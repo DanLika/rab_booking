@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/enums.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 part 'owner_bookings_provider.g.dart';
 
@@ -135,7 +136,7 @@ Future<List<OwnerBooking>> allOwnerBookings(Ref ref) async {
   final userId = auth.currentUser?.uid;
 
   if (userId == null) {
-    throw Exception('User not authenticated');
+    throw AuthException('User not authenticated', code: 'auth/not-authenticated');
   }
 
   final bookings = await repository.getOwnerBookings(
@@ -201,7 +202,7 @@ Future<List<OwnerBooking>> recentOwnerBookings(Ref ref) async {
   final userId = auth.currentUser?.uid;
 
   if (userId == null) {
-    throw Exception('User not authenticated');
+    throw AuthException('User not authenticated', code: 'auth/not-authenticated');
   }
 
   final allBookings = await repository.getOwnerBookings(ownerId: userId);

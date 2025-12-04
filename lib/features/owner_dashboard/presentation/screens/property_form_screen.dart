@@ -17,6 +17,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../providers/owner_properties_provider.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 /// Modern Property form screen for add/edit with enhanced UI
 class PropertyFormScreen extends ConsumerStatefulWidget {
@@ -911,25 +912,15 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           ),
           selected: isSelected,
           onSelected: (selected) {
-            debugPrint('🎯 [AMENITY] Chip tapped: ${amenity.displayName}');
-            debugPrint('📊 [AMENITY] Selected: $selected (was: $isSelected)');
-            debugPrint(
-              '📋 [AMENITY] Current set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}',
-            );
 
             setState(() {
               // Force create new Set to trigger rebuild
               if (selected) {
                 _selectedAmenities = {..._selectedAmenities, amenity};
-                debugPrint('✅ [AMENITY] Added ${amenity.displayName}');
               } else {
                 _selectedAmenities = Set.from(_selectedAmenities)
                   ..remove(amenity);
-                debugPrint('❌ [AMENITY] Removed ${amenity.displayName}');
               }
-              debugPrint(
-                '📊 [AMENITY] New set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}',
-              );
             });
           },
           avatar: Icon(
@@ -1230,7 +1221,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       final ownerId = auth.currentUser?.uid;
 
       if (ownerId == null) {
-        throw Exception('Korisnik nije prijavljen');
+        throw AuthException('Korisnik nije prijavljen', code: 'auth/not-authenticated');
       }
 
       final repository = ref.read(ownerPropertiesRepositoryProvider);
@@ -1238,33 +1229,23 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       // Upload new images to Firebase Storage
       final List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
-        debugPrint(
-          '🔍 [UPLOAD] Starting upload for ${_selectedImages.length} images',
-        );
 
         try {
           final propertyId = _isEditing
               ? widget.property!.id
               : 'temp-${DateTime.now().millisecondsSinceEpoch}';
 
-          debugPrint('📦 [UPLOAD] PropertyId: $propertyId');
 
           for (int i = 0; i < _selectedImages.length; i++) {
             final image = _selectedImages[i];
-            debugPrint(
-              '📸 [UPLOAD] Image ${i + 1}/${_selectedImages.length} - Path: ${image.path}',
-            );
 
             final bytes = await image.readAsBytes();
-            debugPrint('✅ [UPLOAD] Read ${bytes.length} bytes');
 
-            debugPrint('☁️ [UPLOAD] Calling uploadPropertyImage...');
             final imageUrl = await repository.uploadPropertyImage(
               propertyId: propertyId,
               filePath: image.path,
               bytes: bytes,
             );
-            debugPrint('✅ [UPLOAD] Success! URL: $imageUrl');
 
             uploadedImageUrls.add(imageUrl);
 
@@ -1277,10 +1258,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             }
           }
 
-          debugPrint('🎉 [UPLOAD] All images uploaded successfully!');
         } catch (e, stackTrace) {
-          debugPrint('❌ [UPLOAD ERROR] $e');
-          debugPrint('📚 [STACK TRACE] $stackTrace');
 
           if (mounted) {
             // Direct SnackBar for guaranteed visibility
@@ -1293,7 +1271,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   label: 'Detalji',
                   textColor: Colors.white,
                   onPressed: () {
-                    debugPrint('💥 [FULL ERROR] $e\n$stackTrace');
                   },
                 ),
               ),

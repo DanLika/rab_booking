@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/daily_price_model.dart';
@@ -146,15 +145,10 @@ class CalendarDataBuilder {
     DateTime rangeStart,
     DateTime rangeEnd,
   ) {
-    debugPrint('[CalendarDataBuilder] Processing ${bookings.length} bookings');
     for (final booking in bookings) {
       final checkIn = DateNormalizer.normalize(booking.checkIn);
       final checkOut = DateNormalizer.normalize(booking.checkOut);
       final isPending = booking.status == BookingStatus.pending;
-
-      debugPrint('[CalendarDataBuilder] Booking ${booking.id.substring(0, 8)}: '
-          'status=${booking.status}, isPending=$isPending, '
-          'checkIn=$checkIn, checkOut=$checkOut');
 
       // Calculate intersection of booking range with current range
       final effectiveStart = checkIn.isAfter(rangeStart) ? checkIn : rangeStart;

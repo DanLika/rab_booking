@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 /// Performance statistics model
 class PerformanceStats {
@@ -96,7 +97,11 @@ class FirebasePropertyPerformanceRepository {
       if (totalAvailableNights == 0) return 0.0;
       return (totalBookedNights / totalAvailableNights) * 100;
     } catch (e) {
-      throw Exception('Failed to calculate occupancy rate: $e');
+      throw AnalyticsException(
+        'Failed to calculate occupancy rate',
+        code: 'analytics/occupancy-rate-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -206,7 +211,11 @@ class FirebasePropertyPerformanceRepository {
 
       return totalCount;
     } catch (e) {
-      throw Exception('Failed to get bookings count: $e');
+      throw AnalyticsException(
+        'Failed to get bookings count',
+        code: 'analytics/bookings-count-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -250,7 +259,11 @@ class FirebasePropertyPerformanceRepository {
 
       return totalCount;
     } catch (e) {
-      throw Exception('Failed to get bookings this month: $e');
+      throw AnalyticsException(
+        'Failed to get bookings this month',
+        code: 'analytics/bookings-this-month-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -323,7 +336,11 @@ class FirebasePropertyPerformanceRepository {
 
       return snapshot.docs.length;
     } catch (e) {
-      throw Exception('Failed to get active listings: $e');
+      throw AnalyticsException(
+        'Failed to get active listings',
+        code: 'analytics/active-listings-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -397,7 +414,11 @@ class FirebasePropertyPerformanceRepository {
         cancellationRate: cancellationRate,
       );
     } catch (e) {
-      throw Exception('Failed to get performance stats: $e');
+      throw AnalyticsException(
+        'Failed to get performance stats',
+        code: 'analytics/performance-stats-failed',
+        originalError: e,
+      );
     }
   }
 }

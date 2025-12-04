@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/services/logging_service.dart';
@@ -47,7 +48,7 @@ class FirebaseOwnerPropertiesRepository {
 
       return properties;
     } catch (e) {
-      throw Exception('Failed to fetch properties: $e');
+      throw PropertyException('Failed to fetch properties', code: 'property/fetch-failed', originalError: e);
     }
   }
 
@@ -73,7 +74,7 @@ class FirebaseOwnerPropertiesRepository {
 
       return PropertyModel.fromJson(propertyData);
     } catch (e) {
-      throw Exception('Failed to fetch property: $e');
+      throw PropertyException('Failed to fetch property', code: 'property/fetch-failed', originalError: e);
     }
   }
 
@@ -93,7 +94,7 @@ class FirebaseOwnerPropertiesRepository {
 
       return UnitModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
-      throw Exception('Failed to fetch unit: $e');
+      throw PropertyException('Failed to fetch unit', code: 'property/unit-fetch-failed', originalError: e);
     }
   }
 
@@ -130,7 +131,7 @@ class FirebaseOwnerPropertiesRepository {
 
       return null;
     } catch (e) {
-      throw Exception('Failed to fetch unit: $e');
+      throw PropertyException('Failed to fetch unit', code: 'property/unit-fetch-failed', originalError: e);
     }
   }
 
@@ -177,7 +178,7 @@ class FirebaseOwnerPropertiesRepository {
       final doc = await docRef.get();
       return PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
-      throw Exception('Failed to create property: $e');
+      throw PropertyException.creationFailed(e);
     }
   }
 
@@ -218,7 +219,7 @@ class FirebaseOwnerPropertiesRepository {
       if (isActive != null) updates['is_active'] = isActive;
 
       if (updates.isEmpty) {
-        throw Exception('No updates provided');
+        throw PropertyException('No updates provided', code: 'property/no-updates');
       }
 
       updates['updated_at'] = FieldValue.serverTimestamp();
@@ -231,17 +232,15 @@ class FirebaseOwnerPropertiesRepository {
       final doc = await _firestore.collection('properties').doc(propertyId).get();
       return PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
-      throw Exception('Failed to update property: $e');
+      throw PropertyException.updateFailed(e);
     }
   }
 
   /// Delete property
   Future<void> deleteProperty(String propertyId) async {
     try {
-      debugPrint('[REPO] deleteProperty called for: $propertyId');
 
       // Check if property has units in NEW subcollection
-      debugPrint('[REPO] Checking NEW subcollection units...');
       final unitsInSubcollection = await _firestore
           .collection('properties')
           .doc(propertyId)
@@ -249,33 +248,27 @@ class FirebaseOwnerPropertiesRepository {
           .limit(1)
           .get();
 
-      debugPrint('[REPO] NEW subcollection check: ${unitsInSubcollection.docs.length} units found');
       if (unitsInSubcollection.docs.isNotEmpty) {
-        throw Exception(
+        throw PropertyException(
           'Cannot delete property with existing units. Please delete all units first.',
-        );
+          code: 'property/has-units');
       }
 
       // ALSO check OLD top-level units collection (for backwards compatibility)
-      debugPrint('[REPO] Checking OLD top-level units collection...');
       final unitsInOldCollection = await _firestore
           .collection('units')
           .where('property_id', isEqualTo: propertyId)
           .limit(1)
           .get();
 
-      debugPrint('[REPO] OLD collection check: ${unitsInOldCollection.docs.length} units found');
       if (unitsInOldCollection.docs.isNotEmpty) {
-        throw Exception(
+        throw PropertyException(
           'Cannot delete property with existing units in old location. Please delete all units first.',
-        );
+          code: 'property/has-units-legacy');
       }
 
-      debugPrint('[REPO] No units found, proceeding with delete...');
       await _firestore.collection('properties').doc(propertyId).delete();
-      debugPrint('[REPO] Property deleted from Firestore');
     } catch (e) {
-      debugPrint('[REPO] Error in deleteProperty: $e');
       rethrow;
     }
   }
@@ -299,7 +292,7 @@ class FirebaseOwnerPropertiesRepository {
       final downloadUrl = await uploadTask.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      throw Exception('Failed to upload image: $e');
+      throw PropertyException('Failed to upload image', code: 'property/image-upload-failed', originalError: e);
     }
   }
 
@@ -309,7 +302,7 @@ class FirebaseOwnerPropertiesRepository {
       final ref = _storage.refFromURL(imageUrl);
       await ref.delete();
     } catch (e) {
-      throw Exception('Failed to delete image: $e');
+      throw PropertyException('Failed to delete image', code: 'property/image-delete-failed', originalError: e);
     }
   }
 
@@ -327,7 +320,7 @@ class FirebaseOwnerPropertiesRepository {
           .map((doc) => UnitModel.fromJson({...doc.data(), 'id': doc.id}))
           .toList();
     } catch (e) {
-      throw Exception('Failed to fetch units: $e');
+      throw PropertyException('Failed to fetch units', code: 'property/units-fetch-failed', originalError: e);
     }
   }
 
@@ -346,7 +339,7 @@ class FirebaseOwnerPropertiesRepository {
 
       return allUnits;
     } catch (e) {
-      throw Exception('Failed to fetch owner units: $e');
+      throw PropertyException('Failed to fetch owner units', code: 'property/owner-units-fetch-failed', originalError: e);
     }
   }
 
@@ -460,7 +453,7 @@ class FirebaseOwnerPropertiesRepository {
 
       return UnitModel.fromJson({...doc.data()!, 'id': unitId});
     } catch (e) {
-      throw Exception('Failed to create unit: $e');
+      throw PropertyException.creationFailed(e);
     }
   }
 
@@ -501,7 +494,7 @@ class FirebaseOwnerPropertiesRepository {
       if (isAvailable != null) updates['is_available'] = isAvailable;
 
       if (updates.isEmpty) {
-        throw Exception('No updates provided');
+        throw PropertyException('No updates provided', code: 'property/no-updates');
       }
 
       updates['updated_at'] = FieldValue.serverTimestamp();
@@ -521,7 +514,7 @@ class FirebaseOwnerPropertiesRepository {
           .get();
       return UnitModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
-      throw Exception('Failed to update unit: $e');
+      throw PropertyException.updateFailed(e);
     }
   }
 
@@ -537,7 +530,7 @@ class FirebaseOwnerPropertiesRepository {
           .get();
 
       if (bookingsSnapshot.docs.isNotEmpty) {
-        throw Exception('Cannot delete unit with active bookings.');
+        throw PropertyException('Cannot delete unit with active bookings.', code: 'property/unit-has-bookings');
       }
 
       await _firestore

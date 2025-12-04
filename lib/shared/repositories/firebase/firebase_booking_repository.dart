@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/exceptions/app_exceptions.dart';
 import '../booking_repository.dart';
 import '../../models/booking_model.dart';
 import '../../../core/constants/enums.dart';
@@ -80,7 +81,7 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<BookingModel> updateBookingStatus(String id, BookingStatus status) async {
     final doc = await _firestore.collection('bookings').doc(id).get();
-    if (!doc.exists) throw Exception('Booking not found');
+    if (!doc.exists) throw BookingException('Booking not found', code: 'booking/not-found');
 
     final booking = BookingModel.fromJson({...doc.data()!, 'id': doc.id});
     final updated = booking.copyWith(
@@ -95,7 +96,7 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<BookingModel> cancelBooking(String id, String reason) async {
     final doc = await _firestore.collection('bookings').doc(id).get();
-    if (!doc.exists) throw Exception('Booking not found');
+    if (!doc.exists) throw BookingException('Booking not found', code: 'booking/not-found');
 
     final booking = BookingModel.fromJson({...doc.data()!, 'id': doc.id});
     final cancelled = booking.copyWith(
@@ -274,7 +275,7 @@ class FirebaseBookingRepository implements BookingRepository {
     String? paymentIntentId,
   }) async {
     final doc = await _firestore.collection('bookings').doc(bookingId).get();
-    if (!doc.exists) throw Exception('Booking not found');
+    if (!doc.exists) throw BookingException('Booking not found', code: 'booking/not-found');
 
     final booking = BookingModel.fromJson({...doc.data()!, 'id': doc.id});
     final updated = booking.copyWith(
@@ -290,7 +291,7 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<BookingModel> completeBookingPayment(String bookingId) async {
     final doc = await _firestore.collection('bookings').doc(bookingId).get();
-    if (!doc.exists) throw Exception('Booking not found');
+    if (!doc.exists) throw BookingException('Booking not found', code: 'booking/not-found');
 
     final booking = BookingModel.fromJson({...doc.data()!, 'id': doc.id});
     final completed = booking.copyWith(

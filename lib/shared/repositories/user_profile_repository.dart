@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_profile_model.dart';
 import '../models/notification_preferences_model.dart';
+import '../../core/exceptions/app_exceptions.dart';
 
 /// Repository for managing user profile and preferences in Firestore
 ///
@@ -60,7 +61,11 @@ class UserProfileRepository {
             SetOptions(merge: true),
           );
     } catch (e) {
-      throw Exception('Failed to update profile: $e');
+      throw AuthException(
+        'Failed to update profile',
+        code: 'auth/profile-update-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -123,7 +128,11 @@ class UserProfileRepository {
         SetOptions(merge: true),
       );
     } catch (e) {
-      throw Exception('Failed to update company details: $e');
+      throw AuthException(
+        'Failed to update company details',
+        code: 'auth/company-update-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -179,7 +188,11 @@ class UserProfileRepository {
             SetOptions(merge: true),
           );
     } catch (e) {
-      throw Exception('Failed to update notification preferences: $e');
+      throw AuthException(
+        'Failed to update notification preferences',
+        code: 'auth/preferences-update-failed',
+        originalError: e,
+      );
     }
   }
 

@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/widget/domain/models/widget_settings.dart';
 import '../../shared/models/booking_model.dart';
+// ignore: unused_import
+import '../utils/date_time_parser.dart'; // Used in commented example code
 import 'logging_service.dart';
+import '../exceptions/app_exceptions.dart';
 
 /// Service for syncing with external calendar platforms (Booking.com, Airbnb)
 ///
@@ -137,7 +140,7 @@ class ExternalCalendarSyncService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Booking.com API error: ${response.statusCode}');
+        throw IntegrationException.apiFailed('Booking.com', 'HTTP ${response.statusCode}');
       }
 
       final data = json.decode(response.body);
@@ -151,8 +154,14 @@ class ExternalCalendarSyncService {
           guestName: reservation['guest']['name'],
           guestEmail: reservation['guest']['email'],
           guestPhone: reservation['guest']['phone'],
-          checkIn: DateTime.parse(reservation['check_in']),
-          checkOut: DateTime.parse(reservation['check_out']),
+          checkIn: DateTimeParser.parseOrThrow(
+            reservation['check_in'],
+            context: 'ExternalCalendarSync.bookingcom.check_in',
+          ),
+          checkOut: DateTimeParser.parseOrThrow(
+            reservation['check_out'],
+            context: 'ExternalCalendarSync.bookingcom.check_out',
+          ),
           status: BookingStatus.confirmed,
           totalPrice: reservation['total_price'].toDouble(),
           paidAmount: reservation['paid_amount'].toDouble(),
@@ -216,7 +225,7 @@ class ExternalCalendarSyncService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Airbnb API error: ${response.statusCode}');
+        throw IntegrationException.apiFailed('Airbnb', 'HTTP ${response.statusCode}');
       }
 
       final data = json.decode(response.body);
@@ -230,8 +239,14 @@ class ExternalCalendarSyncService {
           guestName: reservation['guest']['name'],
           guestEmail: reservation['guest']['email'],
           guestPhone: reservation['guest']['phone'],
-          checkIn: DateTime.parse(reservation['start_date']),
-          checkOut: DateTime.parse(reservation['end_date']),
+          checkIn: DateTimeParser.parseOrThrow(
+            reservation['start_date'],
+            context: 'ExternalCalendarSync.airbnb.start_date',
+          ),
+          checkOut: DateTimeParser.parseOrThrow(
+            reservation['end_date'],
+            context: 'ExternalCalendarSync.airbnb.end_date',
+          ),
           status: BookingStatus.confirmed,
           totalPrice: reservation['listing_total'].toDouble(),
           paidAmount: reservation['listing_total'].toDouble(),
@@ -386,7 +401,7 @@ class ExternalCalendarSyncService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Token exchange failed: ${response.body}');
+        throw IntegrationException('Token exchange failed: ${response.body}', code: 'integration/token-exchange-failed');
       }
 
       final data = json.decode(response.body);
@@ -424,7 +439,7 @@ class ExternalCalendarSyncService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Token exchange failed: ${response.body}');
+        throw IntegrationException('Token exchange failed: ${response.body}', code: 'integration/token-exchange-failed');
       }
 
       final data = json.decode(response.body);

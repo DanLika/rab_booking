@@ -1,5 +1,6 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import '../exceptions/app_exceptions.dart';
 
 /// Service for handling Firebase Storage operations
 class StorageService {
@@ -37,7 +38,7 @@ class StorageService {
 
       return downloadUrl;
     } catch (e) {
-      throw Exception('Failed to upload profile image: $e');
+      throw StorageException.uploadFailed('profile image', e);
     }
   }
 
@@ -49,7 +50,6 @@ class StorageService {
       await ref.delete();
     } catch (e) {
       // If delete fails, it's not critical - log and continue
-      debugPrint('Failed to delete profile image: $e');
     }
   }
 
@@ -79,7 +79,7 @@ class StorageService {
 
       return downloadUrl;
     } catch (e) {
-      throw Exception('Failed to upload property image: $e');
+      throw StorageException.uploadFailed('property image', e);
     }
   }
 
@@ -111,7 +111,7 @@ class StorageService {
 
       return downloadUrl;
     } catch (e) {
-      throw Exception('Failed to upload unit image: $e');
+      throw StorageException.uploadFailed('unit image', e);
     }
   }
 }

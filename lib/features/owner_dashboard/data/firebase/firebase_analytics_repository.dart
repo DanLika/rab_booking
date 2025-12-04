@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/models/analytics_summary.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 /// Firebase implementation of Analytics Repository
 class FirebaseAnalyticsRepository {
@@ -179,7 +180,11 @@ class FirebaseAnalyticsRepository {
         bookingsBySource: bookingsBySource,
       );
     } catch (e) {
-      throw Exception('Failed to fetch analytics: $e');
+      throw AnalyticsException(
+        'Failed to fetch analytics',
+        code: 'analytics/fetch-failed',
+        originalError: e,
+      );
     }
   }
 

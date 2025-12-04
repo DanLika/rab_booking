@@ -6,6 +6,7 @@ import '../../../../core/services/logging_service.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/onboarding_state.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 part 'onboarding_provider.g.dart';
 
@@ -118,12 +119,12 @@ class OnboardingNotifier extends _$OnboardingNotifier {
   /// Create actual property in Firebase (from Step 1 data)
   Future<String> createProperty() async {
     if (state.propertyData == null) {
-      throw Exception('Property data is null');
+      throw PropertyException('Property data is null', code: 'property/data-missing');
     }
 
     final userId = ref.read(enhancedAuthProvider).firebaseUser?.uid;
     if (userId == null) {
-      throw Exception('User not authenticated');
+      throw AuthException('User not authenticated', code: 'auth/not-authenticated');
     }
 
     final data = state.propertyData!;

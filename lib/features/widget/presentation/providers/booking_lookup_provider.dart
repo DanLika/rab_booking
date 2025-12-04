@@ -1,5 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 import '../../domain/models/booking_details_model.dart';
 
 /// Provider for Firebase Functions instance
@@ -46,7 +47,7 @@ class BookingLookupService {
       final response = BookingLookupResponse.fromJson(result.data);
 
       if (!response.success) {
-        throw Exception('Booking verification failed');
+        throw BookingException.lookupFailed('Booking verification failed');
       }
 
       return response.booking;
@@ -54,18 +55,21 @@ class BookingLookupService {
       // Handle specific Firebase Functions errors
       switch (e.code) {
         case 'not-found':
-          throw Exception(
-              'Booking not found. Please check your booking reference.');
+          throw BookingException(
+              'Booking not found. Please check your booking reference.',
+              code: 'booking/not-found');
         case 'permission-denied':
-          throw Exception(
-              'Email does not match booking records or link has expired.');
+          throw BookingException(
+              'Email does not match booking records or link has expired.',
+              code: 'booking/permission-denied');
         case 'invalid-argument':
-          throw Exception('Booking reference and email are required.');
+          throw BookingException('Booking reference and email are required.',
+              code: 'booking/invalid-argument');
         default:
-          throw Exception('Failed to verify booking: ${e.message}');
+          throw BookingException.lookupFailed(e.message);
       }
     } catch (e) {
-      throw Exception('Failed to lookup booking: $e');
+      throw BookingException.lookupFailed(e);
     }
   }
 }

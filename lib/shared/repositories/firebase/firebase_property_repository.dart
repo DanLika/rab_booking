@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../property_repository.dart';
 import '../../models/property_model.dart';
+import '../../../core/exceptions/app_exceptions.dart';
 
 /// Firebase implementation of PropertyRepository
 class FirebasePropertyRepository implements PropertyRepository {
@@ -145,7 +146,7 @@ class FirebasePropertyRepository implements PropertyRepository {
   @override
   Future<PropertyModel> togglePropertyStatus(String id, bool isActive) async {
     final doc = await _firestore.collection('properties').doc(id).get();
-    if (!doc.exists) throw Exception('Property not found');
+    if (!doc.exists) throw PropertyException('Property not found', code: 'property/not-found');
 
     final property = PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     final updated = property.copyWith(isActive: isActive);
@@ -157,7 +158,7 @@ class FirebasePropertyRepository implements PropertyRepository {
   @override
   Future<PropertyModel> updatePropertyRating(String id, double rating, int reviewCount) async {
     final doc = await _firestore.collection('properties').doc(id).get();
-    if (!doc.exists) throw Exception('Property not found');
+    if (!doc.exists) throw PropertyException('Property not found', code: 'property/not-found');
 
     final property = PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     final updated = property.copyWith(

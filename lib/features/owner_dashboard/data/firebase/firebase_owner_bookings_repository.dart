@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
@@ -49,7 +49,6 @@ class FirebaseOwnerBookingsRepository {
         if (v is String) return v;
       }
       // Last resort: return toString()
-      debugPrint('⚠️ Unexpected Map structure for string field: $value');
       return fallback;
     }
     // For any other type, convert to string
@@ -67,7 +66,7 @@ class FirebaseOwnerBookingsRepository {
   }) async {
     try {
       final userId = ownerId ?? _auth.currentUser?.uid;
-      if (userId == null) throw Exception('User not authenticated');
+      if (userId == null) throw AuthException('User not authenticated', code: 'auth/not-authenticated');
 
       // Step 1: Get all properties for owner (if not filtering by specific property)
       List<String> propertyIds = [];
@@ -235,7 +234,7 @@ class FirebaseOwnerBookingsRepository {
 
       return ownerBookings;
     } catch (e) {
-      throw Exception('Failed to fetch owner bookings: $e');
+      throw BookingException('Failed to fetch owner bookings', code: 'booking/fetch-failed', originalError: e);
     }
   }
 
@@ -327,7 +326,6 @@ class FirebaseOwnerBookingsRepository {
         } catch (icalError) {
           // GRACEFUL FALLBACK: If iCal query fails, continue with regular bookings
           // This ensures calendar works even if owner has no iCal feeds or there's an error
-          debugPrint('⚠️ iCal events query failed (non-critical): $icalError');
         }
       }
 
@@ -338,7 +336,7 @@ class FirebaseOwnerBookingsRepository {
 
       return bookingsByUnit;
     } catch (e) {
-      throw Exception('Failed to fetch calendar bookings: $e');
+      throw BookingException('Failed to fetch calendar bookings', code: 'booking/calendar-fetch-failed', originalError: e);
     }
   }
 
@@ -409,7 +407,6 @@ class FirebaseOwnerBookingsRepository {
           bookingsByUnit[unitId]!.add(pseudoBooking);
         } catch (parseError) {
           // Skip malformed iCal events
-          debugPrint('⚠️ Failed to parse iCal event ${doc.id}: $parseError');
         }
       }
     }
@@ -425,7 +422,7 @@ class FirebaseOwnerBookingsRepository {
       });
       // Email notification will be sent by onBookingStatusChange Cloud Function
     } catch (e) {
-      throw Exception('Failed to approve booking: $e');
+      throw BookingException.approvalFailed(e);
     }
   }
 
@@ -440,7 +437,7 @@ class FirebaseOwnerBookingsRepository {
       });
       // Email notification will be sent by onBookingStatusChange Cloud Function
     } catch (e) {
-      throw Exception('Failed to reject booking: $e');
+      throw BookingException('Failed to reject booking', code: 'booking/rejection-failed', originalError: e);
     }
   }
 
@@ -452,7 +449,7 @@ class FirebaseOwnerBookingsRepository {
         'updated_at': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      throw Exception('Failed to confirm booking: $e');
+      throw BookingException('Failed to confirm booking', code: 'booking/confirmation-failed', originalError: e);
     }
   }
 
@@ -474,7 +471,7 @@ class FirebaseOwnerBookingsRepository {
       // Email is automatically sent by onBookingStatusChange Cloud Function
       // when status changes to 'cancelled'
     } catch (e) {
-      throw Exception('Failed to cancel booking: $e');
+      throw BookingException.cancellationFailed(e);
     }
   }
 
@@ -486,7 +483,7 @@ class FirebaseOwnerBookingsRepository {
         'updated_at': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      throw Exception('Failed to complete booking: $e');
+      throw BookingException('Failed to complete booking', code: 'booking/completion-failed', originalError: e);
     }
   }
 
@@ -495,7 +492,7 @@ class FirebaseOwnerBookingsRepository {
     try {
       await _firestore.collection('bookings').doc(bookingId).delete();
     } catch (e) {
-      throw Exception('Failed to delete booking: $e');
+      throw BookingException.deletionFailed(e);
     }
   }
 }

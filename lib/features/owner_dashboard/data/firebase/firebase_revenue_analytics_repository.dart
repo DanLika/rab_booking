@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../presentation/widgets/revenue_chart_widget.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 /// Firebase implementation of Revenue Analytics Repository
 class FirebaseRevenueAnalyticsRepository {
@@ -92,7 +93,11 @@ class FirebaseRevenueAnalyticsRepository {
 
       return dataPoints;
     } catch (e) {
-      throw Exception('Failed to get revenue by days: $e');
+      throw AnalyticsException(
+        'Failed to get revenue by days',
+        code: 'analytics/revenue-by-days-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -184,7 +189,11 @@ class FirebaseRevenueAnalyticsRepository {
 
       return total;
     } catch (e) {
-      throw Exception('Failed to get total revenue: $e');
+      throw AnalyticsException(
+        'Failed to get total revenue',
+        code: 'analytics/total-revenue-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -197,7 +206,11 @@ class FirebaseRevenueAnalyticsRepository {
 
       return await _getRevenueInRange(ownerId, startOfMonth, endOfMonth);
     } catch (e) {
-      throw Exception('Failed to get revenue this month: $e');
+      throw AnalyticsException(
+        'Failed to get revenue this month',
+        code: 'analytics/revenue-this-month-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -214,7 +227,11 @@ class FirebaseRevenueAnalyticsRepository {
         endOfLastMonth,
       );
     } catch (e) {
-      throw Exception('Failed to get revenue last month: $e');
+      throw AnalyticsException(
+        'Failed to get revenue last month',
+        code: 'analytics/revenue-last-month-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -331,7 +348,11 @@ class FirebaseRevenueAnalyticsRepository {
 
       return revenueByProperty;
     } catch (e) {
-      throw Exception('Failed to get revenue by property: $e');
+      throw AnalyticsException(
+        'Failed to get revenue by property',
+        code: 'analytics/revenue-by-property-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -350,7 +371,11 @@ class FirebaseRevenueAnalyticsRepository {
         revenueByProperty: revenueByProperty,
       );
     } catch (e) {
-      throw Exception('Failed to get revenue stats: $e');
+      throw AnalyticsException(
+        'Failed to get revenue stats',
+        code: 'analytics/revenue-stats-failed',
+        originalError: e,
+      );
     }
   }
 }

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../shared/models/booking_model.dart';
 import '../../features/widget/domain/models/widget_settings.dart';
 import 'logging_service.dart';
+import '../exceptions/app_exceptions.dart';
 
 /// Service for sending email notifications using Resend API
 ///
@@ -244,8 +245,9 @@ class EmailNotificationService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception(
+      throw NotificationException(
         'Resend API error: ${response.statusCode} - ${response.body}',
+        code: 'notification/email-send-failed',
       );
     }
 

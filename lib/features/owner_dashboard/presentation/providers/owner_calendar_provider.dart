@@ -8,6 +8,7 @@ import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/constants/enums.dart';
 
 part 'owner_calendar_provider.g.dart';
@@ -20,7 +21,7 @@ Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
   final userId = auth.currentUser?.uid;
 
   if (userId == null) {
-    throw Exception('User not authenticated');
+    throw AuthException('User not authenticated', code: 'auth/not-authenticated');
   }
 
   return repository.getOwnerProperties(userId);
@@ -51,7 +52,7 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   final userId = auth.currentUser?.uid;
 
   if (userId == null) {
-    throw Exception('User not authenticated');
+    throw AuthException('User not authenticated', code: 'auth/not-authenticated');
   }
 
   // OPTIMIZED: Narrower date range: 3 months ago to 1 year in future

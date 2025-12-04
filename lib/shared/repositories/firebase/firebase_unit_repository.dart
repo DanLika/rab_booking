@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../unit_repository.dart';
 import '../../models/unit_model.dart';
+import '../../../core/exceptions/app_exceptions.dart';
 
 class FirebaseUnitRepository implements UnitRepository {
   final FirebaseFirestore _firestore;
@@ -76,7 +77,7 @@ class FirebaseUnitRepository implements UnitRepository {
         return;
       }
     }
-    throw Exception('Unit not found');
+    throw PropertyException('Unit not found', code: 'property/unit-not-found');
   }
 
   @override
@@ -119,7 +120,7 @@ class FirebaseUnitRepository implements UnitRepository {
         return updated;
       }
     }
-    throw Exception('Unit not found');
+    throw PropertyException('Unit not found', code: 'property/unit-not-found');
   }
 
   @override
@@ -139,7 +140,7 @@ class FirebaseUnitRepository implements UnitRepository {
         return updated;
       }
     }
-    throw Exception('Unit not found');
+    throw PropertyException('Unit not found', code: 'property/unit-not-found');
   }
 
   @override

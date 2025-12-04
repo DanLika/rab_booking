@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/models/analytics_summary.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 part 'analytics_provider.g.dart';
 
@@ -13,7 +14,7 @@ class AnalyticsNotifier extends _$AnalyticsNotifier {
     final userId = auth.currentUser?.uid;
 
     if (userId == null) {
-      throw Exception('User not authenticated');
+      throw AuthException('User not authenticated', code: 'auth/not-authenticated');
     }
 
     final repository = ref.watch(analyticsRepositoryProvider);
@@ -30,7 +31,7 @@ class AnalyticsNotifier extends _$AnalyticsNotifier {
       final userId = auth.currentUser?.uid;
 
       if (userId == null) {
-        throw Exception('User not authenticated');
+        throw AuthException('User not authenticated', code: 'auth/not-authenticated');
       }
 
       final repository = ref.read(analyticsRepositoryProvider);

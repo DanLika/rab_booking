@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/owner_dashboard/domain/models/notification_model.dart';
+import '../exceptions/app_exceptions.dart';
 
 /// Service for managing owner notifications
 class NotificationService {
@@ -31,7 +32,7 @@ class NotificationService {
           .collection(_collectionName)
           .add(notification.toFirestore());
     } catch (e) {
-      throw Exception('Failed to create notification: $e');
+      throw NotificationException.creationFailed(e);
     }
   }
 
@@ -65,7 +66,7 @@ class NotificationService {
         'isRead': true,
       });
     } catch (e) {
-      throw Exception('Failed to mark notification as read: $e');
+      throw NotificationException.updateFailed(e);
     }
   }
 
@@ -82,7 +83,7 @@ class NotificationService {
 
       await batch.commit();
     } catch (e) {
-      throw Exception('Failed to mark notifications as read: $e');
+      throw NotificationException.updateFailed(e);
     }
   }
 
@@ -112,7 +113,7 @@ class NotificationService {
         await batch.commit();
       }
     } catch (e) {
-      throw Exception('Failed to mark all notifications as read: $e');
+      throw NotificationException.updateFailed(e);
     }
   }
 
@@ -121,7 +122,11 @@ class NotificationService {
     try {
       await _firestore.collection(_collectionName).doc(notificationId).delete();
     } catch (e) {
-      throw Exception('Failed to delete notification: $e');
+      throw NotificationException(
+        'Failed to delete notification',
+        code: 'notification/deletion-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -150,7 +155,11 @@ class NotificationService {
         await batch.commit();
       }
     } catch (e) {
-      throw Exception('Failed to delete all notifications: $e');
+      throw NotificationException(
+        'Failed to delete all notifications',
+        code: 'notification/bulk-deletion-failed',
+        originalError: e,
+      );
     }
   }
 

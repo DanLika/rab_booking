@@ -5,6 +5,9 @@ import 'package:rab_booking/features/widget/data/helpers/availability_checker.da
 import 'package:rab_booking/features/widget/data/repositories/firebase_booking_calendar_repository.dart';
 import 'package:rab_booking/features/widget/domain/models/calendar_date_status.dart';
 
+// Using 2026 dates (future) to avoid pastReservation status
+const testYear = 2026;
+
 void main() {
   group('FirebaseBookingCalendarRepository', () {
     late FakeFirebaseFirestore fakeFirestore;
@@ -25,8 +28,8 @@ void main() {
       test('returns true when no bookings exist', () async {
         final isAvailable = await repository.checkAvailability(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 15),
-          checkOut: DateTime(2024, 1, 20),
+          checkIn: DateTime(testYear, 1, 15),
+          checkOut: DateTime(testYear, 1, 20),
         );
 
         expect(isAvailable, true);
@@ -36,8 +39,8 @@ void main() {
         // Add conflicting booking
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 15)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 20)),
           'status': 'confirmed',
           'guest_name': 'Test Guest',
           'guest_email': 'test@example.com',
@@ -47,8 +50,8 @@ void main() {
 
         final isAvailable = await repository.checkAvailability(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 17),
-          checkOut: DateTime(2024, 1, 22),
+          checkIn: DateTime(testYear, 1, 17),
+          checkOut: DateTime(testYear, 1, 22),
         );
 
         expect(isAvailable, false);
@@ -58,8 +61,8 @@ void main() {
         // Add booking ending on Jan 15
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 10)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 15)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 10)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 15)),
           'status': 'confirmed',
           'guest_name': 'Test Guest',
           'guest_email': 'test@example.com',
@@ -70,8 +73,8 @@ void main() {
         // Check-in on Jan 15 (same day as previous check-out)
         final isAvailable = await repository.checkAvailability(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 15),
-          checkOut: DateTime(2024, 1, 20),
+          checkIn: DateTime(testYear, 1, 15),
+          checkOut: DateTime(testYear, 1, 20),
         );
 
         expect(isAvailable, true);
@@ -81,8 +84,8 @@ void main() {
         // Add cancelled booking
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 15)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 20)),
           'status': 'cancelled',
           'guest_name': 'Test Guest',
           'guest_email': 'test@example.com',
@@ -92,8 +95,8 @@ void main() {
 
         final isAvailable = await repository.checkAvailability(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 17),
-          checkOut: DateTime(2024, 1, 22),
+          checkIn: DateTime(testYear, 1, 17),
+          checkOut: DateTime(testYear, 1, 22),
         );
 
         expect(isAvailable, true);
@@ -103,16 +106,16 @@ void main() {
         // Add iCal event
         await fakeFirestore.collection('ical_events').add({
           'unit_id': 'unit123',
-          'start_date': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'end_date': Timestamp.fromDate(DateTime(2024, 1, 20)),
+          'start_date': Timestamp.fromDate(DateTime(testYear, 1, 15)),
+          'end_date': Timestamp.fromDate(DateTime(testYear, 1, 20)),
           'source': 'Booking.com',
           'guest_name': 'External Guest',
         });
 
         final isAvailable = await repository.checkAvailability(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 17),
-          checkOut: DateTime(2024, 1, 22),
+          checkIn: DateTime(testYear, 1, 17),
+          checkOut: DateTime(testYear, 1, 22),
         );
 
         expect(isAvailable, false);
@@ -122,15 +125,15 @@ void main() {
         // Add blocked date
         await fakeFirestore.collection('daily_prices').add({
           'unit_id': 'unit123',
-          'date': Timestamp.fromDate(DateTime(2024, 1, 17)),
+          'date': Timestamp.fromDate(DateTime(testYear, 1, 17)),
           'price': 100.0,
           'available': false,
         });
 
         final isAvailable = await repository.checkAvailability(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 15),
-          checkOut: DateTime(2024, 1, 20),
+          checkIn: DateTime(testYear, 1, 15),
+          checkOut: DateTime(testYear, 1, 20),
         );
 
         expect(isAvailable, false);
@@ -141,8 +144,8 @@ void main() {
       test('returns available result when no conflicts', () async {
         final result = await repository.checkAvailabilityDetailed(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 15),
-          checkOut: DateTime(2024, 1, 20),
+          checkIn: DateTime(testYear, 1, 15),
+          checkOut: DateTime(testYear, 1, 20),
         );
 
         expect(result.isAvailable, true);
@@ -152,8 +155,8 @@ void main() {
       test('returns booking conflict info', () async {
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 15)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 20)),
           'status': 'confirmed',
           'guest_name': 'Test Guest',
           'guest_email': 'test@example.com',
@@ -163,8 +166,8 @@ void main() {
 
         final result = await repository.checkAvailabilityDetailed(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 17),
-          checkOut: DateTime(2024, 1, 22),
+          checkIn: DateTime(testYear, 1, 17),
+          checkOut: DateTime(testYear, 1, 22),
         );
 
         expect(result.isAvailable, false);
@@ -176,8 +179,8 @@ void main() {
       test('calculates price using base price when no daily prices', () async {
         final price = await repository.calculateBookingPrice(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 15),
-          checkOut: DateTime(2024, 1, 18),
+          checkIn: DateTime(testYear, 1, 15),
+          checkOut: DateTime(testYear, 1, 18),
           basePrice: 100.0,
         );
 
@@ -188,8 +191,8 @@ void main() {
       test('applies weekend price for weekend nights', () async {
         final price = await repository.calculateBookingPrice(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 19), // Friday
-          checkOut: DateTime(2024, 1, 22), // Monday
+          checkIn: DateTime(testYear, 1, 19), // Friday
+          checkOut: DateTime(testYear, 1, 22), // Monday
           basePrice: 100.0,
           weekendBasePrice: 150.0,
         );
@@ -203,8 +206,8 @@ void main() {
       test('returns detailed breakdown', () async {
         final result = await repository.calculateBookingPriceDetailed(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 15),
-          checkOut: DateTime(2024, 1, 18),
+          checkIn: DateTime(testYear, 1, 15),
+          checkOut: DateTime(testYear, 1, 18),
           basePrice: 100.0,
         );
 
@@ -220,8 +223,8 @@ void main() {
         // Add a booking
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 10)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 15)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 10)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 15)),
           'status': 'confirmed',
           'guest_name': 'Test Guest',
           'guest_email': 'test@example.com',
@@ -232,7 +235,7 @@ void main() {
         final stream = repository.watchCalendarData(
           propertyId: 'property123',
           unitId: 'unit123',
-          year: 2024,
+          year: testYear,
           month: 1,
         );
 
@@ -242,19 +245,19 @@ void main() {
         expect(calendarData, isNotEmpty);
 
         // Check that Jan 12 is booked (middle of booking)
-        final jan12 = calendarData[DateTime.utc(2024, 1, 12)];
+        final jan12 = calendarData[DateTime.utc(testYear, 1, 12)];
         expect(jan12?.status, DateStatus.booked);
 
         // Check that Jan 20 is available
-        final jan20 = calendarData[DateTime.utc(2024, 1, 20)];
+        final jan20 = calendarData[DateTime.utc(testYear, 1, 20)];
         expect(jan20?.status, DateStatus.available);
       });
 
-      test('marks pending bookings with pending status', () async {
+      test('marks pending bookings with isPendingBooking flag', () async {
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 10)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 15)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 10)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 15)),
           'status': 'pending',
           'guest_name': 'Test Guest',
           'guest_email': 'test@example.com',
@@ -265,22 +268,23 @@ void main() {
         final stream = repository.watchCalendarData(
           propertyId: 'property123',
           unitId: 'unit123',
-          year: 2024,
+          year: testYear,
           month: 1,
         );
 
         final calendarData = await stream.first;
 
-        // Check that Jan 12 is pending
-        final jan12 = calendarData[DateTime.utc(2024, 1, 12)];
-        expect(jan12?.status, DateStatus.pending);
+        // Check that Jan 12 is booked with isPendingBooking flag
+        final jan12 = calendarData[DateTime.utc(testYear, 1, 12)];
+        expect(jan12?.status, DateStatus.booked);
+        expect(jan12?.isPendingBooking, true);
       });
 
       test('marks check-in and check-out days correctly', () async {
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 10)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 15)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 10)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 15)),
           'status': 'confirmed',
           'guest_name': 'Test Guest',
           'guest_email': 'test@example.com',
@@ -291,18 +295,18 @@ void main() {
         final stream = repository.watchCalendarData(
           propertyId: 'property123',
           unitId: 'unit123',
-          year: 2024,
+          year: testYear,
           month: 1,
         );
 
         final calendarData = await stream.first;
 
         // Check-in day should be partialCheckIn
-        final jan10 = calendarData[DateTime.utc(2024, 1, 10)];
+        final jan10 = calendarData[DateTime.utc(testYear, 1, 10)];
         expect(jan10?.status, DateStatus.partialCheckIn);
 
         // Check-out day should be partialCheckOut
-        final jan15 = calendarData[DateTime.utc(2024, 1, 15)];
+        final jan15 = calendarData[DateTime.utc(testYear, 1, 15)];
         expect(jan15?.status, DateStatus.partialCheckOut);
       });
 
@@ -316,8 +320,8 @@ void main() {
       test('emits calendar data for entire year', () async {
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 6, 10)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 6, 15)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 6, 10)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 6, 15)),
           'status': 'confirmed',
           'guest_name': 'Test Guest',
           'guest_email': 'test@example.com',
@@ -328,21 +332,21 @@ void main() {
         final stream = repository.watchYearCalendarData(
           propertyId: 'property123',
           unitId: 'unit123',
-          year: 2024,
+          year: testYear,
         );
 
         final calendarData = await stream.first;
 
         // Should have entries for all days in year
-        // 2024 is a leap year = 366 days
-        expect(calendarData.length, 366);
+        // 2026 is not a leap year = 365 days
+        expect(calendarData.length, 365);
 
         // Check June 12 is booked
-        final jun12 = calendarData[DateTime(2024, 6, 12)];
+        final jun12 = calendarData[DateTime(testYear, 6, 12)];
         expect(jun12?.status, DateStatus.booked);
 
         // Check March 15 is available
-        final mar15 = calendarData[DateTime(2024, 3, 15)];
+        final mar15 = calendarData[DateTime(testYear, 3, 15)];
         expect(mar15?.status, DateStatus.available);
       });
     });
@@ -357,8 +361,8 @@ void main() {
         // Add two bookings with 2-day gap
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 10)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 15)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 10)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 15)),
           'status': 'confirmed',
           'guest_name': 'Guest 1',
           'guest_email': 'guest1@example.com',
@@ -368,8 +372,8 @@ void main() {
 
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 17)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 22)),
+          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 17)),
+          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 22)),
           'status': 'confirmed',
           'guest_name': 'Guest 2',
           'guest_email': 'guest2@example.com',
@@ -380,7 +384,7 @@ void main() {
         final stream = repository.watchCalendarData(
           propertyId: 'property123',
           unitId: 'unit123',
-          year: 2024,
+          year: testYear,
           month: 1,
         );
 
@@ -388,8 +392,8 @@ void main() {
 
         // Gap days (Jan 15-16) should be blocked
         // minNights = 3, gap = 2 days, so gap should be blocked
-        final jan15 = calendarData[DateTime.utc(2024, 1, 15)];
-        final jan16 = calendarData[DateTime.utc(2024, 1, 16)];
+        final jan15 = calendarData[DateTime.utc(testYear, 1, 15)];
+        final jan16 = calendarData[DateTime.utc(testYear, 1, 16)];
 
         // Jan 15 is checkout of first booking (partialCheckOut)
         expect(jan15?.status, DateStatus.partialCheckOut);

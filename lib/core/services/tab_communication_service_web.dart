@@ -1,6 +1,7 @@
 import 'dart:async';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import 'dart:js_interop';
+
+import 'package:web/web.dart' as web;
 
 import 'logging_service.dart';
 import 'tab_communication_service.dart';
@@ -20,7 +21,7 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   static const String _localStorageKey = 'rab-booking-tab-message';
 
   /// BroadcastChannel instance (null if not supported)
-  html.BroadcastChannel? _channel;
+  web.BroadcastChannel? _channel;
 
   /// Stream controller for parsed messages
   final StreamController<TabMessage> _messageController =
@@ -42,13 +43,15 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   void _initialize() {
     try {
       // Try to create BroadcastChannel
-      _channel = html.BroadcastChannel(_channelName);
+      _channel = web.BroadcastChannel(_channelName);
       _usesBroadcastChannel = true;
 
       // Listen for messages from other tabs
-      _channel!.onMessage.listen((event) {
-        _handleRawMessage(event.data?.toString() ?? '');
-      });
+      _channel!.addEventListener('message', ((web.Event event) {
+        final messageEvent = event as web.MessageEvent;
+        final data = messageEvent.data;
+        _handleRawMessage(data.toString());
+      }).toJS);
 
       LoggingService.log(
         '[TabCommunication] Initialized with BroadcastChannel',
@@ -69,7 +72,15 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   /// Setup localStorage fallback for browsers that don't support BroadcastChannel
   void _setupLocalStorageFallback() {
     // Listen for storage events (triggered when another tab modifies localStorage)
-    _storageSubscription = html.window.onStorage.listen((event) {
+    // Convert web.Event to Stream using StreamController
+    final storageController = StreamController<web.StorageEvent>.broadcast();
+
+    web.window.addEventListener('storage', ((web.Event event) {
+      // Storage event listener only fires for StorageEvent, safe to cast
+      storageController.add(event as web.StorageEvent);
+    }).toJS);
+
+    _storageSubscription = storageController.stream.listen((event) {
       if (event.key == _localStorageKey && event.newValue != null) {
         _handleRawMessage(event.newValue!);
       }
@@ -126,7 +137,9 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
 
     if (_usesBroadcastChannel && _channel != null) {
       try {
-        _channel!.postMessage(messageWithTimestamp);
+        // Convert String to JSString for BroadcastChannel API
+        final JSString jsMessage = messageWithTimestamp.toJS;
+        _channel!.postMessage(jsMessage);
         LoggingService.log(
           '[TabCommunication] Sent via BroadcastChannel: $message',
           tag: 'TAB_COMM',
@@ -148,12 +161,12 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   void _sendViaLocalStorage(String message) {
     try {
       // Set the message in localStorage
-      html.window.localStorage[_localStorageKey] = message;
+      web.window.localStorage.setItem(_localStorageKey, message);
 
       // Immediately remove it (we just need the storage event to fire)
       // This also prevents stale messages from accumulating
       Future.delayed(const Duration(milliseconds: 100), () {
-        html.window.localStorage.remove(_localStorageKey);
+        web.window.localStorage.removeItem(_localStorageKey);
       });
 
       LoggingService.log(

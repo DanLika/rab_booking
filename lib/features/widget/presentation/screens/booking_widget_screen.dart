@@ -1,8 +1,8 @@
 import 'dart:async';
-// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
-import 'dart:html' as html if (dart.library.io) 'dart:io';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:web/web.dart' as web;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
@@ -478,7 +478,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
 
       final newUri = uri.replace(queryParameters: cleanParams);
-      html.window.history.replaceState(null, '', newUri.toString());
+      web.window.history.replaceState(null, '', newUri.toString());
 
       LoggingService.log(
         '[URL] Cleared booking params, new URL: ${newUri.toString()}',
@@ -514,7 +514,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       final newUri = uri.replace(queryParameters: newParams);
       // Use pushState to add to browser history (back button works)
-      html.window.history.pushState(null, '', newUri.toString());
+      web.window.history.pushState(null, '', newUri.toString());
 
       LoggingService.log(
         '[URL] Added booking params, new URL: ${newUri.toString()}',
@@ -2256,7 +2256,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // This keeps everything in one tab - no cross-tab communication needed
       if (kIsWeb) {
         // Web: Use window.location.href for same-tab redirect
-        html.window.location.href = checkoutResult.checkoutUrl;
+        web.window.location.href = checkoutResult.checkoutUrl;
       } else {
         // Mobile: Use url_launcher (will open in browser)
         final uri = Uri.parse(checkoutResult.checkoutUrl);

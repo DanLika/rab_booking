@@ -228,6 +228,15 @@ export const createBookingAtomic = onCall(async (request) => {
             (1000 * 60 * 60 * 24)
         );
 
+        // Calculate days in advance for min/max advance booking validation
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const checkInDateObj = checkInDate.toDate();
+        checkInDateObj.setHours(0, 0, 0, 0);
+        const daysInAdvance = Math.floor(
+          (checkInDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
         const dailyPricesQuery = db
           .collection("daily_prices")
           .where("unit_id", "==", unitId)
@@ -265,7 +274,73 @@ export const createBookingAtomic = onCall(async (request) => {
           ) {
             throw new HttpsError(
               "failed-precondition",
-              `Minimum ${priceData.min_nights_on_arrival} nights required.`
+              `Minimum ${priceData.min_nights_on_arrival} nights required for ` +
+                `check-in on ${dateStr}. You selected ${bookingNights} nights.`
+            );
+          }
+
+          // Check: maxNightsOnArrival on check-in date
+          if (
+            isCheckInDate &&
+            priceData.max_nights_on_arrival != null &&
+            priceData.max_nights_on_arrival > 0
+          ) {
+            if (bookingNights > priceData.max_nights_on_arrival) {
+              throw new HttpsError(
+                "failed-precondition",
+                `Maximum ${priceData.max_nights_on_arrival} nights allowed for ` +
+                  `check-in on ${dateStr}. You selected ${bookingNights} nights.`
+              );
+            }
+          }
+
+          // Check: minDaysAdvance on check-in date
+          if (
+            isCheckInDate &&
+            priceData.min_days_advance != null &&
+            priceData.min_days_advance > 0
+          ) {
+            if (daysInAdvance < priceData.min_days_advance) {
+              throw new HttpsError(
+                "failed-precondition",
+                `Must book at least ${priceData.min_days_advance} days in advance ` +
+                  `for check-in on ${dateStr}. You are booking ${daysInAdvance} days ahead.`
+              );
+            }
+          }
+
+          // Check: maxDaysAdvance on check-in date
+          if (
+            isCheckInDate &&
+            priceData.max_days_advance != null &&
+            priceData.max_days_advance > 0
+          ) {
+            if (daysInAdvance > priceData.max_days_advance) {
+              throw new HttpsError(
+                "failed-precondition",
+                `Can only book up to ${priceData.max_days_advance} days in advance ` +
+                  `for check-in on ${dateStr}. You are booking ${daysInAdvance} days ahead.`
+              );
+            }
+          }
+        }
+
+        // Check: Is check-out blocked on the check-out date?
+        // (Check-out date is not in the range query above, need separate check)
+        const checkOutPriceQuery = db
+          .collection("daily_prices")
+          .where("unit_id", "==", unitId)
+          .where("date", "==", checkOutDate);
+
+        const checkOutPriceSnapshot = await transaction.get(checkOutPriceQuery);
+
+        if (!checkOutPriceSnapshot.empty) {
+          const checkOutData = checkOutPriceSnapshot.docs[0].data();
+          if (checkOutData.block_checkout === true) {
+            const dateStr = checkOutDate.toDate().toISOString().split("T")[0];
+            throw new HttpsError(
+              "failed-precondition",
+              `Check-out is not allowed on ${dateStr}.`
             );
           }
         }

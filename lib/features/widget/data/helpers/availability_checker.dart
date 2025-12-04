@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
+import '../../domain/services/i_availability_checker.dart';
 import '../../utils/date_normalizer.dart';
 
 /// Result of an availability check with detailed conflict information.
@@ -102,7 +103,7 @@ enum ConflictType {
 ///   print('Conflict: ${result.conflictMessage}');
 /// }
 /// ```
-class AvailabilityChecker {
+class AvailabilityChecker implements IAvailabilityChecker {
   final FirebaseFirestore _firestore;
 
   AvailabilityChecker(this._firestore);
@@ -110,6 +111,7 @@ class AvailabilityChecker {
   /// Check if date range is available for booking.
   ///
   /// Returns [AvailabilityCheckResult] with detailed conflict info.
+  @override
   Future<AvailabilityCheckResult> check({
     required String unitId,
     required DateTime checkIn,
@@ -152,6 +154,7 @@ class AvailabilityChecker {
   }
 
   /// Simple boolean check for backward compatibility.
+  @override
   Future<bool> isAvailable({
     required String unitId,
     required DateTime checkIn,

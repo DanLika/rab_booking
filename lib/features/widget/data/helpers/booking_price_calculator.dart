@@ -5,6 +5,7 @@ import '../../../../core/services/logging_service.dart';
 import '../../../../core/errors/app_exceptions.dart';
 import '../../../../shared/models/daily_price_model.dart';
 import '../../domain/constants/widget_constants.dart';
+import '../../domain/services/i_price_calculator.dart';
 import '../../utils/date_key_generator.dart';
 import '../../utils/date_normalizer.dart';
 import 'availability_checker.dart';
@@ -71,7 +72,7 @@ class PriceCalculationResult {
 /// print('Total: ${result.totalPrice}');
 /// print('Per night: ${result.priceBreakdown}');
 /// ```
-class BookingPriceCalculator {
+class BookingPriceCalculator implements IPriceCalculator {
   final FirebaseFirestore _firestore;
   final AvailabilityChecker? _availabilityChecker;
 
@@ -84,6 +85,7 @@ class BookingPriceCalculator {
   /// Calculate total price for a booking with availability check.
   ///
   /// Throws [DatesNotAvailableException] if dates are not available.
+  @override
   Future<PriceCalculationResult> calculate({
     required String unitId,
     required DateTime checkIn,
@@ -154,6 +156,7 @@ class BookingPriceCalculator {
   /// Calculate price without availability check.
   ///
   /// Useful for preview calculations or when availability is already known.
+  @override
   Future<PriceCalculationResult> calculateWithoutAvailabilityCheck({
     required String unitId,
     required DateTime checkIn,
@@ -260,6 +263,7 @@ class BookingPriceCalculator {
   /// Get effective price for a single date.
   ///
   /// Useful for displaying price in calendar UI.
+  @override
   Future<double> getEffectivePriceForDate({
     required String unitId,
     required DateTime date,

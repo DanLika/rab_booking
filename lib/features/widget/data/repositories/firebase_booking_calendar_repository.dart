@@ -4,6 +4,7 @@ import 'package:rxdart/rxdart.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/daily_price_model.dart';
 import '../../domain/models/calendar_date_status.dart';
+import '../../domain/repositories/i_booking_calendar_repository.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/errors/app_exceptions.dart';
@@ -24,7 +25,7 @@ import '../../utils/date_key_generator.dart';
 ///
 /// The public API remains unchanged for backward compatibility.
 /// Calendar building remains inline (optimized with Bug #71 fixes).
-class FirebaseBookingCalendarRepository {
+class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   final FirebaseFirestore _firestore;
 
   /// Helper for availability checking (lazy initialized).
@@ -42,6 +43,7 @@ class FirebaseBookingCalendarRepository {
   }
 
   /// Get year-view calendar data with realtime updates and prices
+  @override
   Stream<Map<DateTime, CalendarDateInfo>> watchYearCalendarData({
     required String propertyId,
     required String unitId,
@@ -192,6 +194,7 @@ class FirebaseBookingCalendarRepository {
 
   /// Get month-view calendar data with realtime updates and prices
   /// UPDATED: Now includes iCal events (Booking.com, Airbnb, etc.)
+  @override
   Stream<Map<DateTime, CalendarDateInfo>> watchCalendarData({
     required String propertyId,
     required String unitId,
@@ -895,6 +898,7 @@ class FirebaseBookingCalendarRepository {
   ///
   /// Checks regular bookings, iCal events (Booking.com, Airbnb), and blocked dates.
   /// Delegates to [AvailabilityChecker] for the actual logic.
+  @override
   Future<bool> checkAvailability({
     required String unitId,
     required DateTime checkIn,
@@ -932,6 +936,7 @@ class FirebaseBookingCalendarRepository {
   /// [weekendDays] - optional custom weekend days (1=Mon...7=Sun). Default: [6,7]
   ///
   /// Throws [DatesNotAvailableException] if dates are not available.
+  @override
   Future<double> calculateBookingPrice({
     required String unitId,
     required DateTime checkIn,

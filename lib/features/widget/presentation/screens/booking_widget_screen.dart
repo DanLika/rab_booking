@@ -59,7 +59,7 @@ import '../widgets/booking/booking_pill_bar.dart';
 import '../widgets/booking/contact_pill_card_widget.dart';
 // MinimalistColorSchemeAdapter is already imported via minimalist_colors.dart
 import '../../../../shared/utils/ui/snackbar_helper.dart';
-import '../../../../core/errors/app_exceptions.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size

@@ -7,7 +7,7 @@ import '../../domain/models/calendar_date_status.dart';
 import '../../domain/repositories/i_booking_calendar_repository.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/errors/app_exceptions.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 import '../helpers/availability_checker.dart';
 import '../helpers/booking_price_calculator.dart';
 // CalendarDataBuilder available for testing or future extraction

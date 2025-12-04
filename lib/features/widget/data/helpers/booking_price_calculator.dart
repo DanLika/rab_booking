@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/services/logging_service.dart';
-import '../../../../core/errors/app_exceptions.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../shared/models/daily_price_model.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/services/i_price_calculator.dart';
@@ -125,7 +125,7 @@ class BookingPriceCalculator implements IPriceCalculator {
             '⚠️ Price calculation skipped - dates not available',
             tag: 'PRICE_CALCULATION',
           );
-          throw const DatesNotAvailableException();
+          throw DatesNotAvailableException.conflict();
         }
       }
 

@@ -50,9 +50,10 @@ service cloud.firestore {
       }
     }
 
-    // User Profiles - authenticated users only (legacy, kept for backwards compatibility)
+    // User Profiles - LEGACY collection (kept for backwards compatibility)
+    // SECURITY FIX: Users can only read their own profile
     match /user_profiles/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isOwner(userId);
       allow write: if isOwner(userId);
     }
 
@@ -150,34 +151,39 @@ service cloud.firestore {
       allow update, delete: if isResourceOwner();
     }
 
-    // Email templates - owners manage, anyone can read
+    // ========================================================================
+    // UNUSED COLLECTIONS - Locked down (only Cloud Functions via Admin SDK)
+    // ========================================================================
+
+    // Email templates - NOT CURRENTLY USED (Cloud Functions use hardcoded templates)
+    // Locked for future use - only Admin SDK can access
     match /email_templates/{templateId} {
-      allow read: if true; // Functions need to read templates
-      // CRITICAL SECURITY: Only resource owner can modify their own templates
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow read: if false;
+      allow write: if false;
     }
 
-    // iCal feeds - owners manage, anyone can read
+    // Tenants - NOT CURRENTLY USED in codebase
+    // Locked for future use - only Admin SDK can access
+    match /tenants/{tenantId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // ========================================================================
+    // OWNER DASHBOARD COLLECTIONS - Authenticated owner access only
+    // ========================================================================
+
+    // iCal feeds - Owner Dashboard manages external calendar imports
+    // SECURITY FIX: Only resource owner can read/write their own feeds
     match /ical_feeds/{feedId} {
-      allow read: if true; // Functions need to read feeds
-      // CRITICAL SECURITY: Only resource owner can modify their own feeds
+      allow read: if isResourceOwner();
       allow create: if canCreateAsOwner();
       allow update, delete: if isResourceOwner();
     }
 
-    // iCal events - owners manage, anyone can read
+    // iCal events - Widget needs to read for availability calendar
     match /ical_events/{eventId} {
       allow read: if true; // Widget needs to read events for availability
-      // CRITICAL SECURITY: Only resource owner can modify their own events
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
-    }
-
-    // Tenants - owners manage, anyone can read
-    match /tenants/{tenantId} {
-      allow read: if true; // Widget needs to read tenant info
-      // CRITICAL SECURITY: Only resource owner can modify their own tenant data
       allow create: if canCreateAsOwner();
       allow update, delete: if isResourceOwner();
     }

@@ -87,6 +87,42 @@ export const EMAIL_COLORS_DARK: EmailColorScheme = {
 };
 
 /**
+ * Neutral Theme Colors (White-Label for Guest Emails)
+ * Used for guest-facing emails to maintain white-label experience
+ * No brand colors - professional gray palette
+ */
+export const EMAIL_COLORS_NEUTRAL: EmailColorScheme = {
+  // Primary - Dark gray (no brand purple)
+  primary: "#374151",           // Medium dark gray
+  primaryLight: "#F9FAFB",      // Very light gray
+  primaryDark: "#1F2937",       // Darker gray
+
+  // Neutral palette
+  background: "#FFFFFF",
+  backgroundSecondary: "#F9FAFB",
+  text: "#1F2937",              // Soft black (not pure black)
+  textSecondary: "#6B7280",     // Medium gray
+  border: "#E5E7EB",            // Light gray border
+
+  // Status colors - professional tones
+  success: "#059669",           // Professional green
+  warning: "#D97706",           // Amber/orange
+  error: "#DC2626",             // Professional red
+  info: "#2563EB",              // Professional blue
+
+  // Shadows
+  shadowColor: "0, 0, 0",       // RGB for rgba()
+  shadowOpacity: "0.08",        // Subtle 8% opacity
+};
+
+/**
+ * Get color scheme by recipient type
+ */
+export function getEmailColors(recipient: 'guest' | 'owner'): EmailColorScheme {
+  return recipient === 'guest' ? EMAIL_COLORS_NEUTRAL : EMAIL_COLORS_LIGHT;
+}
+
+/**
  * Get CSS variable declarations for a color scheme
  * Used in inline styles for email compatibility
  */

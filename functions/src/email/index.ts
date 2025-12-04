@@ -21,10 +21,20 @@ export {
 } from "./templates/booking-confirmation";
 
 export {
+  sendBookingConfirmationEmailV2,
+  generateBookingConfirmationEmailV2,
+} from "./templates/booking-confirmation-v2";
+
+export {
   sendBookingApprovedEmail,
   generateBookingApprovedEmail,
   type BookingApprovedParams,
 } from "./templates/booking-approved";
+
+export {
+  sendBookingApprovedEmailV2,
+  generateBookingApprovedEmailV2,
+} from "./templates/booking-approved-v2";
 
 export {
   sendGuestCancellationEmail,
@@ -39,10 +49,26 @@ export {
 } from "./templates/cancellation";
 
 export {
+  sendGuestCancellationEmailV2,
+  generateGuestCancellationEmailV2,
+} from "./templates/guest-cancellation-v2";
+
+export {
+  sendRefundNotificationEmailV2,
+  generateRefundNotificationEmailV2,
+} from "./templates/refund-notification-v2";
+
+export {
   sendOwnerNotificationEmail,
   generateOwnerNotificationEmail,
   type OwnerNotificationParams,
 } from "./templates/owner-notification";
+
+export {
+  sendPendingBookingRequestEmailV2,
+  generatePendingBookingRequestEmailV2,
+  type PendingBookingRequestParams,
+} from "./templates/pending-request-v2";
 
 export {
   sendPaymentReminderEmail,
@@ -55,6 +81,21 @@ export {
   type CheckInReminderParams,
   type CheckOutReminderParams,
 } from "./templates/reminder";
+
+export {
+  sendPaymentReminderEmailV2,
+  generatePaymentReminderEmailV2,
+} from "./templates/payment-reminder-v2";
+
+export {
+  sendCheckInReminderEmailV2,
+  generateCheckInReminderEmailV2,
+} from "./templates/check-in-reminder-v2";
+
+export {
+  sendCheckOutReminderEmailV2,
+  generateCheckOutReminderEmailV2,
+} from "./templates/check-out-reminder-v2";
 
 export {
   sendCustomGuestEmail,
@@ -72,9 +113,21 @@ export {
 export {
   EMAIL_COLORS_LIGHT,
   EMAIL_COLORS_DARK,
+  EMAIL_COLORS_NEUTRAL,
+  getEmailColors,
   LEGACY_COLORS,
   type EmailColorScheme,
 } from "./styles/colors";
+
+export {
+  DESIGN_TOKENS_PREMIUM,
+  DESIGN_TOKENS_REFINED,
+  getDesignTokens,
+  getCardStyles,
+  getButtonStyles,
+  getTypographyStyles,
+  type DesignTokens,
+} from "./styles/design-tokens";
 
 export {
   getBaseStyles,

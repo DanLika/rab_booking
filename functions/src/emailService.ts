@@ -28,19 +28,21 @@ import {Resend} from "resend";
 import {db} from "./firebase";
 import {logError, logSuccess} from "./logger";
 
-// Import new email templates
+// Import new email templates (V2 - OPCIJA A: Refined Premium)
 import {
-  sendBookingConfirmationEmail as sendBookingConfirmationEmailTemplate,
-  sendBookingApprovedEmail as sendBookingApprovedEmailTemplate,
-  sendGuestCancellationEmail as sendGuestCancellationEmailTemplate,
+  sendBookingConfirmationEmailV2,
+  sendPendingBookingRequestEmailV2,
+  sendBookingApprovedEmailV2,
+  sendGuestCancellationEmailV2,
+  sendRefundNotificationEmailV2,
+  sendPaymentReminderEmailV2,
+  sendCheckInReminderEmailV2,
+  sendCheckOutReminderEmailV2,
   sendOwnerCancellationEmail as sendOwnerCancellationEmailTemplate,
-  sendRefundNotificationEmail as sendRefundNotificationEmailTemplate,
   sendOwnerNotificationEmail as sendOwnerNotificationEmailTemplate,
-  sendPaymentReminderEmail as sendPaymentReminderEmailTemplate,
-  sendCheckInReminderEmail as sendCheckInReminderEmailTemplate,
-  sendCheckOutReminderEmail as sendCheckOutReminderEmailTemplate,
   sendCustomGuestEmail as sendCustomGuestEmailTemplate,
   type BookingConfirmationParams,
+  type PendingBookingRequestParams,
   type BookingApprovedParams,
   type GuestCancellationParams,
   type OwnerCancellationParams,
@@ -191,8 +193,8 @@ export async function sendBookingConfirmationEmail(
       contactEmail: contactEmail || ownerEmail,
     };
 
-    // Send email using new template
-    await sendBookingConfirmationEmailTemplate(
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendBookingConfirmationEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL,
@@ -200,7 +202,7 @@ export async function sendBookingConfirmationEmail(
       ownerEmail
     );
 
-    logSuccess("Booking confirmation email sent (NEW TEMPLATE)", {email: guestEmail});
+    logSuccess("Booking confirmation email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending booking confirmation email", error);
     throw error;
@@ -261,8 +263,8 @@ export async function sendBookingApprovedEmail(
       contactEmail: contactEmail || ownerEmail,
     };
 
-    // Send email using new template
-    await sendBookingApprovedEmailTemplate(
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendBookingApprovedEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL,
@@ -270,7 +272,7 @@ export async function sendBookingApprovedEmail(
       ownerEmail
     );
 
-    logSuccess("Booking approved email sent (NEW TEMPLATE)", {email: guestEmail});
+    logSuccess("Booking approved email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending booking approved email", error);
     throw error;
@@ -371,15 +373,15 @@ export async function sendGuestCancellationEmail(
       contactEmail,
     };
 
-    // Send email using new template
-    await sendGuestCancellationEmailTemplate(
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendGuestCancellationEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL,
       FROM_NAME
     );
 
-    logSuccess("Guest cancellation email sent (NEW TEMPLATE)", {email: guestEmail});
+    logSuccess("Guest cancellation email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending guest cancellation email", error);
     throw error;
@@ -469,15 +471,15 @@ export async function sendRefundNotificationEmail(
       contactEmail,
     };
 
-    // Send email using new template
-    await sendRefundNotificationEmailTemplate(
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendRefundNotificationEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL,
       FROM_NAME
     );
 
-    logSuccess("Refund notification email sent (NEW TEMPLATE)", {email: guestEmail});
+    logSuccess("Refund notification email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending refund notification email", error);
     throw error;
@@ -575,15 +577,15 @@ export async function sendPaymentReminderEmail(
       contactEmail,
     };
 
-    // Send email using new template
-    await sendPaymentReminderEmailTemplate(
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendPaymentReminderEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL,
       FROM_NAME
     );
 
-    logSuccess("Payment reminder email sent (NEW TEMPLATE)", {email: guestEmail});
+    logSuccess("Payment reminder email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending payment reminder email", error);
     throw error;
@@ -641,15 +643,15 @@ export async function sendCheckInReminderEmail(
       contactEmail,
     };
 
-    // Send email using new template
-    await sendCheckInReminderEmailTemplate(
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendCheckInReminderEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL,
       FROM_NAME
     );
 
-    logSuccess("Check-in reminder email sent (NEW TEMPLATE)", {email: guestEmail});
+    logSuccess("Check-in reminder email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending check-in reminder email", error);
     throw error;
@@ -695,15 +697,15 @@ export async function sendCheckOutReminderEmail(
       contactEmail,
     };
 
-    // Send email using new template
-    await sendCheckOutReminderEmailTemplate(
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendCheckOutReminderEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL,
       FROM_NAME
     );
 
-    logSuccess("Check-out reminder email sent (NEW TEMPLATE)", {email: guestEmail});
+    logSuccess("Check-out reminder email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending check-out reminder email", error);
     throw error;
@@ -754,8 +756,8 @@ export async function sendSuspiciousActivityEmail(
 }
 
 /**
- * Send pending booking request email (NOT YET MIGRATED)
- * Uses old inline HTML template
+ * Send pending booking request email
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, warning theme)
  */
 export async function sendPendingBookingRequestEmail(
   guestEmail: string,
@@ -763,28 +765,24 @@ export async function sendPendingBookingRequestEmail(
   bookingReference: string,
   propertyName: string
 ): Promise<void> {
-  const subject = `Zahtjev za rezervaciju - ${bookingReference}`;
-  const html = `
-<!DOCTYPE html>
-<html>
-<body>
-  <h1>Zahtjev za rezervaciju zaprimljen</h1>
-  <p>Poštovani/a ${guestName},</p>
-  <p>Vaš zahtjev za rezervaciju ${propertyName} je zaprimljen.</p>
-  <p>Referenca: ${bookingReference}</p>
-  <p>Čekamo potvrdu vlasnika nekretnine.</p>
-</body>
-</html>
-  `;
-
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: guestEmail,
-      subject: subject,
-      html: html,
-    });
-    logSuccess("Pending booking request email sent", {email: guestEmail});
+    // Build params for V2 template
+    const params: PendingBookingRequestParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      propertyName,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendPendingBookingRequestEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL,
+      FROM_NAME
+    );
+
+    logSuccess("Pending booking request email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending pending booking request email", error);
     throw error;

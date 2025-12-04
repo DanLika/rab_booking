@@ -5,11 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:intl/intl.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 // Cross-tab communication service (conditional import for web)
 import '../../../../core/services/tab_communication_service.dart';
-import '../../utils/email_notification_helper.dart';
 import '../../services/form_persistence_service.dart';
 import '../../state/booking_form_state.dart';
 import '../../../../core/services/tab_communication_service_web.dart'
@@ -23,6 +21,8 @@ import '../providers/theme_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/additional_services_provider.dart';
+import '../providers/submit_booking_provider.dart';
+import '../../domain/use_cases/submit_booking_use_case.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
@@ -45,7 +45,6 @@ import '../widgets/email_verification_dialog.dart';
 import '../../data/services/email_verification_service.dart';
 import '../widgets/common/rotate_device_overlay.dart';
 import '../widgets/common/loading_screen.dart';
-import '../widgets/common/error_screen.dart';
 import '../widgets/booking/payment/payment_option_widget.dart';
 import '../widgets/booking/guest_form/guest_count_picker.dart';
 import '../widgets/common/info_card_widget.dart';
@@ -995,10 +994,43 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Show error screen if validation failed
     if (_validationError != null) {
-      return WidgetErrorScreen(
-        isDarkMode: isDarkMode,
-        errorMessage: _validationError!,
-        onRetry: _validateUnitAndProperty,
+      final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+      return Scaffold(
+        backgroundColor: colors.backgroundPrimary,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: colors.error,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  _validationError!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: _validateUnitAndProperty,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.buttonPrimary,
+                    foregroundColor: colors.buttonPrimaryText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
@@ -1966,164 +1998,65 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     });
 
     try {
+      // Submit booking via use case
       // Race condition is handled atomically by createBookingAtomic Cloud Function
       // Client-side checks are unsafe due to TOCTOU (Time-of-check-to-time-of-use)
+      final submitBookingUseCase = ref.read(submitBookingUseCaseProvider);
 
-      final bookingService = ref.read(bookingServiceProvider);
-
-      // For bookingPending mode - create booking without payment
-      if (widgetMode == WidgetMode.bookingPending) {
-        // Sanitize user input to prevent XSS and injection attacks
-        final sanitizedGuestName = InputSanitizer.sanitizeName(
-          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
-              .trim(),
-        );
-        final sanitizedEmail = InputSanitizer.sanitizeEmail(
-          _emailController.text.trim(),
-        );
-        final sanitizedPhone = InputSanitizer.sanitizePhone(
-          _phoneController.text.trim(),
-        );
-        final sanitizedNotes = _notesController.text.trim().isEmpty
-            ? null
-            : InputSanitizer.sanitizeText(_notesController.text.trim());
-
-        // For bookingPending mode: Booking is created immediately (no Stripe)
-        final bookingResult = await bookingService.createBooking(
-          unitId: _unitId,
-          propertyId: _propertyId!,
-          ownerId: _ownerId!,
-          checkIn: _checkIn!,
-          checkOut: _checkOut!,
-          guestName: sanitizedGuestName ?? '',
-          guestEmail: sanitizedEmail ?? _emailController.text.trim(),
-          guestPhone:
-              '${_selectedCountry.dialCode} ${sanitizedPhone ?? _phoneController.text.trim()}',
-          guestCount: _adults + _children,
-          totalPrice: calculation.totalPrice,
-          paymentOption: 'none', // No payment for pending bookings
-          paymentMethod: 'none',
-          requireOwnerApproval:
-              true, // Always requires approval in bookingPending mode
-          notes: sanitizedNotes,
-          taxLegalAccepted:
-              _widgetSettings?.taxLegalConfig != null &&
-                  _widgetSettings!.taxLegalConfig.enabled
-              ? _taxLegalAccepted
-              : null,
-        );
-
-        // Non-Stripe flow: Booking was created
-        final booking = bookingResult.booking!;
-
-        // Send email notifications
-        _sendBookingEmails(
-          booking: booking,
-          requiresApproval: true,
-        );
-
-        // Navigate to confirmation screen and cleanup
-        await _navigateToConfirmationAndCleanup(
-          booking: booking,
-          paymentMethod: 'pending',
-        );
-        return;
-      }
-
-      // For bookingInstant mode - create booking with payment
-      // NEW FLOW (2025-12-02):
-      // - For Stripe: Only validates availability, returns bookingData for checkout
-      // - For non-Stripe: Creates booking immediately
-
-      // Sanitize user input to prevent XSS and injection attacks
-      final sanitizedGuestName = InputSanitizer.sanitizeName(
-        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
-            .trim(),
-      );
-      final sanitizedEmail = InputSanitizer.sanitizeEmail(
-        _emailController.text.trim(),
-      );
-      final sanitizedPhone = InputSanitizer.sanitizePhone(
-        _phoneController.text.trim(),
-      );
-      final sanitizedNotes = _notesController.text.trim().isEmpty
-          ? null
-          : InputSanitizer.sanitizeText(_notesController.text.trim());
-
-      final bookingResult = await bookingService.createBooking(
+      final params = SubmitBookingParams(
         unitId: _unitId,
         propertyId: _propertyId!,
         ownerId: _ownerId!,
+        unit: _unit,
+        widgetSettings: _widgetSettings,
         checkIn: _checkIn!,
         checkOut: _checkOut!,
-        guestName: sanitizedGuestName ?? '',
-        guestEmail: sanitizedEmail ?? _emailController.text.trim(),
-        guestPhone:
-            '${_selectedCountry.dialCode} ${sanitizedPhone ?? _phoneController.text.trim()}',
-        guestCount: _adults + _children,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email: _emailController.text.trim(),
+        phoneWithCountryCode:
+            '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
+        notes: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
+        adults: _adults,
+        children: _children,
         totalPrice: calculation.totalPrice,
-        paymentOption: _selectedPaymentOption, // 'deposit' or 'full'
-        paymentMethod: _selectedPaymentMethod, // 'stripe' or 'bank_transfer'
-        requireOwnerApproval: _widgetSettings?.requireOwnerApproval ?? false,
-        notes: sanitizedNotes,
-        taxLegalAccepted:
-            _widgetSettings?.taxLegalConfig != null &&
-                _widgetSettings!.taxLegalConfig.enabled
-            ? _taxLegalAccepted
-            : null,
+        paymentMethod: widgetMode == WidgetMode.bookingPending
+            ? 'none'
+            : _selectedPaymentMethod,
+        paymentOption: widgetMode == WidgetMode.bookingPending
+            ? 'none'
+            : _selectedPaymentOption,
+        taxLegalAccepted: _taxLegalAccepted,
       );
 
-      if (_selectedPaymentMethod == 'stripe') {
-        // STRIPE FLOW: No booking created yet - only validation passed
-        // Booking will be created by webhook after successful payment
-        if (!bookingResult.isStripeValidation ||
-            bookingResult.stripeBookingData == null) {
-          throw const PaymentException(
-            'Invalid Stripe validation response from booking service',
-            userMessage: 'Payment validation failed. Please try again or contact support.',
-          );
-        }
+      final result = await submitBookingUseCase.execute(params);
 
+      // Handle Stripe flow: Redirect to checkout
+      if (result.isStripeFlow) {
         await _handleStripePayment(
-          bookingData: bookingResult.stripeBookingData!,
+          bookingData: result.stripeBookingData!,
           guestEmail: _emailController.text.trim(),
         );
         // User redirected to Stripe - no further action here
         return;
       }
 
-      // NON-STRIPE FLOW: Booking was created, proceed with confirmation
-      final booking = bookingResult.booking!;
+      // Handle non-Stripe flow: Navigate to confirmation
+      final booking = result.booking;
+      final paymentMethod = widgetMode == WidgetMode.bookingPending
+          ? 'pending'
+          : _selectedPaymentMethod;
 
-      // Send booking confirmation email (pre-payment for bank transfer)
-      // Calculate payment deadline for bank transfer (default 3 days)
-      final paymentDeadlineDays =
-          _widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
-      final paymentDeadline = DateTime.now().add(
-        Duration(days: paymentDeadlineDays),
-      );
-      final dateFormat = DateFormat('dd.MM.yyyy');
-
-      _sendBookingEmails(
-        booking: booking,
-        requiresApproval: _widgetSettings?.requireOwnerApproval ?? false,
-        paymentMethod: _selectedPaymentMethod,
-        paymentDeadline: dateFormat.format(paymentDeadline),
-      );
-
-      if (_selectedPaymentMethod == 'bank_transfer') {
-        // Bank transfer - navigate to confirmation screen
-        await _navigateToConfirmationAndCleanup(
-          booking: booking,
-          paymentMethod: 'bank_transfer',
-        );
-      } else if (_selectedPaymentMethod == 'pay_on_arrival') {
-        // Pay on Arrival - navigate to confirmation screen
-        await _navigateToConfirmationAndCleanup(
-          booking: booking,
-          paymentMethod: 'pay_on_arrival',
-        );
+      if (booking == null) {
+        throw Exception('Booking creation failed - no booking returned');
       }
+
+      await _navigateToConfirmationAndCleanup(
+        booking: booking,
+        paymentMethod: paymentMethod,
+      );
     } on BookingConflictException catch (e) {
       // Race condition - dates were booked by another user
       if (mounted) {
@@ -2218,24 +2151,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     LoggingService.log(
       '[Navigation] Confirmation screen closed (payment: $paymentMethod)',
       tag: 'NAV',
-    );
-  }
-
-  /// Helper method to send booking confirmation emails
-  /// Delegates to EmailNotificationHelper for cleaner code
-  void _sendBookingEmails({
-    required BookingModel booking,
-    required bool requiresApproval,
-    String? paymentMethod,
-    String? paymentDeadline,
-  }) {
-    EmailNotificationHelper.sendBookingEmails(
-      booking: booking,
-      requiresApproval: requiresApproval,
-      widgetSettings: _widgetSettings,
-      unit: _unit,
-      paymentMethod: paymentMethod,
-      paymentDeadline: paymentDeadline,
     );
   }
 

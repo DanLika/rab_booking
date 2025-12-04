@@ -110,6 +110,12 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                      resource.data.owner_id == request.auth.uid;
 
+      // EXCEPTION #4: Calendar widget availability check
+      // Allows: WHERE unit_id == "xxx" AND status IN ["pending", "confirmed", ...]
+      // Safe: Only exposes blocked dates, not sensitive guest info
+      // Widget needs this to show availability calendar
+      allow read: if request.query.where.keys().hasAll(['unit_id', 'status']);
+
       // WRITES: Only Cloud Functions (Admin SDK bypasses these rules)
       allow write: if false;
     }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
 
 /// Privacy Policy Screen
 ///
@@ -82,11 +81,10 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      drawer: const OwnerAppDrawer(currentRoute: 'privacy-policy'),
       appBar: CommonAppBar(
         title: 'Privacy Policy',
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: SafeArea(
         child: Stack(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../widgets/owner_app_drawer.dart';
+import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/theme/app_shadows.dart';
 
 /// About screen - App information, version, and credits
 class AboutScreen extends StatelessWidget {
@@ -15,11 +15,10 @@ class AboutScreen extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-      drawer: const OwnerAppDrawer(currentRoute: 'about'),
       appBar: CommonAppBar(
         title: 'About',
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
@@ -30,26 +29,9 @@ class AboutScreen extends StatelessWidget {
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                gradient: isDark
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.elevation2Dark,
-                          AppColors.elevation1Dark,
-                        ],
-                      )
-                    : AppColors.primaryGradient,
+                gradient: context.gradients.brandPrimary,
                 borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
-                boxShadow: [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.3)
-                        : AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: isMobile ? 15 : 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
               ),
               padding: EdgeInsets.all(isMobile ? 32 : 48),
               child: Column(
@@ -72,7 +54,7 @@ class AboutScreen extends StatelessWidget {
                     child: Icon(
                       Icons.calendar_month_rounded,
                       size: isMobile ? 50 : 60,
-                      color: AppColors.primary,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                   SizedBox(height: isMobile ? 20 : 24),
@@ -274,25 +256,17 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.elevation1Dark : Colors.white,
+        gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
         border: Border.all(
-          color: isDark
-              ? AppColors.borderDark.withValues(alpha: 0.5)
-              : AppColors.borderLight,
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.2)
-                : Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       child: Column(
@@ -303,12 +277,12 @@ class _InfoCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(isMobile ? 8 : 10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   icon,
-                  color: AppColors.primary,
+                  color: theme.colorScheme.primary,
                   size: isMobile ? 20 : 22,
                 ),
               ),
@@ -318,7 +292,7 @@ class _InfoCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isMobile ? 16 : 18,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ],
@@ -354,7 +328,7 @@ class _FeatureItem extends StatelessWidget {
         Icon(
           icon,
           size: isMobile ? 20 : 22,
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -394,16 +368,17 @@ class _TechChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 16,
         vertical: isMobile ? 6 : 8,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
+        color: theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.3),
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Text(
@@ -411,7 +386,7 @@ class _TechChip extends StatelessWidget {
         style: TextStyle(
           fontSize: isMobile ? 12 : 14,
           fontWeight: FontWeight.w600,
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
         ),
       ),
     );

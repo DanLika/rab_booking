@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/language_provider.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 
 /// Show language selection bottom sheet
 void showLanguageSelectionBottomSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context,
+    backgroundColor: Colors.transparent,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
@@ -23,6 +25,10 @@ class LanguageSelectionBottomSheet extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

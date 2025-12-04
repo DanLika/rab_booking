@@ -49,7 +49,7 @@ export const createBookingAtomic = onCall(async (request) => {
 
   // Validate required fields
   if (!unitId || !propertyId || !ownerId || !checkIn || !checkOut ||
-    !guestName || !guestEmail || !totalPrice) {
+    !guestName || !guestEmail || !totalPrice || !guestCount) {
     throw new HttpsError(
       "invalid-argument",
       "Missing required booking fields"
@@ -110,10 +110,10 @@ export const createBookingAtomic = onCall(async (request) => {
 
     // Validate guest count is a valid positive integer
     const guestCountNum = Number(guestCount);
-    if (!guestCount || !Number.isInteger(guestCountNum) || guestCountNum < 1) {
+    if (!Number.isInteger(guestCountNum) || guestCountNum < 1) {
       throw new HttpsError(
         "invalid-argument",
-        "Guest count must be at least 1"
+        "Guest count must be a valid integer of at least 1"
       );
     }
 
@@ -287,6 +287,18 @@ export const createBookingAtomic = onCall(async (request) => {
             throw new HttpsError(
               "failed-precondition",
               `Minimum ${unitMinStayNights} nights required.`
+            );
+          }
+
+          // RACE CONDITION FIX: Validate guest count INSIDE transaction
+          // This prevents owner from changing max_guests between validation and booking
+          const maxGuestsInTransaction = unitData?.max_guests ?? 10;
+          const guestCountNum = Number(guestCount);
+
+          if (guestCountNum > maxGuestsInTransaction) {
+            throw new HttpsError(
+              "invalid-argument",
+              `Maximum ${maxGuestsInTransaction} guests allowed for this unit. You requested ${guestCountNum}.`
             );
           }
         }
@@ -601,8 +613,12 @@ export const createBookingAtomic = onCall(async (request) => {
         .doc(unitId);
       const unitSnapshot = await transaction.get(unitDocRef);
 
+      // Store unit data for email usage (avoid duplicate fetch after transaction)
+      let unitDataFromTransaction: any = null;
+
       if (unitSnapshot.exists) {
         const unitData = unitSnapshot.data();
+        unitDataFromTransaction = unitData; // Save for email sending
         const unitMinStayNights = unitData?.min_stay_nights ?? 1;
 
         if (bookingNights < unitMinStayNights) {
@@ -622,6 +638,30 @@ export const createBookingAtomic = onCall(async (request) => {
           unitId,
           unitMinStayNights,
           bookingNights,
+        });
+
+        // RACE CONDITION FIX: Validate guest count INSIDE transaction
+        // This prevents owner from changing max_guests between validation and booking
+        const maxGuestsInTransaction = unitData?.max_guests ?? 10;
+        const guestCountNum = Number(guestCount);
+
+        if (guestCountNum > maxGuestsInTransaction) {
+          logError("[AtomicBooking] Guest count exceeds unit capacity", null, {
+            unitId,
+            maxGuests: maxGuestsInTransaction,
+            requestedGuests: guestCountNum,
+          });
+
+          throw new HttpsError(
+            "invalid-argument",
+            `Maximum ${maxGuestsInTransaction} guests allowed for this unit. You requested ${guestCountNum}.`
+          );
+        }
+
+        logInfo("[AtomicBooking] Guest count validated", {
+          unitId,
+          maxGuests: maxGuestsInTransaction,
+          requestedGuests: guestCountNum,
         });
       }
 
@@ -685,6 +725,7 @@ export const createBookingAtomic = onCall(async (request) => {
         accessToken, // Include plaintext token for email
         icalExportEnabled, // For widget to show "Add to Calendar" button
         booking: bookingData, // Include full booking data for confirmation screen
+        unitDataFromTransaction, // OPTIMIZATION: Pass unit data to avoid duplicate fetch
       };
     });
 
@@ -693,19 +734,13 @@ export const createBookingAtomic = onCall(async (request) => {
 
     // Send emails for ALL payment methods (not just bank_transfer)
     try {
-      // Fetch property and unit data for email
-      // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
+      // Fetch property data for email (unitData already from transaction)
       const propertyDoc =
         await db.collection("properties").doc(propertyId).get();
-      const unitDoc =
-        await db
-          .collection("properties")
-          .doc(propertyId)
-          .collection("units")
-          .doc(unitId)
-          .get();
       const propertyData = propertyDoc.data();
-      const unitData = unitDoc.data();
+
+      // OPTIMIZATION: Use unit data from transaction instead of duplicate fetch
+      const unitData = result.unitDataFromTransaction;
 
       if (requireOwnerApproval) {
         // Manual approval flow - send "Booking Request Received" email to guest

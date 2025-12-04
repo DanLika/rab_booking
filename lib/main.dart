@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_owner.dart';
+import 'core/error_handling/error_boundary.dart';
 import 'core/providers/language_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
@@ -26,16 +27,18 @@ void main() async {
   // Initialize SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();
 
-  // Initialize Firebase Crashlytics (Phase 3)
+  // Initialize Global Error Handling
   if (kReleaseMode) {
-    // Pass all uncaught errors from the framework to Crashlytics
+    // Production: Use Firebase Crashlytics
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-    // Pass all uncaught asynchronous errors to Crashlytics
     PlatformDispatcher.instance.onError = (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
+  } else {
+    // Debug: Use custom error handler with better logging
+    GlobalErrorHandler.initialize();
   }
 
   runApp(
@@ -67,9 +70,16 @@ class RabBookingApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       routerConfig: router,
-      // Global navigation loader overlay
+      // Global navigation loader + error boundary
       builder: (context, child) {
-        return GlobalNavigationOverlay(child: child!);
+        return ErrorBoundary(
+          child: GlobalNavigationOverlay(child: child!),
+          onError: (details) {
+            // Log errors in debug mode
+            if (kDebugMode) {
+            }
+          },
+        );
       },
       // Localization configuration
       locale: locale,

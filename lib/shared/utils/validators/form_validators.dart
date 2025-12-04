@@ -1,8 +1,10 @@
 import 'package:flutter/services.dart';
 
 import 'phone_config.dart';
+import 'input_sanitizer.dart';
 
 export 'phone_config.dart';
+export 'input_sanitizer.dart';
 
 /// First Name validator
 /// - Requires at least one word
@@ -236,5 +238,42 @@ class PhoneNumberFormatter extends TextInputFormatter {
     }
 
     return buffer.toString();
+  }
+}
+
+/// Notes validator
+/// - Blocks dangerous content (XSS, SQL injection)
+/// - Allows letters, numbers, basic punctuation
+/// - Validates length (max 500 characters)
+class NotesValidator {
+  /// Validates notes/special requests field
+  /// Returns error message if invalid, null if valid
+  static String? validate(String? value) {
+    // Empty is valid (optional field)
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+
+    final trimmed = value.trim();
+
+    // Check for dangerous content
+    if (InputSanitizer.containsDangerousContent(trimmed)) {
+      return 'Notes contain invalid characters or patterns';
+    }
+
+    // Check length
+    if (trimmed.length > 500) {
+      return 'Notes must be 500 characters or less';
+    }
+
+    // Block dangerous characters that could indicate injection attacks
+    // Allow most characters except: < > | \ ` (command/script injection risks)
+    final dangerousPattern = RegExp(r'[<>|\\`]');
+
+    if (dangerousPattern.hasMatch(trimmed)) {
+      return 'Notes contain invalid characters';
+    }
+
+    return null; // Valid
   }
 }

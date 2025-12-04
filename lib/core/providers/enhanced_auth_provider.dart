@@ -111,16 +111,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
         final data = doc.data()!;
 
-        // Print ALL field types to console for debugging
-        debugPrint('=== FIRESTORE USER DATA DEBUG ===');
-        debugPrint('Total fields: ${data.length}');
-        data.forEach((key, value) {
-          debugPrint(
-            'Field: $key | Type: ${value.runtimeType} | Value: ${value.toString().length > 100 ? '${value.toString().substring(0, 100)}...' : value}',
-          );
-        });
-        debugPrint('=== END DEBUG ===');
-
         UserModel userModel;
         try {
           // Try parsing the user model
@@ -149,7 +139,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           });
 
           // Create fallback UserModel instead of crashing
-          debugPrint('=== CREATING FALLBACK USER MODEL ===');
           try {
             userModel = UserModel(
               id: doc.id,
@@ -171,11 +160,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
               avatarUrl: data['avatar_url'] as String?,
               createdAt: DateTime.now(), // Fallback
             );
-            debugPrint(
-              'Fallback UserModel created successfully for ${userModel.email}',
-            );
           } catch (fallbackError) {
-            debugPrint('Fallback also failed: $fallbackError');
             rethrow;
           }
         }
@@ -730,7 +715,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       );
 
       if (userCredential.user == null) {
-        throw Exception('Apple Sign-In failed: No user returned');
+        throw AuthException.noUserReturned('Apple');
       }
 
       // Check if this is a new user
@@ -817,11 +802,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
     final user = _auth.currentUser;
     if (user == null) {
-      throw Exception('No user logged in');
+      throw AuthException('No user logged in', code: 'auth/no-user');
     }
 
     if (user.email == null) {
-      throw Exception('Current user has no email');
+      throw AuthException('Current user has no email', code: 'auth/no-email');
     }
 
     try {

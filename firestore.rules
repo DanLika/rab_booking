@@ -7,34 +7,39 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper function to check if user is owner or admin
-    function isOwnerOrAdmin() {
+    // Helper function to check if user has owner or admin role
+    // NOTE: This only checks role, NOT resource ownership
+    function hasOwnerOrAdminRole() {
       return isAuthenticated() &&
-        (
-          // Check if user document exists and has owner/admin role
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['owner', 'admin']
-        );
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['owner', 'admin'];
     }
 
-    // Helper function to check if user owns the document
+    // Helper function to check if user owns the document (for update/delete)
+    // CRITICAL SECURITY: Checks resource.data.owner_id matches authenticated user
+    function isResourceOwner() {
+      return isAuthenticated() && resource.data.owner_id == request.auth.uid;
+    }
+
+    // Helper function to check if user is creating resource as themselves (for create)
+    // CRITICAL SECURITY: Ensures owner_id in new document matches authenticated user
+    function canCreateAsOwner() {
+      return isAuthenticated() && request.resource.data.owner_id == request.auth.uid;
+    }
+
+    // Helper function to check if user owns the document by userId param
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Helper function to check if user owns the property
-    function isPropertyOwner(ownerId) {
-      return isAuthenticated() && request.auth.uid == ownerId;
-    }
-
-    // Users collection - authenticated users only
+    // Users collection - users can only read their own data (MEDIUM SECURITY FIX)
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isOwner(userId); // Changed from isAuthenticated() - users can only read their own profile
       allow write: if isOwner(userId);
 
       // Subcollection for user data (profile, company, preferences)
       match /data/{document} {
-        allow read: if isAuthenticated();
+        allow read: if isOwner(userId); // Only user can read their own data
         allow write: if isOwner(userId);
       }
 
@@ -54,30 +59,38 @@ service cloud.firestore {
     // Collection group query for units (allows searching across all properties)
     match /{path=**}/units/{unitId} {
       allow read: if true; // Widget and owner app need to read units across properties
-      allow write: if isOwnerOrAdmin(); // Only owners can modify
+      // CRITICAL SECURITY: Only resource owner can modify their own units
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // Collection group query for widget_settings
     match /{path=**}/widget_settings/{unitId} {
       allow read: if true; // Widget needs to read settings
-      allow write: if isOwnerOrAdmin(); // Only owners can modify
+      // CRITICAL SECURITY: Only resource owner can modify their own widget_settings
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // Properties - owners can CRUD, anyone can read (for widget)
     match /properties/{propertyId} {
       allow read: if true; // Public read for widget
-      allow create, update, delete: if isOwnerOrAdmin();
+      // CRITICAL SECURITY: Only resource owner can modify their own properties
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
 
       // Units subcollection - same permissions as properties
       match /units/{unitId} {
         allow read: if true; // Public read for widget
-        allow create, update, delete: if isOwnerOrAdmin();
+        allow create: if canCreateAsOwner();
+        allow update, delete: if isResourceOwner();
       }
 
       // Widget settings subcollection - public read, owner write
       match /widget_settings/{unitId} {
         allow read: if true; // Widget needs to read settings
-        allow create, update, delete: if isOwnerOrAdmin();
+        allow create: if canCreateAsOwner();
+        allow update, delete: if isResourceOwner();
       }
     }
 
@@ -85,7 +98,8 @@ service cloud.firestore {
     // Keeping for backwards compatibility if there are any old documents
     match /units/{unitId} {
       allow read: if true; // Public read for widget
-      allow create, update, delete: if isOwnerOrAdmin();
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // ========================================================================
@@ -123,52 +137,66 @@ service cloud.firestore {
     // Daily prices - owners manage, anyone can read
     match /daily_prices/{priceId} {
       allow read: if true; // Widget needs to read prices
-      allow write: if isOwnerOrAdmin();
+      // CRITICAL SECURITY: Only resource owner can modify their own prices
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // Additional services - owners manage, anyone can read
     match /additional_services/{serviceId} {
       allow read: if true; // Widget needs to read services
-      allow write: if isOwnerOrAdmin();
+      // CRITICAL SECURITY: Only resource owner can modify their own services
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // Email templates - owners manage, anyone can read
     match /email_templates/{templateId} {
       allow read: if true; // Functions need to read templates
-      allow write: if isOwnerOrAdmin();
+      // CRITICAL SECURITY: Only resource owner can modify their own templates
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // iCal feeds - owners manage, anyone can read
     match /ical_feeds/{feedId} {
       allow read: if true; // Functions need to read feeds
-      allow write: if isOwnerOrAdmin();
+      // CRITICAL SECURITY: Only resource owner can modify their own feeds
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // iCal events - owners manage, anyone can read
     match /ical_events/{eventId} {
       allow read: if true; // Widget needs to read events for availability
-      allow write: if isOwnerOrAdmin();
+      // CRITICAL SECURITY: Only resource owner can modify their own events
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // Tenants - owners manage, anyone can read
     match /tenants/{tenantId} {
       allow read: if true; // Widget needs to read tenant info
-      allow write: if isOwnerOrAdmin();
+      // CRITICAL SECURITY: Only resource owner can modify their own tenant data
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
     }
 
     // ========================================================================
-    // MEDIUM PRIORITY FIX: BOOKING SERVICES VALIDATION
+    // CRITICAL SECURITY FIX: BOOKING SERVICES
     // ========================================================================
     // Booking Services - junction table for booking ↔ additional_services
+    // Only Cloud Functions should create these (during booking creation)
     match /booking_services/{bookingServiceId} {
       allow read: if true; // Widget needs to read for price calculation
 
-      // Validation: Ensure required fields and non-negative price
-      allow create: if request.resource.data.keys().hasAll(['bookingId', 'serviceId', 'price']) &&
-                       request.resource.data.price is number &&
-                       request.resource.data.price >= 0;
+      // CRITICAL FIX: Only Cloud Functions can create booking services
+      // (Admin SDK bypasses these rules)
+      // This prevents unauthenticated users from creating arbitrary booking_services
+      allow create: if false;
 
-      allow update, delete: if isOwnerOrAdmin();
+      // CRITICAL SECURITY: Only resource owner can modify their own booking_services
+      allow update, delete: if isResourceOwner();
     }
 
     // Notifications - owner notifications for new bookings
@@ -210,8 +238,10 @@ service cloud.firestore {
     // CRITICAL SECURITY FIX: SECURITY EVENTS
     // ========================================================================
     // Security events - security audit log
+    // CRITICAL FIX: Users can only read their OWN security events
     match /securityEvents/{eventId} {
-      allow read: if isOwnerOrAdmin();
+      // Only allow reading events where userId matches the authenticated user
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       // Only Cloud Functions can write (prevents log poisoning)
       allow write: if false;
     }

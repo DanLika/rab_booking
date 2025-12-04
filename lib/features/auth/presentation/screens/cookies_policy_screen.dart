@@ -80,8 +80,12 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: SafeArea(
-        child: Stack(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: SafeArea(
+          child: Stack(
         children: [
           SingleChildScrollView(
             controller: _scrollController,
@@ -180,6 +184,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
             ),
         ],
       ),
+        ),
       ),
     );
   }

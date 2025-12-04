@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
@@ -248,8 +247,12 @@ class _FAQScreenState extends State<FAQScreen> {
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      body: SafeArea(
-        child: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: SafeArea(
+          child: Column(
         children: [
           // Search Bar
           Padding(
@@ -307,12 +310,12 @@ class _FAQScreenState extends State<FAQScreen> {
                         ? theme.colorScheme.surfaceContainerHighest
                         : Colors.grey.shade200,
                     selectedColor: isDark
-                        ? AppColors.authPrimary.withAlpha((0.4 * 255).toInt())
-                        : AppColors.authPrimary.withAlpha((0.2 * 255).toInt()),
-                    checkmarkColor: AppColors.authPrimary,
+                        ? theme.colorScheme.primary.withAlpha((0.4 * 255).toInt())
+                        : theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                    checkmarkColor: theme.colorScheme.primary,
                     labelStyle: TextStyle(
                       color: isSelected
-                          ? (isDark ? Colors.white : AppColors.authPrimary)
+                          ? (isDark ? Colors.white : theme.colorScheme.primary)
                           : (isDark
                               ? theme.colorScheme.onSurfaceVariant
                               : Colors.grey.shade700),
@@ -358,6 +361,7 @@ class _FAQScreenState extends State<FAQScreen> {
           ),
         ],
       ),
+        ),
       ),
     );
   }
@@ -382,10 +386,10 @@ class _FAQScreenState extends State<FAQScreen> {
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           leading: CircleAvatar(
-            backgroundColor: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
+            backgroundColor: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
             child: Icon(
               _getCategoryIcon(faq.category),
-              color: AppColors.authPrimary,
+              color: theme.colorScheme.primary,
               size: 20,
             ),
           ),

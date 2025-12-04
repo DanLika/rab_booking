@@ -88,8 +88,12 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: SafeArea(
-        child: Stack(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: SafeArea(
+          child: Stack(
         children: [
           SingleChildScrollView(
             controller: _scrollController,
@@ -253,6 +257,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
             ),
         ],
       ),
+        ),
       ),
     );
   }

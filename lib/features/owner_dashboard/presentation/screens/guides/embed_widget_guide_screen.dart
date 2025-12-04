@@ -43,8 +43,12 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      body: SafeArea(
-        child: ListView(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: SafeArea(
+          child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Header
@@ -327,6 +331,7 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
           const SizedBox(height: 24),
         ],
       ),
+        ),
       ),
     );
   }

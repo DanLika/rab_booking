@@ -1203,6 +1203,7 @@ class _PriceListCalendarWidgetState
                                     final messenger =
                                         ScaffoldMessenger.of(context);
                                     final navigator = Navigator.of(context);
+                                    final errorColor = context.errorColor;
 
                                     // Save price data
                                     final priceText =
@@ -1419,8 +1420,7 @@ class _PriceListCalendarWidgetState
                                             SnackBar(
                                               content: Text(
                                                   'Greška pri spremanju: $e'),
-                                              backgroundColor:
-                                                  context.errorColor,
+                                              backgroundColor: errorColor,
                                               action: SnackBarAction(
                                                 label: 'Poništi',
                                                 onPressed: _localState.undo,
@@ -1435,7 +1435,7 @@ class _PriceListCalendarWidgetState
                                           SnackBar(
                                             content:
                                                 Text('Greška validacije: $e'),
-                                            backgroundColor: context.errorColor,
+                                            backgroundColor: errorColor,
                                           ),
                                         );
                                       }
@@ -1821,10 +1821,15 @@ class _PriceListCalendarWidgetState
                   onPressed: isProcessing
                       ? null
                       : () async {
+                          // Capture context-dependent values before async gap
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+                          final errorColor = context.errorColor;
+
                           // Show confirmation dialog before blocking dates
                           final confirmed = await showDialog<bool>(
                             context: context,
-                            builder: (context) => AlertDialog(
+                            builder: (dialogContext) => AlertDialog(
                               title: const Text('Potvrda'),
                               content: Text(
                                 'Jeste li sigurni da želite blokirati ${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan' : 'dana'}?\n\n'
@@ -1833,14 +1838,14 @@ class _PriceListCalendarWidgetState
                               actions: [
                                 TextButton(
                                   onPressed: () =>
-                                      Navigator.of(context).pop(false),
+                                      Navigator.of(dialogContext).pop(false),
                                   child: const Text('Otkaži'),
                                 ),
                                 ElevatedButton(
                                   onPressed: () =>
-                                      Navigator.of(context).pop(true),
+                                      Navigator.of(dialogContext).pop(true),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: context.errorColor,
+                                    backgroundColor: errorColor,
                                     foregroundColor: Colors.white,
                                   ),
                                   child: const Text('Blokiraj'),
@@ -1850,9 +1855,6 @@ class _PriceListCalendarWidgetState
                           );
 
                           if (confirmed != true) return;
-
-                          final navigator = Navigator.of(context);
-                          final messenger = ScaffoldMessenger.of(context);
 
                           setState(() => isProcessing = true);
 

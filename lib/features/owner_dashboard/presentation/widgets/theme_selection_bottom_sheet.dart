@@ -128,6 +128,9 @@ class _ThemeOption extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
+    // Use colorScheme.primary which is more vibrant than primaryColor
+    final selectedColor = theme.colorScheme.primary;
+
     return ListTile(
       leading: Container(
         width: 40,
@@ -135,7 +138,7 @@ class _ThemeOption extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected
-              ? theme.primaryColor.withValues(alpha: isDark ? 0.25 : 0.1)
+              ? selectedColor.withValues(alpha: isDark ? 0.35 : 0.15)
               : isDark
                   ? Colors.white.withValues(alpha: 0.15)
                   : Colors.grey[200],
@@ -143,7 +146,7 @@ class _ThemeOption extends StatelessWidget {
         child: Icon(
           icon,
           color: isSelected
-              ? theme.primaryColor
+              ? (isDark ? Colors.white : selectedColor)
               : isDark
                   ? Colors.white
                   : Colors.grey[600],
@@ -159,7 +162,7 @@ class _ThemeOption extends StatelessWidget {
       trailing: isSelected
           ? Icon(
               Icons.check_circle,
-              color: Theme.of(context).primaryColor,
+              color: isDark ? Colors.white : selectedColor,
             )
           : null,
       onTap: onTap,

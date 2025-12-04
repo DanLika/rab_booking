@@ -16,7 +16,7 @@ void main() {
   late SubmitBookingUseCase useCase;
 
   // Test data
-  final testCheckIn = DateTime(2025, 6, 1);
+  final testCheckIn = DateTime(2025, 6);
   final testCheckOut = DateTime(2025, 6, 5);
 
   final testBooking = BookingModel(
@@ -45,7 +45,7 @@ void main() {
     maxGuests: 4,
     pricePerNight: 100.0,
     weekendBasePrice: 120.0,
-    createdAt: DateTime(2025, 1, 1),
+    createdAt: DateTime(2025),
   );
 
   setUp(() {
@@ -69,8 +69,8 @@ void main() {
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025, 1, 1),
-          updatedAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025),
+          updatedAt: DateTime(2025),
         );
 
         final params = SubmitBookingParams(
@@ -149,8 +149,8 @@ void main() {
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025, 1, 1),
-          updatedAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025),
+          updatedAt: DateTime(2025),
         );
 
         final params = SubmitBookingParams(
@@ -230,13 +230,11 @@ void main() {
         final widgetSettings = WidgetSettings(
           id: 'unit-1',
           propertyId: 'property-1',
-          widgetMode: WidgetMode.bookingInstant,
-          requireOwnerApproval: false,
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025, 1, 1),
-          updatedAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025),
+          updatedAt: DateTime(2025),
         );
 
         final params = SubmitBookingParams(
@@ -251,7 +249,6 @@ void main() {
           lastName: 'Doe',
           email: 'john@example.com',
           phoneWithCountryCode: '+385 91 123 4567',
-          notes: null,
           adults: 2,
           children: 0,
           totalPrice: 500.0,
@@ -315,8 +312,6 @@ void main() {
               totalPrice: 500.0,
               paymentOption: 'deposit',
               paymentMethod: 'stripe',
-              requireOwnerApproval: false,
-              notes: null,
               taxLegalAccepted: true,
             )).called(1);
       });
@@ -326,12 +321,11 @@ void main() {
         final widgetSettings = WidgetSettings(
           id: 'unit-1',
           propertyId: 'property-1',
-          widgetMode: WidgetMode.bookingInstant,
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025, 1, 1),
-          updatedAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025),
+          updatedAt: DateTime(2025),
         );
 
         final params = SubmitBookingParams(
@@ -386,13 +380,11 @@ void main() {
         final widgetSettings = WidgetSettings(
           id: 'unit-1',
           propertyId: 'property-1',
-          widgetMode: WidgetMode.bookingInstant,
-          requireOwnerApproval: false,
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025, 1, 1),
-          updatedAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025),
+          updatedAt: DateTime(2025),
         );
 
         final params = SubmitBookingParams(
@@ -464,7 +456,6 @@ void main() {
               totalPrice: 600.0,
               paymentOption: 'full',
               paymentMethod: 'bank_transfer',
-              requireOwnerApproval: false,
               notes: 'Bank transfer notes',
               taxLegalAccepted: true,
             )).called(1);
@@ -477,13 +468,12 @@ void main() {
         final widgetSettings = WidgetSettings(
           id: 'unit-1',
           propertyId: 'property-1',
-          widgetMode: WidgetMode.bookingInstant,
           requireOwnerApproval: true,
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025, 1, 1),
-          updatedAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025),
+          updatedAt: DateTime(2025),
         );
 
         final params = SubmitBookingParams(
@@ -498,7 +488,6 @@ void main() {
           lastName: 'Smith',
           email: 'jane@example.com',
           phoneWithCountryCode: '+385 92 987 6543',
-          notes: null,
           adults: 1,
           children: 0,
           totalPrice: 300.0,
@@ -558,7 +547,6 @@ void main() {
               paymentOption: 'full',
               paymentMethod: 'pay_on_arrival',
               requireOwnerApproval: true,
-              notes: null,
               taxLegalAccepted: false,
             )).called(1);
       });
@@ -570,14 +558,13 @@ void main() {
         final widgetSettings = WidgetSettings(
           id: 'unit-1',
           propertyId: 'property-1',
-          widgetMode: WidgetMode.bookingInstant,
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(
-            enabled: true,
+            
           ),
-          createdAt: DateTime(2025, 1, 1),
-          updatedAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025),
+          updatedAt: DateTime(2025),
         );
 
         final params = SubmitBookingParams(
@@ -645,12 +632,11 @@ void main() {
         final widgetSettings = WidgetSettings(
           id: 'unit-1',
           propertyId: 'property-1',
-          widgetMode: WidgetMode.bookingInstant,
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(enabled: false),
-          createdAt: DateTime(2025, 1, 1),
-          updatedAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025),
+          updatedAt: DateTime(2025),
         );
 
         final params = SubmitBookingParams(
@@ -709,7 +695,6 @@ void main() {
               paymentMethod: any(named: 'paymentMethod'),
               requireOwnerApproval: any(named: 'requireOwnerApproval'),
               notes: any(named: 'notes'),
-              taxLegalAccepted: null,
             )).called(1);
       });
     });

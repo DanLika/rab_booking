@@ -353,10 +353,10 @@ class CalendarTopToolbar extends StatelessWidget {
           tooltip: 'Idi na danas',
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
         ),
-        // IgnorePointer - badge ne blokira klikove na ikonicu
-        IgnorePointer(
-          child: Positioned(
-            bottom: 10,
+        // Positioned must be direct child of Stack, IgnorePointer inside
+        Positioned(
+          bottom: 10,
+          child: IgnorePointer(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
               decoration: BoxDecoration(

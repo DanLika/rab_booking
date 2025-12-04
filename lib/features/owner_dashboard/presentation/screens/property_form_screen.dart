@@ -1258,7 +1258,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             }
           }
 
-        } catch (e, stackTrace) {
+        } catch (e) {
 
           if (mounted) {
             // Direct SnackBar for guaranteed visibility

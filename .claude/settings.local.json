@@ -9,7 +9,8 @@
       "Bash(npx eslint:*)",
       "Bash(cat:*)",
       "Read(//private/tmp/**)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

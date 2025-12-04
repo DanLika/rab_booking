@@ -167,7 +167,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           }
 
                           return DropdownButtonFormField<String>(
-                            value: _selectedUnitId,
+                            initialValue: _selectedUnitId,
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(),
                               prefixIcon: Icon(Icons.bed_outlined),

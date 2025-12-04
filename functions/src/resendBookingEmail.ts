@@ -79,7 +79,7 @@ export const resendBookingEmail = onCall(async (request) => {
     if (booking.owner_id !== request.auth.uid) {
       logError("[ResendBookingEmail] Unauthorized - not the owner", {
         requesterId: request.auth.uid,
-        ownerId: unitData.owner_id,
+        ownerId: booking.owner_id,
       });
       throw new HttpsError(
         "permission-denied",

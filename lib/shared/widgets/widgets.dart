@@ -37,19 +37,9 @@ export 'adaptive/adaptive_padding.dart';
 // Premium Components (Phase 2)
 export 'button.dart';
 export 'card.dart';
-export 'text_field.dart';
-export 'dropdown.dart';
-export 'date_picker.dart';
-export 'tab_bar.dart';
-export 'snackbar.dart';
-// export 'dialog.dart'; // REMOVED - unused, file deleted
-export 'bottom_sheet.dart';
-export 'image.dart';
-export 'avatar.dart';
 
 // Adaptive & Responsive Widgets (Phase 3)
 export 'adaptive_layout.dart';
-export 'responsive_property_grid.dart';
 
 // Animations (Phase 11)
 export 'animations/animations.dart';

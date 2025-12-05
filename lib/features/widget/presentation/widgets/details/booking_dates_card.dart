@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
 import '../common/detail_row_widget.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card displaying booking dates and guest information.
 ///
@@ -55,14 +56,9 @@ class BookingDatesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checkInDate = DateTimeParser.parseOrThrow(
-      checkIn,
-      context: 'BookingDatesCard.checkIn',
-    );
-    final checkOutDate = DateTimeParser.parseOrThrow(
-      checkOut,
-      context: 'BookingDatesCard.checkOut',
-    );
+    final tr = WidgetTranslations.of(context);
+    final checkInDate = DateTimeParser.parseOrThrow(checkIn, context: 'BookingDatesCard.checkIn');
+    final checkOutDate = DateTimeParser.parseOrThrow(checkOut, context: 'BookingDatesCard.checkOut');
     // Match BookingSummaryCard date format
     final formatter = DateFormat('EEEE, MMM dd, yyyy');
 
@@ -71,16 +67,14 @@ class BookingDatesCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header matching BookingSummaryCard style
           Text(
-            'Booking Dates',
+            tr.bookingDates,
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
@@ -90,29 +84,29 @@ class BookingDatesCard extends StatelessWidget {
           const SizedBox(height: SpacingTokens.m),
           // Use DetailRowWidget for consistent styling
           DetailRowWidget(
-            label: 'Check-in',
+            label: tr.checkIn,
             value: formatter.format(checkInDate),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Check-out',
+            label: tr.checkOut,
             value: formatter.format(checkOutDate),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Duration',
-            value: '$nights ${nights == 1 ? 'night' : 'nights'}',
+            label: tr.duration,
+            value: tr.nightCount(nights),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Guests',
-            value: _formatGuestCount(),
+            label: tr.guests,
+            value: _formatGuestCount(tr),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
@@ -122,10 +116,10 @@ class BookingDatesCard extends StatelessWidget {
     );
   }
 
-  String _formatGuestCount() {
-    final adultsText = '$adults adult${adults > 1 ? 's' : ''}';
+  String _formatGuestCount(WidgetTranslations tr) {
+    final adultsText = tr.adultsCount(adults);
     if (children > 0) {
-      return '$adultsText, $children child${children > 1 ? 'ren' : ''}';
+      return '$adultsText, ${tr.childrenCount(children)}';
     }
     return adultsText;
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Reusable cancellation policy section for booking confirmation
 /// Displays cancellation deadline and instructions for guests
@@ -20,6 +21,7 @@ class CancellationPolicySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+    final tr = WidgetTranslations.of(context);
 
     return Padding(
       padding: const EdgeInsets.only(top: SpacingTokens.l),
@@ -28,17 +30,15 @@ class CancellationPolicySection extends StatelessWidget {
         decoration: BoxDecoration(
           color: colors.backgroundSecondary,
           borderRadius: BorderTokens.circularMedium,
-          border: Border.all(
-            color: colors.borderDefault,
-          ),
+          border: Border.all(color: colors.borderDefault),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(colors),
+            _buildHeader(colors, tr),
             const SizedBox(height: SpacingTokens.s),
             Text(
-              'Free cancellation up to $deadlineHours hours before check-in',
+              tr.freeCancellationUpTo(deadlineHours),
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeM,
                 fontWeight: TypographyTokens.semiBold,
@@ -47,37 +47,26 @@ class CancellationPolicySection extends StatelessWidget {
             ),
             const SizedBox(height: SpacingTokens.xs),
             Text(
-              'To cancel your booking:',
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                color: colors.textSecondary,
-              ),
+              tr.toCancelYourBooking,
+              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
             ),
             const SizedBox(height: SpacingTokens.xs),
-            _buildCancellationStep(colors, 'Reply to the confirmation email'),
-            _buildCancellationStep(
-              colors,
-              'Include your booking reference: $bookingReference',
-            ),
-            if (fromEmail != null)
-              _buildCancellationStep(colors, 'Or email: $fromEmail'),
+            _buildCancellationStep(colors, tr.replyToConfirmationEmail),
+            _buildCancellationStep(colors, tr.includeBookingReference(bookingReference)),
+            if (fromEmail != null) _buildCancellationStep(colors, tr.orEmailTo(fromEmail!)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(dynamic colors) {
+  Widget _buildHeader(dynamic colors, WidgetTranslations tr) {
     return Row(
       children: [
-        Icon(
-          Icons.event_available,
-          color: colors.textPrimary,
-          size: 24,
-        ),
+        Icon(Icons.event_available, color: colors.textPrimary, size: 24),
         const SizedBox(width: SpacingTokens.s),
         Text(
-          'Cancellation Policy',
+          tr.cancellationPolicy,
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeL,
             fontWeight: TypographyTokens.bold,
@@ -90,27 +79,18 @@ class CancellationPolicySection extends StatelessWidget {
 
   Widget _buildCancellationStep(dynamic colors, String text) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: SpacingTokens.m,
-        top: SpacingTokens.xxs,
-      ),
+      padding: const EdgeInsets.only(left: SpacingTokens.m, top: SpacingTokens.xxs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '• ',
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              color: colors.textSecondary,
-            ),
+            style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
           ),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                color: colors.textSecondary,
-              ),
+              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
             ),
           ),
         ],

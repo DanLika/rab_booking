@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Animated confirmation header with icon and message.
 ///
@@ -37,18 +38,18 @@ class ConfirmationHeader extends StatelessWidget {
     this.customLogoUrl,
   });
 
-  String _getConfirmationMessage() {
+  String _getConfirmationMessage(WidgetTranslations tr) {
     switch (paymentMethod) {
       case 'stripe':
-        return 'Payment successful! Your booking is confirmed.';
+        return tr.paymentSuccessfulBookingConfirmed;
       case 'bank_transfer':
-        return 'Booking received! Please complete the bank transfer to confirm.';
+        return tr.bookingReceivedCompleteBankTransfer;
       case 'pay_on_arrival':
-        return 'Booking confirmed! You can pay at the property.';
+        return tr.bookingConfirmedPayAtProperty;
       case 'pending':
-        return 'Booking request sent! Waiting for owner approval.';
+        return tr.bookingRequestSentWaitingApproval;
       default:
-        return 'Your booking has been confirmed!';
+        return tr.yourBookingHasBeenConfirmed;
     }
   }
 
@@ -69,6 +70,7 @@ class ConfirmationHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = WidgetTranslations.of(context);
     // Responsive icon and logo sizes
     final screenWidth = MediaQuery.of(context).size.width;
     final iconSize = screenWidth < 600 ? 56.0 : 80.0;
@@ -82,24 +84,20 @@ class ConfirmationHeader extends StatelessWidget {
             imageUrl: customLogoUrl!,
             height: logoHeight,
             fit: BoxFit.contain,
-            placeholder: (context, url) =>
-                SizedBox(height: logoHeight, width: logoHeight),
+            placeholder: (context, url) => SizedBox(height: logoHeight, width: logoHeight),
             errorWidget: (context, url, error) => const SizedBox.shrink(),
           ),
           const SizedBox(height: SpacingTokens.l),
         ],
 
         // Success icon with animation
-        ScaleTransition(
-          scale: scaleAnimation,
-          child: _getConfirmationIcon(iconSize),
-        ),
+        ScaleTransition(scale: scaleAnimation, child: _getConfirmationIcon(iconSize)),
 
         const SizedBox(height: SpacingTokens.l),
 
         // Confirmation message
         Text(
-          _getConfirmationMessage(),
+          _getConfirmationMessage(tr),
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeXL,

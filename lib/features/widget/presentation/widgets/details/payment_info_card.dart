@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card displaying payment information for a booking.
 ///
@@ -59,20 +60,19 @@ class PaymentInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = WidgetTranslations.of(context);
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Payment Information',
+            tr.paymentInformation,
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
@@ -80,58 +80,42 @@ class PaymentInfoCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
-          _buildPaymentRow('Total', totalPrice, bold: true),
+          _buildPaymentRow(tr.total, totalPrice, bold: true),
           const SizedBox(height: SpacingTokens.xs),
-          _buildPaymentRow('Deposit', depositAmount),
+          _buildPaymentRow(tr.deposit, depositAmount),
           const SizedBox(height: SpacingTokens.xs),
-          _buildPaymentRow('Paid', paidAmount, color: colors.success),
+          _buildPaymentRow(tr.paid, paidAmount, color: colors.success),
           const SizedBox(height: SpacingTokens.xs),
-          _buildPaymentRow(
-            'Remaining',
-            remainingAmount,
-            color: remainingAmount > 0 ? colors.error : colors.success,
-          ),
+          _buildPaymentRow(tr.remaining, remainingAmount, color: remainingAmount > 0 ? colors.error : colors.success),
           const SizedBox(height: SpacingTokens.s),
           Divider(color: colors.borderDefault),
           const SizedBox(height: SpacingTokens.s),
-          _buildStatusRow(),
+          _buildStatusRow(tr),
           const SizedBox(height: SpacingTokens.xs),
-          _buildMethodRow(),
-          if (paymentDeadline != null) ...[
-            const SizedBox(height: SpacingTokens.xs),
-            _buildDeadlineRow(),
-          ],
+          _buildMethodRow(tr),
+          if (paymentDeadline != null) ...[const SizedBox(height: SpacingTokens.xs), _buildDeadlineRow(tr)],
         ],
       ),
     );
   }
 
-  Widget _buildPaymentRow(
-    String label,
-    double amount, {
-    bool bold = false,
-    Color? color,
-  }) {
+  Widget _buildPaymentRow(String label, double amount, {bool bold = false, Color? color}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
-            fontSize:
-                bold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
-            fontWeight:
-                bold ? TypographyTokens.bold : TypographyTokens.regular,
+            fontSize: bold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
+            fontWeight: bold ? TypographyTokens.bold : TypographyTokens.regular,
             color: color ?? colors.textSecondary,
           ),
         ),
         Text(
           '€${amount.toStringAsFixed(2)}',
           style: TextStyle(
-            fontSize:
-                bold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
-            fontWeight:
-                bold ? TypographyTokens.bold : TypographyTokens.semiBold,
+            fontSize: bold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
+            fontWeight: bold ? TypographyTokens.bold : TypographyTokens.semiBold,
             color: color ?? colors.textPrimary,
           ),
         ),
@@ -139,35 +123,29 @@ class PaymentInfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusRow() {
+  Widget _buildStatusRow(WidgetTranslations tr) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Payment Status',
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
-            color: colors.textSecondary,
-          ),
+          tr.paymentStatusLabel,
+          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
         ),
-        _buildPaymentStatusChip(),
+        _buildPaymentStatusChip(tr),
       ],
     );
   }
 
-  Widget _buildMethodRow() {
+  Widget _buildMethodRow(WidgetTranslations tr) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Payment Method',
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
-            color: colors.textSecondary,
-          ),
+          tr.paymentMethodLabel,
+          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
         ),
         Text(
-          _formatPaymentMethod(),
+          _formatPaymentMethod(tr),
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             fontWeight: TypographyTokens.medium,
@@ -178,24 +156,18 @@ class PaymentInfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDeadlineRow() {
+  Widget _buildDeadlineRow(WidgetTranslations tr) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Payment Deadline',
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
-            color: colors.textSecondary,
-          ),
+          tr.paymentDeadline,
+          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
         ),
         Text(
-          DateFormat('MMM d, yyyy').format(
-            DateTimeParser.parseOrThrow(
-              paymentDeadline,
-              context: 'PaymentInfoCard.paymentDeadline',
-            ),
-          ),
+          DateFormat(
+            'MMM d, yyyy',
+          ).format(DateTimeParser.parseOrThrow(paymentDeadline, context: 'PaymentInfoCard.paymentDeadline')),
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             fontWeight: TypographyTokens.semiBold,
@@ -206,7 +178,7 @@ class PaymentInfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentStatusChip() {
+  Widget _buildPaymentStatusChip(WidgetTranslations tr) {
     Color statusColor;
     String statusText;
 
@@ -214,11 +186,11 @@ class PaymentInfoCard extends StatelessWidget {
       case 'paid':
       case 'completed':
         statusColor = colors.success;
-        statusText = 'Paid';
+        statusText = tr.paid;
         break;
       case 'pending':
         statusColor = colors.warning;
-        statusText = 'Pending';
+        statusText = tr.statusPending;
         break;
       case 'failed':
       case 'refunded':
@@ -231,10 +203,7 @@ class PaymentInfoCard extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.s,
-        vertical: SpacingTokens.xxs,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xxs),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderTokens.circularRounded,
@@ -251,14 +220,14 @@ class PaymentInfoCard extends StatelessWidget {
     );
   }
 
-  String _formatPaymentMethod() {
+  String _formatPaymentMethod(WidgetTranslations tr) {
     switch (paymentMethod.toLowerCase()) {
       case 'bank_transfer':
-        return 'Bank Transfer';
+        return tr.bankTransfer;
       case 'stripe':
-        return 'Credit Card (Stripe)';
+        return tr.creditCard;
       case 'cash':
-        return 'Cash';
+        return tr.cash;
       default:
         return paymentMethod;
     }

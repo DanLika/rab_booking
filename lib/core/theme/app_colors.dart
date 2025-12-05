@@ -244,23 +244,23 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  /// Auth background gradient - Beige to White diagonal (Light Mode)
+  /// Auth background gradient - Cool lavender-gray to White (Light Mode)
   /// Use for: auth screen background in light mode
   static const LinearGradient authBackgroundGradient = LinearGradient(
     colors: [
-      Color(0xFFFAF8F3), // Beige
+      Color(0xFFF5F3F9), // Cool lavender-gray
       Color(0xFFFFFFFF), // White
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Auth background gradient - Dark gray gradient (Dark Mode)
+  /// Auth background gradient - Cool dark purple-gray (Dark Mode)
   /// Use for: auth screen background in dark mode
   static const LinearGradient authBackgroundGradientDark = LinearGradient(
     colors: [
-      Color(0xFF0D0D0D), // Very dark gray (slightly lighter than pure black)
-      Color(0xFF1A1A1A), // Dark gray
+      Color(0xFF1A1820), // Cool dark purple-gray
+      Color(0xFF211F26), // Slightly lighter
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -426,29 +426,18 @@ class AppColors {
   /// Surface elevation levels for light theme (subtle brightness variations)
   static const Color elevation0Light = surfaceLight; // Base surface (0dp)
   static const Color elevation1Light = Color(0xFFFEFEFE); // +1dp (cards)
-  static const Color elevation2Light = Color(
-    0xFFFDFDFD,
-  ); // +2dp (floating buttons)
+  static const Color elevation2Light = Color(0xFFFDFDFD); // +2dp (floating buttons)
   static const Color elevation3Light = Color(0xFFFCFCFC); // +4dp (modals)
   static const Color elevation4Light = Color(0xFFFBFBFB); // +8dp (dialogs)
 
   /// Surface elevation levels for dark theme (brighter on elevation - Material Design 3)
   /// UPGRADED: All levels recalculated for true black base (0xFF000000)
   /// Uses white overlay technique: elevation = base + white opacity
-  static const Color elevation0Dark =
-      surfaceDark; // Base surface (0dp) = 0xFF121212
-  static const Color elevation1Dark = Color(
-    0xFF1E1E1E,
-  ); // +1dp (cards) - 5% white overlay
-  static const Color elevation2Dark = Color(
-    0xFF232323,
-  ); // +2dp (floating buttons) - 8% white overlay
-  static const Color elevation3Dark = Color(
-    0xFF282828,
-  ); // +4dp (modals) - 11% white overlay
-  static const Color elevation4Dark = Color(
-    0xFF2C2C2C,
-  ); // +8dp (dialogs) - 14% white overlay
+  static const Color elevation0Dark = surfaceDark; // Base surface (0dp) = 0xFF121212
+  static const Color elevation1Dark = Color(0xFF1E1E1E); // +1dp (cards) - 5% white overlay
+  static const Color elevation2Dark = Color(0xFF232323); // +2dp (floating buttons) - 8% white overlay
+  static const Color elevation3Dark = Color(0xFF282828); // +4dp (modals) - 11% white overlay
+  static const Color elevation4Dark = Color(0xFF2C2C2C); // +8dp (dialogs) - 14% white overlay
 
   // ============================================================================
   // SCRIM & BACKDROP COLORS

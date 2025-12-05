@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import '../theme/gradient_extensions.dart';
 
 /// Centralized helper for creating consistent InputDecoration across the app
 class InputDecorationHelper {
   InputDecorationHelper._();
 
   /// Creates modern input decoration for form fields
-  /// Matches unit_pricing_screen styling: borderRadius 12, filled background
+  /// Uses design system colors: inputFillColor for background, sectionBorder for borders
   static InputDecoration buildDecoration({
     required String labelText,
     String? hintText,
@@ -24,13 +25,19 @@ class InputDecorationHelper {
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: context.gradients.sectionBorder),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: context.gradients.sectionBorder),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
       ),
       filled: true,
-      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 12 : 16,
-        vertical: isMobile ? 12 : 16,
-      ),
+      fillColor: context.gradients.inputFillColor,
+      contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 12 : 16),
     );
   }
 
@@ -41,11 +48,6 @@ class InputDecorationHelper {
     bool isMobile = false,
     required BuildContext context,
   }) {
-    return buildDecoration(
-      labelText: labelText,
-      prefixIcon: prefixIcon,
-      isMobile: isMobile,
-      context: context,
-    );
+    return buildDecoration(labelText: labelText, prefixIcon: prefixIcon, isMobile: isMobile, context: context);
   }
 }

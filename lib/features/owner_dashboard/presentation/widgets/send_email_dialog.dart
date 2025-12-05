@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -11,16 +12,16 @@ enum EmailTemplate {
   cancellation,
   custom;
 
-  String get displayName {
+  String getDisplayName(AppLocalizations l10n) {
     switch (this) {
       case EmailTemplate.confirmation:
-        return 'Potvrda rezervacije';
+        return l10n.sendEmailTemplateConfirmation;
       case EmailTemplate.reminder:
-        return 'Podsjetnik';
+        return l10n.sendEmailTemplateReminder;
       case EmailTemplate.cancellation:
-        return 'Otkazivanje';
+        return l10n.sendEmailTemplateCancellation;
       case EmailTemplate.custom:
-        return 'Prilagođena poruka';
+        return l10n.sendEmailTemplateCustom;
     }
   }
 
@@ -96,11 +97,7 @@ Srdačan pozdrav''';
 /// Send Custom Email Dialog - Phase 2 Feature
 ///
 /// Allows property owners to send custom emails to guests
-Future<void> showSendEmailDialog(
-  BuildContext context,
-  WidgetRef ref,
-  BookingModel booking,
-) async {
+Future<void> showSendEmailDialog(BuildContext context, WidgetRef ref, BookingModel booking) async {
   return showDialog(
     context: context,
     builder: (context) => _SendEmailDialog(booking: booking),
@@ -148,13 +145,14 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
       title: Row(
         children: [
           Icon(Icons.email, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          const Text('Pošalji Email Gostu'),
+          Text(l10n.sendEmailTitle),
         ],
       ),
       content: SizedBox(
@@ -204,13 +202,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 const SizedBox(height: 20),
 
                 // Template selector
-                const Text(
-                  'Predložak',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text(l10n.sendEmailTemplate, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -218,7 +210,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                   children: EmailTemplate.values.map((template) {
                     final isSelected = _selectedTemplate == template;
                     return ChoiceChip(
-                      label: Text(template.displayName),
+                      label: Text(template.getDisplayName(l10n)),
                       selected: isSelected,
                       onSelected: (selected) {
                         if (selected) {
@@ -228,9 +220,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                       selectedColor: theme.colorScheme.primaryContainer,
                       backgroundColor: theme.colorScheme.surface,
                       labelStyle: TextStyle(
-                        color: isSelected
-                          ? theme.colorScheme.onPrimaryContainer
-                          : theme.colorScheme.onSurface,
+                        color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                         fontSize: 12,
                       ),
@@ -242,15 +232,15 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 // Subject
                 TextFormField(
                   controller: _subjectController,
-                  decoration: const InputDecoration(
-                    labelText: 'Naslov *',
-                    hintText: 'Naslov emaila',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.subject),
+                  decoration: InputDecoration(
+                    labelText: l10n.sendEmailSubject,
+                    hintText: l10n.sendEmailSubjectHint,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.subject),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Molimo unesite naslov';
+                      return l10n.sendEmailSubjectRequired;
                     }
                     return null;
                   },
@@ -261,18 +251,18 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 TextFormField(
                   controller: _messageController,
                   maxLines: 10,
-                  decoration: const InputDecoration(
-                    labelText: 'Poruka *',
-                    hintText: 'Unesite poruku za gosta...',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.sendEmailMessage,
+                    hintText: l10n.sendEmailMessageHint,
+                    border: const OutlineInputBorder(),
                     alignLabelWithHint: true,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Molimo unesite poruku';
+                      return l10n.sendEmailMessageRequired;
                     }
                     if (value.trim().length < 10) {
-                      return 'Poruka mora imati najmanje 10 znakova';
+                      return l10n.sendEmailMessageTooShort;
                     }
                     return null;
                   },
@@ -285,24 +275,16 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.tertiaryContainer,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-                    ),
+                    border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline,
-                        size: 20,
-                        color: theme.colorScheme.tertiary,
-                      ),
+                      Icon(Icons.info_outline, size: 20, color: theme.colorScheme.tertiary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Email će biti poslan sa vaše registrirane email adrese',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.colorScheme.onTertiaryContainer,
-                          ),
+                          l10n.sendEmailInfo,
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onTertiaryContainer),
                         ),
                       ),
                     ],
@@ -314,10 +296,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Odustani'),
-        ),
+        TextButton(onPressed: _isLoading ? null : () => Navigator.of(context).pop(), child: Text(l10n.sendEmailCancel)),
         ElevatedButton.icon(
           onPressed: _isLoading ? null : _sendEmail,
           icon: _isLoading
@@ -326,13 +305,11 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      theme.colorScheme.onPrimary,
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
                   ),
                 )
               : const Icon(Icons.send),
-          label: Text(_isLoading ? 'Šaljem...' : 'Pošalji Email'),
+          label: Text(_isLoading ? l10n.sendEmailSending : l10n.sendEmailSend),
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.colorScheme.primary,
             foregroundColor: theme.colorScheme.onPrimary,
@@ -347,10 +324,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
 
     // Validate guest email exists
     if (widget.booking.guestEmail == null || widget.booking.guestEmail!.isEmpty) {
-      ErrorDisplayUtils.showWarningSnackBar(
-        context,
-        'Email adresa gosta nije dostupna',
-      );
+      ErrorDisplayUtils.showWarningSnackBar(context, AppLocalizations.of(context).sendEmailNoGuestEmail);
       return;
     }
 
@@ -373,17 +347,13 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
         Navigator.of(context).pop();
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          'Email uspješno poslan gostu ${widget.booking.guestName ?? ""}',
+          AppLocalizations.of(context).sendEmailSuccess(widget.booking.guestName ?? ''),
         );
       }
     } catch (e) {
       // FIXED: Use ErrorDisplayUtils for user-friendly error messages
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška pri slanju emaila',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).sendEmailError);
       }
     } finally {
       if (mounted) {

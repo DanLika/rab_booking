@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -15,8 +16,7 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() =>
-      _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
@@ -55,15 +55,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => _PremiumAlertDialog(
-        title: 'Obriši odabrane?',
-        content:
-            'Jeste li sigurni da želite obrisati ${_selectedIds.length} obavještenja?',
-        confirmText: 'Obriši',
-        cancelText: 'Otkaži',
+      builder: (ctx) => _PremiumAlertDialog(
+        title: l10n.notificationsDeleteSelected,
+        content: l10n.notificationsDeleteSelectedDesc(_selectedIds.length),
+        confirmText: l10n.delete,
+        cancelText: l10n.cancel,
         isDestructive: true,
       ),
     );
@@ -79,22 +79,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             _isSelectionMode = false;
             _isDeleting = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Obavještenja obrisana'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.notificationsDeleted), backgroundColor: Colors.green));
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isDeleting = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: Colors.red));
         }
       }
     }
@@ -104,15 +98,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final authState = ref.read(enhancedAuthProvider);
     final ownerId = authState.firebaseUser?.uid;
     if (ownerId == null) return;
+    final l10n = AppLocalizations.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => const _PremiumAlertDialog(
-        title: 'Obriši sve?',
-        content:
-            'Jeste li sigurni da želite obrisati SVA obavještenja? Ova radnja se ne može poništiti.',
-        confirmText: 'Obriši sve',
-        cancelText: 'Otkaži',
+      builder: (ctx) => _PremiumAlertDialog(
+        title: l10n.notificationsDeleteAll,
+        content: l10n.notificationsDeleteAllDesc,
+        confirmText: l10n.notificationsDeleteAllBtn,
+        cancelText: l10n.cancel,
         isDestructive: true,
       ),
     );
@@ -128,22 +122,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             _isSelectionMode = false;
             _isDeleting = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sva obavještenja obrisana'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.notificationsAllDeleted), backgroundColor: Colors.green));
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isDeleting = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: Colors.red));
         }
       }
     }
@@ -159,150 +147,128 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     // Flatten notifications for select all
     final allNotifications = notificationsAsync.valueOrNull ?? [];
 
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: _isSelectionMode
-          ? _buildSelectionAppBar(theme, allNotifications)
+          ? _buildSelectionAppBar(theme, allNotifications, l10n)
           : CommonAppBar(
-              title: 'Obavještenja',
+              title: l10n.notificationsTitle,
               leadingIcon: Icons.menu,
               onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
             ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: Stack(
           children: [
             notificationsAsync.when(
-            data: (notifications) {
-              if (notifications.isEmpty) {
-                return _buildEmptyState(context);
-              }
+              data: (notifications) {
+                if (notifications.isEmpty) {
+                  return _buildEmptyState(context);
+                }
 
-              return RefreshIndicator(
-                color: theme.colorScheme.primary,
-                onRefresh: () async {
-                  ref.invalidate(notificationsStreamProvider);
-                },
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: groupedNotifications.length,
-                  itemBuilder: (context, index) {
-                    final dateKey = groupedNotifications.keys.elementAt(index);
-                    final dayNotifications = groupedNotifications[dateKey]!;
+                return RefreshIndicator(
+                  color: theme.colorScheme.primary,
+                  onRefresh: () async {
+                    ref.invalidate(notificationsStreamProvider);
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: groupedNotifications.length,
+                    itemBuilder: (context, index) {
+                      final dateKey = groupedNotifications.keys.elementAt(index);
+                      final dayNotifications = groupedNotifications[dateKey]!;
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Premium Date header
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16, bottom: 12),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      theme.colorScheme.primary.withAlpha(
-                                        (0.1 * 255).toInt(),
-                                      ),
-                                      theme.colorScheme.secondary.withAlpha(
-                                        (0.05 * 255).toInt(),
-                                      ),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  dateKey,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Container(
-                                  height: 1,
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Premium Date header
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16, bottom: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        theme.colorScheme.primary.withAlpha(
-                                          (0.2 * 255).toInt(),
-                                        ),
-                                        Colors.transparent,
+                                        theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                                        theme.colorScheme.secondary.withAlpha((0.05 * 255).toInt()),
                                       ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    dateKey,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.primary,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Container(
+                                    height: 1,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                                          Colors.transparent,
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
 
-                        // Notifications for this date
-                        ...dayNotifications.map(
-                          (notification) => _buildNotificationCard(
-                            context,
-                            notification,
-                            actions,
+                          // Notifications for this date
+                          ...dayNotifications.map(
+                            (notification) => _buildNotificationCard(context, notification, actions),
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              );
-            },
-            loading: () => Center(
-              child: CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              },
+              loading: () => Center(
+                child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary)),
               ),
+              error: (error, stack) {
+                return _buildErrorState(context, error, ref);
+              },
             ),
-            error: (error, stack) {
-              return _buildErrorState(context, error, ref);
-            },
-          ),
 
-          // Loading overlay during delete
-          if (_isDeleting)
-            Container(
-              color: Colors.black.withAlpha((0.3 * 255).toInt()),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: context.gradients.sectionBackground,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: context.gradients.sectionBorder,
+            // Loading overlay during delete
+            if (_isDeleting)
+              Container(
+                color: Colors.black.withAlpha((0.3 * 255).toInt()),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: context.gradients.cardBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.gradients.sectionBorder),
+                      boxShadow: theme.brightness == Brightness.dark
+                          ? AppShadows.elevation3Dark
+                          : AppShadows.elevation3,
                     ),
-                    boxShadow: theme.brightness == Brightness.dark
-                        ? AppShadows.elevation3Dark
-                        : AppShadows.elevation3,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Brisanje...'),
-                    ],
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary)),
+                        const SizedBox(height: 16),
+                        Text(l10n.notificationsDeleting),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -316,7 +282,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: Colors.white,
                 icon: const Icon(Icons.checklist_rounded, size: 18),
-                label: const Text('Odaberi'),
+                label: Text(l10n.notificationsSelect),
               ),
             )
           : null,
@@ -327,9 +293,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   PreferredSizeWidget _buildSelectionAppBar(
     ThemeData theme,
     List<NotificationModel> allNotifications,
+    AppLocalizations l10n,
   ) {
-    final allSelected = _selectedIds.length == allNotifications.length &&
-        allNotifications.isNotEmpty;
+    final allSelected = _selectedIds.length == allNotifications.length && allNotifications.isNotEmpty;
 
     return AppBar(
       backgroundColor: theme.colorScheme.primary,
@@ -337,18 +303,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       leading: IconButton(
         icon: const Icon(Icons.close),
         onPressed: _toggleSelectionMode,
-        tooltip: 'Otkaži',
+        tooltip: l10n.notificationsCancel,
       ),
-      title: Text(
-        '${_selectedIds.length} odabrano',
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
+      title: Text(l10n.notificationsSelected(_selectedIds.length), style: const TextStyle(fontWeight: FontWeight.w600)),
       actions: [
         // Select All / Deselect All
         IconButton(
-          icon: Icon(allSelected
-              ? Icons.deselect_rounded
-              : Icons.select_all_rounded),
+          icon: Icon(allSelected ? Icons.deselect_rounded : Icons.select_all_rounded),
           onPressed: () {
             if (allSelected) {
               _deselectAll();
@@ -356,7 +317,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               _selectAll(allNotifications);
             }
           },
-          tooltip: allSelected ? 'Poništi odabir' : 'Odaberi sve',
+          tooltip: allSelected ? l10n.notificationsDeselectAll : l10n.notificationsSelectAll,
         ),
 
         // Delete Selected
@@ -364,7 +325,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           IconButton(
             icon: const Icon(Icons.delete_rounded),
             onPressed: _deleteSelected,
-            tooltip: 'Obriši odabrane',
+            tooltip: l10n.notificationsDeleteSelectedBtn,
           ),
 
         // More options
@@ -375,17 +336,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               _deleteAll();
             }
           },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
+          itemBuilder: (ctx) => [
+            PopupMenuItem(
               value: 'delete_all',
               child: Row(
                 children: [
-                  Icon(Icons.delete_forever, color: Colors.red),
-                  SizedBox(width: 12),
-                  Text(
-                    'Obriši sve',
-                    style: TextStyle(color: Colors.red),
-                  ),
+                  const Icon(Icons.delete_forever, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Text(l10n.notificationsDeleteAllBtn, style: const TextStyle(color: Colors.red)),
                 ],
               ),
             ),
@@ -396,11 +354,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   /// Build notification card
-  Widget _buildNotificationCard(
-    BuildContext context,
-    NotificationModel notification,
-    NotificationActions actions,
-  ) {
+  Widget _buildNotificationCard(BuildContext context, NotificationModel notification, NotificationActions actions) {
     final isSelected = _selectedIds.contains(notification.id);
 
     if (_isSelectionMode) {
@@ -423,24 +377,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.error,
-              Theme.of(context).colorScheme.error
-            ],
-          ),
+          gradient: LinearGradient(colors: [Theme.of(context).colorScheme.error, Theme.of(context).colorScheme.error]),
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
       ),
       confirmDismiss: (direction) async {
+        final l10n = AppLocalizations.of(context);
         return await showDialog<bool>(
           context: context,
-          builder: (context) => const _PremiumAlertDialog(
-            title: 'Obriši obavještenje',
-            content: 'Jeste li sigurni da želite obrisati ovo obavještenje?',
-            confirmText: 'Obriši',
-            cancelText: 'Otkaži',
+          builder: (ctx) => _PremiumAlertDialog(
+            title: l10n.notificationsDeleteNotification,
+            content: l10n.notificationsDeleteNotificationDesc,
+            confirmText: l10n.delete,
+            cancelText: l10n.cancel,
             isDestructive: true,
           ),
         );
@@ -459,10 +409,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           // Navigate to booking if bookingId exists
           if (notification.bookingId != null && context.mounted) {
             context.go(
-              Uri(
-                path: OwnerRoutes.bookings,
-                queryParameters: {'bookingId': notification.bookingId},
-              ).toString(),
+              Uri(path: OwnerRoutes.bookings, queryParameters: {'bookingId': notification.bookingId}).toString(),
             );
           }
         },
@@ -476,6 +423,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Padding(
@@ -488,36 +436,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               width: 140,
               height: 140,
               decoration: BoxDecoration(
-                gradient: context.gradients.sectionBackground,
+                color: context.gradients.cardBackground,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: context.gradients.sectionBorder,
-                  width: 2,
-                ),
+                border: Border.all(color: context.gradients.sectionBorder, width: 2),
                 boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
               ),
-              child: Icon(
-                Icons.notifications_none_rounded,
-                size: 70,
-                color: theme.colorScheme.primary,
-              ),
+              child: Icon(Icons.notifications_none_rounded, size: 70, color: theme.colorScheme.primary),
             ),
             const SizedBox(height: 32),
             Text(
-              'Nema obavještenja',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
+              l10n.notificationsEmpty,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
             ),
             const SizedBox(height: 12),
             Text(
-              'Ovdje ćete vidjeti sva vaša obavještenja',
-              style: TextStyle(
-                fontSize: 15,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              l10n.notificationsEmptyDesc,
+              style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],
@@ -530,6 +464,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget _buildErrorState(BuildContext context, Object error, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Padding(
@@ -541,36 +476,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                gradient: context.gradients.sectionBackground,
+                color: context.gradients.cardBackground,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
-                  width: 2,
-                ),
+                border: Border.all(color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt()), width: 2),
                 boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
               ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                size: 50,
-                color: theme.colorScheme.error,
-              ),
+              child: Icon(Icons.error_outline_rounded, size: 50, color: theme.colorScheme.error),
             ),
             const SizedBox(height: 24),
             Text(
-              'Greška pri učitavanju obavještenja',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
+              l10n.notificationsLoadError,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
             ),
             const SizedBox(height: 12),
             Text(
               error.toString(),
-              style: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -581,17 +502,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 ref.invalidate(notificationsStreamProvider);
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Pokušaj ponovno'),
+              label: Text(l10n.notificationsTryAgain),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
@@ -665,17 +581,14 @@ class _SelectableNotificationCard extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: isSelected ? null : context.gradients.sectionBackground,
-        color: isSelected
-            ? theme.colorScheme.primary.withAlpha((0.1 * 255).toInt())
-            : null,
+        color: isSelected ? theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()) : context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
               ? theme.colorScheme.primary
               : isUnread
-                  ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
-                  : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+              ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+              : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
           width: isSelected ? 2 : 1,
         ),
         boxShadow: isSelected
@@ -696,9 +609,7 @@ class _SelectableNotificationCard extends StatelessWidget {
                   value: isSelected,
                   onChanged: (_) => onTap(),
                   activeColor: theme.colorScheme.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                 ),
 
                 const SizedBox(width: 8),
@@ -711,10 +622,7 @@ class _SelectableNotificationCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        iconColor.withAlpha((0.15 * 255).toInt()),
-                        iconColor.withAlpha((0.08 * 255).toInt()),
-                      ],
+                      colors: [iconColor.withAlpha((0.15 * 255).toInt()), iconColor.withAlpha((0.08 * 255).toInt())],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -735,8 +643,7 @@ class _SelectableNotificationCard extends StatelessWidget {
                               notification.title,
                               style: TextStyle(
                                 fontSize: 15,
-                                fontWeight:
-                                    isUnread ? FontWeight.bold : FontWeight.w600,
+                                fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                                 color: theme.colorScheme.onSurface,
                               ),
                               maxLines: 1,
@@ -748,20 +655,14 @@ class _SelectableNotificationCard extends StatelessWidget {
                               width: 8,
                               height: 8,
                               margin: const EdgeInsets.only(left: 8),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                shape: BoxShape.circle,
-                              ),
+                              decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
                             ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         notification.message,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                        style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -792,8 +693,7 @@ class _PremiumNotificationCard extends StatefulWidget {
   });
 
   @override
-  State<_PremiumNotificationCard> createState() =>
-      _PremiumNotificationCardState();
+  State<_PremiumNotificationCard> createState() => _PremiumNotificationCardState();
 }
 
 class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
@@ -812,14 +712,14 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          gradient: context.gradients.sectionBackground,
+          color: context.gradients.cardBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isHovered
                 ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
                 : isUnread
-                    ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
-                    : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+                ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+                : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
             width: _isHovered ? 2 : 1,
           ),
           boxShadow: _isHovered
@@ -852,19 +752,13 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: widget.iconColor.withAlpha(
-                            (0.2 * 255).toInt(),
-                          ),
+                          color: widget.iconColor.withAlpha((0.2 * 255).toInt()),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Icon(
-                      widget.iconData,
-                      color: widget.iconColor,
-                      size: 26,
-                    ),
+                    child: Icon(widget.iconData, color: widget.iconColor, size: 26),
                   ),
 
                   const SizedBox(width: 16),
@@ -882,9 +776,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                                 widget.notification.title,
                                 style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: isUnread
-                                      ? FontWeight.bold
-                                      : FontWeight.w600,
+                                  fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                                   color: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -895,17 +787,12 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                                 height: 10,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: [
-                                      theme.colorScheme.primary,
-                                      theme.colorScheme.secondary,
-                                    ],
+                                    colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
                                   ),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: theme.colorScheme.primary.withAlpha(
-                                        (0.4 * 255).toInt(),
-                                      ),
+                                      color: theme.colorScheme.primary.withAlpha((0.4 * 255).toInt()),
                                       blurRadius: 4,
                                     ),
                                   ],
@@ -919,11 +806,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                         // Message
                         Text(
                           widget.notification.message,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: theme.colorScheme.onSurfaceVariant,
-                            height: 1.5,
-                          ),
+                          style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant, height: 1.5),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -936,18 +819,14 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                             Icon(
                               Icons.access_time_rounded,
                               size: 14,
-                              color: theme.colorScheme.primary.withAlpha(
-                                (0.6 * 255).toInt(),
-                              ),
+                              color: theme.colorScheme.primary.withAlpha((0.6 * 255).toInt()),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               widget.notification.getRelativeTime(),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: theme.colorScheme.primary.withAlpha(
-                                  (0.7 * 255).toInt(),
-                                ),
+                                color: theme.colorScheme.primary.withAlpha((0.7 * 255).toInt()),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -995,7 +874,7 @@ class _PremiumAlertDialog extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          gradient: context.gradients.sectionBackground,
+          color: context.gradients.cardBackground,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isDestructive
@@ -1013,7 +892,7 @@ class _PremiumAlertDialog extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                gradient: context.gradients.sectionBackground,
+                color: context.gradients.cardBackground,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isDestructive
@@ -1024,12 +903,8 @@ class _PremiumAlertDialog extends StatelessWidget {
                 boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
               ),
               child: Icon(
-                isDestructive
-                    ? Icons.warning_amber_rounded
-                    : Icons.help_outline_rounded,
-                color: isDestructive
-                    ? theme.colorScheme.error
-                    : theme.colorScheme.primary,
+                isDestructive ? Icons.warning_amber_rounded : Icons.help_outline_rounded,
+                color: isDestructive ? theme.colorScheme.error : theme.colorScheme.primary,
                 size: 32,
               ),
             ),
@@ -1039,11 +914,7 @@ class _PremiumAlertDialog extends StatelessWidget {
             // Title
             Text(
               title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
               textAlign: TextAlign.center,
             ),
 
@@ -1052,11 +923,7 @@ class _PremiumAlertDialog extends StatelessWidget {
             // Content
             Text(
               content,
-              style: TextStyle(
-                fontSize: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant, height: 1.5),
               textAlign: TextAlign.center,
             ),
 
@@ -1070,21 +937,12 @@ class _PremiumAlertDialog extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(false),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(
-                        color: theme.colorScheme.outline.withAlpha(
-                          (0.5 * 255).toInt(),
-                        ),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      side: BorderSide(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
                       cancelText,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurfaceVariant),
                     ),
                   ),
                 ),
@@ -1093,20 +951,13 @@ class _PremiumAlertDialog extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(true),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDestructive
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.primary,
+                      backgroundColor: isDestructive ? theme.colorScheme.error : theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text(
-                      confirmText,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    child: Text(confirmText, style: const TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],

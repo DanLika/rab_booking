@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/models/calendar_filter_options.dart';
 import '../../providers/calendar_filters_provider.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Calendar Filter Chips Widget
 /// Displays active filters and allows clearing them
@@ -22,9 +23,7 @@ class CalendarFilterChips extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt()),
-        border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor),
-        ),
+        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(
         children: [
@@ -38,11 +37,7 @@ class CalendarFilterChips extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.filter_list,
-                  size: 14,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
+                Icon(Icons.filter_list, size: 14, color: Theme.of(context).colorScheme.onPrimary),
                 const SizedBox(width: 4),
                 Text(
                   '${filters.activeFilterCount}',
@@ -56,25 +51,33 @@ class CalendarFilterChips extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            filters.activeFilterCount == 1 ? 'aktivan filter' : 'aktivna filtera',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return Text(
+                filters.activeFilterCount == 1 ? l10n.ownerFilterActiveFilter : l10n.ownerFilterActiveFilters,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+              );
+            },
           ),
           const Spacer(),
           // Clear all button (elevated for visibility)
-          ElevatedButton.icon(
-            icon: const Icon(Icons.clear_all, size: 18),
-            label: const Text('Očisti sve'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              minimumSize: const Size(0, 36),
-            ),
-            onPressed: () {
-              ref.read(calendarFiltersProvider.notifier).clearFilters();
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return ElevatedButton.icon(
+                icon: const Icon(Icons.clear_all, size: 18),
+                label: Text(l10n.ownerFilterClearAll),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  minimumSize: const Size(0, 36),
+                ),
+                onPressed: () {
+                  ref.read(calendarFiltersProvider.notifier).clearFilters();
+                },
+              );
             },
           ),
         ],

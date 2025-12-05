@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/breakpoints.dart';
@@ -11,6 +12,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
@@ -23,8 +25,7 @@ class BookingCreateDialog extends ConsumerStatefulWidget {
   const BookingCreateDialog({super.key, this.unitId, this.initialCheckIn});
 
   @override
-  ConsumerState<BookingCreateDialog> createState() =>
-      _BookingCreateDialogState();
+  ConsumerState<BookingCreateDialog> createState() => _BookingCreateDialogState();
 }
 
 class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
@@ -84,15 +85,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       clipBehavior: Clip.antiAlias,
       child: Container(
         width: isMobile ? screenWidth * 0.9 : 500,
-        constraints: BoxConstraints(
-          maxHeight: screenHeight * 0.85,
-        ),
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -103,9 +100,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(11),
-                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
@@ -115,27 +110,19 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.add_circle_outline,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Nova rezervacija',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      AppLocalizations.of(context).bookingCreateTitle,
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-                    tooltip: 'Zatvori',
+                    tooltip: AppLocalizations.of(context).bookingCreateClose,
                   ),
                 ],
               ),
@@ -153,31 +140,26 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     children: [
                       // Unit Selection
                       Text(
-                        'Jedinica *',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        AppLocalizations.of(context).bookingCreateUnit,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
 
                       unitsAsync.when(
                         data: (units) {
                           if (units.isEmpty) {
-                            return const Text('Nema dostupnih jedinica');
+                            return Text(AppLocalizations.of(context).bookingCreateNoUnits);
                           }
 
                           return DropdownButtonFormField<String>(
                             initialValue: _selectedUnitId,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.bed_outlined),
-                              hintText: 'Odaberite jedinicu *',
+                            decoration: InputDecorationHelper.buildDecoration(
+                              labelText: AppLocalizations.of(context).bookingCreateSelectUnit,
+                              prefixIcon: const Icon(Icons.bed_outlined),
+                              context: context,
                             ),
                             items: units.map((unit) {
-                              return DropdownMenuItem(
-                                value: unit.id,
-                                child: Text(unit.name),
-                              );
+                              return DropdownMenuItem(value: unit.id, child: Text(unit.name));
                             }).toList(),
                             onChanged: (value) {
                               setState(() {
@@ -186,24 +168,23 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                             },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Odaberite jedinicu';
+                                return AppLocalizations.of(context).bookingCreateSelectUnitError;
                               }
                               return null;
                             },
                           );
                         },
                         loading: () => const CircularProgressIndicator(),
-                        error: (error, _) => Text('Greška: $error'),
+                        error: (error, _) =>
+                            Text(AppLocalizations.of(context).bookingCreateErrorGeneric(error.toString())),
                       ),
 
                       const SizedBox(height: 24),
 
                       // Dates
                       Text(
-                        'Datumi *',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        AppLocalizations.of(context).bookingCreateDates,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
 
@@ -212,13 +193,13 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                         Column(
                           children: [
                             _buildDateField(
-                              label: 'Check-in *',
+                              label: AppLocalizations.of(context).bookingCreateCheckIn,
                               date: _checkInDate,
                               onTap: _selectCheckInDate,
                             ),
                             const SizedBox(height: 12),
                             _buildDateField(
-                              label: 'Check-out *',
+                              label: AppLocalizations.of(context).bookingCreateCheckOut,
                               date: _checkOutDate,
                               onTap: _selectCheckOutDate,
                             ),
@@ -229,7 +210,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           children: [
                             Expanded(
                               child: _buildDateField(
-                                label: 'Check-in *',
+                                label: AppLocalizations.of(context).bookingCreateCheckIn,
                                 date: _checkInDate,
                                 onTap: _selectCheckInDate,
                               ),
@@ -237,7 +218,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _buildDateField(
-                                label: 'Check-out *',
+                                label: AppLocalizations.of(context).bookingCreateCheckOut,
                                 date: _checkOutDate,
                                 onTap: _selectCheckOutDate,
                               ),
@@ -251,27 +232,19 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary.withAlpha(
-                            (0.1 * 255).toInt(),
-                          ),
+                          color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.colorScheme.tertiary.withAlpha(
-                              (0.3 * 255).toInt(),
-                            ),
-                          ),
+                          border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.nights_stay,
-                              size: 18,
-                              color: theme.colorScheme.tertiary,
-                            ),
+                            Icon(Icons.nights_stay, size: 18, color: theme.colorScheme.tertiary),
                             const SizedBox(width: 8),
                             Text(
-                              '${_checkOutDate.difference(_checkInDate).inDays} noć${_checkOutDate.difference(_checkInDate).inDays > 1 ? 'i' : ''}',
+                              AppLocalizations.of(
+                                context,
+                              ).bookingCreateNightsCount(_checkOutDate.difference(_checkInDate).inDays),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -286,24 +259,22 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                       // Guest Information
                       Text(
-                        'Informacije o gostu',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        AppLocalizations.of(context).bookingCreateGuestInfo,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
 
                       TextFormField(
                         controller: _guestNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Ime gosta *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.person),
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(context).bookingCreateGuestName,
+                          prefixIcon: const Icon(Icons.person),
+                          context: context,
                         ),
                         textCapitalization: TextCapitalization.words,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Unesite ime gosta';
+                            return AppLocalizations.of(context).bookingCreateGuestNameError;
                           }
                           return null;
                         },
@@ -312,18 +283,18 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                       TextFormField(
                         controller: _guestEmailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.email),
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(context).bookingCreateEmail,
+                          prefixIcon: const Icon(Icons.email),
+                          context: context,
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Unesite email';
+                            return AppLocalizations.of(context).bookingCreateEmailError;
                           }
                           if (!_isValidEmail(value.trim())) {
-                            return 'Unesite validan email';
+                            return AppLocalizations.of(context).bookingCreateEmailInvalid;
                           }
                           return null;
                         },
@@ -332,15 +303,15 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                       TextFormField(
                         controller: _guestPhoneController,
-                        decoration: const InputDecoration(
-                          labelText: 'Telefon *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.phone),
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(context).bookingCreatePhone,
+                          prefixIcon: const Icon(Icons.phone),
+                          context: context,
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Unesite telefon';
+                            return AppLocalizations.of(context).bookingCreatePhoneError;
                           }
                           return null;
                         },
@@ -350,29 +321,27 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                       // Booking Details
                       Text(
-                        'Detalji rezervacije',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        AppLocalizations.of(context).bookingCreateBookingDetails,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
 
                       TextFormField(
                         controller: _guestCountController,
-                        decoration: const InputDecoration(
-                          labelText: 'Broj gostiju *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.people),
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(context).bookingCreateGuestCount,
+                          prefixIcon: const Icon(Icons.people),
+                          context: context,
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Unesite broj gostiju';
+                            return AppLocalizations.of(context).bookingCreateGuestCountError;
                           }
                           final count = int.tryParse(value.trim());
                           if (count == null || count <= 0) {
-                            return 'Broj gostiju mora biti veći od 0';
+                            return AppLocalizations.of(context).bookingCreateGuestCountInvalid;
                           }
                           return null;
                         },
@@ -382,27 +351,25 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       // Total Price Input (manual entry only)
                       TextFormField(
                         controller: _totalPriceController,
-                        decoration: const InputDecoration(
-                          labelText: 'Ukupna cijena (€) *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.euro),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context).bookingCreateTotalPrice,
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.euro),
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Unesite cijenu';
+                            return AppLocalizations.of(context).bookingCreatePriceError;
                           }
                           final price = double.tryParse(value.trim());
                           if (price == null) {
-                            return 'Unesite validnu cijenu';
+                            return AppLocalizations.of(context).bookingCreatePriceInvalid;
                           }
                           if (price < 0) {
-                            return 'Cijena ne može biti negativna';
+                            return AppLocalizations.of(context).bookingCreatePriceNegative;
                           }
                           if (price == 0) {
-                            return 'Cijena mora biti veća od 0';
+                            return AppLocalizations.of(context).bookingCreatePriceZero;
                           }
                           return null;
                         },
@@ -414,28 +381,18 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer
-                              .withValues(alpha: 0.3),
+                          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.3),
-                          ),
+                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.info_outline,
-                              size: 18,
-                              color: theme.colorScheme.primary,
-                            ),
+                            Icon(Icons.info_outline, size: 18, color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Status: Potvrđeno • Plaćanje: Gotovina',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface,
-                                ),
+                                AppLocalizations.of(context).bookingCreateStatusInfo,
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface),
                               ),
                             ),
                           ],
@@ -446,20 +403,18 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                       // Notes
                       Text(
-                        'Napomene',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        AppLocalizations.of(context).bookingCreateNotes,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
 
                       TextFormField(
                         controller: _notesController,
-                        decoration: const InputDecoration(
-                          labelText: 'Interne napomene',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.notes),
-                          hintText: 'Npr. posebni zahtjevi...',
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context).bookingCreateInternalNotes,
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.notes),
+                          hintText: AppLocalizations.of(context).bookingCreateNotesHint,
                         ),
                         maxLines: 3,
                         textCapitalization: TextCapitalization.sentences,
@@ -474,18 +429,14 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-                  ),
-                ),
+                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-                    child: const Text('Otkaži'),
+                    child: Text(AppLocalizations.of(context).bookingCreateCancel),
                   ),
                   const SizedBox(width: 12),
                   Container(
@@ -499,25 +450,16 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                         onTap: _isSaving ? null : _createBooking,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           child: _isSaving
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                 )
-                              : const Text(
-                                  'Kreiraj',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              : Text(
+                                  AppLocalizations.of(context).bookingCreateSubmit,
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
                         ),
                       ),
@@ -532,11 +474,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     );
   }
 
-  Widget _buildDateField({
-    required String label,
-    required DateTime date,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildDateField({required String label, required DateTime date, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       child: InputDecorator(
@@ -545,10 +483,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           border: const OutlineInputBorder(),
           prefixIcon: const Icon(Icons.calendar_today),
         ),
-        child: Text(
-          DateFormat('d.M.yyyy').format(date),
-          style: const TextStyle(fontSize: 16),
-        ),
+        child: Text(DateFormat('d.M.yyyy').format(date), style: const TextStyle(fontSize: 16)),
       ),
     );
   }
@@ -559,17 +494,16 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       initialDate: _checkInDate,
       firstDate: DateTime(2024),
       lastDate: DateTime(2030),
-      helpText: 'Izaberite datum check-in',
-      cancelText: 'Otkaži',
-      confirmText: 'Potvrdi',
+      helpText: AppLocalizations.of(context).bookingCreateSelectCheckInDate,
+      cancelText: AppLocalizations.of(context).bookingCreateCancel,
+      confirmText: AppLocalizations.of(context).confirm,
     );
 
     if (selectedDate != null) {
       setState(() {
         _checkInDate = selectedDate;
         // Ensure check-out is after check-in
-        if (_checkOutDate.isBefore(_checkInDate) ||
-            _checkOutDate.isAtSameMomentAs(_checkInDate)) {
+        if (_checkOutDate.isBefore(_checkInDate) || _checkOutDate.isAtSameMomentAs(_checkInDate)) {
           _checkOutDate = _checkInDate.add(const Duration(days: 1));
         }
       });
@@ -582,9 +516,9 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       initialDate: _checkOutDate,
       firstDate: _checkInDate.add(const Duration(days: 1)),
       lastDate: DateTime(2030),
-      helpText: 'Izaberite datum check-out',
-      cancelText: 'Otkaži',
-      confirmText: 'Potvrdi',
+      helpText: AppLocalizations.of(context).bookingCreateSelectCheckOutDate,
+      cancelText: AppLocalizations.of(context).bookingCreateCancel,
+      confirmText: AppLocalizations.of(context).confirm,
     );
 
     if (selectedDate != null) {
@@ -600,7 +534,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     }
 
     if (_selectedUnitId == null) {
-      _showError('Odaberite jedinicu');
+      _showError(AppLocalizations.of(context).bookingCreateSelectUnitError);
       return;
     }
 
@@ -646,9 +580,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         ownerId: authState.firebaseUser?.uid,
         guestName: _guestNameController.text.trim(),
         guestEmail: _guestEmailController.text.trim(),
-        guestPhone: _guestPhoneController.text.trim().isEmpty
-            ? null
-            : _guestPhoneController.text.trim(),
+        guestPhone: _guestPhoneController.text.trim().isEmpty ? null : _guestPhoneController.text.trim(),
         checkIn: _checkInDate,
         checkOut: _checkOutDate,
         guestCount: guestCount,
@@ -656,9 +588,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         paymentMethod: _paymentMethod,
         paymentStatus: 'pending',
         status: _status,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         source: 'admin',
         createdAt: DateTime.now(),
       );
@@ -667,19 +597,12 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          'Rezervacija uspješno kreirana',
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, AppLocalizations.of(context).bookingCreateSuccess);
       }
     } catch (e) {
       // FIXED: Use ErrorDisplayUtils for user-friendly error messages
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška pri kreiranju rezervacije',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).bookingCreateError);
       }
     } finally {
       if (mounted) {
@@ -694,161 +617,116 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
   void _showError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message), backgroundColor: Theme.of(context).colorScheme.error));
     }
   }
 
   /// Show conflict warning dialog with option to force-save
   Future<bool> _showConflictWarningDialog(List<BookingModel> conflicts) async {
+    final l10n = AppLocalizations.of(context);
     return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        icon: const Icon(
-          Icons.warning,
-          color: Colors.red,
-          size: 48,
-        ),
-        title: const Text(
-          'UPOZORENJE: Preklapanje rezervacija!',
-          style: TextStyle(
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                conflicts.length == 1
-                    ? 'Nova rezervacija se preklapa sa postojećom rezervacijom:'
-                    : 'Nova rezervacija se preklapa sa ${conflicts.length} postojećih rezervacija:',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              // Show conflict details
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 200),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: conflicts.map((conflict) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red[200]!),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.person, size: 16, color: Colors.red),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    conflict.guestName ?? 'Nepoznati gost',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                const Icon(Icons.calendar_today, size: 14, color: Colors.black54),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}. - ${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}.',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: conflict.status.color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  conflict.status.displayName,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: conflict.status.color,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.warning, color: Colors.red, size: 48),
+            title: Text(
+              l10n.bookingCreateOverlapWarning,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    conflicts.length == 1
+                        ? l10n.bookingCreateOverlapSingle
+                        : l10n.bookingCreateOverlapMultiple(conflicts.length),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 18, color: Colors.orange[700]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Želite li svejedno kreirati ovu rezervaciju?',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.orange[900],
-                          fontWeight: FontWeight.w500,
-                        ),
+                  const SizedBox(height: 12),
+                  // Show conflict details
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: conflicts.map((conflict) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red[50],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red[200]!),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.person, size: 16, color: Colors.red),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        conflict.guestName ?? l10n.bookingCreateUnknownGuest,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.calendar_today, size: 14, color: Colors.black54),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}. - ${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}.',
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(color: conflict.status.color, shape: BoxShape.circle),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      conflict.status.displayName,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: conflict.status.color,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.bookingCreateCancel)),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                child: Text(l10n.bookingCreateContinueAnyway),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Otkaži'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Kreiraj svejedno'),
-          ),
-        ],
-      ),
-    ) ?? false; // Return false if dialog dismissed
+        ) ??
+        false; // Return false if dialog dismissed
   }
 }

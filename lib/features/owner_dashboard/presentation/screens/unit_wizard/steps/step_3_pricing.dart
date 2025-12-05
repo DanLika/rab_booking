@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
@@ -93,6 +94,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final wizardState = ref.watch(unitWizardNotifierProvider(widget.unitId));
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -104,9 +106,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
-          decoration: BoxDecoration(
-            gradient: context.gradients.pageBackground,
-          ),
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Column(
@@ -114,7 +114,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
               children: [
                 // Title
                 Text(
-                  'Cena i Dostupnost',
+                  l10n.unitWizardStep3Title,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -124,10 +124,8 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
 
                 // Subtitle
                 Text(
-                  'Postavite cenu, minimalan boravak i dostupnost',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.unitWizardStep3Subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 24),
 
@@ -151,12 +149,9 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-                        gradient: context.gradients.sectionBackground,
+                        color: context.gradients.cardBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: context.gradients.sectionBorder,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -169,34 +164,24 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withAlpha(
-                                      (0.12 * 255).toInt(),
-                                    ),
+                                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(
-                                    Icons.euro,
-                                    color: theme.colorScheme.primary,
-                                    size: 18,
-                                  ),
+                                  child: Icon(Icons.euro, color: theme.colorScheme.primary, size: 18),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Informacije o Cijeni',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    l10n.unitWizardStep3PriceInfo,
+                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Osnovna cijena i pravila rezervacije',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              l10n.unitWizardStep3PriceInfoDesc,
+                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -217,24 +202,22 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       TextFormField(
                                         controller: _priceController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'Cena po Noći (€) *',
-                                          hintText: '50',
-                                          helperText: 'Osnovna cena za jednu noć',
+                                          labelText: l10n.unitWizardStep3PricePerNight,
+                                          hintText: l10n.unitWizardStep3PricePerNightHint,
+                                          helperText: l10n.unitWizardStep3PricePerNightHelper,
                                           prefixIcon: const Icon(Icons.euro),
                                           isMobile: isMobile,
                                           context: context,
                                         ),
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                                        ],
+                                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Cena je obavezna';
+                                            return l10n.unitWizardStep3PriceRequired;
                                           }
                                           final number = double.tryParse(value);
                                           if (number == null || number <= 0) {
-                                            return 'Unesite ispravnu cenu';
+                                            return l10n.unitWizardStep3PriceInvalid;
                                           }
                                           return null;
                                         },
@@ -244,24 +227,22 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       TextFormField(
                                         controller: _weekendPriceController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'Vikend Cena (€)',
-                                          hintText: '70',
-                                          helperText: 'Cena za Sub-Ned (opcionalno)',
+                                          labelText: l10n.unitWizardStep3WeekendPrice,
+                                          hintText: l10n.unitWizardStep3WeekendPriceHint,
+                                          helperText: l10n.unitWizardStep3WeekendPriceHelper,
                                           prefixIcon: const Icon(Icons.weekend),
                                           isMobile: isMobile,
                                           context: context,
                                         ),
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                                        ],
+                                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
                                             return null; // Weekend price is optional
                                           }
                                           final number = double.tryParse(value);
                                           if (number == null || number <= 0) {
-                                            return 'Unesite ispravnu cenu';
+                                            return l10n.unitWizardStep3PriceInvalid;
                                           }
                                           return null;
                                         },
@@ -271,24 +252,22 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       TextFormField(
                                         controller: _minStayController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'Minimalan Boravak (noći) *',
-                                          hintText: '1',
-                                          helperText: 'Najmanje noći za rezervaciju',
+                                          labelText: l10n.unitWizardStep3MinStay,
+                                          hintText: l10n.unitWizardStep3MinStayHint,
+                                          helperText: l10n.unitWizardStep3MinStayHelper,
                                           prefixIcon: const Icon(Icons.calendar_today),
                                           isMobile: isMobile,
                                           context: context,
                                         ),
                                         keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.digitsOnly,
-                                        ],
+                                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Minimalan boravak je obavezan';
+                                            return l10n.unitWizardStep3MinStayRequired;
                                           }
                                           final number = int.tryParse(value);
                                           if (number == null || number < 1) {
-                                            return 'Minimum je 1 noć';
+                                            return l10n.unitWizardStep3MinStayMin;
                                           }
                                           return null;
                                         },
@@ -298,29 +277,27 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       TextFormField(
                                         controller: _maxStayController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'Maksimalan Boravak (noći)',
-                                          hintText: '30',
-                                          helperText: 'Najviše noći (opcionalno)',
+                                          labelText: l10n.unitWizardStep3MaxStay,
+                                          hintText: l10n.unitWizardStep3MaxStayHint,
+                                          helperText: l10n.unitWizardStep3MaxStayHelper,
                                           prefixIcon: const Icon(Icons.date_range),
                                           isMobile: isMobile,
                                           context: context,
                                         ),
                                         keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.digitsOnly,
-                                        ],
+                                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
                                             return null; // Max stay is optional
                                           }
                                           final number = int.tryParse(value);
                                           if (number == null || number < 1) {
-                                            return 'Unesite ispravan broj';
+                                            return l10n.unitWizardStep3MaxStayInvalid;
                                           }
                                           // Check that max >= min
                                           final minStay = int.tryParse(_minStayController.text) ?? 1;
                                           if (number < minStay) {
-                                            return 'Max mora biti >= min ($minStay)';
+                                            return l10n.unitWizardStep3MaxStayMinError(minStay);
                                           }
                                           return null;
                                         },
@@ -339,9 +316,9 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           child: TextFormField(
                                             controller: _priceController,
                                             decoration: InputDecorationHelper.buildDecoration(
-                                              labelText: 'Cena po Noći (€) *',
-                                              hintText: '50',
-                                              helperText: 'Osnovna cena za jednu noć',
+                                              labelText: l10n.unitWizardStep3PricePerNight,
+                                              hintText: l10n.unitWizardStep3PricePerNightHint,
+                                              helperText: l10n.unitWizardStep3PricePerNightHelper,
                                               prefixIcon: const Icon(Icons.euro),
                                               isMobile: isMobile,
                                               context: context,
@@ -352,11 +329,11 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                             ],
                                             validator: (value) {
                                               if (value == null || value.isEmpty) {
-                                                return 'Cena je obavezna';
+                                                return l10n.unitWizardStep3PriceRequired;
                                               }
                                               final number = double.tryParse(value);
                                               if (number == null || number <= 0) {
-                                                return 'Unesite ispravnu cenu';
+                                                return l10n.unitWizardStep3PriceInvalid;
                                               }
                                               return null;
                                             },
@@ -368,9 +345,9 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           child: TextFormField(
                                             controller: _weekendPriceController,
                                             decoration: InputDecorationHelper.buildDecoration(
-                                              labelText: 'Vikend Cena (€)',
-                                              hintText: '70',
-                                              helperText: 'Cena za Sub-Ned (opcionalno)',
+                                              labelText: l10n.unitWizardStep3WeekendPrice,
+                                              hintText: l10n.unitWizardStep3WeekendPriceHint,
+                                              helperText: l10n.unitWizardStep3WeekendPriceHelper,
                                               prefixIcon: const Icon(Icons.weekend),
                                               isMobile: isMobile,
                                               context: context,
@@ -385,7 +362,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                               }
                                               final number = double.tryParse(value);
                                               if (number == null || number <= 0) {
-                                                return 'Unesite ispravnu cenu';
+                                                return l10n.unitWizardStep3PriceInvalid;
                                               }
                                               return null;
                                             },
@@ -401,24 +378,22 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           child: TextFormField(
                                             controller: _minStayController,
                                             decoration: InputDecorationHelper.buildDecoration(
-                                              labelText: 'Minimalan Boravak (noći) *',
-                                              hintText: '1',
-                                              helperText: 'Najmanje noći za rezervaciju',
+                                              labelText: l10n.unitWizardStep3MinStay,
+                                              hintText: l10n.unitWizardStep3MinStayHint,
+                                              helperText: l10n.unitWizardStep3MinStayHelper,
                                               prefixIcon: const Icon(Icons.calendar_today),
                                               isMobile: isMobile,
                                               context: context,
                                             ),
                                             keyboardType: TextInputType.number,
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter.digitsOnly,
-                                            ],
+                                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                             validator: (value) {
                                               if (value == null || value.isEmpty) {
-                                                return 'Minimalan boravak je obavezan';
+                                                return l10n.unitWizardStep3MinStayRequired;
                                               }
                                               final number = int.tryParse(value);
                                               if (number == null || number < 1) {
-                                                return 'Minimum je 1 noć';
+                                                return l10n.unitWizardStep3MinStayMin;
                                               }
                                               return null;
                                             },
@@ -429,29 +404,27 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           child: TextFormField(
                                             controller: _maxStayController,
                                             decoration: InputDecorationHelper.buildDecoration(
-                                              labelText: 'Maksimalan Boravak (noći)',
-                                              hintText: '30',
-                                              helperText: 'Najviše noći (opcionalno)',
+                                              labelText: l10n.unitWizardStep3MaxStay,
+                                              hintText: l10n.unitWizardStep3MaxStayHint,
+                                              helperText: l10n.unitWizardStep3MaxStayHelper,
                                               prefixIcon: const Icon(Icons.date_range),
                                               isMobile: isMobile,
                                               context: context,
                                             ),
                                             keyboardType: TextInputType.number,
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter.digitsOnly,
-                                            ],
+                                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                             validator: (value) {
                                               if (value == null || value.isEmpty) {
                                                 return null; // Max stay is optional
                                               }
                                               final number = int.tryParse(value);
                                               if (number == null || number < 1) {
-                                                return 'Unesite ispravan broj';
+                                                return l10n.unitWizardStep3MaxStayInvalid;
                                               }
                                               // Check that max >= min
                                               final minStay = int.tryParse(_minStayController.text) ?? 1;
                                               if (number < minStay) {
-                                                return 'Max mora biti >= min ($minStay)';
+                                                return l10n.unitWizardStep3MaxStayMinError(minStay);
                                               }
                                               return null;
                                             },
@@ -491,12 +464,9 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-                        gradient: context.gradients.sectionBackground,
+                        color: context.gradients.cardBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: context.gradients.sectionBorder,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -509,34 +479,24 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withAlpha(
-                                      (0.12 * 255).toInt(),
-                                    ),
+                                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(
-                                    Icons.calendar_today,
-                                    color: theme.colorScheme.primary,
-                                    size: 18,
-                                  ),
+                                  child: Icon(Icons.calendar_today, color: theme.colorScheme.primary, size: 18),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Dostupnost',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    l10n.unitWizardStep3Availability,
+                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Postavite kada je jedinica dostupna za rezervacije',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              l10n.unitWizardStep3AvailabilityDesc,
+                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -545,15 +505,10 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                             // Year-round toggle
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: Text(
-                                'Dostupna Tokom Cijele Godine',
-                                style: theme.textTheme.titleMedium,
-                              ),
+                              title: Text(l10n.unitWizardStep3YearRound, style: theme.textTheme.titleMedium),
                               subtitle: Text(
-                                'Jedinica je otvorena za rezervacije 365 dana godišnje',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                                l10n.unitWizardStep3YearRoundDesc,
+                                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               ),
                               trailing: Switch(
                                 value: draft.availableYearRound,
@@ -580,25 +535,19 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.secondaryContainer.withAlpha((0.3 * 255).toInt()),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: theme.colorScheme.secondary.withAlpha((0.3 * 255).toInt()),
-                    ),
+                    border: Border.all(color: theme.colorScheme.secondary.withAlpha((0.3 * 255).toInt())),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.lightbulb_outline,
-                        color: theme.colorScheme.secondary,
-                        size: 24,
-                      ),
+                      Icon(Icons.lightbulb_outline, color: theme.colorScheme.secondary, size: 24),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Napredne opcije cijena',
+                              l10n.unitWizardStep3AdvancedTitle,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: theme.colorScheme.secondary,
@@ -606,9 +555,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Nakon kreiranja jedinice, u Cjenovnik tabu možete podesiti napredne opcije '
-                              'kao što su min/max noći po datumu, blokiranje check-in/check-out dana, '
-                              'vikend dani i sezonske cijene.',
+                              l10n.unitWizardStep3AdvancedDesc,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                               ),
@@ -626,9 +573,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 }

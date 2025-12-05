@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../../core/utils/slug_utils.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
@@ -115,15 +116,15 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
+    final l10n = AppLocalizations.of(context);
+
     return wizardState.when(
       data: (draft) {
         _loadData(draft);
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
-          decoration: BoxDecoration(
-            gradient: context.gradients.pageBackground,
-          ),
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Column(
@@ -131,7 +132,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
               children: [
                 // Title
                 Text(
-                  'Osnovne Informacije',
+                  l10n.unitWizardStep1Title,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -141,10 +142,8 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
 
                 // Subtitle
                 Text(
-                  'Unesite naziv i opis smještajne jedinice',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.unitWizardStep1Subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 24),
 
@@ -168,12 +167,9 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-                        gradient: context.gradients.sectionBackground,
+                        color: context.gradients.cardBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: context.gradients.sectionBorder,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -186,34 +182,24 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withAlpha(
-                                      (0.12 * 255).toInt(),
-                                    ),
+                                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(
-                                    Icons.meeting_room,
-                                    color: theme.colorScheme.primary,
-                                    size: 18,
-                                  ),
+                                  child: Icon(Icons.meeting_room, color: theme.colorScheme.primary, size: 18),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Informacije o Jedinici',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    l10n.unitWizardStep1UnitInfo,
+                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Naziv i URL slug jedinice za identifikaciju',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              l10n.unitWizardStep1UnitInfoDesc,
+                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -234,15 +220,15 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       TextFormField(
                                         controller: _nameController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'Naziv Jedinice *',
-                                          hintText: 'npr. Apartman Prizemlje',
+                                          labelText: l10n.unitWizardStep1UnitName,
+                                          hintText: l10n.unitWizardStep1UnitNameHint,
                                           prefixIcon: const Icon(Icons.meeting_room),
                                           isMobile: isMobile,
                                           context: context,
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Naziv je obavezan';
+                                            return l10n.unitWizardStep1UnitNameRequired;
                                           }
                                           return null;
                                         },
@@ -252,12 +238,12 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       TextFormField(
                                         controller: _slugController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'URL Slug',
-                                          hintText: 'apartman-prizemlje',
+                                          labelText: l10n.unitWizardStep1UrlSlug,
+                                          hintText: l10n.unitWizardStep1UrlSlugHint,
                                           prefixIcon: const Icon(Icons.link),
                                           suffixIcon: IconButton(
                                             icon: const Icon(Icons.refresh),
-                                            tooltip: 'Regeneriši iz naziva',
+                                            tooltip: l10n.unitWizardStep1RegenerateSlug,
                                             onPressed: _regenerateSlug,
                                           ),
                                           isMobile: isMobile,
@@ -265,10 +251,10 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Slug je obavezan';
+                                            return l10n.unitWizardStep1SlugRequired;
                                           }
                                           if (!isValidSlug(value)) {
-                                            return 'Slug može sadržavati samo mala slova, brojeve i crtice';
+                                            return l10n.unitWizardStep1SlugInvalid;
                                           }
                                           return null;
                                         },
@@ -285,15 +271,15 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       child: TextFormField(
                                         controller: _nameController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'Naziv Jedinice *',
-                                          hintText: 'npr. Apartman Prizemlje',
+                                          labelText: l10n.unitWizardStep1UnitName,
+                                          hintText: l10n.unitWizardStep1UnitNameHint,
                                           prefixIcon: const Icon(Icons.meeting_room),
                                           isMobile: isMobile,
                                           context: context,
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Naziv je obavezan';
+                                            return l10n.unitWizardStep1UnitNameRequired;
                                           }
                                           return null;
                                         },
@@ -305,12 +291,12 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       child: TextFormField(
                                         controller: _slugController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'URL Slug',
-                                          hintText: 'apartman-prizemlje',
+                                          labelText: l10n.unitWizardStep1UrlSlug,
+                                          hintText: l10n.unitWizardStep1UrlSlugHint,
                                           prefixIcon: const Icon(Icons.link),
                                           suffixIcon: IconButton(
                                             icon: const Icon(Icons.refresh),
-                                            tooltip: 'Regeneriši iz naziva',
+                                            tooltip: l10n.unitWizardStep1RegenerateSlug,
                                             onPressed: _regenerateSlug,
                                           ),
                                           isMobile: isMobile,
@@ -318,10 +304,10 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Slug je obavezan';
+                                            return l10n.unitWizardStep1SlugRequired;
                                           }
                                           if (!isValidSlug(value)) {
-                                            return 'Slug može sadržavati samo mala slova, brojeve i crtice';
+                                            return l10n.unitWizardStep1SlugInvalid;
                                           }
                                           return null;
                                         },
@@ -359,12 +345,9 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-                        gradient: context.gradients.sectionBackground,
+                        color: context.gradients.cardBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: context.gradients.sectionBorder,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -377,34 +360,24 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withAlpha(
-                                      (0.12 * 255).toInt(),
-                                    ),
+                                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(
-                                    Icons.description,
-                                    color: theme.colorScheme.primary,
-                                    size: 18,
-                                  ),
+                                  child: Icon(Icons.description, color: theme.colorScheme.primary, size: 18),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Opis Jedinice',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    l10n.unitWizardStep1Description,
+                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Dodatne informacije koje će biti vidljive gostima',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              l10n.unitWizardStep1DescriptionInfo,
+                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -414,13 +387,11 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                             TextFormField(
                               controller: _descriptionController,
                               decoration: InputDecorationHelper.buildDecoration(
-                                labelText: 'Opis (opcionalno)',
-                                hintText: 'Kratki opis jedinice...',
+                                labelText: l10n.unitWizardStep1DescriptionLabel,
+                                hintText: l10n.unitWizardStep1DescriptionHint,
                                 isMobile: isMobile,
                                 context: context,
-                              ).copyWith(
-                                counterText: '${_descriptionController.text.length}/500',
-                              ),
+                              ).copyWith(counterText: '${_descriptionController.text.length}/500'),
                               minLines: 2,
                               maxLines: 4,
                               maxLength: 500,
@@ -439,9 +410,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 }

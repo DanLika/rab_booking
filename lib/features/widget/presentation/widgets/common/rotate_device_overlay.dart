@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Overlay prompting user to rotate device to landscape mode.
 ///
@@ -28,11 +29,15 @@ class RotateDeviceOverlay extends StatelessWidget {
   /// Callback when user taps "Switch to Month View" button
   final VoidCallback onSwitchToMonthView;
 
+  /// Translations for localization
+  final WidgetTranslations translations;
+
   const RotateDeviceOverlay({
     super.key,
     required this.isDarkMode,
     required this.colors,
     required this.onSwitchToMonthView,
+    required this.translations,
   });
 
   @override
@@ -50,14 +55,10 @@ class RotateDeviceOverlay extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.screen_rotation,
-                  size: iconSize,
-                  color: colors.textPrimary,
-                ),
+                Icon(Icons.screen_rotation, size: iconSize, color: colors.textPrimary),
                 const SizedBox(height: SpacingTokens.l),
                 Text(
-                  'Rotate Your Device',
+                  translations.rotateYourDevice,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeXXL,
                     fontWeight: TypographyTokens.bold,
@@ -67,37 +68,22 @@ class RotateDeviceOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: SpacingTokens.m),
                 Text(
-                  'For the best year view experience, please rotate your device to landscape mode.',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    color: colors.textSecondary,
-                  ),
+                  translations.rotateForBestExperience,
+                  style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: SpacingTokens.xl),
                 ElevatedButton(
                   onPressed: onSwitchToMonthView,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isDarkMode
-                        ? ColorTokens.pureWhite
-                        : ColorTokens.pureBlack,
-                    foregroundColor: isDarkMode
-                        ? ColorTokens.pureBlack
-                        : ColorTokens.pureWhite,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingTokens.xl,
-                      vertical: SpacingTokens.m,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                    ),
+                    backgroundColor: isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack,
+                    foregroundColor: isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite,
+                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xl, vertical: SpacingTokens.m),
+                    shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
                   ),
-                  child: const Text(
-                    'Switch to Month View',
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeM,
-                      fontWeight: TypographyTokens.semiBold,
-                    ),
+                  child: Text(
+                    translations.switchToMonthView,
+                    style: const TextStyle(fontSize: TypographyTokens.fontSizeM, fontWeight: TypographyTokens.semiBold),
                   ),
                 ),
               ],

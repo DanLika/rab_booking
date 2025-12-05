@@ -20,6 +20,8 @@ class AppGradients extends ThemeExtension<AppGradients> {
     required this.sectionBackground,
     required this.brandPrimary,
     required this.sectionBorder,
+    required this.cardBackground,
+    required this.inputFillColor,
   });
 
   /// Screen body gradient (left → right, horizontal)
@@ -27,7 +29,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
   final LinearGradient pageBackground;
 
   /// Section/Card gradient (right → left, horizontal)
-  /// Used for: cards, sections, elevated containers
+  /// Used for: sidebar panels, elevated sections
   final LinearGradient sectionBackground;
 
   /// Brand purple gradient (topLeft → bottomRight)
@@ -35,28 +37,44 @@ class AppGradients extends ThemeExtension<AppGradients> {
   final LinearGradient brandPrimary;
 
   /// Section border color (theme-aware)
-  /// Light: warm beige (#E8E5DC), Dark: warm gray (#3D3733)
+  /// Light: cool gray (#E0DCE8), Dark: dark cool gray (#35323D)
   final Color sectionBorder;
+
+  /// Card background color (flat, no gradient)
+  /// Used for: info cards, list tiles, flat containers
+  final Color cardBackground;
+
+  /// Input fill color for text fields, dropdowns, and form inputs
+  /// Light: subtle lavender (#F5F3F9), Dark: darker purple-gray (#1E1C24)
+  final Color inputFillColor;
 
   // ============================================================================
   // CENTRAL COLOR DEFINITIONS - CHANGE HERE = UPDATE EVERYWHERE!
   // ============================================================================
 
-  // Light theme: Warm cream → White (Mediterranean sun feel)
-  static const Color _lightStart = Color(0xFFFAF8F3); // Cream/beige
+  // Light theme: Cool lavender-gray → White (matches purple brand)
+  static const Color _lightStart = Color(0xFFF5F3F9); // Lavender-gray
   static const Color _lightEnd = Color(0xFFFFFFFF); // White
 
-  // Dark theme: Warm charcoal → Warm stone (Mediterranean evening feel)
-  static const Color _darkStart = Color(0xFF1C1917); // Warm charcoal
-  static const Color _darkEnd = Color(0xFF292524); // Warm stone
+  // Dark theme: Cool dark purple-gray (matches purple brand)
+  static const Color _darkStart = Color(0xFF1A1820); // Dark purple-gray
+  static const Color _darkEnd = Color(0xFF211F26); // Slightly lighter
 
   // Brand purple (same for light & dark)
   static const Color _brandStart = Color(0xFF6B4CE6); // Purple
   static const Color _brandEnd = Color(0xFF7E5FEE); // Lighter purple
 
-  // Section border colors (warm tones to match backgrounds)
-  static const Color _lightBorder = Color(0xFFE8E5DC); // Warm beige
-  static const Color _darkBorder = Color(0xFF3D3733); // Warm gray
+  // Section border colors (cool tones to match backgrounds)
+  static const Color _lightBorder = Color(0xFFE0DCE8); // Cool gray
+  static const Color _darkBorder = Color(0xFF35323D); // Dark cool gray
+
+  // Card background colors (flat, no gradient)
+  static const Color _lightCard = Color(0xFFFFFFFF); // White
+  static const Color _darkCard = Color(0xFF252330); // Dark purple-gray
+
+  // Input fill colors (for text fields, dropdowns)
+  static const Color _lightInputFill = Color(0xFFF5F3F9); // Subtle lavender
+  static const Color _darkInputFill = Color(0xFF1E1C24); // Darker purple-gray
 
   // ============================================================================
   // PREDEFINED THEME INSTANCES
@@ -64,15 +82,12 @@ class AppGradients extends ThemeExtension<AppGradients> {
 
   /// Light theme gradients
   static const AppGradients light = AppGradients(
-    pageBackground: LinearGradient(
-      colors: [_lightStart, _lightEnd],
-      stops: [0.0, 0.3],
-    ),
+    pageBackground: LinearGradient(colors: [_lightStart, _lightEnd], stops: [0.0, 0.6]),
     sectionBackground: LinearGradient(
       begin: Alignment.centerRight,
       end: Alignment.centerLeft,
-      colors: [_lightStart, _lightEnd],
-      stops: [0.0, 0.3],
+      colors: [Color(0xFFEFECF5), Color(0xFFF8F7FB)],
+      stops: [0.0, 0.5],
     ),
     brandPrimary: LinearGradient(
       begin: Alignment.topLeft,
@@ -80,19 +95,18 @@ class AppGradients extends ThemeExtension<AppGradients> {
       colors: [_brandStart, _brandEnd],
     ),
     sectionBorder: _lightBorder,
+    cardBackground: _lightCard,
+    inputFillColor: _lightInputFill,
   );
 
   /// Dark theme gradients
   static const AppGradients dark = AppGradients(
-    pageBackground: LinearGradient(
-      colors: [_darkStart, _darkEnd],
-      stops: [0.0, 0.3],
-    ),
+    pageBackground: LinearGradient(colors: [_darkStart, _darkEnd], stops: [0.0, 0.6]),
     sectionBackground: LinearGradient(
       begin: Alignment.centerRight,
       end: Alignment.centerLeft,
-      colors: [_darkStart, _darkEnd],
-      stops: [0.0, 0.3],
+      colors: [Color(0xFF252330), Color(0xFF1E1C24)],
+      stops: [0.0, 0.5],
     ),
     brandPrimary: LinearGradient(
       begin: Alignment.topLeft,
@@ -100,6 +114,8 @@ class AppGradients extends ThemeExtension<AppGradients> {
       colors: [_brandStart, _brandEnd],
     ),
     sectionBorder: _darkBorder,
+    cardBackground: _darkCard,
+    inputFillColor: _darkInputFill,
   );
 
   // ============================================================================
@@ -112,12 +128,16 @@ class AppGradients extends ThemeExtension<AppGradients> {
     LinearGradient? sectionBackground,
     LinearGradient? brandPrimary,
     Color? sectionBorder,
+    Color? cardBackground,
+    Color? inputFillColor,
   }) {
     return AppGradients(
       pageBackground: pageBackground ?? this.pageBackground,
       sectionBackground: sectionBackground ?? this.sectionBackground,
       brandPrimary: brandPrimary ?? this.brandPrimary,
       sectionBorder: sectionBorder ?? this.sectionBorder,
+      cardBackground: cardBackground ?? this.cardBackground,
+      inputFillColor: inputFillColor ?? this.inputFillColor,
     );
   }
 
@@ -130,6 +150,8 @@ class AppGradients extends ThemeExtension<AppGradients> {
       sectionBackground: LinearGradient.lerp(sectionBackground, other.sectionBackground, t)!,
       brandPrimary: LinearGradient.lerp(brandPrimary, other.brandPrimary, t)!,
       sectionBorder: Color.lerp(sectionBorder, other.sectionBorder, t)!,
+      cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
+      inputFillColor: Color.lerp(inputFillColor, other.inputFillColor, t)!,
     );
   }
 
@@ -148,6 +170,16 @@ class AppGradients extends ThemeExtension<AppGradients> {
 
   /// Get the end color of brand gradient
   Color get brandEnd => brandPrimary.colors.last;
+
+  // ============================================================================
+  // STATIC COLOR ACCESS (for card backgrounds)
+  // ============================================================================
+
+  /// Light theme card background
+  static Color get lightCardBackground => _lightCard;
+
+  /// Dark theme card background
+  static Color get darkCardBackground => _darkCard;
 
   // ============================================================================
   // STATIC COLOR ACCESS (for use without context)

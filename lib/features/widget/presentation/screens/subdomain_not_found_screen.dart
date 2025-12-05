@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../l10n/widget_translations.dart';
 
 /// Screen displayed when a subdomain URL doesn't match any property.
 ///
@@ -16,16 +17,12 @@ class SubdomainNotFoundScreen extends StatelessWidget {
   /// The invalid subdomain that was attempted
   final String subdomain;
 
-  const SubdomainNotFoundScreen({
-    super.key,
-    required this.subdomain,
-  });
+  const SubdomainNotFoundScreen({super.key, required this.subdomain});
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).brightness == Brightness.dark
-        ? ColorTokens.dark
-        : ColorTokens.light;
+    final colors = Theme.of(context).brightness == Brightness.dark ? ColorTokens.dark : ColorTokens.light;
+    final tr = WidgetTranslations.of(context);
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
@@ -42,21 +39,14 @@ class SubdomainNotFoundScreen extends StatelessWidget {
                   Container(
                     width: 100,
                     height: 100,
-                    decoration: BoxDecoration(
-                      color: colors.error.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.error_outline_rounded,
-                      size: 50,
-                      color: colors.error,
-                    ),
+                    decoration: BoxDecoration(color: colors.error.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: Icon(Icons.error_outline_rounded, size: 50, color: colors.error),
                   ),
                   const SizedBox(height: SpacingTokens.xl),
 
                   // Title
                   Text(
-                    'Property Not Found',
+                    tr.propertyNotFoundTitle,
                     style: GoogleFonts.inter(
                       fontSize: TypographyTokens.fontSizeXXL,
                       fontWeight: TypographyTokens.bold,
@@ -68,10 +58,7 @@ class SubdomainNotFoundScreen extends StatelessWidget {
 
                   // Subdomain display
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingTokens.m,
-                      vertical: SpacingTokens.s,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
                     decoration: BoxDecoration(
                       color: colors.backgroundSecondary,
                       borderRadius: BorderTokens.circularMedium,
@@ -90,11 +77,7 @@ class SubdomainNotFoundScreen extends StatelessWidget {
 
                   // Explanation
                   Text(
-                    "We couldn't find a property associated with this address. "
-                    'This could happen if:\n\n'
-                    '- The property link has expired\n'
-                    '- The address was typed incorrectly\n'
-                    '- The property is no longer available',
+                    tr.propertyNotFoundExplanation,
                     style: GoogleFonts.inter(
                       fontSize: TypographyTokens.fontSizeM,
                       color: colors.textSecondary,
@@ -114,14 +97,10 @@ class SubdomainNotFoundScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.help_outline_rounded,
-                          size: 32,
-                          color: colors.primary,
-                        ),
+                        Icon(Icons.help_outline_rounded, size: 32, color: colors.primary),
                         const SizedBox(height: SpacingTokens.s),
                         Text(
-                          'Need Help?',
+                          tr.needHelp,
                           style: GoogleFonts.inter(
                             fontSize: TypographyTokens.fontSizeM,
                             fontWeight: TypographyTokens.semiBold,
@@ -130,12 +109,8 @@ class SubdomainNotFoundScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: SpacingTokens.xs),
                         Text(
-                          'If you received this link from a property owner, '
-                          'please contact them directly for assistance.',
-                          style: GoogleFonts.inter(
-                            fontSize: TypographyTokens.fontSizeS,
-                            color: colors.textSecondary,
-                          ),
+                          tr.contactPropertyOwnerForHelp,
+                          style: GoogleFonts.inter(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                           textAlign: TextAlign.center,
                         ),
                       ],

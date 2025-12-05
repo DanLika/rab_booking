@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 
@@ -8,9 +9,7 @@ void showThemeSelectionBottomSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
     builder: (context) => const ThemeSelectionBottomSheet(),
   );
 }
@@ -22,11 +21,12 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentThemeMode = ref.watch(currentThemeModeProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
-        gradient: context.gradients.sectionBackground,
+        color: context.gradients.cardBackground,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Column(
@@ -37,16 +37,11 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                Icon(
-                  Icons.brightness_6_outlined,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+                Icon(Icons.brightness_6_outlined, color: Theme.of(context).colorScheme.onSurface),
                 const SizedBox(width: 12),
                 Text(
-                  'Select Theme',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  l10n.themeSelectionTitle,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -58,8 +53,8 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
           _ThemeOption(
             themeMode: ThemeMode.light,
             icon: Icons.light_mode,
-            title: 'Light',
-            subtitle: 'Always use light theme',
+            title: l10n.themeSelectionLight,
+            subtitle: l10n.themeSelectionLightDesc,
             isSelected: currentThemeMode == ThemeMode.light,
             onTap: () {
               Navigator.of(context).pop();
@@ -73,8 +68,8 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
           _ThemeOption(
             themeMode: ThemeMode.dark,
             icon: Icons.dark_mode,
-            title: 'Dark',
-            subtitle: 'Always use dark theme',
+            title: l10n.themeSelectionDark,
+            subtitle: l10n.themeSelectionDarkDesc,
             isSelected: currentThemeMode == ThemeMode.dark,
             onTap: () {
               Navigator.of(context).pop();
@@ -88,8 +83,8 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
           _ThemeOption(
             themeMode: ThemeMode.system,
             icon: Icons.brightness_auto,
-            title: 'System Default',
-            subtitle: 'Follow system theme',
+            title: l10n.themeSelectionSystem,
+            subtitle: l10n.themeSelectionSystemDesc,
             isSelected: currentThemeMode == ThemeMode.system,
             onTap: () {
               Navigator.of(context).pop();
@@ -127,7 +122,7 @@ class _ThemeOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Use colorScheme.primary which is more vibrant than primaryColor
     final selectedColor = theme.colorScheme.primary;
 
@@ -140,31 +135,21 @@ class _ThemeOption extends StatelessWidget {
           color: isSelected
               ? selectedColor.withValues(alpha: isDark ? 0.35 : 0.15)
               : isDark
-                  ? Colors.white.withValues(alpha: 0.15)
-                  : Colors.grey[200],
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.grey[200],
         ),
         child: Icon(
           icon,
           color: isSelected
               ? (isDark ? Colors.white : selectedColor)
               : isDark
-                  ? Colors.white
-                  : Colors.grey[600],
+              ? Colors.white
+              : Colors.grey[600],
         ),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
+      title: Text(title, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
       subtitle: Text(subtitle),
-      trailing: isSelected
-          ? Icon(
-              Icons.check_circle,
-              color: isDark ? Colors.white : selectedColor,
-            )
-          : null,
+      trailing: isSelected ? Icon(Icons.check_circle, color: isDark ? Colors.white : selectedColor) : null,
       onTap: onTap,
     );
   }

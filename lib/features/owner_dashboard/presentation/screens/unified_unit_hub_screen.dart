@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -37,17 +38,7 @@ const Color _kAvailableColor = Color(0xFF66BB6A);
 /// Unavailable status color
 const Color _kUnavailableColor = Color(0xFFEF5350);
 
-/// Croatian pluralization for "jedinica" (unit)
-/// 1 -> jedinica, 2-4 -> jedinice, 0/5+ -> jedinica
-String _pluralizeJedinica(int count) {
-  if (count == 1) return 'jedinica';
-  final lastDigit = count % 10;
-  final lastTwoDigits = count % 100;
-  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) {
-    return 'jedinice';
-  }
-  return 'jedinica';
-}
+// ============================================================================
 
 /// Unified Unit Hub - Centralno mjesto za sve unit operacije
 /// Master-Detail layout sa tab navigacijom
@@ -66,12 +57,10 @@ class UnifiedUnitHubScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<UnifiedUnitHubScreen> createState() =>
-      _UnifiedUnitHubScreenState();
+  ConsumerState<UnifiedUnitHubScreen> createState() => _UnifiedUnitHubScreenState();
 }
 
-class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
-    with SingleTickerProviderStateMixin {
+class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> with SingleTickerProviderStateMixin {
   UnitModel? _selectedUnit;
   PropertyModel? _selectedProperty;
   late TabController _tabController;
@@ -84,12 +73,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   String _searchQuery = '';
 
   // Vertical tabs with icon above text (compact design)
-  List<Widget> _buildTabs() {
+  List<Widget> _buildTabs(AppLocalizations l10n) {
     return [
-      _buildTab(Icons.description_outlined, 'Osnovni Podaci'),
-      _buildTab(Icons.payments_outlined, 'Cjenovnik'),
-      _buildTab(Icons.code, 'Widget'),
-      _buildTab(Icons.tune, 'Napredne Postavke'),
+      _buildTab(Icons.description_outlined, l10n.unitHubTabBasicInfo),
+      _buildTab(Icons.payments_outlined, l10n.unitHubTabPricing),
+      _buildTab(Icons.code, l10n.unitHubTabWidget),
+      _buildTab(Icons.tune, l10n.unitHubTabAdvanced),
     ];
   }
 
@@ -114,7 +103,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         _searchQuery = _searchController.text.toLowerCase();
       });
     });
-
   }
 
   @override
@@ -129,9 +117,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     if (units.isNotEmpty && _selectedUnit == null) {
       // Auto-select first unit when none is selected
       final firstUnit = units.first;
-      final property = await ref.read(
-        propertyByIdProvider(firstUnit.propertyId).future,
-      );
+      final property = await ref.read(propertyByIdProvider(firstUnit.propertyId).future);
       if (mounted) {
         setState(() {
           _selectedUnit = firstUnit;
@@ -140,10 +126,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       }
     } else if (_selectedUnit != null) {
       // Update selected unit with fresh data from stream
-      final updatedUnit = units.firstWhere(
-        (u) => u.id == _selectedUnit!.id,
-        orElse: () => _selectedUnit!,
-      );
+      final updatedUnit = units.firstWhere((u) => u.id == _selectedUnit!.id, orElse: () => _selectedUnit!);
       // Only update if data actually changed
       if (updatedUnit != _selectedUnit && mounted) {
         setState(() {
@@ -161,26 +144,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final isDesktop = screenWidth >= _kDesktopBreakpoint;
 
     // Listen for units changes and handle side effects (auto-selection, sync)
-    ref.listen<AsyncValue<List<UnitModel>>>(
-      ownerUnitsProvider,
-      (previous, next) {
-        next.whenData(_handleUnitsChanged);
-      },
-    );
+    ref.listen<AsyncValue<List<UnitModel>>>(ownerUnitsProvider, (previous, next) {
+      next.whenData(_handleUnitsChanged);
+    });
+
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       key: _scaffoldKey,
       appBar: isDesktop
           ? CommonAppBar(
-              title: 'Smještajne Jedinice',
+              title: l10n.unitHubTitle,
               leadingIcon: Icons.menu,
               onLeadingIconTap: (_) => _scaffoldKey.currentState?.openDrawer(),
             )
           : AppBar(
-              title: Text(
-                _selectedUnit?.name ?? 'Smještajne Jedinice',
-                style: const TextStyle(color: Colors.white),
-              ),
+              title: Text(_selectedUnit?.name ?? l10n.unitHubTitle, style: const TextStyle(color: Colors.white)),
               centerTitle: false,
               leading: IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
@@ -190,14 +169,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 IconButton(
                   icon: const Icon(Icons.list, color: Colors.white),
                   onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-                  tooltip: 'Prikaži sve jedinice',
+                  tooltip: l10n.unitHubShowAllUnits,
                 ),
               ],
-              flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                  gradient: GradientTokens.brandPrimary,
-                ),
-              ),
+              flexibleSpace: Container(decoration: const BoxDecoration(gradient: GradientTokens.brandPrimary)),
             ),
       drawer: const OwnerAppDrawer(currentRoute: 'unit-hub'),
       // EndDrawer for mobile/tablet - shows master panel
@@ -205,9 +180,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ? Drawer(
               width: _kMasterPanelWidth,
               child: Container(
-                decoration: BoxDecoration(
-                  gradient: context.gradients.sectionBackground,
-                ),
+                decoration: BoxDecoration(gradient: context.gradients.sectionBackground),
                 child: Builder(
                   builder: (drawerContext) => _buildMasterPanel(
                     theme,
@@ -224,12 +197,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             )
           : null,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
-        child: isDesktop
-            ? _buildDesktopLayout(theme, isDark, screenWidth)
-            : _buildMobileLayout(theme, isDark),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: isDesktop ? _buildDesktopLayout(theme, isDark, screenWidth) : _buildMobileLayout(theme, isDark),
       ),
     );
   }
@@ -247,11 +216,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           width: _kMasterPanelWidth,
           decoration: BoxDecoration(
             gradient: context.gradients.sectionBackground,
-            border: Border(
-              left: BorderSide(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2),
-              ),
-            ),
+            border: Border(left: BorderSide(color: context.gradients.sectionBorder, width: 1.5)),
           ),
           child: _buildMasterPanel(theme, isDark),
         ),
@@ -268,12 +233,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   /// Master panel - Properties and Units list (hierarchical view)
-  Widget _buildMasterPanel(
-    ThemeData theme,
-    bool isDark, {
-    VoidCallback? onUnitSelected,
-  }) {
+  Widget _buildMasterPanel(ThemeData theme, bool isDark, {VoidCallback? onUnitSelected}) {
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       children: [
@@ -281,28 +243,19 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2),
-              ),
-            ),
+            border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2))),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.home_work_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(Icons.home_work_outlined, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Objekti i Jedinice',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      l10n.unitHubPropertiesAndUnits,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   // Add Property button
@@ -311,7 +264,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     onPressed: () {
                       context.push(OwnerRoutes.propertyNew);
                     },
-                    tooltip: 'Dodaj novi objekt',
+                    tooltip: l10n.unitHubAddProperty,
                   ),
                 ],
               ),
@@ -321,24 +274,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Pretraži...',
+                  hintText: l10n.unitHubSearch,
                   prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 20),
-                          onPressed: _searchController.clear,
-                        )
+                      ? IconButton(icon: const Icon(Icons.clear, size: 20), onPressed: _searchController.clear)
                       : null,
                   filled: true,
                   fillColor: theme.colorScheme.surfaceContainerHighest,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   isDense: true,
                 ),
               ),
@@ -351,9 +295,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           child: propertiesAsync.when(
             loading: () => Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  isDark ? Colors.white : Colors.black,
-                ),
+                valueColor: AlwaysStoppedAnimation<Color>(isDark ? Colors.white : Colors.black),
               ),
             ),
             error: (error, stack) => Center(
@@ -362,17 +304,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: theme.colorScheme.error,
-                    ),
+                    Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
                     const SizedBox(height: 16),
-                    Text(
-                      'Greška pri učitavanju',
-                      style: theme.textTheme.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(l10n.unitHubLoadingError, style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
                   ],
                 ),
               ),
@@ -381,12 +315,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               if (properties.isEmpty) {
                 return _buildEmptyPropertiesState(theme, isDark);
               }
-              return _buildPropertiesWithUnits(
-                theme,
-                isDark,
-                properties,
-                onUnitSelected: onUnitSelected,
-              );
+              return _buildPropertiesWithUnits(theme, isDark, properties, onUnitSelected: onUnitSelected);
             },
           ),
         ),
@@ -396,27 +325,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Empty state when no properties exist
   Widget _buildEmptyPropertiesState(ThemeData theme, bool isDark) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.add_business,
-              size: 64,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-            ),
+            Icon(Icons.add_business, size: 64, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             Text(
-              'Nemate objekata',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              l10n.unitHubNoProperties,
+              style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             Text(
-              'Kreirajte prvi objekt da biste mogli dodavati smještajne jedinice',
+              l10n.unitHubNoPropertiesDesc,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
@@ -424,10 +348,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             ),
             const SizedBox(height: 24),
             Container(
-              decoration: BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: BoxDecoration(gradient: GradientTokens.brandPrimary, borderRadius: BorderRadius.circular(12)),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -435,22 +356,16 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     context.push(OwnerRoutes.propertyNew);
                   },
                   borderRadius: BorderRadius.circular(12),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.add_business, size: 20, color: Colors.white),
-                        SizedBox(width: 8),
+                        const Icon(Icons.add_business, size: 20, color: Colors.white),
+                        const SizedBox(width: 8),
                         Text(
-                          'Kreiraj Objekt',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          l10n.unitHubCreateProperty,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -476,14 +391,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return unitsAsync.when(
       loading: () => Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(
-            isDark ? Colors.white : Colors.black,
-          ),
+          valueColor: AlwaysStoppedAnimation<Color>(isDark ? Colors.white : Colors.black),
         ),
       ),
-      error: (error, stack) => Center(
-        child: Text('Greška: $error'),
-      ),
+      error: (error, stack) {
+        final l10n = AppLocalizations.of(context);
+        return Center(child: Text(l10n.unitHubError(error.toString())));
+      },
       data: (allUnits) {
         // Group units by property
         final unitsByProperty = <String, List<UnitModel>>{};
@@ -501,29 +415,26 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
           // Match any unit in this property
           final propertyUnits = unitsByProperty[property.id] ?? [];
-          return propertyUnits.any((unit) =>
-              unit.name.toLowerCase().contains(_searchQuery) ||
-              (unit.description?.toLowerCase().contains(_searchQuery) ?? false));
+          return propertyUnits.any(
+            (unit) =>
+                unit.name.toLowerCase().contains(_searchQuery) ||
+                (unit.description?.toLowerCase().contains(_searchQuery) ?? false),
+          );
         }).toList();
 
         if (filteredProperties.isEmpty) {
+          final l10n = AppLocalizations.of(context);
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  ),
+                  Icon(Icons.search_off, size: 64, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
                   const SizedBox(height: 16),
                   Text(
-                    'Nema rezultata',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                    l10n.unitHubNoResults,
+                    style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -541,9 +452,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             // Filter units by search
             final filteredUnits = _searchQuery.isEmpty
                 ? propertyUnits
-                : propertyUnits.where((unit) =>
-                    unit.name.toLowerCase().contains(_searchQuery) ||
-                    (unit.description?.toLowerCase().contains(_searchQuery) ?? false)).toList();
+                : propertyUnits
+                      .where(
+                        (unit) =>
+                            unit.name.toLowerCase().contains(_searchQuery) ||
+                            (unit.description?.toLowerCase().contains(_searchQuery) ?? false),
+                      )
+                      .toList();
 
             return _buildPropertySection(
               theme,
@@ -566,16 +481,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     required List<UnitModel> units,
     VoidCallback? onUnitSelected,
   }) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: context.gradients.sectionBackground,
+        color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: context.gradients.sectionBorder,
-          width: 1.5,
-        ),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+        boxShadow: AppShadows.getElevation(2, isDark: isDark),
       ),
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
@@ -589,23 +502,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              Icons.apartment,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
+            child: Icon(Icons.apartment, color: theme.colorScheme.primary, size: 20),
           ),
-          title: Text(
-            property.name,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          title: Text(property.name, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           subtitle: Text(
-            '${units.length} ${_pluralizeJedinica(units.length)}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            l10n.unitHubUnitsCount(units.length),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -614,11 +516,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               IconButton(
                 icon: const Icon(Icons.edit_outlined, size: 18),
                 onPressed: () {
-                  context.push(
-                    OwnerRoutes.propertyEdit.replaceAll(':id', property.id),
-                  );
+                  context.push(OwnerRoutes.propertyEdit.replaceAll(':id', property.id));
                 },
-                tooltip: 'Uredi objekt',
+                tooltip: l10n.unitHubEditProperty,
                 visualDensity: VisualDensity.compact,
               ),
               // Delete property
@@ -631,20 +531,16 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
                 onPressed: () => _confirmDeleteProperty(context, property, units.length),
-                tooltip: units.isEmpty
-                    ? 'Obriši objekt'
-                    : 'Obriši sve jedinice prije brisanja objekta',
+                tooltip: units.isEmpty ? l10n.unitHubDeleteProperty : l10n.unitHubDeleteAllUnitsFirst,
                 visualDensity: VisualDensity.compact,
               ),
               // Add unit to this property
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 20),
                 onPressed: () {
-                  context.push(
-                    '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                  );
+                  context.push('${OwnerRoutes.unitWizard}?propertyId=${property.id}');
                 },
-                tooltip: 'Dodaj jedinicu',
+                tooltip: l10n.unitHubAddUnit,
                 visualDensity: VisualDensity.compact,
               ),
               const Icon(Icons.expand_more),
@@ -662,18 +558,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      Icon(Icons.info_outline, size: 20, color: theme.colorScheme.onSurfaceVariant),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Nema jedinica u ovom objektu',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                          l10n.unitHubNoUnitsInProperty,
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                         ),
                       ),
                       Container(
@@ -685,23 +575,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              context.push(
-                                '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                              );
+                              context.push('${OwnerRoutes.unitWizard}?propertyId=${property.id}');
                             },
                             borderRadius: BorderRadius.circular(8),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               child: Text(
-                                'Dodaj',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
+                                l10n.unitHubAdd,
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                               ),
                             ),
                           ),
@@ -728,6 +609,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   /// Confirm and delete a property
   Future<void> _confirmDeleteProperty(BuildContext dialogContext, PropertyModel property, int unitCount) async {
     final theme = Theme.of(dialogContext);
+    final l10n = AppLocalizations.of(dialogContext);
 
     // Check if property has units - cannot delete
     if (unitCount > 0) {
@@ -735,17 +617,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       await showDialog<void>(
         context: dialogContext,
         builder: (ctx) => AlertDialog(
-          title: const Text('Nije moguće obrisati'),
-          content: Text(
-            'Objekt "${property.name}" ima $unitCount ${_pluralizeJedinica(unitCount)}.\n\n'
-            'Morate prvo obrisati sve jedinice prije brisanja objekta.',
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Razumijem'),
-            ),
-          ],
+          title: Text(l10n.unitHubCannotDelete),
+          content: Text(l10n.unitHubCannotDeleteDesc(property.name, unitCount)),
+          actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.unitHubUnderstand))],
         ),
       );
       return;
@@ -754,22 +628,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final confirmed = await showDialog<bool>(
       context: dialogContext,
       builder: (ctx) => AlertDialog(
-        title: const Text('Obriši objekt'),
-        content: Text(
-          'Jeste li sigurni da želite obrisati "${property.name}"?\n\n'
-          'Ova akcija se ne može poništiti.',
-        ),
+        title: Text(l10n.unitHubDeletePropertyTitle),
+        content: Text(l10n.unitHubDeletePropertyConfirm(property.name)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Odustani'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Obriši'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -777,9 +643,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     if (confirmed == true && mounted) {
       try {
-        await ref
-            .read(ownerPropertiesRepositoryProvider)
-            .deleteProperty(property.id);
+        await ref.read(ownerPropertiesRepositoryProvider).deleteProperty(property.id);
 
         // Invalidate providers to refresh UI
         ref.invalidate(ownerPropertiesProvider);
@@ -794,19 +658,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         }
 
         if (mounted) {
+          final l10nCtx = AppLocalizations.of(context);
           // ignore: use_build_context_synchronously - State.context is safe after mounted check
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            'Objekt "${property.name}" je uspješno obrisan',
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10nCtx.unitHubPropertyDeleted(property.name));
         }
       } catch (e) {
         if (mounted) {
+          final l10nCtx = AppLocalizations.of(context);
           // ignore: use_build_context_synchronously - State.context is safe after mounted check
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            'Greška pri brisanju: $e',
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, l10nCtx.unitHubDeleteError(e.toString()));
         }
       }
     }
@@ -815,26 +675,19 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   /// Confirm and delete a unit
   Future<void> _confirmDeleteUnit(BuildContext dialogContext, UnitModel unit) async {
     final theme = Theme.of(dialogContext);
+    final l10n = AppLocalizations.of(dialogContext);
 
     final confirmed = await showDialog<bool>(
       context: dialogContext,
       builder: (ctx) => AlertDialog(
-        title: const Text('Obriši jedinicu'),
-        content: Text(
-          'Jeste li sigurni da želite obrisati "${unit.name}"?\n\n'
-          'Ova akcija se ne može poništiti.',
-        ),
+        title: Text(l10n.unitHubDeleteUnitTitle),
+        content: Text(l10n.unitHubDeleteUnitConfirm(unit.name)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Odustani'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Obriši'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -842,9 +695,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     if (confirmed == true && mounted) {
       try {
-        await ref
-            .read(ownerPropertiesRepositoryProvider)
-            .deleteUnit(unit.propertyId, unit.id);
+        await ref.read(ownerPropertiesRepositoryProvider).deleteUnit(unit.propertyId, unit.id);
 
         // Invalidate providers to refresh UI
         ref.invalidate(ownerUnitsProvider);
@@ -858,19 +709,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         }
 
         if (mounted) {
+          final l10nCtx = AppLocalizations.of(context);
           // ignore: use_build_context_synchronously - State.context is safe after mounted check
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            'Jedinica "${unit.name}" je uspješno obrisana',
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10nCtx.unitHubUnitDeleted(unit.name));
         }
       } catch (e) {
         if (mounted) {
+          final l10nCtx = AppLocalizations.of(context);
           // ignore: use_build_context_synchronously - State.context is safe after mounted check
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            'Greška pri brisanju: $e',
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, l10nCtx.unitHubDeleteError(e.toString()));
         }
       }
     }
@@ -885,8 +732,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     VoidCallback? onUnitSelected,
   }) {
     // Sort units by sortOrder
-    final sortedUnits = List<UnitModel>.from(units)
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final sortedUnits = List<UnitModel>.from(units)..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     // Calculate height: each unit tile is approximately 110px + 8px margin
     final listHeight = sortedUnits.length * 118.0;
@@ -898,11 +744,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         physics: const NeverScrollableScrollPhysics(),
         buildDefaultDragHandles: false,
         itemCount: sortedUnits.length,
-        onReorder: (oldIndex, newIndex) => _handleUnitReorder(
-          sortedUnits,
-          oldIndex,
-          newIndex,
-        ),
+        onReorder: (oldIndex, newIndex) => _handleUnitReorder(sortedUnits, oldIndex, newIndex),
         proxyDecorator: (child, index, animation) {
           return AnimatedBuilder(
             animation: animation,
@@ -939,11 +781,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   /// Handle unit reorder
-  Future<void> _handleUnitReorder(
-    List<UnitModel> units,
-    int oldIndex,
-    int newIndex,
-  ) async {
+  Future<void> _handleUnitReorder(List<UnitModel> units, int oldIndex, int newIndex) async {
     // Adjust newIndex for removal
     if (newIndex > oldIndex) {
       newIndex -= 1;
@@ -967,10 +805,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ref.invalidate(ownerUnitsProvider);
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          'Greška pri spremanju redoslijeda: $e',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.unitHubDeleteError(e.toString()));
       }
     }
   }
@@ -988,13 +824,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        gradient: isSelected ? null : context.gradients.sectionBackground,
-        color: isSelected ? theme.colorScheme.primaryContainer : null,
+        color: isSelected ? theme.colorScheme.primaryContainer : context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : context.gradients.sectionBorder,
+          color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
           width: isSelected ? 2 : 1.5,
         ),
         boxShadow: AppShadows.getElevation(1, isDark: isDark),
@@ -1009,7 +842,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               child: Icon(
                 Icons.drag_indicator,
                 color: isSelected
-                    ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                    ? (isDark
+                          ? Colors.white.withValues(alpha: 0.7)
+                          : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                     : theme.colorScheme.onSurfaceVariant,
                 size: 20,
               ),
@@ -1019,9 +854,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           Expanded(
             child: InkWell(
               onTap: () async {
-                final property = await ref.read(
-                  propertyByIdProvider(unit.propertyId).future,
-                );
+                final property = await ref.read(propertyByIdProvider(unit.propertyId).future);
                 if (mounted) {
                   setState(() {
                     _selectedUnit = unit;
@@ -1030,10 +863,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   onUnitSelected?.call();
                 }
               },
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-              ),
+              borderRadius: const BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.only(top: 12, bottom: 12, right: 12),
                 child: Column(
@@ -1057,26 +887,26 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: unit.isAvailable
                                 ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
                                 : _kUnavailableColor.withAlpha((0.2 * 255).toInt()),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            unit.isAvailable ? 'Dostupan' : 'Nedostupan',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: isSelected
-                                  ? Colors.white
-                                  : (unit.isAvailable
-                                      ? _kAvailableColor
-                                      : _kUnavailableColor),
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context);
+                              return Text(
+                                unit.isAvailable ? l10n.unitHubAvailable : l10n.unitHubUnavailable,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : (unit.isAvailable ? _kAvailableColor : _kUnavailableColor),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -1084,22 +914,25 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                         SizedBox(
                           width: 28,
                           height: 28,
-                          child: IconButton(
-                            onPressed: () {
-                              context.push(
-                                '${OwnerRoutes.unitWizard}?propertyId=${unit.propertyId}&duplicateFromId=${unit.id}',
+                          child: Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context);
+                              return IconButton(
+                                onPressed: () {
+                                  context.push(
+                                    '${OwnerRoutes.unitWizard}?propertyId=${unit.propertyId}&duplicateFromId=${unit.id}',
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.copy_outlined,
+                                  size: 16,
+                                  color: isSelected ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.primary,
+                                ),
+                                tooltip: l10n.unitHubEditUnit,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
                               );
                             },
-                            icon: Icon(
-                              Icons.copy_outlined,
-                              size: 16,
-                              color: isSelected
-                                  ? Colors.white.withValues(alpha: 0.7)
-                                  : theme.colorScheme.primary,
-                            ),
-                            tooltip: 'Kopiraj jedinicu',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
                           ),
                         ),
                         const SizedBox(width: 2),
@@ -1107,18 +940,21 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                         SizedBox(
                           width: 28,
                           height: 28,
-                          child: IconButton(
-                            onPressed: () => _confirmDeleteUnit(context, unit),
-                            icon: Icon(
-                              Icons.delete_outline,
-                              size: 16,
-                              color: isSelected
-                                  ? Colors.white.withValues(alpha: 0.7)
-                                  : theme.colorScheme.error,
-                            ),
-                            tooltip: 'Obriši jedinicu',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                          child: Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context);
+                              return IconButton(
+                                onPressed: () => _confirmDeleteUnit(context, unit),
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  size: 16,
+                                  color: isSelected ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.error,
+                                ),
+                                tooltip: l10n.unitHubDeleteUnit,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -1129,8 +965,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       propertyName,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isSelected
-                            ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                            ? (isDark ? Colors.white.withValues(alpha: 0.7) : Colors.white)
                             : theme.colorScheme.onSurfaceVariant,
+                        fontWeight: isSelected ? FontWeight.w500 : null,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1141,7 +978,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           Icons.people_outline,
                           size: 16,
                           color: isSelected
-                              ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                              ? (isDark
+                                    ? Colors.white.withValues(alpha: 0.7)
+                                    : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
@@ -1149,7 +988,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           '${unit.maxGuests}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: isSelected
-                                ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                                ? (isDark
+                                      ? Colors.white.withValues(alpha: 0.7)
+                                      : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                                 : theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
@@ -1158,18 +999,27 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           Icons.euro_outlined,
                           size: 16,
                           color: isSelected
-                              ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                              ? (isDark
+                                    ? Colors.white.withValues(alpha: 0.7)
+                                    : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          '${unit.pricePerNight.toStringAsFixed(0)}/noć',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isSelected
-                                ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                                : theme.colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return Text(
+                              '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isSelected
+                                    ? (isDark
+                                          ? Colors.white.withValues(alpha: 0.7)
+                                          : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                                    : theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -1195,52 +1045,34 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Container(
           decoration: BoxDecoration(
             color: Colors.transparent,
-            border: Border(
-              bottom: BorderSide(
-                color: context.borderColor.withValues(alpha: 0.5),
-              ),
-            ),
+            border: Border(bottom: BorderSide(color: context.borderColor.withValues(alpha: 0.5))),
           ),
-          child: TabBar(
-            controller: _tabController,
-            tabs: _buildTabs(),
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            labelColor: theme.colorScheme.primary,
-            unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-            indicatorColor: theme.colorScheme.primary,
-            indicatorWeight: 3,
-            indicatorSize: TabBarIndicatorSize.label,
-            // Tab bar left padding: smaller for mobile
-            padding: EdgeInsets.only(
-              left: screenWidth < _kMobileBreakpoint ? 4 : 16,
-            ),
-            // Responsive padding: smaller for mobile, larger for desktop
-            labelPadding: EdgeInsets.symmetric(
-              horizontal: screenWidth < _kMobileBreakpoint ? 8 : 20,
-            ),
-            labelStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              letterSpacing: 0.1,
-            ),
-            // Theme-aware divider color (lighter for light theme, darker for dark theme)
-            dividerColor: isDark
-                ? Colors.white.withValues(alpha: 0.15)
-                : Colors.black.withValues(alpha: 0.1),
-            indicator: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: theme.colorScheme.primary,
-                  width: 3,
+          child: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return TabBar(
+                controller: _tabController,
+                tabs: _buildTabs(l10n),
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                labelColor: theme.colorScheme.primary,
+                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                indicatorColor: theme.colorScheme.primary,
+                indicatorWeight: 3,
+                indicatorSize: TabBarIndicatorSize.label,
+                // Tab bar left padding: smaller for mobile
+                padding: EdgeInsets.only(left: screenWidth < _kMobileBreakpoint ? 4 : 16),
+                // Responsive padding: smaller for mobile, larger for desktop
+                labelPadding: EdgeInsets.symmetric(horizontal: screenWidth < _kMobileBreakpoint ? 8 : 20),
+                labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.2),
+                unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, letterSpacing: 0.1),
+                // Theme-aware divider color (lighter for light theme, darker for dark theme)
+                dividerColor: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.1),
+                indicator: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 3)),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
 
@@ -1262,25 +1094,20 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Empty state - no unit selected
   Widget _buildEmptyState(ThemeData theme, bool isDark) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.home_work_outlined,
-            size: 80,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-          ),
+          Icon(Icons.home_work_outlined, size: 80, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
           const SizedBox(height: 24),
           Text(
-            'Izaberite jedinicu',
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            l10n.unitHubSelectUnit,
+            style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Text(
-            'Odaberite jedinicu iz liste da vidite detalje',
+            l10n.unitHubSelectUnitDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
@@ -1300,70 +1127,54 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final isMobile = screenWidth < _kMobileBreakpoint;
 
     // Build individual cards as widgets for flex layout
+    final l10n = AppLocalizations.of(context);
+
     final informacijeCard = _buildInfoCard(
       theme,
-      title: 'Informacije',
+      title: l10n.unitHubInfoSection,
       icon: Icons.info_outline,
       isMobile: isMobile,
       children: [
-        _buildDetailRow(theme, 'Naziv', _selectedUnit!.name),
-        _buildDetailRow(theme, 'Slug', _selectedUnit!.slug ?? 'N/A'),
+        _buildDetailRow(theme, l10n.unitHubName, _selectedUnit!.name),
+        _buildDetailRow(theme, l10n.unitHubSlug, _selectedUnit!.slug ?? 'N/A'),
         if (_selectedUnit!.description != null)
-          _buildDetailRow(theme, 'Opis', _selectedUnit!.description!),
+          _buildDetailRow(theme, l10n.unitHubDescription, _selectedUnit!.description!),
         _buildDetailRow(
           theme,
-          'Status',
-          _selectedUnit!.isAvailable ? 'Dostupan' : 'Nedostupan',
-          valueColor: _selectedUnit!.isAvailable
-              ? _kAvailableColor
-              : _kUnavailableColor,
+          l10n.unitHubStatus,
+          _selectedUnit!.isAvailable ? l10n.unitHubStatusAvailable : l10n.unitHubStatusUnavailable,
+          valueColor: _selectedUnit!.isAvailable ? _kAvailableColor : _kUnavailableColor,
         ),
       ],
     );
 
     final kapacitetCard = _buildInfoCard(
       theme,
-      title: 'Kapacitet',
+      title: l10n.unitHubCapacitySection,
       icon: Icons.people_outline,
       isMobile: isMobile,
       children: [
-        _buildDetailRow(
-          theme,
-          'Spavaće sobe',
-          '${_selectedUnit!.bedrooms}',
-        ),
-        _buildDetailRow(theme, 'Kupaonice', '${_selectedUnit!.bathrooms}'),
-        _buildDetailRow(
-          theme,
-          'Max gostiju',
-          '${_selectedUnit!.maxGuests}',
-        ),
+        _buildDetailRow(theme, l10n.unitHubBedrooms, '${_selectedUnit!.bedrooms}'),
+        _buildDetailRow(theme, l10n.unitHubBathrooms, '${_selectedUnit!.bathrooms}'),
+        _buildDetailRow(theme, l10n.unitHubMaxGuests, '${_selectedUnit!.maxGuests}'),
         if (_selectedUnit!.areaSqm != null)
-          _buildDetailRow(
-            theme,
-            'Površina',
-            '${_selectedUnit!.areaSqm!.toStringAsFixed(0)} m²',
-          ),
+          _buildDetailRow(theme, l10n.unitHubArea, '${_selectedUnit!.areaSqm!.toStringAsFixed(0)} m²'),
       ],
     );
 
     final cijenaCard = _buildInfoCard(
       theme,
-      title: 'Cijena',
+      title: l10n.unitHubPriceSection,
       icon: Icons.euro_outlined,
       isMobile: isMobile,
       children: [
         _buildDetailRow(
           theme,
-          'Cijena po noći',
+          l10n.unitHubPricePerNight,
           '€${_selectedUnit!.pricePerNight.toStringAsFixed(0)}',
           valueColor: theme.colorScheme.primary,
         ),
-        _buildDetailRow(
-          theme,
-          'Min noći',
-          '${_selectedUnit!.minStayNights}',
-        ),
+        _buildDetailRow(theme, l10n.unitHubMinNights, '${_selectedUnit!.minStayNights}'),
       ],
     );
 
@@ -1375,50 +1186,29 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Osnovni Podaci',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
-              ),
+              l10n.unitHubBasicData,
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
             ),
             // Gradient button using brand gradient
             Container(
-              decoration: BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
-                borderRadius: BorderRadius.circular(10),
-              ),
+              decoration: BoxDecoration(gradient: GradientTokens.brandPrimary, borderRadius: BorderRadius.circular(10)),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    context.push(
-                      OwnerRoutes.unitWizardEdit.replaceAll(
-                        ':id',
-                        _selectedUnit!.id,
-                      ),
-                    );
+                    context.push(OwnerRoutes.unitWizardEdit.replaceAll(':id', _selectedUnit!.id));
                   },
                   borderRadius: BorderRadius.circular(10),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.edit,
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                        SizedBox(width: 8),
+                        const Icon(Icons.edit, size: 18, color: Colors.white),
+                        const SizedBox(width: 8),
                         Text(
-                          'Uredi',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          l10n.unitHubEdit,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -1451,10 +1241,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               Expanded(
                 child: _buildInfoCard(
                   theme,
-                  title: 'Fotografije',
+                  title: l10n.unitHubPhotosSection,
                   icon: Icons.photo_library_outlined,
                   isMobile: isMobile,
-                  children: _buildImageGridContent(theme, imageSize: 80),
+                  children: _buildImageGridContent(theme, imageSize: 80, l10n: l10n),
                 ),
               ),
             ],
@@ -1470,10 +1260,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           const SizedBox(height: 16),
           _buildInfoCard(
             theme,
-            title: 'Fotografije',
+            title: l10n.unitHubPhotosSection,
             icon: Icons.photo_library_outlined,
             isMobile: isMobile,
-            children: _buildImageGridContent(theme, imageSize: 100),
+            children: _buildImageGridContent(theme, imageSize: 100, l10n: l10n),
           ),
         ],
       ],
@@ -1535,18 +1325,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        boxShadow: AppShadows.getElevation(2, isDark: isDark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
           child: Column(
@@ -1557,24 +1344,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha(
-                        (0.12 * 255).toInt(),
-                      ),
+                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      icon,
-                      color: theme.colorScheme.primary,
-                      size: 18,
-                    ),
+                    child: Icon(icon, color: theme.colorScheme.primary, size: 18),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1586,12 +1362,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  Widget _buildDetailRow(
-    ThemeData theme,
-    String label,
-    String value, {
-    Color? valueColor,
-  }) {
+  Widget _buildDetailRow(ThemeData theme, String label, String value, {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -1599,12 +1370,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         children: [
           Expanded(
             flex: 2,
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            child: Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
           ),
           Expanded(
             flex: 3,
@@ -1623,17 +1389,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Builds the image grid for unit photos
   /// [imageSize] - Size of each image thumbnail (desktop: 80, mobile: 100)
-  List<Widget> _buildImageGridContent(ThemeData theme, {required double imageSize}) {
+  List<Widget> _buildImageGridContent(ThemeData theme, {required double imageSize, required AppLocalizations l10n}) {
     if (_selectedUnit == null) return [];
 
     final images = _selectedUnit!.images;
     if (images.isEmpty) {
       return [
         Text(
-          'Nema fotografija',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          l10n.unitHubNoPhotos,
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ];
     }
@@ -1655,10 +1419,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   width: imageSize,
                   height: imageSize,
                   color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  child: Icon(Icons.broken_image, color: theme.colorScheme.onSurfaceVariant),
                 );
               },
             ),
@@ -1669,10 +1430,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Padding(
           padding: const EdgeInsets.only(top: 8),
           child: Text(
-            '+${images.length - 6} više',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            l10n.unitHubMorePhotos(images.length - 6),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
         ),
     ];

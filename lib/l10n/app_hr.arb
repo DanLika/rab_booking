@@ -442,5 +442,2156 @@
   "widgetTermsAndConditions": "Rezervacijom prihvatate naše Uvjete korištenja i Politiku privatnosti",
   "widgetMissingParameters": "Nedostaju obavezni parametri",
   "widgetPropertyNotFound": "Nekretnina ili jedinica nije pronađena",
-  "widgetContactSupport": "Molimo kontaktirajte podršku"
+  "widgetContactSupport": "Molimo kontaktirajte podršku",
+
+  "ownerOverview": "Pregled",
+  "ownerErrorLoadingData": "Greška prilikom učitavanja podataka",
+  "ownerMonthlyRevenue": "Zarada ovaj mjesec",
+  "ownerYearlyRevenue": "Zarada ove godine",
+  "ownerMonthlyBookings": "Rezervacije ovaj mjesec",
+  "ownerUpcomingCheckIns": "Nadolazeći check-in",
+  "ownerActiveProperties": "Aktivne nekretnine",
+  "ownerOccupancyRate": "Popunjenost",
+
+  "ownerNewBookingReceived": "Nova rezervacija primljena",
+  "ownerBookingConfirmedActivity": "Rezervacija potvrđena",
+  "ownerBookingCancelledActivity": "Rezervacija otkazana",
+  "ownerBookingCompleted": "Rezervacija završena",
+
+  "ownerRecentActivities": "Nedavne Aktivnosti",
+  "ownerViewAll": "Sve",
+  "ownerNoRecentActivities": "Nema nedavnih aktivnosti",
+  "ownerRecentActivitiesDescription": "Vaše nedavne rezervacije i aktivnosti će se prikazati ovdje",
+  "ownerJustNow": "Upravo sada",
+  "ownerMinutesAgo": "prije {count}m",
+  "@ownerMinutesAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "ownerHoursAgo": "prije {count}h",
+  "@ownerHoursAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "ownerDaysAgo": "prije {count}d",
+  "@ownerDaysAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "ownerDrawerOverview": "Pregled",
+  "ownerDrawerCalendar": "Kalendar",
+  "ownerDrawerBookings": "Rezervacije",
+  "ownerDrawerAnalytics": "Analitika",
+  "ownerDrawerUnits": "Smještajne Jedinice",
+  "ownerDrawerIntegrations": "Integracije",
+  "ownerDrawerIcal": "iCal",
+  "ownerDrawerImportBookings": "Import Rezervacija",
+  "ownerDrawerSyncBookingCom": "Sync sa booking.com",
+  "ownerDrawerExportCalendar": "Export Kalendara",
+  "ownerDrawerIcalFeedUrl": "iCal feed URL",
+  "ownerDrawerPayments": "Plaćanja",
+  "ownerDrawerStripePayments": "Stripe Plaćanja",
+  "ownerDrawerCardProcessing": "Obrada kartica",
+  "ownerDrawerBankAccount": "Bankovni Račun",
+  "ownerDrawerBankAccountData": "Podaci za uplate",
+  "ownerDrawerGuides": "Uputstva",
+  "ownerDrawerEmbedWidget": "Embed Widget",
+  "ownerDrawerAddToSite": "Dodavanje na sajt",
+  "ownerDrawerFaq": "Česta Pitanja",
+  "ownerDrawerNotifications": "Obavještenja",
+  "ownerDrawerProfile": "Profil",
+  "ownerDrawerLogout": "Odjavi se",
+
+  "ownerCalendar": "Kalendar",
+  "ownerCalendarPreviousWeek": "Prethodni tjedan",
+  "ownerCalendarNextWeek": "Sljedeći tjedan",
+  "ownerCalendarPreviousMonth": "Prethodni mjesec",
+  "ownerCalendarNextMonth": "Sljedeći mjesec",
+  "ownerCalendarToday": "Danas",
+  "ownerCalendarGoToToday": "Idi na danas",
+  "ownerCalendarOptions": "Opcije",
+  "ownerCalendarNotifications": "Obavijesti",
+  "ownerCalendarSearch": "Pretraži",
+  "ownerCalendarSearchBookings": "Pretraži rezervacije",
+  "ownerCalendarRefresh": "Osvježi",
+  "ownerCalendarFilters": "Filteri",
+  "ownerCalendarHideStats": "Sakrij statistiku",
+  "ownerCalendarShowStats": "Prikaži statistiku",
+  "ownerCalendarNoUnits": "Nema jedinica za prikaz",
+  "ownerCalendarLoadingUnits": "Učitavanje jedinica...",
+  "ownerCalendarErrorLoadingUnits": "Greška pri učitavanju jedinica",
+  "ownerCalendarTryAgain": "Pokušaj ponovno",
+  "ownerCalendarZoom": "Zoom: {percent}%",
+  "@ownerCalendarZoom": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "ownerCalendarReset": "Reset",
+
+  "ownerFilterActiveFilter": "aktivan filter",
+  "ownerFilterActiveFilters": "aktivna filtera",
+  "ownerFilterClearAll": "Očisti sve",
+  "ownerFilterApply": "Primijeni",
+  "ownerFilterCancel": "Otkaži",
+  "ownerFilterClear": "Očisti",
+  "ownerFilterProperties": "Objekti",
+  "ownerFilterUnits": "Jedinice",
+  "ownerFilterStatuses": "Statusi",
+  "ownerFilterSourceWidget": "Widget",
+  "ownerFilterSourceManual": "Manualno",
+  "ownerFilterSourceIcal": "iCal",
+
+  "ownerMultiSelectSelected": "odabrana",
+  "ownerMultiSelectSelectedPlural": "odabrano",
+  "ownerMultiSelectClear": "Poništi",
+  "ownerMultiSelectChangeStatus": "Promijeni status",
+  "ownerMultiSelectDeleteSelected": "Obriši odabrano",
+  "ownerMultiSelectConfirmation": "Potvrda",
+  "ownerMultiSelectChangeStatusConfirm": "Promijeni status za {count} {countLabel} u \"{status}\"?",
+  "@ownerMultiSelectChangeStatusConfirm": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "countLabel": {"type": "String"},
+      "status": {"type": "String"}
+    }
+  },
+  "ownerMultiSelectReservation": "rezervaciju",
+  "ownerMultiSelectReservations": "rezervacija",
+  "ownerMultiSelectCancel": "Odustani",
+  "ownerMultiSelectConfirm": "Potvrdi",
+  "ownerMultiSelectStatusChanged": "Status promijenjen za {count} {countLabel}",
+  "@ownerMultiSelectStatusChanged": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "countLabel": {"type": "String"}
+    }
+  },
+  "ownerMultiSelectStatusError": "Greška pri promjeni statusa",
+  "ownerMultiSelectDeleteConfirmTitle": "Potvrda brisanja",
+  "ownerMultiSelectDeleteConfirmMessage": "Jeste li sigurni da želite obrisati {count} {countLabel}?\n\nOva akcija se ne može poništiti.",
+  "@ownerMultiSelectDeleteConfirmMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "countLabel": {"type": "String"}
+    }
+  },
+  "ownerMultiSelectDelete": "Obriši",
+  "ownerMultiSelectDeleted": "Obrisano {count} {countLabel}",
+  "@ownerMultiSelectDeleted": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "countLabel": {"type": "String"}
+    }
+  },
+  "ownerMultiSelectDeleteError": "Greška pri brisanju rezervacija",
+
+  "ownerStatusPending": "Na čekanju",
+  "ownerStatusConfirmed": "Potvrđeno",
+  "ownerStatusCompleted": "Završeno",
+  "ownerStatusCancelled": "Otkazano",
+
+  "ownerCalendarError": "Greška",
+  "ownerCalendarClose": "Zatvori",
+  "ownerCalendarHelp": "Pomoć",
+
+  "ownerBookingsTitle": "Rezervacije",
+  "ownerBookingsErrorLoading": "Greška pri učitavanju rezervacija",
+  "ownerBookingsLoadingMore": "Učitavam još rezervacija...",
+  "ownerBookingsScrollToLoadMore": "Skrolujte da učitate više",
+  "ownerBookingsFiltersAndView": "Filteri i Pregled",
+  "ownerBookingsCardView": "Card pogled",
+  "ownerBookingsTableView": "Tabela pogled",
+  "ownerBookingsAdvancedFiltering": "Napredno filtriranje",
+  "ownerBookingsFilterByStatusPropertyDate": "Filtriraj po statusu, nekretnini, datumu",
+  "ownerBookingsClearAllFilters": "Očisti sve filtere",
+  "ownerBookingsNoBookings": "Nemate rezervacija",
+  "ownerBookingsNoBookingsDescription": "Ovdje će se prikazati sve rezervacije za vaše objekte. Kreirajte prvu rezervaciju ili pričekajte rezervacije gostiju.",
+  "ownerBookingsGuest": "gost",
+  "ownerBookingsGuests": "gostiju",
+  "ownerBookingsApproved": "Rezervacija je uspješno odobrena",
+  "ownerBookingsApproveError": "Greška pri odobravanju rezervacije",
+  "ownerBookingsRejected": "Rezervacija je odbijena",
+  "ownerBookingsRejectError": "Greška pri odbijanju rezervacije",
+  "ownerBookingsCompleted": "Rezervacija je označena kao završena",
+  "ownerBookingsCompleteError": "Greška pri završavanju rezervacije",
+  "ownerBookingsCancelled": "Rezervacija je otkazana",
+  "ownerBookingsCancelError": "Greška pri otkazivanju rezervacije",
+
+  "ownerTableSelected": "{count} odabrano",
+  "@ownerTableSelected": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "ownerTableClearSelection": "Poništi odabir",
+  "ownerTableBulkActions": "Grupne akcije",
+  "ownerTableConfirmSelected": "Potvrdi odabrane",
+  "ownerTableRejectSelected": "Odbij odabrane",
+  "ownerTableDeleteSelected": "Obriši odabrane",
+  "ownerTableColumnGuest": "Gost",
+  "ownerTableColumnPropertyUnit": "Objekt / Jedinica",
+  "ownerTableColumnCheckIn": "Check-in",
+  "ownerTableColumnCheckOut": "Check-out",
+  "ownerTableColumnNights": "Noći",
+  "ownerTableColumnGuests": "Gostiju",
+  "ownerTableColumnStatus": "Status",
+  "ownerTableColumnPrice": "Cijena",
+  "ownerTableColumnSource": "Izvor",
+  "ownerTableColumnActions": "Akcije",
+  "ownerTableSourceDirect": "Direktno",
+  "ownerTableSourceIcal": "iCal",
+  "ownerTableSourceBookingCom": "Booking.com",
+  "ownerTableSourceAirbnb": "Airbnb",
+  "ownerTableSourceWidget": "Widget",
+  "ownerTableSourceManual": "Manualno",
+  "ownerTableActionDetails": "Detalji",
+  "ownerTableActionConfirm": "Potvrdi",
+  "ownerTableActionComplete": "Završi",
+  "ownerTableActionEdit": "Uredi",
+  "ownerTableActionCancel": "Otkaži",
+  "ownerTableActionSendEmail": "Pošalji email",
+  "ownerTableActionDelete": "Obriši",
+  "ownerTableConfirmBooking": "Potvrdi rezervaciju",
+  "ownerTableConfirmBookingMessage": "Jeste li sigurni da želite potvrditi ovu rezervaciju?",
+  "ownerTableCompleteBooking": "Označi kao završeno",
+  "ownerTableCompleteBookingMessage": "Jeste li sigurni da želite označiti ovu rezervaciju kao završenu?",
+  "ownerTableCancelBooking": "Otkaži rezervaciju",
+  "ownerTableCancelBookingMessage": "Jeste li sigurni da želite otkazati ovu rezervaciju?",
+  "ownerTableCancellationReason": "Razlog otkazivanja",
+  "ownerTableCancellationReasonHint": "Unesite razlog...",
+  "ownerTableSendEmailToGuest": "Pošalji email gostu",
+  "ownerTableCancelBookingButton": "Otkaži rezervaciju",
+  "ownerTableDeleteBooking": "Obriši rezervaciju",
+  "ownerTableDeleteBookingMessage": "Jeste li sigurni da želite TRAJNO obrisati ovu rezervaciju? Ova akcija se ne može poništiti.",
+  "ownerTableBookingConfirmed": "Rezervacija je uspješno potvrđena",
+  "ownerTableBookingCompleted": "Rezervacija je označena kao završena",
+  "ownerTableBookingCancelled": "Rezervacija je otkazana",
+  "ownerTableBookingDeleted": "Rezervacija je obrisana",
+  "ownerTableConfirmSelectedTitle": "Potvrdi odabrane rezervacije",
+  "ownerTableConfirmSelectedMessage": "Jeste li sigurni da želite potvrditi {count} {label}?",
+  "@ownerTableConfirmSelectedMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableConfirmAll": "Potvrdi sve",
+  "ownerTableBookingsConfirmed": "{count} {label} potvrđeno",
+  "@ownerTableBookingsConfirmed": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableRejectSelectedTitle": "Odbij odabrane rezervacije",
+  "ownerTableRejectSelectedMessage": "Jeste li sigurni da želite odbiti {count} {label}?",
+  "@ownerTableRejectSelectedMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableRejectionReasonOptional": "Razlog odbijanja (opcionalno)",
+  "ownerTableRejectAll": "Odbij sve",
+  "ownerTableBookingsRejected": "{count} {label} odbijeno",
+  "@ownerTableBookingsRejected": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableDeleteSelectedTitle": "Obriši odabrane rezervacije",
+  "ownerTableDeleteSelectedMessage": "Jeste li sigurni da želite TRAJNO obrisati {count} {label}? Ova akcija se ne može poništiti.",
+  "@ownerTableDeleteSelectedMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableBookingsDeleted": "{count} {label} obrisano",
+  "@ownerTableBookingsDeleted": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableBooking": "rezervaciju",
+  "ownerTableBookings": "rezervacija",
+  "ownerTableCancelledByOwner": "Otkazano od strane vlasnika",
+
+  "ownerDetailsTitle": "Detalji rezervacije",
+  "ownerDetailsBookingId": "ID rezervacije",
+  "ownerDetailsStatus": "Status",
+  "ownerDetailsGuestInfo": "Informacije o gostu",
+  "ownerDetailsName": "Ime",
+  "ownerDetailsEmail": "Email",
+  "ownerDetailsPhone": "Telefon",
+  "ownerDetailsPropertyInfo": "Informacije o objektu",
+  "ownerDetailsProperty": "Objekt",
+  "ownerDetailsUnit": "Jedinica",
+  "ownerDetailsLocation": "Lokacija",
+  "ownerDetailsStayInfo": "Detalji boravka",
+  "ownerDetailsCheckIn": "Prijava",
+  "ownerDetailsCheckOut": "Odjava",
+  "ownerDetailsNights": "Broj noći",
+  "ownerDetailsGuests": "Broj gostiju",
+  "ownerDetailsPaymentInfo": "Informacije o plaćanju",
+  "ownerDetailsTotalPrice": "Ukupna cijena",
+  "ownerDetailsPaid": "Plaćeno",
+  "ownerDetailsRemaining": "Preostalo",
+  "ownerDetailsNotes": "Napomene",
+  "ownerDetailsCancellationInfo": "Informacije o otkazivanju",
+  "ownerDetailsCancelledOn": "Otkazano",
+  "ownerDetailsReason": "Razlog",
+  "ownerDetailsCreated": "Kreirano",
+  "ownerDetailsUpdated": "Ažurirano",
+  "ownerDetailsEdit": "Uredi",
+  "ownerDetailsResend": "Ponovo",
+  "ownerDetailsCancel": "Otkaži",
+  "ownerDetailsClose": "Zatvori",
+  "ownerDetailsCancelConfirmTitle": "Potvrda otkazivanja",
+  "ownerDetailsCancelConfirmMessage": "Jeste li sigurni da želite otkazati ovu rezervaciju?",
+  "ownerDetailsCancellationReason": "Razlog otkazivanja (opciono)",
+  "ownerDetailsCancellationHint": "Npr. Greška u datumu, Zahtjev gosta...",
+  "ownerDetailsCancelBooking": "Otkaži rezervaciju",
+  "ownerDetailsCancelling": "Otkaz rezervacije u tijeku...",
+  "ownerDetailsCancelSuccess": "Rezervacija uspješno otkazana",
+  "ownerDetailsCancelError": "Greška prilikom otkazivanja rezervacije",
+  "ownerDetailsResendTitle": "Ponovo pošalji email",
+  "ownerDetailsResendMessage": "Želite li ponovo poslati email potvrde rezervacije gostu {guestName}?",
+  "@ownerDetailsResendMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "ownerDetailsResendNote": "Email će sadržavati link \"View My Booking\" za pregled rezervacije.",
+  "ownerDetailsSend": "Pošalji",
+  "ownerDetailsSending": "Slanje emaila...",
+  "ownerDetailsSendSuccess": "Email uspješno poslan na {email}",
+  "@ownerDetailsSendSuccess": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "ownerDetailsSendError": "Greška pri slanju emaila",
+
+  "ownerFiltersTitle": "Filteri rezervacija",
+  "ownerFiltersStatusSection": "Status rezervacije",
+  "ownerFiltersStatusLabel": "Filtriraj po statusu",
+  "ownerFiltersAllStatuses": "Svi statusi",
+  "ownerFiltersPropertySection": "Nekretnina",
+  "ownerFiltersPropertyLabel": "Filtriraj po nekretnini",
+  "ownerFiltersAllProperties": "Sve nekretnine",
+  "ownerFiltersLoadingProperties": "Učitavam nekretnine...",
+  "ownerFiltersDateSection": "Vremenski period",
+  "ownerFiltersSelectDateRange": "Odaberi vremenski period",
+  "ownerFiltersApply": "Primijeni filtere",
+  "ownerFiltersClear": "Očisti filtere",
+
+  "ownerAnalyticsTitle": "Analitika i izvještaji",
+  "ownerAnalyticsLoadError": "Greška pri učitavanju analitike",
+  "ownerAnalyticsLastWeek": "Prošli tjedan",
+  "ownerAnalyticsLastMonth": "Prošli mjesec",
+  "ownerAnalyticsLastQuarter": "Prošlo tromjesečje",
+  "ownerAnalyticsLastYear": "Prošla godina",
+  "ownerAnalyticsCustomRange": "Prilagođeni period",
+  "ownerAnalyticsRevenueOverTime": "Prihod kroz vrijeme",
+  "ownerAnalyticsBookingsOverTime": "Rezervacije kroz vrijeme",
+  "ownerAnalyticsTopProperties": "Najbolji objekti",
+  "ownerAnalyticsWidgetPerformance": "Performanse widgeta",
+  "ownerAnalyticsTotalRevenue": "Ukupni prihod",
+  "ownerAnalyticsTotalBookings": "Ukupno rezervacija",
+  "ownerAnalyticsOccupancyRate": "Stopa popunjenosti",
+  "ownerAnalyticsAvgNightlyRate": "Prosj. cijena noćenja",
+  "ownerAnalyticsLast7Days": "Zadnjih 7 dana",
+  "ownerAnalyticsLastDays": "Zadnjih {days} dana",
+  "@ownerAnalyticsLastDays": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "ownerAnalyticsLast30Days": "Zadnjih 30 dana",
+  "ownerAnalyticsPropertiesActive": "{active}/{total} aktivnih objekata",
+  "@ownerAnalyticsPropertiesActive": {
+    "placeholders": {
+      "active": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "ownerAnalyticsCancellation": "Otkazivanje: {rate}%",
+  "@ownerAnalyticsCancellation": {
+    "placeholders": {
+      "rate": {"type": "String"}
+    }
+  },
+  "ownerAnalyticsNoData": "Nema podataka za odabrani period",
+  "ownerAnalyticsRevenueTitle": "Prihod kroz vrijeme",
+  "ownerAnalyticsRevenueSubtitle": "Mjesečni trend prihoda",
+  "ownerAnalyticsBookingsTitle": "Rezervacije kroz vrijeme",
+  "ownerAnalyticsBookingsSubtitle": "Mjesečna aktivnost rezervacija",
+  "ownerAnalyticsPropertiesSubtitle": "Objekti rangirani po prihodima",
+  "ownerAnalyticsBookings": "rezervacija",
+  "ownerAnalyticsOccupancy": "popunjenost",
+  "ownerAnalyticsWidgetSubtitle": "Pratite rezervacije i prihode s ugrađenog widgeta",
+  "ownerAnalyticsWidgetBookings": "Widget rezervacije",
+  "ownerAnalyticsWidgetRevenue": "Widget prihod",
+  "ownerAnalyticsOfTotal": "({percent}% od ukupno)",
+  "@ownerAnalyticsOfTotal": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "ownerAnalyticsBookingsBySource": "Rezervacije po izvoru",
+  "ownerAnalyticsSourceSubtitle": "Distribucija rezervacija po različitim izvorima",
+  "ownerAnalyticsNoSourceData": "Nema podataka o izvorima",
+  "ownerAnalyticsOther": "Ostalo ({count} izvora)",
+  "@ownerAnalyticsOther": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "ownerProfileTitle": "Profil",
+  "ownerProfileThemeLight": "Svijetla",
+  "ownerProfileThemeDark": "Tamna",
+  "ownerProfileThemeSystem": "Sistemska postavka",
+  "ownerProfileNotAuthenticated": "Niste prijavljeni",
+  "ownerProfileGuestUser": "Gost",
+  "ownerProfileOwner": "Vlasnik",
+  "ownerProfileAnonymousAccount": "Anonimni račun",
+  "ownerProfileNoEmail": "Nema emaila",
+  "ownerProfileEditProfile": "Uredi profil",
+  "ownerProfileEditProfileSubtitleAnonymous": "Registrirajte se za uređivanje profila",
+  "ownerProfileEditProfileSubtitle": "Ažurirajte osobne podatke",
+  "ownerProfileChangePassword": "Promijeni lozinku",
+  "ownerProfileChangePasswordSubtitle": "Ažurirajte svoju lozinku",
+  "ownerProfileNotificationSettings": "Postavke obavijesti",
+  "ownerProfileNotificationSettingsSubtitle": "Upravljajte obavijestima",
+  "ownerProfileLanguage": "Jezik",
+  "ownerProfileTheme": "Tema",
+  "ownerProfileHelpSupport": "Pomoć i podrška",
+  "ownerProfileHelpSupportSubtitle": "Dobijte pomoć s aplikacijom",
+  "ownerProfileHelpSupportComingSoon": "Pomoć i podrška uskoro dolazi",
+  "ownerProfileAbout": "O aplikaciji",
+  "ownerProfileAboutSubtitle": "Informacije o aplikaciji",
+  "ownerProfileTermsConditions": "Uvjeti korištenja",
+  "ownerProfileTermsConditionsSubtitle": "Licencni ugovor krajnjeg korisnika",
+  "ownerProfilePrivacyPolicy": "Politika privatnosti",
+  "ownerProfilePrivacyPolicySubtitle": "Kako postupamo s vašim podacima",
+  "ownerProfileCookiesPolicy": "Politika kolačića",
+  "ownerProfileCookiesPolicySubtitle": "Korištenje kolačića i postavke",
+  "ownerProfileLoading": "Učitavanje profila...",
+  "ownerProfileLoadError": "Greška pri učitavanju profila",
+  "ownerProfileBack": "Nazad",
+  "ownerProfileTryAgain": "Pokušaj ponovo",
+  "ownerProfileLogout": "Odjava",
+  "ownerProfileLogoutSubtitle": "Odjavite se iz računa",
+
+  "editProfileTitle": "Uredi Profil",
+  "editProfileSubtitle": "Ažurirajte osobne podatke",
+  "editProfileDiscardTitle": "Odbaciti promjene?",
+  "editProfileDiscardMessage": "Imate nespremljene promjene. Želite li ih odbaciti?",
+  "editProfileDiscard": "Odbaci",
+  "editProfileSaving": "Spremanje...",
+  "editProfileSaveChanges": "Spremi Promjene",
+  "editProfileSaveSuccess": "Profil uspješno ažuriran",
+  "editProfileSaveError": "Greška pri spremanju profila",
+  "editProfileValidationError": "Molimo ispunite sva obavezna polja ispravno",
+  "editProfileOptional": "opcionalno",
+  "editProfilePersonalData": "Lični Podaci",
+  "editProfilePersonalDataSubtitle": "Osnovni kontakt podaci",
+  "editProfileFullName": "Ime i Prezime",
+  "editProfileEmail": "Email",
+  "editProfilePhone": "Telefon",
+  "editProfileAddress": "Adresa",
+  "editProfileAddressSubtitle": "Vaša fizička adresa",
+  "editProfileCountry": "Država",
+  "editProfileStreet": "Ulica i Broj",
+  "editProfileCity": "Grad",
+  "editProfilePostalCode": "Poštanski Broj",
+  "editProfileCompany": "Kompanija",
+  "editProfileCompanySubtitle": "Za poslovne korisnike i fakture",
+  "editProfileCompanyName": "Naziv Kompanije",
+  "editProfileTaxId": "OIB / Porezni Broj",
+  "editProfileVatId": "PDV ID",
+  "editProfileCompanyAddress": "Adresa Kompanije",
+  "editProfileOnlinePresence": "Online Prisutnost",
+  "editProfileWebsite": "Web Stranica",
+  "editProfileFacebook": "Facebook Stranica",
+  "editProfilePropertyType": "Tip Nekretnine",
+
+  "notificationSettingsTitle": "Postavke Obavijesti",
+  "notificationSettingsEnableAll": "Omogući Sve Obavijesti",
+  "notificationSettingsMasterSwitch": "Glavni prekidač za sve vrste obavijesti",
+  "notificationSettingsEnabled": "Obavijesti uspješno omogućene",
+  "notificationSettingsDisabled": "Obavijesti uspješno onemogućene",
+  "notificationSettingsUpdateError": "Greška pri ažuriranju postavki",
+  "notificationSettingsDisabledWarning": "Obavijesti su onemogućene. Omogućite glavni prekidač za primanje obavijesti.",
+  "notificationSettingsCategories": "Kategorije Obavijesti",
+  "notificationSettingsBookings": "Rezervacije",
+  "notificationSettingsBookingsDesc": "Nove rezervacije, otkazivanja i ažuriranja",
+  "notificationSettingsPayments": "Plaćanja",
+  "notificationSettingsPaymentsDesc": "Potvrde plaćanja i ažuriranja transakcija",
+  "notificationSettingsCalendar": "Kalendar",
+  "notificationSettingsCalendarDesc": "Promjene dostupnosti, blokirani datumi i ažuriranja cijena",
+  "notificationSettingsMarketing": "Marketing",
+  "notificationSettingsMarketingDesc": "Promotivne ponude, savjeti i novosti platforme",
+  "notificationSettingsEmailChannel": "Email",
+  "notificationSettingsEmailChannelDesc": "Primajte obavijesti putem emaila",
+  "notificationSettingsPushChannel": "Push Obavijesti",
+  "notificationSettingsPushChannelDesc": "Primajte push obavijesti na uređaj",
+  "notificationSettingsSmsChannel": "SMS",
+  "notificationSettingsSmsChannelDesc": "Primajte obavijesti putem SMS-a",
+  "notificationSettingsLoadError": "Greška pri učitavanju postavki",
+  "notificationSettingsUpdated": "Postavke obavijesti za {category} ažurirane",
+  "@notificationSettingsUpdated": {
+    "placeholders": {
+      "category": {"type": "String"}
+    }
+  },
+
+  "aboutTitle": "O Aplikaciji",
+  "aboutAppName": "Rab Booking",
+  "aboutTagline": "Sustav za Upravljanje Nekretninama",
+  "aboutVersion": "Verzija 1.0.0",
+  "aboutWhatIs": "Što je Rab Booking?",
+  "aboutDescription": "Rab Booking je sveobuhvatan sustav za upravljanje nekretninama dizajniran za vlasnike smještaja za odmor. Upravljajte svojim nekretninama, rezervacijama, kalendarom i integracijama na jednom mjestu. Naš ugrađeni widget za rezervacije olakšava gostima izravno rezerviranje na vašoj web stranici.",
+  "aboutKeyFeatures": "Ključne Značajke",
+  "aboutFeatureCalendar": "Pametni Kalendar",
+  "aboutFeatureCalendarDesc": "Upravljajte dostupnošću više nekretnina",
+  "aboutFeatureBookings": "Online Rezervacije",
+  "aboutFeatureBookingsDesc": "Ugrađeni widget za rezervacije na vašoj stranici",
+  "aboutFeatureIcal": "iCal Integracija",
+  "aboutFeatureIcalDesc": "Sinkronizacija s Booking.com, Airbnb i drugima",
+  "aboutFeaturePayments": "Obrada Plaćanja",
+  "aboutFeaturePaymentsDesc": "Stripe integracija za sigurna plaćanja",
+  "aboutFeatureAnalytics": "Analitika",
+  "aboutFeatureAnalyticsDesc": "Pratite rezervacije, prihode i popunjenost",
+  "aboutBuiltWith": "Izrađeno S",
+  "aboutContactSupport": "Kontakt i Podrška",
+  "aboutEmailLabel": "Email",
+  "aboutWebsiteLabel": "Web stranica",
+  "aboutCopyright": "© 2025 Rab Booking. Sva prava pridržana.",
+
+  "unitHubTitle": "Smještajne Jedinice",
+  "unitHubShowAllUnits": "Prikaži sve jedinice",
+  "unitHubPropertiesAndUnits": "Objekti i Jedinice",
+  "unitHubAddProperty": "Dodaj novi objekt",
+  "unitHubSearch": "Pretraži...",
+  "unitHubLoadingError": "Greška pri učitavanju",
+  "unitHubNoProperties": "Nemate objekata",
+  "unitHubNoPropertiesDesc": "Kreirajte prvi objekt da biste mogli dodavati smještajne jedinice",
+  "unitHubCreateProperty": "Kreiraj Objekt",
+  "unitHubNoResults": "Nema rezultata",
+  "unitHubUnitsCount": "{count, plural, =1{1 jedinica} =2{2 jedinice} few{{count} jedinice} other{{count} jedinica}}",
+  "@unitHubUnitsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitHubEditProperty": "Uredi objekt",
+  "unitHubDeleteProperty": "Obriši objekt",
+  "unitHubDeleteAllUnitsFirst": "Obriši sve jedinice prije brisanja objekta",
+  "unitHubAddUnit": "Dodaj jedinicu",
+  "unitHubNoUnitsInProperty": "Nema jedinica u ovom objektu",
+  "unitHubAdd": "Dodaj",
+  "unitHubCannotDelete": "Nije moguće obrisati",
+  "unitHubCannotDeleteDesc": "Objekt \"{name}\" ima {count} jedinica.\n\nMorate prvo obrisati sve jedinice prije brisanja objekta.",
+  "@unitHubCannotDeleteDesc": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "unitHubUnderstand": "Razumijem",
+  "unitHubDeletePropertyTitle": "Obriši objekt",
+  "unitHubDeletePropertyConfirm": "Jeste li sigurni da želite obrisati \"{name}\"?\n\nOva akcija se ne može poništiti.",
+  "@unitHubDeletePropertyConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "unitHubPropertyDeleted": "Objekt \"{name}\" je uspješno obrisan",
+  "@unitHubPropertyDeleted": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "unitHubDeleteError": "Greška pri brisanju: {error}",
+  "@unitHubDeleteError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "unitHubDeleteUnitTitle": "Obriši jedinicu",
+  "unitHubDeleteUnitConfirm": "Jeste li sigurni da želite obrisati \"{name}\"?\n\nOva akcija se ne može poništiti.",
+  "@unitHubDeleteUnitConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "unitHubUnitDeleted": "Jedinica \"{name}\" je uspješno obrisana",
+  "@unitHubUnitDeleted": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "unitHubTabBasicInfo": "Osnovni Podaci",
+  "unitHubTabPricing": "Cjenovnik",
+  "unitHubTabWidget": "Widget",
+  "unitHubTabAdvanced": "Napredne Postavke",
+  "unitHubSelectUnit": "Odaberite jedinicu",
+  "unitHubSelectUnitDesc": "Odaberite jedinicu s liste za pregled i uređivanje detalja",
+  "unitHubAvailable": "Dostupno",
+  "unitHubUnavailable": "Nedostupno",
+  "unitHubEditUnit": "Uredi jedinicu",
+  "unitHubDeleteUnit": "Obriši jedinicu",
+  "unitHubError": "Greška: {error}",
+  "@unitHubError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "notificationsTitle": "Obavještenja",
+  "notificationsDeleteSelected": "Obriši odabrane?",
+  "notificationsDeleteSelectedDesc": "Jeste li sigurni da želite obrisati {count} obavještenja?",
+  "@notificationsDeleteSelectedDesc": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "notificationsDeleted": "Obavještenja obrisana",
+  "notificationsDeleteAll": "Obriši sve?",
+  "notificationsDeleteAllDesc": "Jeste li sigurni da želite obrisati SVA obavještenja? Ova radnja se ne može poništiti.",
+  "notificationsAllDeleted": "Sva obavještenja obrisana",
+  "notificationsSelect": "Odaberi",
+  "notificationsCancel": "Otkaži",
+  "notificationsSelected": "{count} odabrano",
+  "@notificationsSelected": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "notificationsDeselectAll": "Poništi odabir",
+  "notificationsSelectAll": "Odaberi sve",
+  "notificationsDeleteSelectedBtn": "Obriši odabrane",
+  "notificationsDeleteAllBtn": "Obriši sve",
+  "notificationsDeleting": "Brisanje...",
+  "notificationsEmpty": "Nema obavještenja",
+  "notificationsEmptyDesc": "Ovdje ćete vidjeti sva vaša obavještenja",
+  "notificationsLoadError": "Greška pri učitavanju obavještenja",
+  "notificationsTryAgain": "Pokušaj ponovno",
+  "notificationsDeleteNotification": "Obriši obavještenje",
+  "notificationsDeleteNotificationDesc": "Jeste li sigurni da želite obrisati ovo obavještenje?",
+
+  "bankAccountTitle": "Bankovni Račun",
+  "bankAccountBankDetails": "Bankovni Podaci",
+  "bankAccountBankDetailsSubtitle": "Podaci za primanje uplata",
+  "bankAccountIban": "IBAN",
+  "bankAccountSwift": "SWIFT/BIC",
+  "bankAccountBankName": "Naziv Banke",
+  "bankAccountHolder": "Vlasnik Računa",
+  "bankAccountInfoTitle": "Kada se koriste ovi podaci?",
+  "bankAccountInfoDesc": "Ovi bankovni podaci se prikazuju gostima kada odaberu \"Bankovni prijenos\" kao način plaćanja u booking widget-u.",
+  "bankAccountSaveChanges": "Spremi Promjene",
+  "bankAccountSaving": "Spremanje...",
+  "bankAccountCancel": "Odustani",
+  "bankAccountFillFieldsError": "Molimo ispravno popunite sva polja",
+  "bankAccountSaveSuccess": "Bankovni podaci uspješno spremljeni",
+  "bankAccountSaveError": "Greška pri spremanju bankovnih podataka",
+  "bankAccountDiscardTitle": "Odbaciti promjene?",
+  "bankAccountDiscardDesc": "Imate nespremljene promjene. Želite li ih odbaciti?",
+  "bankAccountDiscard": "Odbaci",
+
+  "stripeTitle": "Stripe Plaćanja",
+  "stripeConnectAccount": "Poveži Stripe Račun",
+  "stripeFinishSetup": "Završi Stripe Setup",
+  "stripeHowItWorks": "Kako funkcionira Stripe Connect?",
+  "stripeNotConnected": "Nije povezano",
+  "stripeNotConnectedDesc": "Stripe račun nije povezan. Prijem plaćanja nije moguć.",
+  "stripeSetupInProgress": "Setup u toku",
+  "stripeSetupInProgressDesc": "Završite Stripe setup da biste mogli primati plaćanja.",
+  "stripeActive": "Aktivno",
+  "stripeActiveDesc": "Stripe račun je povezan. Možete primati plaćanja!",
+  "stripeWhyConnect": "Zašto Stripe Connect?",
+  "stripeReceivePayments": "Prijem plaćanja",
+  "stripeReceivePaymentsDesc": "Primajte plaćanja karticama direktno na vaš račun",
+  "stripeSecurity": "Sigurnost",
+  "stripeSecurityDesc": "PCI-DSS komplijantan sistem za sigurne transakcije",
+  "stripeInstantConfirmations": "Instant potvrde",
+  "stripeInstantConfirmationsDesc": "Automatska potvrda rezervacija nakon uspješne uplate",
+  "stripeNoHiddenFees": "Nema skrivenih troškova",
+  "stripeNoHiddenFeesDesc": "Stripe naplaćuje ~2.9% + €0.30 po transakciji",
+  "stripeCannotOpenPage": "Ne mogu otvoriti Stripe stranicu",
+  "stripeCannotOpenPageDesc": "Ne mogu otvoriti Stripe stranicu. Pokušajte ponovo.",
+  "stripeCreateAccountError": "Greška prilikom kreiranja Stripe računa",
+  "stripeConnectError": "Greška prilikom povezivanja Stripe računa",
+
+  "advancedSettingsTitle": "Napredne Postavke",
+  "advancedSettingsSaveSuccess": "Napredne postavke uspješno spremljene",
+  "advancedSettingsSaveError": "Greška pri spremanju naprednih postavki",
+  "advancedSettingsNotFound": "Postavke widgeta nisu pronađene",
+  "advancedSettingsDisclaimerPreview": "Pregled Izjave",
+  "advancedSettingsNoDisclaimer": "Nema teksta izjave",
+  "advancedSettingsCustomTextRequired": "Unesite prilagođeni tekst ili koristite zadani",
+  "advancedSettingsSaving": "Spremanje...",
+  "advancedSettingsSave": "Spremi Napredne Postavke",
+
+  "onboardingWelcomeTitle": "Dobrodošli u BedBooking!",
+  "onboardingWelcomeSubtitle": "Sistem za upravljanje smještajem",
+  "onboardingWhatYouWillLearn": "Što ćete naučiti kroz vodič:",
+  "onboardingCreateProperty": "Kreiranje objekta",
+  "onboardingCreatePropertyDesc": "Dodajte osnovne informacije o vašem smještaju",
+  "onboardingSetupUnits": "Postavljanje jedinica",
+  "onboardingSetupUnitsDesc": "Kreirajte sobe ili apartmane",
+  "onboardingSetupPricing": "Podešavanje cijena",
+  "onboardingSetupPricingDesc": "Postavite osnovne cijene za smještaj",
+  "onboardingStart": "Započni",
+  "onboardingSkipForNow": "Preskoči za sada",
+  "onboardingAlreadyHaveAccount": "Već imate nalog?",
+  "onboardingSignIn": "Prijavite se",
+  "onboardingSkipTitle": "Preskoči vodič?",
+  "onboardingSkipDesc": "Ako preskočite vodič, nećete naučiti osnove podešavanja sistema. Uvijek možete dodati objekat i jedinice kasnije kroz postavke.\n\nŽelite li nastaviti?",
+  "onboardingSkip": "Preskoči",
+
+  "onboardingSuccessCongrats": "Čestitamo!",
+  "onboardingSuccessSubtitle": "Uspješno ste završili početno podešavanje",
+  "onboardingSuccessDesc": "Vaš objekat je kreiran i spreman za korištenje.",
+  "onboardingSuccessNextSteps": "Sljedeći koraci:",
+  "onboardingSuccessAddUnits": "Dodajte jedinice",
+  "onboardingSuccessAddUnitsDesc": "Kreirajte sobe ili apartmane",
+  "onboardingSuccessSetPrices": "Postavite cijene",
+  "onboardingSuccessSetPricesDesc": "Definirajte cijene po datumima",
+  "onboardingSuccessViewCalendar": "Pregledajte kalendar",
+  "onboardingSuccessViewCalendarDesc": "Pratite rezervacije i dostupnost",
+  "onboardingSuccessGoToDashboard": "Idi na Dashboard",
+
+  "unitHubInfoSection": "Informacije",
+  "unitHubName": "Naziv",
+  "unitHubSlug": "Slug",
+  "unitHubDescription": "Opis",
+  "unitHubStatus": "Status",
+  "unitHubStatusAvailable": "Dostupan",
+  "unitHubStatusUnavailable": "Nedostupan",
+  "unitHubCapacitySection": "Kapacitet",
+  "unitHubBedrooms": "Spavaće sobe",
+  "unitHubBathrooms": "Kupaonice",
+  "unitHubMaxGuests": "Max gostiju",
+  "unitHubArea": "Površina",
+  "unitHubPriceSection": "Cijena",
+  "unitHubPricePerNight": "Cijena po noći",
+  "unitHubMinNights": "Min noći",
+  "unitHubPhotosSection": "Fotografije",
+  "unitHubNoPhotos": "Nema fotografija",
+  "unitHubMorePhotos": "+{count} više",
+  "@unitHubMorePhotos": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitHubBasicData": "Osnovni Podaci",
+  "unitHubEdit": "Uredi",
+  "unitHubPerNight": "/noć",
+
+  "propertyFormTitleAdd": "Dodaj Nekretninu",
+  "propertyFormTitleEdit": "Uredi Nekretninu",
+  "propertyFormBasicInfo": "Osnovne Informacije",
+  "propertyFormPropertyName": "Naziv nekretnine *",
+  "propertyFormPropertyNameHint": "npr. Villa Mediteran",
+  "propertyFormPropertyNameRequired": "Naziv je obavezan",
+  "propertyFormUrlSlug": "URL Slug",
+  "propertyFormUrlSlugHint": "villa-mediteran",
+  "propertyFormUrlSlugHelper": "SEO-friendly URL: /booking/[slug]",
+  "propertyFormSlugRequired": "Slug je obavezan",
+  "propertyFormSlugInvalid": "Slug može sadržavati samo mala slova, brojeve i crtice",
+  "propertyFormRegenerateSlug": "Regeneriši iz naziva",
+  "propertyFormSubdomain": "Poddomena",
+  "propertyFormSubdomainHint": "vasa-nekretnina",
+  "propertyFormSubdomainHelper": "Prilagođeni URL: [subdomain].rabbooking.com",
+  "propertyFormSubdomainAvailable": "Dostupno",
+  "propertyFormSubdomainTaken": "Zauzeto",
+  "propertyFormSubdomainUseSuggestion": "Koristi prijedlog",
+  "propertyFormPropertyType": "Tip nekretnine *",
+  "propertyFormDescription": "Opis *",
+  "propertyFormDescriptionHint": "Detaljno opišite vašu nekretninu...",
+  "propertyFormDescriptionRequired": "Opis je obavezan",
+  "propertyFormDescriptionTooShort": "Opis mora imati najmanje 100 znakova (trenutno: {count})",
+  "@propertyFormDescriptionTooShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "propertyFormLocation": "Lokacija",
+  "propertyFormLocationLabel": "Lokacija *",
+  "propertyFormLocationHint": "npr. Rab (grad), Otok Rab",
+  "propertyFormLocationRequired": "Lokacija je obavezna",
+  "propertyFormAddress": "Adresa",
+  "propertyFormAddressHint": "Ulica i broj",
+  "propertyFormAmenities": "Sadržaji",
+  "propertyFormPhotos": "Fotografije",
+  "propertyFormPhotosMin": "Fotografije (min 3)",
+  "propertyFormSettings": "Postavke",
+  "propertyFormPublishNow": "Objavi odmah",
+  "propertyFormPublishNowActive": "Nekretnina će biti vidljiva korisnicima",
+  "propertyFormPublishNowInactive": "Nekretnina će biti skrivena",
+  "propertyFormSaveChanges": "Spremi Izmjene",
+  "propertyFormAddProperty": "Dodaj Nekretninu",
+  "propertyFormSaving": "Čuvanje...",
+  "propertyFormGeneratingError": "Greška pri generiranju: {error}",
+  "@propertyFormGeneratingError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "propertyFormCheckingError": "Greška pri provjeri: {error}",
+  "@propertyFormCheckingError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "propertyFormAddPhotos": "Dodaj Fotografije",
+  "propertyFormAddMore": "Dodaj Još",
+  "propertyFormPhotoCount": "{count} fotografija",
+  "@propertyFormPhotoCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "propertyFormPhotoRecommendation": "Preporuka: Dodajte najmanje 3 fotografije za bolju vidljivost",
+  "propertyFormUploadProgress": "Upload fotografija: {current}/{total}",
+  "@propertyFormUploadProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "propertyFormUploadError": "Greška pri uploadu: {error}",
+  "@propertyFormUploadError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "propertyFormUploadErrorGeneric": "Greška pri uploadu fotografija",
+  "propertyFormSubdomainError": "Molimo odaberite dostupan subdomain",
+  "propertyFormSubdomainSetError": "Greška pri postavljanju subdomena",
+  "propertyFormSuccessUpdate": "Nekretnina uspješno ažurirana",
+  "propertyFormSuccessAdd": "Nekretnina uspješno dodana",
+  "propertyFormErrorUpdate": "Greška pri ažuriranju nekretnine",
+  "propertyFormErrorAdd": "Greška pri dodavanju nekretnine",
+  "propertyFormUserNotLoggedIn": "Korisnik nije prijavljen",
+
+  "unitFormTitleAdd": "Dodaj Jedinicu",
+  "unitFormTitleEdit": "Uredi Jedinicu",
+  "unitFormBasicInfo": "Osnovne informacije",
+  "unitFormUnitName": "Naziv jedinice *",
+  "unitFormUnitNameHint": "npr. Apartman prizemlje",
+  "unitFormUnitNameRequired": "Naziv je obavezan",
+  "unitFormUrlSlug": "URL Slug",
+  "unitFormUrlSlugHint": "apartman-prizemlje",
+  "unitFormUrlSlugHelper": "SEO-friendly URL: /booking/[slug]",
+  "unitFormSlugRequired": "Slug je obavezan",
+  "unitFormSlugInvalid": "Slug može sadržavati samo mala slova, brojeve i crtice",
+  "unitFormRegenerateSlug": "Regeneriši iz naziva",
+  "unitFormDescription": "Opis",
+  "unitFormDescriptionHint": "Dodatne informacije o jedinici...",
+  "unitFormCapacity": "Kapacitet",
+  "unitFormBedrooms": "Spavaće sobe *",
+  "unitFormBathrooms": "Kupaonice *",
+  "unitFormMaxGuests": "Max gostiju *",
+  "unitFormArea": "Površina (m²)",
+  "unitFormRequired": "Obavezno",
+  "unitFormInvalidNumber": "Nevažeći broj",
+  "unitFormMin1": "Min 1",
+  "unitFormRange1to16": "1-16",
+  "unitFormPricing": "Cijena i uvjeti",
+  "unitFormPricePerNight": "Cijena po noći (€) *",
+  "unitFormInvalidAmount": "Nevažeći iznos",
+  "unitFormMinNights": "Min noći *",
+  "unitFormAmenities": "Sadržaji",
+  "unitFormPhotos": "Fotografije",
+  "unitFormAddPhotos": "Dodaj fotografije",
+  "unitFormAddMore": "Dodaj još",
+  "unitFormTotalPhotos": "Ukupno: {count} fotografija",
+  "@unitFormTotalPhotos": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitFormAvailability": "Dostupnost",
+  "unitFormAvailableForBooking": "Dostupno za rezervaciju",
+  "unitFormAvailableDesc": "Jedinica će biti dostupna za rezervacije",
+  "unitFormUnavailableDesc": "Jedinica neće biti prikazana",
+  "unitFormSaveChanges": "Spremi Izmjene",
+  "unitFormAddUnit": "Dodaj Jedinicu",
+  "unitFormSaving": "Spremanje...",
+  "unitFormEmbedWidget": "Embed Widget",
+  "unitFormEmbedDesc": "Integrirajte booking widget na vašu web stranicu",
+  "unitFormWidgetSettings": "Postavke Widgeta",
+  "unitFormGenerateEmbed": "Generiši Embed Kod",
+  "unitFormSuccessUpdate": "Jedinica uspješno ažurirana",
+  "unitFormSuccessAdd": "Jedinica uspješno dodana",
+  "unitFormErrorUpdate": "Greška pri ažuriranju jedinice",
+  "unitFormErrorAdd": "Greška pri dodavanju jedinice",
+
+  "unitPricingTitle": "Cjenovnik",
+  "unitPricingSelectUnit": "Odaberi jedinicu",
+  "unitPricingSelectUnitHint": "Izaberite jedinicu",
+  "unitPricingUnit": "Jedinica",
+  "unitPricingNoUnits": "Nemate dodane jedinice",
+  "unitPricingNoUnitsDesc": "Dodajte jedinicu kako biste mogli upravljati cijenama za vaše smještajne objekte.",
+  "unitPricingLoadError": "Greška pri učitavanju jedinica",
+  "unitPricingBasePrice": "Osnovna Cijena",
+  "unitPricingBasePriceDesc": "Ovo je default cijena po noćenju koja se koristi kada nema posebnih cijena.",
+  "unitPricingPricePerNight": "Cijena po noći (€)",
+  "unitPricingSave": "Sačuvaj",
+  "unitPricingSavePrice": "Sačuvaj Cijenu",
+  "unitPricingEnterPrice": "Unesite cijenu",
+  "unitPricingPriceGreaterThanZero": "Cijena mora biti veća od 0",
+  "unitPricingSuccessUpdate": "Osnovna cijena uspješno ažurirana",
+  "unitPricingErrorUpdate": "Greška pri ažuriranju cijene",
+
+  "onboardingWizardPropertyData": "Podaci o Objektu",
+  "onboardingWizardFinish": "Završi",
+  "onboardingWizardSkipDialogTitle": "Preskoči vodič?",
+  "onboardingWizardSkipDialogDesc": "Ako preskočite vodič, nećete završiti početno podešavanje. Morat ćete ručno dodati objekte i jedinice kasnije.\n\nŽelite li nastaviti?",
+  "onboardingWizardCompleteError": "Greška prilikom završavanja početnog podešavanja",
+
+  "widgetSettingsTitle": "Postavke Widgeta",
+  "widgetSettingsLoadError": "Greška prilikom učitavanja postavki",
+  "widgetSettingsSaveSuccess": "Postavke uspješno sačuvane!",
+  "widgetSettingsSaveError": "Greška prilikom čuvanja postavki",
+  "widgetSettingsSave": "Sačuvaj Postavke",
+  "widgetSettingsSaving": "Čuvanje...",
+  "widgetSettingsWidgetMode": "Mod Widgeta",
+  "widgetSettingsWidgetModeDesc": "Odaberite kako će widget funkcionirati:",
+  "widgetSettingsPaymentMethods": "Metode Plaćanja",
+  "widgetSettingsPaymentMethodsDesc": "Odaberite metode plaćanja dostupne gostima:",
+  "widgetSettingsDepositAmount": "Iznos Avansa: {percent}%",
+  "@widgetSettingsDepositAmount": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "widgetSettingsDepositDesc": "Ovaj procenat se primjenjuje na sve metode plaćanja (Stripe, Bankovna uplata)",
+  "widgetSettingsFullPayment": "Puna uplata",
+  "widgetSettingsStripePayment": "Stripe Plaćanje",
+  "widgetSettingsCardPayment": "Plaćanje karticom",
+  "widgetSettingsBankTransfer": "Bankovna Uplata",
+  "widgetSettingsBankPayment": "Uplata na račun",
+  "widgetSettingsBankNotEntered": "Bankovni podaci nisu uneseni",
+  "widgetSettingsBankNotEnteredDesc": "Da biste omogućili bankovnu uplatu, morate prvo unijeti bankovne podatke u svom profilu (naziv banke, IBAN, vlasnik računa).",
+  "widgetSettingsAddBankDetails": "Dodaj Bankovne Podatke",
+  "widgetSettingsBankEnterDetails": "Unesite bankovne podatke u Integracije → Plaćanja.",
+  "widgetSettingsBankFromProfile": "Bankovni podaci iz profila:",
+  "widgetSettingsBank": "Banka",
+  "widgetSettingsAccountHolder": "Vlasnik računa",
+  "widgetSettingsPaymentDeadline": "Rok za uplatu (dana)",
+  "widgetSettingsDay": "dan",
+  "widgetSettingsDays": "dana",
+  "widgetSettingsShowQrCode": "Prikaži QR kod",
+  "widgetSettingsEpcQrCode": "EPC QR kod",
+  "widgetSettingsCustomNote": "Prilagođena napomena",
+  "widgetSettingsAddMessage": "Dodaj poruku",
+  "widgetSettingsNoteMaxChars": "Napomena (max 500 znakova)",
+  "widgetSettingsNoteHelper": "Prilagođena poruka koja će se prikazati gostima",
+  "widgetSettingsPayOnArrival": "Plaćanje po Dolasku",
+  "widgetSettingsPayOnArrivalDesc": "Gost plaća prilikom prijave",
+  "widgetSettingsPayOnArrivalRequired": "⚠️ Obavezno (jer su ostale metode isključene)",
+  "widgetSettingsPaymentValidation": "Mora biti uključen bar jedan način plaćanja u Instant Booking modu",
+  "widgetSettingsBookingBehavior": "Ponašanje Rezervacije",
+  "widgetSettingsRequireApproval": "Zahtijeva Odobrenje",
+  "widgetSettingsManualApproval": "Ručno odobravanje",
+  "widgetSettingsAllowCancellation": "Dozvolite Otkazivanje",
+  "widgetSettingsGuestsCanCancel": "Gosti mogu otkazati",
+  "widgetSettingsPendingModeInfo": "U \"Rezervacija bez plaćanja\" modu sve rezervacije uvijek zahtijevaju vaše odobrenje.",
+  "widgetSettingsCancellationDeadline": "Rok za otkazivanje: {hours} sati prije prijave",
+  "@widgetSettingsCancellationDeadline": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "widgetSettingsMinNights": "Minimalni broj noćenja: {nights} {nightsLabel}",
+  "@widgetSettingsMinNights": {
+    "placeholders": {
+      "nights": {"type": "int"},
+      "nightsLabel": {"type": "String"}
+    }
+  },
+  "widgetSettingsNight": "noć",
+  "widgetSettingsNights": "noći",
+  "widgetSettingsContactInfo": "Kontakt Informacije",
+  "widgetSettingsContactDesc": "Kontakt opcije koje će biti prikazane u widgetu:",
+  "widgetSettingsPhoneNumber": "Broj telefona",
+  "widgetSettingsEmailAddress": "Email adresa",
+  "widgetSettingsPhone": "Telefon",
+  "widgetSettingsEmail": "Email",
+  "widgetSettingsBookingWithoutPayment": "Rezervacija bez plaćanja",
+  "widgetSettingsBookingWithoutPaymentDesc": "U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.",
+
+  "bookingCreateTitle": "Nova rezervacija",
+  "bookingCreateClose": "Zatvori",
+  "bookingCreateUnit": "Jedinica *",
+  "bookingCreateNoUnits": "Nema dostupnih jedinica",
+  "bookingCreateSelectUnit": "Odaberite jedinicu *",
+  "bookingCreateSelectUnitError": "Odaberite jedinicu",
+  "bookingCreateDates": "Datumi *",
+  "bookingCreateCheckIn": "Check-in *",
+  "bookingCreateCheckOut": "Check-out *",
+  "bookingCreateSelectCheckInDate": "Izaberite datum check-in",
+  "bookingCreateSelectCheckOutDate": "Izaberite datum check-out",
+  "bookingCreateNightsCount": "{count} noć{count, plural, =1{} few{i} other{i}}",
+  "@bookingCreateNightsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookingCreateGuestInfo": "Informacije o gostu",
+  "bookingCreateGuestName": "Ime gosta *",
+  "bookingCreateGuestNameError": "Unesite ime gosta",
+  "bookingCreateEmail": "Email *",
+  "bookingCreateEmailError": "Unesite email",
+  "bookingCreateEmailInvalid": "Unesite validan email",
+  "bookingCreatePhone": "Telefon *",
+  "bookingCreatePhoneError": "Unesite telefon",
+  "bookingCreateBookingDetails": "Detalji rezervacije",
+  "bookingCreateGuestCount": "Broj gostiju *",
+  "bookingCreateGuestCountError": "Unesite broj gostiju",
+  "bookingCreateGuestCountInvalid": "Broj gostiju mora biti veći od 0",
+  "bookingCreateTotalPrice": "Ukupna cijena (€) *",
+  "bookingCreatePriceError": "Unesite cijenu",
+  "bookingCreatePriceInvalid": "Unesite validnu cijenu",
+  "bookingCreatePriceNegative": "Cijena ne može biti negativna",
+  "bookingCreatePriceZero": "Cijena mora biti veća od 0",
+  "bookingCreateStatusInfo": "Status: Potvrđeno • Plaćanje: Gotovina",
+  "bookingCreateNotes": "Napomene",
+  "bookingCreateInternalNotes": "Interne napomene",
+  "bookingCreateNotesHint": "Npr. posebni zahtjevi...",
+  "bookingCreateCancel": "Otkaži",
+  "bookingCreateSubmit": "Kreiraj",
+  "bookingCreateSuccess": "Rezervacija uspješno kreirana",
+  "bookingCreateError": "Greška pri kreiranju rezervacije",
+  "bookingCreateOverlapWarning": "UPOZORENJE: Preklapanje rezervacija!",
+  "bookingCreateOverlapSingle": "Nova rezervacija se preklapa sa postojećom rezervacijom:",
+  "bookingCreateOverlapMultiple": "Nova rezervacija se preklapa sa {count} postojećih rezervacija:",
+  "@bookingCreateOverlapMultiple": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookingCreateUnknownGuest": "Nepoznati gost",
+  "bookingCreateContinueAnyway": "Nastavi svejedno",
+  "bookingCreateErrorGeneric": "Greška: {error}",
+  "@bookingCreateErrorGeneric": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "bookingApproveTitle": "Odobri rezervaciju",
+  "bookingApproveMessage": "Jeste li sigurni da želite odobriti ovu rezervaciju?\n\nNakon odobrenja, možete kontaktirati gosta sa detaljima plaćanja.",
+  "bookingApproveCancel": "Odustani",
+  "bookingApproveConfirm": "Odobri",
+
+  "bookingRejectTitle": "Odbij rezervaciju",
+  "bookingRejectMessage": "Jeste li sigurni da želite odbiti ovu rezervaciju?",
+  "bookingRejectReason": "Razlog odbijanja",
+  "bookingRejectReasonHint": "Unesite razlog (opcionalno)...",
+  "bookingRejectCancel": "Odustani",
+  "bookingRejectConfirm": "Odbij",
+
+  "bookingCancelTitle": "Otkaži rezervaciju",
+  "bookingCancelMessage": "Jeste li sigurni da želite otkazati ovu rezervaciju?",
+  "bookingCancelReason": "Razlog otkazivanja",
+  "bookingCancelReasonHint": "Unesite razlog...",
+  "bookingCancelSendEmail": "Pošalji email gostu",
+  "bookingCancelCancel": "Odustani",
+  "bookingCancelConfirm": "Otkaži rezervaciju",
+  "bookingCancelDefaultReason": "Otkazano od strane vlasnika",
+
+  "onboardingPropertyTitle": "Osnovni podaci o objektu",
+  "onboardingPropertySubtitle": "Unesite osnovne informacije o vašem smještaju",
+  "onboardingPropertyName": "Naziv objekta *",
+  "onboardingPropertyNameHint": "npr. Villa Jasko",
+  "onboardingPropertyType": "Tip smještaja *",
+  "onboardingPropertyAddress": "Adresa *",
+  "onboardingPropertyAddressHint": "Ulica i broj",
+  "onboardingPropertyCity": "Grad *",
+  "onboardingPropertyCountry": "Država *",
+  "onboardingPropertyRequired": "Obavezno polje",
+  "onboardingPropertyRequiredShort": "Obavezno",
+  "onboardingPropertyOptional": "Dodatne informacije (opciono)",
+  "onboardingPropertyPhone": "Telefon",
+  "onboardingPropertyPhoneHint": "+385 xx xxx xxxx",
+  "onboardingPropertyEmail": "Email",
+  "onboardingPropertyEmailHint": "info@example.com",
+  "onboardingPropertyWebsite": "Website",
+  "onboardingPropertyWebsiteHint": "https://example.com",
+  "onboardingPropertyTypeVilla": "Villa",
+  "onboardingPropertyTypeApartment": "Apartman",
+  "onboardingPropertyTypeStudio": "Studio",
+  "onboardingPropertyTypeHouse": "Kuća",
+  "onboardingPropertyTypeRoom": "Soba",
+
+  "themeSelectionTitle": "Odaberi temu",
+  "themeSelectionLight": "Svijetla",
+  "themeSelectionLightDesc": "Uvijek koristi svijetlu temu",
+  "themeSelectionDark": "Tamna",
+  "themeSelectionDarkDesc": "Uvijek koristi tamnu temu",
+  "themeSelectionSystem": "Sistemska",
+  "themeSelectionSystemDesc": "Prati sistemsku temu",
+
+  "unitPricingTitle": "Cjenovnik",
+  "unitPricingSelectUnit": "Odaberi jedinicu",
+  "unitPricingSelectUnitHint": "Izaberite jedinicu",
+  "unitPricingUnit": "Jedinica",
+  "unitPricingNoUnits": "Nemate dodane jedinice",
+  "unitPricingNoUnitsDesc": "Dodajte jedinicu kako biste mogli upravljati cijenama za vaše smještajne objekte.",
+  "unitPricingErrorLoading": "Greška pri učitavanju jedinica",
+  "unitPricingBasePrice": "Osnovna Cijena",
+  "unitPricingBasePriceDesc": "Ovo je default cijena po noćenju koja se koristi kada nema posebnih cijena.",
+  "unitPricingPricePerNight": "Cijena po noći (€)",
+  "unitPricingSave": "Sačuvaj",
+  "unitPricingSavePrice": "Sačuvaj Cijenu",
+  "unitPricingEnterPrice": "Unesite cijenu",
+  "unitPricingPriceGreaterThanZero": "Cijena mora biti veća od 0",
+  "unitPricingSuccess": "Osnovna cijena uspješno ažurirana",
+  "unitPricingError": "Greška pri ažuriranju cijene",
+
+  "ownerFaqTitle": "Česta Pitanja (FAQ)",
+  "ownerFaqSearchHint": "Pretražite pitanja...",
+  "ownerFaqCategoryAll": "Sve",
+  "ownerFaqCategoryGeneral": "Općenito",
+  "ownerFaqCategoryBookings": "Rezervacije",
+  "ownerFaqCategoryPayments": "Plaćanja",
+  "ownerFaqCategoryWidget": "Widget",
+  "ownerFaqCategoryIcalSync": "iCal Sync",
+  "ownerFaqCategorySupport": "Tehnička Podrška",
+  "ownerFaqResultsFound": "Pronađeno: {count} rezultata",
+  "@ownerFaqResultsFound": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "ownerFaqNoResults": "Nema rezultata",
+  "ownerFaqNoResultsDesc": "Pokušajte sa drugom pretragom ili kategorijom",
+
+  "icalSyncTitle": "iCal Sinhronizacija",
+  "icalSyncNoFeeds": "Nema feedova",
+  "icalSyncNoFeedsDesc": "Dodajte prvi iCal feed da započnete sinhronizaciju",
+  "icalSyncError": "Greška u sinhronizaciji",
+  "icalSyncErrorCount": "{errorCount} od {totalCount} feedova ima grešku",
+  "@icalSyncErrorCount": {
+    "placeholders": {
+      "errorCount": {"type": "int"},
+      "totalCount": {"type": "int"}
+    }
+  },
+  "icalSyncActive": "Sinhronizacija aktivna",
+  "icalSyncActiveCount": "{count} feedova aktivno sinhronizovano",
+  "@icalSyncActiveCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalSyncAllPaused": "Svi feedovi pauzirani",
+  "icalSyncNoActiveFeeds": "Nema aktivnih feedova",
+  "icalSyncWhyTitle": "Zašto iCal Sinhronizacija?",
+  "icalSyncAutoSync": "Automatska Sinhronizacija",
+  "icalSyncAutoSyncDesc": "Rezervacije se automatski uvoze sa booking platformi svakih 60 minuta",
+  "icalSyncPreventDouble": "Sprečavanje Duplog Bukinga",
+  "icalSyncPreventDoubleDesc": "Blokirajte termine na svim platformama automatski",
+  "icalSyncCompatibility": "Kompatibilnost",
+  "icalSyncCompatibilityDesc": "Podržava Booking.com, Airbnb i druge iCal platforme",
+  "icalSyncSecure": "Sigurno i Pouzdano",
+  "icalSyncSecureDesc": "Enkriptovani podaci i automatski backup svih rezervacija",
+  "icalSyncNoFeedsTitle": "Nema iCal Feedova",
+  "icalSyncNoFeedsMessage": "Dodajte iCal feed da sinhronizujete rezervacije sa booking platformama",
+  "icalSyncAddFeed": "Dodaj iCal Feed",
+  "icalSyncAddFeedDesc": "Povežite kalendar sa Booking.com, Airbnb ili druge platforme",
+  "icalSyncAddFeedButton": "Dodaj Feed",
+  "icalSyncYourFeeds": "Vaši Feedovi",
+  "icalSyncLastSync": "Zadnje sinhronizovano: {time}",
+  "@icalSyncLastSync": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "icalSyncErrorLabel": "Greška: {error}",
+  "@icalSyncErrorLabel": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "icalSyncReservationsCount": "{reservations} rezervacija • {syncs} sinhronizacija",
+  "@icalSyncReservationsCount": {
+    "placeholders": {
+      "reservations": {"type": "int"},
+      "syncs": {"type": "int"}
+    }
+  },
+  "icalSyncNow": "Sinhronizuj sada",
+  "icalSyncPause": "Pauziraj",
+  "icalSyncResume": "Nastavi",
+  "icalSyncEdit": "Uredi",
+  "icalSyncDelete": "Obriši",
+  "icalSyncDeleteTitle": "Obriši Feed?",
+  "icalSyncDeleteMessage": "Da li ste sigurni da želite obrisati {platform} feed? Ova akcija će obrisati {count} sinhronizovanih rezervacija.",
+  "@icalSyncDeleteMessage": {
+    "placeholders": {
+      "platform": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "icalSyncDeleteSuccess": "Feed obrisan",
+  "icalSyncDeleteError": "Greška prilikom brisanja feeda",
+  "icalSyncStarted": "Sinhronizacija pokrenuta za {platform}...",
+  "@icalSyncStarted": {
+    "placeholders": {
+      "platform": {"type": "String"}
+    }
+  },
+  "icalSyncSuccess": "Sinhronizacija uspješna! Kreirano rezervacija: {count}",
+  "@icalSyncSuccess": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalSyncFailed": "Greška prilikom sinhronizacije",
+  "icalSyncPaused": "Feed pauziran",
+  "icalSyncPauseError": "Greška prilikom pauziranja feeda",
+  "icalSyncResumed": "Feed nastavljen",
+  "icalSyncResumeError": "Greška prilikom nastavljanja feeda",
+  "icalSyncHowItWorks": "Kako funkcionira iCal sinhronizacija?",
+  "icalSyncLoadingError": "Greška pri učitavanju feedova",
+  "icalSyncAddTitle": "Dodaj iCal Feed",
+  "icalSyncEditTitle": "Uredi iCal Feed",
+  "icalSyncSelectUnit": "Odaberi jedinicu *",
+  "icalSyncNoUnits": "Nemate kreiranih jedinica. Prvo kreirajte apartman.",
+  "icalSyncSelectPlatform": "Odaberi platformu *",
+  "icalSyncIcalUrl": "iCal URL *",
+  "icalSyncIcalUrlHint": "https://...",
+  "icalSyncIcalUrlError": "Unesite iCal URL",
+  "icalSyncIcalUrlInvalid": "Unesite validan URL (https://...)",
+  "icalSyncSaving": "Spremanje...",
+  "icalSyncSave": "Sačuvaj",
+  "icalSyncLoadingUnits": "Učitavanje jedinica...",
+
+  "embedGuideTitle": "Embed Widget - Uputstvo",
+  "embedGuideHeaderTitle": "Embed Booking Widget",
+  "embedGuideHeaderSubtitle": "Dodajte kalendar i booking sistem na vaš web sajt",
+  "embedGuideHeaderTip": "💡 Embed widget omogućava vašim gostima da vide dostupnost i kreiraju rezervacije direktno sa vašeg sajta, bez potrebe za redirekcijom.",
+  "embedGuideStep1Title": "Konfigurišite Widget Postavke",
+  "embedGuideStep2Title": "Generiši Embed Kod",
+  "embedGuideStep3Title": "Dodajte na Vaš Sajt",
+  "embedGuideStep4Title": "Testirajte Widget",
+  "embedGuideAdvancedOptions": "Napredne Opcije",
+  "embedGuideTroubleshooting": "Rješavanje Problema",
+  "embedGuideCodeCopied": "Kod kopiran!",
+
+  "embedGuideStep1Intro": "Prvo morate konfigurisati kako će widget funkcionirati:",
+  "embedGuideStep1Nav1": "Idite na: Konfiguracija → Smještajne jedinice",
+  "embedGuideStep1Nav2": "Kliknite \"Uredi\" na željeni unit",
+  "embedGuideStep1Nav3": "Kliknite \"Postavke Widgeta\"",
+  "embedGuideStep1SelectMode": "Odaberite widget mod:",
+  "embedGuideWidgetModeCalendar": "📅 Samo Kalendar",
+  "embedGuideWidgetModeCalendarDesc": "Gosti vide samo dostupnost i kontakt info. Za klijente kao jasko-rab.com.",
+  "embedGuideWidgetModeBooking": "📝 Rezervacija bez Plaćanja",
+  "embedGuideWidgetModeBookingDesc": "Gosti mogu kreirati rezervaciju, ali morate ručno odobriti.",
+  "embedGuideWidgetModePayment": "💳 Puna Rezervacija sa Plaćanjem",
+  "embedGuideWidgetModePaymentDesc": "Gosti mogu odmah rezervisati i platiti (Stripe ili banka).",
+  "embedGuidePlaceholderWidgetSettings": "Slika: Widget Settings ekran sa opcijama",
+
+  "embedGuideStep2Intro": "Nakon konfiguracije, generišite embed kod:",
+  "embedGuideStep2Nav1": "U Edit Unit formi, kliknite \"Generiši Embed Kod\"",
+  "embedGuideStep2Nav2": "Otvorit će se dialog sa iframe kodom",
+  "embedGuideStep2Nav3": "Odaberite jezik (Hrvatski, English, Deutsch, Italiano)",
+  "embedGuideStep2Nav4": "Podesite visinu widgeta (default: 900px)",
+  "embedGuideStep2Nav5": "Kopirajte kod klikom na \"Kopiraj\"",
+  "embedGuideStep2ExampleCode": "Primjer koda:",
+
+  "embedGuideStep3Intro": "Sada zalijepite kod na vašu web stranicu:",
+  "embedGuideStep3WordPress": "Za WordPress:",
+  "embedGuideStep3WP1": "Otvorite stranicu u editoru",
+  "embedGuideStep3WP2": "Prebacite na \"HTML\" ili \"Code\" mod",
+  "embedGuideStep3WP3": "Zalijepite iframe kod",
+  "embedGuideStep3WP4": "Kliknite \"Publish\" ili \"Update\"",
+  "embedGuideStep3Static": "Za statičke HTML stranice:",
+  "embedGuideStep3HTML1": "Otvorite HTML fajl u text editoru",
+  "embedGuideStep3HTML2": "Nađite mjesto gdje želite widget (npr. unutar <div>)",
+  "embedGuideStep3HTML3": "Zalijepite iframe kod",
+  "embedGuideStep3HTML4": "Sačuvajte fajl i uploadujte na server",
+  "embedGuidePlaceholderAddIframe": "GIF: Proces dodavanja iframe-a u HTML",
+
+  "embedGuideStep4Intro": "Provjerite da li widget radi pravilno:",
+  "embedGuideStep4Check1": "Otvorite vašu web stranicu",
+  "embedGuideStep4Check2": "Provjerite da li se widget učitava",
+  "embedGuideStep4Check3": "Testirajte navigaciju po kalendaru",
+  "embedGuideStep4Check4": "Testirajte booking flow (ako nije calendar-only)",
+  "embedGuideStep4Success": "Gotovo! Widget je aktivan i gosti mogu vidjeti dostupnost.",
+
+  "embedGuideAdvResponsive": "Responsive Widget",
+  "embedGuideAdvResponsiveDesc": "Za widget koji se automatski prilagođava širini ekrana, koristite responsive embed kod iz dialoga.",
+  "embedGuideAdvLanguage": "Promjena Jezika",
+  "embedGuideAdvLanguageDesc": "Dodajte &language=en (ili hr, de, it) u URL za promjenu jezika widgeta.",
+  "embedGuideAdvColors": "Custom Boje",
+  "embedGuideAdvColorsDesc": "U Widget Settings možete promijeniti primarnu boju za branding.",
+  "embedGuideAdvMultiple": "Multiple Units",
+  "embedGuideAdvMultipleDesc": "Za više apartmana, kreirajte poseban widget za svaki (različit unit ID u URL-u).",
+
+  "embedGuideTroubleNotShowing": "Widget se ne prikazuje",
+  "embedGuideTroubleNotShowingSolution": "• Provjerite da li ste zalijepili kompletan iframe kod\n• Provjerite da li je unit ID tačan\n• Provjerite browser konzolu za JavaScript greške",
+  "embedGuideTroubleHeight": "Widget je previsok/prenizak",
+  "embedGuideTroubleHeightSolution": "• Podesite height parametar u iframe tagu (npr. height=\"1200px\")\n• Koristite responsive embed kod za automatsko prilagođavanje",
+  "embedGuideTroublePayment": "Plaćanje ne radi",
+  "embedGuideTroublePaymentSolution": "• Provjerite da li ste povezali Stripe račun\n• Provjerite da li ste uključili Stripe u Widget Settings\n• Provjerite allow=\"payment\" atribut u iframe tagu",
+  "embedGuideTroubleOldData": "Kalendar pokazuje stare podatke",
+  "embedGuideTroubleOldDataSolution": "• Osvježite stranicu (Ctrl+F5 za hard refresh)\n• Kalendar se automatski ažurira svakih 5 minuta",
+
+  "stripeGuideTitle": "Stripe Integracija - Uputstvo",
+  "stripeGuideHeaderTitle": "Stripe Connect",
+  "stripeGuideHeaderSubtitle": "Prihvatajte plaćanja karticama direktno na vaš Stripe račun",
+  "stripeGuideHeaderTip": "💡 Stripe Connect omogućava da primajte plaćanja direktno na vaš Stripe račun. Gosti plaćaju karticom, a sredstva odmah dolaze vama (minus Stripe naknada).",
+  "stripeGuideStep1Title": "Kreirajte Stripe Račun",
+  "stripeGuideStep2Title": "Dovršite Stripe Onboarding",
+  "stripeGuideStep3Title": "Povežite Stripe sa Owner Aplikacijom",
+  "stripeGuideStep4Title": "Uključite Stripe u Widget Postavkama",
+  "stripeGuideGoToIntegration": "Idi na Stripe Integraciju",
+  "stripeGuideFaq": "Česta Pitanja",
+
+  "unitWizardCreateTitle": "Kreiraj Novu Jedinicu",
+  "unitWizardEditTitle": "Uredi Jedinicu",
+  "unitWizardPublish": "Objavi",
+  "unitWizardContinueToReview": "Nastavi na Pregled",
+  "unitWizardNext": "Dalje",
+  "unitWizardBack": "Nazad",
+  "unitWizardSkip": "Preskoči",
+  "unitWizardFailedToLoad": "Greška pri učitavanju wizarda",
+  "unitWizardValidationStep1": "Molimo unesite naziv jedinice i URL slug",
+  "unitWizardValidationStep2": "Molimo unesite broj soba, kupatila i maksimalan broj gostiju",
+  "unitWizardValidationStep3": "Molimo postavite cijenu po noći i minimalan boravak",
+  "unitWizardValidationStep5": "Molimo dovršite sve obavezne korake prije objavljivanja",
+  "unitWizardValidationDefault": "Molimo dovršite ovaj korak",
+  "unitWizardCreateSuccess": "Jedinica uspješno kreirana!",
+  "unitWizardUpdateSuccess": "Jedinica uspješno ažurirana!",
+  "unitWizardPublishError": "Greška pri objavljivanju jedinice: {error}",
+  "@unitWizardPublishError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "unitWizardStep1Title": "Osnovne Informacije",
+  "unitWizardStep1Subtitle": "Unesite naziv i opis smještajne jedinice",
+  "unitWizardStep1UnitInfo": "Informacije o Jedinici",
+  "unitWizardStep1UnitInfoDesc": "Naziv i URL slug jedinice za identifikaciju",
+  "unitWizardStep1UnitName": "Naziv Jedinice *",
+  "unitWizardStep1UnitNameHint": "npr. Apartman Prizemlje",
+  "unitWizardStep1UnitNameRequired": "Naziv je obavezan",
+  "unitWizardStep1UrlSlug": "URL Slug",
+  "unitWizardStep1UrlSlugHint": "apartman-prizemlje",
+  "unitWizardStep1SlugRequired": "Slug je obavezan",
+  "unitWizardStep1SlugInvalid": "Slug može sadržavati samo mala slova, brojeve i crtice",
+  "unitWizardStep1RegenerateSlug": "Regeneriši iz naziva",
+  "unitWizardStep1Description": "Opis Jedinice",
+  "unitWizardStep1DescriptionInfo": "Dodatne informacije koje će biti vidljive gostima",
+  "unitWizardStep1DescriptionLabel": "Opis (opcionalno)",
+  "unitWizardStep1DescriptionHint": "Kratki opis jedinice...",
+
+  "unitWizardStep2Title": "Kapacitet i Prostor",
+  "unitWizardStep2Subtitle": "Unesite tehničke karakteristike smještajne jedinice",
+  "unitWizardStep2UnitCapacity": "Kapacitet Jedinice",
+  "unitWizardStep2UnitCapacityDesc": "Tehničke specifikacije smještaja",
+  "unitWizardStep2Bedrooms": "Spavaće Sobe *",
+  "unitWizardStep2Bathrooms": "Kupatila *",
+  "unitWizardStep2MaxGuests": "Maksimalno Gostiju *",
+  "unitWizardStep2Area": "Površina (m²)",
+  "unitWizardStep2Required": "Obavezno",
+  "unitWizardStep2InvalidNumber": "Neispravan broj",
+  "unitWizardStep2MinGuest": "Minimalno 1 gost",
+  "unitWizardStep2InfoTip": "Ove informacije pomažu gostima da odaberu odgovarajući smještaj",
+
+  "unitWizardStep3Title": "Cena i Dostupnost",
+  "unitWizardStep3Subtitle": "Postavite cenu, minimalan boravak i dostupnost",
+  "unitWizardStep3PriceInfo": "Informacije o Cijeni",
+  "unitWizardStep3PriceInfoDesc": "Osnovna cijena i pravila rezervacije",
+  "unitWizardStep3PricePerNight": "Cena po Noći (€) *",
+  "unitWizardStep3PricePerNightHint": "50",
+  "unitWizardStep3PricePerNightHelper": "Osnovna cena za jednu noć",
+  "unitWizardStep3PriceRequired": "Cena je obavezna",
+  "unitWizardStep3PriceInvalid": "Unesite ispravnu cenu",
+  "unitWizardStep3WeekendPrice": "Vikend Cena (€)",
+  "unitWizardStep3WeekendPriceHint": "70",
+  "unitWizardStep3WeekendPriceHelper": "Cena za Sub-Ned (opcionalno)",
+  "unitWizardStep3MinStay": "Minimalan Boravak (noći) *",
+  "unitWizardStep3MinStayHint": "1",
+  "unitWizardStep3MinStayHelper": "Najmanje noći za rezervaciju",
+  "unitWizardStep3MinStayRequired": "Minimalan boravak je obavezan",
+  "unitWizardStep3MinStayMin": "Minimum je 1 noć",
+  "unitWizardStep3MaxStay": "Maksimalan Boravak (noći)",
+  "unitWizardStep3MaxStayHint": "30",
+  "unitWizardStep3MaxStayHelper": "Najviše noći (opcionalno)",
+  "unitWizardStep3MaxStayInvalid": "Unesite ispravan broj",
+  "unitWizardStep3MaxStayMinError": "Max mora biti >= min ({min})",
+  "@unitWizardStep3MaxStayMinError": {
+    "placeholders": {
+      "min": {"type": "int"}
+    }
+  },
+  "unitWizardStep3Availability": "Dostupnost",
+  "unitWizardStep3AvailabilityDesc": "Postavite kada je jedinica dostupna za rezervacije",
+  "unitWizardStep3YearRound": "Dostupna Tokom Cijele Godine",
+  "unitWizardStep3YearRoundDesc": "Jedinica je otvorena za rezervacije tokom cijele godine",
+  "unitWizardStep3AdvancedTitle": "Napredne opcije cijena",
+  "unitWizardStep3AdvancedDesc": "Nakon kreiranja jedinice, u Cjenovnik tabu možete podesiti napredne opcije kao što su min/max noći po datumu, blokiranje check-in/check-out dana, vikend dani i sezonske cijene.",
+
+  "unitWizardStep4Title": "Fotografije",
+  "unitWizardStep4Subtitle": "Dodajte fotografije smještajne jedinice (preporučeno min. 5)",
+  "unitWizardStep4Gallery": "Galerija Fotografija",
+  "unitWizardStep4GalleryDesc": "Upload fotografija vaše jedinice",
+  "unitWizardStep4AddPhotos": "Dodaj Fotografije",
+  "unitWizardStep4Uploading": "Uploading...",
+  "unitWizardStep4PhotoCount": "{count} fotografija",
+  "@unitWizardStep4PhotoCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitWizardStep4NoPhotos": "Nema fotografija",
+  "unitWizardStep4SetCover": "Postavi kao naslovnu",
+  "unitWizardStep4Delete": "Obriši",
+  "unitWizardStep4Cover": "Cover",
+  "unitWizardStep4UploadSuccess": "Uspješno uploadano {count} slika",
+  "@unitWizardStep4UploadSuccess": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitWizardStep4UploadError": "Greška pri uploadu slika: {error}",
+  "@unitWizardStep4UploadError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "unitWizardStep4ImageDeleted": "Slika obrisana",
+  "unitWizardStep4CoverUpdated": "Naslovna slika ažurirana",
+
+  "unitWizardStep5Title": "Pregled i Objava",
+  "unitWizardStep5Subtitle": "Pregledajte sve informacije prije objave jedinice",
+  "unitWizardStep5BasicInfo": "Osnovne Informacije",
+  "unitWizardStep5Capacity": "Kapacitet",
+  "unitWizardStep5Pricing": "Cijene",
+  "unitWizardStep5AvailabilityCard": "Dostupnost",
+  "unitWizardStep5Name": "Naziv",
+  "unitWizardStep5Slug": "Slug",
+  "unitWizardStep5Description": "Opis",
+  "unitWizardStep5Bedrooms": "Spavaće sobe",
+  "unitWizardStep5Bathrooms": "Kupatila",
+  "unitWizardStep5MaxGuests": "Max gostiju",
+  "unitWizardStep5Area": "Površina",
+  "unitWizardStep5PricePerNight": "Cena po noći",
+  "unitWizardStep5MinStay": "Min. boravak",
+  "unitWizardStep5MinStayNights": "{nights} noći",
+  "@unitWizardStep5MinStayNights": {
+    "placeholders": {
+      "nights": {"type": "int"}
+    }
+  },
+  "unitWizardStep5YearRound": "Tokom godine",
+  "unitWizardStep5YearRoundYes": "Da",
+  "unitWizardStep5YearRoundSeasonal": "Sezonski",
+  "unitWizardStep5IncompleteWarning": "Molimo popunite sve obavezne korake prije objave",
+  "unitWizardStep5ReadyMessage": "Sve obavezne informacije su popunjene. Kliknite \"Objavi\" za objavljivanje jedinice.",
+
+  "unitWizardProgressStepOf": "Korak {current} od {total}",
+  "@unitWizardProgressStepOf": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "unitWizardProgressInfo": "Info",
+  "unitWizardProgressCapacity": "Kapacitet",
+  "unitWizardProgressPrice": "Cena",
+  "unitWizardProgressPhotos": "Fotografije",
+  "unitWizardProgressReview": "Pregled",
+  "unitWizardProgressOptional": "(opcionalno)",
+
+  "propertyFormSubdomainSuggestion": "Predlog: ",
+  "propertyFormUseSuggestion": "Koristi",
+  "propertyFormSubdomainAvailable": "Subdomena je dostupna",
+  "propertyFormNoPhotos": "Nema fotografija",
+  "propertyFormGenerateFromName": "Generiši iz naziva",
+  "propertyFormSubdomainLabel": "Subdomena (za email linkove)",
+  "propertyFormSubdomainEmailHelper": "URL za email linkove: [subdomain].rabbooking.com",
+
+  "icalExportTitle": "iCal Export",
+  "icalExportUnit": "Jedinica",
+  "icalExportGenerating": "Generiranje...",
+  "icalExportGenerate": "Generiraj iCal Export",
+  "icalExportUrl": "Export URL",
+  "icalExportCopyUrl": "Kopiraj URL",
+  "icalExportLastGenerated": "Zadnje generirano: {time}",
+  "@icalExportLastGenerated": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "icalExportPreview": "Pregled .ics datoteke",
+  "icalExportHowToTest": "Kako testirati",
+  "icalExportGoogleCalendar": "1. Google Calendar",
+  "icalExportGoogleInstructions": "Idite na Settings → Add calendar → From URL → Zalijepite export URL",
+  "icalExportAppleCalendar": "2. Apple Calendar",
+  "icalExportAppleInstructions": "File → New Calendar Subscription → Zalijepite export URL",
+  "icalExportOutlook": "3. Outlook",
+  "icalExportOutlookInstructions": "Add calendar → Subscribe from web → Zalijepite export URL",
+  "icalExportSyncNote": "Napomena: Kalendar aplikacije mogu trebati 5-15 minuta za sinkronizaciju nakon pretplate",
+  "icalExportSuccess": "iCal export uspješno generiran",
+  "icalExportError": "Greška pri generiranju iCal exporta",
+  "icalExportUrlCopied": "URL kopiran u međuspremnik",
+  "icalExportJustNow": "Upravo sada",
+  "icalExportMinutesAgo": "prije {minutes}m",
+  "@icalExportMinutesAgo": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "icalExportHoursAgo": "prije {hours}h",
+  "@icalExportHoursAgo": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+
+  "icalExportListTitle": "iCal Export - Odaberi Jedinicu",
+  "icalExportListHeader": "iCal Export",
+  "icalExportListDescription": "Odaberite jedinicu za koju želite generirati iCal URL za sinkronizaciju kalendara.",
+  "icalExportListUnknownUnit": "Nepoznata jedinica",
+  "icalExportListUnknownProperty": "Nepoznata nekretnina",
+  "icalExportListNoUnits": "Nema smještajnih jedinica",
+  "icalExportListNoUnitsDesc": "Prvo kreirajte nekretninu i dodajte smještajne jedinice.",
+  "icalExportListAddProperty": "Dodaj Nekretninu",
+
+  "errorWithMessage": "Greška: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+
+  "languageSelectTitle": "Odaberite Jezik",
+  "revenueChartTitle": "Pregled Prihoda",
+  "revenueChartLegend": "Prihod",
+  "revenueChartNoData": "Nema podataka o prihodima",
+
+  "propertyCardPublished": "Objavljeno",
+  "propertyCardHidden": "Skriveno",
+  "propertyCardUnits": "{count, plural, =1{1 jedinica} few{{count} jedinice} other{{count} jedinica}}",
+  "@propertyCardUnits": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "propertyCardEdit": "Uredi",
+  "propertyCardDelete": "Obriši",
+
+  "editBookingTitle": "Uredi Rezervaciju",
+  "editBookingBookingId": "Rezervacija: {id}",
+  "@editBookingBookingId": {
+    "placeholders": {
+      "id": {"type": "String"}
+    }
+  },
+  "editBookingGuest": "Gost: {name}",
+  "@editBookingGuest": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "editBookingCheckIn": "Check-in",
+  "editBookingCheckOut": "Check-out",
+  "editBookingNights": "{count, plural, =1{1 noć} few{{count} noći} other{{count} noći}}",
+  "@editBookingNights": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "editBookingGuests": "Gosti",
+  "editBookingInternalNotes": "Interne Bilješke",
+  "editBookingNotesHint": "Dodaj bilješke (nisu vidljive gostu)...",
+  "editBookingSaveChanges": "Sačuvaj Promjene",
+  "editBookingSuccess": "Rezervacija uspješno ažurirana",
+  "editBookingError": "Greška pri ažuriranju rezervacije",
+
+  "embedCodeTitle": "Embed Kod za Widget",
+  "embedCodeUnit": "Jedinica",
+  "embedCodeUrlSlug": "URL Slug",
+  "embedCodeUnitIdTechnical": "Unit ID (tehnički)",
+  "embedCodeWidgetUrl": "Widget URL",
+  "embedCodeOptions": "Opcije",
+  "embedCodeLanguage": "Jezik",
+  "embedCodeHeight": "Visina (px)",
+  "embedCodeFixedHeight": "Fiksna Visina",
+  "embedCodeFixedHeightDesc": "Iframe sa fiksnom visinom ({height}px)",
+  "@embedCodeFixedHeightDesc": {
+    "placeholders": {
+      "height": {"type": "String"}
+    }
+  },
+  "embedCodeResponsive": "Responsive",
+  "embedCodeResponsiveDesc": "Automatski prilagođava se širini (aspect ratio 4:3)",
+  "embedCodeCopy": "Kopiraj",
+  "embedCodeCopied": "{label} kopiran u clipboard!",
+  "@embedCodeCopied": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "embedCodeInstructions": "Uputstvo",
+  "embedCodeInstructionsText": "1. Kopirajte embed kod (kliknite na \"Kopiraj\" dugme)\n2. Otvorite stranicu vašeg web sajta u editoru\n3. Zalijepite kod na željeno mjesto\n4. Sačuvajte i objavite stranicu",
+
+  "sendEmailTitle": "Pošalji Email Gostu",
+  "sendEmailTemplate": "Predložak",
+  "sendEmailTemplateConfirmation": "Potvrda rezervacije",
+  "sendEmailTemplateReminder": "Podsjetnik",
+  "sendEmailTemplateCancellation": "Otkazivanje",
+  "sendEmailTemplateCustom": "Prilagođena poruka",
+  "sendEmailSubject": "Naslov *",
+  "sendEmailSubjectHint": "Naslov emaila",
+  "sendEmailSubjectRequired": "Molimo unesite naslov",
+  "sendEmailMessage": "Poruka *",
+  "sendEmailMessageHint": "Unesite poruku za gosta...",
+  "sendEmailMessageRequired": "Molimo unesite poruku",
+  "sendEmailMessageTooShort": "Poruka mora imati najmanje 10 znakova",
+  "sendEmailInfo": "Email će biti poslan sa vaše registrirane email adrese",
+  "sendEmailCancel": "Odustani",
+  "sendEmailSend": "Pošalji Email",
+  "sendEmailSending": "Šaljem...",
+  "sendEmailSuccess": "Email uspješno poslan gostu {name}",
+  "@sendEmailSuccess": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "sendEmailError": "Greška pri slanju emaila",
+  "sendEmailNoGuestEmail": "Email adresa gosta nije dostupna",
+
+  "priceCalendarSetPrice": "Postavi cijenu",
+  "priceCalendarAvailability": "Dostupnost",
+  "priceCalendarSelectMonth": "Odaberi mjesec",
+  "priceCalendarBulkEdit": "Bulk Edit",
+  "priceCalendarDaysSelected": "{count} {count, plural, =1{dan} few{dana} other{dana}} odabrano",
+  "@priceCalendarDaysSelected": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarClear": "Očisti",
+  "priceCalendarSelectAllDays": "Selektuj sve dane",
+  "priceCalendarDeselectAll": "Deselektuj sve",
+  "priceCalendarErrorLoadingPrices": "Greška pri učitavanju cijena",
+  "priceCalendarWeekdayMon": "Pon",
+  "priceCalendarWeekdayTue": "Uto",
+  "priceCalendarWeekdayWed": "Sri",
+  "priceCalendarWeekdayThu": "Čet",
+  "priceCalendarWeekdayFri": "Pet",
+  "priceCalendarWeekdaySat": "Sub",
+  "priceCalendarWeekdaySun": "Ned",
+  "priceCalendarEditDate": "Uredi datum",
+  "priceCalendarPrice": "CIJENA",
+  "priceCalendarBasePricePerNight": "Osnovna cijena po noći (€)",
+  "priceCalendarAvailabilitySection": "DOSTUPNOST",
+  "priceCalendarAvailable": "Dostupno",
+  "priceCalendarBlockCheckIn": "Blokiraj prijavu (check-in)",
+  "priceCalendarBlockCheckInDesc": "Gosti ne mogu započeti rezervaciju",
+  "priceCalendarBlockCheckOut": "Blokiraj odjavu (check-out)",
+  "priceCalendarBlockCheckOutDesc": "Gosti ne mogu završiti rezervaciju",
+  "priceCalendarAdvancedOptions": "Napredne opcije",
+  "priceCalendarAdvancedOptionsDesc": "Vikend cijena, min/max noći, unaprijed",
+  "priceCalendarWeekendPrice": "Vikend cijena (€)",
+  "priceCalendarMinNights": "Min. noći",
+  "priceCalendarMaxNights": "Max. noći",
+  "priceCalendarMinDaysAdvance": "Min. dana unaprijed",
+  "priceCalendarMaxDaysAdvance": "Max. dana unaprijed",
+  "priceCalendarDeleteConfirmTitle": "Potvrda brisanja",
+  "priceCalendarDeleteConfirmMessage": "Da li ste sigurni da želite obrisati custom cijenu? Datum će biti vraćen na osnovnu cijenu.",
+  "priceCalendarRevertedToBasePrice": "Vraćeno na osnovnu cijenu",
+  "priceCalendarEnterPrice": "Unesite cijenu",
+  "priceCalendarPriceMustBeGreaterThanZero": "Cijena mora biti veća od 0",
+  "priceCalendarWeekendPriceMustBeGreaterThanZero": "Vikend cijena mora biti veća od 0",
+  "priceCalendarMinNightsMustBeGreaterThanZero": "Min. noći mora biti veće od 0",
+  "priceCalendarMaxNightsMustBeGreaterThanZero": "Max. noći mora biti veće od 0",
+  "priceCalendarMinDaysAdvanceMustBeZeroOrMore": "Min. dana unaprijed mora biti 0 ili više",
+  "priceCalendarMaxDaysAdvanceMustBeGreaterThanZero": "Max. dana unaprijed mora biti veće od 0",
+  "priceCalendarPriceSaved": "Cijena spremljena",
+  "priceCalendarSetPriceForDays": "Postavi cijenu za {count} dana",
+  "@priceCalendarSetPriceForDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarPricePerNight": "Cijena po noći (€)",
+  "priceCalendarWillSetPriceForAllDates": "Postavit će se cijena za sve odabrane datume",
+  "priceCalendarConfirmation": "Potvrda",
+  "priceCalendarConfirmSetPrice": "Jeste li sigurni da želite postaviti cijenu €{price} za {count} {count, plural, =1{dan} few{dana} other{dana}}?",
+  "@priceCalendarConfirmSetPrice": {
+    "placeholders": {
+      "price": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarUpdatedPrices": "Ažurirano {count} cijena",
+  "@priceCalendarUpdatedPrices": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarUndo": "Poništi",
+  "priceCalendarAvailabilityForDays": "Dostupnost za {count} dana",
+  "@priceCalendarAvailabilityForDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarSelectActionForDays": "Odaberite akciju za {count} {count, plural, =1{dan} few{dana} other{dana}}:",
+  "@priceCalendarSelectActionForDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarMarkAsAvailable": "Označi kao dostupno",
+  "priceCalendarDaysMarkedAvailable": "{count} {count, plural, =1{dan označen} few{dana označeno} other{dana označeno}} kao dostupno",
+  "@priceCalendarDaysMarkedAvailable": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarConfirmBlockDays": "Jeste li sigurni da želite blokirati {count} {count, plural, =1{dan} few{dana} other{dana}}?\n\nOvi datumi će biti označeni kao nedostupni.",
+  "@priceCalendarConfirmBlockDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarBlock": "Blokiraj",
+  "priceCalendarBlockDates": "Blokiraj datume",
+  "priceCalendarDaysBlocked": "{count} {count, plural, =1{dan blokiran} few{dana blokirano} other{dana blokirano}}",
+  "@priceCalendarDaysBlocked": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarBlockCheckInButton": "Blokiraj check-in",
+  "priceCalendarCheckInBlockedForDays": "Check-in blokiran za odabrane dane",
+  "priceCalendarBlockCheckOutButton": "Blokiraj check-out",
+  "priceCalendarCheckOutBlockedForDays": "Check-out blokiran za odabrane dane",
+
+  "icalSyncTitle": "iCal Sinhronizacija",
+  "icalNoFeeds": "Nema feedova",
+  "icalNoFeedsDescription": "Dodajte prvi iCal feed da započnete sinhronizaciju",
+  "icalSyncError": "Greška u sinhronizaciji",
+  "icalSyncErrorCount": "{errorCount} od {totalCount} feedova ima grešku",
+  "@icalSyncErrorCount": {
+    "placeholders": {
+      "errorCount": {"type": "int"},
+      "totalCount": {"type": "int"}
+    }
+  },
+  "icalSyncActive": "Sinhronizacija aktivna",
+  "icalSyncActiveCount": "{count} feedova aktivno sinhronizovano",
+  "@icalSyncActiveCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalAllFeedsPaused": "Svi feedovi pauzirani",
+  "icalNoActiveFeeds": "Nema aktivnih feedova",
+  "icalWhySync": "Zašto iCal Sinhronizacija?",
+  "icalAutoSync": "Automatska Sinhronizacija",
+  "icalAutoSyncDesc": "Rezervacije se automatski uvoze sa booking platformi svakih 60 minuta",
+  "icalPreventDoubleBooking": "Sprečavanje Duplog Bukinga",
+  "icalPreventDoubleBookingDesc": "Blokirajte termine na svim platformama automatski",
+  "icalCompatibility": "Kompatibilnost",
+  "icalCompatibilityDesc": "Podržava Booking.com, Airbnb i druge iCal platforme",
+  "icalSecure": "Sigurno i Pouzdano",
+  "icalSecureDesc": "Enkriptovani podaci i automatski backup svih rezervacija",
+  "icalErrorLoadingFeeds": "Greška pri učitavanju feedova",
+  "icalNoFeedsTitle": "Nema iCal Feedova",
+  "icalNoFeedsSubtitle": "Dodajte iCal feed da sinhronizujete rezervacije sa booking platformama",
+  "icalAddFeed": "Dodaj iCal Feed",
+  "icalAddFeedSubtitle": "Povežite kalendar sa Booking.com, Airbnb ili druge platforme",
+  "icalAddFeedButton": "Dodaj Feed",
+  "icalYourFeeds": "Vaši Feedovi",
+  "icalLastSynced": "Zadnje sinhronizovano: {time}",
+  "@icalLastSynced": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "icalErrorPrefix": "Greška: {error}",
+  "@icalErrorPrefix": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "icalReservationsAndSyncs": "{reservations} rezervacija • {syncs} sinhronizacija",
+  "@icalReservationsAndSyncs": {
+    "placeholders": {
+      "reservations": {"type": "int"},
+      "syncs": {"type": "int"}
+    }
+  },
+  "icalSyncNow": "Sinhronizuj sada",
+  "icalPause": "Pauziraj",
+  "icalResume": "Nastavi",
+  "icalHowItWorks": "Kako funkcionira iCal sinhronizacija?",
+  "icalSyncStarted": "Sinhronizacija pokrenuta za {platform}...",
+  "@icalSyncStarted": {
+    "placeholders": {
+      "platform": {"type": "String"}
+    }
+  },
+  "icalSyncSuccess": "Sinhronizacija uspješna! Kreirano rezervacija: {count}",
+  "@icalSyncSuccess": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalSyncErrorMessage": "Greška prilikom sinhronizacije",
+  "icalUnknownError": "Nepoznata greška",
+  "icalFeedPaused": "Feed pauziran",
+  "icalFeedPauseError": "Greška prilikom pauziranja feeda",
+  "icalFeedResumed": "Feed nastavljen",
+  "icalFeedResumeError": "Greška prilikom nastavljanja feeda",
+  "icalDeleteFeedTitle": "Obriši Feed?",
+  "icalDeleteFeedMessage": "Da li ste sigurni da želite obrisati {platform} feed? Ova akcija će obrisati {count} sinhronizovanih rezervacija.",
+  "@icalDeleteFeedMessage": {
+    "placeholders": {
+      "platform": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "icalFeedDeleted": "Feed obrisan",
+  "icalFeedDeleteError": "Greška prilikom brisanja feeda",
+  "icalAddFeedTitle": "Dodaj iCal Feed",
+  "icalEditFeedTitle": "Uredi iCal Feed",
+  "icalSelectUnit": "Odaberi jedinicu *",
+  "icalSelectUnitRequired": "Molimo odaberite jedinicu",
+  "icalNoUnitsCreated": "Nemate kreiranih jedinica. Prvo kreirajte apartman.",
+  "icalErrorLoadingUnits": "Greška učitavanja jedinica",
+  "icalPlatform": "Platforma *",
+  "icalPlatformBookingCom": "Booking.com",
+  "icalPlatformAirbnb": "Airbnb",
+  "icalPlatformOther": "Druga platforma (iCal)",
+  "icalUrlLabel": "iCal URL *",
+  "icalUrlHint": "https://...",
+  "icalPasteFromClipboard": "Zalijepi iz clipboard-a",
+  "icalUrlRequired": "Molimo unesite iCal URL",
+  "icalUrlInvalid": "URL mora početi sa http:// ili https://",
+  "icalAutoSyncInfo": "Automatska sinhronizacija",
+  "icalAutoSyncInfoDesc": "Rezervacije će se automatski sinhronizovati svakih 60 minuta. Inicijalna sinhronizacija će se pokrenuti odmah nakon dodavanja.",
+  "icalAdd": "Dodaj",
+  "icalInitialSyncStarting": "Feed uspješno dodan! Pokrećem inicijalnu sinhronizaciju...",
+  "icalInitialSyncSuccess": "Inicijalna sinhronizacija završena! Uvezeno: {count} rezervacija",
+  "@icalInitialSyncSuccess": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalInitialSyncFailed": "Feed je dodan, ali inicijalna sinhronizacija nije uspjela. Sinhronizacija će se automatski pokrenuti za 60 minuta.",
+  "icalInitialSyncError": "Feed je dodan, ali automatska sinhronizacija nije uspjela. Možete ručno pokrenuti sinhronizaciju kasnije.",
+  "icalFeedUpdated": "Feed ažuriran",
+  "icalFeedSaveError": "Greška prilikom čuvanja feeda",
+
+  "icalGuideTitle": "iCal Sinhronizacija - Uputstvo",
+  "icalGuideHeaderTitle": "iCal Sinhronizacija",
+  "icalGuideHeaderSubtitle": "Automatski sync rezervacija sa Booking.com, Airbnb i drugih platformi",
+  "icalGuideHeaderTip": "💡 iCal sinhronizacija sprečava overbooking tako što automatski uvozi rezervacije sa drugih platformi i prikazuje ih kao zauzete dane u vašem kalendaru.",
+  "icalGuideBookingComSteps": "Koraci za dobijanje iCal URL-a:",
+  "icalGuideBookingCom1": "1. Ulogujte se na Extranet (admin.booking.com)",
+  "icalGuideBookingCom2": "2. Idite na: Property → Calendar → Reservations export",
+  "icalGuideBookingCom3": "3. Kopirajte \"Calendar export link\" (iCal URL)",
+  "icalGuideBookingCom4": "4. Zalijepite u Owner aplikaciju",
+  "icalGuideAirbnb1": "1. Ulogujte se na Airbnb host dashboard",
+  "icalGuideAirbnb2": "2. Odaberite property (listing)",
+  "icalGuideAirbnb3": "3. Idite na: Calendar → Availability settings → Export calendar",
+  "icalGuideAirbnb4": "4. Kopirajte iCal link",
+  "icalGuideAirbnb5": "5. Zalijepite u Owner aplikaciju",
+  "icalGuideAddFeedTitle": "Dodavanje iCal Feed-a u Owner Aplikaciju",
+  "icalGuideStep1Title": "Otvorite iCal Sinhronizaciju",
+  "icalGuideStep1Desc": "U Owner aplikaciji:",
+  "icalGuideStep1Bullet1": "Otvorite drawer (hamburger meni)",
+  "icalGuideStep1Bullet2": "Idite na: Integracije → iCal Sinhronizacija",
+  "icalGuideStep1Button": "Idi na iCal Sinhronizaciju",
+  "icalGuideStep2Title": "Dodajte novi Feed",
+  "icalGuideStep2Desc": "Kliknite na \"Dodaj iCal Feed\" dugme:",
+  "icalGuideStep2Bullet1": "Odaberite Unit (apartman) za koji želite sync",
+  "icalGuideStep2Bullet2": "Odaberite platformu (Booking.com, Airbnb, itd.)",
+  "icalGuideStep2Bullet3": "Zalijepite iCal URL koji ste kopirali",
+  "icalGuideStep2Bullet4": "Kliknite \"Dodaj\"",
+  "icalGuideStep3Title": "Pokrenite Sync",
+  "icalGuideStep3Desc": "Nakon dodavanja feed-a:",
+  "icalGuideStep3Bullet1": "Kliknite \"Sync Now\" dugme pored feed-a",
+  "icalGuideStep3Bullet2": "Sačekajte par sekundi",
+  "icalGuideStep3Bullet3": "Provjerite status (Active ✓)",
+  "icalGuideStep3Success": "Gotovo! Rezervacije sa drugih platformi će se automatski prikazivati kao zauzeti dani.",
+  "icalGuideStep4Title": "Automatska Sinhronizacija",
+  "icalGuideStep4Desc": "Sistem automatski sinhronizuje rezervacije:",
+  "icalGuideStep4Bullet1": "Svaki sat se pokreće automatski sync",
+  "icalGuideStep4Bullet2": "Nove rezervacije se pojavljuju u roku od 1h",
+  "icalGuideStep4Bullet3": "Otkazane rezervacije se uklanjaju",
+  "icalGuideStep4Bullet4": "Možete ručno pokrenuti sync bilo kada",
+  "icalGuideStep4Info": "Vrijeme sinhronizacije: Svaki sat u 00 minuta (npr. 10:00, 11:00, 12:00...)",
+  "icalGuideFaqTitle": "Česta Pitanja",
+  "icalGuideFaq1Q": "Koliko često se sinhronizuje?",
+  "icalGuideFaq1A": "Automatski sync se izvršava svaki sat. Možete ručno pokrenuti sync bilo kada klikom na \"Sync Now\".",
+  "icalGuideFaq2Q": "Hoće li gosti vidjeti rezervacije sa drugih platformi?",
+  "icalGuideFaq2A": "Da! Rezervacije uvezene preko iCal-a će biti prikazane kao zauzeti dani u embed widgetu, sprečavajući overbooking.",
+  "icalGuideFaq3Q": "Mogu li dodati više feed-ova za isti apartman?",
+  "icalGuideFaq3A": "Da, možete dodati feed-ove sa više platformi (Booking.com, Airbnb, ili bilo koja druga iCal platforma) za isti unit. Sve rezervacije će biti sinhronizovane.",
+  "icalGuideFaq4Q": "Da li mogu vidjeti detalje gosta sa drugih platformi?",
+  "icalGuideFaq4A": "Ne. iCal protokol samo prenosi datume rezervacije (check-in i check-out), ne i lične podatke gostiju. Za detalje gosta, morate se ulogovat na odgovarajuću platformu.",
+  "icalGuideFaq5Q": "Šta ako URL prestane da radi?",
+  "icalGuideFaq5A": "Ako se URL promeni, jednostavno ažurirajte feed u aplikaciji. Obrišite stari feed i dodajte novi sa ažuriranim URL-om.",
+  "icalGuideTroubleshootTitle": "Rješavanje Problema",
+  "icalGuideTrouble1Problem": "Feed ima status \"Error\"",
+  "icalGuideTrouble1Solution": "• Provjerite da li je URL tačan\n• Provjerite da li je URL još aktivan na platformi\n• Obrišite feed i dodajte ponovo sa novim URL-om",
+  "icalGuideTrouble2Problem": "Rezervacije se ne prikazuju",
+  "icalGuideTrouble2Solution": "• Kliknite \"Sync Now\" da ručno pokrenete sync\n• Provjerite da li ste odabrali tačan unit\n• Sačekajte par minuta i osvježite stranicu",
+  "icalGuideTrouble3Problem": "Stare rezervacije još uvijek prikazane",
+  "icalGuideTrouble3Solution": "• iCal sync automatski uklanja prošle rezervacije\n• Kliknite \"Sync Now\" da forsirate ažuriranje",
+
+  "stripeGuideStep1Desc": "Ako već nemate Stripe račun, morate ga kreirati:",
+  "stripeGuideStep1Bullet1": "Idite na Stripe.com",
+  "stripeGuideStep1Bullet2": "Kliknite na \"Sign up\" ili \"Start now\"",
+  "stripeGuideStep1Bullet3": "Unesite email, ime i lozinku",
+  "stripeGuideStep1Bullet4": "Verifikujte email adresu",
+  "stripeGuideStep1Note": "Napomena: Stripe je besplatan za registraciju. Naplaćuje samo proviziju po transakciji (oko 1.4% + 0.25€).",
+  "stripeGuideStep2Desc": "Nakon registracije, Stripe će tražiti dodatne informacije:",
+  "stripeGuideStep2Bullet1": "Tip biznisa (Individual ili Company)",
+  "stripeGuideStep2Bullet2": "Lične informacije (ime, prezime, datum rođenja)",
+  "stripeGuideStep2Bullet3": "Adresa stanovanja",
+  "stripeGuideStep2Bullet4": "Bankovni račun za isplate (IBAN)",
+  "stripeGuideStep2Bullet5": "Poreska identifikacija (OIB u Hrvatskoj)",
+  "stripeGuideStep2Warning": "Važno: Unesite tačne podatke. Stripe provjerava identitet zbog sigurnosti i zakonskih propisa.",
+  "stripeGuideStep3Desc": "Vratite se u Owner aplikaciju i povežite svoj Stripe račun:",
+  "stripeGuideStep3Bullet1": "Otvorite drawer (hamburger meni)",
+  "stripeGuideStep3Bullet2": "Idite na: Integracije → Stripe Plaćanja",
+  "stripeGuideStep3Bullet3": "Kliknite \"Poveži Stripe Račun\"",
+  "stripeGuideStep3Bullet4": "Ulogujte se sa vašim Stripe email/lozinkom",
+  "stripeGuideStep3Bullet5": "Odobrite pristup",
+  "stripeGuideStep4Desc": "Nakon što povežete Stripe, omogućite ga za svaki unit:",
+  "stripeGuideStep4Bullet1": "Idite na Konfiguracija → Smještajne jedinice",
+  "stripeGuideStep4Bullet2": "Kliknite \"Uredi\" na unit",
+  "stripeGuideStep4Bullet3": "Kliknite \"Postavke Widgeta\"",
+  "stripeGuideStep4Bullet4": "Uključite \"Stripe Plaćanje\" toggle",
+  "stripeGuideStep4Bullet5": "Podesite postotak depozita (default: 20%)",
+  "stripeGuideStep4Bullet6": "Sačuvajte izmjene",
+  "stripeGuideStep4Success": "Gotovo! Sada gosti mogu plaćati karticom kroz widget.",
+  "stripeGuideFaq1Q": "Koliko košta Stripe?",
+  "stripeGuideFaq1A": "Stripe ne naplaćuje mjesečnu pretplatu. Provizija je 1.4% + 0.25€ po uspješnoj transakciji unutar EU. Za kartice van EU, provizija je 2.9% + 0.25€.",
+  "stripeGuideFaq2Q": "Kada dolaze isplate na moj račun?",
+  "stripeGuideFaq2A": "Stripe po defaultu prebacuje sredstva na vaš bankovni račun svakih 7 dana. Nakon prvog mjeseca, možete promijeniti na dnevne isplate.",
+  "stripeGuideFaq3Q": "Mogu li primati plaćanja u različitim valutama?",
+  "stripeGuideFaq3A": "Da, Stripe podržava 135+ valuta. Međutim, isplate će biti u EUR (vaša primarna valuta).",
+  "stripeGuideFaq4Q": "Šta ako gost napravi chargeback?",
+  "stripeGuideFaq4A": "Stripe automatski obrađuje chargebacke. Vi ćete biti obaviješteni emailom i moći ćete podnijeti dokaze (potvrdu rezervacije, email komunikaciju). Naknada za chargeback je €15.",
+  "stripeGuideFaq5Q": "Da li mogu testirati prije aktivacije?",
+  "stripeGuideFaq5A": "Da! Stripe ima test mod gdje možete simulirati plaćanja. Koristite test kartice koje Stripe pruža za testiranje.",
+
+  "termsScreenTitle": "Uvjeti korištenja",
+  "termsScreenHeaderTitle": "Uvjeti korištenja",
+  "termsScreenLastUpdated": "Zadnje ažurirano: {year}",
+  "@termsScreenLastUpdated": {
+    "placeholders": {
+      "year": {"type": "String"}
+    }
+  },
+  "termsScreenToc": "Sadržaj",
+  "termsScreenSection1Title": "1. Prihvaćanje uvjeta",
+  "termsScreenSection1Body": "Pristupanjem i korištenjem ove platforme za rezervacije (\"Usluga\"), prihvaćate i slažete se s uvjetima i odredbama ovog ugovora. Ako se ne slažete s navedenim, molimo vas da ne koristite ovu uslugu.",
+  "termsScreenSection2Title": "2. Licenca za korištenje",
+  "termsScreenSection2Body": "Odobrava se privremeno korištenje ove Usluge samo za osobno, nekomercijalno pregledavanje. Ovo je dodjela licence, a ne prijenos vlasništva, i pod ovom licencom ne smijete:\n\n• Modificirati ili kopirati materijale\n• Koristiti materijale u komercijalne svrhe\n• Pokušati dekompilirati ili obrnuto inženjerirati bilo koji softver sadržan u Usluzi\n• Ukloniti bilo kakve oznake autorskih prava ili vlasništva s materijala",
+  "termsScreenSection3Title": "3. Politika rezervacija",
+  "termsScreenSection3Body": "Sve rezervacije izvršene putem ove platforme podliježu sljedećim uvjetima:\n\n• Depozit od 20% potreban je prilikom rezervacije\n• Preostalih 80% dospijeva po dolasku u objekt\n• Politike otkazivanja variraju ovisno o objektu i bit će jasno prikazane prije rezervacije\n• Morate imati najmanje 18 godina da biste izvršili rezervaciju",
+  "termsScreenSection4Title": "4. Uvjeti plaćanja",
+  "termsScreenSection4Body": "Prihvaćamo sljedeće načine plaćanja:\n\n• Kreditne/debitne kartice (sigurno obrađene putem Stripe-a)\n• Bankovni prijenos\n\nSva plaćanja se obrađuju sigurno. Ne pohranjujemo podatke o vašoj platnoj kartici.",
+  "termsScreenSection5Title": "5. Politika otkazivanja i povrata",
+  "termsScreenSection5Body": "Politike otkazivanja postavljaju pojedinačni vlasnici objekata. Molimo pregledajte specifičnu politiku otkazivanja za vašu rezervaciju prije potvrde. Povrati će se obraditi prema politici otkazivanja objekta.",
+  "termsScreenSection6Title": "6. Odgovornosti korisnika",
+  "termsScreenSection6Body": "Slažete se da ćete:\n\n• Pružiti točne i potpune informacije prilikom rezervacije\n• Pridržavati se pravila i propisa objekta\n• Poštovati objekt i druge goste\n• Platiti za bilo kakvu štetu nastalu tijekom vašeg boravka",
+  "termsScreenSection7Title": "7. Ograničenje odgovornosti",
+  "termsScreenSection7Body": "Usluga i njeni vlasnici neće biti odgovorni za bilo kakvu neizravnu, slučajnu, posebnu, posljedičnu ili kaznenu štetu, uključujući bez ograničenja, gubitak dobiti, podataka, korištenja, goodwilla ili drugih nematerijalnih gubitaka.",
+  "termsScreenSection8Title": "8. Izmjene uvjeta",
+  "termsScreenSection8Body": "Zadržavamo pravo izmjene ovih uvjeta u bilo kojem trenutku. Obavijestit ćemo korisnike o svim materijalnim promjenama ažuriranjem datuma \"Zadnje ažurirano\". Vaše daljnje korištenje Usluge nakon takvih izmjena predstavlja vaše prihvaćanje ažuriranih uvjeta.",
+  "termsScreenSection9Title": "9. Mjerodavno pravo",
+  "termsScreenSection9Body": "Ovi uvjeti bit će regulirani i tumačeni u skladu sa zakonima Hrvatske, bez obzira na odredbe o sukobu zakona.",
+  "termsScreenSection10Title": "10. Kontakt informacije",
+  "termsScreenSection10Body": "Za pitanja o ovim Uvjetima, kontaktirajte nas na:\n\nEmail: duskolicanin1234@gmail.com\nAdresa: [Adresa vaše tvrtke]\n\n⚠️ NAPOMENA: Ažurirajte ove kontakt informacije sa stvarnim podacima.",
+  "termsScreenLegalNotice": "Pravna napomena",
+  "termsScreenLegalNoticeBody": "Ovo je predložak dokumenta. Molimo konzultirajte se s pravnim savjetnikom kako biste osigurali usklađenost s hrvatskim i EU zakonima, uključujući GDPR propise.",
+
+  "privacyScreenTitle": "Politika privatnosti",
+  "privacyScreenHeaderTitle": "Politika privatnosti",
+  "privacyScreenLastUpdated": "Zadnje ažurirano: {year}",
+  "@privacyScreenLastUpdated": {
+    "placeholders": {
+      "year": {"type": "String"}
+    }
+  },
+  "privacyScreenToc": "Sadržaj",
+  "privacyScreenSection1Title": "1. Uvod",
+  "privacyScreenSection1Body": "Ova Politika privatnosti objašnjava kako prikupljamo, koristimo, otkrivamo i štitimo vaše podatke kada koristite našu platformu za rezervacije. Ova politika je usklađena s Općom uredbom EU o zaštiti podataka (GDPR) i hrvatskim zakonima o zaštiti podataka.\n\nKorištenjem naše Usluge, pristajete na prikupljanje i korištenje podataka u skladu s ovom politikom.",
+  "privacyScreenSection2Title": "2. Podaci koje prikupljamo",
+  "privacyScreenSection2Body": "Prikupljamo sljedeće vrste podataka:\n\n**Osobni podaci:**\n• Ime i kontakt podaci (email, broj telefona)\n• Podaci za naplatu i plaćanje\n• Povijest rezervacija i preferencije\n• Zapisi komunikacije\n\n**Tehnički podaci:**\n• IP adresa i vrsta preglednika\n• Podaci o uređaju\n• Kolačići i podaci o korištenju\n• Podaci o lokaciji (ako ih omogućite)",
+  "privacyScreenSection3Title": "3. Pravna osnova za obradu (GDPR)",
+  "privacyScreenSection3Body": "Obrađujemo vaše osobne podatke na temelju sljedećih pravnih osnova:\n\n• **Izvršenje ugovora:** Za ispunjenje ugovora o rezervaciji\n• **Legitimni interes:** Za poboljšanje naših usluga i sprječavanje prijevara\n• **Privola:** Za marketinške komunikacije (možete se odjaviti bilo kada)\n• **Zakonska obveza:** Za usklađenost s poreznim i računovodstvenim zahtjevima",
+  "privacyScreenSection4Title": "4. Kako koristimo vaše podatke",
+  "privacyScreenSection4Body": "Koristimo vaše podatke za:\n\n• Obradu i upravljanje vašim rezervacijama\n• Slanje potvrda rezervacija i ažuriranja\n• Sigurnu obradu plaćanja\n• Pružanje korisničke podrške\n• Poboljšanje naših usluga\n• Slanje promotivnih komunikacija (uz vašu privolu)\n• Usklađenost sa zakonskim obvezama",
+  "privacyScreenSection5Title": "5. Dijeljenje podataka",
+  "privacyScreenSection5Body": "Dijelimo vaše podatke samo u sljedećim okolnostima:\n\n• **Vlasnici objekata:** Za olakšavanje vaše rezervacije\n• **Procesori plaćanja:** Stripe za sigurnu obradu plaćanja\n• **Email usluga:** Resend za transakcijske emailove\n• **Zakonski zahtjevi:** Kada to zahtijeva zakon\n\nNE prodajemo vaše osobne podatke trećim stranama.",
+  "privacyScreenSection6Title": "6. Pohrana i sigurnost podataka",
+  "privacyScreenSection6Body": "Vaši podaci se sigurno pohranjuju koristeći Firebase (Google Cloud Platform) sa serverima smještenim u EU. Implementiramo sigurnosne mjere industrijskih standarda uključujući:\n\n• Enkripciju u prijenosu i u mirovanju\n• Redovite sigurnosne revizije\n• Kontrole pristupa i autentifikaciju\n• Sigurnu obradu plaćanja putem Stripe-a (PCI DSS usklađeno)",
+  "privacyScreenSection7Title": "7. Zadržavanje podataka",
+  "privacyScreenSection7Body": "Zadržavamo vaše osobne podatke onoliko dugo koliko je potrebno za:\n\n• Ispunjenje svrha navedenih u ovoj politici\n• Usklađenost sa zakonskim obvezama (porezni zapisi: 7 godina)\n• Rješavanje sporova i provođenje ugovora\n\nNakon tog razdoblja, vaši podaci će biti sigurno izbrisani ili anonimizirani.",
+  "privacyScreenSection8Title": "8. Vaša GDPR prava",
+  "privacyScreenSection8Body": "Prema GDPR-u, imate pravo na:\n\n• **Pristup:** Zatražiti kopiju vaših osobnih podataka\n• **Ispravak:** Ispraviti netočne podatke\n• **Brisanje:** Zatražiti brisanje vaših podataka (\"pravo na zaborav\")\n• **Ograničenje:** Ograničiti kako obrađujemo vaše podatke\n• **Prenosivost:** Primiti vaše podatke u strukturiranom formatu\n• **Prigovor:** Prigovoriti obradi temeljenoj na legitimnim interesima\n• **Povlačenje privole:** Odjava od marketinških komunikacija\n\nZa ostvarivanje ovih prava, kontaktirajte nas na: duskolicanin1234@gmail.com",
+  "privacyScreenSection9Title": "9. Kolačići",
+  "privacyScreenSection9Body": "Koristimo kolačiće i slične tehnologije za:\n\n• Pamćenje vaših preferencija\n• Analizu obrazaca korištenja\n• Poboljšanje korisničkog iskustva\n\nMožete kontrolirati kolačiće putem postavki preglednika. Napomena: onemogućavanje kolačića može utjecati na funkcionalnost.",
+  "privacyScreenSection10Title": "10. Međunarodni prijenosi podataka",
+  "privacyScreenSection10Body": "Vaši podaci se primarno pohranjuju unutar EU. Ako prenosimo podatke izvan EU, osiguravamo odgovarajuće zaštitne mjere (npr. Standardne ugovorne klauzule).",
+  "privacyScreenSection11Title": "11. Privatnost djece",
+  "privacyScreenSection11Body": "Naša Usluga nije namijenjena korisnicima mlađim od 18 godina. Ne prikupljamo svjesno osobne podatke od djece. Ako vjerujete da smo prikupili podatke od djeteta, molimo kontaktirajte nas odmah.",
+  "privacyScreenSection12Title": "12. Promjene ove politike",
+  "privacyScreenSection12Body": "Možemo povremeno ažurirati ovu Politiku privatnosti. Obavijestit ćemo vas o svim materijalnim promjenama ažuriranjem datuma \"Zadnje ažurirano\" i, gdje je prikladno, putem emaila.",
+  "privacyScreenSection13Title": "13. Službenik za zaštitu podataka",
+  "privacyScreenSection13Body": "Ako imate pitanja o ovoj Politici privatnosti ili želite ostvariti svoja GDPR prava, kontaktirajte:\n\n**Službenik za zaštitu podataka**\nEmail: duskolicanin1234@gmail.com\nAdresa: [Adresa vaše tvrtke]\n\n⚠️ NAPOMENA: Ažurirajte ove kontakt informacije sa stvarnim podacima vašeg DPO-a.",
+  "privacyScreenSection14Title": "14. Nadzorno tijelo",
+  "privacyScreenSection14Body": "Imate pravo podnijeti pritužbu Agenciji za zaštitu osobnih podataka (AZOP) ako vjerujete da smo prekršili vaša prava na privatnost:\n\nAgencija za zaštitu osobnih podataka (AZOP)\nSelska cesta 136, 10000 Zagreb\nWeb stranica: azop.hr",
+  "privacyScreenGdprNotice": "Napomena o GDPR usklađenosti",
+  "privacyScreenGdprNoticeBody": "Ovaj predložak politike privatnosti dizajniran je za usklađenost s GDPR zahtjevima. Međutim, trebali biste ga dati na pregled pravnom stručnjaku kako biste osigurali potpunu usklađenost s vašim specifičnim aktivnostima obrade podataka.",
+
+  "cookiesScreenTitle": "Politika kolačića",
+  "cookiesScreenHeaderTitle": "Politika kolačića",
+  "cookiesScreenLastUpdated": "Zadnje ažurirano: {date}",
+  "@cookiesScreenLastUpdated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "cookiesScreenToc": "Sadržaj",
+  "cookiesScreenSection1Title": "1. Što su kolačići?",
+  "cookiesScreenSection1Body": "Kolačići su male tekstualne datoteke koje se postavljaju na vaš uređaj kada posjetite našu web stranicu. Pomažu nam pružiti vam bolje iskustvo pamćenjem vaših postavki i razumijevanjem kako koristite našu uslugu.",
+  "cookiesScreenSection2Title": "2. Kako koristimo kolačiće",
+  "cookiesScreenSection2Body": "Koristimo kolačiće u sljedeće svrhe:\n\n• **Neophodni kolačići:** Potrebni za pravilno funkcioniranje web stranice (npr. autentifikacija, sigurnost)\n• **Kolačići postavki:** Pamte vaše postavke i preferencije (npr. jezik, tema)\n• **Analitički kolačići:** Pomažu nam razumjeti kako posjetitelji koriste našu web stranicu (npr. Google Analytics)\n• **Marketinški kolačići:** Koriste se za praćenje posjetitelja na web stranicama radi prikazivanja relevantnih oglasa\n\nTrenutno primarno koristimo neophodne kolačiće i kolačiće postavki kako bismo osigurali osnovnu funkcionalnost naše platforme za rezervacije.",
+  "cookiesScreenSection3Title": "3. Vrste kolačića koje koristimo",
+  "cookiesScreenSection3Body": "**Sesijski kolačići:** Privremeni kolačići koji istječu kada zatvorite preglednik. Neophodni su za autentifikaciju i navigaciju.\n\n**Trajni kolačići:** Ostaju na vašem uređaju određeno vrijeme ili dok ih ne izbrišete. Pamte vaše postavke između posjeta.\n\n**Kolačići trećih strana:** Postavljaju ih vanjske usluge koje koristimo (npr. procesori plaćanja, pružatelji analitike).",
+  "cookiesScreenSection4Title": "4. Vaši izbori vezani uz kolačiće",
+  "cookiesScreenSection4Body": "Imate nekoliko opcija za upravljanje kolačićima:\n\n• **Postavke preglednika:** Većina preglednika omogućuje odbijanje ili brisanje kolačića. Provjerite odjeljak pomoći vašeg preglednika za upute.\n• **Linkovi za odjavu:** Neke usluge trećih strana pružaju mehanizme za odjavu od njihovih kolačića.\n• **Postavke kolačića:** Možemo pružiti banner za pristanak na kolačiće gdje možete prilagoditi svoje postavke.\n\n⚠️ **Napomena:** Onemogućavanje određenih kolačića može utjecati na funkcionalnost naše web stranice, posebno značajke poput prijave i upravljanja rezervacijama.",
+  "cookiesScreenSection5Title": "5. Kolačići trećih strana",
+  "cookiesScreenSection5Body": "Koristimo sljedeće usluge trećih strana koje mogu postavljati kolačiće:\n\n• **Firebase (Google):** Za autentifikaciju i usluge baze podataka\n• **Stripe:** Za sigurnu obradu plaćanja\n• **Resend:** Za dostavu emailova\n\nOve usluge imaju vlastite politike privatnosti i politike kolačića. Preporučujemo pregled njihovih politika za više informacija.",
+  "cookiesScreenSection6Title": "6. Ažuriranja ove politike",
+  "cookiesScreenSection6Body": "Možemo povremeno ažurirati ovu Politiku kolačića kako bismo odrazili promjene u našim praksama ili zakonskim zahtjevima. Datum \"Zadnje ažurirano\" na vrhu označava kada je politika zadnji put revidirana.",
+  "cookiesScreenSection7Title": "7. Više informacija",
+  "cookiesScreenSection7Body": "Za detaljnije informacije o tome kako postupamo s vašim osobnim podacima, uključujući kolačiće, molimo pregledajte našu potpunu Politiku privatnosti.\n\nAko imate pitanja o našem korištenju kolačića, kontaktirajte nas na:\n\nEmail: duskolicanin1234@gmail.com",
+  "cookiesScreenPrivacyLinkTitle": "Potpuna Politika privatnosti",
+  "cookiesScreenPrivacyLinkBody": "Za sveobuhvatne informacije o prikupljanju podataka, obradi i vašim pravima prema GDPR-u, molimo pročitajte našu potpunu Politiku privatnosti.",
+  "cookiesScreenPrivacyLinkButton": "Pogledaj Politiku privatnosti",
+  "cookiesScreenLegalNotice": "Pravna napomena",
+  "cookiesScreenLegalNoticeBody": "Ovo je predložak dokumenta. Prije postavljanja u produkciju:\n\n• Pregledajte i prilagodite ovu politiku kako bi odgovarala vašem stvarnom korištenju kolačića\n• Implementirajte banner za pristanak na kolačiće ako to zahtijeva vaša jurisdikcija\n• Ažurirajte informacije o uslugama trećih strana\n• Razmislite o konzultaciji s pravnim stručnjakom kako biste osigurali usklađenost s GDPR-om, ePrivacy direktivom i drugim primjenjivim zakonima",
+
+  "calendarActionsDeleteTitle": "Obriši rezervaciju",
+  "calendarActionsDeleteConfirm": "Jeste li sigurni da želite obrisati rezervaciju za {guestName}?",
+  "@calendarActionsDeleteConfirm": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "calendarActionsCancel": "Otkaži",
+  "calendarActionsDelete": "Obriši",
+  "calendarActionsDeleting": "Brisanje rezervacije...",
+  "calendarActionsDeleted": "Rezervacija obrisana",
+  "calendarActionsError": "Greška: {error}",
+  "@calendarActionsError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "calendarActionsChangingStatus": "Promjena statusa u {status}...",
+  "@calendarActionsChangingStatus": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "calendarActionsStatusChanged": "Status promijenjen u {status}",
+  "@calendarActionsStatusChanged": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+
+  "bookingCompleteDialogTitle": "Označi kao završeno",
+  "bookingCompleteDialogMessage": "Jeste li sigurni da želite označiti ovu rezervaciju kao završenu?",
+  "bookingCompleteDialogCancel": "Otkaži",
+  "bookingCompleteDialogConfirm": "Završi",
+
+  "ownerFaqGeneral1Q": "Šta je ova platforma?",
+  "ownerFaqGeneral1A": "Ovo je multi-tenant booking platforma koja omogućava vlasnicima apartmana da upravljaju rezervacijama, primaju plaćanja i embed-uju booking widget na svoj web sajt. Platforma podržava Stripe plaćanja, iCal sinhronizaciju sa Booking.com/Airbnb, i više jezika.",
+  "ownerFaqGeneral2Q": "Da li postoji mobilna aplikacija?",
+  "ownerFaqGeneral2A": "Da! Owner aplikacija je dostupna za Android i iOS. Možete upravljati rezervacijama, pregledati kalendar, odobriti/otkazati rezervacije, i primati notifikacije na telefonu.",
+  "ownerFaqGeneral3Q": "Koliko košta korištenje?",
+  "ownerFaqGeneral3A": "Platforma trenutno ima trial verziju. Planirane su tri pretplate: Trial (1 property), Premium (5 properties), i Enterprise (unlimited). Stripe provizija (1.4% + 0.25€) se naplaćuje odvojeno.",
+
+  "ownerFaqBookings1Q": "Kako funkcionira booking flow?",
+  "ownerFaqBookings1A": "Postoje tri moda: (1) Calendar Only - gosti vide samo dostupnost i zovu vas, (2) Booking Pending - gosti kreiraju rezervaciju koja čeka vašu potvrdu, (3) Booking Instant - gosti mogu odmah rezervisati i platiti. Vi odabirete mod u Widget Settings.",
+  "ownerFaqBookings2Q": "Kako odobriti rezervaciju?",
+  "ownerFaqBookings2A": "Idite na Rezervacije → Pending rezervacije → Kliknite na rezervaciju → \"Odobri\". Email će automatski biti poslan gostu sa potvrdom.",
+  "ownerFaqBookings3Q": "Mogu li otkazati rezervaciju?",
+  "ownerFaqBookings3A": "Da. Kliknite na rezervaciju → \"Otkaži\" → Unesite razlog → Potvrdi. Gost će biti obaviješten emailom. Za refund Stripe plaćanja, kontaktirajte podršku.",
+  "ownerFaqBookings4Q": "Kako spriječiti overbooking?",
+  "ownerFaqBookings4A": "Koristite iCal sinhronizaciju da uvezete rezervacije sa Booking.com, Airbnb i drugih platformi. Sve rezervacije će se prikazati u kalendaru kao zauzeti dani.",
+  "ownerFaqBookings5Q": "Kako ručno blokirati datume?",
+  "ownerFaqBookings5A": "U kalendaru, kliknite na datum ili raspon datuma → \"Blokiraj\" → Unesite razlog (opciono). Blokirani dani će biti prikazani kao nedostupni u widgetu.",
+
+  "ownerFaqPayments1Q": "Koje metode plaćanja podržavate?",
+  "ownerFaqPayments1A": "Podržavamo: (1) Stripe plaćanja karticom (instant), (2) Bankovna uplata (ručna potvrda), (3) Plaćanje po dolasku. Možete omogućiti/onemogućiti svaku metodu u Widget Settings.",
+  "ownerFaqPayments2Q": "Koliki depozit mogu zahtijevati?",
+  "ownerFaqPayments2A": "Možete podesiti depozit od 0% do 100% ukupne cijene. Standardno je 20%. Preostali iznos gost plaća pri dolasku. Podesite u Widget Settings.",
+  "ownerFaqPayments3Q": "Kada dolaze isplate od Stripe-a?",
+  "ownerFaqPayments3A": "Stripe automatski prebacuje sredstva na vaš bankovni račun svakih 7 dana. Nakon prvog mjeseca možete promijeniti na dnevne isplate u Stripe dashboard-u.",
+  "ownerFaqPayments4Q": "Šta ako gost zahtijeva refund?",
+  "ownerFaqPayments4A": "Za bankovne uplate, refund radite ručno. Za Stripe plaćanja, kontaktirajte podršku ili kreirajte refund direktno u Stripe dashboard-u.",
+
+  "ownerFaqWidget1Q": "Kako dodati widget na moj sajt?",
+  "ownerFaqWidget1A": "Idite na Unit Form → \"Generiši Embed Kod\" → Kopirajte iframe kod → Zalijepite u HTML vašeg sajta. Detaljnije uputstvo je u \"Embed Widget\" sekciji uputstava.",
+  "ownerFaqWidget2Q": "Mogu li prilagoditi izgled widgeta?",
+  "ownerFaqWidget2A": "Da! U Widget Settings možete: promijeniti primarnu boju, uploadovati logo, prilagoditi custom message, i omogućiti/onemogućiti \"Powered by\" branding.",
+  "ownerFaqWidget3Q": "Da li widget radi na mobilnim uređajima?",
+  "ownerFaqWidget3A": "Da, widget je potpuno responsive i prilagođava se svim veličinama ekrana. Koristite responsive embed kod za najbolje rezultate.",
+  "ownerFaqWidget4Q": "Mogu li imati više widgeta na jednoj stranici?",
+  "ownerFaqWidget4A": "Da, možete embed-ovati više widgeta (za različite apartmane) na istoj stranici. Svaki widget će imati svoj jedinstveni unit ID u URL-u.",
+  "ownerFaqWidget5Q": "Da li widget podržava više jezika?",
+  "ownerFaqWidget5A": "Da! Widget podržava hrvatski, engleski, njemački i italijanski jezik. Dodajte &language=en (ili hr, de, it) u URL ili omogućite language selector.",
+
+  "ownerFaqIcal1Q": "Kako povezati Booking.com kalendar?",
+  "ownerFaqIcal1A": "Ulogujte se na Booking.com Extranet → Calendar → Reservations export → Kopirajte iCal URL → Dodajte u našu aplikaciju pod iCal Sinhronizacija. Detaljnije u \"iCal Sync\" uputstvu.",
+  "ownerFaqIcal2Q": "Koliko često se sinhronizuje?",
+  "ownerFaqIcal2A": "Automatski sync se izvršava svaki sat. Možete ručno pokrenuti sync bilo kada klikom na \"Sync Now\" dugme.",
+  "ownerFaqIcal3Q": "Hoće li gosti vidjeti imena gostiju sa drugih platformi?",
+  "ownerFaqIcal3A": "Ne. iCal protokol prenosi samo datume rezervacije (check-in/check-out), ne i lične podatke. Rezervacije će biti prikazane kao \"Platform Gost\" u vašem kalendaru.",
+  "ownerFaqIcal4Q": "Mogu li sync-ovati sa više platformi istovremeno?",
+  "ownerFaqIcal4A": "Da! Možete dodati iCal feed-ove sa Booking.com, Airbnb ili bilo koje druge platforme koja podržava iCal format za isti apartman. Sve rezervacije će biti prikazane.",
+
+  "ownerFaqSupport1Q": "Widget se ne učitava na mom sajtu",
+  "ownerFaqSupport1A": "Provjerite: (1) Da li ste zalijepili kompletan iframe kod, (2) Da li je unit ID tačan, (3) Browser konzolu za greške (F12). Ako problem persistira, kontaktirajte podršku.",
+  "ownerFaqSupport2Q": "Zaboravio/la sam lozinku",
+  "ownerFaqSupport2A": "Na login ekranu kliknite \"Forgot Password\" → Unesite email → Provjerite inbox (i spam folder) za reset link.",
+  "ownerFaqSupport3Q": "Email notifikacije ne stižu",
+  "ownerFaqSupport3A": "Provjerite spam folder. Ako još uvijek ne stižu, idite na Profile → Notification Settings i provjerite da su notifikacije omogućene. Dodajte duskolicanin1234@gmail.com u whitelist.",
+  "ownerFaqSupport4Q": "Kako kontaktirati podršku?",
+  "ownerFaqSupport4A": "Pošaljite email na: duskolicanin1234@gmail.com sa detaljnim opisom problema. Uključite screenshots ako je moguće. Odgovaramo unutar 24-48h."
 }

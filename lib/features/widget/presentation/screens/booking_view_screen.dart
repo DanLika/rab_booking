@@ -8,6 +8,7 @@ import '../providers/subdomain_provider.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../domain/services/subdomain_service.dart';
+import '../l10n/widget_translations.dart';
 import 'subdomain_not_found_screen.dart';
 
 /// Booking View Screen (Auto-lookup from URL params)
@@ -18,12 +19,7 @@ class BookingViewScreen extends ConsumerStatefulWidget {
   final String? email;
   final String? token;
 
-  const BookingViewScreen({
-    super.key,
-    this.bookingRef,
-    this.email,
-    this.token,
-  });
+  const BookingViewScreen({super.key, this.bookingRef, this.email, this.token});
 
   @override
   ConsumerState<BookingViewScreen> createState() => _BookingViewScreenState();
@@ -112,28 +108,19 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
         try {
           final widgetSettings = await ref
               .read(widgetSettingsRepositoryProvider)
-              .getWidgetSettings(
-                propertyId: booking.propertyId ?? '',
-                unitId: booking.unitId ?? '',
-              );
+              .getWidgetSettings(propertyId: booking.propertyId ?? '', unitId: booking.unitId ?? '');
 
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
           // Navigate to booking details screen with both booking and settings
-          context.go('/view/details', extra: {
-            'booking': booking,
-            'widgetSettings': widgetSettings,
-          });
+          context.go('/view/details', extra: {'booking': booking, 'widgetSettings': widgetSettings});
         } catch (e) {
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
           // If widget settings fail to load, still show booking details
-          context.go('/view/details', extra: {
-            'booking': booking,
-            'widgetSettings': null,
-          });
+          context.go('/view/details', extra: {'booking': booking, 'widgetSettings': null});
         }
       }
     } catch (e) {
@@ -148,23 +135,19 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+    final tr = WidgetTranslations.of(context);
 
     // Show SubdomainNotFoundScreen if subdomain was present but not found
     if (_subdomainNotFound && _subdomainContext != null) {
-      return SubdomainNotFoundScreen(
-        subdomain: _subdomainContext!.subdomain,
-      );
+      return SubdomainNotFoundScreen(subdomain: _subdomainContext!.subdomain);
     }
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
       appBar: AppBar(
         title: Text(
-          'View Booking',
-          style: GoogleFonts.inter(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+          tr.viewBooking,
+          style: GoogleFonts.inter(color: colors.textPrimary, fontWeight: FontWeight.w600),
         ),
         backgroundColor: colors.backgroundPrimary,
         elevation: 0,
@@ -175,62 +158,40 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
-                  ),
+                  CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(colors.primary)),
                   const SizedBox(height: 16),
-                  Text(
-                    'Loading your booking...',
-                    style: GoogleFonts.inter(
-                      color: colors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
+                  Text(tr.loadingYourBooking, style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14)),
                 ],
               )
             : _errorMessage != null
-                ? Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: colors.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Unable to load booking',
-                          style: GoogleFonts.inter(
-                            color: colors.textPrimary,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: colors.textSecondary,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: () => context.go('/'),
-                          icon: const Icon(Icons.home),
-                          label: const Text('Go to Home'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
+            ? Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: colors.error),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr.unableToLoadBooking,
+                      style: GoogleFonts.inter(color: colors.textPrimary, fontSize: 20, fontWeight: FontWeight.w600),
                     ),
-                  )
-                : const SizedBox.shrink(),
+                    const SizedBox(height: 8),
+                    Text(
+                      _errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => context.go('/'),
+                      icon: const Icon(Icons.home),
+                      label: Text(tr.goToHome),
+                      style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white),
+                    ),
+                  ],
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }

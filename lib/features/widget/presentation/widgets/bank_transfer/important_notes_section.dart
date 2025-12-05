@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Reusable important notes section for bank transfers
 /// Displays either custom notes or default payment instructions
@@ -9,12 +10,14 @@ class ImportantNotesSection extends StatelessWidget {
   final bool isDarkMode;
   final BankTransferConfig? bankConfig;
   final String remainingAmount;
+  final WidgetTranslations translations;
 
   const ImportantNotesSection({
     super.key,
     required this.isDarkMode,
     required this.bankConfig,
     required this.remainingAmount,
+    required this.translations,
   });
 
   @override
@@ -29,10 +32,10 @@ class ImportantNotesSection extends StatelessWidget {
       notes.add(customNotes);
     } else {
       notes.addAll([
-        'Obavezno navedite referentni broj u opisu uplate',
-        'Primit ćete email potvrdu nakon što uplata bude zaprimljena',
-        'Preostali iznos ($remainingAmount) plaća se po dolasku',
-        'Politika otkazivanja: 7 dana prije dolaska za potpuni povrat',
+        translations.includeReferenceInPayment,
+        translations.emailConfirmationAfterPayment,
+        translations.remainingAmountOnArrival(remainingAmount),
+        translations.cancellationPolicy7Days,
       ]);
     }
 
@@ -41,9 +44,7 @@ class ImportantNotesSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,11 +54,7 @@ class ImportantNotesSection extends StatelessWidget {
           if (useCustom && customNotes != null && customNotes.isNotEmpty)
             Text(
               customNotes,
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                color: colors.textPrimary,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textPrimary, height: 1.5),
             )
           else
             ...notes.map((note) => _buildNoteItem(note, colors)),
@@ -69,14 +66,10 @@ class ImportantNotesSection extends StatelessWidget {
   Widget _buildHeader(MinimalistColorSchemeAdapter colors) {
     return Row(
       children: [
-        Icon(
-          Icons.info_outline,
-          color: colors.buttonPrimary,
-          size: IconSizeTokens.medium,
-        ),
+        Icon(Icons.info_outline, color: colors.buttonPrimary, size: IconSizeTokens.medium),
         const SizedBox(width: SpacingTokens.xs),
         Text(
-          'Važne Informacije',
+          translations.importantInformation,
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeL,
             fontWeight: TypographyTokens.semiBold,
@@ -96,23 +89,13 @@ class ImportantNotesSection extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            margin: const EdgeInsets.only(
-              top: 8,
-              right: SpacingTokens.s,
-            ),
-            decoration: BoxDecoration(
-              color: colors.buttonPrimary,
-              shape: BoxShape.circle,
-            ),
+            margin: const EdgeInsets.only(top: 8, right: SpacingTokens.s),
+            decoration: BoxDecoration(color: colors.buttonPrimary, shape: BoxShape.circle),
           ),
           Expanded(
             child: Text(
               note,
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                color: colors.textPrimary,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textPrimary, height: 1.5),
             ),
           ),
         ],

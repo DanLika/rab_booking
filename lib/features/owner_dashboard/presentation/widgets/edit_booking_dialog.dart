@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/breakpoints.dart';
@@ -15,11 +16,7 @@ import '../../../../core/utils/error_display_utils.dart';
 /// - Guest count
 /// - Notes
 /// - Status (if needed)
-Future<void> showEditBookingDialog(
-  BuildContext context,
-  WidgetRef ref,
-  BookingModel booking,
-) async {
+Future<void> showEditBookingDialog(BuildContext context, WidgetRef ref, BookingModel booking) async {
   return showDialog(
     context: context,
     builder: (context) => _EditBookingDialog(booking: booking),
@@ -59,23 +56,17 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final nights = _checkOut.difference(_checkIn).inDays;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = Breakpoints.isMobile(context);
 
     return AlertDialog(
-      title: const Text(
-        'Edit Booking',
-        style: TextStyle(
-          color: Colors.white,
-        ),
-      ),
+      title: Text(l10n.editBookingTitle, style: const TextStyle(color: Colors.white)),
       content: Container(
         width: isMobile ? screenWidth * 0.9 : 500,
-        constraints: BoxConstraints(
-          maxHeight: screenHeight * 0.8,
-        ),
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.8),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -83,25 +74,19 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
             children: [
               // Booking Info
               Text(
-                'Booking: ${widget.booking.id}',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 12,
-                ),
+                l10n.editBookingBookingId(widget.booking.id),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
               ),
               Text(
-                'Guest: ${widget.booking.guestName}',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w500,
-                ),
+                l10n.editBookingGuest(widget.booking.guestName ?? ''),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 24),
 
               // Check-in Date
               ListTile(
                 leading: const Icon(Icons.login),
-                title: const Text('Check-in'),
+                title: Text(l10n.editBookingCheckIn),
                 subtitle: Text(DateFormat('MMM dd, yyyy').format(_checkIn)),
                 trailing: IconButton(
                   icon: const Icon(Icons.edit_calendar),
@@ -113,7 +98,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
               // Check-out Date
               ListTile(
                 leading: const Icon(Icons.logout),
-                title: const Text('Check-out'),
+                title: Text(l10n.editBookingCheckOut),
                 subtitle: Text(DateFormat('MMM dd, yyyy').format(_checkOut)),
                 trailing: IconButton(
                   icon: const Icon(Icons.edit_calendar),
@@ -129,11 +114,8 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '$nights ${nights == 1 ? 'night' : 'nights'}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.authSecondary,
-                  ),
+                  l10n.editBookingNights(nights),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.authSecondary),
                 ),
               ),
               const SizedBox(height: 16),
@@ -141,7 +123,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
               // Guest Count
               ListTile(
                 leading: const Icon(Icons.people),
-                title: const Text('Guests'),
+                title: Text(l10n.editBookingGuests),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -151,9 +133,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                       height: 32,
                       decoration: BoxDecoration(
                         color: _guestCount > 1
-                            ? (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : Colors.black)
+                            ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)
                             : Colors.grey[400],
                         shape: BoxShape.circle,
                       ),
@@ -163,33 +143,21 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                           Icons.remove,
                           size: 16,
                           color: _guestCount > 1
-                              ? (Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.black
-                                  : Colors.white)
+                              ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white)
                               : Colors.grey[600],
                         ),
-                        onPressed: _guestCount > 1
-                            ? () => setState(() => _guestCount--)
-                            : null,
+                        onPressed: _guestCount > 1 ? () => setState(() => _guestCount--) : null,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Text(
-                      _guestCount.toString(),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text(_guestCount.toString(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 12),
                     // Plus button
                     Container(
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black,
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
@@ -197,9 +165,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                         icon: Icon(
                           Icons.add,
                           size: 16,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.black
-                              : Colors.white,
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
                         ),
                         onPressed: () => setState(() => _guestCount++),
                       ),
@@ -214,10 +180,10 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
               TextField(
                 controller: _notesController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Internal Notes',
-                  hintText: 'Add notes (not visible to guest)...',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.editBookingInternalNotes,
+                  hintText: l10n.editBookingNotesHint,
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ],
@@ -225,10 +191,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
+        TextButton(onPressed: _isLoading ? null : () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
         Container(
           decoration: const BoxDecoration(
             gradient: GradientTokens.brandPrimary,
@@ -250,7 +213,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : const Text('Save Changes'),
+                : Text(l10n.editBookingSaveChanges),
           ),
         ),
       ],
@@ -297,19 +260,12 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          'Rezervacija uspješno ažurirana',
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, AppLocalizations.of(context).editBookingSuccess);
       }
     } catch (e) {
       // FIXED: Use ErrorDisplayUtils for user-friendly error messages
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška pri ažuriranju rezervacije',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).editBookingError);
       }
     } finally {
       if (mounted) {

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -103,12 +104,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: theme.colorScheme.surface,
       appBar: CommonAppBar(
-        title: _isEditing ? 'Uredi Jedinicu' : 'Dodaj Jedinicu',
+        title: _isEditing ? l10n.unitFormTitleEdit : l10n.unitFormTitleAdd,
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
@@ -117,31 +119,26 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           Form(
             key: _formKey,
             child: ListView(
-              padding: EdgeInsets.fromLTRB(
-                isMobile ? 16 : 24,
-                isMobile ? 16 : 24,
-                isMobile ? 16 : 24,
-                24,
-              ),
+              padding: EdgeInsets.fromLTRB(isMobile ? 16 : 24, isMobile ? 16 : 24, isMobile ? 16 : 24, 24),
               children: [
                 // Basic Info Section
                 _buildSection(
                   context,
-                  title: 'Osnovne informacije',
+                  title: l10n.unitFormBasicInfo,
                   icon: Icons.info_outline,
                   children: [
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'Naziv jedinice *',
-                        hintText: 'npr. Apartman prizemlje',
+                        labelText: l10n.unitFormUnitName,
+                        hintText: l10n.unitFormUnitNameHint,
                         prefixIcon: const Icon(Icons.meeting_room),
                         isMobile: isMobile,
                         context: context,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Naziv je obavezan';
+                          return l10n.unitFormUnitNameRequired;
                         }
                         return null;
                       },
@@ -151,13 +148,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _slugController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'URL Slug',
-                        hintText: 'apartman-prizemlje',
-                        helperText: 'SEO-friendly URL: /booking/{slug}',
+                        labelText: l10n.unitFormUrlSlug,
+                        hintText: l10n.unitFormUrlSlugHint,
+                        helperText: l10n.unitFormUrlSlugHelper,
                         prefixIcon: const Icon(Icons.link),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.refresh),
-                          tooltip: 'Regeneriši iz naziva',
+                          tooltip: l10n.unitFormRegenerateSlug,
                           onPressed: () {
                             setState(() {
                               _isManualSlugEdit = false;
@@ -170,10 +167,10 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Slug je obavezan';
+                          return l10n.unitFormSlugRequired;
                         }
                         if (!isValidSlug(value)) {
-                          return 'Slug može sadržavati samo mala slova, brojeve i crtice';
+                          return l10n.unitFormSlugInvalid;
                         }
                         return null;
                       },
@@ -187,8 +184,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'Opis',
-                        hintText: 'Dodatne informacije o jedinici...',
+                        labelText: l10n.unitFormDescription,
+                        hintText: l10n.unitFormDescriptionHint,
                         prefixIcon: const Icon(Icons.description),
                         isMobile: isMobile,
                         context: context,
@@ -202,13 +199,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 // Capacity Section
                 _buildSection(
                   context,
-                  title: 'Kapacitet',
+                  title: l10n.unitFormCapacity,
                   icon: Icons.people_outline,
                   children: [
                     TextFormField(
                       controller: _bedroomsController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'Spavaće sobe *',
+                        labelText: l10n.unitFormBedrooms,
                         prefixIcon: const Icon(Icons.bed),
                         isMobile: isMobile,
                         context: context,
@@ -217,11 +214,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Obavezno';
+                          return l10n.unitFormRequired;
                         }
                         final num = int.tryParse(value);
                         if (num == null || num < 0) {
-                          return 'Nevažeći broj';
+                          return l10n.unitFormInvalidNumber;
                         }
                         return null;
                       },
@@ -230,7 +227,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _bathroomsController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'Kupaonice *',
+                        labelText: l10n.unitFormBathrooms,
                         prefixIcon: const Icon(Icons.bathroom),
                         isMobile: isMobile,
                         context: context,
@@ -239,11 +236,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Obavezno';
+                          return l10n.unitFormRequired;
                         }
                         final num = int.tryParse(value);
                         if (num == null || num < 1) {
-                          return 'Min 1';
+                          return l10n.unitFormMin1;
                         }
                         return null;
                       },
@@ -252,7 +249,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _maxGuestsController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'Max gostiju *',
+                        labelText: l10n.unitFormMaxGuests,
                         prefixIcon: const Icon(Icons.person),
                         isMobile: isMobile,
                         context: context,
@@ -261,11 +258,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Obavezno';
+                          return l10n.unitFormRequired;
                         }
                         final num = int.tryParse(value);
                         if (num == null || num < 1 || num > 16) {
-                          return '1-16';
+                          return l10n.unitFormRange1to16;
                         }
                         return null;
                       },
@@ -274,7 +271,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _areaController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'Površina (m²)',
+                        labelText: l10n.unitFormArea,
                         prefixIcon: const Icon(Icons.aspect_ratio),
                         isMobile: isMobile,
                         context: context,
@@ -289,13 +286,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 // Pricing Section
                 _buildSection(
                   context,
-                  title: 'Cijena i uvjeti',
+                  title: l10n.unitFormPricing,
                   icon: Icons.euro,
                   children: [
                     TextFormField(
                       controller: _priceController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'Cijena po noći (€) *',
+                        labelText: l10n.unitFormPricePerNight,
                         prefixIcon: const Icon(Icons.payments),
                         isMobile: isMobile,
                         context: context,
@@ -304,11 +301,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Obavezno';
+                          return l10n.unitFormRequired;
                         }
                         final num = double.tryParse(value);
                         if (num == null || num <= 0) {
-                          return 'Nevažeći iznos';
+                          return l10n.unitFormInvalidAmount;
                         }
                         return null;
                       },
@@ -317,7 +314,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _minStayController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        labelText: 'Min noći *',
+                        labelText: l10n.unitFormMinNights,
                         prefixIcon: const Icon(Icons.nights_stay),
                         isMobile: isMobile,
                         context: context,
@@ -326,11 +323,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Obavezno';
+                          return l10n.unitFormRequired;
                         }
                         final num = int.tryParse(value);
                         if (num == null || num < 1) {
-                          return 'Min 1';
+                          return l10n.unitFormMin1;
                         }
                         return null;
                       },
@@ -342,7 +339,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 // Amenities Section
                 _buildSection(
                   context,
-                  title: 'Sadržaji',
+                  title: l10n.unitFormAmenities,
                   icon: Icons.star_outline,
                   children: [_buildAmenitiesGrid()],
                 ),
@@ -351,7 +348,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 // Images Section
                 _buildSection(
                   context,
-                  title: 'Fotografije',
+                  title: l10n.unitFormPhotos,
                   icon: Icons.photo_library_outlined,
                   children: [_buildImagesSection()],
                 ),
@@ -360,21 +357,16 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 // Availability Section
                 _buildSection(
                   context,
-                  title: 'Dostupnost',
+                  title: l10n.unitFormAvailability,
                   icon: Icons.toggle_on_outlined,
                   children: [
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Dostupno za rezervaciju'),
-                      subtitle: Text(
-                        _isAvailable
-                            ? 'Jedinica će biti dostupna za rezervacije'
-                            : 'Jedinica neće biti prikazana',
-                      ),
+                      title: Text(l10n.unitFormAvailableForBooking),
+                      subtitle: Text(_isAvailable ? l10n.unitFormAvailableDesc : l10n.unitFormUnavailableDesc),
                       trailing: Switch(
                         value: _isAvailable,
-                        onChanged: (value) =>
-                            setState(() => _isAvailable = value),
+                        onChanged: (value) => setState(() => _isAvailable = value),
                         activeThumbColor: Theme.of(context).colorScheme.primary,
                         activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                       ),
@@ -385,7 +377,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
 
                 // Modern Gradient Save Button
                 GradientButton(
-                  text: _isEditing ? 'Spremi Izmjene' : 'Dodaj Jedinicu',
+                  text: _isEditing ? l10n.unitFormSaveChanges : l10n.unitFormAddUnit,
                   onPressed: _handleSave,
                   isLoading: _isLoading,
                   icon: _isEditing ? Icons.save : Icons.add,
@@ -397,37 +389,25 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   const SizedBox(height: AppDimensions.spaceM),
                   _buildSection(
                     context,
-                    title: 'Embed Widget',
+                    title: l10n.unitFormEmbedWidget,
                     icon: Icons.widgets,
                     children: [
                       Text(
-                        'Integrirajte booking widget na vašu web stranicu',
+                        l10n.unitFormEmbedDesc,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withAlpha(
-                            (0.7 * 255).toInt(),
-                          ),
+                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                         ),
                       ),
                       const SizedBox(height: AppDimensions.spaceM),
                       OutlinedButton.icon(
                         onPressed: () {
-                          context.push(
-                            OwnerRoutes.unitWidgetSettings.replaceAll(
-                              ':id',
-                              widget.unit!.id,
-                            ),
-                          );
+                          context.push(OwnerRoutes.unitWidgetSettings.replaceAll(':id', widget.unit!.id));
                         },
                         icon: const Icon(Icons.settings),
-                        label: const Text('Postavke Widgeta'),
+                        label: Text(l10n.unitFormWidgetSettings),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 24,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                       const SizedBox(height: AppDimensions.spaceS),
@@ -443,15 +423,10 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                           );
                         },
                         icon: const Icon(Icons.code),
-                        label: const Text('Generiši Embed Kod'),
+                        label: Text(l10n.unitFormGenerateEmbed),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 24,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                     ],
@@ -470,9 +445,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
               child: Center(
                 child: Card(
                   elevation: 8,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Column(
@@ -481,29 +454,16 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.primary,
-                                AppColors.authSecondary,
-                              ],
-                            ),
+                            gradient: LinearGradient(colors: [AppColors.primary, AppColors.authSecondary]),
                             shape: BoxShape.circle,
                           ),
                           child: const CircularProgressIndicator(
                             strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          'Spremanje...',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        Text(l10n.unitFormSaving, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -526,11 +486,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-        ),
+        side: BorderSide(color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt())),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -555,12 +511,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   child: Icon(icon, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 16),
@@ -594,11 +545,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
         return FilterChip(
           label: Text(
             amenity.displayName,
-            style: TextStyle(
-              color: isSelected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.onSurface,
-            ),
+            style: TextStyle(color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface),
           ),
           selected: isSelected,
           onSelected: (selected) {
@@ -654,26 +601,32 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           const SizedBox(height: 8),
         ],
 
-        OutlinedButton.icon(
-          onPressed: _pickImages,
-          icon: const Icon(Icons.add_photo_alternate),
-          label: Text(totalImages == 0 ? 'Dodaj fotografije' : 'Dodaj još'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context);
+            return OutlinedButton.icon(
+              onPressed: _pickImages,
+              icon: const Icon(Icons.add_photo_alternate),
+              label: Text(totalImages == 0 ? l10n.unitFormAddPhotos : l10n.unitFormAddMore),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+          },
         ),
 
         if (totalImages > 0)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'Ukupno: $totalImages fotografija',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.textColorSecondary,
-              ),
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Text(
+                  l10n.unitFormTotalPhotos(totalImages),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                );
+              },
             ),
           ),
       ],
@@ -690,9 +643,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
@@ -702,12 +653,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      (0.3 * 255).toInt(),
-                    ),
-                  ),
+                  child: Icon(Icons.broken_image, color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt())),
                 );
               },
             ),
@@ -742,9 +688,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
             color: theme.colorScheme.surfaceContainerHighest,
           ),
           child: ClipRRect(
@@ -756,9 +700,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 return Icon(
                   Icons.broken_image,
                   size: 40,
-                  color: theme.colorScheme.onSurface.withAlpha(
-                    (0.3 * 255).toInt(),
-                  ),
+                  color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                 );
               },
             ),
@@ -820,9 +762,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           unitId: widget.unit!.id,
           name: _nameController.text,
           slug: _slugController.text,
-          description: _descriptionController.text.isEmpty
-              ? null
-              : _descriptionController.text,
+          description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
           basePrice: double.parse(_priceController.text),
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
@@ -845,9 +785,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           ownerId: currentUser.uid,
           name: _nameController.text,
           slug: _slugController.text,
-          description: _descriptionController.text.isEmpty
-              ? null
-              : _descriptionController.text,
+          description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
           basePrice: double.parse(_priceController.text),
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
@@ -861,23 +799,21 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
       }
 
       if (mounted) {
+        final l10nSuccess = AppLocalizations.of(context);
         Navigator.of(context).pop();
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          _isEditing
-              ? 'Jedinica uspješno ažurirana'
-              : 'Jedinica uspješno dodana',
+          _isEditing ? l10nSuccess.unitFormSuccessUpdate : l10nSuccess.unitFormSuccessAdd,
         );
       }
     } catch (e) {
       // FIXED: Use ErrorDisplayUtils for user-friendly error messages
       if (mounted) {
+        final l10nError = AppLocalizations.of(context);
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: _isEditing
-              ? 'Greška pri ažuriranju jedinice'
-              : 'Greška pri dodavanju jedinice',
+          userMessage: _isEditing ? l10nError.unitFormErrorUpdate : l10nError.unitFormErrorAdd,
         );
       }
     } finally {

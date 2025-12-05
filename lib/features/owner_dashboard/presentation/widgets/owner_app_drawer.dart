@@ -9,6 +9,7 @@ import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Premium Owner App Navigation Drawer
 class OwnerAppDrawer extends ConsumerWidget {
@@ -20,12 +21,11 @@ class OwnerAppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
     final authState = ref.watch(enhancedAuthProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Drawer(
       child: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: ListView(
           padding: EdgeInsets.zero,
           physics: const AlwaysScrollableScrollPhysics(),
@@ -38,7 +38,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Navigation items
             _DrawerItem(
               icon: Icons.dashboard_outlined,
-              title: 'Pregled',
+              title: l10n.ownerDrawerOverview,
               isSelected: currentRoute == 'overview',
               onTap: () => context.go(OwnerRoutes.overview),
             ),
@@ -48,7 +48,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Kalendar
             _DrawerItem(
               icon: Icons.calendar_view_month,
-              title: 'Kalendar',
+              title: l10n.ownerDrawerCalendar,
               isSelected: currentRoute.startsWith('calendar'),
               onTap: () => context.go(OwnerRoutes.calendarTimeline),
             ),
@@ -58,7 +58,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Rezervacije
             _DrawerItem(
               icon: Icons.book_online,
-              title: 'Rezervacije',
+              title: l10n.ownerDrawerBookings,
               isSelected: currentRoute == 'bookings',
               onTap: () => context.go(OwnerRoutes.bookings),
             ),
@@ -68,7 +68,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Analytics
             _DrawerItem(
               icon: Icons.analytics_outlined,
-              title: 'Analitika',
+              title: l10n.ownerDrawerAnalytics,
               isSelected: currentRoute == 'analytics',
               onTap: () => context.go(OwnerRoutes.analytics),
             ),
@@ -78,7 +78,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Smještajne Jedinice
             _DrawerItem(
               icon: Icons.home_work_outlined,
-              title: 'Smještajne Jedinice',
+              title: l10n.ownerDrawerUnits,
               isSelected: currentRoute == 'unit-hub',
               onTap: () => context.go(OwnerRoutes.unitHub),
             ),
@@ -88,21 +88,21 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Unified Integracije Expansion (iCal + Plaćanja)
             _PremiumExpansionTile(
               icon: Icons.extension_outlined,
-              title: 'Integracije',
+              title: l10n.ownerDrawerIntegrations,
               isExpanded: currentRoute.startsWith('integrations'),
               children: [
                 // iCal Section Header
-                const _DrawerSectionHeader(title: 'iCal'),
+                _DrawerSectionHeader(title: l10n.ownerDrawerIcal),
                 _DrawerSubItem(
-                  title: 'Import Rezervacija',
-                  subtitle: 'Sync sa booking.com',
+                  title: l10n.ownerDrawerImportBookings,
+                  subtitle: l10n.ownerDrawerSyncBookingCom,
                   icon: Icons.download,
                   isSelected: currentRoute == 'integrations/ical/import',
                   onTap: () => context.go(OwnerRoutes.icalImport),
                 ),
                 _DrawerSubItem(
-                  title: 'Export Kalendara',
-                  subtitle: 'iCal feed URL',
+                  title: l10n.ownerDrawerExportCalendar,
+                  subtitle: l10n.ownerDrawerIcalFeedUrl,
                   icon: Icons.upload,
                   isSelected: currentRoute == 'integrations/ical/export-list',
                   onTap: () => context.go(OwnerRoutes.icalExportList),
@@ -111,17 +111,17 @@ class OwnerAppDrawer extends ConsumerWidget {
                 const SizedBox(height: 8),
 
                 // Plaćanja Section Header
-                const _DrawerSectionHeader(title: 'Plaćanja'),
+                _DrawerSectionHeader(title: l10n.ownerDrawerPayments),
                 _DrawerSubItem(
-                  title: 'Stripe Plaćanja',
-                  subtitle: 'Obrada kartica',
+                  title: l10n.ownerDrawerStripePayments,
+                  subtitle: l10n.ownerDrawerCardProcessing,
                   icon: Icons.credit_card,
                   isSelected: currentRoute == 'integrations/stripe',
                   onTap: () => context.go(OwnerRoutes.stripeIntegration),
                 ),
                 _DrawerSubItem(
-                  title: 'Bankovni Račun',
-                  subtitle: 'Podaci za uplate',
+                  title: l10n.ownerDrawerBankAccount,
+                  subtitle: l10n.ownerDrawerBankAccountData,
                   icon: Icons.account_balance,
                   isSelected: currentRoute == 'integrations/payments/bank-account',
                   onTap: () => context.go(OwnerRoutes.bankAccount),
@@ -134,18 +134,18 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Uputstva Expansion
             _PremiumExpansionTile(
               icon: Icons.menu_book,
-              title: 'Uputstva',
+              title: l10n.ownerDrawerGuides,
               isExpanded: currentRoute.startsWith('guides'),
               children: [
                 _DrawerSubItem(
-                  title: 'Embed Widget',
-                  subtitle: 'Dodavanje na sajt',
+                  title: l10n.ownerDrawerEmbedWidget,
+                  subtitle: l10n.ownerDrawerAddToSite,
                   icon: Icons.code,
                   isSelected: currentRoute == 'guides/embed-widget',
                   onTap: () => context.go(OwnerRoutes.guideEmbedWidget),
                 ),
                 _DrawerSubItem(
-                  title: 'Česta Pitanja',
+                  title: l10n.ownerDrawerFaq,
                   subtitle: 'FAQ',
                   icon: Icons.question_answer,
                   isSelected: currentRoute == 'guides/faq',
@@ -158,16 +158,13 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Divider(
-                height: 1,
-                color: context.gradients.sectionBorder,
-              ),
+              child: Divider(height: 1, color: context.gradients.sectionBorder),
             ),
 
             // Settings & Profile
             _DrawerItem(
               icon: Icons.notifications_outlined,
-              title: 'Obavještenja',
+              title: l10n.ownerDrawerNotifications,
               isSelected: currentRoute == 'notifications',
               onTap: () => context.go(OwnerRoutes.notifications),
             ),
@@ -176,17 +173,14 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             _DrawerItem(
               icon: Icons.person_outline,
-              title: 'Profil',
+              title: l10n.ownerDrawerProfile,
               isSelected: currentRoute == 'profile',
               onTap: () => context.go(OwnerRoutes.profile),
             ),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Divider(
-                height: 1,
-                color: context.gradients.sectionBorder,
-              ),
+              child: Divider(height: 1, color: context.gradients.sectionBorder),
             ),
 
             // Logout
@@ -209,15 +203,9 @@ class OwnerAppDrawer extends ConsumerWidget {
     );
   }
 
-  Widget _buildPremiumHeader(
-    BuildContext context,
-    User? user,
-    dynamic authState,
-  ) {
+  Widget _buildPremiumHeader(BuildContext context, User? user, dynamic authState) {
     final theme = Theme.of(context);
-    final displayName =
-        authState.userModel?.firstName != null &&
-            authState.userModel?.lastName != null
+    final displayName = authState.userModel?.firstName != null && authState.userModel?.lastName != null
         ? '${authState.userModel!.firstName} ${authState.userModel!.lastName}'
         : user?.displayName ?? 'Owner';
 
@@ -255,9 +243,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                   color: Colors.white,
                   boxShadow: AppShadows.getElevation(2, isDark: theme.brightness == Brightness.dark),
                 ),
-                child:
-                    authState.userModel?.avatarUrl != null &&
-                        authState.userModel!.avatarUrl!.isNotEmpty
+                child: authState.userModel?.avatarUrl != null && authState.userModel!.avatarUrl!.isNotEmpty
                     ? ClipOval(
                         child: Image.network(
                           authState.userModel!.avatarUrl!,
@@ -298,21 +284,14 @@ class OwnerAppDrawer extends ConsumerWidget {
                   children: [
                     Text(
                       displayName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       email,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withAlpha((0.9 * 255).toInt()),
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.white.withAlpha((0.9 * 255).toInt())),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -334,12 +313,7 @@ class _DrawerItem extends StatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _DrawerItem({
-    required this.icon,
-    required this.title,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _DrawerItem({required this.icon, required this.title, required this.isSelected, required this.onTap});
 
   @override
   State<_DrawerItem> createState() => _DrawerItemState();
@@ -379,27 +353,19 @@ class _DrawerItemState extends State<_DrawerItem> {
           child: ListTile(
             leading: Icon(
               widget.icon,
-              color: widget.isSelected
-                  ? selectedTextColor
-                  : theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              color: widget.isSelected ? selectedTextColor : theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               size: 24,
             ),
             title: Text(
               widget.title,
               style: TextStyle(
                 fontSize: 15,
-                fontWeight: widget.isSelected
-                    ? FontWeight.w600
-                    : FontWeight.w500,
-                color: widget.isSelected
-                    ? selectedTextColor
-                    : theme.colorScheme.onSurface,
+                fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: widget.isSelected ? selectedTextColor : theme.colorScheme.onSurface,
               ),
             ),
             onTap: widget.onTap,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),
@@ -453,13 +419,7 @@ class _DrawerSubItem extends StatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _DrawerSubItem({
-    required this.title,
-    this.subtitle,
-    this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _DrawerSubItem({required this.title, this.subtitle, this.icon, required this.isSelected, required this.onTap});
 
   @override
   State<_DrawerSubItem> createState() => _DrawerSubItemState();
@@ -477,8 +437,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
     final isDark = theme.brightness == Brightness.dark;
 
     // In dark mode, use lighter purple text and stronger purple background
-    final selectedTextColor =
-        isDark ? _lightPurple : theme.colorScheme.brandPurple;
+    final selectedTextColor = isDark ? _lightPurple : theme.colorScheme.brandPurple;
     final selectedBgAlpha = isDark ? 0.15 : 0.12;
     final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
@@ -492,12 +451,10 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple
-                    .withAlpha((selectedBgAlpha * 255).toInt())
+                ? theme.colorScheme.brandPurple.withAlpha((selectedBgAlpha * 255).toInt())
                 : _isHovered
-                    ? theme.colorScheme.brandPurple
-                        .withAlpha((hoverBgAlpha * 255).toInt())
-                    : Colors.transparent,
+                ? theme.colorScheme.brandPurple.withAlpha((hoverBgAlpha * 255).toInt())
+                : Colors.transparent,
           ),
           child: ListTile(
             dense: true,
@@ -507,34 +464,23 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     size: 18,
                     color: widget.isSelected
                         ? selectedTextColor
-                        : theme.colorScheme.onSurface.withAlpha(
-                            (0.5 * 255).toInt(),
-                          ),
+                        : theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
                   )
                 : const SizedBox(width: 18),
             title: Text(
               widget.title,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: widget.isSelected
-                    ? FontWeight.w600
-                    : FontWeight.w500,
+                fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: widget.isSelected
                     ? selectedTextColor
-                    : theme.colorScheme.onSurface.withAlpha(
-                        (0.85 * 255).toInt(),
-                      ),
+                    : theme.colorScheme.onSurface.withAlpha((0.85 * 255).toInt()),
               ),
             ),
             subtitle: widget.subtitle != null
                 ? Text(
                     widget.subtitle!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.colorScheme.onSurface.withAlpha(
-                        (0.5 * 255).toInt(),
-                      ),
-                    ),
+                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt())),
                   )
                 : null,
             onTap: widget.onTap,
@@ -568,34 +514,18 @@ class _PremiumExpansionTile extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent,
-          splashColor: theme.colorScheme.brandPurple.withAlpha(
-            (0.06 * 255).toInt(),
-          ),
-          highlightColor: theme.colorScheme.brandPurple.withAlpha(
-            (0.06 * 255).toInt(),
-          ),
+          splashColor: theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt()),
+          highlightColor: theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt()),
         ),
         child: ExpansionTile(
-          leading: Icon(
-            icon,
-            color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-            size: 24,
-          ),
+          leading: Icon(icon, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()), size: 24),
           title: Text(
             title,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
           ),
           initiallyExpanded: isExpanded,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          collapsedShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           tilePadding: const EdgeInsets.symmetric(horizontal: 16),
           childrenPadding: const EdgeInsets.only(bottom: 8),
           children: children,
@@ -621,6 +551,7 @@ class _LogoutButtonState extends State<_LogoutButton> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -629,9 +560,7 @@ class _LogoutButtonState extends State<_LogoutButton> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: _isHovered
-              ? theme.colorScheme.danger.withAlpha((0.08 * 255).toInt())
-              : Colors.transparent,
+          color: _isHovered ? theme.colorScheme.danger.withAlpha((0.08 * 255).toInt()) : Colors.transparent,
           border: Border.all(
             color: _isHovered
                 ? theme.colorScheme.danger.withAlpha((0.3 * 255).toInt())
@@ -640,26 +569,15 @@ class _LogoutButtonState extends State<_LogoutButton> {
           ),
         ),
         child: ListTile(
-          leading: Icon(
-            Icons.logout_rounded,
-            color: theme.colorScheme.danger,
-            size: 22,
-          ),
+          leading: Icon(Icons.logout_rounded, color: theme.colorScheme.danger, size: 22),
           title: Text(
-            'Odjavi se',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.danger,
-            ),
+            l10n.ownerDrawerLogout,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.danger),
           ),
           onTap: widget.onLogout,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
   }
 }
-

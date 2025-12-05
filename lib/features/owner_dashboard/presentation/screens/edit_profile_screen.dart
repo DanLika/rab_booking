@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
@@ -149,13 +150,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
+    final l10n = AppLocalizations.of(context);
+
     // Validate form and show error if validation fails
     if (!_formKey.currentState!.validate()) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          'Please fill in all required fields correctly',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.editProfileValidationError);
       }
       return;
     }
@@ -181,9 +181,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         await FirebaseAuth.instance.currentUser?.updatePhotoURL(avatarUrl);
 
         // Update avatarUrl in Firestore users collection
-        await FirebaseFirestore.instance.collection('users').doc(userId).update(
-          {'avatar_url': avatarUrl},
-        );
+        await FirebaseFirestore.instance.collection('users').doc(userId).update({'avatar_url': avatarUrl});
       }
 
       // Create updated profile
@@ -198,10 +196,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           street: _streetController.text.trim(),
           postalCode: _postalCodeController.text.trim(),
         ),
-        social: SocialLinks(
-          website: _websiteController.text.trim(),
-          facebook: _facebookController.text.trim(),
-        ),
+        social: SocialLinks(website: _websiteController.text.trim(), facebook: _facebookController.text.trim()),
         propertyType: _propertyTypeController.text.trim(),
         logoUrl: _originalProfile?.logoUrl ?? '',
       );
@@ -226,14 +221,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       );
 
       // Save profile to Firestore
-      await ref
-          .read(userProfileNotifierProvider.notifier)
-          .updateProfile(updatedProfile);
+      await ref.read(userProfileNotifierProvider.notifier).updateProfile(updatedProfile);
 
       // Save company details to Firestore
-      await ref
-          .read(userProfileNotifierProvider.notifier)
-          .updateCompany(userId, updatedCompany);
+      await ref.read(userProfileNotifierProvider.notifier).updateCompany(userId, updatedCompany);
 
       if (mounted) {
         setState(() {
@@ -244,10 +235,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         // Refresh auth provider to update avatarUrl
         ref.invalidate(enhancedAuthProvider);
 
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          'Profile updated successfully',
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.editProfileSaveSuccess);
 
         context.pop();
       }
@@ -255,11 +243,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Failed to save profile',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.editProfileSaveError);
       }
     }
   }
@@ -293,54 +277,46 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: theme.dividerColor.withAlpha((0.4 * 255).toInt()),
-              width: 1.5,
-            ),
+            border: Border.all(color: theme.dividerColor.withAlpha((0.4 * 255).toInt()), width: 1.5),
           ),
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               initiallyExpanded: initiallyExpanded,
-              tilePadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color:
-                      theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: theme.colorScheme.primary, size: 18),
               ),
               title: Row(
                 children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   if (isOptional) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        'opcionalno',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return Text(
+                            l10n.editProfileOptional,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -349,9 +325,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               subtitle: subtitle != null
                   ? Text(
                       subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     )
                   : null,
               children: children,
@@ -371,10 +345,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           Container(
             width: 3,
             height: 16,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(width: 8),
           Text(
@@ -405,15 +376,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ],
+                      colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
                     )
                   : null,
-              color: (_isDirty && !_isSaving)
-                  ? null
-                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
+              color: (_isDirty && !_isSaving) ? null : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: ElevatedButton.icon(
@@ -424,21 +390,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 shadowColor: Colors.transparent,
                 disabledBackgroundColor: Colors.transparent,
                 disabledForegroundColor: theme.disabledColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               icon: _isSaving
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.save_rounded),
-              label: Text(_isSaving ? 'Spremanje...' : 'Spremi Promjene'),
+              label: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Text(_isSaving ? l10n.editProfileSaving : l10n.editProfileSaveChanges);
+                },
+              ),
             ),
           ),
         ),
@@ -452,16 +418,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: TextButton(
             onPressed: () => context.pop(),
             style: TextButton.styleFrom(
-              foregroundColor:
-                  theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+              foregroundColor: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: theme.dividerColor,
-                ),
+                side: BorderSide(color: theme.dividerColor),
               ),
             ),
-            child: const Text('Odustani'),
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Text(l10n.cancel);
+              },
+            ),
           ),
         ),
       ],
@@ -477,22 +445,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       canPop: !_isDirty,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop && _isDirty) {
+          final l10n = AppLocalizations.of(context);
           final shouldPop = await showDialog<bool>(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Discard changes?'),
-              content: const Text(
-                'You have unsaved changes. Do you want to discard them?',
-              ),
+            builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.editProfileDiscardTitle),
+              content: Text(l10n.editProfileDiscardMessage),
               actions: [
+                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.cancel)),
                 TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
+                  onPressed: () => Navigator.pop(dialogContext, true),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: const Text('Discard'),
+                  child: Text(l10n.editProfileDiscard),
                 ),
               ],
             ),
@@ -521,13 +485,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
               _loadData(effectiveUserData);
               _currentAvatarUrl = authState.userModel?.avatarUrl;
+              final l10n = AppLocalizations.of(context);
 
               return SingleChildScrollView(
                 child: Center(
                   child: Padding(
-                    padding: EdgeInsets.all(
-                      MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                    ),
+                    padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 24),
                     child: GlassCard(
                       maxWidth: 600,
                       child: Form(
@@ -543,7 +506,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               child: IconButton(
                                 onPressed: () => context.pop(),
                                 icon: const Icon(Icons.arrow_back),
-                                tooltip: 'Back',
+                                tooltip: l10n.back,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -564,46 +527,44 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
                             // Title
                             Text(
-                              'Edit Profile',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 28,
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                  ),
+                              l10n.editProfileTitle,
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 28,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
 
                             // Subtitle
                             Text(
-                              'Update your personal information',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    fontSize: 15,
-                                  ),
+                              l10n.editProfileSubtitle,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                fontSize: 15,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 32),
 
                             // ========== KARTICA 1: LIČNI PODACI ==========
                             _buildProfileCard(
-                              title: 'Lični Podaci',
+                              title: l10n.editProfilePersonalData,
                               icon: Icons.person_outline,
                               initiallyExpanded: true,
-                              subtitle: 'Osnovni kontakt podaci',
+                              subtitle: l10n.editProfilePersonalDataSubtitle,
                               children: [
                                 PremiumInputField(
                                   controller: _displayNameController,
-                                  labelText: 'Ime i Prezime',
+                                  labelText: l10n.editProfileFullName,
                                   prefixIcon: Icons.person_outline,
                                   validator: ProfileValidators.validateName,
                                 ),
                                 const SizedBox(height: 16),
                                 PremiumInputField(
                                   controller: _emailContactController,
-                                  labelText: 'Email',
+                                  labelText: l10n.editProfileEmail,
                                   prefixIcon: Icons.email_outlined,
                                   keyboardType: TextInputType.emailAddress,
                                   validator: ProfileValidators.validateEmail,
@@ -611,7 +572,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 const SizedBox(height: 16),
                                 PremiumInputField(
                                   controller: _phoneController,
-                                  labelText: 'Telefon',
+                                  labelText: l10n.editProfilePhone,
                                   prefixIcon: Icons.phone_outlined,
                                   keyboardType: TextInputType.phone,
                                   validator: ProfileValidators.validatePhone,
@@ -621,21 +582,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
                             // ========== KARTICA 2: ADRESA ==========
                             _buildProfileCard(
-                              title: 'Adresa',
+                              title: l10n.editProfileAddress,
                               icon: Icons.location_on_outlined,
                               initiallyExpanded: _hasAddressData(),
                               isOptional: true,
-                              subtitle: 'Vaša fizička adresa',
+                              subtitle: l10n.editProfileAddressSubtitle,
                               children: [
                                 PremiumInputField(
                                   controller: _countryController,
-                                  labelText: 'Država',
+                                  labelText: l10n.editProfileCountry,
                                   prefixIcon: Icons.public,
                                 ),
                                 const SizedBox(height: 16),
                                 PremiumInputField(
                                   controller: _streetController,
-                                  labelText: 'Ulica i Broj',
+                                  labelText: l10n.editProfileStreet,
                                   prefixIcon: Icons.location_on_outlined,
                                 ),
                                 const SizedBox(height: 16),
@@ -644,7 +605,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     Expanded(
                                       child: PremiumInputField(
                                         controller: _cityController,
-                                        labelText: 'Grad',
+                                        labelText: l10n.editProfileCity,
                                         prefixIcon: Icons.location_city,
                                       ),
                                     ),
@@ -652,7 +613,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     Expanded(
                                       child: PremiumInputField(
                                         controller: _postalCodeController,
-                                        labelText: 'Poštanski Broj',
+                                        labelText: l10n.editProfilePostalCode,
                                         prefixIcon: Icons.markunread_mailbox,
                                       ),
                                     ),
@@ -665,42 +626,42 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             // Note: Bankovni Podaci moved to dedicated Bank Account screen
                             // in Integracije → Plaćanja → Bankovni Račun
                             _buildProfileCard(
-                              title: 'Kompanija',
+                              title: l10n.editProfileCompany,
                               icon: Icons.business_outlined,
                               isOptional: true,
-                              subtitle: 'Za poslovne korisnike i fakture',
+                              subtitle: l10n.editProfileCompanySubtitle,
                               children: [
                                 // Company Info
                                 PremiumInputField(
                                   controller: _companyNameController,
-                                  labelText: 'Naziv Kompanije',
+                                  labelText: l10n.editProfileCompanyName,
                                   prefixIcon: Icons.business,
                                 ),
                                 const SizedBox(height: 16),
                                 PremiumInputField(
                                   controller: _taxIdController,
-                                  labelText: 'OIB / Porezni Broj',
+                                  labelText: l10n.editProfileTaxId,
                                   prefixIcon: Icons.receipt_long,
                                 ),
                                 const SizedBox(height: 16),
                                 PremiumInputField(
                                   controller: _vatIdController,
-                                  labelText: 'PDV ID',
+                                  labelText: l10n.editProfileVatId,
                                   prefixIcon: Icons.account_balance,
                                 ),
                                 const SizedBox(height: 20),
 
                                 // Company Address
-                                _buildSectionDivider('Adresa Kompanije'),
+                                _buildSectionDivider(l10n.editProfileCompanyAddress),
                                 PremiumInputField(
                                   controller: _companyCountryController,
-                                  labelText: 'Država',
+                                  labelText: l10n.editProfileCountry,
                                   prefixIcon: Icons.public,
                                 ),
                                 const SizedBox(height: 16),
                                 PremiumInputField(
                                   controller: _companyStreetController,
-                                  labelText: 'Ulica i Broj',
+                                  labelText: l10n.editProfileStreet,
                                   prefixIcon: Icons.location_on_outlined,
                                 ),
                                 const SizedBox(height: 16),
@@ -709,7 +670,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     Expanded(
                                       child: PremiumInputField(
                                         controller: _companyCityController,
-                                        labelText: 'Grad',
+                                        labelText: l10n.editProfileCity,
                                         prefixIcon: Icons.location_city,
                                       ),
                                     ),
@@ -717,7 +678,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     Expanded(
                                       child: PremiumInputField(
                                         controller: _companyPostalCodeController,
-                                        labelText: 'Poštanski Broj',
+                                        labelText: l10n.editProfilePostalCode,
                                         prefixIcon: Icons.markunread_mailbox,
                                       ),
                                     ),
@@ -726,24 +687,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 const SizedBox(height: 20),
 
                                 // Online Presence
-                                _buildSectionDivider('Online Prisutnost'),
+                                _buildSectionDivider(l10n.editProfileOnlinePresence),
                                 PremiumInputField(
                                   controller: _websiteController,
-                                  labelText: 'Web Stranica',
+                                  labelText: l10n.editProfileWebsite,
                                   prefixIcon: Icons.language_outlined,
                                   keyboardType: TextInputType.url,
                                 ),
                                 const SizedBox(height: 16),
                                 PremiumInputField(
                                   controller: _facebookController,
-                                  labelText: 'Facebook Stranica',
+                                  labelText: l10n.editProfileFacebook,
                                   prefixIcon: Icons.facebook,
                                   keyboardType: TextInputType.url,
                                 ),
                                 const SizedBox(height: 16),
                                 PremiumInputField(
                                   controller: _propertyTypeController,
-                                  labelText: 'Tip Nekretnine',
+                                  labelText: l10n.editProfilePropertyType,
                                   prefixIcon: Icons.home_work_outlined,
                                 ),
                               ],
@@ -762,7 +723,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(child: Text('Error: $error')),
+            error: (error, stack) {
+              final l10n = AppLocalizations.of(context);
+              return Center(child: Text(l10n.errorWithMessage(error.toString())));
+            },
           ),
         ),
       ),

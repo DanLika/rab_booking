@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -16,12 +17,10 @@ class StripeConnectSetupScreen extends ConsumerStatefulWidget {
   const StripeConnectSetupScreen({super.key});
 
   @override
-  ConsumerState<StripeConnectSetupScreen> createState() =>
-      _StripeConnectSetupScreenState();
+  ConsumerState<StripeConnectSetupScreen> createState() => _StripeConnectSetupScreenState();
 }
 
-class _StripeConnectSetupScreenState
-    extends ConsumerState<StripeConnectSetupScreen> {
+class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScreen> {
   bool _isLoading = false;
   String? _stripeAccountId;
   String? _stripeAccountStatus;
@@ -85,10 +84,7 @@ class _StripeConnectSetupScreenState
       final returnUrl = '$baseUrl/owner/stripe-return';
       final refreshUrl = '$baseUrl/owner/stripe-refresh';
 
-      final result = await callable.call({
-        'returnUrl': returnUrl,
-        'refreshUrl': refreshUrl,
-      });
+      final result = await callable.call({'returnUrl': returnUrl, 'refreshUrl': refreshUrl});
 
       final data = result.data as Map<String, dynamic>;
       final success = data['success'] == true;
@@ -97,23 +93,22 @@ class _StripeConnectSetupScreenState
       if (success && onboardingUrl != null) {
         // Launch Stripe onboarding URL
         final uri = Uri.parse(onboardingUrl);
-        final launched = await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
+        final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
 
         if (!launched && mounted) {
+          final l10n = AppLocalizations.of(context);
           ErrorDisplayUtils.showErrorSnackBar(
             context,
-            'Ne mogu otvoriti Stripe stranicu',
-            userMessage: 'Ne mogu otvoriti Stripe stranicu. Pokušajte ponovo.',
+            l10n.stripeCannotOpenPage,
+            userMessage: l10n.stripeCannotOpenPageDesc,
           );
         }
       } else if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ErrorDisplayUtils.showErrorSnackBar(
           context,
-          'Greška prilikom kreiranja Stripe računa',
-          userMessage: 'Greška prilikom kreiranja Stripe računa.',
+          l10n.stripeCreateAccountError,
+          userMessage: l10n.stripeCreateAccountError,
         );
       }
 
@@ -125,11 +120,8 @@ class _StripeConnectSetupScreenState
     } catch (e) {
       LoggingService.log('Error connecting account', tag: 'StripeConnect');
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška prilikom povezivanja Stripe računa',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.stripeConnectError);
         setState(() {
           _isLoading = false;
         });
@@ -140,6 +132,7 @@ class _StripeConnectSetupScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     // Hardcoded horizontal gradient colors (left → right)
     const gradientStart = Color(0xFF6B4CE6); // Purple
@@ -150,14 +143,10 @@ class _StripeConnectSetupScreenState
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(56),
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [gradientStart, gradientEnd],
-            ),
-          ),
+          decoration: const BoxDecoration(gradient: LinearGradient(colors: [gradientStart, gradientEnd])),
           child: AppBar(
             title: Text(
-              'Stripe Plaćanja',
+              l10n.stripeTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -185,29 +174,21 @@ class _StripeConnectSetupScreenState
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/stripe'),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [gradientStart, gradientEnd],
-          ),
-        ),
+        decoration: const BoxDecoration(gradient: LinearGradient(colors: [gradientStart, gradientEnd])),
         child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
-              )
+            ? const Center(child: CircularProgressIndicator(color: Colors.white))
             : SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Status card
-                    _buildStatusCard(theme),
+                    _buildStatusCard(theme, l10n),
 
                     const SizedBox(height: 24),
 
                     // Info section
-                    _buildInfoSection(),
+                    _buildInfoSection(l10n),
 
                     const SizedBox(height: 32),
 
@@ -216,48 +197,32 @@ class _StripeConnectSetupScreenState
                       FilledButton.icon(
                         onPressed: _connectStripeAccount,
                         icon: const Icon(Icons.link, size: 20),
-                        label: const Text(
-                          'Poveži Stripe Račun',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        label: Text(
+                          l10n.stripeConnectAccount,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                           minimumSize: const Size(double.infinity, 48),
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       )
                     else if (_stripeAccountStatus != 'complete')
                       FilledButton.icon(
                         onPressed: _connectStripeAccount,
                         icon: const Icon(Icons.pending, size: 20),
-                        label: const Text(
-                          'Završi Stripe Setup',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        label: Text(
+                          l10n.stripeFinishSetup,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                           minimumSize: const Size(double.infinity, 48),
                           backgroundColor: Colors.orange,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
 
@@ -266,16 +231,8 @@ class _StripeConnectSetupScreenState
                     // Help link
                     TextButton.icon(
                       onPressed: () => context.go(OwnerRoutes.guideStripe),
-                      icon: const Icon(
-                        Icons.help_outline,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
-                        'Kako funkcionira Stripe Connect?',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
+                      icon: const Icon(Icons.help_outline, color: Colors.white),
+                      label: Text(l10n.stripeHowItWorks, style: const TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -284,7 +241,7 @@ class _StripeConnectSetupScreenState
     );
   }
 
-  Widget _buildStatusCard(ThemeData theme) {
+  Widget _buildStatusCard(ThemeData theme, AppLocalizations l10n) {
     final isDark = theme.brightness == Brightness.dark;
     const cardColorDark = Color(0xFF2D2D2D);
     const confirmedGreen = Color(0xFF66BB6A);
@@ -302,20 +259,18 @@ class _StripeConnectSetupScreenState
     if (_stripeAccountId == null) {
       statusColor = isDark ? textTertiary : AppColors.textTertiaryLight;
       statusIcon = Icons.warning_amber_rounded;
-      statusTitle = 'Nije povezano';
-      statusDescription =
-          'Stripe račun nije povezan. Prijem plaćanja nije moguć.';
+      statusTitle = l10n.stripeNotConnected;
+      statusDescription = l10n.stripeNotConnectedDesc;
     } else if (_stripeAccountStatus != 'complete') {
       statusColor = pendingOrange;
       statusIcon = Icons.pending;
-      statusTitle = 'Setup u toku';
-      statusDescription =
-          'Završite Stripe setup da biste mogli primati plaćanja.';
+      statusTitle = l10n.stripeSetupInProgress;
+      statusDescription = l10n.stripeSetupInProgressDesc;
     } else {
       statusColor = confirmedGreen;
       statusIcon = Icons.check_circle;
-      statusTitle = 'Aktivno';
-      statusDescription = 'Stripe račun je povezan. Možete primati plaćanja!';
+      statusTitle = l10n.stripeActive;
+      statusDescription = l10n.stripeActiveDesc;
     }
 
     final borderColor = isDark
@@ -327,10 +282,7 @@ class _StripeConnectSetupScreenState
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: borderColor,
-          width: 2,
-        ),
+        side: BorderSide(color: borderColor, width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -348,29 +300,15 @@ class _StripeConnectSetupScreenState
                 children: [
                   Text(
                     statusTitle,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: statusColor),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    statusDescription,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: textSecondary,
-                    ),
-                  ),
+                  Text(statusDescription, style: TextStyle(fontSize: 14, color: textSecondary)),
                   if (_stripeAccountId != null) ...[
                     const SizedBox(height: 8),
                     Text(
                       'ID: $_stripeAccountId',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: textTertiary,
-                        fontFamily: 'monospace',
-                      ),
+                      style: TextStyle(fontSize: 12, color: textTertiary, fontFamily: 'monospace'),
                     ),
                   ],
                 ],
@@ -382,39 +320,19 @@ class _StripeConnectSetupScreenState
     );
   }
 
-  Widget _buildInfoSection() {
+  Widget _buildInfoSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Zašto Stripe Connect?',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        Text(
+          l10n.stripeWhyConnect,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         const SizedBox(height: 12),
-        _buildInfoItem(
-          Icons.credit_card,
-          'Prijem plaćanja',
-          'Primajte plaćanja karticama direktno na vaš račun',
-        ),
-        _buildInfoItem(
-          Icons.security,
-          'Sigurnost',
-          'PCI-DSS komplijantan sistem za sigurne transakcije',
-        ),
-        _buildInfoItem(
-          Icons.flash_on,
-          'Instant potvrde',
-          'Automatska potvrda rezervacija nakon uspješne uplate',
-        ),
-        _buildInfoItem(
-          Icons.money_off,
-          'Nema skrivenih troškova',
-          'Stripe naplaćuje ~2.9% + €0.30 po transakciji',
-        ),
+        _buildInfoItem(Icons.credit_card, l10n.stripeReceivePayments, l10n.stripeReceivePaymentsDesc),
+        _buildInfoItem(Icons.security, l10n.stripeSecurity, l10n.stripeSecurityDesc),
+        _buildInfoItem(Icons.flash_on, l10n.stripeInstantConfirmations, l10n.stripeInstantConfirmationsDesc),
+        _buildInfoItem(Icons.money_off, l10n.stripeNoHiddenFees, l10n.stripeNoHiddenFeesDesc),
       ],
     );
   }
@@ -433,20 +351,10 @@ class _StripeConnectSetupScreenState
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withAlpha((0.85 * 255).toInt()),
-                  ),
-                ),
+                Text(description, style: TextStyle(fontSize: 13, color: Colors.white.withAlpha((0.85 * 255).toInt()))),
               ],
             ),
           ),

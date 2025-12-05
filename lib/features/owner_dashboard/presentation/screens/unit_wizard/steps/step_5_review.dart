@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../state/unit_wizard_provider.dart';
@@ -12,6 +13,7 @@ class Step5Review extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final wizardState = ref.watch(unitWizardNotifierProvider(unitId));
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -24,75 +26,46 @@ class Step5Review extends ConsumerWidget {
         final allRequiredCompleted = _validateAllRequiredSteps(draft);
 
         // Build the 4 summary cards
-        final basicInfoCard = _buildSummaryCard(
-          context,
-          theme,
-          isMobile,
-          'Osnovne Informacije',
-          Icons.info_outline,
-          [
-            _buildSummaryRow(theme, 'Naziv', draft.name ?? '-'),
-            _buildSummaryRow(theme, 'Slug', draft.slug ?? '-'),
-            if (draft.description != null && draft.description!.isNotEmpty)
-              _buildSummaryRow(theme, 'Opis', draft.description!),
-          ],
-        );
+        final basicInfoCard =
+            _buildSummaryCard(context, theme, isMobile, l10n.unitWizardStep5BasicInfo, Icons.info_outline, [
+              _buildSummaryRow(theme, l10n.unitWizardStep5Name, draft.name ?? '-'),
+              _buildSummaryRow(theme, l10n.unitWizardStep5Slug, draft.slug ?? '-'),
+              if (draft.description != null && draft.description!.isNotEmpty)
+                _buildSummaryRow(theme, l10n.unitWizardStep5Description, draft.description!),
+            ]);
 
-        final capacityCard = _buildSummaryCard(
-          context,
-          theme,
-          isMobile,
-          'Kapacitet',
-          Icons.people,
-          [
-            _buildSummaryRow(theme, 'Spavaće sobe', draft.bedrooms?.toString() ?? '-'),
-            _buildSummaryRow(theme, 'Kupatila', draft.bathrooms?.toString() ?? '-'),
-            _buildSummaryRow(theme, 'Max gostiju', draft.maxGuests?.toString() ?? '-'),
-            if (draft.areaSqm != null)
-              _buildSummaryRow(theme, 'Površina', '${draft.areaSqm} m²'),
-          ],
-        );
+        final capacityCard = _buildSummaryCard(context, theme, isMobile, l10n.unitWizardStep5Capacity, Icons.people, [
+          _buildSummaryRow(theme, l10n.unitWizardStep5Bedrooms, draft.bedrooms?.toString() ?? '-'),
+          _buildSummaryRow(theme, l10n.unitWizardStep5Bathrooms, draft.bathrooms?.toString() ?? '-'),
+          _buildSummaryRow(theme, l10n.unitWizardStep5MaxGuests, draft.maxGuests?.toString() ?? '-'),
+          if (draft.areaSqm != null) _buildSummaryRow(theme, l10n.unitWizardStep5Area, '${draft.areaSqm} m²'),
+        ]);
 
-        final pricingCard = _buildSummaryCard(
-          context,
-          theme,
-          isMobile,
-          'Cijene',
-          Icons.euro,
-          [
-            _buildSummaryRow(
-              theme,
-              'Cena po noći',
-              draft.pricePerNight != null ? '€${draft.pricePerNight}' : '-',
-            ),
-            _buildSummaryRow(
-              theme,
-              'Min. boravak',
-              draft.minStayNights != null ? '${draft.minStayNights} noći' : '-',
-            ),
-          ],
-        );
+        final pricingCard = _buildSummaryCard(context, theme, isMobile, l10n.unitWizardStep5Pricing, Icons.euro, [
+          _buildSummaryRow(
+            theme,
+            l10n.unitWizardStep5PricePerNight,
+            draft.pricePerNight != null ? '€${draft.pricePerNight}' : '-',
+          ),
+          _buildSummaryRow(
+            theme,
+            l10n.unitWizardStep5MinStay,
+            draft.minStayNights != null ? l10n.unitWizardStep5MinStayNights(draft.minStayNights!) : '-',
+          ),
+        ]);
 
-        final availabilityCard = _buildSummaryCard(
-          context,
-          theme,
-          isMobile,
-          'Dostupnost',
-          Icons.calendar_today,
-          [
-            _buildSummaryRow(
-              theme,
-              'Tokom godine',
-              draft.availableYearRound ? 'Da' : 'Sezonski',
-            ),
-          ],
-        );
+        final availabilityCard =
+            _buildSummaryCard(context, theme, isMobile, l10n.unitWizardStep5AvailabilityCard, Icons.calendar_today, [
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5YearRound,
+                draft.availableYearRound ? l10n.unitWizardStep5YearRoundYes : l10n.unitWizardStep5YearRoundSeasonal,
+              ),
+            ]);
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
-          decoration: BoxDecoration(
-            gradient: context.gradients.pageBackground,
-          ),
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Column(
@@ -100,7 +73,7 @@ class Step5Review extends ConsumerWidget {
               children: [
                 // Title
                 Text(
-                  'Pregled i Objava',
+                  l10n.unitWizardStep5Title,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -110,10 +83,8 @@ class Step5Review extends ConsumerWidget {
 
                 // Subtitle
                 Text(
-                  'Pregledajte sve informacije prije objave jedinice',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.unitWizardStep5Subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 24),
 
@@ -124,9 +95,7 @@ class Step5Review extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: theme.colorScheme.error.withValues(alpha: 0.3),
-                      ),
+                      border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
@@ -134,7 +103,7 @@ class Step5Review extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Molimo popunite sve obavezne korake prije objave',
+                            l10n.unitWizardStep5IncompleteWarning,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.error,
                               fontWeight: FontWeight.w500,
@@ -187,9 +156,7 @@ class Step5Review extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
-                      ),
+                      border: Border.all(color: theme.colorScheme.tertiary.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
@@ -197,10 +164,8 @@ class Step5Review extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Sve obavezne informacije su popunjene. Kliknite "Publish" za objavljivanje jedinice.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface,
-                            ),
+                            l10n.unitWizardStep5ReadyMessage,
+                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface),
                           ),
                         ),
                       ],
@@ -213,9 +178,7 @@ class Step5Review extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 
@@ -259,12 +222,9 @@ class Step5Review extends ConsumerWidget {
           decoration: BoxDecoration(
             // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
             // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -277,25 +237,14 @@ class Step5Review extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.12 * 255).toInt(),
-                        ),
+                        color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
-                        icon,
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
+                      child: Icon(icon, color: theme.colorScheme.primary, size: 18),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),

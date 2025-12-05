@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -29,13 +30,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, spreadRadius: 5)],
               ),
               child: Column(
                 children: [
@@ -45,9 +40,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
                   const Divider(height: 1),
 
                   // Step Content
-                  Expanded(
-                    child: _buildCurrentStep(onboardingState.currentStep),
-                  ),
+                  Expanded(child: _buildCurrentStep(onboardingState.currentStep)),
 
                   const Divider(height: 1),
 
@@ -63,17 +56,13 @@ class OnboardingWizardScreen extends ConsumerWidget {
   }
 
   Widget _buildStepperHeader(BuildContext context, int currentStep) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _StepIndicator(
-            number: 1,
-            label: 'Podaci o Objektu',
-            isActive: true,
-            isCompleted: false,
-          ),
+          _StepIndicator(number: 1, label: l10n.onboardingWizardPropertyData, isActive: true, isCompleted: false),
         ],
       ),
     );
@@ -84,11 +73,8 @@ class OnboardingWizardScreen extends ConsumerWidget {
     return const OnboardingPropertyStep();
   }
 
-  Widget _buildNavigationButtons(
-    BuildContext context,
-    WidgetRef ref,
-    OnboardingState state,
-  ) {
+  Widget _buildNavigationButtons(BuildContext context, WidgetRef ref, OnboardingState state) {
+    final l10n = AppLocalizations.of(context);
     final canGoNext = _canGoNext(state);
     final isLastStep = true; // Only 1 step now, always last
 
@@ -98,10 +84,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Skip Button
-          TextButton(
-            onPressed: () => _showSkipDialog(context, ref),
-            child: const Text('Preskoči'),
-          ),
+          TextButton(onPressed: () => _showSkipDialog(context, ref), child: Text(l10n.onboardingSkip)),
 
           const SizedBox(width: 16),
 
@@ -113,14 +96,11 @@ class OnboardingWizardScreen extends ConsumerWidget {
               backgroundColor: AppColors.authPrimary,
               foregroundColor: Colors.white,
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Text(
-                  'Završi',
-                  style: TextStyle(fontSize: 16),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.check),
+                Text(l10n.onboardingWizardFinish, style: const TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                const Icon(Icons.check),
               ],
             ),
           ),
@@ -141,12 +121,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleNext(
-    BuildContext context,
-    WidgetRef ref,
-    OnboardingState state,
-    bool isLastStep,
-  ) async {
+  Future<void> _handleNext(BuildContext context, WidgetRef ref, OnboardingState state, bool isLastStep) async {
     final notifier = ref.read(onboardingNotifierProvider.notifier);
 
     if (isLastStep) {
@@ -165,11 +140,13 @@ class OnboardingWizardScreen extends ConsumerWidget {
 
       // Show loading
       if (context.mounted) {
-        unawaited(showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => const Center(child: CircularProgressIndicator()),
-        ));
+        unawaited(
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const Center(child: CircularProgressIndicator()),
+          ),
+        );
       }
 
       // Create property (Step 1)
@@ -201,36 +178,25 @@ class OnboardingWizardScreen extends ConsumerWidget {
 
       // Show error
       if (context.mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška prilikom završavanja početnog podešavanja',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.onboardingWizardCompleteError);
       }
     }
   }
 
   Future<void> _showSkipDialog(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Preskoči vodič?'),
-        content: const Text(
-          'Ako preskočite vodič, nećete završiti početno podešavanje. '
-          'Morat ćete ručno dodati objekte i jedinice kasnije.\n\n'
-          'Želite li nastaviti?',
-        ),
+        title: Text(l10n.onboardingWizardSkipDialogTitle),
+        content: Text(l10n.onboardingWizardSkipDialogDesc),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Odustani'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.warning,
-            ),
-            child: const Text('Preskoči'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning),
+            child: Text(l10n.onboardingSkip),
           ),
         ],
       ),
@@ -252,12 +218,7 @@ class _StepIndicator extends StatelessWidget {
   final bool isActive;
   final bool isCompleted;
 
-  const _StepIndicator({
-    required this.number,
-    required this.label,
-    required this.isActive,
-    required this.isCompleted,
-  });
+  const _StepIndicator({required this.number, required this.label, required this.isActive, required this.isCompleted});
 
   @override
   Widget build(BuildContext context) {
@@ -271,18 +232,15 @@ class _StepIndicator extends StatelessWidget {
             color: isCompleted
                 ? AppColors.success
                 : isActive
-                    ? AppColors.authPrimary
-                    : Colors.grey[300],
+                ? AppColors.authPrimary
+                : Colors.grey[300],
           ),
           child: Center(
             child: isCompleted
                 ? const Icon(Icons.check, color: Colors.white, size: 20)
                 : Text(
                     '$number',
-                    style: TextStyle(
-                      color: isActive ? Colors.white : Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(color: isActive ? Colors.white : Colors.grey[600], fontWeight: FontWeight.bold),
                   ),
           ),
         ),

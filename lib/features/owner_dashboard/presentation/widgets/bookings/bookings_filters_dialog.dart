@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/property_model.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../providers/owner_bookings_provider.dart';
@@ -14,8 +15,7 @@ class BookingsFiltersDialog extends ConsumerStatefulWidget {
   const BookingsFiltersDialog({super.key});
 
   @override
-  ConsumerState<BookingsFiltersDialog> createState() =>
-      _BookingsFiltersDialogState();
+  ConsumerState<BookingsFiltersDialog> createState() => _BookingsFiltersDialogState();
 }
 
 class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
@@ -33,6 +33,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -44,15 +45,11 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
       clipBehavior: Clip.antiAlias,
       child: Container(
         width: isMobile ? double.infinity : 700,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -63,9 +60,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(11),
-                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
@@ -73,17 +68,14 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Filteri rezervacija',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      l10n.ownerFiltersTitle,
+                      style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
-                    tooltip: 'Zatvori',
+                    tooltip: l10n.ownerDetailsClose,
                   ),
                 ],
               ),
@@ -97,15 +89,15 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Status filter
-                    _buildStatusFilter(theme),
+                    _buildStatusFilter(theme, l10n),
                     const SizedBox(height: 16),
 
                     // Property filter
-                    _buildPropertyFilter(theme, propertiesAsync),
+                    _buildPropertyFilter(theme, propertiesAsync, l10n),
                     const SizedBox(height: 16),
 
                     // Date range filter
-                    _buildDateRangeFilter(theme),
+                    _buildDateRangeFilter(theme, l10n),
                   ],
                 ),
               ),
@@ -115,30 +107,26 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-                  ),
-                ),
+                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
               ),
               child: isMobile
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Apply button (full width on mobile)
-                        _buildApplyButton(theme, true),
+                        _buildApplyButton(theme, true, l10n),
                         const SizedBox(height: 8),
                         // Clear button (full width on mobile)
-                        _buildClearButton(theme, true),
+                        _buildClearButton(theme, true, l10n),
                       ],
                     )
                   : Row(
                       children: [
                         // Clear button (left)
-                        Expanded(child: _buildClearButton(theme, false)),
+                        Expanded(child: _buildClearButton(theme, false, l10n)),
                         const SizedBox(width: 16),
                         // Apply button (right) with gradient
-                        Expanded(child: _buildApplyButton(theme, false)),
+                        Expanded(child: _buildApplyButton(theme, false, l10n)),
                       ],
                     ),
             ),
@@ -148,7 +136,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     );
   }
 
-  Widget _buildStatusFilter(ThemeData theme) {
+  Widget _buildStatusFilter(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -161,18 +149,12 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                Icons.info_outline,
-                size: 18,
-                color: theme.colorScheme.primary,
-              ),
+              child: Icon(Icons.info_outline, size: 18, color: theme.colorScheme.primary),
             ),
             const SizedBox(width: 12),
             Text(
-              'Status rezervacije',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              l10n.ownerFiltersStatusSection,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -182,55 +164,41 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         DropdownButtonFormField<BookingStatus?>(
           initialValue: _filters.status,
           decoration: InputDecoration(
-            labelText: 'Filtriraj po statusu',
-            prefixIcon: Icon(
-              Icons.label_outline,
-              color: theme.colorScheme.primary,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
+            labelText: l10n.ownerFiltersStatusLabel,
+            prefixIcon: Icon(Icons.label_outline, color: theme.colorScheme.primary),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           items: [
-            const DropdownMenuItem(
-              child: Text('Svi statusi'),
-            ),
+            DropdownMenuItem(child: Text(l10n.ownerFiltersAllStatuses)),
             ...BookingStatus.values
-                .where((s) =>
-                    s == BookingStatus.pending ||
-                    s == BookingStatus.confirmed ||
-                    s == BookingStatus.cancelled ||
-                    s == BookingStatus.completed)
+                .where(
+                  (s) =>
+                      s == BookingStatus.pending ||
+                      s == BookingStatus.confirmed ||
+                      s == BookingStatus.cancelled ||
+                      s == BookingStatus.completed,
+                )
                 .map((status) {
-              return DropdownMenuItem(
-                value: status,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: status.color,
-                        shape: BoxShape.circle,
-                      ),
+                  return DropdownMenuItem(
+                    value: status,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(color: status.color, shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(status.displayName),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Text(status.displayName),
-                  ],
-                ),
-              );
-            }),
+                  );
+                }),
           ],
           onChanged: (status) {
             setState(() {
-              _filters = _filters.copyWith(
-                status: status,
-                clearStatus: status == null,
-              );
+              _filters = _filters.copyWith(status: status, clearStatus: status == null);
             });
           },
         ),
@@ -238,10 +206,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     );
   }
 
-  Widget _buildPropertyFilter(
-    ThemeData theme,
-    AsyncValue<List<PropertyModel>> propertiesAsync,
-  ) {
+  Widget _buildPropertyFilter(ThemeData theme, AsyncValue<List<PropertyModel>> propertiesAsync, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -254,18 +219,12 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 color: theme.colorScheme.secondary.withAlpha((0.12 * 255).toInt()),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                Icons.home_outlined,
-                size: 18,
-                color: theme.colorScheme.secondary,
-              ),
+              child: Icon(Icons.home_outlined, size: 18, color: theme.colorScheme.secondary),
             ),
             const SizedBox(width: 12),
             Text(
-              'Nekretnina',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              l10n.ownerFiltersPropertySection,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -277,39 +236,23 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             return DropdownButtonFormField<String?>(
               initialValue: _filters.propertyId,
               decoration: InputDecoration(
-                labelText: 'Filtriraj po nekretnini',
-                prefixIcon: Icon(
-                  Icons.apartment,
-                  color: theme.colorScheme.secondary,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                labelText: l10n.ownerFiltersPropertyLabel,
+                prefixIcon: Icon(Icons.apartment, color: theme.colorScheme.secondary),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
               items: [
-                const DropdownMenuItem(
-                  child: Text('Sve nekretnine'),
-                ),
+                DropdownMenuItem(child: Text(l10n.ownerFiltersAllProperties)),
                 ...properties.map((property) {
                   return DropdownMenuItem(
                     value: property.id,
-                    child: Text(
-                      property.name,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    child: Text(property.name, overflow: TextOverflow.ellipsis),
                   );
                 }),
               ],
               onChanged: (propertyId) {
                 setState(() {
-                  _filters = _filters.copyWith(
-                    propertyId: propertyId,
-                    clearProperty: propertyId == null,
-                  );
+                  _filters = _filters.copyWith(propertyId: propertyId, clearProperty: propertyId == null);
                 });
               },
             );
@@ -317,29 +260,21 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           loading: () => Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
-              ),
+              border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 12),
-                Text('Učitavam nekretnine...'),
+                const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox(width: 12),
+                Text(l10n.ownerFiltersLoadingProperties),
               ],
             ),
           ),
           error: (error, _) => Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
-              ),
+              border: Border.all(color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt())),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -347,10 +282,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 Icon(Icons.error_outline, color: theme.colorScheme.error),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'Greška: $error',
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
+                  child: Text('${l10n.ownerCalendarError}: $error', style: TextStyle(color: theme.colorScheme.error)),
                 ),
               ],
             ),
@@ -360,7 +292,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     );
   }
 
-  Widget _buildDateRangeFilter(ThemeData theme) {
+  Widget _buildDateRangeFilter(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -373,18 +305,12 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 color: theme.colorScheme.tertiary.withAlpha((0.12 * 255).toInt()),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                Icons.date_range,
-                size: 18,
-                color: theme.colorScheme.tertiary,
-              ),
+              child: Icon(Icons.date_range, size: 18, color: theme.colorScheme.tertiary),
             ),
             const SizedBox(width: 12),
             Text(
-              'Vremenski period',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              l10n.ownerFiltersDateSection,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -408,10 +334,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
               setState(() {
                 _selectedStartDate = picked.start;
                 _selectedEndDate = picked.end;
-                _filters = _filters.copyWith(
-                  startDate: picked.start,
-                  endDate: picked.end,
-                );
+                _filters = _filters.copyWith(startDate: picked.start, endDate: picked.end);
               });
             }
           },
@@ -419,44 +342,32 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
-              ),
+              border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.calendar_today,
-                  color: theme.colorScheme.tertiary,
-                ),
+                Icon(Icons.calendar_today, color: theme.colorScheme.tertiary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     _selectedStartDate == null || _selectedEndDate == null
-                        ? 'Odaberi vremenski period'
+                        ? l10n.ownerFiltersSelectDateRange
                         : '${_formatDate(_selectedStartDate!)} - ${_formatDate(_selectedEndDate!)}',
                     style: theme.textTheme.bodyLarge,
                   ),
                 ),
                 if (_selectedStartDate != null && _selectedEndDate != null)
                   IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      size: 18,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                    icon: Icon(Icons.close, size: 18, color: theme.colorScheme.onSurfaceVariant),
                     onPressed: () {
                       setState(() {
                         _selectedStartDate = null;
                         _selectedEndDate = null;
-                        _filters = _filters.copyWith(
-                          clearStartDate: true,
-                          clearEndDate: true,
-                        );
+                        _filters = _filters.copyWith(clearStartDate: true, clearEndDate: true);
                       });
                     },
-                    tooltip: 'Obriši',
+                    tooltip: l10n.ownerFiltersClear,
                   ),
               ],
             ),
@@ -466,7 +377,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     );
   }
 
-  Widget _buildApplyButton(ThemeData theme, bool isFullWidth) {
+  Widget _buildApplyButton(ThemeData theme, bool isFullWidth, AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
         gradient: context.gradients.brandPrimary,
@@ -497,11 +408,8 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 const Icon(Icons.check, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(
-                  'Primijeni filtere',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  l10n.ownerFiltersApply,
+                  style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -511,7 +419,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     );
   }
 
-  Widget _buildClearButton(ThemeData theme, bool isFullWidth) {
+  Widget _buildClearButton(ThemeData theme, bool isFullWidth, AppLocalizations l10n) {
     return OutlinedButton.icon(
       onPressed: () {
         setState(() {
@@ -521,15 +429,11 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         });
       },
       icon: const Icon(Icons.clear_all),
-      label: const Text('Očisti filtere'),
+      label: Text(l10n.ownerFiltersClear),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        side: BorderSide(
-          color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        side: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

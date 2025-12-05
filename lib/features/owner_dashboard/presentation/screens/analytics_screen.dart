@@ -9,9 +9,11 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/custom_date_range_picker.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../widgets/owner_app_drawer.dart';
 
 /// Helper function to create purple shade variations (1-6, darkest to lightest).
@@ -40,39 +42,28 @@ class AnalyticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final dateRange = ref.watch(dateRangeNotifierProvider);
-    final analyticsAsync = ref.watch(
-      analyticsNotifierProvider(dateRange: dateRange),
-    );
+    final analyticsAsync = ref.watch(analyticsNotifierProvider(dateRange: dateRange));
 
     return Scaffold(
       drawer: const OwnerAppDrawer(currentRoute: 'analytics'),
       appBar: CommonAppBar(
-        title: 'Analytics & Reports',
+        title: l10n.ownerAnalyticsTitle,
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: Column(
           children: [
             _DateRangeSelector(dateRange: dateRange),
             Expanded(
               child: analyticsAsync.when(
-                data: (analytics) => _AnalyticsContent(
-                  analytics: analytics,
-                  dateRange: dateRange,
-                ),
-                loading: () => Center(
-                  child: CircularProgressIndicator(
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
+                data: (analytics) => _AnalyticsContent(analytics: analytics, dateRange: dateRange),
+                loading: SkeletonLoader.analytics,
                 error: (error, stack) => ErrorStateWidget(
-                  message: 'Failed to load analytics',
+                  message: l10n.ownerAnalyticsLoadError,
                   onRetry: () {
                     ref.invalidate(analyticsNotifierProvider);
                   },
@@ -93,14 +84,12 @@ class _DateRangeSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.horizontalPadding,
-        vertical: isMobile ? 12 : 16,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding, vertical: isMobile ? 12 : 16),
       color: Colors.transparent,
       child: Row(
         children: [
@@ -111,42 +100,34 @@ class _DateRangeSelector extends ConsumerWidget {
               child: Row(
                 children: [
                   _FilterChip(
-                    label: 'Last Week',
+                    label: l10n.ownerAnalyticsLastWeek,
                     selected: dateRange.preset == 'week',
                     onSelected: () {
-                      ref
-                          .read(dateRangeNotifierProvider.notifier)
-                          .setPreset('week');
+                      ref.read(dateRangeNotifierProvider.notifier).setPreset('week');
                     },
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Last Month',
+                    label: l10n.ownerAnalyticsLastMonth,
                     selected: dateRange.preset == 'month',
                     onSelected: () {
-                      ref
-                          .read(dateRangeNotifierProvider.notifier)
-                          .setPreset('month');
+                      ref.read(dateRangeNotifierProvider.notifier).setPreset('month');
                     },
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Last Quarter',
+                    label: l10n.ownerAnalyticsLastQuarter,
                     selected: dateRange.preset == 'quarter',
                     onSelected: () {
-                      ref
-                          .read(dateRangeNotifierProvider.notifier)
-                          .setPreset('quarter');
+                      ref.read(dateRangeNotifierProvider.notifier).setPreset('quarter');
                     },
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Last Year',
+                    label: l10n.ownerAnalyticsLastYear,
                     selected: dateRange.preset == 'year',
                     onSelected: () {
-                      ref
-                          .read(dateRangeNotifierProvider.notifier)
-                          .setPreset('year');
+                      ref.read(dateRangeNotifierProvider.notifier).setPreset('year');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -156,19 +137,14 @@ class _DateRangeSelector extends ConsumerWidget {
                         context: context,
                         firstDate: DateTime(2020),
                         lastDate: DateTime(2030),
-                        initialDateRange: DateTimeRange(
-                          start: dateRange.startDate,
-                          end: dateRange.endDate,
-                        ),
+                        initialDateRange: DateTimeRange(start: dateRange.startDate, end: dateRange.endDate),
                       );
                       if (picked != null) {
-                        ref
-                            .read(dateRangeNotifierProvider.notifier)
-                            .setCustomRange(picked.start, picked.end);
+                        ref.read(dateRangeNotifierProvider.notifier).setCustomRange(picked.start, picked.end);
                       }
                     },
                     icon: const Icon(Icons.calendar_today, size: 16),
-                    label: const Text('Custom Range'),
+                    label: Text(l10n.ownerAnalyticsCustomRange),
                   ),
                 ],
               ),
@@ -185,11 +161,7 @@ class _FilterChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onSelected;
 
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onSelected,
-  });
+  const _FilterChip({required this.label, required this.selected, required this.onSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -199,17 +171,13 @@ class _FilterChip extends StatelessWidget {
       selected: selected,
       onSelected: (_) => onSelected(),
       selectedColor: theme.colorScheme.primary,
-      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+      backgroundColor: context.gradients.cardBackground,
       side: BorderSide(
-        color: selected
-            ? theme.colorScheme.primary
-            : theme.colorScheme.outline.withValues(alpha: 0.3),
+        color: selected ? theme.colorScheme.primary : context.gradients.sectionBorder,
         width: selected ? 2 : 1,
       ),
       labelStyle: TextStyle(
-        color: selected
-            ? Colors.white  // White text on selected chip
-            : theme.colorScheme.onSurface,
+        color: selected ? Colors.white : theme.colorScheme.onSurface,
         fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
       ),
       checkmarkColor: Colors.white,
@@ -221,43 +189,27 @@ class _AnalyticsContent extends StatelessWidget {
   final AnalyticsSummary analytics;
   final DateRangeFilter dateRange;
 
-  const _AnalyticsContent({
-    required this.analytics,
-    required this.dateRange,
-  });
+  const _AnalyticsContent({required this.analytics, required this.dateRange});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isDesktop = screenWidth > 900;
 
     return ListView(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.horizontalPadding,
-        vertical: isMobile ? 12 : 16,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding, vertical: isMobile ? 12 : 16),
       children: [
         // Metric Cards
-        _MetricCardsGrid(
-          analytics: analytics,
-          dateRange: dateRange,
-        ),
+        _MetricCardsGrid(analytics: analytics, dateRange: dateRange),
         SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
-
         // Charts Section - Desktop: side-by-side, Mobile/Tablet: stacked
-        if (isDesktop)
-          _buildDesktopChartsRow()
-        else
-          _buildStackedCharts(isMobile),
+        if (isDesktop) _buildDesktopChartsRow(l10n) else _buildStackedCharts(isMobile, l10n),
 
         SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
-
         // Bottom Section - Desktop: side-by-side, Mobile/Tablet: stacked
-        if (isDesktop)
-          _buildDesktopBottomRow()
-        else
-          _buildStackedBottom(isMobile),
+        if (isDesktop) _buildDesktopBottomRow(l10n) else _buildStackedBottom(isMobile, l10n),
 
         SizedBox(height: isMobile ? 12 : 16), // Reduced from 16/24
       ],
@@ -265,7 +217,7 @@ class _AnalyticsContent extends StatelessWidget {
   }
 
   /// Desktop layout - Charts side-by-side (Revenue + Bookings)
-  Widget _buildDesktopChartsRow() {
+  Widget _buildDesktopChartsRow(AppLocalizations l10n) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -274,7 +226,7 @@ class _AnalyticsContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionTitle(title: 'Revenue Over Time'),
+              _SectionTitle(title: l10n.ownerAnalyticsRevenueOverTime),
               const SizedBox(height: 12),
               _RevenueChart(data: analytics.revenueHistory),
             ],
@@ -286,7 +238,7 @@ class _AnalyticsContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionTitle(title: 'Bookings Over Time'),
+              _SectionTitle(title: l10n.ownerAnalyticsBookingsOverTime),
               const SizedBox(height: 12),
               _BookingsChart(data: analytics.bookingHistory),
             ],
@@ -297,18 +249,18 @@ class _AnalyticsContent extends StatelessWidget {
   }
 
   /// Mobile/Tablet layout - Charts stacked vertically
-  Widget _buildStackedCharts(bool isMobile) {
+  Widget _buildStackedCharts(bool isMobile, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Revenue Chart
-        const _SectionTitle(title: 'Revenue Over Time'),
+        _SectionTitle(title: l10n.ownerAnalyticsRevenueOverTime),
         const SizedBox(height: 12),
         _RevenueChart(data: analytics.revenueHistory),
         SizedBox(height: isMobile ? 16 : 20),
 
         // Bookings Chart
-        const _SectionTitle(title: 'Bookings Over Time'),
+        _SectionTitle(title: l10n.ownerAnalyticsBookingsOverTime),
         const SizedBox(height: 12),
         _BookingsChart(data: analytics.bookingHistory),
       ],
@@ -316,7 +268,7 @@ class _AnalyticsContent extends StatelessWidget {
   }
 
   /// Desktop layout - Bottom section side-by-side (Top Properties + Widget Analytics)
-  Widget _buildDesktopBottomRow() {
+  Widget _buildDesktopBottomRow(AppLocalizations l10n) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -325,7 +277,7 @@ class _AnalyticsContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionTitle(title: 'Top Performing Properties'),
+              _SectionTitle(title: l10n.ownerAnalyticsTopProperties),
               const SizedBox(height: 12),
               _TopPropertiesList(properties: analytics.topPerformingProperties),
               const SizedBox(height: 20),
@@ -339,7 +291,7 @@ class _AnalyticsContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionTitle(title: 'Widget Performance'),
+              _SectionTitle(title: l10n.ownerAnalyticsWidgetPerformance),
               const SizedBox(height: 12),
               _WidgetAnalyticsCard(
                 widgetBookings: analytics.widgetBookings,
@@ -355,18 +307,18 @@ class _AnalyticsContent extends StatelessWidget {
   }
 
   /// Mobile/Tablet layout - Bottom section stacked vertically
-  Widget _buildStackedBottom(bool isMobile) {
+  Widget _buildStackedBottom(bool isMobile, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Top Properties
-        const _SectionTitle(title: 'Top Performing Properties'),
+        _SectionTitle(title: l10n.ownerAnalyticsTopProperties),
         const SizedBox(height: 12),
         _TopPropertiesList(properties: analytics.topPerformingProperties),
         SizedBox(height: isMobile ? 16 : 20),
 
         // Widget Analytics
-        const _SectionTitle(title: 'Widget Performance'),
+        _SectionTitle(title: l10n.ownerAnalyticsWidgetPerformance),
         const SizedBox(height: 12),
         _WidgetAnalyticsCard(
           widgetBookings: analytics.widgetBookings,
@@ -384,17 +336,14 @@ class _AnalyticsContent extends StatelessWidget {
 class _SectionTitle extends StatelessWidget {
   final String title;
 
-  const _SectionTitle({required this.title});
+  const _SectionTitle({required this.title}); // ignore: prefer_const_constructors_in_immutables
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Text(
       title,
-      style: theme.textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: theme.colorScheme.onSurface,
-      ),
+      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
     );
   }
 }
@@ -403,20 +352,18 @@ class _MetricCardsGrid extends StatelessWidget {
   final AnalyticsSummary analytics;
   final DateRangeFilter dateRange;
 
-  const _MetricCardsGrid({
-    required this.analytics,
-    required this.dateRange,
-  });
+  const _MetricCardsGrid({required this.analytics, required this.dateRange});
 
-  String _getRecentPeriodLabel() {
+  String _getRecentPeriodLabel(AppLocalizations l10n) {
     final totalDays = dateRange.endDate.difference(dateRange.startDate).inDays;
-    if (totalDays <= 7) return 'Last 7 days';
-    if (totalDays <= 30) return 'Last $totalDays days';
-    return 'Last 30 days';
+    if (totalDays <= 7) return l10n.ownerAnalyticsLast7Days;
+    if (totalDays <= 30) return l10n.ownerAnalyticsLastDays(totalDays);
+    return l10n.ownerAnalyticsLast30Days;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 900;
@@ -427,39 +374,36 @@ class _MetricCardsGrid extends StatelessWidget {
       alignment: WrapAlignment.center,
       children: [
         _MetricCard(
-          title: 'Total Revenue',
+          title: l10n.ownerAnalyticsTotalRevenue,
           value: '\$${analytics.totalRevenue.toStringAsFixed(2)}',
-          subtitle:
-              '${_getRecentPeriodLabel()}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
+          subtitle: '${_getRecentPeriodLabel(l10n)}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
           icon: Icons.euro_rounded,
           gradientColor: _getPurpleShade(3), // Original purple
           isMobile: isMobile,
           isTablet: isTablet,
         ),
         _MetricCard(
-          title: 'Total Bookings',
+          title: l10n.ownerAnalyticsTotalBookings,
           value: '${analytics.totalBookings}',
-          subtitle: '${_getRecentPeriodLabel()}: ${analytics.monthlyBookings}',
+          subtitle: '${_getRecentPeriodLabel(l10n)}: ${analytics.monthlyBookings}',
           icon: Icons.calendar_today_rounded,
           gradientColor: _getPurpleShade(4), // Light purple
           isMobile: isMobile,
           isTablet: isTablet,
         ),
         _MetricCard(
-          title: 'Occupancy Rate',
+          title: l10n.ownerAnalyticsOccupancyRate,
           value: '${analytics.occupancyRate.toStringAsFixed(1)}%',
-          subtitle:
-              '${analytics.activeProperties}/${analytics.totalProperties} properties active',
+          subtitle: l10n.ownerAnalyticsPropertiesActive(analytics.activeProperties, analytics.totalProperties),
           icon: Icons.analytics_rounded,
           gradientColor: _getPurpleShade(5), // Lighter purple
           isMobile: isMobile,
           isTablet: isTablet,
         ),
         _MetricCard(
-          title: 'Avg. Nightly Rate',
+          title: l10n.ownerAnalyticsAvgNightlyRate,
           value: '\$${analytics.averageNightlyRate.toStringAsFixed(2)}',
-          subtitle:
-              'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
+          subtitle: l10n.ownerAnalyticsCancellation(analytics.cancellationRate.toStringAsFixed(1)),
           icon: Icons.trending_up_rounded,
           gradientColor: _getPurpleShade(2), // Dark purple
           isMobile: isMobile,
@@ -525,21 +469,12 @@ class _MetricCard extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 320),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(20),
-          ),
+          decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(20)),
           padding: EdgeInsets.all(isMobile ? 14 : 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -548,10 +483,7 @@ class _MetricCard extends StatelessWidget {
               // Icon container
               Container(
                 padding: EdgeInsets.all(isMobile ? 10 : 12),
-                decoration: BoxDecoration(
-                  color: iconBgColor,
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(14)),
                 child: Icon(icon, color: iconColor, size: isMobile ? 22 : 26),
               ),
               SizedBox(height: isMobile ? 8 : 12),
@@ -615,6 +547,7 @@ class _RevenueChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
@@ -632,10 +565,8 @@ class _RevenueChart extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Nema podataka za odabrani period',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                l10n.ownerAnalyticsNoData,
+                style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -648,149 +579,114 @@ class _RevenueChart extends StatelessWidget {
         // Responsive chart height - INCREASED
         final screenWidth = constraints.maxWidth;
         final chartHeight = screenWidth > 900
-            ? 400.0  // Desktop (was 300)
+            ? 400.0 // Desktop (was 300)
             : screenWidth > 600
-                ? 350.0  // Tablet (was 250)
-                : 300.0; // Mobile (was 200)
+            ? 350.0 // Tablet (was 250)
+            : 300.0; // Mobile (was 200)
 
         return SizedBox(
           height: chartHeight,
           child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: context.gradients.sectionBackground,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                  width: 1.5,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.gradients.cardBackground,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
                 ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(isMobile ? 16 : 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Section header with minimalist icon
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: EdgeInsets.all(isMobile ? 16 : 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section header with minimalist icon
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.show_chart, color: theme.colorScheme.primary, size: 18),
                           ),
-                          child: Icon(
-                            Icons.show_chart,
-                            color: theme.colorScheme.primary,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Prihod Kroz Vrijeme',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.ownerAnalyticsRevenueTitle,
+                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                 ),
-                              ),
-                              Text(
-                                'Mjesečni trend prihoda',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                                Text(
+                                  l10n.ownerAnalyticsRevenueSubtitle,
+                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Chart
-                    Expanded(
-                      child: Chart(
-                data: data.asMap().entries.map((e) => {
-                  'index': e.key,
-                  'label': e.value.label,
-                  'amount': e.value.amount,
-                }).toList(),
-                variables: {
-                  'index': Variable(
-                    accessor: (Map map) => map['index'] as num,
-                  ),
-                  'amount': Variable(
-                    accessor: (Map map) => map['amount'] as num,
-                    scale: LinearScale(min: 0),
-                  ),
-                },
-                coord: RectCoord(
-                  horizontalRangeUpdater: Defaults.horizontalRangeEvent,
-                ),
-                marks: [
-                  AreaMark(
-                    shape: ShapeEncode(
-                      value: BasicAreaShape(smooth: true),
-                    ),
-                    color: ColorEncode(
-                      value: theme.colorScheme.primary.withValues(alpha: 0.15),
-                    ),
-                    entrance: {MarkEntrance.y},
-                  ),
-                  LineMark(
-                    shape: ShapeEncode(
-                      value: BasicLineShape(smooth: true),
-                    ),
-                    size: SizeEncode(value: 3),
-                    color: ColorEncode(
-                      value: theme.colorScheme.primary,
-                    ),
-                    entrance: {MarkEntrance.y},
-                  ),
-                  PointMark(
-                    shape: ShapeEncode(value: CircleShape()),
-                    size: SizeEncode(value: 8),
-                    color: ColorEncode(
-                      value: theme.colorScheme.primary,
-                    ),
-                    entrance: {MarkEntrance.opacity},
-                  ),
-                ],
-                axes: [
-                  Defaults.horizontalAxis,
-                  Defaults.verticalAxis,
-                ],
-                selections: {
-                  'touchMove': PointSelection(
-                    on: {GestureType.hover},
-                    devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-                  )
-                },
-                tooltip: TooltipGuide(
-                  backgroundColor: theme.colorScheme.surface,
-                  elevation: 8,
-                  textStyle: AppTypography.bodySmall.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
-                        ),
-                        crosshair: CrosshairGuide(
-                          followPointer: [false, true],
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Chart
+                      Expanded(
+                        child: Chart(
+                          data: data
+                              .asMap()
+                              .entries
+                              .map((e) => {'index': e.key, 'label': e.value.label, 'amount': e.value.amount})
+                              .toList(),
+                          variables: {
+                            'index': Variable(accessor: (Map map) => map['index'] as num),
+                            'amount': Variable(accessor: (Map map) => map['amount'] as num, scale: LinearScale(min: 0)),
+                          },
+                          coord: RectCoord(horizontalRangeUpdater: Defaults.horizontalRangeEvent),
+                          marks: [
+                            AreaMark(
+                              shape: ShapeEncode(value: BasicAreaShape(smooth: true)),
+                              color: ColorEncode(value: theme.colorScheme.primary.withValues(alpha: 0.15)),
+                              entrance: {MarkEntrance.y},
+                            ),
+                            LineMark(
+                              shape: ShapeEncode(value: BasicLineShape(smooth: true)),
+                              size: SizeEncode(value: 3),
+                              color: ColorEncode(value: theme.colorScheme.primary),
+                              entrance: {MarkEntrance.y},
+                            ),
+                            PointMark(
+                              shape: ShapeEncode(value: CircleShape()),
+                              size: SizeEncode(value: 8),
+                              color: ColorEncode(value: theme.colorScheme.primary),
+                              entrance: {MarkEntrance.opacity},
+                            ),
+                          ],
+                          axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+                          selections: {
+                            'touchMove': PointSelection(
+                              on: {GestureType.hover},
+                              devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                            ),
+                          },
+                          tooltip: TooltipGuide(
+                            backgroundColor: theme.colorScheme.surface,
+                            elevation: 8,
+                            textStyle: AppTypography.bodySmall.copyWith(color: theme.colorScheme.onSurface),
+                          ),
+                          crosshair: CrosshairGuide(followPointer: [false, true]),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         );
       },
     );
@@ -804,6 +700,7 @@ class _BookingsChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
@@ -821,10 +718,8 @@ class _BookingsChart extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Nema podataka za odabrani period',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                l10n.ownerAnalyticsNoData,
+                style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -837,136 +732,108 @@ class _BookingsChart extends StatelessWidget {
         // Responsive chart height - INCREASED
         final screenWidth = constraints.maxWidth;
         final chartHeight = screenWidth > 900
-            ? 400.0  // Desktop (was 300)
+            ? 400.0 // Desktop (was 300)
             : screenWidth > 600
-                ? 350.0  // Tablet (was 250)
-                : 300.0; // Mobile (was 200)
+            ? 350.0 // Tablet (was 250)
+            : 300.0; // Mobile (was 200)
 
         return SizedBox(
           height: chartHeight,
           child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: context.gradients.sectionBackground,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                  width: 1.5,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.gradients.cardBackground,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
                 ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(isMobile ? 16 : 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Section header with minimalist icon
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: EdgeInsets.all(isMobile ? 16 : 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section header with minimalist icon
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.event, color: theme.colorScheme.primary, size: 18),
                           ),
-                          child: Icon(
-                            Icons.event,
-                            color: theme.colorScheme.primary,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Rezervacije Kroz Vrijeme',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.ownerAnalyticsBookingsTitle,
+                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                 ),
-                              ),
-                              Text(
-                                'Mjesečna aktivnost bookinga',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                                Text(
+                                  l10n.ownerAnalyticsBookingsSubtitle,
+                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Chart
-                    Expanded(
-                      child: Chart(
-                data: data.asMap().entries.map((e) => {
-                  'index': e.key,
-                  'label': e.value.label,
-                  'count': e.value.count,
-                }).toList(),
-                variables: {
-                  'index': Variable(
-                    accessor: (Map map) => map['index'] as num,
-                  ),
-                  'count': Variable(
-                    accessor: (Map map) => map['count'] as num,
-                    scale: LinearScale(min: 0),
-                  ),
-                },
-                coord: RectCoord(
-                  horizontalRangeUpdater: Defaults.horizontalRangeEvent,
-                ),
-                marks: [
-                  IntervalMark(
-                    shape: ShapeEncode(
-                      value: RectShape(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    elevation: ElevationEncode(value: 2),
-                    gradient: GradientEncode(
-                      value: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withValues(alpha: 0.7),
                         ],
                       ),
-                    ),
-                    entrance: {MarkEntrance.y},
-                  ),
-                ],
-                axes: [
-                  Defaults.horizontalAxis,
-                  Defaults.verticalAxis,
-                ],
-                selections: {
-                  'touchMove': PointSelection(
-                    on: {GestureType.hover},
-                    devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-                  )
-                },
-                tooltip: TooltipGuide(
-                  backgroundColor: theme.colorScheme.surface,
-                  elevation: 8,
-                          textStyle: AppTypography.bodySmall.copyWith(
-                            color: theme.colorScheme.onSurface,
+                      const SizedBox(height: 16),
+                      // Chart
+                      Expanded(
+                        child: Chart(
+                          data: data
+                              .asMap()
+                              .entries
+                              .map((e) => {'index': e.key, 'label': e.value.label, 'count': e.value.count})
+                              .toList(),
+                          variables: {
+                            'index': Variable(accessor: (Map map) => map['index'] as num),
+                            'count': Variable(accessor: (Map map) => map['count'] as num, scale: LinearScale(min: 0)),
+                          },
+                          coord: RectCoord(horizontalRangeUpdater: Defaults.horizontalRangeEvent),
+                          marks: [
+                            IntervalMark(
+                              shape: ShapeEncode(value: RectShape(borderRadius: BorderRadius.circular(8))),
+                              elevation: ElevationEncode(value: 2),
+                              gradient: GradientEncode(
+                                value: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
+                                ),
+                              ),
+                              entrance: {MarkEntrance.y},
+                            ),
+                          ],
+                          axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+                          selections: {
+                            'touchMove': PointSelection(
+                              on: {GestureType.hover},
+                              devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                            ),
+                          },
+                          tooltip: TooltipGuide(
+                            backgroundColor: theme.colorScheme.surface,
+                            elevation: 8,
+                            textStyle: AppTypography.bodySmall.copyWith(color: theme.colorScheme.onSurface),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         );
       },
     );
@@ -980,6 +847,7 @@ class _TopPropertiesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
@@ -994,12 +862,9 @@ class _TopPropertiesList extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           child: Container(
             decoration: BoxDecoration(
-              gradient: context.gradients.sectionBackground,
+              color: context.gradients.cardBackground,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                width: 1.5,
-              ),
+              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
             ),
             child: Padding(
               padding: const EdgeInsets.all(32),
@@ -1013,10 +878,8 @@ class _TopPropertiesList extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Nema podataka za odabrani period',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      l10n.ownerAnalyticsNoData,
+                      style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -1036,12 +899,9 @@ class _TopPropertiesList extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.4),
-              width: 1.5,
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -1057,29 +917,21 @@ class _TopPropertiesList extends StatelessWidget {
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
-                        Icons.home_work,
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
+                      child: Icon(Icons.home_work, color: theme.colorScheme.primary, size: 18),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Top Performing Properties',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        l10n.ownerAnalyticsTopProperties,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Properties ranked by revenue performance',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.ownerAnalyticsPropertiesSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1087,72 +939,70 @@ class _TopPropertiesList extends StatelessWidget {
 
                 // Properties list
                 ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: properties.length > 3 ? 3 : properties.length, // Limit to Top 3
-        separatorBuilder: (context, index) => const Divider(),
-        itemBuilder: (context, index) {
-          final property = properties[index];
-          return ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), // Compact padding
-            leading: CircleAvatar(
-              radius: 16, // Smaller circle (default 20)
-              backgroundColor: AppColors.authPrimary,
-              child: Text(
-                '${index + 1}',
-                style: AppTypography.bodySmall.copyWith( // Smaller font
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            title: Text(
-              property.propertyName,
-              style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            subtitle: Text(
-              '${property.bookings} bookings • ${property.occupancyRate.toStringAsFixed(1)}% occupancy',
-              style: AppTypography.bodySmall.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            trailing: SizedBox(
-              width: 100, // Compact width (was 120)
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '\$${property.revenue.toStringAsFixed(2)}',
-                    style: AppTypography.bodySmall.copyWith( // Smaller font (was bodyMedium)
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary, // Purple revenue
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star, size: 14, color: AppColors.star),
-                      const SizedBox(width: 2),
-                      Text(
-                        property.rating.toStringAsFixed(1),
-                        style: AppTypography.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: properties.length > 3 ? 3 : properties.length, // Limit to Top 3
+                  separatorBuilder: (context, index) => const Divider(),
+                  itemBuilder: (context, index) {
+                    final property = properties[index];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), // Compact padding
+                      leading: CircleAvatar(
+                        radius: 16, // Smaller circle (default 20)
+                        backgroundColor: AppColors.authPrimary,
+                        child: Text(
+                          '${index + 1}',
+                          style: AppTypography.bodySmall.copyWith(
+                            // Smaller font
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+                      title: Text(
+                        property.propertyName,
+                        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '${property.bookings} ${l10n.ownerAnalyticsBookings} • ${property.occupancyRate.toStringAsFixed(1)}% ${l10n.ownerAnalyticsOccupancy}',
+                        style: AppTypography.bodySmall.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      trailing: SizedBox(
+                        width: 100, // Compact width (was 120)
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '\$${property.revenue.toStringAsFixed(2)}',
+                              style: AppTypography.bodySmall.copyWith(
+                                // Smaller font (was bodyMedium)
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary, // Purple revenue
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star, size: 14, color: AppColors.star),
+                                const SizedBox(width: 2),
+                                Text(
+                                  property.rating.toStringAsFixed(1),
+                                  style: AppTypography.bodySmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -1179,13 +1029,10 @@ class _WidgetAnalyticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final widgetBookingsPercent = totalBookings > 0
-        ? (widgetBookings / totalBookings * 100).toStringAsFixed(1)
-        : '0.0';
-    final widgetRevenuePercent = totalRevenue > 0
-        ? (widgetRevenue / totalRevenue * 100).toStringAsFixed(1)
-        : '0.0';
+    final widgetBookingsPercent = totalBookings > 0 ? (widgetBookings / totalBookings * 100).toStringAsFixed(1) : '0.0';
+    final widgetRevenuePercent = totalRevenue > 0 ? (widgetRevenue / totalRevenue * 100).toStringAsFixed(1) : '0.0';
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
@@ -1199,12 +1046,9 @@ class _WidgetAnalyticsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.4),
-              width: 1.5,
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -1220,29 +1064,21 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
-                        Icons.widgets,
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
+                      child: Icon(Icons.widgets, color: theme.colorScheme.primary, size: 18),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Widget Performance',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        l10n.ownerAnalyticsWidgetPerformance,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Track bookings and revenue from embedded widget',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.ownerAnalyticsWidgetSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1257,10 +1093,8 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Widget Bookings',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+                            l10n.ownerAnalyticsWidgetBookings,
+                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                           ),
                           const SizedBox(height: 4),
                           Wrap(
@@ -1275,10 +1109,8 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '($widgetBookingsPercent% of total)',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                                l10n.ownerAnalyticsOfTotal(widgetBookingsPercent),
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               ),
                             ],
                           ),
@@ -1291,9 +1123,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                 // Progress bar for bookings
                 LinearProgressIndicator(
                   value: totalBookings > 0 ? widgetBookings / totalBookings : 0,
-                  backgroundColor: theme.brightness == Brightness.dark
-                      ? AppColors.borderDark
-                      : AppColors.borderLight,
+                  backgroundColor: theme.brightness == Brightness.dark ? AppColors.borderDark : AppColors.borderLight,
                   valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                   minHeight: 8,
                   borderRadius: BorderRadius.circular(4),
@@ -1309,10 +1139,8 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Widget Revenue',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+                            l10n.ownerAnalyticsWidgetRevenue,
+                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                           ),
                           const SizedBox(height: 4),
                           Wrap(
@@ -1327,10 +1155,8 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '($widgetRevenuePercent% of total)',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                                l10n.ownerAnalyticsOfTotal(widgetRevenuePercent),
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               ),
                             ],
                           ),
@@ -1343,9 +1169,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                 // Progress bar for revenue
                 LinearProgressIndicator(
                   value: totalRevenue > 0 ? widgetRevenue / totalRevenue : 0,
-                  backgroundColor: theme.brightness == Brightness.dark
-                      ? AppColors.borderDark
-                      : AppColors.borderLight,
+                  backgroundColor: theme.brightness == Brightness.dark ? AppColors.borderDark : AppColors.borderLight,
                   valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                   minHeight: 8,
                   borderRadius: BorderRadius.circular(4),
@@ -1407,6 +1231,7 @@ class _BookingsBySourceChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
@@ -1418,17 +1243,11 @@ class _BookingsBySourceChart extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.source_outlined,
-                size: 48,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-              ),
+              Icon(Icons.source_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
               const SizedBox(height: 16),
               Text(
-                'Nema podataka o izvorima',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                l10n.ownerAnalyticsNoSourceData,
+                style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -1436,8 +1255,7 @@ class _BookingsBySourceChart extends StatelessWidget {
       );
     }
 
-    final sortedEntries = bookingsBySource.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final sortedEntries = bookingsBySource.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
     final totalCount = bookingsBySource.values.fold<int>(0, (sum, count) => sum + count);
 
@@ -1446,9 +1264,7 @@ class _BookingsBySourceChart extends StatelessWidget {
 
     // Calculate "Other" count if there are more than 5 sources
     final hasOther = sortedEntries.length > 5;
-    final otherCount = hasOther
-        ? sortedEntries.skip(5).fold<int>(0, (sum, entry) => sum + entry.value)
-        : 0;
+    final otherCount = hasOther ? sortedEntries.skip(5).fold<int>(0, (sum, entry) => sum + entry.value) : 0;
 
     return Container(
       decoration: BoxDecoration(
@@ -1459,12 +1275,9 @@ class _BookingsBySourceChart extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.4),
-              width: 1.5,
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -1480,155 +1293,136 @@ class _BookingsBySourceChart extends StatelessWidget {
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
-                        Icons.source,
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
+                      child: Icon(Icons.source, color: theme.colorScheme.primary, size: 18),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Bookings by Source',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        l10n.ownerAnalyticsBookingsBySource,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Distribution of bookings across different sources',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.ownerAnalyticsSourceSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 20),
-            ...displayEntries.map((sourceEntry) {
-              final source = sourceEntry.key;
-              final count = sourceEntry.value;
-              final percentage = totalCount > 0
-                  ? (count / totalCount * 100).toStringAsFixed(1)
-                  : '0.0';
-              final color = _getSourceColor(source);
+                ...displayEntries.map((sourceEntry) {
+                  final source = sourceEntry.key;
+                  final count = sourceEntry.value;
+                  final percentage = totalCount > 0 ? (count / totalCount * 100).toStringAsFixed(1) : '0.0';
+                  final color = _getSourceColor(source);
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12), // Compact spacing (was 16)
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12), // Compact spacing (was 16)
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  shape: BoxShape.circle,
-                                ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      _getSourceDisplayName(source),
+                                      style: AppTypography.bodyMedium,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  _getSourceDisplayName(source),
-                                  style: AppTypography.bodyMedium,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                            Text(
+                              '$count ($percentage%)',
+                              style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                          ],
                         ),
-                        Text(
-                          '$count ($percentage%)',
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: totalCount > 0 ? count / totalCount : 0,
+                          backgroundColor: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                          minHeight: 8,
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    LinearProgressIndicator(
-                      value: totalCount > 0 ? count / totalCount : 0,
-                      backgroundColor: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.borderDark
-                          : AppColors.borderLight,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                      minHeight: 8,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ],
-                ),
-              );
-            }),
+                  );
+                }),
 
-            // Add "Other" category if there are more than 5 sources
-            if (hasOther) ...[
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Add "Other" category if there are more than 5 sources
+                if (hasOther) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  shape: BoxShape.circle,
-                                ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      l10n.ownerAnalyticsOther(sortedEntries.length - 5),
+                                      style: AppTypography.bodyMedium,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  'Other (${sortedEntries.length - 5} sources)',
-                                  style: AppTypography.bodyMedium,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                            Text(
+                              '$otherCount (${totalCount > 0 ? (otherCount / totalCount * 100).toStringAsFixed(1) : "0.0"}%)',
+                              style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                          ],
                         ),
-                        Text(
-                          '$otherCount (${totalCount > 0 ? (otherCount / totalCount * 100).toStringAsFixed(1) : "0.0"}%)',
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: totalCount > 0 ? otherCount / totalCount : 0,
+                          backgroundColor: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
+                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onSurfaceVariant),
+                          minHeight: 8,
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    LinearProgressIndicator(
-                      value: totalCount > 0 ? otherCount / totalCount : 0,
-                      backgroundColor: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.borderDark
-                          : AppColors.borderLight,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      minHeight: 8,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );

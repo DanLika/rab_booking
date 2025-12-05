@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -10,28 +11,21 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
-import '../../../widget/presentation/providers/widget_settings_provider.dart'
-    as widget_provider;
+import '../../../widget/presentation/providers/widget_settings_provider.dart' as widget_provider;
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/user_profile_provider.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
-  const WidgetSettingsScreen({
-    required this.propertyId,
-    required this.unitId,
-    this.showAppBar = true,
-    super.key,
-  });
+  const WidgetSettingsScreen({required this.propertyId, required this.unitId, this.showAppBar = true, super.key});
 
   final String propertyId;
   final String unitId;
   final bool showAppBar;
 
   @override
-  ConsumerState<WidgetSettingsScreen> createState() =>
-      _WidgetSettingsScreenState();
+  ConsumerState<WidgetSettingsScreen> createState() => _WidgetSettingsScreenState();
 }
 
 class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
@@ -92,10 +86,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
     try {
       final repository = ref.read(widgetSettingsRepositoryProvider);
-      final settings = await repository.getWidgetSettings(
-        propertyId: widget.propertyId,
-        unitId: widget.unitId,
-      );
+      final settings = await repository.getWidgetSettings(propertyId: widget.propertyId, unitId: widget.unitId);
 
       if (settings != null) {
         _existingSettings = settings;
@@ -110,11 +101,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška prilikom učitavanja postavki',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.widgetSettingsLoadError);
       }
     } finally {
       if (mounted) {
@@ -136,13 +124,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
       // Payment Methods - Bank Transfer (bank details now from profile)
       _bankTransferEnabled = settings.bankTransferConfig?.enabled ?? false;
-      _bankPaymentDeadlineDays =
-          settings.bankTransferConfig?.paymentDeadlineDays ?? 3;
+      _bankPaymentDeadlineDays = settings.bankTransferConfig?.paymentDeadlineDays ?? 3;
       _bankEnableQrCode = settings.bankTransferConfig?.enableQrCode ?? true;
-      _bankCustomNotesController.text =
-          settings.bankTransferConfig?.customNotes ?? '';
-      _bankUseCustomNotes =
-          settings.bankTransferConfig?.useCustomNotes ?? false;
+      _bankCustomNotesController.text = settings.bankTransferConfig?.customNotes ?? '';
+      _bankUseCustomNotes = settings.bankTransferConfig?.useCustomNotes ?? false;
 
       // Pay on Arrival
       _payOnArrivalEnabled = settings.allowPayOnArrival;
@@ -160,26 +145,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _emailController.text = settings.contactOptions.emailAddress ?? '';
 
       // External Calendar Sync Options
-      _externalCalendarEnabled =
-          settings.externalCalendarConfig?.enabled ?? false;
-      _syncBookingCom =
-          settings.externalCalendarConfig?.syncBookingCom ?? false;
-      _bookingComAccountIdController.text =
-          settings.externalCalendarConfig?.bookingComAccountId ?? '';
-      _bookingComAccessTokenController.text =
-          settings.externalCalendarConfig?.bookingComAccessToken ?? '';
+      _externalCalendarEnabled = settings.externalCalendarConfig?.enabled ?? false;
+      _syncBookingCom = settings.externalCalendarConfig?.syncBookingCom ?? false;
+      _bookingComAccountIdController.text = settings.externalCalendarConfig?.bookingComAccountId ?? '';
+      _bookingComAccessTokenController.text = settings.externalCalendarConfig?.bookingComAccessToken ?? '';
       _syncAirbnb = settings.externalCalendarConfig?.syncAirbnb ?? false;
-      _airbnbAccountIdController.text =
-          settings.externalCalendarConfig?.airbnbAccountId ?? '';
-      _airbnbAccessTokenController.text =
-          settings.externalCalendarConfig?.airbnbAccessToken ?? '';
-      _syncIntervalMinutes =
-          settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
+      _airbnbAccountIdController.text = settings.externalCalendarConfig?.airbnbAccountId ?? '';
+      _airbnbAccessTokenController.text = settings.externalCalendarConfig?.airbnbAccessToken ?? '';
+      _syncIntervalMinutes = settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
     });
   }
 
   /// Handle bank transfer toggle with lazy validation
   Future<void> _handleBankTransferToggle(bool val) async {
+    final l10n = AppLocalizations.of(context);
     if (val) {
       // Check if bank details exist in profile
       if (_companyDetails == null || !_companyDetails!.hasBankDetails) {
@@ -187,20 +166,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         final goToProfile = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Bankovni podaci nisu uneseni'),
-            content: const Text(
-              'Da biste omogućili bankovnu uplatu, morate prvo unijeti '
-              'bankovne podatke u svom profilu (naziv banke, IBAN, vlasnik računa).',
-            ),
+            title: Text(l10n.widgetSettingsBankNotEntered),
+            content: Text(l10n.widgetSettingsBankNotEnteredDesc),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Odustani'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Dodaj Bankovne Podatke'),
-              ),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+              ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.widgetSettingsAddBankDetails)),
             ],
           ),
         );
@@ -238,54 +208,55 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         decoration: BoxDecoration(
           color: theme.colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.error.withAlpha((0.5 * 255).toInt()),
-          ),
+          border: Border.all(color: theme.colorScheme.error.withAlpha((0.5 * 255).toInt())),
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: theme.colorScheme.error,
-              size: 24,
-            ),
+            Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error, size: 24),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bankovni podaci nisu uneseni',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Unesite bankovne podatke u Integracije → Plaćanja.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-                    ),
-                  ),
-                ],
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.widgetSettingsBankNotEntered,
+                        style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.error),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.widgetSettingsBankEnterDetails,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
-            TextButton(
-              onPressed: () async {
-                await context.push(OwnerRoutes.bankAccount);
-                // Reload on return
-                final userId = FirebaseAuth.instance.currentUser?.uid;
-                if (userId != null) {
-                  final profileRepository = ref.read(userProfileRepositoryProvider);
-                  final updatedCompany = await profileRepository.getCompanyDetails(userId);
-                  if (mounted) {
-                    setState(() => _companyDetails = updatedCompany);
-                  }
-                }
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return TextButton(
+                  onPressed: () async {
+                    await context.push(OwnerRoutes.bankAccount);
+                    // Reload on return
+                    final userId = FirebaseAuth.instance.currentUser?.uid;
+                    if (userId != null) {
+                      final profileRepository = ref.read(userProfileRepositoryProvider);
+                      final updatedCompany = await profileRepository.getCompanyDetails(userId);
+                      if (mounted) {
+                        setState(() => _companyDetails = updatedCompany);
+                      }
+                    }
+                  },
+                  child: Text(l10n.edit),
+                );
               },
-              child: const Text('Uredi'),
             ),
           ],
         ),
@@ -298,52 +269,62 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
-        ),
+        border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
+              Icon(Icons.info_outline, color: theme.colorScheme.primary, size: 20),
               const SizedBox(width: 8),
-              Text(
-                'Bankovni podaci iz profila:',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
-                ),
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Text(
+                    l10n.widgetSettingsBankFromProfile,
+                    style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+                  );
+                },
               ),
               const Spacer(),
-              TextButton.icon(
-                onPressed: () async {
-                  await context.push(OwnerRoutes.bankAccount);
-                  // Reload on return
-                  final userId = FirebaseAuth.instance.currentUser?.uid;
-                  if (userId != null) {
-                    final profileRepository = ref.read(userProfileRepositoryProvider);
-                    final updatedCompany = await profileRepository.getCompanyDetails(userId);
-                    if (mounted) {
-                      setState(() => _companyDetails = updatedCompany);
-                    }
-                  }
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return TextButton.icon(
+                    onPressed: () async {
+                      await context.push(OwnerRoutes.bankAccount);
+                      // Reload on return
+                      final userId = FirebaseAuth.instance.currentUser?.uid;
+                      if (userId != null) {
+                        final profileRepository = ref.read(userProfileRepositoryProvider);
+                        final updatedCompany = await profileRepository.getCompanyDetails(userId);
+                        if (mounted) {
+                          setState(() => _companyDetails = updatedCompany);
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: Text(l10n.edit),
+                  );
                 },
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('Uredi'),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          _buildBankDetailRow('Banka', company.bankName),
-          _buildBankDetailRow('IBAN', company.bankAccountIban),
-          _buildBankDetailRow('SWIFT/BIC', company.swift),
-          _buildBankDetailRow('Vlasnik računa', company.accountHolder),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return Column(
+                children: [
+                  _buildBankDetailRow(l10n.widgetSettingsBank, company.bankName),
+                  _buildBankDetailRow('IBAN', company.bankAccountIban),
+                  _buildBankDetailRow('SWIFT/BIC', company.swift),
+                  _buildBankDetailRow(l10n.widgetSettingsAccountHolder, company.accountHolder),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );
@@ -360,20 +341,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             width: 120,
             child: Text(
               '$label:',
-              style: TextStyle(
-                fontSize: 13,
-                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
+              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
             ),
           ),
           Expanded(
             child: Text(
               value.isNotEmpty ? value : '-',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurface,
-              ),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface),
             ),
           ),
         ],
@@ -384,18 +358,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final l10n = AppLocalizations.of(context);
+
     // Validation: At least one payment method must be enabled in bookingInstant mode
     // (No validation needed for bookingPending - payment methods are hidden)
     if (_selectedMode == WidgetMode.bookingInstant) {
-      final hasPaymentMethod =
-          _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
+      final hasPaymentMethod = _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
       if (!hasPaymentMethod) {
         if (mounted) {
           ErrorDisplayUtils.showErrorSnackBar(
             context,
             Exception('Validation failed'),
-            userMessage:
-                'Mora biti uključen bar jedan način plaćanja u Instant Booking modu',
+            userMessage: l10n.widgetSettingsPaymentValidation,
           );
         }
         return;
@@ -420,15 +394,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         stripeConfig: _stripeEnabled
             ? StripePaymentConfig(
                 enabled: true,
-                depositPercentage:
-                    _globalDepositPercentage, // Use global deposit
+                depositPercentage: _globalDepositPercentage, // Use global deposit
               )
             : null,
         bankTransferConfig: _bankTransferEnabled
             ? BankTransferConfig(
                 enabled: true,
-                depositPercentage:
-                    _globalDepositPercentage, // Use global deposit
+                depositPercentage: _globalDepositPercentage, // Use global deposit
                 // Owner ID for fetching bank details from CompanyDetails
                 ownerId: FirebaseAuth.instance.currentUser?.uid,
                 // Bank details copied from CompanyDetails for backward compatibility
@@ -439,33 +411,24 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 accountHolder: _companyDetails?.accountHolder,
                 paymentDeadlineDays: _bankPaymentDeadlineDays,
                 enableQrCode: _bankEnableQrCode,
-                customNotes: _bankCustomNotesController.text.isEmpty
-                    ? null
-                    : _bankCustomNotesController.text,
+                customNotes: _bankCustomNotesController.text.isEmpty ? null : _bankCustomNotesController.text,
                 useCustomNotes: _bankUseCustomNotes,
               )
             : null,
         allowPayOnArrival: _payOnArrivalEnabled,
         // For bookingPending mode, approval is ALWAYS required (hardcoded true)
         // For bookingInstant mode, use the user's selection
-        requireOwnerApproval: _selectedMode == WidgetMode.bookingPending
-            ? true
-            : _requireApproval,
+        requireOwnerApproval: _selectedMode == WidgetMode.bookingPending ? true : _requireApproval,
         allowGuestCancellation: _allowCancellation,
         cancellationDeadlineHours: _cancellationHours,
         minNights: _minNights,
         contactOptions: ContactOptions(
           showPhone: _showPhone,
-          phoneNumber: _phoneController.text.isEmpty
-              ? null
-              : _phoneController.text,
+          phoneNumber: _phoneController.text.isEmpty ? null : _phoneController.text,
           showEmail: _showEmail,
-          emailAddress: _emailController.text.isEmpty
-              ? null
-              : _emailController.text,
+          emailAddress: _emailController.text.isEmpty ? null : _emailController.text,
         ),
-        emailConfig:
-            _existingSettings?.emailConfig ?? const EmailNotificationConfig(),
+        emailConfig: _existingSettings?.emailConfig ?? const EmailNotificationConfig(),
         externalCalendarConfig: _externalCalendarEnabled
             ? ExternalCalendarConfig(
                 enabled: true,
@@ -473,23 +436,16 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 bookingComAccountId: _bookingComAccountIdController.text.isEmpty
                     ? null
                     : _bookingComAccountIdController.text,
-                bookingComAccessToken:
-                    _bookingComAccessTokenController.text.isEmpty
+                bookingComAccessToken: _bookingComAccessTokenController.text.isEmpty
                     ? null
                     : _bookingComAccessTokenController.text,
                 syncAirbnb: _syncAirbnb,
-                airbnbAccountId: _airbnbAccountIdController.text.isEmpty
-                    ? null
-                    : _airbnbAccountIdController.text,
-                airbnbAccessToken: _airbnbAccessTokenController.text.isEmpty
-                    ? null
-                    : _airbnbAccessTokenController.text,
+                airbnbAccountId: _airbnbAccountIdController.text.isEmpty ? null : _airbnbAccountIdController.text,
+                airbnbAccessToken: _airbnbAccessTokenController.text.isEmpty ? null : _airbnbAccessTokenController.text,
                 syncIntervalMinutes: _syncIntervalMinutes,
               )
             : null,
-        taxLegalConfig:
-            _existingSettings?.taxLegalConfig ??
-            const TaxLegalConfig(enabled: false),
+        taxLegalConfig: _existingSettings?.taxLegalConfig ?? const TaxLegalConfig(enabled: false),
         themeOptions: _existingSettings?.themeOptions,
         createdAt: _existingSettings?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
@@ -501,10 +457,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       ref.invalidate(widget_provider.widgetSettingsStreamProvider);
 
       if (mounted) {
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          'Postavke uspješno sačuvane!',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.widgetSettingsSaveSuccess);
         // Only navigate back when used as standalone screen (with AppBar)
         // When embedded in tabs (showAppBar: false), stay on current tab
         if (widget.showAppBar) {
@@ -519,11 +473,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška prilikom čuvanja postavki',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.widgetSettingsSaveError);
       }
     } finally {
       if (mounted) {
@@ -547,97 +498,83 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final contentPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
 
     final bodyContent = _isLoading
         ? const Center(child: CircularProgressIndicator())
         : Form(
-              key: _formKey,
-              child: ListView(
-                padding: EdgeInsets.all(contentPadding),
-                children: [
-                  _buildWidgetModeSection(),
+            key: _formKey,
+            child: ListView(
+              padding: EdgeInsets.all(contentPadding),
+              children: [
+                _buildWidgetModeSection(),
 
+                const SizedBox(height: 24),
+
+                // Payment Methods - ONLY for bookingInstant mode
+                if (_selectedMode == WidgetMode.bookingInstant) ...[
+                  _buildPaymentMethodsSection(),
                   const SizedBox(height: 24),
 
-                  // Payment Methods - ONLY for bookingInstant mode
-                  if (_selectedMode == WidgetMode.bookingInstant) ...[
-                    _buildPaymentMethodsSection(),
-                    const SizedBox(height: 24),
+                  _buildBookingBehaviorSection(),
+                  const SizedBox(height: 24),
+                ],
 
-                    _buildBookingBehaviorSection(),
-                    const SizedBox(height: 24),
-                  ],
+                // Info card - ONLY for bookingPending mode
+                if (_selectedMode == WidgetMode.bookingPending) ...[
+                  _buildInfoCard(
+                    icon: Icons.info_outline,
+                    title: l10n.widgetSettingsBookingWithoutPayment,
+                    message: l10n.widgetSettingsBookingWithoutPaymentDesc,
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  const SizedBox(height: 24),
 
-                  // Info card - ONLY for bookingPending mode
-                  if (_selectedMode == WidgetMode.bookingPending) ...[
-                    _buildInfoCard(
-                      icon: Icons.info_outline,
-                      title: 'Rezervacija bez plaćanja',
-                      message:
-                          'U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. '
-                          'Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.',
-                      color: Theme.of(context).colorScheme.tertiary,
-                    ),
-                    const SizedBox(height: 24),
+                  _buildBookingBehaviorSection(),
+                  const SizedBox(height: 24),
+                ],
 
-                    _buildBookingBehaviorSection(),
-                    const SizedBox(height: 24),
-                  ],
+                _buildContactOptionsSection(),
 
-                  _buildContactOptionsSection(),
+                const SizedBox(height: 32),
 
-                  const SizedBox(height: 32),
-
-                  // Gradient save button (uses brand gradient)
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: GradientTokens.brandPrimary,
+                // Gradient save button (uses brand gradient)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: GradientTokens.brandPrimary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isSaving ? null : _saveSettings,
                       borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _isSaving ? null : _saveSettings,
-                        borderRadius: BorderRadius.circular(10),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 15,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _isSaving
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(
-                                      Icons.check,
-                                      size: 18,
-                                      color: Colors.white,
-                                    ),
-                              const SizedBox(width: 8),
-                              Text(
-                                _isSaving ? 'Čuvanje...' : 'Sačuvaj Postavke',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Icon(Icons.check, size: 18, color: Colors.white),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isSaving ? l10n.widgetSettingsSaving : l10n.widgetSettingsSave,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            );
+                ),
+              ],
+            ),
+          );
 
     // When showAppBar is false, return only content (for embedding in tabs)
     if (!widget.showAppBar) {
@@ -646,7 +583,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
     return Scaffold(
       appBar: CommonAppBar(
-        title: 'Postavke Widgeta',
+        title: l10n.widgetSettingsTitle,
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
@@ -657,6 +594,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Widget _buildWidgetModeSection() {
     final theme = Theme.of(context);
     final sectionPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -676,12 +614,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             // TIP 1: Simple diagonal gradient (2 colors, 2 stops)
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           padding: EdgeInsets.all(sectionPadding),
           child: Column(
@@ -693,36 +628,26 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha(
-                        (0.12 * 255).toInt(),
-                      ),
+                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      Icons.widgets_outlined,
-                      color: theme.colorScheme.primary,
-                      size: 18,
-                    ),
+                    child: Icon(Icons.widgets_outlined, color: theme.colorScheme.primary, size: 18),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Mod Widgeta',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      l10n.widgetSettingsWidgetMode,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                'Odaberite kako će widget funkcionirati:',
+                l10n.widgetSettingsWidgetModeDesc,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                 ),
               ),
               const SizedBox(height: 12),
@@ -745,8 +670,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                             border: Border.all(
                               color: _selectedMode == mode
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface
-                                        .withAlpha((0.3 * 255).toInt()),
+                                  : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                               width: 2,
                             ),
                           ),
@@ -757,9 +681,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                     height: 10,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
+                                      color: Theme.of(context).colorScheme.primary,
                                     ),
                                   ),
                                 )
@@ -774,8 +696,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                 mode.description,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withAlpha((0.6 * 255).toInt()),
+                                  color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                                 ),
                               ),
                             ],
@@ -796,6 +717,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Widget _buildPaymentMethodsSection() {
     final theme = Theme.of(context);
     final sectionPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -814,284 +736,246 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           padding: EdgeInsets.all(sectionPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Header with icon and title
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha(
-                      (0.12 * 255).toInt(),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.payment,
-                    color: theme.colorScheme.primary,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Metode Plaćanja',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Info text
-            Text(
-              'Odaberite metode plaćanja dostupne gostima:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Global Deposit Percentage Slider (applies to all payment methods)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withAlpha((0.3 * 255).toInt()),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Header with icon and title
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.percent,
-                        size: 22,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Iznos Avansa: $_globalDepositPercentage%',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ovaj procenat se primjenjuje na sve metode plaćanja (Stripe, Bankovna uplata)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Icon(Icons.payment, color: theme.colorScheme.primary, size: 18),
                   ),
-                  const SizedBox(height: 8),
-                  Slider(
-                    value: _globalDepositPercentage.toDouble(),
-                    max: 100,
-                    divisions: 20,
-                    label: '$_globalDepositPercentage%',
-                    onChanged: (value) {
-                      setState(() => _globalDepositPercentage = value.round());
-                    },
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '0% (Puna uplata)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface
-                              .withAlpha((0.5 * 255).toInt()),
-                        ),
-                      ),
-                      Text(
-                        '100% (Puna uplata)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface
-                              .withAlpha((0.5 * 255).toInt()),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.widgetSettingsPaymentMethods,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              // Info text
+              Text(
+                l10n.widgetSettingsPaymentMethodsDesc,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                ),
+              ),
+              const SizedBox(height: 16),
 
-            // Stripe Payment - Collapsible (no deposit slider)
-            _buildPaymentMethodExpansionTile(
-              icon: Icons.credit_card,
-              title: 'Stripe Plaćanje',
-              subtitle: 'Plaćanje karticom',
-              enabled: _stripeEnabled,
-              onToggle: (val) => setState(() => _stripeEnabled = val),
-              child: const SizedBox.shrink(), // No additional settings needed
-            ),
-
-            const SizedBox(height: 12),
-
-            // Bank Transfer - Collapsible with lazy validation
-            _buildPaymentMethodExpansionTile(
-              icon: Icons.account_balance,
-              title: 'Bankovna Uplata',
-              subtitle: 'Uplata na račun',
-              enabled: _bankTransferEnabled,
-              onToggle: _handleBankTransferToggle,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 12),
-
-                  // Bank details from profile (read-only display)
-                  _buildBankDetailsFromProfile(),
-
-                  const SizedBox(height: 12),
-
-                  // Payment deadline dropdown
-                  DropdownButtonFormField<int>(
-                    initialValue: _bankPaymentDeadlineDays,
-                    decoration: const InputDecoration(
-                      labelText: 'Rok za uplatu (dana)',
-                      border: OutlineInputBorder(),
-                      isDense: true,
+              // Global Deposit Percentage Slider (applies to all payment methods)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.percent, size: 22, color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.widgetSettingsDepositAmount(_globalDepositPercentage),
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                        ),
+                      ],
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('1 dan')),
-                      DropdownMenuItem(value: 3, child: Text('3 dana')),
-                      DropdownMenuItem(value: 5, child: Text('5 dana')),
-                      DropdownMenuItem(value: 7, child: Text('7 dana')),
-                      DropdownMenuItem(value: 14, child: Text('14 dana')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _bankPaymentDeadlineDays = value);
-                      }
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Additional options in responsive grid
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isDesktop = constraints.maxWidth >= 600;
-
-                      final qrSwitch = _buildCompactSwitchCard(
-                        icon: Icons.qr_code,
-                        label: 'Prikaži QR kod',
-                        subtitle: 'EPC QR kod',
-                        value: _bankEnableQrCode,
-                        onChanged: (val) =>
-                            setState(() => _bankEnableQrCode = val),
-                      );
-
-                      final customNotesSwitch = _buildCompactSwitchCard(
-                        icon: Icons.edit_note,
-                        label: 'Prilagođena napomena',
-                        subtitle: 'Dodaj poruku',
-                        value: _bankUseCustomNotes,
-                        onChanged: (val) =>
-                            setState(() => _bankUseCustomNotes = val),
-                      );
-
-                      if (isDesktop) {
-                        // Desktop: 2 columns
-                        return Row(
-                          children: [
-                            Expanded(child: qrSwitch),
-                            const SizedBox(width: 12),
-                            Expanded(child: customNotesSwitch),
-                          ],
-                        );
-                      } else {
-                        // Mobile: Vertical
-                        return Column(
-                          children: [
-                            qrSwitch,
-                            const SizedBox(height: 12),
-                            customNotesSwitch,
-                          ],
-                        );
-                      }
-                    },
-                  ),
-
-                  // Custom notes text field (conditional)
-                  if (_bankUseCustomNotes) ...[
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _bankCustomNotesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Napomena (max 500 znakova)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        helperText:
-                            'Prilagođena poruka koja će se prikazati gostima',
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.widgetSettingsDepositDesc,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                       ),
-                      maxLines: 3,
-                      maxLength: 500,
+                    ),
+                    const SizedBox(height: 8),
+                    Slider(
+                      value: _globalDepositPercentage.toDouble(),
+                      max: 100,
+                      divisions: 20,
+                      label: '$_globalDepositPercentage%',
+                      onChanged: (value) {
+                        setState(() => _globalDepositPercentage = value.round());
+                      },
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '0% (${l10n.widgetSettingsFullPayment})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                          ),
+                        ),
+                        Text(
+                          '100% (${l10n.widgetSettingsFullPayment})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
+              const SizedBox(height: 16),
 
-            const SizedBox(height: 12),
+              // Stripe Payment - Collapsible (no deposit slider)
+              _buildPaymentMethodExpansionTile(
+                icon: Icons.credit_card,
+                title: l10n.widgetSettingsStripePayment,
+                subtitle: l10n.widgetSettingsCardPayment,
+                enabled: _stripeEnabled,
+                onToggle: (val) => setState(() => _stripeEnabled = val),
+                child: const SizedBox.shrink(), // No additional settings needed
+              ),
 
-            // Pay on Arrival - Simple switch card (not collapsible since no options)
-            Builder(
-              builder: (context) {
-                // Force Pay on Arrival if both Stripe and Bank Transfer are disabled
-                final isForced = !_stripeEnabled && !_bankTransferEnabled;
+              const SizedBox(height: 12),
 
-                // Auto-enable if forced
-                if (isForced && !_payOnArrivalEnabled) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    setState(() => _payOnArrivalEnabled = true);
-                  });
-                }
+              // Bank Transfer - Collapsible with lazy validation
+              _buildPaymentMethodExpansionTile(
+                icon: Icons.account_balance,
+                title: l10n.widgetSettingsBankTransfer,
+                subtitle: l10n.widgetSettingsBankPayment,
+                enabled: _bankTransferEnabled,
+                onToggle: _handleBankTransferToggle,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
 
-                return _buildCompactSwitchCard(
-                  icon: Icons.payments,
-                  label: 'Plaćanje po Dolasku',
-                  subtitle: isForced
-                      ? '⚠️ Obavezno (jer su ostale metode isključene)'
-                      : 'Gost plaća prilikom prijave',
-                  value: _payOnArrivalEnabled,
-                  onChanged: isForced
-                      ? null
-                      : (val) => setState(() => _payOnArrivalEnabled = val),
-                  isWarning: isForced,
-                );
-              },
-            ),
+                    // Bank details from profile (read-only display)
+                    _buildBankDetailsFromProfile(),
+
+                    const SizedBox(height: 12),
+
+                    // Payment deadline dropdown
+                    DropdownButtonFormField<int>(
+                      initialValue: _bankPaymentDeadlineDays,
+                      decoration: InputDecoration(
+                        labelText: l10n.widgetSettingsPaymentDeadline,
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: [
+                        DropdownMenuItem(value: 1, child: Text('1 ${l10n.widgetSettingsDay}')),
+                        DropdownMenuItem(value: 3, child: Text('3 ${l10n.widgetSettingsDays}')),
+                        DropdownMenuItem(value: 5, child: Text('5 ${l10n.widgetSettingsDays}')),
+                        DropdownMenuItem(value: 7, child: Text('7 ${l10n.widgetSettingsDays}')),
+                        DropdownMenuItem(value: 14, child: Text('14 ${l10n.widgetSettingsDays}')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _bankPaymentDeadlineDays = value);
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Additional options in responsive grid
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 600;
+
+                        final l10nInner = AppLocalizations.of(context);
+                        final qrSwitch = _buildCompactSwitchCard(
+                          icon: Icons.qr_code,
+                          label: l10nInner.widgetSettingsShowQrCode,
+                          subtitle: l10nInner.widgetSettingsEpcQrCode,
+                          value: _bankEnableQrCode,
+                          onChanged: (val) => setState(() => _bankEnableQrCode = val),
+                        );
+
+                        final customNotesSwitch = _buildCompactSwitchCard(
+                          icon: Icons.edit_note,
+                          label: l10nInner.widgetSettingsCustomNote,
+                          subtitle: l10nInner.widgetSettingsAddMessage,
+                          value: _bankUseCustomNotes,
+                          onChanged: (val) => setState(() => _bankUseCustomNotes = val),
+                        );
+
+                        if (isDesktop) {
+                          // Desktop: 2 columns
+                          return Row(
+                            children: [
+                              Expanded(child: qrSwitch),
+                              const SizedBox(width: 12),
+                              Expanded(child: customNotesSwitch),
+                            ],
+                          );
+                        } else {
+                          // Mobile: Vertical
+                          return Column(children: [qrSwitch, const SizedBox(height: 12), customNotesSwitch]);
+                        }
+                      },
+                    ),
+
+                    // Custom notes text field (conditional)
+                    if (_bankUseCustomNotes) ...[
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _bankCustomNotesController,
+                        decoration: InputDecoration(
+                          labelText: l10n.widgetSettingsNoteMaxChars,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          helperText: l10n.widgetSettingsNoteHelper,
+                        ),
+                        maxLines: 3,
+                        maxLength: 500,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Pay on Arrival - Simple switch card (not collapsible since no options)
+              Builder(
+                builder: (context) {
+                  // Force Pay on Arrival if both Stripe and Bank Transfer are disabled
+                  final isForced = !_stripeEnabled && !_bankTransferEnabled;
+
+                  // Auto-enable if forced
+                  if (isForced && !_payOnArrivalEnabled) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() => _payOnArrivalEnabled = true);
+                    });
+                  }
+
+                  final l10nInner = AppLocalizations.of(context);
+                  return _buildCompactSwitchCard(
+                    icon: Icons.payments,
+                    label: l10nInner.widgetSettingsPayOnArrival,
+                    subtitle: isForced
+                        ? l10nInner.widgetSettingsPayOnArrivalRequired
+                        : l10nInner.widgetSettingsPayOnArrivalDesc,
+                    value: _payOnArrivalEnabled,
+                    onChanged: isForced ? null : (val) => setState(() => _payOnArrivalEnabled = val),
+                    isWarning: isForced,
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -1111,19 +995,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: enabled
-            ? Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt())
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(
-                (0.3 * 255).toInt(),
-              ),
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt())
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: enabled
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(
-                  context,
-                ).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
           width: enabled ? 2 : 1,
         ),
       ),
@@ -1131,33 +1009,23 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: const EdgeInsets.only(
-            left: 16,
-            right: 16,
-            bottom: 16,
-          ),
+          childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
           leading: Icon(
             icon,
-            color: enabled
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: enabled ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           title: Text(
             title,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: enabled
-                  ? Theme.of(context).colorScheme.onSurface
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              color: enabled ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           subtitle: Text(
             subtitle,
             style: TextStyle(
               fontSize: 13,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
             ),
           ),
           trailing: Row(
@@ -1172,10 +1040,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ),
               if (enabled) ...[
                 const SizedBox(width: 8),
-                Icon(
-                  Icons.expand_more,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                Icon(Icons.expand_more, color: Theme.of(context).colorScheme.onSurfaceVariant),
               ],
             ],
           ),
@@ -1198,25 +1063,17 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: value && !isWarning
-            ? Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
             : isWarning
-            ? Theme.of(
-                context,
-              ).colorScheme.errorContainer.withAlpha((0.2 * 255).toInt())
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(
-                (0.3 * 255).toInt(),
-              ),
+            ? const Color(0xFFF3E8F5) // Cool lavender warning background
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value && !isWarning
               ? Theme.of(context).colorScheme.primary
               : isWarning
-              ? Theme.of(context).colorScheme.error
-              : Theme.of(
-                  context,
-                ).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+              ? const Color(0xFF9C7BA8) // Cool purple warning border
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
           width: value || isWarning ? 2 : 1,
         ),
       ),
@@ -1227,7 +1084,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             color: value && !isWarning
                 ? Theme.of(context).colorScheme.primary
                 : isWarning
-                ? Theme.of(context).colorScheme.error
+                ? const Color(0xFF7B5A8C) // Cool purple warning icon
                 : Theme.of(context).colorScheme.onSurfaceVariant,
             size: 20,
           ),
@@ -1244,7 +1101,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     color: value && !isWarning
                         ? Theme.of(context).colorScheme.onSurface
                         : isWarning
-                        ? Theme.of(context).colorScheme.error
+                        ? const Color(0xFF7B5A8C) // Cool purple warning text
                         : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -1254,11 +1111,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     color: isWarning
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.error.withAlpha((0.8 * 255).toInt())
-                        : Theme.of(context).colorScheme.onSurfaceVariant
-                              .withAlpha((0.7 * 255).toInt()),
+                        ? const Color(0xFF9C7BA8) // Cool purple warning subtitle
+                        : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
                   ),
                 ),
               ],
@@ -1279,6 +1133,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Widget _buildBookingBehaviorSection() {
     final theme = Theme.of(context);
     final sectionPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -1297,249 +1152,198 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           padding: EdgeInsets.all(sectionPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Header with icon and title
-            Row(
-              children: [
+              // Header with icon and title
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.settings, color: theme.colorScheme.primary, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.widgetSettingsBookingBehavior,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Responsive Grid for Switches
+              // Note: For bookingPending mode, approval is ALWAYS required (hidden toggle)
+              // Only show approval toggle for bookingInstant mode
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isDesktop = constraints.maxWidth >= 600;
+                  final isBookingPending = _selectedMode == WidgetMode.bookingPending;
+                  final l10nInner = AppLocalizations.of(context);
+
+                  // Build cancellation card (always shown)
+                  final cancellationCard = _buildBehaviorSwitchCard(
+                    icon: Icons.event_busy,
+                    label: l10nInner.widgetSettingsAllowCancellation,
+                    subtitle: l10nInner.widgetSettingsGuestsCanCancel,
+                    value: _allowCancellation,
+                    onChanged: (val) => setState(() => _allowCancellation = val),
+                  );
+
+                  // Build approval card (only for bookingInstant)
+                  final approvalCard = _buildBehaviorSwitchCard(
+                    icon: Icons.approval,
+                    label: l10nInner.widgetSettingsRequireApproval,
+                    subtitle: l10nInner.widgetSettingsManualApproval,
+                    value: _requireApproval,
+                    onChanged: (val) => setState(() => _requireApproval = val),
+                  );
+
+                  // For bookingPending: only show cancellation (approval is always true)
+                  if (isBookingPending) {
+                    return Column(
+                      children: [
+                        // Info banner explaining approval is automatic
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary.withAlpha((0.5 * 255).toInt()),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  l10nInner.widgetSettingsPendingModeInfo,
+                                  style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        cancellationCard,
+                      ],
+                    );
+                  }
+
+                  // For bookingInstant: show both cards
+                  if (isDesktop) {
+                    // Desktop: 2 columns
+                    return Row(
+                      children: [
+                        Expanded(child: approvalCard),
+                        const SizedBox(width: 12),
+                        Expanded(child: cancellationCard),
+                      ],
+                    );
+                  } else {
+                    // Mobile: Vertical
+                    return Column(children: [approvalCard, const SizedBox(height: 12), cancellationCard]);
+                  }
+                },
+              ),
+
+              // Cancellation deadline slider (conditional)
+              if (_allowCancellation) ...[
+                const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha(
-                      (0.12 * 255).toInt(),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
                   ),
-                  child: Icon(
-                    Icons.settings,
-                    color: theme.colorScheme.primary,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Ponašanje Rezervacije',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, size: 20, color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.widgetSettingsCancellationDeadline(_cancellationHours),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Slider(
+                        value: _cancellationHours.toDouble(),
+                        max: 168, // 7 days
+                        divisions: 28,
+                        label: '$_cancellationHours h',
+                        onChanged: (value) {
+                          setState(() => _cancellationHours = value.round());
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
-            // Responsive Grid for Switches
-            // Note: For bookingPending mode, approval is ALWAYS required (hidden toggle)
-            // Only show approval toggle for bookingInstant mode
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isDesktop = constraints.maxWidth >= 600;
-                final isBookingPending = _selectedMode == WidgetMode.bookingPending;
 
-                // Build cancellation card (always shown)
-                final cancellationCard = _buildBehaviorSwitchCard(
-                  icon: Icons.event_busy,
-                  label: 'Dozvolite Otkazivanje',
-                  subtitle: 'Gosti mogu otkazati',
-                  value: _allowCancellation,
-                  onChanged: (val) =>
-                      setState(() => _allowCancellation = val),
-                );
-
-                // Build approval card (only for bookingInstant)
-                final approvalCard = _buildBehaviorSwitchCard(
-                  icon: Icons.approval,
-                  label: 'Zahtijeva Odobrenje',
-                  subtitle: 'Ručno odobravanje',
-                  value: _requireApproval,
-                  onChanged: (val) =>
-                      setState(() => _requireApproval = val),
-                );
-
-                // For bookingPending: only show cancellation (approval is always true)
-                if (isBookingPending) {
-                  return Column(
-                    children: [
-                      // Info banner explaining approval is automatic
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer
-                              .withAlpha((0.3 * 255).toInt()),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary
-                                .withAlpha((0.5 * 255).toInt()),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'U "Rezervacija bez plaćanja" modu sve rezervacije uvijek zahtijevaju vaše odobrenje.',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      cancellationCard,
-                    ],
-                  );
-                }
-
-                // For bookingInstant: show both cards
-                if (isDesktop) {
-                  // Desktop: 2 columns
-                  return Row(
-                    children: [
-                      Expanded(child: approvalCard),
-                      const SizedBox(width: 12),
-                      Expanded(child: cancellationCard),
-                    ],
-                  );
-                } else {
-                  // Mobile: Vertical
-                  return Column(
-                    children: [
-                      approvalCard,
-                      const SizedBox(height: 12),
-                      cancellationCard,
-                    ],
-                  );
-                }
-              },
-            ),
-
-            // Cancellation deadline slider (conditional)
-            if (_allowCancellation) ...[
+              // Minimum nights slider (always shown)
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest
-                      .withAlpha((0.3 * 255).toInt()),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withAlpha((0.3 * 255).toInt()),
-                  ),
+                  border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.schedule,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        Icon(Icons.hotel, size: 20, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Rok za otkazivanje: $_cancellationHours sati prije prijave',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                        Text(
+                          l10n.widgetSettingsMinNights(
+                            _minNights,
+                            _minNights == 1 ? l10n.widgetSettingsNight : l10n.widgetSettingsNights,
                           ),
+                          style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Slider(
-                      value: _cancellationHours.toDouble(),
-                      max: 168, // 7 days
-                      divisions: 28,
-                      label: '$_cancellationHours h',
+                      value: _minNights.toDouble(),
+                      min: 1,
+                      max: 14,
+                      divisions: 13,
+                      label: '$_minNights ${_minNights == 1 ? l10n.widgetSettingsNight : l10n.widgetSettingsNights}',
                       onChanged: (value) {
-                        setState(() => _cancellationHours = value.round());
+                        setState(() => _minNights = value.round());
                       },
                     ),
                   ],
                 ),
               ),
             ],
-
-            // Minimum nights slider (always shown)
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest
-                    .withAlpha((0.3 * 255).toInt()),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withAlpha((0.3 * 255).toInt()),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.hotel,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Minimalni broj noćenja: $_minNights ${_minNights == 1
-                            ? 'noć'
-                            : _minNights >= 2 && _minNights <= 4
-                            ? 'noći'
-                            : 'noći'}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Slider(
-                    value: _minNights.toDouble(),
-                    min: 1,
-                    max: 14,
-                    divisions: 13,
-                    label: '$_minNights ${_minNights == 1 ? 'noć' : 'noći'}',
-                    onChanged: (value) {
-                      setState(() => _minNights = value.round());
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -1555,21 +1359,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: value
-            ? Theme.of(context)
-                .colorScheme
-                .primaryContainer
-                .withAlpha((0.3 * 255).toInt())
-            : Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
-                .withAlpha((0.3 * 255).toInt()),
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(
-                  context,
-                ).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
           width: value ? 2 : 1,
         ),
       ),
@@ -1578,9 +1374,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           // Leading icon
           Icon(
             icon,
-            color: value
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: value ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
             size: 24,
           ),
           const SizedBox(width: 12),
@@ -1604,9 +1398,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
                   ),
                 ),
               ],
@@ -1629,6 +1421,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Widget _buildContactOptionsSection() {
     final theme = Theme.of(context);
     final sectionPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -1647,12 +1440,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           padding: EdgeInsets.all(sectionPadding),
           child: Column(
@@ -1664,36 +1454,26 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha(
-                        (0.12 * 255).toInt(),
-                      ),
+                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      Icons.contact_phone,
-                      color: theme.colorScheme.primary,
-                      size: 18,
-                    ),
+                    child: Icon(Icons.contact_phone, color: theme.colorScheme.primary, size: 18),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Kontakt Informacije',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      l10n.widgetSettingsContactInfo,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                'Kontakt opcije koje će biti prikazane u widgetu:',
+                l10n.widgetSettingsContactDesc,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1703,24 +1483,25 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 builder: (context, constraints) {
                   final isDesktop = constraints.maxWidth >= 600;
 
+                  final l10nInner = AppLocalizations.of(context);
                   final phoneInput = TextFormField(
                     controller: _phoneController,
-                    decoration: const InputDecoration(
-                      labelText: 'Broj telefona',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10nInner.widgetSettingsPhoneNumber,
+                      border: const OutlineInputBorder(),
                       isDense: true,
-                      prefixIcon: Icon(Icons.phone),
+                      prefixIcon: const Icon(Icons.phone),
                     ),
                     keyboardType: TextInputType.phone,
                   );
 
                   final emailInput = TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email adresa',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10nInner.widgetSettingsEmailAddress,
+                      border: const OutlineInputBorder(),
                       isDense: true,
-                      prefixIcon: Icon(Icons.email),
+                      prefixIcon: const Icon(Icons.email),
                     ),
                     keyboardType: TextInputType.emailAddress,
                   );
@@ -1735,7 +1516,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           width: (constraints.maxWidth - 12) / 2,
                           child: _buildContactSwitchCard(
                             icon: Icons.phone,
-                            label: 'Telefon',
+                            label: l10nInner.widgetSettingsPhone,
                             value: _showPhone,
                             onChanged: (val) => setState(() => _showPhone = val),
                             child: phoneInput,
@@ -1745,7 +1526,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           width: (constraints.maxWidth - 12) / 2,
                           child: _buildContactSwitchCard(
                             icon: Icons.email,
-                            label: 'Email',
+                            label: l10nInner.widgetSettingsEmail,
                             value: _showEmail,
                             onChanged: (val) => setState(() => _showEmail = val),
                             child: emailInput,
@@ -1759,7 +1540,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       children: [
                         _buildContactSwitchCard(
                           icon: Icons.phone,
-                          label: 'Telefon',
+                          label: l10nInner.widgetSettingsPhone,
                           value: _showPhone,
                           onChanged: (val) => setState(() => _showPhone = val),
                           child: phoneInput,
@@ -1767,7 +1548,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         const SizedBox(height: 12),
                         _buildContactSwitchCard(
                           icon: Icons.email,
-                          label: 'Email',
+                          label: l10nInner.widgetSettingsEmail,
                           value: _showEmail,
                           onChanged: (val) => setState(() => _showEmail = val),
                           child: emailInput,
@@ -1796,21 +1577,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: value
-            ? Theme.of(context)
-                .colorScheme
-                .primaryContainer
-                .withAlpha((0.3 * 255).toInt())
-            : Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
-                .withAlpha((0.3 * 255).toInt()),
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(
-                  context,
-                ).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
           width: value ? 2 : 1,
         ),
       ),
@@ -1821,9 +1594,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             children: [
               Icon(
                 icon,
-                color: value
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                color: value ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -1847,10 +1618,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ),
             ],
           ),
-          if (value && child != null) ...[
-            const SizedBox(height: 12),
-            child,
-          ],
+          if (value && child != null) ...[const SizedBox(height: 12), child],
         ],
       ),
     );
@@ -1884,10 +1652,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                color.withAlpha((0.1 * 255).toInt()),
-                color.withAlpha((0.05 * 255).toInt()),
-              ],
+              colors: [color.withAlpha((0.1 * 255).toInt()), color.withAlpha((0.05 * 255).toInt())],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
@@ -1905,20 +1670,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: color,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: color),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       message,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                        color: Theme.of(context).colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                       ),
                     ),
                   ],

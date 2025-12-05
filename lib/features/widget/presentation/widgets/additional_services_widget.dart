@@ -6,18 +6,14 @@ import '../providers/theme_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
+import '../l10n/widget_translations.dart';
 
 class AdditionalServicesWidget extends ConsumerWidget {
   final String unitId;
   final int nights;
   final int guests;
 
-  const AdditionalServicesWidget({
-    super.key,
-    required this.unitId,
-    this.nights = 1,
-    this.guests = 1,
-  });
+  const AdditionalServicesWidget({super.key, required this.unitId, this.nights = 1, this.guests = 1});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,12 +47,8 @@ class AdditionalServicesWidget extends ConsumerWidget {
       decoration: BoxDecoration(
         color: colors.backgroundPrimary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
-        boxShadow: isDarkMode
-            ? MinimalistShadows.medium
-            : MinimalistShadows.light,
+        border: Border.all(color: colors.borderDefault),
+        boxShadow: isDarkMode ? MinimalistShadows.medium : MinimalistShadows.light,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,13 +56,10 @@ class AdditionalServicesWidget extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.add_circle,
-                color: colors.buttonPrimary,
-              ),
+              Icon(Icons.add_circle, color: colors.buttonPrimary),
               const SizedBox(width: SpacingTokens.xs),
               Text(
-                'Additional Services',
+                WidgetTranslations.of(context).additionalServices,
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeL,
                   fontWeight: FontWeight.bold,
@@ -83,20 +72,11 @@ class AdditionalServicesWidget extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.m),
           Column(
             children: [
-              ...services.map(
-                (service) => _buildServiceItem(
-                  context,
-                  ref,
-                  service,
-                  colors,
-                ),
-              ),
+              ...services.map((service) => _buildServiceItem(context, ref, service, colors)),
               const SizedBox(height: SpacingTokens.m),
-              Divider(
-                color: colors.borderDefault,
-              ),
+              Divider(color: colors.borderDefault),
               const SizedBox(height: SpacingTokens.xs),
-              _buildServicesTotal(ref, services, colors),
+              _buildServicesTotal(context, ref, services, colors),
             ],
           ),
         ],
@@ -119,15 +99,11 @@ class AdditionalServicesWidget extends ConsumerWidget {
       padding: const EdgeInsets.all(SpacingTokens.s),
       decoration: BoxDecoration(
         border: Border.all(
-          color: isSelected
-              ? colors.statusAvailableBorder
-              : colors.borderDefault,
+          color: isSelected ? colors.statusAvailableBorder : colors.borderDefault,
           width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
         ),
         borderRadius: BorderTokens.circularSmall,
-        color: isSelected
-            ? colors.statusAvailableBackground
-            : colors.backgroundPrimary,
+        color: isSelected ? colors.statusAvailableBackground : colors.backgroundPrimary,
       ),
       child: Row(
         children: [
@@ -136,15 +112,11 @@ class AdditionalServicesWidget extends ConsumerWidget {
             value: isSelected,
             onChanged: (value) {
               if (value == true) {
-                ref.read(selectedAdditionalServicesProvider.notifier).update((
-                  state,
-                ) {
+                ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
                   return {...state, service.id: 1};
                 });
               } else {
-                ref.read(selectedAdditionalServicesProvider.notifier).update((
-                  state,
-                ) {
+                ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
                   final newState = Map<String, int>.from(state);
                   newState.remove(service.id);
                   return newState;
@@ -168,8 +140,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                     fontFamily: 'Manrope',
                   ),
                 ),
-                if (service.description != null &&
-                    service.description!.isNotEmpty)
+                if (service.description != null && service.description!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: SpacingTokens.xxs),
                     child: Text(
@@ -199,41 +170,26 @@ class AdditionalServicesWidget extends ConsumerWidget {
           if (isSelected)
             Container(
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: colors.borderDefault,
-                ),
+                border: Border.all(color: colors.borderDefault),
                 borderRadius: BorderTokens.circularSmall,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(
-                      Icons.remove,
-                      size: 16,
-                      color: colors.textPrimary,
-                    ),
+                    icon: Icon(Icons.remove, size: 16, color: colors.textPrimary),
                     onPressed: quantity > 1
                         ? () {
-                            ref
-                                .read(
-                                  selectedAdditionalServicesProvider.notifier,
-                                )
-                                .update((state) {
-                                  return {...state, service.id: quantity - 1};
-                                });
+                            ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
+                              return {...state, service.id: quantity - 1};
+                            });
                           }
                         : null,
                     padding: const EdgeInsets.all(SpacingTokens.xxs),
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingTokens.xs,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs),
                     child: Text(
                       quantity.toString(),
                       style: TextStyle(
@@ -245,15 +201,10 @@ class AdditionalServicesWidget extends ConsumerWidget {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(
-                      Icons.add,
-                      size: 16,
-                      color: colors.textPrimary,
-                    ),
+                    icon: Icon(Icons.add, size: 16, color: colors.textPrimary),
                     onPressed: () {
                       // Check max quantity
-                      if (service.maxQuantity != null &&
-                          quantity >= service.maxQuantity!) {
+                      if (service.maxQuantity != null && quantity >= service.maxQuantity!) {
                         SnackBarHelper.showWarning(
                           context: context,
                           message: 'Maximum quantity: ${service.maxQuantity}',
@@ -262,17 +213,12 @@ class AdditionalServicesWidget extends ConsumerWidget {
                         return;
                       }
 
-                      ref
-                          .read(selectedAdditionalServicesProvider.notifier)
-                          .update((state) {
-                            return {...state, service.id: quantity + 1};
-                          });
+                      ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
+                        return {...state, service.id: quantity + 1};
+                      });
                     },
                     padding: const EdgeInsets.all(SpacingTokens.xxs),
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                   ),
                 ],
               ),
@@ -283,19 +229,13 @@ class AdditionalServicesWidget extends ConsumerWidget {
   }
 
   Widget _buildServicesTotal(
+    BuildContext context,
     WidgetRef ref,
     List<AdditionalServiceModel> services,
     MinimalistColorSchemeAdapter colors,
   ) {
     final selectedServices = ref.watch(selectedAdditionalServicesProvider);
-    final total = ref.watch(
-      additionalServicesTotalProvider((
-        services,
-        selectedServices,
-        nights,
-        guests,
-      )),
-    );
+    final total = ref.watch(additionalServicesTotalProvider((services, selectedServices, nights, guests)));
 
     if (selectedServices.isEmpty) {
       return const SizedBox.shrink();
@@ -305,7 +245,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Services Total',
+          WidgetTranslations.of(context).servicesTotal,
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeM,
             fontWeight: FontWeight.bold,

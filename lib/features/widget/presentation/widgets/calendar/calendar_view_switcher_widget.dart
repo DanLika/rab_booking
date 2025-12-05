@@ -4,6 +4,7 @@ import '../../../domain/models/calendar_view_type.dart';
 import '../../providers/calendar_view_provider.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/theme/custom_icons_tablericons.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Reusable Month/Year view toggle used by both calendar widgets.
 ///
@@ -12,11 +13,13 @@ import '../../../../../core/theme/custom_icons_tablericons.dart';
 class CalendarViewSwitcherWidget extends ConsumerWidget {
   final WidgetColorScheme colors;
   final bool isDarkMode;
+  final WidgetTranslations translations;
 
   const CalendarViewSwitcherWidget({
     super.key,
     required this.colors,
     required this.isDarkMode,
+    required this.translations,
   });
 
   @override
@@ -37,7 +40,7 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
         children: [
           _buildViewTab(
             ref: ref,
-            label: 'Month',
+            label: translations.monthView,
             icon: TablerIcons.ktableFilled,
             viewType: CalendarViewType.month,
             isSelected: currentView == CalendarViewType.month,
@@ -46,7 +49,7 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
           SizedBox(width: isSmallScreen ? 2 : 4),
           _buildViewTab(
             ref: ref,
-            label: 'Year',
+            label: translations.yearView,
             icon: TablerIcons.ktableOptions,
             viewType: CalendarViewType.year,
             isSelected: currentView == CalendarViewType.year,
@@ -67,10 +70,8 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
   }) {
     // Dark theme: selected button has white background with black text
     // Light theme: selected button has black background with white text
-    final selectedBg =
-        isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
-    final selectedText =
-        isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
+    final selectedBg = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
+    final selectedText = isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
 
     return Semantics(
       label: '$label view',
@@ -83,10 +84,7 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
         borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(
-            horizontal: isSmallScreen ? 8 : 12,
-            vertical: isSmallScreen ? 6 : 8,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 12, vertical: isSmallScreen ? 6 : 8),
           decoration: BoxDecoration(
             color: isSelected ? selectedBg : Colors.transparent,
             borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
@@ -107,9 +105,7 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
                   style: TextStyle(
                     color: isSelected ? selectedText : colors.textPrimary,
                     fontSize: TypographyTokens.fontSizeS2,
-                    fontWeight: isSelected
-                        ? TypographyTokens.semiBold
-                        : TypographyTokens.regular,
+                    fontWeight: isSelected ? TypographyTokens.semiBold : TypographyTokens.regular,
                   ),
                 ),
               ],

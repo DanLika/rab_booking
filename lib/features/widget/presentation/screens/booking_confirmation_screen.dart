@@ -15,6 +15,7 @@ import '../widgets/confirmation/bank_transfer_instructions_card.dart';
 import '../widgets/confirmation/email_confirmation_card.dart';
 import '../widgets/confirmation/cancellation_policy_section.dart';
 import '../widgets/confirmation/next_steps_section.dart';
+import '../l10n/widget_translations.dart';
 
 /// Simplified Booking Confirmation Screen for Embedded Widget
 /// Shows booking confirmation with reference number and details
@@ -34,10 +35,13 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   final BookingModel? booking;
   final EmailNotificationConfig? emailConfig;
   final WidgetSettings? widgetSettings;
+
   /// Property ID for clean URL redirect when closing confirmation
   final String? propertyId;
+
   /// Unit ID for clean URL redirect when closing confirmation
   final String? unitId;
+
   /// Optional callback for state-based close (direct bookings)
   /// If provided, this is called instead of URL navigation
   final VoidCallback? onClose;
@@ -64,12 +68,10 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<BookingConfirmationScreen> createState() =>
-      _BookingConfirmationScreenState();
+  ConsumerState<BookingConfirmationScreen> createState() => _BookingConfirmationScreenState();
 }
 
-class _BookingConfirmationScreenState
-    extends ConsumerState<BookingConfirmationScreen>
+class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationScreen>
     with SingleTickerProviderStateMixin, ThemeDetectionMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -78,18 +80,17 @@ class _BookingConfirmationScreenState
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
+    _animationController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
 
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.elasticOut));
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
 
     _animationController.forward();
   }
@@ -113,7 +114,6 @@ class _BookingConfirmationScreenState
   /// - Stripe returns - also pushed via Navigator
   /// The parent widget handles form reset and URL cleanup after pop
   void _navigateToCleanCalendar() {
-
     // Priority 1: Custom close callback (if provided)
     if (widget.onClose != null) {
       widget.onClose!();
@@ -128,10 +128,10 @@ class _BookingConfirmationScreenState
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+    final tr = WidgetTranslations.of(context);
 
     // Use pure black background for dark theme in widget
-    final backgroundColor =
-        isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final backgroundColor = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -159,8 +159,7 @@ class _BookingConfirmationScreenState
                             paymentMethod: widget.paymentMethod,
                             colors: colors,
                             scaleAnimation: _scaleAnimation,
-                            customLogoUrl: widget
-                                .widgetSettings?.themeOptions?.customLogoUrl,
+                            customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
                           ),
 
                           const SizedBox(height: SpacingTokens.m),
@@ -168,21 +167,16 @@ class _BookingConfirmationScreenState
                           // Payment verification warning (Stripe pending)
                           if (_shouldShowPaymentVerificationWarning)
                             Padding(
-                              padding:
-                                  const EdgeInsets.only(bottom: SpacingTokens.m),
+                              padding: const EdgeInsets.only(bottom: SpacingTokens.m),
                               child: InfoCardWidget(
-                                title: 'Payment Verification in Progress',
-                                message:
-                                    'Your payment was successful, but we\'re still verifying it with the payment provider. You will receive a confirmation email within a few minutes. If you don\'t receive it, please contact the property owner.',
+                                title: tr.paymentVerificationInProgress,
+                                message: tr.paymentVerificationMessage,
                                 isDarkMode: isDarkMode,
                               ),
                             ),
 
                           // Booking reference card
-                          BookingReferenceCard(
-                            bookingReference: widget.bookingReference,
-                            colors: colors,
-                          ),
+                          BookingReferenceCard(bookingReference: widget.bookingReference, colors: colors),
 
                           const SizedBox(height: SpacingTokens.m),
 
@@ -209,9 +203,7 @@ class _BookingConfirmationScreenState
                           const SizedBox(height: SpacingTokens.l),
 
                           // Calendar export button
-                          if (widget.booking != null &&
-                              (widget.widgetSettings?.icalExportEnabled ??
-                                  false))
+                          if (widget.booking != null && (widget.widgetSettings?.icalExportEnabled ?? false))
                             CalendarExportButton(
                               booking: widget.booking!,
                               unitName: widget.unitName ?? widget.propertyName,
@@ -221,12 +213,9 @@ class _BookingConfirmationScreenState
 
                           // Bank transfer instructions
                           if (widget.paymentMethod == 'bank_transfer' &&
-                              widget.widgetSettings?.bankTransferConfig
-                                      ?.hasCompleteDetails ==
-                                  true)
+                              widget.widgetSettings?.bankTransferConfig?.hasCompleteDetails == true)
                             BankTransferInstructionsCard(
-                              bankConfig:
-                                  widget.widgetSettings!.bankTransferConfig!,
+                              bankConfig: widget.widgetSettings!.bankTransferConfig!,
                               bookingReference: widget.bookingReference,
                               colors: colors,
                             ),
@@ -243,23 +232,17 @@ class _BookingConfirmationScreenState
                           ),
 
                           // Cancellation policy
-                          if (widget.widgetSettings?.allowGuestCancellation ==
-                                  true &&
-                              widget.widgetSettings?.cancellationDeadlineHours !=
-                                  null)
+                          if (widget.widgetSettings?.allowGuestCancellation == true &&
+                              widget.widgetSettings?.cancellationDeadlineHours != null)
                             CancellationPolicySection(
                               isDarkMode: isDarkMode,
-                              deadlineHours: widget
-                                  .widgetSettings!.cancellationDeadlineHours!,
+                              deadlineHours: widget.widgetSettings!.cancellationDeadlineHours!,
                               bookingReference: widget.bookingReference,
                               fromEmail: widget.emailConfig?.fromEmail,
                             ),
 
                           // Next steps section
-                          NextStepsSection(
-                            isDarkMode: isDarkMode,
-                            paymentMethod: widget.paymentMethod,
-                          ),
+                          NextStepsSection(isDarkMode: isDarkMode, paymentMethod: widget.paymentMethod),
 
                           const SizedBox(height: SpacingTokens.xl),
 
@@ -270,12 +253,9 @@ class _BookingConfirmationScreenState
 
                           // Helpful info
                           Text(
-                            'Save this booking reference for your records. You can use it to check your booking status.',
+                            tr.saveBookingReference,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: TypographyTokens.fontSizeS,
-                              color: colors.textSecondary,
-                            ),
+                            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                           ),
                         ],
                       ),
@@ -301,11 +281,9 @@ class _BookingConfirmationScreenState
   }
 
   Widget _buildHeader(WidgetColorScheme colors) {
+    final tr = WidgetTranslations.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.m,
-        vertical: SpacingTokens.s,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
       child: Row(
         children: [
           IconButton(
@@ -315,7 +293,7 @@ class _BookingConfirmationScreenState
           Expanded(
             child: Center(
               child: Text(
-                'Booking Confirmation',
+                tr.bookingConfirmation,
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeXL,
                   fontWeight: TypographyTokens.bold,
@@ -331,6 +309,7 @@ class _BookingConfirmationScreenState
   }
 
   Widget _buildCloseButton(WidgetColorScheme colors, {required bool isDark}) {
+    final tr = WidgetTranslations.of(context);
     // Use white button with black text for dark theme
     final buttonBg = isDark ? ColorTokens.pureWhite : colors.buttonPrimary;
     final buttonText = isDark ? ColorTokens.pureBlack : colors.buttonPrimaryText;
@@ -343,16 +322,11 @@ class _BookingConfirmationScreenState
           backgroundColor: buttonBg,
           foregroundColor: buttonText,
           padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderTokens.circularRounded,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularRounded),
         ),
-        child: const Text(
-          'Close',
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeL,
-            fontWeight: TypographyTokens.bold,
-          ),
+        child: Text(
+          tr.close,
+          style: const TextStyle(fontSize: TypographyTokens.fontSizeL, fontWeight: TypographyTokens.bold),
         ),
       ),
     );

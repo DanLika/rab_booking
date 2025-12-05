@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
+import '../../l10n/widget_translations.dart';
 import 'price_row_widget.dart';
 
 /// Price breakdown container showing room price, services, total, and deposit.
@@ -49,6 +50,9 @@ class PriceBreakdownWidget extends StatelessWidget {
   /// Deposit percentage (e.g., 20 for 20%)
   final int depositPercentage;
 
+  /// Translations for localization
+  final WidgetTranslations translations;
+
   const PriceBreakdownWidget({
     super.key,
     required this.isDarkMode,
@@ -59,6 +63,7 @@ class PriceBreakdownWidget extends StatelessWidget {
     required this.formattedTotal,
     required this.formattedDeposit,
     required this.depositPercentage,
+    required this.translations,
   });
 
   @override
@@ -74,18 +79,13 @@ class PriceBreakdownWidget extends StatelessWidget {
       child: Column(
         children: [
           // Room price
-          PriceRowWidget(
-            label: 'Room ($nights ${nights == 1 ? 'night' : 'nights'})',
-            amount: formattedRoomPrice,
-            isDarkMode: isDarkMode,
-          ),
+          PriceRowWidget(label: translations.roomNights(nights), amount: formattedRoomPrice, isDarkMode: isDarkMode),
 
           // Additional services (only show if > 0)
-          if (additionalServicesTotal > 0 &&
-              formattedAdditionalServices != null) ...[
+          if (additionalServicesTotal > 0 && formattedAdditionalServices != null) ...[
             const SizedBox(height: SpacingTokens.s),
             PriceRowWidget(
-              label: 'Additional Services',
+              label: translations.additionalServices,
               amount: formattedAdditionalServices!,
               isDarkMode: isDarkMode,
               color: colors.statusAvailableBorder,
@@ -94,29 +94,17 @@ class PriceBreakdownWidget extends StatelessWidget {
 
           Padding(
             padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
-            child: Divider(
-              height: 1,
-              color: colors.borderDefault,
-            ),
+            child: Divider(height: 1, color: colors.borderDefault),
           ),
 
           // Total
-          PriceRowWidget(
-            label: 'Total',
-            amount: formattedTotal,
-            isDarkMode: isDarkMode,
-            isBold: true,
-          ),
+          PriceRowWidget(label: translations.total, amount: formattedTotal, isDarkMode: isDarkMode, isBold: true),
 
           // Deposit info
           const SizedBox(height: SpacingTokens.s),
           Text(
-            'Deposit: $formattedDeposit ($depositPercentage%)',
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
-              color: colors.textSecondary,
-              fontFamily: 'Manrope',
-            ),
+            translations.depositWithPercentage(formattedDeposit, depositPercentage),
+            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary, fontFamily: 'Manrope'),
           ),
         ],
       ),

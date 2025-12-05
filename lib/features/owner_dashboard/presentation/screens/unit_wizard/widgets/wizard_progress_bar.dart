@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 
 /// Wizard Progress Bar - shows current step and completion status
@@ -17,20 +18,20 @@ class WizardProgressBar extends StatelessWidget {
 
   // Step icons mapping
   static const Map<int, IconData> _stepIcons = {
-    1: Icons.info_outline,           // Info/Basic
-    2: Icons.people_outline,         // Capacity
-    3: Icons.euro,                   // Pricing + Availability
+    1: Icons.info_outline, // Info/Basic
+    2: Icons.people_outline, // Capacity
+    3: Icons.euro, // Pricing + Availability
     4: Icons.photo_library_outlined, // Photos
-    5: Icons.check_circle_outline,   // Review
+    5: Icons.check_circle_outline, // Review
   };
 
-  // Step labels mapping (single word)
-  static const Map<int, String> _stepLabels = {
-    1: 'Info',
-    2: 'Kapacitet',
-    3: 'Cena',
-    4: 'Fotografije',
-    5: 'Pregled',
+  // Step labels mapping - returns localized labels
+  static Map<int, String> _getStepLabels(AppLocalizations l10n) => {
+    1: l10n.unitWizardProgressInfo,
+    2: l10n.unitWizardProgressCapacity,
+    3: l10n.unitWizardProgressPrice,
+    4: l10n.unitWizardProgressPhotos,
+    5: l10n.unitWizardProgressReview,
   };
 
   const WizardProgressBar({
@@ -45,20 +46,21 @@ class WizardProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
     if (isMobile) {
-      return _buildCompactProgressBar(context, theme, isDark);
+      return _buildCompactProgressBar(context, theme, isDark, l10n);
     } else {
-      return _buildFullProgressBar(context, theme, isDark);
+      return _buildFullProgressBar(context, theme, isDark, l10n);
     }
   }
 
   /// Full progress bar for desktop/tablet (shows all 8 steps)
-  Widget _buildFullProgressBar(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildFullProgressBar(BuildContext context, ThemeData theme, bool isDark, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
@@ -68,11 +70,8 @@ class WizardProgressBar extends StatelessWidget {
       child: Row(
         children: [
           for (int i = 1; i <= totalSteps; i++) ...[
-            _buildStepIndicator(i, theme, isDark),
-            if (i < totalSteps)
-              Expanded(
-                child: _buildConnector(i, theme, isDark),
-              ),
+            _buildStepIndicator(i, theme, isDark, l10n),
+            if (i < totalSteps) Expanded(child: _buildConnector(i, theme, isDark)),
           ],
         ],
       ),
@@ -80,7 +79,7 @@ class WizardProgressBar extends StatelessWidget {
   }
 
   /// Compact progress bar for mobile (shows "Step X of 8")
-  Widget _buildCompactProgressBar(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildCompactProgressBar(BuildContext context, ThemeData theme, bool isDark, AppLocalizations l10n) {
     final completedCount = completedSteps.values.where((v) => v).length;
 
     return Container(
@@ -93,7 +92,7 @@ class WizardProgressBar extends StatelessWidget {
         children: [
           // Current step indicator
           Text(
-            'Step $currentStep of $totalSteps',
+            l10n.unitWizardProgressStepOf(currentStep, totalSteps),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.onSurface,
@@ -128,7 +127,7 @@ class WizardProgressBar extends StatelessWidget {
   }
 
   /// Step indicator (circle with icon/checkmark + label)
-  Widget _buildStepIndicator(int step, ThemeData theme, bool isDark) {
+  Widget _buildStepIndicator(int step, ThemeData theme, bool isDark, AppLocalizations l10n) {
     final isCompleted = completedSteps[step] == true;
     final isCurrent = step == currentStep;
     final isOptional = optionalSteps.contains(step);
@@ -155,7 +154,8 @@ class WizardProgressBar extends StatelessWidget {
     }
 
     final stepIcon = _stepIcons[step] ?? Icons.circle;
-    final stepLabel = _stepLabels[step] ?? '';
+    final stepLabels = _getStepLabels(l10n);
+    final stepLabel = stepLabels[step] ?? '';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -170,23 +170,12 @@ class WizardProgressBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: backgroundColor,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: borderColor,
-                width: 2,
-              ),
+              border: Border.all(color: borderColor, width: 2),
             ),
             child: Center(
               child: isCompleted
-                  ? const Icon(
-                      Icons.check,
-                      size: 20,
-                      color: Colors.white,
-                    )
-                  : Icon(
-                      stepIcon,
-                      size: 20,
-                      color: iconColor,
-                    ),
+                  ? const Icon(Icons.check, size: 20, color: Colors.white)
+                  : Icon(stepIcon, size: 20, color: iconColor),
             ),
           ),
         ),
@@ -202,8 +191,8 @@ class WizardProgressBar extends StatelessWidget {
             color: isCompleted
                 ? _completedColor
                 : isCurrent
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
           ),
         ),
 
@@ -212,11 +201,8 @@ class WizardProgressBar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              '(opcionalno)',
-              style: TextStyle(
-                fontSize: 9,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              l10n.unitWizardProgressOptional,
+              style: TextStyle(fontSize: 9, color: theme.colorScheme.onSurfaceVariant),
             ),
           ),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -12,25 +13,16 @@ class RevenueDataPoint {
   final double value;
   final DateTime date;
 
-  const RevenueDataPoint({
-    required this.label,
-    required this.value,
-    required this.date,
-  });
+  const RevenueDataPoint({required this.label, required this.value, required this.date});
 }
 
 /// Revenue chart widget
 class RevenueChartWidget extends StatelessWidget {
   final List<RevenueDataPoint> data;
-  final String title;
+  final String? title;
   final String? subtitle;
 
-  const RevenueChartWidget({
-    super.key,
-    required this.data,
-    this.title = 'Revenue Overview',
-    this.subtitle,
-  });
+  const RevenueChartWidget({super.key, required this.data, this.title, this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -48,18 +40,13 @@ class RevenueChartWidget extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: AppTypography.h3,
-                    ),
+                    Text(title ?? AppLocalizations.of(context).revenueChartTitle, style: AppTypography.h3),
                     if (subtitle != null) ...[
                       const SizedBox(height: AppDimensions.spaceXXS),
                       Text(
                         subtitle!,
                         style: AppTypography.small.copyWith(
-                          color: isDark
-                              ? AppColors.textSecondaryDark
-                              : context.textColorSecondary,
+                          color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
                         ),
                       ),
                     ],
@@ -79,11 +66,9 @@ class RevenueChartWidget extends StatelessWidget {
                   ),
                   const SizedBox(width: AppDimensions.spaceXS),
                   Text(
-                    'Revenue',
+                    AppLocalizations.of(context).revenueChartLegend,
                     style: AppTypography.small.copyWith(
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : context.textColorSecondary,
+                      color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
                     ),
                   ),
                 ],
@@ -103,17 +88,13 @@ class RevenueChartWidget extends StatelessWidget {
                     Icon(
                       Icons.bar_chart,
                       size: 64,
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : context.textColorSecondary,
+                      color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     Text(
-                      'No revenue data available',
+                      AppLocalizations.of(context).revenueChartNoData,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : context.textColorSecondary,
+                        color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
                       ),
                     ),
                   ],
@@ -127,8 +108,8 @@ class RevenueChartWidget extends StatelessWidget {
                 final chartHeight = constraints.maxWidth > 600
                     ? 250.0
                     : constraints.maxWidth > 400
-                        ? 200.0
-                        : 150.0;
+                    ? 200.0
+                    : 150.0;
 
                 return SizedBox(
                   height: chartHeight,
@@ -178,9 +159,7 @@ class _BarChart extends StatelessWidget {
                     child: Text(
                       '€${value.toStringAsFixed(0)}',
                       style: AppTypography.small.copyWith(
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : context.textColorSecondary,
+                        color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
                         fontSize: 10,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -208,9 +187,7 @@ class _BarChart extends StatelessWidget {
                           child: Padding(
                             padding: EdgeInsets.only(
                               left: index == 0 ? 0 : AppDimensions.spaceXXS,
-                              right: index == data.length - 1
-                                  ? 0
-                                  : AppDimensions.spaceXXS,
+                              right: index == data.length - 1 ? 0 : AppDimensions.spaceXXS,
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -245,16 +222,12 @@ class _BarChart extends StatelessWidget {
                         child: Padding(
                           padding: EdgeInsets.only(
                             left: index == 0 ? 0 : AppDimensions.spaceXXS,
-                            right: index == data.length - 1
-                                ? 0
-                                : AppDimensions.spaceXXS,
+                            right: index == data.length - 1 ? 0 : AppDimensions.spaceXXS,
                           ),
                           child: Text(
                             point.label,
                             style: AppTypography.small.copyWith(
-                              color: isDark
-                                  ? AppColors.textSecondaryDark
-                                  : context.textColorSecondary,
+                              color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 1,

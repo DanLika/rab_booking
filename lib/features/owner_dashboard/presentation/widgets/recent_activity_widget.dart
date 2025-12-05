@@ -3,6 +3,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Activity type enum
 enum ActivityType { booking, review, message, payment, cancellation }
@@ -62,25 +63,19 @@ class RecentActivityWidget extends StatelessWidget {
   final VoidCallback? onViewAll;
   final void Function(String bookingId)? onActivityTap;
 
-  const RecentActivityWidget({
-    super.key,
-    required this.activities,
-    this.onViewAll,
-    this.onActivityTap,
-  });
+  const RecentActivityWidget({super.key, required this.activities, this.onViewAll, this.onActivityTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
-        gradient: context.gradients.sectionBackground,
+        color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
+        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Column(
@@ -97,10 +92,8 @@ class RecentActivityWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Nedavne Aktivnosti',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        l10n.ownerRecentActivities,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (onViewAll != null) ...[
@@ -115,7 +108,7 @@ class RecentActivityWidget extends StatelessWidget {
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text('Sve'),
+                          child: Text(l10n.ownerViewAll),
                         ),
                       ],
                     ],
@@ -127,10 +120,8 @@ class RecentActivityWidget extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Nedavne Aktivnosti',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        l10n.ownerRecentActivities,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -139,21 +130,15 @@ class RecentActivityWidget extends StatelessWidget {
                       TextButton.icon(
                         onPressed: onViewAll,
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           foregroundColor: theme.colorScheme.primary,
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         icon: const Icon(Icons.arrow_forward, size: 16),
-                        label: const Text(
-                          'Sve',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        label: Text(
+                          l10n.ownerViewAll,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -164,18 +149,12 @@ class RecentActivityWidget extends StatelessWidget {
           ),
 
           // Divider
-          Divider(
-            height: 1,
-            color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
-          ),
+          Divider(height: 1, color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
 
           // Activities list
           if (activities.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 56,
-                horizontal: AppDimensions.spaceL,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 56, horizontal: AppDimensions.spaceL),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -189,12 +168,8 @@ class RecentActivityWidget extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            theme.colorScheme.primary.withAlpha(
-                              (0.15 * 255).toInt(),
-                            ),
-                            theme.colorScheme.primary.withAlpha(
-                              (0.05 * 255).toInt(),
-                            ),
+                            theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                            theme.colorScheme.primary.withAlpha((0.05 * 255).toInt()),
                           ],
                         ),
                         shape: BoxShape.circle,
@@ -202,27 +177,21 @@ class RecentActivityWidget extends StatelessWidget {
                       child: Icon(
                         Icons.notifications_none_rounded,
                         size: 48,
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.6 * 255).toInt(),
-                        ),
+                        color: theme.colorScheme.primary.withAlpha((0.6 * 255).toInt()),
                       ),
                     ),
                     const SizedBox(height: 24),
                     // Title
                     Text(
-                      'Nema nedavnih aktivnosti',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      l10n.ownerNoRecentActivities,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     // Subtitle
                     Text(
-                      'Vaše nedavne rezervacije i aktivnosti će se prikazati ovdje',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      l10n.ownerRecentActivitiesDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                     ),
@@ -235,10 +204,8 @@ class RecentActivityWidget extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: activities.length > 5 ? 5 : activities.length,
-              separatorBuilder: (context, index) => Divider(
-                height: 1,
-                color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
-              ),
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
               itemBuilder: (context, index) {
                 final activity = activities[index];
                 return _ActivityTile(
@@ -265,6 +232,7 @@ class _ActivityTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return ListTile(
       onTap: onTap,
@@ -276,23 +244,16 @@ class _ActivityTile extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              activity.color.withAlpha((0.15 * 255).toInt()),
-              activity.color.withAlpha((0.08 * 255).toInt()),
-            ],
+            colors: [activity.color.withAlpha((0.15 * 255).toInt()), activity.color.withAlpha((0.08 * 255).toInt())],
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: activity.color.withAlpha((0.2 * 255).toInt()),
-          ),
+          border: Border.all(color: activity.color.withAlpha((0.2 * 255).toInt())),
         ),
         child: Icon(activity.icon, color: activity.color, size: 24),
       ),
       title: Text(
         activity.title,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -300,9 +261,7 @@ class _ActivityTile extends StatelessWidget {
         padding: const EdgeInsets.only(top: 4),
         child: Text(
           activity.subtitle,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -314,7 +273,7 @@ class _ActivityTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
-          _formatTimestamp(activity.timestamp),
+          _formatTimestamp(activity.timestamp, l10n),
           style: theme.textTheme.labelSmall?.copyWith(
             fontWeight: FontWeight.w500,
             color: theme.colorScheme.onSurfaceVariant,
@@ -325,18 +284,18 @@ class _ActivityTile extends StatelessWidget {
     );
   }
 
-  String _formatTimestamp(DateTime timestamp) {
+  String _formatTimestamp(DateTime timestamp, AppLocalizations l10n) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return l10n.ownerJustNow;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return l10n.ownerMinutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return l10n.ownerHoursAgo(difference.inHours);
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return l10n.ownerDaysAgo(difference.inDays);
     } else {
       return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
     }

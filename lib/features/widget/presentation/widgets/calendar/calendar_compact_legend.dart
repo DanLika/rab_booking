@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Compact legend/info banner displayed below the calendar.
 ///
@@ -8,12 +9,9 @@ import '../../../../../../core/design_tokens/design_tokens.dart';
 class CalendarCompactLegend extends StatelessWidget {
   final int minNights;
   final WidgetColorScheme colors;
+  final WidgetTranslations translations;
 
-  const CalendarCompactLegend({
-    super.key,
-    required this.minNights,
-    required this.colors,
-  });
+  const CalendarCompactLegend({super.key, required this.minNights, required this.colors, required this.translations});
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +31,7 @@ class CalendarCompactLegend extends StatelessWidget {
           left: SpacingTokens.xs,
           right: SpacingTokens.xs,
         ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: SpacingTokens.s,
-          vertical: SpacingTokens.xs,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xs),
         decoration: BoxDecoration(
           color: colors.backgroundSecondary,
           borderRadius: BorderTokens.circularMedium,
@@ -72,19 +67,11 @@ class CalendarCompactLegend extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.bed_outlined,
-          size: 14,
-          color: colors.textSecondary,
-        ),
+        Icon(Icons.bed_outlined, size: 14, color: colors.textSecondary),
         const SizedBox(width: SpacingTokens.xxs),
         Text(
-          'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: colors.textPrimary,
-          ),
+          translations.minStayNights(minNights),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textPrimary),
         ),
       ],
     );
@@ -96,10 +83,10 @@ class CalendarCompactLegend extends StatelessWidget {
       spacing: SpacingTokens.xs,
       runSpacing: 4,
       children: [
-        _buildLegendItem('Available', colors.statusAvailableBackground),
-        _buildLegendItem('Booked', colors.statusBookedBackground),
-        _buildPendingLegendItem('Pending'),
-        _buildLegendItem('Unavailable', colors.backgroundTertiary),
+        _buildLegendItem(translations.available, colors.statusAvailableBackground),
+        _buildLegendItem(translations.booked, colors.statusBookedBackground),
+        _buildPendingLegendItem(translations.pending),
+        _buildLegendItem(translations.unavailable, colors.backgroundTertiary),
       ],
     );
   }
@@ -119,10 +106,7 @@ class CalendarCompactLegend extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: colors.textSecondary),
-        ),
+        Text(label, style: TextStyle(fontSize: 10, color: colors.textSecondary)),
       ],
     );
   }
@@ -151,10 +135,7 @@ class CalendarCompactLegend extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: colors.textSecondary),
-        ),
+        Text(label, style: TextStyle(fontSize: 10, color: colors.textSecondary)),
       ],
     );
   }
@@ -165,10 +146,7 @@ class _PendingPatternPainter extends CustomPainter {
   final Color backgroundColor;
   final Color lineColor;
 
-  _PendingPatternPainter({
-    required this.backgroundColor,
-    required this.lineColor,
-  });
+  _PendingPatternPainter({required this.backgroundColor, required this.lineColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -186,17 +164,12 @@ class _PendingPatternPainter extends CustomPainter {
 
     const spacing = 2.5;
     for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        linePaint,
-      );
+      canvas.drawLine(Offset(i, 0), Offset(i + size.height, size.height), linePaint);
     }
   }
 
   @override
   bool shouldRepaint(covariant _PendingPatternPainter oldDelegate) {
-    return oldDelegate.backgroundColor != backgroundColor ||
-        oldDelegate.lineColor != lineColor;
+    return oldDelegate.backgroundColor != backgroundColor || oldDelegate.lineColor != lineColor;
   }
 }

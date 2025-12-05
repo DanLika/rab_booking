@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../domain/models/settings/payment/bank_transfer_config.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card displaying bank transfer instructions for payment.
 ///
@@ -36,30 +37,24 @@ class BankTransferInstructionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = WidgetTranslations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: SpacingTokens.l),
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-          width: 2,
-        ),
+        border: Border.all(color: colors.borderDefault, width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.account_balance,
-                color: colors.textSecondary,
-                size: 24,
-              ),
+              Icon(Icons.account_balance, color: colors.textSecondary, size: 24),
               const SizedBox(width: SpacingTokens.s),
               Text(
-                'Bank Transfer Instructions',
+                tr.bankTransferInstructions,
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeL,
                   fontWeight: TypographyTokens.bold,
@@ -69,31 +64,19 @@ class BankTransferInstructionsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: SpacingTokens.m),
-          _BankTransferDetailRow(
-            label: 'Bank Name',
-            value: bankConfig.bankName!,
-            colors: colors,
-          ),
+          _BankTransferDetailRow(label: tr.bankName, value: bankConfig.bankName!, colors: colors, tr: tr),
           const SizedBox(height: SpacingTokens.s),
-          _BankTransferDetailRow(
-            label: 'Account Holder',
-            value: bankConfig.accountHolder!,
-            colors: colors,
-          ),
+          _BankTransferDetailRow(label: tr.accountHolder, value: bankConfig.accountHolder!, colors: colors, tr: tr),
           const SizedBox(height: SpacingTokens.s),
           if (bankConfig.iban != null)
-            _BankTransferDetailRow(
-              label: 'IBAN',
-              value: bankConfig.iban!,
-              colors: colors,
-              copyable: true,
-            )
+            _BankTransferDetailRow(label: 'IBAN', value: bankConfig.iban!, colors: colors, copyable: true, tr: tr)
           else if (bankConfig.accountNumber != null)
             _BankTransferDetailRow(
-              label: 'Account Number',
+              label: tr.accountNumber,
               value: bankConfig.accountNumber!,
               colors: colors,
               copyable: true,
+              tr: tr,
             ),
           if (bankConfig.swift != null) ...[
             const SizedBox(height: SpacingTokens.s),
@@ -102,38 +85,30 @@ class BankTransferInstructionsCard extends StatelessWidget {
               value: bankConfig.swift!,
               colors: colors,
               copyable: true,
+              tr: tr,
             ),
           ],
           const SizedBox(height: SpacingTokens.s),
           _BankTransferDetailRow(
-            label: 'Reference',
+            label: tr.reference,
             value: bookingReference,
             colors: colors,
             copyable: true,
             highlight: true,
+            tr: tr,
           ),
           const SizedBox(height: SpacingTokens.m),
           Container(
             padding: const EdgeInsets.all(SpacingTokens.s),
-            decoration: BoxDecoration(
-              color: colors.backgroundSecondary,
-              borderRadius: BorderTokens.circularSmall,
-            ),
+            decoration: BoxDecoration(color: colors.backgroundSecondary, borderRadius: BorderTokens.circularSmall),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: colors.textSecondary,
-                ),
+                Icon(Icons.info_outline, size: 16, color: colors.textSecondary),
                 const SizedBox(width: SpacingTokens.xs),
                 Expanded(
                   child: Text(
-                    'Please complete the transfer within 3 days and include the reference number.',
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
-                      color: colors.textSecondary,
-                    ),
+                    tr.bankTransferNote,
+                    style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                   ),
                 ),
               ],
@@ -152,11 +127,13 @@ class _BankTransferDetailRow extends StatelessWidget {
   final WidgetColorScheme colors;
   final bool copyable;
   final bool highlight;
+  final WidgetTranslations tr;
 
   const _BankTransferDetailRow({
     required this.label,
     required this.value,
     required this.colors,
+    required this.tr,
     this.copyable = false,
     this.highlight = false,
   });
@@ -166,7 +143,7 @@ class _BankTransferDetailRow extends StatelessWidget {
     if (context.mounted) {
       SnackBarHelper.showSuccess(
         context: context,
-        message: '$label copied to clipboard',
+        message: tr.labelCopied(label),
         duration: const Duration(seconds: 2),
       );
     }
@@ -196,27 +173,20 @@ class _BankTransferDetailRow extends StatelessWidget {
               Expanded(
                 child: Container(
                   padding: highlight
-                      ? const EdgeInsets.symmetric(
-                          horizontal: SpacingTokens.xs,
-                          vertical: SpacingTokens.xxs,
-                        )
+                      ? const EdgeInsets.symmetric(horizontal: SpacingTokens.xs, vertical: SpacingTokens.xxs)
                       : null,
                   decoration: highlight
                       ? BoxDecoration(
                           color: colors.backgroundSecondary,
                           borderRadius: BorderTokens.circularSmall,
-                          border: Border.all(
-                            color: colors.borderDefault,
-                          ),
+                          border: Border.all(color: colors.borderDefault),
                         )
                       : null,
                   child: Text(
                     value,
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,
-                      fontWeight: highlight
-                          ? TypographyTokens.bold
-                          : TypographyTokens.medium,
+                      fontWeight: highlight ? TypographyTokens.bold : TypographyTokens.medium,
                       color: colors.textPrimary,
                       fontFamily: 'monospace',
                     ),
@@ -226,18 +196,11 @@ class _BankTransferDetailRow extends StatelessWidget {
               if (copyable) ...[
                 const SizedBox(width: SpacingTokens.xs),
                 IconButton(
-                  icon: Icon(
-                    Icons.copy,
-                    size: 16,
-                    color: colors.textSecondary,
-                  ),
+                  icon: Icon(Icons.copy, size: 16, color: colors.textSecondary),
                   onPressed: () => _copyToClipboard(context),
-                  tooltip: 'Copy $label',
+                  tooltip: tr.copyLabel(label),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
               ],
             ],

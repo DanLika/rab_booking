@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -69,12 +70,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
   }
 
   Future<void> _saveBankDetails() async {
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          'Molimo ispravno popunite sva polja',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.bankAccountFillFieldsError);
       }
       return;
     }
@@ -98,9 +97,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
       );
 
       // Save company details to Firestore
-      await ref
-          .read(userProfileNotifierProvider.notifier)
-          .updateCompany(userId, updatedCompany);
+      await ref.read(userProfileNotifierProvider.notifier).updateCompany(userId, updatedCompany);
 
       // Invalidate provider to refresh UI with new data
       ref.invalidate(userDataProvider);
@@ -111,10 +108,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
           _isSaving = false;
         });
 
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          'Bankovni podaci uspješno spremljeni',
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.bankAccountSaveSuccess);
 
         // Use go instead of pop - this page is accessed directly via URL
         context.go('/owner/integrations/payments');
@@ -123,16 +117,12 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška pri spremanju bankovnih podataka',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.bankAccountSaveError);
       }
     }
   }
 
-  Widget _buildBankCard() {
+  Widget _buildBankCard(AppLocalizations l10n) {
     final theme = Theme.of(context);
 
     return Container(
@@ -147,65 +137,52 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
           decoration: BoxDecoration(
             gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: theme.dividerColor.withAlpha((0.4 * 255).toInt()),
-              width: 1.5,
-            ),
+            border: Border.all(color: theme.dividerColor.withAlpha((0.4 * 255).toInt()), width: 1.5),
           ),
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               initiallyExpanded: true,
-              tilePadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color:
-                      theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.account_balance_outlined,
-                  color: theme.colorScheme.primary,
-                  size: 18,
-                ),
+                child: Icon(Icons.account_balance_outlined, color: theme.colorScheme.primary, size: 18),
               ),
               title: Text(
-                'Bankovni Podaci',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                l10n.bankAccountBankDetails,
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
-                'Podaci za primanje uplata',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                l10n.bankAccountBankDetailsSubtitle,
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
               children: [
                 PremiumInputField(
                   controller: _ibanController,
-                  labelText: 'IBAN',
+                  labelText: l10n.bankAccountIban,
                   prefixIcon: Icons.credit_card,
                 ),
                 const SizedBox(height: 16),
                 PremiumInputField(
                   controller: _swiftController,
-                  labelText: 'SWIFT/BIC',
+                  labelText: l10n.bankAccountSwift,
                   prefixIcon: Icons.code,
                 ),
                 const SizedBox(height: 16),
                 PremiumInputField(
                   controller: _bankNameController,
-                  labelText: 'Naziv Banke',
+                  labelText: l10n.bankAccountBankName,
                   prefixIcon: Icons.account_balance,
                 ),
                 const SizedBox(height: 16),
                 PremiumInputField(
                   controller: _accountHolderController,
-                  labelText: 'Vlasnik Računa',
+                  labelText: l10n.bankAccountHolder,
                   prefixIcon: Icons.person,
                 ),
               ],
@@ -216,7 +193,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(AppLocalizations l10n) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -226,39 +203,28 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-        border: Border.all(
-          color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-        ),
+        border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.info_outline,
-            color: theme.colorScheme.tertiary,
-            size: 20,
-          ),
+          Icon(Icons.info_outline, color: theme.colorScheme.tertiary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Kada se koriste ovi podaci?',
+                  l10n.bankAccountInfoTitle,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? theme.colorScheme.tertiary
-                        : theme.colorScheme.onSurface,
+                    color: isDark ? theme.colorScheme.tertiary : theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Ovi bankovni podaci se prikazuju gostima kada odaberu '
-                  '"Bankovni prijenos" kao način plaćanja u booking widget-u.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.bankAccountInfoDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -268,7 +234,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(AppLocalizations l10n) {
     final theme = Theme.of(context);
 
     return Column(
@@ -283,15 +249,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ],
+                      colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
                     )
                   : null,
-              color: (_isDirty && !_isSaving)
-                  ? null
-                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
+              color: (_isDirty && !_isSaving) ? null : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: ElevatedButton.icon(
@@ -302,21 +263,16 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
                 shadowColor: Colors.transparent,
                 disabledBackgroundColor: Colors.transparent,
                 disabledForegroundColor: theme.disabledColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               icon: _isSaving
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.save_rounded),
-              label: Text(_isSaving ? 'Spremanje...' : 'Spremi Promjene'),
+              label: Text(_isSaving ? l10n.bankAccountSaving : l10n.bankAccountSaveChanges),
             ),
           ),
         ),
@@ -330,16 +286,13 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
           child: TextButton(
             onPressed: () => context.pop(),
             style: TextButton.styleFrom(
-              foregroundColor:
-                  theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+              foregroundColor: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: theme.dividerColor,
-                ),
+                side: BorderSide(color: theme.dividerColor),
               ),
             ),
-            child: const Text('Odustani'),
+            child: Text(l10n.bankAccountCancel),
           ),
         ),
       ],
@@ -349,6 +302,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
   @override
   Widget build(BuildContext context) {
     final userDataAsync = ref.watch(userDataProvider);
+    final l10n = AppLocalizations.of(context);
 
     return PopScope(
       canPop: !_isDirty,
@@ -356,20 +310,15 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
         if (!didPop && _isDirty) {
           final shouldPop = await showDialog<bool>(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Odbaciti promjene?'),
-              content: const Text(
-                'Imate nespremljene promjene. Želite li ih odbaciti?',
-              ),
+            builder: (ctx) => AlertDialog(
+              title: Text(l10n.bankAccountDiscardTitle),
+              content: Text(l10n.bankAccountDiscardDesc),
               actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
                 TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Odustani'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
+                  onPressed: () => Navigator.pop(ctx, true),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: const Text('Odbaci'),
+                  child: Text(l10n.bankAccountDiscard),
                 ),
               ],
             ),
@@ -384,26 +333,21 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
         resizeToAvoidBottomInset: true,
         drawer: const OwnerAppDrawer(currentRoute: 'integrations/payments/bank-account'),
         appBar: CommonAppBar(
-          title: 'Bankovni Račun',
+          title: l10n.bankAccountTitle,
           leadingIcon: Icons.menu,
           onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
         ),
         body: Container(
-          decoration: BoxDecoration(
-            gradient: context.gradients.pageBackground,
-          ),
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: userDataAsync.when(
             data: (userData) {
               // Create default userData if null
-              final effectiveUserData =
-                  userData ?? const UserData(profile: UserProfile(userId: ''));
+              final effectiveUserData = userData ?? const UserData(profile: UserProfile(userId: ''));
 
               _loadData(effectiveUserData);
 
               return SingleChildScrollView(
-                padding: EdgeInsets.all(
-                  MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                ),
+                padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 24),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 600),
@@ -415,15 +359,15 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // Info Card
-                          _buildInfoCard(),
+                          _buildInfoCard(l10n),
 
                           // Bank Details Card
-                          _buildBankCard(),
+                          _buildBankCard(l10n),
 
                           const SizedBox(height: 8),
 
                           // Action Buttons
-                          _buildActionButtons(),
+                          _buildActionButtons(l10n),
                         ],
                       ),
                     ),
@@ -432,7 +376,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(child: Text('Error: $error')),
+            error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
           ),
         ),
       ),

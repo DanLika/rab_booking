@@ -21,6 +21,7 @@ import 'timeline/timeline_date_header.dart';
 import 'timeline/timeline_unit_name_cell.dart';
 import 'timeline/timeline_summary_cell.dart';
 import 'timeline/timeline_booking_stacker.dart';
+import '../../../../l10n/app_localizations.dart';
 
 // ============================================================================
 // CONSTANTS
@@ -70,10 +71,8 @@ const double _kDayHeaderProportion = 0.65;
 class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final bool showSummary;
   final Function(DateTime date, UnitModel unit)? onCellLongPress;
-  final DateTime?
-  initialScrollToDate; // Date to scroll to on init (null = today)
-  final Function(UnitModel unit)?
-  onUnitNameTap; // Callback when unit name is tapped (to show future bookings dialog)
+  final DateTime? initialScrollToDate; // Date to scroll to on init (null = today)
+  final Function(UnitModel unit)? onUnitNameTap; // Callback when unit name is tapped (to show future bookings dialog)
 
   const TimelineCalendarWidget({
     super.key,
@@ -84,12 +83,10 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TimelineCalendarWidget> createState() =>
-      _TimelineCalendarWidgetState();
+  ConsumerState<TimelineCalendarWidget> createState() => _TimelineCalendarWidgetState();
 }
 
-class _TimelineCalendarWidgetState
-    extends ConsumerState<TimelineCalendarWidget> {
+class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget> {
   late ScrollController _horizontalScrollController;
   late ScrollController _verticalScrollController;
   late ScrollController _headerScrollController;
@@ -115,14 +112,9 @@ class _TimelineCalendarWidgetState
   static const int _bufferDays = 30; // Extra days before/after visible area
 
   // Infinite scroll - dynamic date range (initially offset days before/after)
-  DateTime _dynamicStartDate = DateTime.now().subtract(
-    const Duration(days: _kInitialDaysOffset),
-  );
-  DateTime _dynamicEndDate = DateTime.now().add(
-    const Duration(days: _kInitialDaysOffset),
-  );
-  bool _isInitialScrolling =
-      true; // Prevent infinite scroll during initial scroll to today
+  DateTime _dynamicStartDate = DateTime.now().subtract(const Duration(days: _kInitialDaysOffset));
+  DateTime _dynamicEndDate = DateTime.now().add(const Duration(days: _kInitialDaysOffset));
+  bool _isInitialScrolling = true; // Prevent infinite scroll during initial scroll to today
 
   // Responsive dimensions based on screen size and accessibility settings
   // Using CalendarGridCalculator for consistency
@@ -131,9 +123,7 @@ class _TimelineCalendarWidgetState
     final textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
 
     // Get optimal visible days for screen size
-    final visibleDays = CalendarGridCalculator.getOptimalVisibleDays(
-      screenWidth,
-    );
+    final visibleDays = CalendarGridCalculator.getOptimalVisibleDays(screenWidth);
 
     // Get base width from CalendarGridCalculator
     final baseWidth = CalendarGridCalculator.getDayCellWidth(
@@ -150,20 +140,14 @@ class _TimelineCalendarWidgetState
     final screenWidth = MediaQuery.of(context).size.width;
     final textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
 
-    return CalendarGridCalculator.getRowHeight(
-      screenWidth,
-      textScaleFactor: textScaleFactor,
-    );
+    return CalendarGridCalculator.getRowHeight(screenWidth, textScaleFactor: textScaleFactor);
   }
 
   double _getUnitColumnWidth(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
 
-    return CalendarGridCalculator.getRowHeaderWidth(
-      screenWidth,
-      textScaleFactor: textScaleFactor,
-    );
+    return CalendarGridCalculator.getRowHeaderWidth(screenWidth, textScaleFactor: textScaleFactor);
   }
 
   double _getHeaderHeight(BuildContext context) {
@@ -193,9 +177,7 @@ class _TimelineCalendarWidgetState
     // FIXED: Use initialScrollToDate to initialize windowing (Bug #5 fix)
     final initialDate = widget.initialScrollToDate ?? DateTime.now();
     final initialDateIndex = initialDate.difference(_getStartDate()).inDays;
-    _visibleStartIndex = (initialDateIndex - _kInitialWindowDaysBefore)
-        .clamp(0, double.infinity)
-        .toInt();
+    _visibleStartIndex = (initialDateIndex - _kInitialWindowDaysBefore).clamp(0, double.infinity).toInt();
     _visibleDayCount = _kInitialWindowDaysTotal;
 
     // Create optimized scroll sync listener
@@ -215,14 +197,12 @@ class _TimelineCalendarWidgetState
 
         try {
           // Sync header scroll with higher precision (0.5px threshold)
-          if (_headerScrollController.hasClients &&
-              (_headerScrollController.offset - mainOffset).abs() > 0.5) {
+          if (_headerScrollController.hasClients && (_headerScrollController.offset - mainOffset).abs() > 0.5) {
             _headerScrollController.jumpTo(mainOffset);
           }
 
           // Sync summary bar scroll
-          if (_summaryScrollController.hasClients &&
-              (_summaryScrollController.offset - mainOffset).abs() > 0.5) {
+          if (_summaryScrollController.hasClients && (_summaryScrollController.offset - mainOffset).abs() > 0.5) {
             _summaryScrollController.jumpTo(mainOffset);
           }
         } finally {
@@ -247,8 +227,7 @@ class _TimelineCalendarWidgetState
 
         try {
           // Sync unit names scroll with main vertical scroll
-          if (_unitNamesScrollController.hasClients &&
-              (_unitNamesScrollController.offset - mainOffset).abs() > 0.5) {
+          if (_unitNamesScrollController.hasClients && (_unitNamesScrollController.offset - mainOffset).abs() > 0.5) {
             _unitNamesScrollController.jumpTo(mainOffset);
           }
         } finally {
@@ -301,16 +280,12 @@ class _TimelineCalendarWidgetState
     final daysInViewport = (visibleWidth / dayWidth).ceil();
 
     // Add buffer before and after visible area for smooth scrolling
-    final newStartIndex = (firstVisibleDay - _bufferDays)
-        .clamp(0, double.infinity)
-        .toInt();
+    final newStartIndex = (firstVisibleDay - _bufferDays).clamp(0, double.infinity).toInt();
     final newDayCount = daysInViewport + (2 * _bufferDays);
 
     // Only update state if range changed significantly (avoid excessive rebuilds)
-    if ((newStartIndex - _visibleStartIndex).abs() >
-            _kVisibleRangeUpdateThreshold ||
-        (newDayCount - _visibleDayCount).abs() >
-            _kVisibleRangeUpdateThreshold) {
+    if ((newStartIndex - _visibleStartIndex).abs() > _kVisibleRangeUpdateThreshold ||
+        (newDayCount - _visibleDayCount).abs() > _kVisibleRangeUpdateThreshold) {
       setState(() {
         _visibleStartIndex = newStartIndex;
         _visibleDayCount = newDayCount;
@@ -325,25 +300,17 @@ class _TimelineCalendarWidgetState
 
       // Near start edge? Prepend days (max 1 year in past)
       if (scrollOffset < edgeThreshold &&
-          _dynamicStartDate.isAfter(
-            DateTime.now().subtract(const Duration(days: _kMaxDaysLimit)),
-          )) {
+          _dynamicStartDate.isAfter(DateTime.now().subtract(const Duration(days: _kMaxDaysLimit)))) {
         setState(() {
-          _dynamicStartDate = _dynamicStartDate.subtract(
-            const Duration(days: _kDaysToExtend),
-          );
+          _dynamicStartDate = _dynamicStartDate.subtract(const Duration(days: _kDaysToExtend));
         });
       }
 
       // Near end edge? Append days (max 1 year in future)
       if (scrollOffset > maxScroll - edgeThreshold &&
-          _dynamicEndDate.isBefore(
-            DateTime.now().add(const Duration(days: _kMaxDaysLimit)),
-          )) {
+          _dynamicEndDate.isBefore(DateTime.now().add(const Duration(days: _kMaxDaysLimit)))) {
         setState(() {
-          _dynamicEndDate = _dynamicEndDate.add(
-            const Duration(days: _kDaysToExtend),
-          );
+          _dynamicEndDate = _dynamicEndDate.add(const Duration(days: _kDaysToExtend));
         });
       }
     }
@@ -408,15 +375,10 @@ class _TimelineCalendarWidgetState
     final visibleWidth = screenWidth - unitColumnWidth;
 
     // Center target date in the visible area
-    final targetScroll = (scrollPosition - (visibleWidth / 2) + (dayWidth / 2))
-        .clamp(0.0, maxScroll);
+    final targetScroll = (scrollPosition - (visibleWidth / 2) + (dayWidth / 2)).clamp(0.0, maxScroll);
 
     _horizontalScrollController
-        .animateTo(
-          targetScroll,
-          duration: AppDimensions.animationSlow,
-          curve: Curves.easeInOut,
-        )
+        .animateTo(targetScroll, duration: AppDimensions.animationSlow, curve: Curves.easeInOut)
         .then((_) {
           // Reset flag after scroll animation completes to allow infinite scroll for user scrolling
           if (mounted) {
@@ -468,10 +430,7 @@ class _TimelineCalendarWidgetState
         // Zoom info banner (showing current zoom level)
         if (_zoomScale != 1.0)
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.spaceS,
-              vertical: AppDimensions.spaceXXS,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceS, vertical: AppDimensions.spaceXXS),
             color: AppColors.primary.withValues(alpha: 0.1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -482,13 +441,14 @@ class _TimelineCalendarWidgetState
                   color: AppColors.primary,
                 ),
                 const SizedBox(width: AppDimensions.spaceXXS),
-                Text(
-                  'Zoom: ${(_zoomScale * 100).toInt()}%',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    return Text(
+                      l10n.ownerCalendarZoom((_zoomScale * 100).toInt()),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
+                    );
+                  },
                 ),
                 const SizedBox(width: AppDimensions.spaceXS),
                 TextButton(
@@ -499,12 +459,15 @@ class _TimelineCalendarWidgetState
                     });
                   },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.spaceXS,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
                     minimumSize: const Size(0, 28),
                   ),
-                  child: const Text('Reset', style: TextStyle(fontSize: 11)),
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return Text(l10n.ownerCalendarReset, style: const TextStyle(fontSize: 11));
+                    },
+                  ),
                 ),
               ],
             ),
@@ -520,10 +483,15 @@ class _TimelineCalendarWidgetState
               return unitsAsync.when(
                 data: (units) {
                   if (units.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Padding(
-                        padding: EdgeInsets.all(AppDimensions.spaceM),
-                        child: Text('Nema jedinica za prikaz'),
+                        padding: const EdgeInsets.all(AppDimensions.spaceM),
+                        child: Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return Text(l10n.ownerCalendarNoUnits);
+                          },
+                        ),
                       ),
                     );
                   }
@@ -534,10 +502,7 @@ class _TimelineCalendarWidgetState
                       // (empty calendar grid is better UX than empty state)
                       return _buildTimelineView(units, bookingsByUnit);
                     },
-                    loading: () => const CalendarSkeletonLoader(
-                      unitCount: 3,
-                      dayCount: 30,
-                    ),
+                    loading: () => const CalendarSkeletonLoader(unitCount: 3, dayCount: 30),
                     error: (error, stack) => CalendarErrorState(
                       errorMessage: error.toString(),
                       onRetry: () {
@@ -546,13 +511,18 @@ class _TimelineCalendarWidgetState
                     ),
                   );
                 },
-                loading: () => const Center(
+                loading: () => Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: AppDimensions.spaceM),
-                      Text('Učitavanje jedinica...'),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: AppDimensions.spaceM),
+                      Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return Text(l10n.ownerCalendarLoadingUnits);
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -562,26 +532,29 @@ class _TimelineCalendarWidgetState
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 48,
-                          color: AppColors.error,
-                        ),
+                        const Icon(Icons.error_outline, size: 48, color: AppColors.error),
                         const SizedBox(height: AppDimensions.spaceM),
-                        const Text(
-                          'Greška pri učitavanju jedinica',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return Text(
+                              l10n.ownerCalendarErrorLoadingUnits,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            );
+                          },
                         ),
                         const SizedBox(height: AppDimensions.spaceS),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            ref.invalidate(allOwnerUnitsProvider);
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return ElevatedButton.icon(
+                              onPressed: () {
+                                ref.invalidate(allOwnerUnitsProvider);
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: Text(l10n.ownerCalendarTryAgain),
+                            );
                           },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Pokušaj ponovno'),
                         ),
                       ],
                     ),
@@ -595,10 +568,7 @@ class _TimelineCalendarWidgetState
     );
   }
 
-  Widget _buildTimelineView(
-    List<UnitModel> units,
-    Map<String, List<BookingModel>> bookingsByUnit,
-  ) {
+  Widget _buildTimelineView(List<UnitModel> units, Map<String, List<BookingModel>> bookingsByUnit) {
     // Use windowed date range for performance (only visible days + buffer)
     final dates = _getVisibleDateRange();
     final dayWidth = _getDayWidth(context);
@@ -630,8 +600,7 @@ class _TimelineCalendarWidgetState
                   child: InteractiveViewer(
                     transformationController: _transformationController,
                     minScale: _minZoomScale,
-                    panEnabled:
-                        false, // Disable pan, use ScrollController instead
+                    panEnabled: false, // Disable pan, use ScrollController instead
                     child: SingleChildScrollView(
                       controller: _horizontalScrollController,
                       scrollDirection: Axis.horizontal,
@@ -640,19 +609,9 @@ class _TimelineCalendarWidgetState
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildTimelineGrid(
-                              units,
-                              bookingsByUnit,
-                              dates,
-                              offsetWidth,
-                            ),
+                            _buildTimelineGrid(units, bookingsByUnit, dates, offsetWidth),
                             // Summary bar (if enabled)
-                            if (widget.showSummary)
-                              _buildSummaryBar(
-                                bookingsByUnit,
-                                dates,
-                                offsetWidth,
-                              ),
+                            if (widget.showSummary) _buildSummaryBar(bookingsByUnit, dates, offsetWidth),
                           ],
                         ),
                       ),
@@ -688,8 +647,7 @@ class _TimelineCalendarWidgetState
             child: SingleChildScrollView(
               controller: _headerScrollController,
               scrollDirection: Axis.horizontal,
-              physics:
-                  const NeverScrollableScrollPhysics(), // Disable manual scrolling, sync only
+              physics: const NeverScrollableScrollPhysics(), // Disable manual scrolling, sync only
               child: Column(
                 children: [
                   // Nad-zaglavlje: Month headers
@@ -739,9 +697,7 @@ class _TimelineCalendarWidgetState
     for (int i = 0; i < dates.length; i++) {
       final date = dates[i];
 
-      if (currentMonth == null ||
-          date.month != currentMonth.month ||
-          date.year != currentMonth.year) {
+      if (currentMonth == null || date.month != currentMonth.month || date.year != currentMonth.year) {
         // New month started, add previous month header if exists
         if (currentMonth != null && dayCount > 0) {
           headers.add(
@@ -777,10 +733,7 @@ class _TimelineCalendarWidgetState
     return headers;
   }
 
-  Widget _buildUnitNamesColumn(
-    List<UnitModel> units,
-    Map<String, List<BookingModel>> bookingsByUnit,
-  ) {
+  Widget _buildUnitNamesColumn(List<UnitModel> units, Map<String, List<BookingModel>> bookingsByUnit) {
     final unitColumnWidth = _getUnitColumnWidth(context);
     final baseRowHeight = _getUnitRowHeight(context);
 
@@ -788,23 +741,18 @@ class _TimelineCalendarWidgetState
       width: unitColumnWidth,
       child: SingleChildScrollView(
         controller: _unitNamesScrollController,
-        physics:
-            const NeverScrollableScrollPhysics(), // Disable manual scroll, sync only
+        physics: const NeverScrollableScrollPhysics(), // Disable manual scroll, sync only
         child: Column(
           children: units.map((unit) {
             // Calculate dynamic height for this unit based on booking stacks
             final bookings = bookingsByUnit[unit.id] ?? [];
-            final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(
-              bookings,
-            );
+            final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
             final dynamicHeight = baseRowHeight * maxStackCount;
 
             return TimelineUnitNameCell(
               unit: unit,
               unitRowHeight: dynamicHeight,
-              onTap: widget.onUnitNameTap != null
-                  ? () => widget.onUnitNameTap!(unit)
-                  : null,
+              onTap: widget.onUnitNameTap != null ? () => widget.onUnitNameTap!(unit) : null,
             );
           }).toList(),
         ),
@@ -823,13 +771,7 @@ class _TimelineCalendarWidgetState
       child: Column(
         children: units.map((unit) {
           final bookings = bookingsByUnit[unit.id] ?? [];
-          return _buildUnitRow(
-            unit,
-            bookings,
-            dates,
-            offsetWidth,
-            bookingsByUnit,
-          );
+          return _buildUnitRow(unit, bookings, dates, offsetWidth, bookingsByUnit);
         }).toList(),
       ),
     );
@@ -847,9 +789,7 @@ class _TimelineCalendarWidgetState
 
     // Calculate stack levels for overlapping bookings
     final stackLevels = TimelineBookingStacker.assignStackLevels(bookings);
-    final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(
-      bookings,
-    );
+    final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
 
     // Dynamic height: base height × number of stacks
     final unitRowHeight = baseRowHeight * maxStackCount;
@@ -858,11 +798,7 @@ class _TimelineCalendarWidgetState
       height: unitRowHeight,
       decoration: BoxDecoration(
         color: Colors.transparent, // Transparent to show parent gradient
-        border: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()))),
       ),
       child: Stack(
         children: [
@@ -879,14 +815,7 @@ class _TimelineCalendarWidgetState
           ..._buildDropZones(unit, dates, offsetWidth, bookings),
 
           // Reservation blocks (foreground)
-          ..._buildReservationBlocks(
-            bookings,
-            dates,
-            offsetWidth,
-            allBookingsByUnit,
-            stackLevels,
-            baseRowHeight,
-          ),
+          ..._buildReservationBlocks(bookings, dates, offsetWidth, allBookingsByUnit, stackLevels, baseRowHeight),
         ],
       ),
     );
@@ -928,9 +857,7 @@ class _TimelineCalendarWidgetState
               height: unitRowHeight,
               isPast: isPast,
               isToday: isToday,
-              onLongPress: widget.onCellLongPress != null
-                  ? () => widget.onCellLongPress!(date, unit)
-                  : null,
+              onLongPress: widget.onCellLongPress != null ? () => widget.onCellLongPress!(date, unit) : null,
               onBookingDropped: (booking) {
                 _handleBookingDrop(booking, date, unit, allBookings);
               },
@@ -952,12 +879,7 @@ class _TimelineCalendarWidgetState
   ) async {
     await ref
         .read(dragDropProvider.notifier)
-        .executeDrop(
-          dropDate: dropDate,
-          targetUnit: targetUnit,
-          allBookings: allBookings,
-          context: context,
-        );
+        .executeDrop(dropDate: dropDate, targetUnit: targetUnit, allBookings: allBookings, context: context);
 
     // Clear drag state
     ref.read(dragDropProvider.notifier).stopDragging();
@@ -967,8 +889,7 @@ class _TimelineCalendarWidgetState
     final dayWidth = _getDayWidth(context);
     final theme = Theme.of(context);
     final isToday = _isToday(date);
-    final isWeekend =
-        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
     return Container(
@@ -981,23 +902,12 @@ class _TimelineCalendarWidgetState
             : Colors.transparent, // Transparent to show parent gradient
         border: Border(
           left: BorderSide(
-            color: isFirstDayOfMonth
-                ? theme.colorScheme.primary
-                : theme.dividerColor.withAlpha((0.5 * 255).toInt()),
+            color: isFirstDayOfMonth ? theme.colorScheme.primary : theme.dividerColor.withAlpha((0.5 * 255).toInt()),
             width: isFirstDayOfMonth ? 2 : 1,
           ),
-          right: BorderSide(
-            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-            width: 0.5,
-          ),
-          top: BorderSide(
-            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-            width: 0.5,
-          ),
-          bottom: BorderSide(
-            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-            width: 0.5,
-          ),
+          right: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()), width: 0.5),
+          top: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()), width: 0.5),
+          bottom: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()), width: 0.5),
         ),
       ),
     );
@@ -1019,10 +929,7 @@ class _TimelineCalendarWidgetState
     for (final booking in bookings) {
       // Calculate position and width
       final checkIn = booking.checkIn;
-      final nights = TimelineBookingBlock.calculateNights(
-        booking.checkIn,
-        booking.checkOut,
-      );
+      final nights = TimelineBookingBlock.calculateNights(booking.checkIn, booking.checkOut);
 
       // Find index of check-in date in visible range
       final startIndex = dates.indexWhere((d) => _isSameDay(d, checkIn));
@@ -1133,20 +1040,11 @@ class _TimelineCalendarWidgetState
     );
 
     if (newStatus != null && mounted) {
-      await CalendarBookingActions.changeBookingStatus(
-        context,
-        ref,
-        booking,
-        newStatus,
-      );
+      await CalendarBookingActions.changeBookingStatus(context, ref, booking, newStatus);
     }
   }
 
-  Widget _buildSummaryBar(
-    Map<String, List<BookingModel>> bookingsByUnit,
-    List<DateTime> dates,
-    double offsetWidth,
-  ) {
+  Widget _buildSummaryBar(Map<String, List<BookingModel>> bookingsByUnit, List<DateTime> dates, double offsetWidth) {
     final theme = Theme.of(context);
 
     // FIXED: Removed nested SingleChildScrollView - summary now scrolls with main timeline
@@ -1154,26 +1052,15 @@ class _TimelineCalendarWidgetState
     return Container(
       height: 120,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-          (0.3 * 255).toInt(),
-        ),
-        border: Border(
-          top: BorderSide(
-            color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
-            width: 2,
-          ),
-        ),
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+        border: Border(top: BorderSide(color: theme.dividerColor.withAlpha((0.5 * 255).toInt()), width: 2)),
       ),
       child: Row(
         children: [
           // Offset padding to maintain scroll position
           if (offsetWidth > 0) SizedBox(width: offsetWidth),
           ...dates.map(
-            (date) => TimelineSummaryCell(
-              date: date,
-              bookingsByUnit: bookingsByUnit,
-              dayWidth: _getDayWidth(context),
-            ),
+            (date) => TimelineSummaryCell(date: date, bookingsByUnit: bookingsByUnit, dayWidth: _getDayWidth(context)),
           ),
         ],
       ),
@@ -1182,9 +1069,7 @@ class _TimelineCalendarWidgetState
 
   bool _isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
+    return date.year == now.year && date.month == now.month && date.day == now.day;
   }
 
   bool _isSameDay(DateTime a, DateTime b) {

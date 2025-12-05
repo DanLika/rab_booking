@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/widget_translations.dart';
 import '../../theme/minimalist_colors.dart';
 import 'compact_pill_summary.dart';
 
@@ -87,6 +88,9 @@ class PillBarContent extends StatelessWidget {
   /// Builder for the tax/legal disclaimer widget
   final Widget Function() taxLegalBuilder;
 
+  /// Translations for localization
+  final WidgetTranslations translations;
+
   const PillBarContent({
     super.key,
     required this.checkIn,
@@ -107,6 +111,7 @@ class PillBarContent extends StatelessWidget {
     required this.paymentSectionBuilder,
     required this.additionalServicesBuilder,
     required this.taxLegalBuilder,
+    required this.translations,
   });
 
   @override
@@ -136,10 +141,7 @@ class PillBarContent extends StatelessWidget {
             Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: colors.borderLight,
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: colors.borderLight, borderRadius: BorderRadius.circular(2)),
             ),
             const Spacer(),
             // Close button (right)
@@ -153,11 +155,7 @@ class PillBarContent extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: colors.borderLight),
                 ),
-                child: Icon(
-                  Icons.close,
-                  size: 16,
-                  color: colors.textSecondary,
-                ),
+                child: Icon(Icons.close, size: 16, color: colors.textSecondary),
               ),
             ),
           ],
@@ -168,10 +166,7 @@ class PillBarContent extends StatelessWidget {
         ConstrainedBox(
           constraints: BoxConstraints(
             // Bug #46: Account for keyboard when calculating max height
-            maxHeight:
-                (MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).viewInsets.bottom) *
-                0.6,
+            maxHeight: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom) * 0.6,
           ),
           child: SingleChildScrollView(
             child: Row(
@@ -220,6 +215,7 @@ class PillBarContent extends StatelessWidget {
           showReserveButton: !showGuestForm,
           onClose: onClose,
           onReserve: onReserve,
+          translations: translations,
         ),
         // Show guest form if needed (mobile)
         if (showGuestForm && !isWideScreen) ...[

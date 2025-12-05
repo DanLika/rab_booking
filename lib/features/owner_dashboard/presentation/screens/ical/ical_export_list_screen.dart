@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/providers/repository_providers.dart';
@@ -32,15 +33,10 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       final List<Map<String, dynamic>> units = [];
 
       for (final property in properties) {
-        final propertyUnits = await ref
-            .read(unitRepositoryProvider)
-            .fetchUnitsByProperty(property.id);
+        final propertyUnits = await ref.read(unitRepositoryProvider).fetchUnitsByProperty(property.id);
 
         for (final unit in propertyUnits) {
-          units.add({
-            'unit': unit,
-            'property': property,
-          });
+          units.add({'unit': unit, 'property': property});
         }
       }
 
@@ -72,14 +68,10 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(56),
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [gradientStart, gradientEnd],
-            ),
-          ),
+          decoration: const BoxDecoration(gradient: LinearGradient(colors: [gradientStart, gradientEnd])),
           child: AppBar(
             title: Text(
-              'iCal Export - Odaberi Jedinicu',
+              AppLocalizations.of(context).icalExportListTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -107,35 +99,27 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical/export-list'),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [gradientStart, gradientEnd],
-          ),
-        ),
+        decoration: const BoxDecoration(gradient: LinearGradient(colors: [gradientStart, gradientEnd])),
         child: SafeArea(
           child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                  ),
-                )
+              ? const Center(child: CircularProgressIndicator(color: Colors.white))
               : _allUnits.isEmpty
-                  ? _buildEmptyState(context, theme)
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
-                      children: [
-                  // Info card
-                  _buildInfoCard(theme),
-                  const SizedBox(height: 16),
+              ? _buildEmptyState(context, theme)
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
+                  children: [
+                    // Info card
+                    _buildInfoCard(theme),
+                    const SizedBox(height: 16),
 
-                  // Units list
-                  ..._allUnits.map((item) {
-                    final unit = item['unit'];
-                    final property = item['property'];
-                    return _buildUnitCard(unit, property, theme);
-                  }),
-                      ],
-                    ),
+                    // Units list
+                    ..._allUnits.map((item) {
+                      final unit = item['unit'];
+                      final property = item['property'];
+                      return _buildUnitCard(unit, property, theme);
+                    }),
+                  ],
+                ),
         ),
       ),
     );
@@ -149,9 +133,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
     final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
     final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
-    final borderColor = isDark
-        ? confirmedGreen.withAlpha((0.3 * 255).toInt())
-        : Colors.transparent;
+    final borderColor = isDark ? confirmedGreen.withAlpha((0.3 * 255).toInt()) : Colors.transparent;
 
     return Card(
       color: cardColor,
@@ -169,11 +151,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                 color: confirmedGreen.withAlpha((0.2 * 255).toInt()),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.info_outline,
-                color: confirmedGreen,
-                size: 24,
-              ),
+              child: const Icon(Icons.info_outline, color: confirmedGreen, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -181,20 +159,13 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'iCal Export',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
+                    AppLocalizations.of(context).icalExportListHeader,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Odaberite jedinicu za koju želite generirati iCal URL za sinkronizaciju kalendara.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: textSecondary,
-                    ),
+                    AppLocalizations.of(context).icalExportListDescription,
+                    style: TextStyle(fontSize: 14, color: textSecondary),
                   ),
                 ],
               ),
@@ -213,9 +184,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
     final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
     final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
-    final borderColor = isDark
-        ? confirmedGreen.withAlpha((0.3 * 255).toInt())
-        : Colors.transparent;
+    final borderColor = isDark ? confirmedGreen.withAlpha((0.3 * 255).toInt()) : Colors.transparent;
 
     return Card(
       color: cardColor,
@@ -232,37 +201,19 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
             color: AppColors.primary.withAlpha((0.15 * 255).toInt()),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(
-            Icons.apartment,
-            color: AppColors.primary,
-            size: 24,
-          ),
+          child: const Icon(Icons.apartment, color: AppColors.primary, size: 24),
         ),
         title: Text(
-          unit.name ?? 'Nepoznata jedinica',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: textPrimary,
-          ),
+          unit.name ?? AppLocalizations.of(context).icalExportListUnknownUnit,
+          style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary),
         ),
         subtitle: Text(
-          property.name ?? 'Nepoznata nekretnina',
-          style: TextStyle(
-            color: textSecondary,
-          ),
+          property.name ?? AppLocalizations.of(context).icalExportListUnknownProperty,
+          style: TextStyle(color: textSecondary),
         ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: textSecondary,
-        ),
+        trailing: Icon(Icons.chevron_right, color: textSecondary),
         onTap: () {
-          context.push(
-            OwnerRoutes.icalExport,
-            extra: {
-              'unit': unit,
-              'propertyId': property.id,
-            },
-          );
+          context.push(OwnerRoutes.icalExport, extra: {'unit': unit, 'propertyId': property.id});
         },
       ),
     );
@@ -286,38 +237,24 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.apartment_outlined,
-                size: 64,
-                color: iconColor,
-              ),
+              Icon(Icons.apartment_outlined, size: 64, color: iconColor),
               const SizedBox(height: 16),
               Text(
-                'Nema smještajnih jedinica',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
+                AppLocalizations.of(context).icalExportListNoUnits,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
-                'Prvo kreirajte nekretninu i dodajte smještajne jedinice.',
+                AppLocalizations.of(context).icalExportListNoUnitsDesc,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: textSecondary,
-                ),
+                style: TextStyle(fontSize: 14, color: textSecondary),
               ),
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: () => context.push(OwnerRoutes.propertyNew),
                 icon: const Icon(Icons.add),
-                label: const Text('Dodaj Nekretninu'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                ),
+                label: Text(AppLocalizations.of(context).icalExportListAddProperty),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
               ),
             ],
           ),
@@ -325,5 +262,4 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       ),
     );
   }
-
 }

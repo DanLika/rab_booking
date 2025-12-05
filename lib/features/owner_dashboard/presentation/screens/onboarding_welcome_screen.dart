@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/onboarding_provider.dart';
@@ -12,16 +13,15 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppColors.authPrimary.withValues(alpha: 0.1),
-              Colors.white,
-            ],
+            colors: [AppColors.authPrimary.withValues(alpha: 0.1), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -34,30 +34,23 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Logo or Icon
-                    const Icon(
-                      Icons.hotel,
-                      size: 100,
-                      color: AppColors.authPrimary,
-                    ),
+                    const Icon(Icons.hotel, size: 100, color: AppColors.authPrimary),
                     const SizedBox(height: 32),
 
                     // Welcome Title
                     Text(
-                      'Dobrodošli u BedBooking!',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.authPrimary,
-                          ),
+                      l10n.onboardingWelcomeTitle,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: AppColors.authPrimary),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
 
                     // Subtitle
                     Text(
-                      'Sistem za upravljanje smještajem',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      l10n.onboardingWelcomeSubtitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 48),
@@ -71,28 +64,26 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Što ćete naučiti kroz vodič:',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              l10n.onboardingWhatYouWillLearn,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 16),
                             _buildFeatureItem(
                               icon: Icons.home_work,
-                              title: 'Kreiranje objekta',
-                              description: 'Dodajte osnovne informacije o vašem smještaju',
+                              title: l10n.onboardingCreateProperty,
+                              description: l10n.onboardingCreatePropertyDesc,
                             ),
                             const SizedBox(height: 12),
                             _buildFeatureItem(
                               icon: Icons.meeting_room,
-                              title: 'Postavljanje jedinica',
-                              description: 'Kreirajte sobe ili apartmane',
+                              title: l10n.onboardingSetupUnits,
+                              description: l10n.onboardingSetupUnitsDesc,
                             ),
                             const SizedBox(height: 12),
                             _buildFeatureItem(
                               icon: Icons.euro,
-                              title: 'Podešavanje cena',
-                              description: 'Postavite osnovne cijene za smještaj',
+                              title: l10n.onboardingSetupPricing,
+                              description: l10n.onboardingSetupPricingDesc,
                             ),
                           ],
                         ),
@@ -110,15 +101,15 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                           backgroundColor: AppColors.authPrimary,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Započni',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              l10n.onboardingStart,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward),
                           ],
                         ),
                       ),
@@ -127,11 +118,8 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
 
                     // Skip Button
                     TextButton(
-                      onPressed: () => _showSkipDialog(context, ref),
-                      child: Text(
-                        'Preskoči za sada',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
+                      onPressed: () => _showSkipDialog(context, ref, l10n),
+                      child: Text(l10n.onboardingSkipForNow, style: TextStyle(color: Colors.grey[600])),
                     ),
                     const SizedBox(height: 24),
 
@@ -139,14 +127,8 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Već imate nalog?',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                        TextButton(
-                          onPressed: () => context.go(OwnerRoutes.login),
-                          child: const Text('Prijavite se'),
-                        ),
+                        Text(l10n.onboardingAlreadyHaveAccount, style: TextStyle(color: Colors.grey[600])),
+                        TextButton(onPressed: () => context.go(OwnerRoutes.login), child: Text(l10n.onboardingSignIn)),
                       ],
                     ),
                   ],
@@ -159,11 +141,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFeatureItem({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
+  Widget _buildFeatureItem({required IconData icon, required String title, required String description}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -173,20 +151,8 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                description,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 13,
-                ),
-              ),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              Text(description, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
             ],
           ),
         ),
@@ -194,27 +160,18 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showSkipDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showSkipDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Preskoči vodič?'),
-        content: const Text(
-          'Ako preskočite vodič, nećete naučiti osnove podešavanja sistema. '
-          'Uvijek možete dodati objekat i jedinice kasnije kroz postavke.\n\n'
-          'Želite li nastaviti?',
-        ),
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.onboardingSkipTitle),
+        content: Text(l10n.onboardingSkipDesc),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Odustani'),
-          ),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
           ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.warning,
-            ),
-            child: const Text('Preskoči'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning),
+            child: Text(l10n.onboardingSkip),
           ),
         ],
       ),

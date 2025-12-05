@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../../../core/services/storage_service.dart';
@@ -42,10 +43,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
       final userId = ref.read(enhancedAuthProvider).firebaseUser?.uid;
 
       if (userId == null) {
-        throw AuthException(
-          'User not authenticated',
-          code: 'auth/not-authenticated',
-        );
+        throw AuthException('User not authenticated', code: 'auth/not-authenticated');
       }
 
       // Use propertyId if available, otherwise use 'draft' folder
@@ -75,29 +73,21 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
       final updatedImages = [...currentImages, ...uploadedUrls];
 
       // Update draft
-      ref
-          .read(unitWizardNotifierProvider(widget.unitId).notifier)
-          .updateField('images', updatedImages);
+      ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('images', updatedImages);
 
       // Set cover image if not set
       if (wizardState.coverImageUrl == null && updatedImages.isNotEmpty) {
-        ref
-            .read(unitWizardNotifierProvider(widget.unitId).notifier)
-            .updateField('coverImageUrl', updatedImages.first);
+        ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('coverImageUrl', updatedImages.first);
       }
 
       if (mounted) {
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          'Uploaded ${uploadedUrls.length} image(s) successfully',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.unitWizardStep4UploadSuccess(uploadedUrls.length));
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          'Failed to upload images: $e',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.unitWizardStep4UploadError(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -111,9 +101,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
     // Remove from list
     final updatedImages = currentImages.where((url) => url != imageUrl).toList();
 
-    ref
-        .read(unitWizardNotifierProvider(widget.unitId).notifier)
-        .updateField('images', updatedImages);
+    ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('images', updatedImages);
 
     // Update cover image if deleted
     final wizardState = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
@@ -124,23 +112,23 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
     }
 
     if (mounted) {
-      ErrorDisplayUtils.showSuccessSnackBar(context, 'Image deleted');
+      final l10n = AppLocalizations.of(context);
+      ErrorDisplayUtils.showSuccessSnackBar(context, l10n.unitWizardStep4ImageDeleted);
     }
   }
 
   /// Set cover image
   void _setCoverImage(String imageUrl) {
-    ref
-        .read(unitWizardNotifierProvider(widget.unitId).notifier)
-        .updateField('coverImageUrl', imageUrl);
+    ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('coverImageUrl', imageUrl);
 
     if (mounted) {
-      ErrorDisplayUtils.showSuccessSnackBar(context, 'Cover image updated');
+      final l10n = AppLocalizations.of(context);
+      ErrorDisplayUtils.showSuccessSnackBar(context, l10n.unitWizardStep4CoverUpdated);
     }
   }
 
   /// Build images grid with Wrap layout
-  Widget _buildImagesGrid(List<String> images, String? coverImageUrl, ThemeData theme) {
+  Widget _buildImagesGrid(List<String> images, String? coverImageUrl, ThemeData theme, AppLocalizations l10n) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -159,9 +147,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isCover
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.outline.withValues(alpha: 0.3),
+                    color: isCover ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.3),
                     width: isCover ? 3 : 1,
                   ),
                 ),
@@ -175,11 +161,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: theme.colorScheme.surfaceContainerHighest,
-                        child: Icon(
-                          Icons.broken_image,
-                          color: theme.colorScheme.error,
-                          size: 24,
-                        ),
+                        child: Icon(Icons.broken_image, color: theme.colorScheme.error, size: 24),
                       );
                     },
                   ),
@@ -193,12 +175,9 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                   left: 4,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+                    decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(6)),
                     child: Text(
-                      'Cover',
+                      l10n.unitWizardStep4Cover,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -226,7 +205,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                           padding: EdgeInsets.zero,
                           minimumSize: const Size(24, 24),
                         ),
-                        tooltip: 'Postavi kao naslovnu',
+                        tooltip: l10n.unitWizardStep4SetCover,
                       ),
 
                     // Delete button
@@ -239,7 +218,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                         padding: EdgeInsets.zero,
                         minimumSize: const Size(24, 24),
                       ),
-                      tooltip: 'Obriši',
+                      tooltip: l10n.unitWizardStep4Delete,
                     ),
                   ],
                 ),
@@ -253,6 +232,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final wizardState = ref.watch(unitWizardNotifierProvider(widget.unitId));
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -265,9 +245,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
-          decoration: BoxDecoration(
-            gradient: context.gradients.pageBackground,
-          ),
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Column(
@@ -275,7 +253,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
               children: [
                 // Title
                 Text(
-                  'Fotografije',
+                  l10n.unitWizardStep4Title,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -285,10 +263,8 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
 
                 // Subtitle
                 Text(
-                  'Dodajte fotografije smještajne jedinice (preporučeno min. 5)',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.unitWizardStep4Subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 24),
 
@@ -312,12 +288,9 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-                        gradient: context.gradients.sectionBackground,
+                        color: context.gradients.cardBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: context.gradients.sectionBorder,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -330,34 +303,24 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withAlpha(
-                                      (0.12 * 255).toInt(),
-                                    ),
+                                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(
-                                    Icons.photo_library,
-                                    color: theme.colorScheme.primary,
-                                    size: 18,
-                                  ),
+                                  child: Icon(Icons.photo_library, color: theme.colorScheme.primary, size: 18),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Galerija Fotografija',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    l10n.unitWizardStep4Gallery,
+                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Upload fotografija vaše jedinice',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              l10n.unitWizardStep4GalleryDesc,
+                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -378,13 +341,13 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                             height: 20,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation(
-                                                theme.colorScheme.onPrimary,
-                                              ),
+                                              valueColor: AlwaysStoppedAnimation(theme.colorScheme.onPrimary),
                                             ),
                                           )
                                         : const Icon(Icons.add_photo_alternate, size: 20),
-                                    label: Text(_isUploading ? 'Uploading...' : 'Dodaj Fotografije'),
+                                    label: Text(
+                                      _isUploading ? l10n.unitWizardStep4Uploading : l10n.unitWizardStep4AddPhotos,
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: theme.colorScheme.primary,
                                       foregroundColor: Colors.white,
@@ -401,7 +364,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      '${images.length} fotografija',
+                                      l10n.unitWizardStep4PhotoCount(images.length),
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: theme.colorScheme.primary,
                                         fontWeight: FontWeight.w600,
@@ -422,7 +385,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                           ),
                                           const SizedBox(height: 12),
                                           Text(
-                                            'Nema fotografija',
+                                            l10n.unitWizardStep4NoPhotos,
                                             style: theme.textTheme.bodyMedium?.copyWith(
                                               color: theme.colorScheme.onSurfaceVariant,
                                             ),
@@ -431,7 +394,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                       ),
                                     )
                                   else
-                                    _buildImagesGrid(images, coverImageUrl, theme),
+                                    _buildImagesGrid(images, coverImageUrl, theme, l10n),
                                 ],
                               )
                             else
@@ -452,13 +415,13 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                                 height: 20,
                                                 child: CircularProgressIndicator(
                                                   strokeWidth: 2,
-                                                  valueColor: AlwaysStoppedAnimation(
-                                                    theme.colorScheme.onPrimary,
-                                                  ),
+                                                  valueColor: AlwaysStoppedAnimation(theme.colorScheme.onPrimary),
                                                 ),
                                               )
                                             : const Icon(Icons.add_photo_alternate, size: 20),
-                                        label: Text(_isUploading ? 'Uploading...' : 'Dodaj Fotografije'),
+                                        label: Text(
+                                          _isUploading ? l10n.unitWizardStep4Uploading : l10n.unitWizardStep4AddPhotos,
+                                        ),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: theme.colorScheme.primary,
                                           foregroundColor: Colors.white,
@@ -475,7 +438,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Text(
-                                          '${images.length} fotografija',
+                                          l10n.unitWizardStep4PhotoCount(images.length),
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             color: theme.colorScheme.primary,
                                             fontWeight: FontWeight.w600,
@@ -499,7 +462,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                                 ),
                                                 const SizedBox(height: 12),
                                                 Text(
-                                                  'Nema fotografija',
+                                                  l10n.unitWizardStep4NoPhotos,
                                                   style: theme.textTheme.bodyMedium?.copyWith(
                                                     color: theme.colorScheme.onSurfaceVariant,
                                                   ),
@@ -507,7 +470,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                               ],
                                             ),
                                           )
-                                        : _buildImagesGrid(images, coverImageUrl, theme),
+                                        : _buildImagesGrid(images, coverImageUrl, theme, l10n),
                                   ),
                                 ],
                               ),
@@ -523,9 +486,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 }

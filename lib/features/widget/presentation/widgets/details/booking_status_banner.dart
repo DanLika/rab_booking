@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Banner displaying booking status with appropriate color and icon.
 ///
@@ -20,15 +21,12 @@ class BookingStatusBanner extends StatelessWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const BookingStatusBanner({
-    super.key,
-    required this.status,
-    required this.colors,
-  });
+  const BookingStatusBanner({super.key, required this.status, required this.colors});
 
   @override
   Widget build(BuildContext context) {
-    final statusInfo = _getStatusInfo();
+    final tr = WidgetTranslations.of(context);
+    final statusInfo = _getStatusInfo(tr);
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
@@ -46,11 +44,8 @@ class BookingStatusBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Booking Status',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXS,
-                    color: colors.textSecondary,
-                  ),
+                  tr.bookingStatus,
+                  style: TextStyle(fontSize: TypographyTokens.fontSizeXS, color: colors.textSecondary),
                 ),
                 Text(
                   statusInfo.text,
@@ -68,33 +63,17 @@ class BookingStatusBanner extends StatelessWidget {
     );
   }
 
-  _StatusInfo _getStatusInfo() {
+  _StatusInfo _getStatusInfo(WidgetTranslations tr) {
     switch (status.toLowerCase()) {
       case 'confirmed':
       case 'approved':
-        return _StatusInfo(
-          color: colors.success,
-          text: 'Confirmed',
-          icon: Icons.check_circle,
-        );
+        return _StatusInfo(color: colors.success, text: tr.statusConfirmed, icon: Icons.check_circle);
       case 'pending':
-        return _StatusInfo(
-          color: colors.warning,
-          text: 'Pending',
-          icon: Icons.schedule,
-        );
+        return _StatusInfo(color: colors.warning, text: tr.statusPending, icon: Icons.schedule);
       case 'cancelled':
-        return _StatusInfo(
-          color: colors.error,
-          text: 'Cancelled',
-          icon: Icons.cancel,
-        );
+        return _StatusInfo(color: colors.error, text: tr.statusCancelled, icon: Icons.cancel);
       default:
-        return _StatusInfo(
-          color: colors.textSecondary,
-          text: status,
-          icon: Icons.info,
-        );
+        return _StatusInfo(color: colors.textSecondary, text: status, icon: Icons.info);
     }
   }
 }
@@ -104,9 +83,5 @@ class _StatusInfo {
   final String text;
   final IconData icon;
 
-  _StatusInfo({
-    required this.color,
-    required this.text,
-    required this.icon,
-  });
+  _StatusInfo({required this.color, required this.text, required this.icon});
 }

@@ -3,6 +3,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Reusable QR code payment section for bank transfers
 /// Generates EPC QR code compatible with European banking apps
@@ -11,6 +12,7 @@ class QrCodePaymentSection extends StatelessWidget {
   final BankTransferConfig bankConfig;
   final double amount;
   final String bookingReference;
+  final WidgetTranslations translations;
 
   const QrCodePaymentSection({
     super.key,
@@ -18,6 +20,7 @@ class QrCodePaymentSection extends StatelessWidget {
     required this.bankConfig,
     required this.amount,
     required this.bookingReference,
+    required this.translations,
   });
 
   @override
@@ -30,9 +33,7 @@ class QrCodePaymentSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         children: [
@@ -55,11 +56,7 @@ class QrCodePaymentSection extends StatelessWidget {
             color: colors.buttonPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
           ),
-          child: Icon(
-            Icons.qr_code_2,
-            color: colors.buttonPrimary,
-            size: IconSizeTokens.medium,
-          ),
+          child: Icon(Icons.qr_code_2, color: colors.buttonPrimary, size: IconSizeTokens.medium),
         ),
         const SizedBox(width: SpacingTokens.m),
         Expanded(
@@ -67,7 +64,7 @@ class QrCodePaymentSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'QR Kod za Uplatu',
+                translations.qrCodeForPayment,
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeL,
                   fontWeight: TypographyTokens.bold,
@@ -76,11 +73,8 @@ class QrCodePaymentSection extends StatelessWidget {
               ),
               const SizedBox(height: SpacingTokens.xxs),
               Text(
-                'Skenirajte sa mobilnom bankom',
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeS,
-                  color: colors.textSecondary,
-                ),
+                translations.scanWithMobileBank,
+                style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
               ),
             ],
           ),
@@ -95,10 +89,7 @@ class QrCodePaymentSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: ColorTokens.pureWhite,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: colors.borderDefault,
-          width: BorderTokens.widthMedium,
-        ),
+        border: Border.all(color: colors.borderDefault, width: BorderTokens.widthMedium),
       ),
       child: QrImageView(
         data: epcData,
@@ -115,27 +106,16 @@ class QrCodePaymentSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.buttonPrimary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
-        border: Border.all(
-          color: colors.buttonPrimary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: colors.buttonPrimary.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.info_outline,
-            size: IconSizeTokens.small,
-            color: colors.buttonPrimary,
-          ),
+          Icon(Icons.info_outline, size: IconSizeTokens.small, color: colors.buttonPrimary),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Text(
-              'QR kod sadrži sve podatke o uplati (IBAN, iznos, referenca). '
-              'Skenirajte ga sa aplikacijom vaše banke.',
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeS,
-                color: colors.textSecondary,
-                height: 1.4,
-              ),
+              translations.qrCodeContainsPaymentData,
+              style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary, height: 1.4),
             ),
           ),
         ],
@@ -163,7 +143,7 @@ class QrCodePaymentSection extends StatelessWidget {
       'EUR$amountStr', // Amount
       '', // Purpose
       reference, // Reference
-      'Booking deposit', // Remittance info
+      translations.bookingDeposit, // Remittance info
       '', // Information to beneficiary
     ].join('\n');
 

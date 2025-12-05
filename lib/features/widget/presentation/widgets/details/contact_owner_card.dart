@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card displaying property owner contact information.
 ///
@@ -23,29 +24,23 @@ class ContactOwnerCard extends StatelessWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const ContactOwnerCard({
-    super.key,
-    this.ownerEmail,
-    this.ownerPhone,
-    required this.colors,
-  });
+  const ContactOwnerCard({super.key, this.ownerEmail, this.ownerPhone, required this.colors});
 
   @override
   Widget build(BuildContext context) {
+    final tr = WidgetTranslations.of(context);
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Property Owner Contact',
+            tr.propertyOwnerContact,
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeM,
               fontWeight: TypographyTokens.bold,
@@ -53,11 +48,10 @@ class ContactOwnerCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
-          if (ownerEmail != null)
-            _buildInfoRow('Email', ownerEmail!, Icons.email),
+          if (ownerEmail != null) _buildInfoRow(tr.email, ownerEmail!, Icons.email),
           if (ownerPhone != null) ...[
             if (ownerEmail != null) const SizedBox(height: SpacingTokens.s),
-            _buildInfoRow('Phone', ownerPhone!, Icons.phone),
+            _buildInfoRow(tr.phone, ownerPhone!, Icons.phone),
           ],
         ],
       ),
@@ -75,10 +69,7 @@ class ContactOwnerCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeXS,
-                  color: colors.textSecondary,
-                ),
+                style: TextStyle(fontSize: TypographyTokens.fontSizeXS, color: colors.textSecondary),
               ),
               Text(
                 value,

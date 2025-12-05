@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../domain/models/onboarding_state.dart';
 import '../providers/onboarding_provider.dart';
 
@@ -83,6 +85,8 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -91,31 +95,27 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Osnovni podaci o objektu',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              l10n.onboardingPropertyTitle,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Unesite osnovne informacije o vašem smještaju',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              l10n.onboardingPropertySubtitle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
 
             // Property Name (REQUIRED)
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Naziv objekta *',
-                hintText: 'npr. Villa Jasko',
-                border: OutlineInputBorder(),
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.onboardingPropertyName,
+                hintText: l10n.onboardingPropertyNameHint,
+                context: context,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Obavezno polje';
+                  return l10n.onboardingPropertyRequired;
                 }
                 return null;
               },
@@ -126,15 +126,12 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
             // Property Type (REQUIRED)
             DropdownButtonFormField<PropertyType>(
               initialValue: _selectedType,
-              decoration: const InputDecoration(
-                labelText: 'Tip smještaja *',
-                border: OutlineInputBorder(),
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.onboardingPropertyType,
+                context: context,
               ),
               items: PropertyType.values.map((type) {
-                return DropdownMenuItem(
-                  value: type,
-                  child: Text(_getPropertyTypeLabel(type)),
-                );
+                return DropdownMenuItem(value: type, child: Text(_getPropertyTypeLabel(type, l10n)));
               }).toList(),
               onChanged: (value) {
                 setState(() => _selectedType = value);
@@ -142,7 +139,7 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
               },
               validator: (value) {
                 if (value == null) {
-                  return 'Obavezno polje';
+                  return l10n.onboardingPropertyRequired;
                 }
                 return null;
               },
@@ -152,14 +149,14 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
             // Address (REQUIRED)
             TextFormField(
               controller: _addressController,
-              decoration: const InputDecoration(
-                labelText: 'Adresa *',
-                hintText: 'Ulica i broj',
-                border: OutlineInputBorder(),
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.onboardingPropertyAddress,
+                hintText: l10n.onboardingPropertyAddressHint,
+                context: context,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Obavezno polje';
+                  return l10n.onboardingPropertyRequired;
                 }
                 return null;
               },
@@ -173,13 +170,13 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
                 Expanded(
                   child: TextFormField(
                     controller: _cityController,
-                    decoration: const InputDecoration(
-                      labelText: 'Grad *',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: l10n.onboardingPropertyCity,
+                      context: context,
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Obavezno';
+                        return l10n.onboardingPropertyRequiredShort;
                       }
                       return null;
                     },
@@ -190,13 +187,13 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
                 Expanded(
                   child: TextFormField(
                     controller: _countryController,
-                    decoration: const InputDecoration(
-                      labelText: 'Država *',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: l10n.onboardingPropertyCountry,
+                      context: context,
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Obavezno';
+                        return l10n.onboardingPropertyRequiredShort;
                       }
                       return null;
                     },
@@ -209,21 +206,19 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
 
             // Optional Fields Section
             Text(
-              'Dodatne informacije (opciono)',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              l10n.onboardingPropertyOptional,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
 
             // Phone
             TextFormField(
               controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Telefon',
-                hintText: '+385 xx xxx xxxx',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone),
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.onboardingPropertyPhone,
+                hintText: l10n.onboardingPropertyPhoneHint,
+                prefixIcon: const Icon(Icons.phone),
+                context: context,
               ),
               keyboardType: TextInputType.phone,
               onChanged: (_) => _saveData(),
@@ -233,11 +228,11 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
             // Email
             TextFormField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                hintText: 'info@example.com',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.onboardingPropertyEmail,
+                hintText: l10n.onboardingPropertyEmailHint,
+                prefixIcon: const Icon(Icons.email),
+                context: context,
               ),
               keyboardType: TextInputType.emailAddress,
               onChanged: (_) => _saveData(),
@@ -247,11 +242,11 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
             // Website
             TextFormField(
               controller: _websiteController,
-              decoration: const InputDecoration(
-                labelText: 'Website',
-                hintText: 'https://example.com',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.language),
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.onboardingPropertyWebsite,
+                hintText: l10n.onboardingPropertyWebsiteHint,
+                prefixIcon: const Icon(Icons.language),
+                context: context,
               ),
               keyboardType: TextInputType.url,
               onChanged: (_) => _saveData(),
@@ -262,18 +257,18 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
     );
   }
 
-  String _getPropertyTypeLabel(PropertyType type) {
+  String _getPropertyTypeLabel(PropertyType type, AppLocalizations l10n) {
     switch (type) {
       case PropertyType.villa:
-        return 'Villa';
+        return l10n.onboardingPropertyTypeVilla;
       case PropertyType.apartment:
-        return 'Apartman';
+        return l10n.onboardingPropertyTypeApartment;
       case PropertyType.studio:
-        return 'Studio';
+        return l10n.onboardingPropertyTypeStudio;
       case PropertyType.house:
-        return 'Kuća';
+        return l10n.onboardingPropertyTypeHouse;
       case PropertyType.room:
-        return 'Soba';
+        return l10n.onboardingPropertyTypeRoom;
     }
   }
 }

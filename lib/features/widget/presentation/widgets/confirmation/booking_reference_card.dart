@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card displaying the booking reference with copy functionality.
 ///
@@ -22,18 +23,14 @@ class BookingReferenceCard extends StatelessWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const BookingReferenceCard({
-    super.key,
-    required this.bookingReference,
-    required this.colors,
-  });
+  const BookingReferenceCard({super.key, required this.bookingReference, required this.colors});
 
-  Future<void> _copyToClipboard(BuildContext context) async {
+  Future<void> _copyToClipboard(BuildContext context, WidgetTranslations tr) async {
     await Clipboard.setData(ClipboardData(text: bookingReference));
     if (context.mounted) {
       SnackBarHelper.showSuccess(
         context: context,
-        message: 'Booking reference copied to clipboard!',
+        message: tr.bookingReferenceCopied,
         duration: const Duration(seconds: 2),
       );
     }
@@ -41,23 +38,19 @@ class BookingReferenceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = WidgetTranslations.of(context);
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         children: [
           Text(
-            'Booking Reference',
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
-              color: colors.textSecondary,
-            ),
+            tr.bookingReference,
+            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
           ),
           const SizedBox(height: SpacingTokens.xs),
           Row(
@@ -74,12 +67,9 @@ class BookingReferenceCard extends StatelessWidget {
               ),
               const SizedBox(width: SpacingTokens.s),
               IconButton(
-                icon: Icon(
-                  Icons.copy,
-                  color: colors.textSecondary,
-                ),
-                onPressed: () => _copyToClipboard(context),
-                tooltip: 'Copy reference',
+                icon: Icon(Icons.copy, color: colors.textSecondary),
+                onPressed: () => _copyToClipboard(context, tr),
+                tooltip: tr.copyReference,
               ),
             ],
           ),

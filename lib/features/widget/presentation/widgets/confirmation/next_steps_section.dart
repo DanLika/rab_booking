@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Reusable next steps section for booking confirmation
 /// Displays different steps based on payment method
@@ -7,16 +8,13 @@ class NextStepsSection extends StatelessWidget {
   final bool isDarkMode;
   final String paymentMethod;
 
-  const NextStepsSection({
-    super.key,
-    required this.isDarkMode,
-    required this.paymentMethod,
-  });
+  const NextStepsSection({super.key, required this.isDarkMode, required this.paymentMethod});
 
   @override
   Widget build(BuildContext context) {
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final steps = _getStepsForPaymentMethod();
+    final tr = WidgetTranslations.of(context);
+    final steps = _getStepsForPaymentMethod(tr);
 
     return Padding(
       padding: const EdgeInsets.only(top: SpacingTokens.l),
@@ -25,15 +23,13 @@ class NextStepsSection extends StatelessWidget {
         decoration: BoxDecoration(
           color: colors.backgroundSecondary,
           borderRadius: BorderTokens.circularMedium,
-          border: Border.all(
-            color: colors.borderDefault,
-          ),
+          border: Border.all(color: colors.borderDefault),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'What\'s Next?',
+              tr.whatsNext,
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeL,
                 fontWeight: TypographyTokens.bold,
@@ -54,99 +50,43 @@ class NextStepsSection extends StatelessWidget {
     );
   }
 
-  List<Map<String, dynamic>> _getStepsForPaymentMethod() {
+  List<Map<String, dynamic>> _getStepsForPaymentMethod(WidgetTranslations tr) {
     switch (paymentMethod) {
       case 'stripe':
         return [
-          {
-            'icon': Icons.email,
-            'title': 'Check Your Email',
-            'description': 'Confirmation email sent with all booking details',
-          },
-          {
-            'icon': Icons.calendar_today,
-            'title': 'Add to Calendar',
-            'description':
-                'Click the "Add to My Calendar" button above to download the event',
-          },
-          {
-            'icon': Icons.directions,
-            'title': 'Prepare for Your Stay',
-            'description': 'Check-in instructions will be sent 24h before',
-          },
+          {'icon': Icons.email, 'title': tr.checkYourEmail, 'description': tr.confirmationEmailSent},
+          {'icon': Icons.calendar_today, 'title': tr.addToCalendar, 'description': tr.addToCalendarDescription},
+          {'icon': Icons.directions, 'title': tr.prepareForYourStay, 'description': tr.checkInInstructionsSent},
         ];
 
       case 'bank_transfer':
         return [
-          {
-            'icon': Icons.account_balance,
-            'title': 'Complete Bank Transfer',
-            'description':
-                'Transfer the deposit amount within 3 days using the reference number',
-          },
-          {
-            'icon': Icons.email,
-            'title': 'Check Your Email',
-            'description':
-                'Bank transfer instructions and booking details have been sent',
-          },
-          {
-            'icon': Icons.pending,
-            'title': 'Awaiting Confirmation',
-            'description':
-                'We\'ll confirm your booking once payment is received (usually within 24h)',
-          },
+          {'icon': Icons.account_balance, 'title': tr.completeBankTransfer, 'description': tr.bankTransferDescription},
+          {'icon': Icons.email, 'title': tr.checkYourEmail, 'description': tr.bankTransferInstructionsSent},
+          {'icon': Icons.pending, 'title': tr.awaitingConfirmation, 'description': tr.awaitingConfirmationDescription},
         ];
 
       case 'pay_on_arrival':
         return [
-          {
-            'icon': Icons.email,
-            'title': 'Check Your Email',
-            'description':
-                'Confirmation email sent with all booking details and payment instructions',
-          },
-          {
-            'icon': Icons.calendar_today,
-            'title': 'Add to Calendar',
-            'description':
-                'Click the "Add to My Calendar" button above to download the event',
-          },
+          {'icon': Icons.email, 'title': tr.checkYourEmail, 'description': tr.confirmationEmailSentWithPayment},
+          {'icon': Icons.calendar_today, 'title': tr.addToCalendar, 'description': tr.addToCalendarDescription},
           {
             'icon': Icons.payments_outlined,
-            'title': 'Payment on Arrival',
-            'description':
-                'Bring payment with you - cash or card accepted at the property',
+            'title': tr.paymentOnArrivalTitle,
+            'description': tr.paymentOnArrivalDescription,
           },
-          {
-            'icon': Icons.directions,
-            'title': 'Prepare for Your Stay',
-            'description':
-                'Check-in instructions will be sent 24h before arrival',
-          },
+          {'icon': Icons.directions, 'title': tr.prepareForYourStay, 'description': tr.checkInInstructionsSentBefore},
         ];
 
       default:
         return [
-          {
-            'icon': Icons.email,
-            'title': 'Check Your Email',
-            'description': 'Confirmation email sent with all booking details',
-          },
-          {
-            'icon': Icons.pending,
-            'title': 'Awaiting Processing',
-            'description': 'Your booking is being processed',
-          },
+          {'icon': Icons.email, 'title': tr.checkYourEmail, 'description': tr.confirmationEmailSent},
+          {'icon': Icons.pending, 'title': tr.awaitingProcessing, 'description': tr.bookingBeingProcessed},
         ];
     }
   }
 
-  Widget _buildStepItem(
-    dynamic colors,
-    Map<String, dynamic> step,
-    bool isLast,
-  ) {
+  Widget _buildStepItem(dynamic colors, Map<String, dynamic> step, bool isLast) {
     return Column(
       children: [
         Row(
@@ -155,17 +95,8 @@ class NextStepsSection extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                color: colors.textPrimary,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(
-                  step['icon'] as IconData,
-                  color: colors.backgroundPrimary,
-                  size: 20,
-                ),
-              ),
+              decoration: BoxDecoration(color: colors.textPrimary, shape: BoxShape.circle),
+              child: Center(child: Icon(step['icon'] as IconData, color: colors.backgroundPrimary, size: 20)),
             ),
             const SizedBox(width: SpacingTokens.m),
             Expanded(
@@ -183,10 +114,7 @@ class NextStepsSection extends StatelessWidget {
                   const SizedBox(height: SpacingTokens.xxs),
                   Text(
                     step['description'] as String,
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
-                      color: colors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                   ),
                 ],
               ),

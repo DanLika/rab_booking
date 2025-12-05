@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 import '../../theme/minimalist_colors.dart';
 import 'price_breakdown_widget.dart';
 
@@ -67,6 +68,9 @@ class CompactPillSummary extends StatelessWidget {
   /// Callback when Reserve button is tapped
   final VoidCallback onReserve;
 
+  /// Translations for localization
+  final WidgetTranslations translations;
+
   const CompactPillSummary({
     super.key,
     required this.checkIn,
@@ -82,6 +86,7 @@ class CompactPillSummary extends StatelessWidget {
     required this.showReserveButton,
     required this.onClose,
     required this.onReserve,
+    required this.translations,
   });
 
   @override
@@ -101,21 +106,11 @@ class CompactPillSummary extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? ColorTokens.pureWhite
-                      : colors.backgroundSecondary,
+                  color: isDarkMode ? ColorTokens.pureWhite : colors.backgroundSecondary,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: colors.borderLight,
-                  ),
+                  border: Border.all(color: colors.borderLight),
                 ),
-                child: Icon(
-                  Icons.close,
-                  size: 16,
-                  color: isDarkMode
-                      ? ColorTokens.pureBlack
-                      : colors.textSecondary,
-                ),
+                child: Icon(Icons.close, size: 16, color: isDarkMode ? ColorTokens.pureBlack : colors.textSecondary),
               ),
             ),
           ],
@@ -128,41 +123,24 @@ class CompactPillSummary extends StatelessWidget {
           decoration: BoxDecoration(
             color: colors.buttonPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: colors.buttonPrimary.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: colors.buttonPrimary.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.calendar_month,
-                size: 18,
-                color: colors.buttonPrimary,
-              ),
+              Icon(Icons.calendar_month, size: 18, color: colors.buttonPrimary),
               const SizedBox(width: 8),
               Text(
                 '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textPrimary,
-                ),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textPrimary),
               ),
               const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: colors.buttonPrimary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                decoration: BoxDecoration(color: colors.buttonPrimary, borderRadius: BorderRadius.circular(12)),
                 child: Text(
-                  '$nights ${nights == 1 ? 'night' : 'nights'}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: colors.buttonPrimaryText,
-                  ),
+                  translations.nightCount(nights),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: colors.buttonPrimaryText),
                 ),
               ),
             ],
@@ -180,6 +158,7 @@ class CompactPillSummary extends StatelessWidget {
           formattedTotal: formattedTotal,
           formattedDeposit: formattedDeposit,
           depositPercentage: depositPercentage,
+          translations: translations,
         ),
 
         const SizedBox(height: 12),
@@ -191,17 +170,10 @@ class CompactPillSummary extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              decoration: BoxDecoration(
-                color: colors.buttonPrimary,
-                borderRadius: BorderRadius.circular(20),
-              ),
+              decoration: BoxDecoration(color: colors.buttonPrimary, borderRadius: BorderRadius.circular(20)),
               child: Text(
-                'Reserve',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: colors.buttonPrimaryText,
-                ),
+                translations.reserve,
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.buttonPrimaryText),
               ),
             ),
           ),

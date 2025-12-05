@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
@@ -31,6 +32,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -40,9 +42,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -63,21 +63,13 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
-                      Icons.cancel_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+                    child: const Icon(Icons.cancel_outlined, color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Otkaži rezervaciju',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      l10n.bookingCancelTitle,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                 ],
@@ -91,19 +83,13 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Jeste li sigurni da želite otkazati ovu rezervaciju?',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
+                  Text(l10n.bookingCancelMessage, style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface)),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _reasonController,
                     decoration: InputDecorationHelper.buildDecoration(
-                      labelText: 'Razlog otkazivanja',
-                      hintText: 'Unesite razlog...',
+                      labelText: l10n.bookingCancelReason,
+                      hintText: l10n.bookingCancelReasonHint,
                       prefixIcon: const Icon(Icons.edit_note),
                       context: context,
                     ),
@@ -111,10 +97,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                   ),
                   const SizedBox(height: 16),
                   CheckboxListTile(
-                    title: Text(
-                      'Pošalji email gostu',
-                      style: TextStyle(color: theme.colorScheme.onSurface),
-                    ),
+                    title: Text(l10n.bookingCancelSendEmail, style: TextStyle(color: theme.colorScheme.onSurface)),
                     value: _sendEmail,
                     onChanged: (value) {
                       setState(() {
@@ -130,15 +113,10 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Text('Odustani'),
+                        child: Text(l10n.bookingCancelCancel),
                       ),
                       const SizedBox(width: 12),
                       FilledButton(
@@ -146,7 +124,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                           // Return reason and sendEmail flag
                           Navigator.of(context).pop({
                             'reason': _reasonController.text.trim().isEmpty
-                                ? 'Otkazano od strane vlasnika'
+                                ? l10n.bookingCancelDefaultReason
                                 : _reasonController.text.trim(),
                             'sendEmail': _sendEmail,
                           });
@@ -154,16 +132,11 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                         style: FilledButton.styleFrom(
                           backgroundColor: theme.colorScheme.error,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           elevation: 0,
                         ),
-                        child: const Text('Otkaži rezervaciju'),
+                        child: Text(l10n.bookingCancelConfirm),
                       ),
                     ],
                   ),

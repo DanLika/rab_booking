@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card displaying cancellation policy information.
 ///
@@ -12,6 +13,7 @@ import '../../../../../core/utils/date_time_parser.dart';
 ///   deadlineHours: 48,
 ///   checkIn: '2024-01-15',
 ///   colors: ColorTokens.light,
+///   translations: WidgetTranslations.of(context),
 /// )
 /// ```
 class CancellationPolicyCard extends StatelessWidget {
@@ -24,19 +26,20 @@ class CancellationPolicyCard extends StatelessWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
+  /// Translations for localization
+  final WidgetTranslations translations;
+
   const CancellationPolicyCard({
     super.key,
     required this.deadlineHours,
     required this.checkIn,
     required this.colors,
+    required this.translations,
   });
 
   @override
   Widget build(BuildContext context) {
-    final checkInDate = DateTimeParser.parseOrThrow(
-      checkIn,
-      context: 'CancellationPolicyCard.checkIn',
-    );
+    final checkInDate = DateTimeParser.parseOrThrow(checkIn, context: 'CancellationPolicyCard.checkIn');
     final now = DateTime.now();
     final hoursUntilCheckIn = checkInDate.difference(now).inHours;
     final canCancel = hoursUntilCheckIn >= deadlineHours;
@@ -48,23 +51,17 @@ class CancellationPolicyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                canCancel ? Icons.event_available : Icons.event_busy,
-                size: 20,
-                color: statusColor,
-              ),
+              Icon(canCancel ? Icons.event_available : Icons.event_busy, size: 20, color: statusColor),
               const SizedBox(width: SpacingTokens.xs),
               Text(
-                'Cancellation Policy',
+                translations.cancellationPolicy,
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeM,
                   fontWeight: TypographyTokens.bold,
@@ -79,17 +76,13 @@ class CancellationPolicyCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderTokens.circularSmall,
-              border: Border.all(
-                color: statusColor.withValues(alpha: 0.3),
-              ),
+              border: Border.all(color: statusColor.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  canCancel
-                      ? '✓ Free cancellation available'
-                      : '✗ Cancellation deadline passed',
+                  canCancel ? translations.freeCancellationAvailable : translations.cancellationDeadlinePassedShort,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeS,
                     fontWeight: TypographyTokens.semiBold,
@@ -98,16 +91,13 @@ class CancellationPolicyCard extends StatelessWidget {
                 ),
                 const SizedBox(height: SpacingTokens.xs),
                 Text(
-                  'You can cancel free of charge up to $deadlineHours hours before check-in.',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
-                    color: colors.textSecondary,
-                  ),
+                  translations.canCancelUpToHours(deadlineHours),
+                  style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                 ),
                 if (!canCancel) ...[
                   const SizedBox(height: SpacingTokens.xs),
                   Text(
-                    'The cancellation deadline has passed. Please contact the property owner if you need to cancel.',
+                    translations.cancellationDeadlinePassedContactOwner,
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,
                       color: colors.warning,

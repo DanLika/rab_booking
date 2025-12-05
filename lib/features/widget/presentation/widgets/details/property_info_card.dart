@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../common/detail_row_widget.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card displaying property and unit information.
 ///
@@ -38,21 +39,20 @@ class PropertyInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = WidgetTranslations.of(context);
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header matching BookingSummaryCard style
           Text(
-            'Property Information',
+            tr.propertyInformation,
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
@@ -62,14 +62,14 @@ class PropertyInfoCard extends StatelessWidget {
           const SizedBox(height: SpacingTokens.m),
           // Use DetailRowWidget for consistent styling
           DetailRowWidget(
-            label: 'Property',
+            label: tr.property,
             value: propertyName,
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Unit',
+            label: tr.unit,
             value: unitName,
             isDarkMode: isDarkMode,
             hasPadding: true,

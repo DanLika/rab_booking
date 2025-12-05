@@ -4,6 +4,7 @@ import '../../../../../core/services/ical_generator.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../utils/ics_download.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Button for adding booking to calendar via .ics file download.
 ///
@@ -47,15 +48,12 @@ class CalendarExportButton extends StatefulWidget {
 class _CalendarExportButtonState extends State<CalendarExportButton> {
   bool _isGeneratingIcs = false;
 
-  Future<void> _handleAddToCalendar() async {
+  Future<void> _handleAddToCalendar(WidgetTranslations tr) async {
     setState(() => _isGeneratingIcs = true);
 
     try {
       // Generate .ics content using IcalGenerator service
-      final icsContent = IcalGenerator.generateBookingEvent(
-        booking: widget.booking,
-        unitName: widget.unitName,
-      );
+      final icsContent = IcalGenerator.generateBookingEvent(booking: widget.booking, unitName: widget.unitName);
 
       // Download file (platform-specific)
       final filename = 'booking-${widget.bookingReference}.ics';
@@ -63,17 +61,14 @@ class _CalendarExportButtonState extends State<CalendarExportButton> {
 
       // Success feedback
       if (mounted) {
-        SnackBarHelper.showSuccess(
-          context: context,
-          message: 'Calendar event downloaded! Check your downloads folder.',
-        );
+        SnackBarHelper.showSuccess(context: context, message: tr.calendarEventDownloaded);
       }
     } catch (e) {
       // Error handling
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: 'Failed to generate calendar file: $e',
+          message: tr.calendarGenerationFailed(e.toString()),
           duration: const Duration(seconds: 5),
         );
       }
@@ -87,26 +82,19 @@ class _CalendarExportButtonState extends State<CalendarExportButton> {
   @override
   Widget build(BuildContext context) {
     final colors = widget.colors;
+    final tr = WidgetTranslations.of(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: SpacingTokens.l),
       child: ElevatedButton.icon(
-        onPressed: _isGeneratingIcs ? null : _handleAddToCalendar,
-        icon: Icon(
-          _isGeneratingIcs ? Icons.hourglass_empty : Icons.calendar_today,
-        ),
-        label: Text(
-          _isGeneratingIcs ? 'Generating...' : 'Add to My Calendar',
-        ),
+        onPressed: _isGeneratingIcs ? null : () => _handleAddToCalendar(tr),
+        icon: Icon(_isGeneratingIcs ? Icons.hourglass_empty : Icons.calendar_today),
+        label: Text(_isGeneratingIcs ? tr.generating : tr.addToMyCalendar),
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.backgroundSecondary,
           foregroundColor: colors.textPrimary,
           minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              BorderTokens.radiusMedium,
-            ),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderTokens.radiusMedium)),
         ),
       ),
     );

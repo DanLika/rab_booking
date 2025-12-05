@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/constants/enums.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../shared/models/booking_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
 import '../../send_email_dialog.dart';
@@ -10,48 +11,41 @@ import '../../send_email_dialog.dart';
 /// Contains common booking operations used across calendar views
 class CalendarBookingActions {
   /// Delete booking with confirmation
-  static Future<void> deleteBooking(
-    BuildContext context,
-    WidgetRef ref,
-    BookingModel booking,
-  ) async {
+  static Future<void> deleteBooking(BuildContext context, WidgetRef ref, BookingModel booking) async {
+    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Obriši rezervaciju'),
-        content: Text(
-          'Jeste li sigurni da želite obrisati rezervaciju za ${booking.guestName ?? 'N/A'}?',
-        ),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.calendarActionsDeleteTitle),
+        content: Text(l10n.calendarActionsDeleteConfirm(booking.guestName ?? 'N/A')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Otkaži'),
-          ),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.calendarActionsCancel)),
           ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Obriši'),
+            child: Text(l10n.calendarActionsDelete),
           ),
         ],
       ),
     );
 
     if (confirm == true && context.mounted) {
+      final l10nMounted = AppLocalizations.of(context);
       // Show loading indicator
       unawaited(
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
+          builder: (dialogContext) => Center(
             child: Card(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Brisanje rezervacije...'),
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(l10nMounted.calendarActionsDeleting),
                   ],
                 ),
               ),
@@ -70,12 +64,10 @@ class CalendarBookingActions {
         }
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Rezervacija obrisana'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          final l10nSuccess = AppLocalizations.of(context);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10nSuccess.calendarActionsDeleted), backgroundColor: Colors.green));
         }
       } catch (e) {
         // Close loading dialog
@@ -84,11 +76,9 @@ class CalendarBookingActions {
         }
 
         if (context.mounted) {
+          final l10nError = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(l10nError.calendarActionsError(e.toString())), backgroundColor: Colors.red),
           );
         }
       }
@@ -102,12 +92,13 @@ class CalendarBookingActions {
     BookingModel booking,
     BookingStatus newStatus,
   ) async {
+    final l10n = AppLocalizations.of(context);
     // Show loading indicator
     unawaited(
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Center(
+        builder: (dialogContext) => Center(
           child: Card(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -116,7 +107,7 @@ class CalendarBookingActions {
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
-                  Text('Promjena statusa u ${newStatus.displayName}...'),
+                  Text(l10n.calendarActionsChangingStatus(newStatus.displayName)),
                 ],
               ),
             ),
@@ -136,9 +127,10 @@ class CalendarBookingActions {
       }
 
       if (context.mounted) {
+        final l10nSuccess = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Status promijenjen u ${newStatus.displayName}'),
+            content: Text(l10nSuccess.calendarActionsStatusChanged(newStatus.displayName)),
             backgroundColor: Colors.green,
           ),
         );
@@ -150,22 +142,16 @@ class CalendarBookingActions {
       }
 
       if (context.mounted) {
+        final l10nError = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Greška: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(l10nError.calendarActionsError(e.toString())), backgroundColor: Colors.red),
         );
       }
     }
   }
 
   /// Send email to guest
-  static void sendEmailToGuest(
-    BuildContext context,
-    WidgetRef ref,
-    BookingModel booking,
-  ) {
+  static void sendEmailToGuest(BuildContext context, WidgetRef ref, BookingModel booking) {
     showSendEmailDialog(context, ref, booking);
   }
 }

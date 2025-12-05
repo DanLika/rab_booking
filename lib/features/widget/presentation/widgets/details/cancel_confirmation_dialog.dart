@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Confirmation dialog for booking cancellation.
 ///
@@ -35,25 +36,20 @@ class CancelConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = WidgetTranslations.of(context);
     // Use pure black background for dark theme
-    final dialogBg =
-        isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final dialogBg = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
 
     return AlertDialog(
       backgroundColor: dialogBg,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularLarge),
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: colors.error, size: 28),
           const SizedBox(width: SpacingTokens.s),
           Text(
-            'Cancel Booking',
-            style: TextStyle(
-              fontWeight: TypographyTokens.bold,
-              color: colors.textPrimary,
-            ),
+            tr.cancelBooking,
+            style: TextStyle(fontWeight: TypographyTokens.bold, color: colors.textPrimary),
           ),
         ],
       ),
@@ -62,11 +58,8 @@ class CancelConfirmationDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Are you sure you want to cancel this booking?',
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              color: colors.textPrimary,
-            ),
+            tr.areYouSureCancelBooking,
+            style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textPrimary),
           ),
           const SizedBox(height: SpacingTokens.m),
           Container(
@@ -81,11 +74,8 @@ class CancelConfirmationDialog extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Booking Reference',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXS,
-                    color: colors.textSecondary,
-                  ),
+                  tr.bookingReference,
+                  style: TextStyle(fontSize: TypographyTokens.fontSizeXS, color: colors.textSecondary),
                 ),
                 const SizedBox(height: SpacingTokens.xxs),
                 Text(
@@ -105,9 +95,7 @@ class CancelConfirmationDialog extends StatelessWidget {
             decoration: BoxDecoration(
               color: colors.error.withValues(alpha: 0.08),
               borderRadius: BorderTokens.circularSmall,
-              border: Border.all(
-                color: colors.error.withValues(alpha: 0.2),
-              ),
+              border: Border.all(color: colors.error.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -115,11 +103,8 @@ class CancelConfirmationDialog extends StatelessWidget {
                 const SizedBox(width: SpacingTokens.xs),
                 Expanded(
                   child: Text(
-                    'This action cannot be undone. You will receive a cancellation confirmation email.',
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeXS,
-                      color: colors.textPrimary,
-                    ),
+                    tr.actionCannotBeUndone,
+                    style: TextStyle(fontSize: TypographyTokens.fontSizeXS, color: colors.textPrimary),
                   ),
                 ),
               ],
@@ -131,11 +116,8 @@ class CancelConfirmationDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.pop(context, false),
           child: Text(
-            'Keep Booking',
-            style: TextStyle(
-              color: colors.textSecondary,
-              fontWeight: TypographyTokens.medium,
-            ),
+            tr.keepBooking,
+            style: TextStyle(color: colors.textSecondary, fontWeight: TypographyTokens.medium),
           ),
         ),
         ElevatedButton(
@@ -144,14 +126,9 @@ class CancelConfirmationDialog extends StatelessWidget {
             backgroundColor: colors.error,
             foregroundColor: Colors.white,
             elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderTokens.circularMedium,
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
           ),
-          child: const Text(
-            'Cancel Booking',
-            style: TextStyle(fontWeight: TypographyTokens.semiBold),
-          ),
+          child: Text(tr.cancelBooking, style: const TextStyle(fontWeight: TypographyTokens.semiBold)),
         ),
       ],
     );

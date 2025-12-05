@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
@@ -26,6 +27,7 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -35,9 +37,7 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -58,21 +58,13 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
-                      Icons.cancel,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+                    child: const Icon(Icons.cancel, color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Odbij rezervaciju',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      l10n.bookingRejectTitle,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                 ],
@@ -86,19 +78,13 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Jeste li sigurni da želite odbiti ovu rezervaciju?',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
+                  Text(l10n.bookingRejectMessage, style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface)),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _reasonController,
                     decoration: InputDecorationHelper.buildDecoration(
-                      labelText: 'Razlog odbijanja',
-                      hintText: 'Unesite razlog (opcionalno)...',
+                      labelText: l10n.bookingRejectReason,
+                      hintText: l10n.bookingRejectReasonHint,
                       prefixIcon: const Icon(Icons.edit_note),
                       context: context,
                     ),
@@ -111,37 +97,25 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Text('Odustani'),
+                        child: Text(l10n.bookingRejectCancel),
                       ),
                       const SizedBox(width: 12),
                       FilledButton(
                         onPressed: () {
                           // Return reason text (empty string if not provided)
-                          Navigator.of(
-                            context,
-                          ).pop(_reasonController.text.trim());
+                          Navigator.of(context).pop(_reasonController.text.trim());
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: theme.colorScheme.error,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           elevation: 0,
                         ),
-                        child: const Text('Odbij'),
+                        child: Text(l10n.bookingRejectConfirm),
                       ),
                     ],
                   ),

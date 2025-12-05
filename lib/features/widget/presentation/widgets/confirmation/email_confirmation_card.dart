@@ -4,6 +4,7 @@ import '../../../../../core/services/email_notification_service.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../domain/models/widget_settings.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card showing email confirmation status with resend functionality.
 ///
@@ -63,23 +64,15 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
   bool _isResendingEmail = false;
   bool _emailResent = false;
 
-  Future<void> _resendConfirmationEmail() async {
+  Future<void> _resendConfirmationEmail(WidgetTranslations tr) async {
     if (widget.booking == null || widget.emailConfig == null) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Unable to resend email - missing configuration',
-      );
+      SnackBarHelper.showError(context: context, message: tr.unableToResendEmail);
       return;
     }
 
     // Check if email service is enabled and configured
-    if (widget.emailConfig!.enabled != true ||
-        widget.emailConfig!.isConfigured != true) {
-      SnackBarHelper.showWarning(
-        context: context,
-        message:
-            'Email service is not enabled or configured. Please contact the property owner.',
-      );
+    if (widget.emailConfig!.enabled != true || widget.emailConfig!.isConfigured != true) {
+      SnackBarHelper.showWarning(context: context, message: tr.emailServiceNotConfigured);
       return;
     }
 
@@ -94,10 +87,8 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
         emailConfig: widget.emailConfig!,
         propertyName: widget.propertyName,
         bookingReference: widget.bookingReference,
-        allowGuestCancellation:
-            widget.widgetSettings?.allowGuestCancellation ?? false,
-        cancellationDeadlineHours:
-            widget.widgetSettings?.cancellationDeadlineHours,
+        allowGuestCancellation: widget.widgetSettings?.allowGuestCancellation ?? false,
+        cancellationDeadlineHours: widget.widgetSettings?.cancellationDeadlineHours,
         ownerEmail: widget.widgetSettings?.contactOptions.emailAddress,
         ownerPhone: widget.widgetSettings?.contactOptions.phoneNumber,
         customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
@@ -109,10 +100,7 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
       });
 
       if (mounted) {
-        SnackBarHelper.showSuccess(
-          context: context,
-          message: 'Confirmation email sent successfully!',
-        );
+        SnackBarHelper.showSuccess(context: context, message: tr.confirmationEmailSentSuccessfully);
       }
     } catch (e) {
       setState(() {
@@ -122,7 +110,7 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: 'Failed to send email: $e',
+          message: tr.failedToSendEmail(e.toString()),
           duration: const Duration(seconds: 5),
         );
       }
@@ -133,29 +121,25 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
   Widget build(BuildContext context) {
     final colors = widget.colors;
     final canResend = widget.emailConfig != null && widget.booking != null;
+    final tr = WidgetTranslations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.email_outlined,
-            color: colors.textPrimary,
-          ),
+          Icon(Icons.email_outlined, color: colors.textPrimary),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Confirmation Email Sent',
+                  tr.confirmationEmailSentTitle,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeM,
                     fontWeight: TypographyTokens.semiBold,
@@ -164,34 +148,17 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
                 ),
                 const SizedBox(height: SpacingTokens.xxs),
                 Text(
-                  'Check your email at ${widget.guestEmail} for booking details.',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
-                    color: colors.textSecondary,
-                  ),
+                  tr.checkEmailAt(widget.guestEmail),
+                  style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                 ),
                 if (canResend) ...[
                   const SizedBox(height: SpacingTokens.xs),
                   TextButton.icon(
-                    onPressed:
-                        _isResendingEmail ? null : _resendConfirmationEmail,
+                    onPressed: _isResendingEmail ? null : () => _resendConfirmationEmail(tr),
                     icon: _isResendingEmail
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Icon(
-                            _emailResent ? Icons.check : Icons.refresh,
-                            size: 16,
-                          ),
-                    label: Text(
-                      _emailResent
-                          ? 'Email sent!'
-                          : 'Didn\'t receive? Resend email',
-                    ),
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Icon(_emailResent ? Icons.check : Icons.refresh, size: 16),
+                    label: Text(_emailResent ? tr.emailSent : tr.didntReceiveResendEmail),
                     style: TextButton.styleFrom(
                       foregroundColor: colors.textPrimary,
                       padding: EdgeInsets.zero,

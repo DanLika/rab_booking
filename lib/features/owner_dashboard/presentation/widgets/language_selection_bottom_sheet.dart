@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 
@@ -8,9 +9,7 @@ void showLanguageSelectionBottomSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
     builder: (context) => const LanguageSelectionBottomSheet(),
   );
 }
@@ -26,7 +25,7 @@ class LanguageSelectionBottomSheet extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
-        gradient: context.gradients.sectionBackground,
+        color: context.gradients.cardBackground,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Column(
@@ -37,16 +36,11 @@ class LanguageSelectionBottomSheet extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                Icon(
-                  Icons.language,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+                Icon(Icons.language, color: Theme.of(context).colorScheme.onSurface),
                 const SizedBox(width: 12),
                 Text(
-                  'Select Language',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  AppLocalizations.of(context).languageSelectTitle,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -115,8 +109,8 @@ class _LanguageOption extends StatelessWidget {
           color: isSelected
               ? selectedColor.withValues(alpha: isDark ? 0.35 : 0.15)
               : isDark
-                  ? Colors.white.withValues(alpha: 0.15)
-                  : Colors.grey[200],
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.grey[200],
         ),
         child: Center(
           child: Text(
@@ -126,25 +120,15 @@ class _LanguageOption extends StatelessWidget {
               color: isSelected
                   ? (isDark ? Colors.white : selectedColor)
                   : isDark
-                      ? Colors.white
-                      : Colors.grey[600],
+                  ? Colors.white
+                  : Colors.grey[600],
             ),
           ),
         ),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
+      title: Text(title, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
       subtitle: Text(subtitle),
-      trailing: isSelected
-          ? Icon(
-              Icons.check_circle,
-              color: isDark ? Colors.white : selectedColor,
-            )
-          : null,
+      trailing: isSelected ? Icon(Icons.check_circle, color: isDark ? Colors.white : selectedColor) : null,
       onTap: onTap,
     );
   }

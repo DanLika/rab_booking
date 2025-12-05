@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../../core/theme/theme_extensions.dart';
 
@@ -41,9 +42,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isHovered
-                ? theme.colorScheme.primary.withAlpha((0.5 * 255).toInt())
-                : theme.dividerColor,
+            color: _isHovered ? theme.colorScheme.primary.withAlpha((0.5 * 255).toInt()) : theme.dividerColor,
             width: _isHovered ? 2 : 1,
           ),
           boxShadow: [
@@ -71,52 +70,40 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                    // Tappable area (Image + Main Info)
-                    InkWell(
-                      onTap: widget.onTap,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Image
-                          _buildImage(isSmallMobile, isMobile),
+                      // Tappable area (Image + Main Info)
+                      InkWell(
+                        onTap: widget.onTap,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Image
+                            _buildImage(isSmallMobile, isMobile),
 
-                          // Main Content (without action buttons)
-                          Padding(
-                            padding: EdgeInsets.all(
-                              isSmallMobile ? 10 : (isMobile ? 12 : 14),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: _buildMainContent(
-                                context,
-                                theme,
-                                isMobile,
-                                isSmallMobile,
+                            // Main Content (without action buttons)
+                            Padding(
+                              padding: EdgeInsets.all(isSmallMobile ? 10 : (isMobile ? 12 : 14)),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: _buildMainContent(context, theme, isMobile, isSmallMobile),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
 
-                    // Action buttons (separate, not tappable for main action)
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        isSmallMobile ? 10 : (isMobile ? 12 : 16),
-                        0,
-                        isSmallMobile ? 10 : (isMobile ? 12 : 16),
-                        isSmallMobile ? 10 : (isMobile ? 12 : 16),
+                      // Action buttons (separate, not tappable for main action)
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          isSmallMobile ? 10 : (isMobile ? 12 : 16),
+                          0,
+                          isSmallMobile ? 10 : (isMobile ? 12 : 16),
+                          isSmallMobile ? 10 : (isMobile ? 12 : 16),
+                        ),
+                        child: _buildActions(context, theme, isMobile, isSmallMobile),
                       ),
-                      child: _buildActions(
-                        context,
-                        theme,
-                        isMobile,
-                        isSmallMobile,
-                      ),
-                    ),
-                  ],
-                ),
-              );
+                    ],
+                  ),
+                );
               },
             ),
           ),
@@ -125,12 +112,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     );
   }
 
-  List<Widget> _buildMainContent(
-    BuildContext context,
-    ThemeData theme,
-    bool isMobile,
-    bool isSmallMobile,
-  ) {
+  List<Widget> _buildMainContent(BuildContext context, ThemeData theme, bool isMobile, bool isSmallMobile) {
     return [
       // Title and type
       Row(
@@ -151,19 +133,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 ),
                 SizedBox(height: isSmallMobile ? 3 : 4),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSmallMobile ? 6 : 8,
-                    vertical: isSmallMobile ? 2 : 3,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: isSmallMobile ? 6 : 8, vertical: isSmallMobile ? 2 : 3),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        theme.colorScheme.primary.withAlpha(
-                          (0.15 * 255).toInt(),
-                        ),
-                        theme.colorScheme.secondary.withAlpha(
-                          (0.15 * 255).toInt(),
-                        ),
+                        theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                        theme.colorScheme.secondary.withAlpha((0.15 * 255).toInt()),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -187,20 +162,14 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       // Location
       Row(
         children: [
-          Icon(
-            Icons.location_on_rounded,
-            size: isSmallMobile ? 16 : 18,
-            color: theme.colorScheme.primary,
-          ),
+          Icon(Icons.location_on_rounded, size: isSmallMobile ? 16 : 18, color: theme.colorScheme.primary),
           SizedBox(width: isSmallMobile ? 4 : 6),
           Expanded(
             child: Text(
               widget.property.location,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: isSmallMobile ? 13 : (isMobile ? 14 : null),
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
@@ -214,13 +183,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       Container(
         height: 1,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.transparent,
-              theme.dividerColor,
-              Colors.transparent,
-            ],
-          ),
+          gradient: LinearGradient(colors: [Colors.transparent, theme.dividerColor, Colors.transparent]),
         ),
       ),
       SizedBox(height: isSmallMobile ? 8 : (isMobile ? 10 : 12)),
@@ -232,8 +195,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
             child: _buildStat(
               context,
               icon: Icons.apartment,
-              label:
-                  '${widget.property.unitsCount} ${widget.property.unitsCount == 1 ? 'jedinica' : 'jedinice'}',
+              label: AppLocalizations.of(context).propertyCardUnits(widget.property.unitsCount),
               isMobile: isMobile,
               isSmallMobile: isSmallMobile,
             ),
@@ -263,24 +225,13 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     ];
   }
 
-  Widget _buildActions(
-    BuildContext context,
-    ThemeData theme,
-    bool isMobile,
-    bool isSmallMobile,
-  ) {
+  Widget _buildActions(BuildContext context, ThemeData theme, bool isMobile, bool isSmallMobile) {
     return Column(
       children: [
         Container(
           height: 1,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.transparent,
-                theme.dividerColor,
-                Colors.transparent,
-              ],
-            ),
+            gradient: LinearGradient(colors: [Colors.transparent, theme.dividerColor, Colors.transparent]),
           ),
         ),
         SizedBox(height: isSmallMobile ? 8 : (isMobile ? 10 : 12)),
@@ -294,39 +245,24 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 children: [
                   // Published toggle with styled switch
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: widget.property.isActive
                             ? [
-                                theme.colorScheme.tertiary.withAlpha(
-                                  (0.1 * 255).toInt(),
-                                ),
-                                theme.colorScheme.tertiary.withAlpha(
-                                  (0.05 * 255).toInt(),
-                                ),
+                                theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
+                                theme.colorScheme.tertiary.withAlpha((0.05 * 255).toInt()),
                               ]
                             : [
-                                theme.colorScheme.error.withAlpha(
-                                  (0.1 * 255).toInt(),
-                                ),
-                                theme.colorScheme.error.withAlpha(
-                                  (0.05 * 255).toInt(),
-                                ),
+                                theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
+                                theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
                               ],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: widget.property.isActive
-                            ? theme.colorScheme.tertiary.withAlpha(
-                                (0.3 * 255).toInt(),
-                              )
-                            : theme.colorScheme.error.withAlpha(
-                                (0.3 * 255).toInt(),
-                              ),
+                            ? theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())
+                            : theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
                       ),
                     ),
                     child: Row(
@@ -334,13 +270,11 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                         Flexible(
                           child: Text(
                             widget.property.isActive
-                                ? 'Objavljeno'
-                                : 'Skriveno',
+                                ? AppLocalizations.of(context).propertyCardPublished
+                                : AppLocalizations.of(context).propertyCardHidden,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: widget.property.isActive
-                                  ? theme.colorScheme.tertiary
-                                  : theme.colorScheme.error,
+                              color: widget.property.isActive ? theme.colorScheme.tertiary : theme.colorScheme.error,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -362,7 +296,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       _StyledIconButton(
                         onPressed: widget.onEdit,
                         icon: Icons.edit_outlined,
-                        tooltip: 'Uredi',
+                        tooltip: AppLocalizations.of(context).propertyCardEdit,
                         color: theme.colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
@@ -370,7 +304,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       _StyledIconButton(
                         onPressed: widget.onDelete,
                         icon: Icons.delete_outline,
-                        tooltip: 'Obriši',
+                        tooltip: AppLocalizations.of(context).propertyCardDelete,
                         color: theme.colorScheme.error,
                       ),
                     ],
@@ -378,44 +312,30 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 ],
               );
             }
+            final l10n = AppLocalizations.of(context);
             return Row(
               children: [
                 // Published toggle with styled switch
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: widget.property.isActive
                             ? [
-                                theme.colorScheme.tertiary.withAlpha(
-                                  (0.1 * 255).toInt(),
-                                ),
-                                theme.colorScheme.tertiary.withAlpha(
-                                  (0.05 * 255).toInt(),
-                                ),
+                                theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
+                                theme.colorScheme.tertiary.withAlpha((0.05 * 255).toInt()),
                               ]
                             : [
-                                theme.colorScheme.error.withAlpha(
-                                  (0.1 * 255).toInt(),
-                                ),
-                                theme.colorScheme.error.withAlpha(
-                                  (0.05 * 255).toInt(),
-                                ),
+                                theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
+                                theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
                               ],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: widget.property.isActive
-                            ? theme.colorScheme.tertiary.withAlpha(
-                                (0.3 * 255).toInt(),
-                              )
-                            : theme.colorScheme.error.withAlpha(
-                                (0.3 * 255).toInt(),
-                              ),
+                            ? theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())
+                            : theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
                       ),
                     ),
                     child: Row(
@@ -423,14 +343,10 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       children: [
                         Flexible(
                           child: Text(
-                            widget.property.isActive
-                                ? 'Objavljeno'
-                                : 'Skriveno',
+                            widget.property.isActive ? l10n.propertyCardPublished : l10n.propertyCardHidden,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: widget.property.isActive
-                                  ? theme.colorScheme.tertiary
-                                  : theme.colorScheme.error,
+                              color: widget.property.isActive ? theme.colorScheme.tertiary : theme.colorScheme.error,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -453,7 +369,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 _StyledIconButton(
                   onPressed: widget.onEdit,
                   icon: Icons.edit_outlined,
-                  tooltip: 'Uredi',
+                  tooltip: l10n.propertyCardEdit,
                   color: theme.colorScheme.primary,
                 ),
 
@@ -463,7 +379,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 _StyledIconButton(
                   onPressed: widget.onDelete,
                   icon: Icons.delete_outline,
-                  tooltip: 'Obriši',
+                  tooltip: l10n.propertyCardDelete,
                   color: theme.colorScheme.error,
                 ),
               ],
@@ -479,10 +395,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     final aspectRatio = isSmallMobile ? 2.2 : (isMobile ? 2.0 : 1.95);
 
     return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(16),
-        topRight: Radius.circular(16),
-      ),
+      borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
       child: AspectRatio(
         aspectRatio: aspectRatio,
         child: widget.property.primaryImage != null
@@ -503,11 +416,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       builder: (context) => Container(
         color: context.surfaceVariantColor,
         child: Center(
-          child: Icon(
-            Icons.villa,
-            size: isSmallMobile ? 48 : 64,
-            color: context.iconColorSecondary,
-          ),
+          child: Icon(Icons.villa, size: isSmallMobile ? 48 : 64, color: context.iconColorSecondary),
         ),
       ),
     );
@@ -528,23 +437,15 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
         vertical: isSmallMobile ? 3 : (isMobile ? 4 : 6),
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-          (0.5 * 255).toInt(),
-        ),
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
         borderRadius: BorderRadius.circular(isSmallMobile ? 8 : 10),
-        border: Border.all(
-          color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
-        ),
+        border: Border.all(color: theme.dividerColor.withAlpha((0.5 * 255).toInt())),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: isSmallMobile ? 14 : (isMobile ? 16 : 18),
-            color: theme.colorScheme.primary,
-          ),
+          Icon(icon, size: isSmallMobile ? 14 : (isMobile ? 16 : 18), color: theme.colorScheme.primary),
           SizedBox(width: isSmallMobile ? 3 : (isMobile ? 4 : 6)),
           Flexible(
             child: Text(
@@ -552,9 +453,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: isSmallMobile ? 10 : (isMobile ? 11 : null),
                 fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.8 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt()),
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -568,12 +467,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
 
 /// Styled icon button with gradient background
 class _StyledIconButton extends StatelessWidget {
-  const _StyledIconButton({
-    required this.onPressed,
-    required this.icon,
-    required this.tooltip,
-    required this.color,
-  });
+  const _StyledIconButton({required this.onPressed, required this.icon, required this.tooltip, required this.color});
 
   final VoidCallback onPressed;
   final IconData icon;
@@ -593,21 +487,12 @@ class _StyledIconButton extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  color.withAlpha((0.15 * 255).toInt()),
-                  color.withAlpha((0.08 * 255).toInt()),
-                ],
+                colors: [color.withAlpha((0.15 * 255).toInt()), color.withAlpha((0.08 * 255).toInt())],
               ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: color.withAlpha((0.3 * 255).toInt()),
-              ),
+              border: Border.all(color: color.withAlpha((0.3 * 255).toInt())),
             ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: color,
-            ),
+            child: Icon(icon, size: 20, color: color),
           ),
         ),
       ),

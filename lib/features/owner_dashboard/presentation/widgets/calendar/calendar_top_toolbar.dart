@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../domain/models/date_range_selection.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Calendar top toolbar widget
 /// Shows date range picker, search, refresh, today button, add room, summary toggle, and notifications
@@ -52,6 +53,7 @@ class CalendarTopToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final textScale = MediaQuery.textScalerOf(context).scale(1.0);
     final responsiveHeight = (60 * textScale).clamp(60.0, 80.0);
 
@@ -68,11 +70,8 @@ class CalendarTopToolbar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: onPreviousPeriod,
-            tooltip: isWeekView ? 'Prethodni tjedan' : 'Prethodni mjesec',
-            constraints: BoxConstraints(
-              minWidth: isCompact ? 32 : 40,
-              minHeight: isCompact ? 32 : 40,
-            ),
+            tooltip: isWeekView ? l10n.ownerCalendarPreviousWeek : l10n.ownerCalendarPreviousMonth,
+            constraints: BoxConstraints(minWidth: isCompact ? 32 : 40, minHeight: isCompact ? 32 : 40),
             iconSize: isCompact ? 18 : 24,
             padding: EdgeInsets.zero,
           ),
@@ -82,13 +81,8 @@ class CalendarTopToolbar extends StatelessWidget {
             onTap: onDatePickerTap,
             borderRadius: BorderRadius.circular(8),
             child: Container(
-              constraints: isCompact
-                  ? const BoxConstraints(maxWidth: 120)
-                  : null,
-              padding: EdgeInsets.symmetric(
-                horizontal: isCompact ? 6 : 12,
-                vertical: isCompact ? 6 : 8,
-              ),
+              constraints: isCompact ? const BoxConstraints(maxWidth: 120) : null,
+              padding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 12, vertical: isCompact ? 6 : 8),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                 borderRadius: BorderRadius.circular(8),
@@ -98,23 +92,15 @@ class CalendarTopToolbar extends StatelessWidget {
                 children: [
                   Text(
                     dateRange.toDisplayString(isWeek: isWeekView),
-                    style:
-                        (isCompact
-                                ? theme.textTheme.labelSmall
-                                : theme.textTheme.titleSmall)
-                            ?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.primary,
-                            ),
+                    style: (isCompact ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(width: isCompact ? 2 : 4),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    size: isCompact ? 14 : 20,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(Icons.arrow_drop_down, size: isCompact ? 14 : 20, color: theme.colorScheme.primary),
                 ],
               ),
             ),
@@ -124,11 +110,8 @@ class CalendarTopToolbar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: onNextPeriod,
-            tooltip: isWeekView ? 'Sljedeći tjedan' : 'Sljedeći mjesec',
-            constraints: BoxConstraints(
-              minWidth: isCompact ? 32 : 40,
-              minHeight: isCompact ? 32 : 40,
-            ),
+            tooltip: isWeekView ? l10n.ownerCalendarNextWeek : l10n.ownerCalendarNextMonth,
+            constraints: BoxConstraints(minWidth: isCompact ? 32 : 40, minHeight: isCompact ? 32 : 40),
             iconSize: isCompact ? 18 : 24,
             padding: EdgeInsets.zero,
           ),
@@ -141,13 +124,11 @@ class CalendarTopToolbar extends StatelessWidget {
             // COMPACT MODE: Only overflow menu
             PopupMenuButton<String>(
               icon: Badge(
-                label: (notificationCount ?? 0) > 0
-                    ? Text('$notificationCount')
-                    : null,
+                label: (notificationCount ?? 0) > 0 ? Text('$notificationCount') : null,
                 isLabelVisible: (notificationCount ?? 0) > 0,
                 child: const Icon(Icons.more_vert),
               ),
-              tooltip: 'Opcije',
+              tooltip: l10n.ownerCalendarOptions,
               position: PopupMenuPosition.under, // Dropdown opens below button
               offset: const Offset(0, 8), // 8px below button
               onSelected: (value) {
@@ -172,91 +153,84 @@ class CalendarTopToolbar extends StatelessWidget {
                     break;
                 }
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'today',
-                  child: Row(
-                    children: [
-                      Icon(Icons.today, size: 20),
-                      SizedBox(width: 12),
-                      Text('Danas'),
-                    ],
-                  ),
-                ),
-                if (onNotificationsTap != null)
+              itemBuilder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return [
                   PopupMenuItem(
-                    value: 'notifications',
+                    value: 'today',
                     child: Row(
                       children: [
-                        Badge(
-                          label: (notificationCount ?? 0) > 0
-                              ? Text('$notificationCount')
-                              : null,
-                          isLabelVisible: (notificationCount ?? 0) > 0,
-                          child: const Icon(Icons.notifications, size: 20),
-                        ),
+                        const Icon(Icons.today, size: 20),
                         const SizedBox(width: 12),
-                        const Text('Obavijesti'),
+                        Text(l10n.ownerCalendarToday),
                       ],
                     ),
                   ),
-                if (onSearchTap != null)
-                  const PopupMenuItem(
-                    value: 'search',
-                    child: Row(
-                      children: [
-                        Icon(Icons.search, size: 20),
-                        SizedBox(width: 12),
-                        Text('Pretraži'),
-                      ],
+                  if (onNotificationsTap != null)
+                    PopupMenuItem(
+                      value: 'notifications',
+                      child: Row(
+                        children: [
+                          Badge(
+                            label: (notificationCount ?? 0) > 0 ? Text('$notificationCount') : null,
+                            isLabelVisible: (notificationCount ?? 0) > 0,
+                            child: const Icon(Icons.notifications, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(l10n.ownerCalendarNotifications),
+                        ],
+                      ),
                     ),
-                  ),
-                if (onRefresh != null)
-                  const PopupMenuItem(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(Icons.refresh, size: 20, color: Colors.green),
-                        SizedBox(width: 12),
-                        Text('Osvježi'),
-                      ],
+                  if (onSearchTap != null)
+                    PopupMenuItem(
+                      value: 'search',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.search, size: 20),
+                          const SizedBox(width: 12),
+                          Text(l10n.ownerCalendarSearch),
+                        ],
+                      ),
                     ),
-                  ),
-                if (onFilterTap != null)
-                  const PopupMenuItem(
-                    value: 'filter',
-                    child: Row(
-                      children: [
-                        Icon(Icons.tune, size: 20, color: Colors.orange),
-                        SizedBox(width: 12),
-                        Text('Filteri'),
-                      ],
+                  if (onRefresh != null)
+                    PopupMenuItem(
+                      value: 'refresh',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.refresh, size: 20, color: Colors.green),
+                          const SizedBox(width: 12),
+                          Text(l10n.ownerCalendarRefresh),
+                        ],
+                      ),
                     ),
-                  ),
-                if (showSummaryToggle && onSummaryToggleChanged != null)
-                  PopupMenuItem(
-                    value: 'analytics',
-                    child: Row(
-                      children: [
-                        Icon(
-                          isSummaryVisible
-                              ? Icons.bar_chart
-                              : Icons.bar_chart_outlined,
-                          size: 20,
-                          color: isSummaryVisible
-                              ? theme.colorScheme.primary
-                              : Colors.blue,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          isSummaryVisible
-                              ? 'Sakrij statistiku'
-                              : 'Prikaži statistiku',
-                        ),
-                      ],
+                  if (onFilterTap != null)
+                    PopupMenuItem(
+                      value: 'filter',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.tune, size: 20, color: Colors.orange),
+                          const SizedBox(width: 12),
+                          Text(l10n.ownerCalendarFilters),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
+                  if (showSummaryToggle && onSummaryToggleChanged != null)
+                    PopupMenuItem(
+                      value: 'analytics',
+                      child: Row(
+                        children: [
+                          Icon(
+                            isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
+                            size: 20,
+                            color: isSummaryVisible ? theme.colorScheme.primary : Colors.blue,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats),
+                        ],
+                      ),
+                    ),
+                ];
+              },
             )
           else
             // DESKTOP MODE: Show all buttons
@@ -269,11 +243,8 @@ class CalendarTopToolbar extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.search),
                       onPressed: onSearchTap,
-                      tooltip: 'Pretraži rezervacije',
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
-                      ),
+                      tooltip: l10n.ownerCalendarSearchBookings,
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
 
                   // Refresh button
@@ -281,12 +252,9 @@ class CalendarTopToolbar extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.refresh),
                       onPressed: onRefresh,
-                      tooltip: 'Osvježi',
+                      tooltip: l10n.ownerCalendarRefresh,
                       color: Colors.green,
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
-                      ),
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
 
                   // Filter button (desktop also gets it now)
@@ -294,45 +262,26 @@ class CalendarTopToolbar extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.tune),
                       onPressed: onFilterTap,
-                      tooltip: 'Filteri',
+                      tooltip: l10n.ownerCalendarFilters,
                       color: Colors.orange,
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
-                      ),
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
 
                   // Today button
-                  _buildTodayButton(theme),
+                  _buildTodayButton(theme, l10n),
 
                   // Notifications button
                   if (onNotificationsTap != null)
-                    _buildNotificationsButton(
-                      theme,
-                      onNotificationsTap,
-                      notificationCount,
-                    ),
+                    _buildNotificationsButton(theme, l10n, onNotificationsTap, notificationCount),
 
                   // Analytics toggle (DESKTOP MODE - icon only to save space)
                   if (showSummaryToggle && onSummaryToggleChanged != null)
                     IconButton(
-                      icon: Icon(
-                        isSummaryVisible
-                            ? Icons.bar_chart
-                            : Icons.bar_chart_outlined,
-                      ),
-                      onPressed: () =>
-                          onSummaryToggleChanged?.call(!isSummaryVisible),
-                      tooltip: isSummaryVisible
-                          ? 'Sakrij statistiku'
-                          : 'Prikaži statistiku',
-                      color: isSummaryVisible
-                          ? theme.colorScheme.primary
-                          : Colors.blue,
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
-                      ),
+                      icon: Icon(isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined),
+                      onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
+                      tooltip: isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats,
+                      color: isSummaryVisible ? theme.colorScheme.primary : Colors.blue,
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
                 ],
               ),
@@ -343,14 +292,14 @@ class CalendarTopToolbar extends StatelessWidget {
   }
 
   /// Build Today button with day badge
-  Widget _buildTodayButton(ThemeData theme) {
+  Widget _buildTodayButton(ThemeData theme, AppLocalizations l10n) {
     return Stack(
       alignment: Alignment.center,
       children: [
         IconButton(
           icon: const Icon(Icons.calendar_today_outlined),
           onPressed: onToday,
-          tooltip: 'Idi na danas',
+          tooltip: l10n.ownerCalendarGoToToday,
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
         ),
         // Positioned must be direct child of Stack, IgnorePointer inside
@@ -359,18 +308,11 @@ class CalendarTopToolbar extends StatelessWidget {
           child: IgnorePointer(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(3),
-              ),
+              decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(3)),
               constraints: const BoxConstraints(minWidth: 16, minHeight: 12),
               child: Text(
                 '${DateTime.now().day}',
-                style: TextStyle(
-                  color: theme.colorScheme.onPrimary,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: theme.colorScheme.onPrimary, fontSize: 9, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -381,17 +323,13 @@ class CalendarTopToolbar extends StatelessWidget {
   }
 
   /// Build Notifications button with badge
-  Widget _buildNotificationsButton(
-    ThemeData theme,
-    VoidCallback? onTap,
-    int? count,
-  ) {
+  Widget _buildNotificationsButton(ThemeData theme, AppLocalizations l10n, VoidCallback? onTap, int? count) {
     return Stack(
       children: [
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
           onPressed: onTap,
-          tooltip: 'Obavijesti',
+          tooltip: l10n.ownerCalendarNotifications,
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
         ),
         if (count != null && count > 0)
@@ -400,18 +338,11 @@ class CalendarTopToolbar extends StatelessWidget {
             top: 8,
             child: Container(
               padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
+              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
               constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               child: Text(
                 count > 9 ? '9+' : '$count',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
             ),

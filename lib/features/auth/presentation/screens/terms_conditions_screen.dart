@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -56,20 +57,12 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
   void _scrollToSection(String key) {
     final context = _sectionKeys[key]?.currentContext;
     if (context != null) {
-      Scrollable.ensureVisible(
-        context,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+      Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
     }
   }
 
   void _scrollToTop() {
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
+    _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
   }
 
   @override
@@ -79,123 +72,112 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: CommonAppBar(
-        title: 'Terms & Conditions',
+        title: AppLocalizations.of(context).termsScreenTitle,
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: Stack(
-          children: [
-          SingleChildScrollView(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                _buildHeader(),
-                const SizedBox(height: 32),
+            children: [
+              SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    _buildHeader(),
+                    const SizedBox(height: 32),
 
-                // Table of Contents
-                _buildTableOfContents(),
-                const SizedBox(height: 40),
+                    // Table of Contents
+                    _buildTableOfContents(),
+                    const SizedBox(height: 40),
 
-                // Sections
-                _buildSection(
-                  '1. Acceptance of Terms',
-                  'By accessing and using this booking platform ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.',
-                  _sectionKeys['acceptance']!,
-                ),
-                _buildSection(
-                  '2. Use License',
-                  'Permission is granted to temporarily use this Service for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:\n\n'
-                  '• Modify or copy the materials\n'
-                  '• Use the materials for any commercial purpose\n'
-                  '• Attempt to decompile or reverse engineer any software contained on the Service\n'
-                  '• Remove any copyright or other proprietary notations from the materials',
-                  _sectionKeys['license']!,
-                ),
-                _buildSection(
-                  '3. Booking Policy',
-                  'All bookings made through this platform are subject to the following terms:\n\n'
-                  '• A deposit of 20% is required at the time of booking\n'
-                  '• The remaining 80% is due upon arrival at the property\n'
-                  '• Cancellation policies vary by property and will be clearly displayed before booking\n'
-                  '• You must be at least 18 years old to make a booking',
-                  _sectionKeys['booking']!,
-                ),
-                _buildSection(
-                  '4. Payment Terms',
-                  'We accept the following payment methods:\n\n'
-                  '• Credit/Debit Cards (processed securely via Stripe)\n'
-                  '• Bank Transfer\n\n'
-                  'All payments are processed securely. We do not store your payment card information.',
-                  _sectionKeys['payment']!,
-                ),
-                _buildSection(
-                  '5. Cancellation & Refund Policy',
-                  'Cancellation policies are set by individual property owners. Please review the specific cancellation policy for your booking before confirming. Refunds will be processed according to the property\'s cancellation policy.',
-                  _sectionKeys['cancellation']!,
-                ),
-                _buildSection(
-                  '6. User Responsibilities',
-                  'You agree to:\n\n'
-                  '• Provide accurate and complete information when making a booking\n'
-                  '• Comply with the property rules and regulations\n'
-                  '• Respect the property and other guests\n'
-                  '• Pay for any damages caused during your stay',
-                  _sectionKeys['responsibilities']!,
-                ),
-                _buildSection(
-                  '7. Limitation of Liability',
-                  'The Service and its owners shall not be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.',
-                  _sectionKeys['liability']!,
-                ),
-                _buildSection(
-                  '8. Modifications to Terms',
-                  'We reserve the right to modify these terms at any time. We will notify users of any material changes by updating the "Last updated" date. Your continued use of the Service after such modifications constitutes your acceptance of the updated terms.',
-                  _sectionKeys['modifications']!,
-                ),
-                _buildSection(
-                  '9. Governing Law',
-                  'These terms shall be governed by and construed in accordance with the laws of Croatia, without regard to its conflict of law provisions.',
-                  _sectionKeys['governing']!,
-                ),
-                _buildSection(
-                  '10. Contact Information',
-                  'For questions about these Terms, please contact us at:\n\n'
-                  'Email: duskolicanin1234@gmail.com\n'
-                  'Address: [Your Company Address]\n\n'
-                  '⚠️ NOTE: Update this contact information with your actual details.',
-                  _sectionKeys['contact']!,
-                ),
+                    // Sections
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return Column(
+                          children: [
+                            _buildSection(
+                              l10n.termsScreenSection1Title,
+                              l10n.termsScreenSection1Body,
+                              _sectionKeys['acceptance']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection2Title,
+                              l10n.termsScreenSection2Body,
+                              _sectionKeys['license']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection3Title,
+                              l10n.termsScreenSection3Body,
+                              _sectionKeys['booking']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection4Title,
+                              l10n.termsScreenSection4Body,
+                              _sectionKeys['payment']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection5Title,
+                              l10n.termsScreenSection5Body,
+                              _sectionKeys['cancellation']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection6Title,
+                              l10n.termsScreenSection6Body,
+                              _sectionKeys['responsibilities']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection7Title,
+                              l10n.termsScreenSection7Body,
+                              _sectionKeys['liability']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection8Title,
+                              l10n.termsScreenSection8Body,
+                              _sectionKeys['modifications']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection9Title,
+                              l10n.termsScreenSection9Body,
+                              _sectionKeys['governing']!,
+                            ),
+                            _buildSection(
+                              l10n.termsScreenSection10Title,
+                              l10n.termsScreenSection10Body,
+                              _sectionKeys['contact']!,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
 
-                const SizedBox(height: 40),
+                    const SizedBox(height: 40),
 
-                // Legal Notice
-                _buildLegalNotice(),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-
-          // Scroll to top button
-          if (_showScrollToTop)
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: FloatingActionButton(
-                onPressed: _scrollToTop,
-                backgroundColor: theme.primaryColor,
-                child: Icon(Icons.arrow_upward, color: theme.colorScheme.onPrimary),
+                    // Legal Notice
+                    _buildLegalNotice(),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
-            ),
-        ],
-      ),
+
+              // Scroll to top button
+              if (_showScrollToTop)
+                Positioned(
+                  bottom: 24,
+                  right: 24,
+                  child: FloatingActionButton(
+                    onPressed: _scrollToTop,
+                    backgroundColor: theme.primaryColor,
+                    child: Icon(Icons.arrow_upward, color: theme.colorScheme.onPrimary),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -217,11 +199,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
               ),
-              child: const Icon(
-                Icons.description,
-                color: Colors.white,
-                size: 32,
-              ),
+              child: const Icon(Icons.description, color: Colors.white, size: 32),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -229,18 +207,18 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Terms and Conditions',
+                    AppLocalizations.of(context).termsScreenHeaderTitle,
                     style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Last updated: ${DateTime.now().year}',
+                    AppLocalizations.of(context).termsScreenLastUpdated(DateTime.now().year.toString()),
                     style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
                   ),
                 ],
               ),
@@ -257,11 +235,9 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: context.gradients.sectionBackground,
+        color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
+        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
@@ -274,7 +250,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 Icon(Icons.list_alt, color: theme.primaryColor, size: 24),
                 const SizedBox(width: 8),
                 Text(
-                  'Table of Contents',
+                  AppLocalizations.of(context).termsScreenToc,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -284,16 +260,25 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildTocItem('1. Acceptance of Terms', 'acceptance'),
-            _buildTocItem('2. Use License', 'license'),
-            _buildTocItem('3. Booking Policy', 'booking'),
-            _buildTocItem('4. Payment Terms', 'payment'),
-            _buildTocItem('5. Cancellation & Refund Policy', 'cancellation'),
-            _buildTocItem('6. User Responsibilities', 'responsibilities'),
-            _buildTocItem('7. Limitation of Liability', 'liability'),
-            _buildTocItem('8. Modifications to Terms', 'modifications'),
-            _buildTocItem('9. Governing Law', 'governing'),
-            _buildTocItem('10. Contact Information', 'contact'),
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Column(
+                  children: [
+                    _buildTocItem(l10n.termsScreenSection1Title, 'acceptance'),
+                    _buildTocItem(l10n.termsScreenSection2Title, 'license'),
+                    _buildTocItem(l10n.termsScreenSection3Title, 'booking'),
+                    _buildTocItem(l10n.termsScreenSection4Title, 'payment'),
+                    _buildTocItem(l10n.termsScreenSection5Title, 'cancellation'),
+                    _buildTocItem(l10n.termsScreenSection6Title, 'responsibilities'),
+                    _buildTocItem(l10n.termsScreenSection7Title, 'liability'),
+                    _buildTocItem(l10n.termsScreenSection8Title, 'modifications'),
+                    _buildTocItem(l10n.termsScreenSection9Title, 'governing'),
+                    _buildTocItem(l10n.termsScreenSection10Title, 'contact'),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -335,11 +320,9 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       padding: const EdgeInsets.only(bottom: 32),
       child: Container(
         decoration: BoxDecoration(
-          gradient: context.gradients.sectionBackground,
+          color: context.gradients.cardBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
           boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
         ),
         child: Padding(
@@ -350,18 +333,18 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
               Text(
                 title,
                 style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 content,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                      height: 1.7,
-                      fontSize: 15,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                  height: 1.7,
+                  fontSize: 15,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ],
           ),
@@ -377,10 +360,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-        border: Border.all(
-          color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-          width: 2,
-        ),
+        border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()), width: 2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -388,15 +368,11 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: theme.colorScheme.tertiary,
-                size: 28,
-              ),
+              Icon(Icons.warning_amber_rounded, color: theme.colorScheme.tertiary, size: 28),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Legal Notice',
+                  AppLocalizations.of(context).termsScreenLegalNotice,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -408,7 +384,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'This is a template document. Please consult with a legal advisor to ensure compliance with Croatian and EU laws, including GDPR regulations.',
+            AppLocalizations.of(context).termsScreenLegalNoticeBody,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 14,
               color: theme.colorScheme.onSurfaceVariant,

@@ -35,7 +35,7 @@ class EmailVerificationCard extends StatelessWidget {
           decoration: BoxDecoration(
             // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
             // topRight → bottomLeft za section
-            gradient: context.gradients.sectionBackground,
+            color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: context.gradients.sectionBorder,

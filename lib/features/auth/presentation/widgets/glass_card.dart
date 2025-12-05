@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 
 /// Premium glass morphism card for auth screens
 class GlassCard extends StatelessWidget {
@@ -6,23 +7,15 @@ class GlassCard extends StatelessWidget {
   final double maxWidth;
   final EdgeInsetsGeometry? padding;
 
-  const GlassCard({
-    super.key,
-    required this.child,
-    this.maxWidth = 460,
-    this.padding,
-  });
+  const GlassCard({super.key, required this.child, this.maxWidth = 460, this.padding});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     // Responsive padding based on screen width
     final screenWidth = MediaQuery.of(context).size.width;
-    final responsivePadding = padding ?? EdgeInsets.all(
-      screenWidth < 400 ? 16 : (screenWidth < 600 ? 24 : 32)
-    );
+    final responsivePadding = padding ?? EdgeInsets.all(screenWidth < 400 ? 16 : (screenWidth < 600 ? 24 : 32));
 
     return Container(
       constraints: BoxConstraints(maxWidth: maxWidth),
@@ -45,24 +38,10 @@ class GlassCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark ? [
-                const Color(0xFF1E1E1E).withAlpha((0.95 * 255).toInt()), // Dark gray for dark mode
-                const Color(0xFF2A2A2A).withAlpha((0.90 * 255).toInt()),
-              ] : [
-                Colors.white.withAlpha((0.95 * 255).toInt()), // White for light mode
-                Colors.white.withAlpha((0.90 * 255).toInt()),
-              ],
-            ),
+            // Use cardBackground from design system for consistent cool palette
+            color: context.gradients.cardBackground.withAlpha((0.97 * 255).toInt()),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withAlpha((0.1 * 255).toInt())
-                  : Colors.white.withAlpha((0.4 * 255).toInt()),
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()), width: 1.5),
           ),
           padding: responsivePadding,
           child: child,

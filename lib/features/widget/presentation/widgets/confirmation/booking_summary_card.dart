@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../common/detail_row_widget.dart';
+import '../../l10n/widget_translations.dart';
 
 /// Card displaying booking summary details.
 ///
@@ -75,20 +76,19 @@ class BookingSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = WidgetTranslations.of(context);
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Booking Details',
+            tr.bookingDetails,
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
@@ -97,21 +97,21 @@ class BookingSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: SpacingTokens.m),
           DetailRowWidget(
-            label: 'Property',
+            label: tr.property,
             value: unitName ?? propertyName,
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Guest',
+            label: tr.guest,
             value: guestName,
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Email',
+            label: tr.email,
             value: guestEmail,
             isDarkMode: isDarkMode,
             hasPadding: true,
@@ -119,36 +119,36 @@ class BookingSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: SpacingTokens.s),
           DetailRowWidget(
-            label: 'Check-in',
+            label: tr.checkIn,
             value: DateFormat('EEEE, MMM dd, yyyy').format(checkIn),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Check-out',
+            label: tr.checkOut,
             value: DateFormat('EEEE, MMM dd, yyyy').format(checkOut),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Duration',
-            value: '$nights ${nights == 1 ? 'night' : 'nights'}',
+            label: tr.duration,
+            value: tr.nightCount(nights),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
-            label: 'Guests',
-            value: '$guests ${guests == 1 ? 'guest' : 'guests'}',
+            label: tr.guests,
+            value: tr.guestCount(guests),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           const SizedBox(height: SpacingTokens.s),
           DetailRowWidget(
-            label: 'Total Price',
+            label: tr.totalPrice,
             value: '€${totalPrice.toStringAsFixed(2)}',
             isDarkMode: isDarkMode,
             hasPadding: true,

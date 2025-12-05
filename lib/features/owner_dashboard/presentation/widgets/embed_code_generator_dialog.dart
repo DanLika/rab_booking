@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Dialog that generates and displays embed code for widget
 class EmbedCodeGeneratorDialog extends StatefulWidget {
-  const EmbedCodeGeneratorDialog({
-    required this.unitId,
-    this.unitSlug,
-    this.unitName,
-    super.key,
-  });
+  const EmbedCodeGeneratorDialog({required this.unitId, this.unitSlug, this.unitName, super.key});
 
   final String unitId;
   final String? unitSlug;
@@ -35,14 +31,9 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
     }
 
     // Fallback to legacy query param URL
-    final queryParams = <String, String>{
-      'unit': widget.unitId,
-      'language': _selectedLanguage,
-    };
+    final queryParams = <String, String>{'unit': widget.unitId, 'language': _selectedLanguage};
 
-    return Uri.parse(_widgetBaseUrl).replace(
-      queryParameters: queryParams,
-    ).toString();
+    return Uri.parse(_widgetBaseUrl).replace(queryParameters: queryParams).toString();
   }
 
   String get _embedCode {
@@ -75,9 +66,10 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
 
   void _copyToClipboard(String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$label kopiran u clipboard!'),
+        content: Text(l10n.embedCodeCopied(label)),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),
@@ -97,196 +89,183 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.code, color: Colors.white),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Embed Kod za Widget',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Row(
+                    children: [
+                      const Icon(Icons.code, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.embedCodeTitle,
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
                       ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
 
             // Content
             Flexible(
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  // Unit name (if available)
-                  if (widget.unitName != null) ...[
-                    _buildInfoCard(
-                      icon: Icons.apartment,
-                      title: 'Jedinica',
-                      content: widget.unitName!,
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      // Unit name (if available)
+                      if (widget.unitName != null) ...[
+                        _buildInfoCard(icon: Icons.apartment, title: l10n.embedCodeUnit, content: widget.unitName!),
+                        const SizedBox(height: 16),
+                      ],
 
-                  // Hybrid Slug (if available)
-                  if (widget.unitSlug != null && widget.unitSlug!.isNotEmpty) ...[
-                    _buildInfoCard(
-                      icon: Icons.label,
-                      title: 'URL Slug',
-                      content: generateHybridSlug(widget.unitSlug!, widget.unitId),
-                      onCopy: () => _copyToClipboard(
-                        generateHybridSlug(widget.unitSlug!, widget.unitId),
-                        'Slug',
+                      // Hybrid Slug (if available)
+                      if (widget.unitSlug != null && widget.unitSlug!.isNotEmpty) ...[
+                        _buildInfoCard(
+                          icon: Icons.label,
+                          title: l10n.embedCodeUrlSlug,
+                          content: generateHybridSlug(widget.unitSlug!, widget.unitId),
+                          onCopy: () => _copyToClipboard(generateHybridSlug(widget.unitSlug!, widget.unitId), 'Slug'),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Unit ID Display (technical reference)
+                      _buildInfoCard(
+                        icon: Icons.fingerprint,
+                        title: l10n.embedCodeUnitIdTechnical,
+                        content: widget.unitId,
+                        onCopy: () => _copyToClipboard(widget.unitId, 'Unit ID'),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
 
-                  // Unit ID Display (technical reference)
-                  _buildInfoCard(
-                    icon: Icons.fingerprint,
-                    title: 'Unit ID (technical)',
-                    content: widget.unitId,
-                    onCopy: () => _copyToClipboard(widget.unitId, 'Unit ID'),
-                  ),
+                      const SizedBox(height: 16),
 
-                  const SizedBox(height: 16),
-
-                  // Widget URL
-                  _buildInfoCard(
-                    icon: Icons.link,
-                    title: 'Widget URL',
-                    content: _widgetUrl,
-                    onCopy: () => _copyToClipboard(_widgetUrl, 'URL'),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Configuration Options
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Opcije',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Language
-                          DropdownButtonFormField<String>(
-                            initialValue: _selectedLanguage,
-                            decoration: const InputDecoration(
-                              labelText: 'Jezik',
-                              border: OutlineInputBorder(),
-                              isDense: true,
-                            ),
-                            items: const [
-                              DropdownMenuItem(value: 'hr', child: Text('Hrvatski')),
-                              DropdownMenuItem(value: 'en', child: Text('English')),
-                              DropdownMenuItem(value: 'de', child: Text('Deutsch')),
-                              DropdownMenuItem(value: 'it', child: Text('Italiano')),
-                            ],
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() => _selectedLanguage = value);
-                              }
-                            },
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Height
-                          TextFormField(
-                            initialValue: _widgetHeight,
-                            decoration: const InputDecoration(
-                              labelText: 'Visina (px)',
-                              border: OutlineInputBorder(),
-                              isDense: true,
-                            ),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              setState(() => _widgetHeight = value);
-                            },
-                          ),
-                        ],
+                      // Widget URL
+                      _buildInfoCard(
+                        icon: Icons.link,
+                        title: l10n.embedCodeWidgetUrl,
+                        content: _widgetUrl,
+                        onCopy: () => _copyToClipboard(_widgetUrl, 'URL'),
                       ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                  // Fixed Height Embed Code
-                  _buildCodeCard(
-                    title: 'Fiksna Visina',
-                    description: 'Iframe sa fiksnom visinom (${_widgetHeight}px)',
-                    code: _embedCode,
-                    onCopy: () => _copyToClipboard(_embedCode, 'Embed kod'),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Responsive Embed Code
-                  _buildCodeCard(
-                    title: 'Responsive',
-                    description: 'Automatski prilagođava se širini (aspect ratio 4:3)',
-                    code: _responsiveEmbedCode,
-                    onCopy: () => _copyToClipboard(_responsiveEmbedCode, 'Responsive embed kod'),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Instructions
-                  Card(
-                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
-                    child: const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                      // Configuration Options
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.info_outline, color: AppColors.authSecondary),
-                              SizedBox(width: 8),
                               Text(
-                                'Uputstvo',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.authSecondary,
+                                l10n.embedCodeOptions,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Language
+                              DropdownButtonFormField<String>(
+                                initialValue: _selectedLanguage,
+                                decoration: InputDecoration(
+                                  labelText: l10n.embedCodeLanguage,
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
                                 ),
+                                items: const [
+                                  DropdownMenuItem(value: 'hr', child: Text('Hrvatski')),
+                                  DropdownMenuItem(value: 'en', child: Text('English')),
+                                  DropdownMenuItem(value: 'de', child: Text('Deutsch')),
+                                  DropdownMenuItem(value: 'it', child: Text('Italiano')),
+                                ],
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() => _selectedLanguage = value);
+                                  }
+                                },
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // Height
+                              TextFormField(
+                                initialValue: _widgetHeight,
+                                decoration: InputDecoration(
+                                  labelText: l10n.embedCodeHeight,
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  setState(() => _widgetHeight = value);
+                                },
                               ),
                             ],
                           ),
-                          SizedBox(height: 12),
-                          Text(
-                            '1. Kopirajte embed kod (kliknite na "Kopiraj" dugme)\n'
-                            '2. Otvorite stranicu vašeg web sajta u editoru\n'
-                            '3. Zalijepite kod na željeno mjesto\n'
-                            '4. Sačuvajte i objavite stranicu',
-                            style: TextStyle(fontSize: 14, height: 1.5),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+
+                      const SizedBox(height: 24),
+
+                      // Fixed Height Embed Code
+                      _buildCodeCard(
+                        title: l10n.embedCodeFixedHeight,
+                        description: l10n.embedCodeFixedHeightDesc(_widgetHeight),
+                        code: _embedCode,
+                        onCopy: () => _copyToClipboard(_embedCode, 'Embed kod'),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Responsive Embed Code
+                      _buildCodeCard(
+                        title: l10n.embedCodeResponsive,
+                        description: l10n.embedCodeResponsiveDesc,
+                        code: _responsiveEmbedCode,
+                        onCopy: () => _copyToClipboard(_responsiveEmbedCode, 'Responsive embed kod'),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Instructions
+                      Card(
+                        color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.info_outline, color: AppColors.authSecondary),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l10n.embedCodeInstructions,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.authSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(l10n.embedCodeInstructionsText, style: const TextStyle(fontSize: 14, height: 1.5)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -313,11 +292,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
                 ),
               ],
             ),
@@ -325,20 +300,10 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
             Row(
               children: [
                 Expanded(
-                  child: SelectableText(
-                    content,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
+                  child: SelectableText(content, style: const TextStyle(fontSize: 14, fontFamily: 'monospace')),
                 ),
                 if (onCopy != null)
-                  IconButton(
-                    icon: const Icon(Icons.copy, size: 20),
-                    onPressed: onCopy,
-                    tooltip: 'Kopiraj',
-                  ),
+                  IconButton(icon: const Icon(Icons.copy, size: 20), onPressed: onCopy, tooltip: 'Kopiraj'),
               ],
             ),
           ],
@@ -365,30 +330,16 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
+                    Text(description, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   ],
                 ),
                 ElevatedButton.icon(
                   onPressed: onCopy,
                   icon: const Icon(Icons.copy, size: 16),
                   label: const Text('Kopiraj'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  ),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
                 ),
               ],
             ),
@@ -400,14 +351,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: Colors.grey.shade300),
               ),
-              child: SelectableText(
-                code,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontFamily: 'monospace',
-                  height: 1.5,
-                ),
-              ),
+              child: SelectableText(code, style: const TextStyle(fontSize: 12, fontFamily: 'monospace', height: 1.5)),
             ),
           ],
         ),

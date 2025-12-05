@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 
 /// Premium input field with glow effect for auth screens
 class PremiumInputField extends StatefulWidget {
@@ -43,14 +44,7 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           boxShadow: _isFocused
-              ? [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withAlpha(
-                      (0.3 * 255).toInt(),
-                    ),
-                    blurRadius: 20,
-                  ),
-                ]
+              ? [BoxShadow(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()), blurRadius: 20)]
               : [],
         ),
         child: TextFormField(
@@ -59,65 +53,40 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           maxLines: widget.maxLines,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: theme.colorScheme.onSurface,
-          ),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
             labelText: widget.labelText,
             labelStyle: TextStyle(
-              color: _isFocused
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant,
+              color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color: _isFocused
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant,
+                    color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
                     size: 20,
                   )
                 : null,
             suffixIcon: widget.suffixIcon,
             filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(
-              (0.5 * 255).toInt(),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
+            fillColor: context.gradients.inputFillColor,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-                width: 1.5,
-              ),
+              borderSide: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-                width: 1.5,
-              ),
+              borderSide: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.primary,
-                width: 2,
-              ),
+              borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.error,
-                width: 1.5,
-              ),
+              borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

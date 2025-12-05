@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
@@ -93,6 +94,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final wizardState = ref.watch(unitWizardNotifierProvider(widget.unitId));
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -104,9 +106,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
-          decoration: BoxDecoration(
-            gradient: context.gradients.pageBackground,
-          ),
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Column(
@@ -114,7 +114,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
               children: [
                 // Title
                 Text(
-                  'Kapacitet i Prostor',
+                  l10n.unitWizardStep2Title,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -124,10 +124,8 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
 
                 // Subtitle
                 Text(
-                  'Unesite tehničke karakteristike smještajne jedinice',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  l10n.unitWizardStep2Subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 24),
 
@@ -151,12 +149,9 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-                        gradient: context.gradients.sectionBackground,
+                        color: context.gradients.cardBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: context.gradients.sectionBorder,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -169,34 +164,24 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withAlpha(
-                                      (0.12 * 255).toInt(),
-                                    ),
+                                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(
-                                    Icons.home_work,
-                                    color: theme.colorScheme.primary,
-                                    size: 18,
-                                  ),
+                                  child: Icon(Icons.home_work, color: theme.colorScheme.primary, size: 18),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Kapacitet Jedinice',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    l10n.unitWizardStep2UnitCapacity,
+                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Tehničke specifikacije smještaja',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              l10n.unitWizardStep2UnitCapacityDesc,
+                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -209,23 +194,21 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                   child: TextFormField(
                                     controller: _bedroomsController,
                                     decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: 'Spavaće Sobe *',
+                                      labelText: l10n.unitWizardStep2Bedrooms,
                                       hintText: '1',
                                       prefixIcon: const Icon(Icons.bed),
                                       isMobile: isMobile,
                                       context: context,
                                     ),
                                     keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
+                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Obavezno';
+                                        return l10n.unitWizardStep2Required;
                                       }
                                       final number = int.tryParse(value);
                                       if (number == null || number < 0) {
-                                        return 'Neispravan broj';
+                                        return l10n.unitWizardStep2InvalidNumber;
                                       }
                                       return null;
                                     },
@@ -236,23 +219,21 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                   child: TextFormField(
                                     controller: _bathroomsController,
                                     decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: 'Kupatila *',
+                                      labelText: l10n.unitWizardStep2Bathrooms,
                                       hintText: '1',
                                       prefixIcon: const Icon(Icons.bathroom),
                                       isMobile: isMobile,
                                       context: context,
                                     ),
                                     keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
+                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Obavezno';
+                                        return l10n.unitWizardStep2Required;
                                       }
                                       final number = int.tryParse(value);
                                       if (number == null || number < 0) {
-                                        return 'Neispravan broj';
+                                        return l10n.unitWizardStep2InvalidNumber;
                                       }
                                       return null;
                                     },
@@ -269,23 +250,21 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                   child: TextFormField(
                                     controller: _maxGuestsController,
                                     decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: 'Maksimalno Gostiju *',
+                                      labelText: l10n.unitWizardStep2MaxGuests,
                                       hintText: '2',
                                       prefixIcon: const Icon(Icons.people),
                                       isMobile: isMobile,
                                       context: context,
                                     ),
                                     keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
+                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Obavezno';
+                                        return l10n.unitWizardStep2Required;
                                       }
                                       final number = int.tryParse(value);
                                       if (number == null || number < 1) {
-                                        return 'Minimalno 1 gost';
+                                        return l10n.unitWizardStep2MinGuest;
                                       }
                                       return null;
                                     },
@@ -296,16 +275,14 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                   child: TextFormField(
                                     controller: _areaSqmController,
                                     decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: 'Površina (m²)',
+                                      labelText: l10n.unitWizardStep2Area,
                                       hintText: '50',
                                       prefixIcon: const Icon(Icons.square_foot),
                                       isMobile: isMobile,
                                       context: context,
                                     ),
                                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                                    ],
+                                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
                                   ),
                                 ),
                               ],
@@ -324,23 +301,16 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
-                    ),
+                    border: Border.all(color: theme.colorScheme.tertiary.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.lightbulb_outline,
-                        color: theme.colorScheme.tertiary,
-                      ),
+                      Icon(Icons.lightbulb_outline, color: theme.colorScheme.tertiary),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Ove informacije pomažu gostima da odaberu odgovarajući smještaj',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface,
-                          ),
+                          l10n.unitWizardStep2InfoTip,
+                          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface),
                         ),
                       ),
                     ],
@@ -352,9 +322,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 }

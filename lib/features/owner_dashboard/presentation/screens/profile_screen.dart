@@ -10,6 +10,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
@@ -22,6 +23,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final user = FirebaseAuth.instance.currentUser;
     final userProfileAsync = ref.watch(userProfileProvider);
     final authState = ref.watch(enhancedAuthProvider);
@@ -31,481 +33,388 @@ class ProfileScreen extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     // Get language display name
-    final languageName = currentLocale.languageCode == 'hr'
-        ? 'Hrvatski'
-        : 'English';
+    final languageName = currentLocale.languageCode == 'hr' ? 'Hrvatski' : 'English';
 
     // Get theme display name
     final themeName = currentThemeMode == ThemeMode.light
-        ? 'Light'
+        ? l10n.ownerProfileThemeLight
         : currentThemeMode == ThemeMode.dark
-        ? 'Dark'
-        : 'System default';
+        ? l10n.ownerProfileThemeDark
+        : l10n.ownerProfileThemeSystem;
 
     return Scaffold(
       drawer: const OwnerAppDrawer(currentRoute: 'profile'),
       appBar: CommonAppBar(
-        title: 'Profil',
+        title: l10n.ownerProfileTitle,
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: user == null
-            ? const Center(child: Text('Not authenticated'))
+            ? Center(child: Text(l10n.ownerProfileNotAuthenticated))
             : userProfileAsync.when(
-              data: (profile) {
-                final isAnonymous = authState.isAnonymous;
-                final displayName =
-                    profile?.displayName ??
-                    user.displayName ??
-                    (isAnonymous ? 'Guest User' : 'Owner');
-                final email =
-                    user.email ??
-                    (isAnonymous ? 'Anonymous Account' : 'No email');
-                final screenWidth = MediaQuery.of(context).size.width;
-                final isMobile = screenWidth < 600;
-                final headerPadding = isMobile ? 16.0 : 32.0;
+                data: (profile) {
+                  final isAnonymous = authState.isAnonymous;
+                  final displayName =
+                      profile?.displayName ??
+                      user.displayName ??
+                      (isAnonymous ? l10n.ownerProfileGuestUser : l10n.ownerProfileOwner);
+                  final email =
+                      user.email ?? (isAnonymous ? l10n.ownerProfileAnonymousAccount : l10n.ownerProfileNoEmail);
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isMobile = screenWidth < 600;
+                  final headerPadding = isMobile ? 16.0 : 32.0;
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // Premium Profile header
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.brandPrimary,
-                          borderRadius: BorderRadius.circular(
-                            isMobile ? 16 : 20,
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        // Premium Profile header
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: context.gradients.brandPrimary,
+                            borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
+                            boxShadow: isDark ? AppShadows.elevation3Dark : AppShadows.elevation3,
                           ),
-                          boxShadow: isDark
-                              ? AppShadows.elevation3Dark
-                              : AppShadows.elevation3,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(headerPadding),
-                          child: Column(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withValues(
-                                      alpha: isDark ? 0.2 : 0.3,
+                          child: Padding(
+                            padding: EdgeInsets.all(headerPadding),
+                            child: Column(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.3),
+                                      width: isMobile ? 3 : 4,
                                     ),
-                                    width: isMobile ? 3 : 4,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: isDark ? 0.4 : 0.2,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.2),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
                                       ),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child:
-                                    authState.userModel?.avatarUrl != null &&
-                                        authState
-                                            .userModel!
-                                            .avatarUrl!
-                                            .isNotEmpty
-                                    ? ClipOval(
-                                        child: Image.network(
-                                          authState.userModel!.avatarUrl!,
-                                          width: isMobile ? 100 : 120,
-                                          height: isMobile ? 100 : 120,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                                return CircleAvatar(
-                                                  radius: isMobile ? 50 : 60,
-                                                  backgroundColor: isDark
-                                                      ? AppColors.primary
-                                                      : Colors.white,
-                                                  child: Text(
-                                                    displayName
-                                                        .substring(0, 1)
-                                                        .toUpperCase(),
-                                                    style: TextStyle(
-                                                      fontSize: isMobile
-                                                          ? 40
-                                                          : 48,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: isDark
-                                                          ? Colors.white
-                                                          : AppColors.primary,
-                                                    ),
+                                    ],
+                                  ),
+                                  child:
+                                      authState.userModel?.avatarUrl != null &&
+                                          authState.userModel!.avatarUrl!.isNotEmpty
+                                      ? ClipOval(
+                                          child: Image.network(
+                                            authState.userModel!.avatarUrl!,
+                                            width: isMobile ? 100 : 120,
+                                            height: isMobile ? 100 : 120,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return CircleAvatar(
+                                                radius: isMobile ? 50 : 60,
+                                                backgroundColor: isDark ? AppColors.primary : Colors.white,
+                                                child: Text(
+                                                  displayName.substring(0, 1).toUpperCase(),
+                                                  style: TextStyle(
+                                                    fontSize: isMobile ? 40 : 48,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: isDark ? Colors.white : AppColors.primary,
                                                   ),
-                                                );
-                                              },
-                                        ),
-                                      )
-                                    : CircleAvatar(
-                                        radius: isMobile ? 50 : 60,
-                                        backgroundColor: isDark
-                                            ? AppColors.primary
-                                            : Colors.white,
-                                        child: Text(
-                                          displayName
-                                              .substring(0, 1)
-                                              .toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: isMobile ? 40 : 48,
-                                            fontWeight: FontWeight.bold,
-                                            color: isDark
-                                                ? Colors.white
-                                                : AppColors.primary,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : CircleAvatar(
+                                          radius: isMobile ? 50 : 60,
+                                          backgroundColor: isDark ? AppColors.primary : Colors.white,
+                                          child: Text(
+                                            displayName.substring(0, 1).toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: isMobile ? 40 : 48,
+                                              fontWeight: FontWeight.bold,
+                                              color: isDark ? Colors.white : AppColors.primary,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                              ),
-                              SizedBox(height: isMobile ? 16 : 20),
-                              ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: isMobile ? double.infinity : 400,
                                 ),
-                                child: Text(
-                                  displayName,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: isMobile ? 24 : 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    shadows: isDark
-                                        ? null
-                                        : [
-                                            Shadow(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.1,
+                                SizedBox(height: isMobile ? 16 : 20),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 400),
+                                  child: Text(
+                                    displayName,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 24 : 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      shadows: isDark
+                                          ? null
+                                          : [
+                                              Shadow(
+                                                color: Colors.black.withValues(alpha: 0.1),
+                                                offset: const Offset(0, 2),
+                                                blurRadius: 4,
                                               ),
-                                              offset: const Offset(0, 2),
-                                              blurRadius: 4,
-                                            ),
-                                          ],
+                                            ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                              SizedBox(height: isMobile ? 8 : 12),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: isMobile ? 12 : 16,
-                                  vertical: isMobile ? 6 : 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(
-                                    alpha: isDark ? 0.15 : 0.25,
+                                SizedBox(height: isMobile ? 8 : 12),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isMobile ? 12 : 16,
+                                    vertical: isMobile ? 6 : 8,
                                   ),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  email,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: isMobile ? 13 : 15,
-                                    color: Colors.white.withValues(alpha: 0.95),
-                                    fontWeight: FontWeight.w500,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.25),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    email,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 13 : 15,
+                                      color: Colors.white.withValues(alpha: 0.95),
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Account settings - Premium
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.sectionBackground,
-                          borderRadius: BorderRadius.circular(
-                            isMobile ? 12 : 16,
-                          ),
-                          border: Border.all(
-                            color: context.gradients.sectionBorder
-                                .withAlpha((0.5 * 255).toInt()),
-                          ),
-                          boxShadow: isDark
-                              ? AppShadows.elevation2Dark
-                              : AppShadows.elevation2,
-                        ),
-                        child: Column(
-                          children: [
-                            _PremiumListTile(
-                              icon: Icons.person_outline,
-                              title: 'Edit Profile',
-                              subtitle: isAnonymous
-                                  ? 'Sign up to edit your profile'
-                                  : 'Update your personal information',
-                              onTap: isAnonymous
-                                  ? null
-                                  : () => context.push(OwnerRoutes.profileEdit),
+                              ],
                             ),
-                            if (!isAnonymous) ...[
-                              const Divider(height: 1, indent: 72),
-                              _PremiumListTile(
-                                icon: Icons.lock_outline,
-                                title: 'Change Password',
-                                subtitle: 'Update your password',
-                                onTap: () => context.push(
-                                  OwnerRoutes.profileChangePassword,
-                                ),
-                              ),
-                            ],
-                            const Divider(height: 1, indent: 72),
-                            _PremiumListTile(
-                              icon: Icons.notifications_outlined,
-                              title: 'Notification Settings',
-                              subtitle: 'Manage your notifications',
-                              onTap: () => context.push(
-                                OwnerRoutes.profileNotifications,
-                              ),
-                              isLast: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // App settings - Premium
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.sectionBackground,
-                          borderRadius: BorderRadius.circular(
-                            isMobile ? 12 : 16,
-                          ),
-                          border: Border.all(
-                            color: context.gradients.sectionBorder
-                                .withAlpha((0.5 * 255).toInt()),
-                          ),
-                          boxShadow: isDark
-                              ? AppShadows.elevation2Dark
-                              : AppShadows.elevation2,
-                        ),
-                        child: Column(
-                          children: [
-                            _PremiumListTile(
-                              icon: Icons.language,
-                              title: 'Language',
-                              subtitle: languageName,
-                              onTap: () => showLanguageSelectionBottomSheet(
-                                context,
-                                ref,
-                              ),
-                            ),
-                            const Divider(height: 1, indent: 72),
-                            _PremiumListTile(
-                              icon: Icons.brightness_6_outlined,
-                              title: 'Theme',
-                              subtitle: themeName,
-                              onTap: () =>
-                                  showThemeSelectionBottomSheet(context, ref),
-                              isLast: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Account actions - Premium
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.sectionBackground,
-                          borderRadius: BorderRadius.circular(
-                            isMobile ? 12 : 16,
-                          ),
-                          border: Border.all(
-                            color: context.gradients.sectionBorder
-                                .withAlpha((0.5 * 255).toInt()),
-                          ),
-                          boxShadow: isDark
-                              ? AppShadows.elevation2Dark
-                              : AppShadows.elevation2,
-                        ),
-                        child: Column(
-                          children: [
-                            _PremiumListTile(
-                              icon: Icons.help_outline,
-                              title: 'Help & Support',
-                              subtitle: 'Get help with the app',
-                              onTap: () {
-                                ErrorDisplayUtils.showInfoSnackBar(
-                                  context,
-                                  'Help & Support coming soon',
-                                );
-                              },
-                            ),
-                            const Divider(height: 1, indent: 72),
-                            _PremiumListTile(
-                              icon: Icons.info_outline,
-                              title: 'About',
-                              subtitle: 'App information',
-                              onTap: () => context.push(OwnerRoutes.about),
-                            ),
-                            const Divider(height: 1, indent: 72),
-                            _LogoutTile(
-                              onLogout: () async {
-                                await ref
-                                    .read(enhancedAuthProvider.notifier)
-                                    .signOut();
-                                if (context.mounted) {
-                                  context.go(OwnerRoutes.login);
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Legal Documents - Premium
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.sectionBackground,
-                          borderRadius: BorderRadius.circular(
-                            isMobile ? 12 : 16,
-                          ),
-                          border: Border.all(
-                            color: context.gradients.sectionBorder
-                                .withAlpha((0.5 * 255).toInt()),
-                          ),
-                          boxShadow: isDark
-                              ? AppShadows.elevation2Dark
-                              : AppShadows.elevation2,
-                        ),
-                        child: Column(
-                          children: [
-                            _PremiumListTile(
-                              icon: Icons.description,
-                              title: 'Terms & Conditions',
-                              subtitle: 'End User License Agreement',
-                              onTap: () => context.push(OwnerRoutes.termsConditions),
-                            ),
-                            const Divider(height: 1, indent: 72),
-                            _PremiumListTile(
-                              icon: Icons.privacy_tip,
-                              title: 'Privacy Policy',
-                              subtitle: 'How we handle your data',
-                              onTap: () => context.push(OwnerRoutes.privacyPolicy),
-                            ),
-                            const Divider(height: 1, indent: 72),
-                            _PremiumListTile(
-                              icon: Icons.cookie,
-                              title: 'Cookies Policy',
-                              subtitle: 'Cookie usage and preferences',
-                              onTap: () => context.push(OwnerRoutes.cookiesPolicy),
-                              isLast: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                );
-              },
-              loading: () {
-                final theme = Theme.of(context);
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Učitavanje profila...',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              error: (error, stack) {
-                final theme = Theme.of(context);
-                final isDark = theme.brightness == Brightness.dark;
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            gradient: context.gradients.sectionBackground,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: theme.colorScheme.error
-                                  .withAlpha((0.3 * 255).toInt()),
-                              width: 2,
-                            ),
-                            boxShadow: isDark
-                                ? AppShadows.elevation2Dark
-                                : AppShadows.elevation2,
-                          ),
-                          child: Icon(
-                            Icons.error_outline,
-                            size: 50,
-                            color: theme.colorScheme.error,
                           ),
                         ),
                         const SizedBox(height: 24),
-                        Text(
-                          'Greška pri učitavanju profila',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.error,
+
+                        // Account settings - Premium
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                          ),
+                          child: Column(
+                            children: [
+                              _PremiumListTile(
+                                icon: Icons.person_outline,
+                                title: l10n.ownerProfileEditProfile,
+                                subtitle: isAnonymous
+                                    ? l10n.ownerProfileEditProfileSubtitleAnonymous
+                                    : l10n.ownerProfileEditProfileSubtitle,
+                                onTap: isAnonymous ? null : () => context.push(OwnerRoutes.profileEdit),
+                              ),
+                              if (!isAnonymous) ...[
+                                const Divider(height: 1, indent: 72),
+                                _PremiumListTile(
+                                  icon: Icons.lock_outline,
+                                  title: l10n.ownerProfileChangePassword,
+                                  subtitle: l10n.ownerProfileChangePasswordSubtitle,
+                                  onTap: () => context.push(OwnerRoutes.profileChangePassword),
+                                ),
+                              ],
+                              const Divider(height: 1, indent: 72),
+                              _PremiumListTile(
+                                icon: Icons.notifications_outlined,
+                                title: l10n.ownerProfileNotificationSettings,
+                                subtitle: l10n.ownerProfileNotificationSettingsSubtitle,
+                                onTap: () => context.push(OwnerRoutes.profileNotifications),
+                                isLast: true,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          '$error',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.7,
-                            ),
+                        const SizedBox(height: 20),
+
+                        // App settings - Premium
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            children: [
+                              _PremiumListTile(
+                                icon: Icons.language,
+                                title: l10n.ownerProfileLanguage,
+                                subtitle: languageName,
+                                onTap: () => showLanguageSelectionBottomSheet(context, ref),
+                              ),
+                              const Divider(height: 1, indent: 72),
+                              _PremiumListTile(
+                                icon: Icons.brightness_6_outlined,
+                                title: l10n.ownerProfileTheme,
+                                subtitle: themeName,
+                                onTap: () => showThemeSelectionBottomSheet(context, ref),
+                                isLast: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Account actions - Premium
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                          ),
+                          child: Column(
+                            children: [
+                              _PremiumListTile(
+                                icon: Icons.help_outline,
+                                title: l10n.ownerProfileHelpSupport,
+                                subtitle: l10n.ownerProfileHelpSupportSubtitle,
+                                onTap: () {
+                                  ErrorDisplayUtils.showInfoSnackBar(context, l10n.ownerProfileHelpSupportComingSoon);
+                                },
+                              ),
+                              const Divider(height: 1, indent: 72),
+                              _PremiumListTile(
+                                icon: Icons.info_outline,
+                                title: l10n.ownerProfileAbout,
+                                subtitle: l10n.ownerProfileAboutSubtitle,
+                                onTap: () => context.push(OwnerRoutes.about),
+                              ),
+                              const Divider(height: 1, indent: 72),
+                              _LogoutTile(
+                                onLogout: () async {
+                                  await ref.read(enhancedAuthProvider.notifier).signOut();
+                                  if (context.mounted) {
+                                    context.go(OwnerRoutes.login);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Legal Documents - Premium
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                          ),
+                          child: Column(
+                            children: [
+                              _PremiumListTile(
+                                icon: Icons.description,
+                                title: l10n.ownerProfileTermsConditions,
+                                subtitle: l10n.ownerProfileTermsConditionsSubtitle,
+                                onTap: () => context.push(OwnerRoutes.termsConditions),
+                              ),
+                              const Divider(height: 1, indent: 72),
+                              _PremiumListTile(
+                                icon: Icons.privacy_tip,
+                                title: l10n.ownerProfilePrivacyPolicy,
+                                subtitle: l10n.ownerProfilePrivacyPolicySubtitle,
+                                onTap: () => context.push(OwnerRoutes.privacyPolicy),
+                              ),
+                              const Divider(height: 1, indent: 72),
+                              _PremiumListTile(
+                                icon: Icons.cookie,
+                                title: l10n.ownerProfileCookiesPolicy,
+                                subtitle: l10n.ownerProfileCookiesPolicySubtitle,
+                                onTap: () => context.push(OwnerRoutes.cookiesPolicy),
+                                isLast: true,
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 32),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: () => Navigator.pop(context),
-                              icon: const Icon(Icons.arrow_back),
-                              label: const Text('Nazad'),
-                            ),
-                            const SizedBox(width: 12),
-                            FilledButton.icon(
-                              onPressed: () =>
-                                  ref.invalidate(userProfileProvider),
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Pokušaj ponovo'),
-                            ),
-                          ],
+                      ],
+                    ),
+                  );
+                },
+                loading: () {
+                  final theme = Theme.of(context);
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.ownerProfileLoading,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+                error: (error, stack) {
+                  final theme = Theme.of(context);
+                  final isDark = theme.brightness == Brightness.dark;
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: context.gradients.cardBackground,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
+                                width: 2,
+                              ),
+                              boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                            ),
+                            child: Icon(Icons.error_outline, size: 50, color: theme.colorScheme.error),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            l10n.ownerProfileLoadError,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            '$error',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: () => Navigator.pop(context),
+                                icon: const Icon(Icons.arrow_back),
+                                label: Text(l10n.ownerProfileBack),
+                              ),
+                              const SizedBox(width: 12),
+                              FilledButton.icon(
+                                onPressed: () => ref.invalidate(userProfileProvider),
+                                icon: const Icon(Icons.refresh),
+                                label: Text(l10n.ownerProfileTryAgain),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }
@@ -519,13 +428,7 @@ class _PremiumListTile extends StatefulWidget {
   final VoidCallback? onTap;
   final bool isLast;
 
-  const _PremiumListTile({
-    required this.icon,
-    required this.title,
-    this.onTap,
-    this.subtitle,
-    this.isLast = false,
-  });
+  const _PremiumListTile({required this.icon, required this.title, this.onTap, this.subtitle, this.isLast = false});
 
   @override
   State<_PremiumListTile> createState() => _PremiumListTileState();
@@ -544,15 +447,11 @@ class _PremiumListTileState extends State<_PremiumListTile> {
     return MouseRegion(
       onEnter: (_) => !isDisabled ? setState(() => _isHovered = true) : null,
       onExit: (_) => !isDisabled ? setState(() => _isHovered = false) : null,
-      cursor: isDisabled
-          ? SystemMouseCursors.forbidden
-          : SystemMouseCursors.click,
+      cursor: isDisabled ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: _isHovered && !isDisabled
-              ? AppColors.primary.withValues(alpha: 0.04)
-              : Colors.transparent,
+          color: _isHovered && !isDisabled ? AppColors.primary.withValues(alpha: 0.04) : Colors.transparent,
           borderRadius: widget.isLast
               ? BorderRadius.only(
                   bottomLeft: Radius.circular(isMobile ? 12 : 16),
@@ -563,21 +462,14 @@ class _PremiumListTileState extends State<_PremiumListTile> {
         child: Opacity(
           opacity: isDisabled ? 0.4 : 1.0,
           child: ListTile(
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 16 : 20,
-              vertical: isMobile ? 10 : 12,
-            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: isMobile ? 10 : 12),
             leading: Container(
               padding: EdgeInsets.all(isMobile ? 8 : 10),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                widget.icon,
-                color: AppColors.primary,
-                size: isMobile ? 20 : 22,
-              ),
+              child: Icon(widget.icon, color: AppColors.primary, size: isMobile ? 20 : 22),
             ),
             title: Text(
               widget.title,
@@ -624,6 +516,7 @@ class _LogoutTileState extends State<_LogoutTile> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
@@ -634,51 +527,31 @@ class _LogoutTileState extends State<_LogoutTile> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: _isHovered
-              ? AppColors.error.withValues(alpha: 0.06)
-              : Colors.transparent,
+          color: _isHovered ? AppColors.error.withValues(alpha: 0.06) : Colors.transparent,
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(isMobile ? 12 : 16),
             bottomRight: Radius.circular(isMobile ? 12 : 16),
           ),
         ),
         child: ListTile(
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 16 : 20,
-            vertical: isMobile ? 10 : 12,
-          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: isMobile ? 10 : 12),
           leading: Container(
             padding: EdgeInsets.all(isMobile ? 8 : 10),
             decoration: BoxDecoration(
               color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              Icons.logout_rounded,
-              color: AppColors.error,
-              size: isMobile ? 20 : 22,
-            ),
+            child: Icon(Icons.logout_rounded, color: AppColors.error, size: isMobile ? 20 : 22),
           ),
           title: Text(
-            'Logout',
-            style: TextStyle(
-              fontSize: isMobile ? 15 : 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.error,
-            ),
+            l10n.ownerProfileLogout,
+            style: TextStyle(fontSize: isMobile ? 15 : 16, fontWeight: FontWeight.w600, color: AppColors.error),
           ),
           subtitle: Text(
-            'Sign out of your account',
-            style: TextStyle(
-              fontSize: isMobile ? 13 : 14,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
+            l10n.ownerProfileLogoutSubtitle,
+            style: TextStyle(fontSize: isMobile ? 13 : 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
           ),
-          trailing: Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.error,
-            size: isMobile ? 20 : 24,
-          ),
+          trailing: Icon(Icons.chevron_right_rounded, color: AppColors.error, size: isMobile ? 20 : 24),
           onTap: widget.onLogout,
         ),
       ),

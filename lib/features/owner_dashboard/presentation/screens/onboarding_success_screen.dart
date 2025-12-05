@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -10,16 +11,15 @@ class OnboardingSuccessScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppColors.success.withAlpha(25),
-              Colors.white,
-            ],
+            colors: [AppColors.success.withAlpha(25), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -34,45 +34,32 @@ class OnboardingSuccessScreen extends ConsumerWidget {
                     // Success Icon
                     Container(
                       padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withAlpha(25),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        size: 100,
-                        color: AppColors.success,
-                      ),
+                      decoration: BoxDecoration(color: AppColors.success.withAlpha(25), shape: BoxShape.circle),
+                      child: const Icon(Icons.check_circle, size: 100, color: AppColors.success),
                     ),
                     const SizedBox(height: 32),
 
                     // Title
                     Text(
-                      'Čestitamo!',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.success,
-                          ),
+                      l10n.onboardingSuccessCongrats,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: AppColors.success),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
 
                     // Subtitle
                     Text(
-                      'Uspješno ste završili početno podešavanje',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.grey[700],
-                          ),
+                      l10n.onboardingSuccessSubtitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[700]),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
 
                     Text(
-                      'Vaš objekat je kreiran i spreman za korištenje.',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
+                      l10n.onboardingSuccessDesc,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 48),
@@ -90,30 +77,28 @@ class OnboardingSuccessScreen extends ConsumerWidget {
                                 const Icon(Icons.lightbulb, color: AppColors.authPrimary, size: 20),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Sljedeći koraci:',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  l10n.onboardingSuccessNextSteps,
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 16),
                             _buildNextStep(
                               icon: Icons.meeting_room,
-                              title: 'Dodajte jedinice',
-                              description: 'Kreirajte sobe ili apartmane',
+                              title: l10n.onboardingSuccessAddUnits,
+                              description: l10n.onboardingSuccessAddUnitsDesc,
                             ),
                             const SizedBox(height: 12),
                             _buildNextStep(
                               icon: Icons.euro,
-                              title: 'Postavite cijene',
-                              description: 'Definirajte cijene po datumima',
+                              title: l10n.onboardingSuccessSetPrices,
+                              description: l10n.onboardingSuccessSetPricesDesc,
                             ),
                             const SizedBox(height: 12),
                             _buildNextStep(
                               icon: Icons.calendar_month,
-                              title: 'Pregledajte kalendar',
-                              description: 'Pratite rezervacije i dostupnost',
+                              title: l10n.onboardingSuccessViewCalendar,
+                              description: l10n.onboardingSuccessViewCalendarDesc,
                             ),
                           ],
                         ),
@@ -131,15 +116,15 @@ class OnboardingSuccessScreen extends ConsumerWidget {
                           backgroundColor: AppColors.authPrimary,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Idi na Dashboard',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              l10n.onboardingSuccessGoToDashboard,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward),
                           ],
                         ),
                       ),
@@ -154,11 +139,7 @@ class OnboardingSuccessScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildNextStep({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
+  Widget _buildNextStep({required IconData icon, required String title, required String description}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -168,20 +149,8 @@ class OnboardingSuccessScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                description,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              Text(description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
             ],
           ),
         ),

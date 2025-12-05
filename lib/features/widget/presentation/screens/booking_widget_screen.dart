@@ -60,6 +60,7 @@ import '../widgets/booking/contact_pill_card_widget.dart';
 // MinimalistColorSchemeAdapter is already imported via minimalist_colors.dart
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../l10n/widget_translations.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -67,8 +68,7 @@ class BookingWidgetScreen extends ConsumerStatefulWidget {
   const BookingWidgetScreen({super.key});
 
   @override
-  ConsumerState<BookingWidgetScreen> createState() =>
-      _BookingWidgetScreenState();
+  ConsumerState<BookingWidgetScreen> createState() => _BookingWidgetScreenState();
 }
 
 class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
@@ -196,15 +196,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final isStripeReturn = stripeStatus == 'success' && stripeSessionId != null;
 
     // Legacy Stripe return (old flow - booking created before checkout)
-    final hasLegacyStripeParams = confirmationRef != null &&
+    final hasLegacyStripeParams =
+        confirmationRef != null &&
         confirmationEmail != null &&
         bookingId != null &&
         (paymentType == 'stripe' || stripeStatus == 'success');
 
     // Check if this is a direct booking return (same tab - Pay on Arrival, Bank Transfer)
-    final isDirectBookingReturn = bookingStatus == 'success' &&
-        confirmationRef != null &&
-        bookingId != null;
+    final isDirectBookingReturn = bookingStatus == 'success' && confirmationRef != null && bookingId != null;
 
     // Validate unit and property immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -222,11 +221,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (hasLegacyStripeParams) {
         await _clearFormData();
 
-        await _showConfirmationFromUrl(
-          confirmationRef,
-          confirmationEmail,
-          bookingId,
-        );
+        await _showConfirmationFromUrl(confirmationRef, confirmationEmail, bookingId);
         return; // Don't continue with normal initialization
       }
 
@@ -283,18 +278,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _tabCommunicationService = TabCommunicationServiceWeb();
 
       // Listen for messages from other tabs
-      _tabMessageSubscription =
-          _tabCommunicationService!.messageStream.listen(_handleTabMessage);
+      _tabMessageSubscription = _tabCommunicationService!.messageStream.listen(_handleTabMessage);
 
-      LoggingService.log(
-        '[CrossTab] Initialized cross-tab communication listener',
-        tag: 'TAB_COMM',
-      );
+      LoggingService.log('[CrossTab] Initialized cross-tab communication listener', tag: 'TAB_COMM');
     } catch (e) {
-      LoggingService.log(
-        '[CrossTab] Failed to initialize: $e',
-        tag: 'TAB_COMM_ERROR',
-      );
+      LoggingService.log('[CrossTab] Failed to initialize: $e', tag: 'TAB_COMM_ERROR');
     }
   }
 
@@ -305,10 +293,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Stream may fire after widget disposal
     if (!mounted) return;
 
-    LoggingService.log(
-      '[CrossTab] Received message: ${message.type}',
-      tag: 'TAB_COMM',
-    );
+    LoggingService.log('[CrossTab] Received message: ${message.type}', tag: 'TAB_COMM');
 
     switch (message.type) {
       case TabMessageType.paymentComplete:
@@ -335,17 +320,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final email = message.email;
 
     if (bookingId == null || bookingRef == null || email == null) {
-      LoggingService.log(
-        '[CrossTab] Invalid payment complete message - missing params',
-        tag: 'TAB_COMM_ERROR',
-      );
+      LoggingService.log('[CrossTab] Invalid payment complete message - missing params', tag: 'TAB_COMM_ERROR');
       return;
     }
 
-    LoggingService.log(
-      '[CrossTab] Payment complete received for booking: $bookingRef',
-      tag: 'TAB_COMM',
-    );
+    LoggingService.log('[CrossTab] Payment complete received for booking: $bookingRef', tag: 'TAB_COMM');
 
     // CRITICAL: Clear form data and reset state BEFORE showing confirmation
     // This prevents the bug where pressing "back" shows old form data
@@ -356,12 +335,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Use the same method as URL-based confirmation
     // Pass fromOtherTab: true to prevent circular broadcasting
     if (mounted) {
-      await _showConfirmationFromUrl(
-        bookingRef,
-        email,
-        bookingId,
-        fromOtherTab: true,
-      );
+      await _showConfirmationFromUrl(bookingRef, email, bookingId, fromOtherTab: true);
     }
   }
 
@@ -371,26 +345,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final isDarkMode = ref.read(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final dialogBg = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final tr = WidgetTranslations.of(context);
 
     await showDialog<void>(
       context: context,
       barrierDismissible: false, // User must acknowledge
       builder: (context) => AlertDialog(
         backgroundColor: dialogBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderTokens.circularLarge,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularLarge),
         title: Row(
           children: [
             Icon(Icons.check_circle, color: colors.success, size: 28),
             const SizedBox(width: SpacingTokens.s),
             Expanded(
               child: Text(
-                'Payment Successful',
-                style: TextStyle(
-                  fontWeight: TypographyTokens.bold,
-                  color: colors.textPrimary,
-                ),
+                tr.paymentSuccessful,
+                style: TextStyle(fontWeight: TypographyTokens.bold, color: colors.textPrimary),
               ),
             ),
           ],
@@ -400,11 +370,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your payment was processed successfully, but the booking confirmation is taking longer than expected.',
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                color: colors.textPrimary,
-              ),
+              tr.paymentProcessedButDelayed,
+              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textPrimary),
             ),
             const SizedBox(height: SpacingTokens.m),
             Container(
@@ -412,15 +379,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               decoration: BoxDecoration(
                 color: colors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderTokens.circularMedium,
-                border: Border.all(
-                  color: colors.warning.withValues(alpha: 0.3),
-                ),
+                border: Border.all(color: colors.warning.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'What to do next:',
+                    tr.whatToDoNext,
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,
                       fontWeight: TypographyTokens.bold,
@@ -428,18 +393,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     ),
                   ),
                   const SizedBox(height: SpacingTokens.xs),
-                  _buildInstructionItem(
-                    '1. Check your email for a confirmation within a few minutes',
-                    colors,
-                  ),
-                  _buildInstructionItem(
-                    '2. Check your spam/junk folder',
-                    colors,
-                  ),
-                  _buildInstructionItem(
-                    '3. If no email arrives within 15 minutes, contact the property owner',
-                    colors,
-                  ),
+                  _buildInstructionItem(tr.checkEmailForConfirmation, colors),
+                  _buildInstructionItem(tr.checkSpamFolder, colors),
+                  _buildInstructionItem(tr.contactOwnerIfNoEmail, colors),
                 ],
               ),
             ),
@@ -451,11 +407,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.buttonPrimary,
               foregroundColor: colors.buttonPrimaryText,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderTokens.circularMedium,
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
             ),
-            child: const Text('I Understand'),
+            child: Text(tr.iUnderstand),
           ),
         ],
       ),
@@ -468,10 +422,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       padding: const EdgeInsets.only(top: SpacingTokens.xs),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: TypographyTokens.fontSizeS,
-          color: colors.textSecondary,
-        ),
+        style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
       ),
     );
   }
@@ -494,15 +445,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       final newUri = uri.replace(queryParameters: cleanParams);
       web.window.history.replaceState(null, '', newUri.toString());
 
-      LoggingService.log(
-        '[URL] Cleared booking params, new URL: ${newUri.toString()}',
-        tag: 'URL_PARAMS',
-      );
+      LoggingService.log('[URL] Cleared booking params, new URL: ${newUri.toString()}', tag: 'URL_PARAMS');
     } catch (e) {
-      LoggingService.log(
-        '[URL] Failed to clear URL params: $e',
-        tag: 'URL_PARAMS',
-      );
+      LoggingService.log('[URL] Failed to clear URL params: $e', tag: 'URL_PARAMS');
     }
   }
 
@@ -530,15 +475,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Use pushState to add to browser history (back button works)
       web.window.history.pushState(null, '', newUri.toString());
 
-      LoggingService.log(
-        '[URL] Added booking params, new URL: ${newUri.toString()}',
-        tag: 'URL_PARAMS',
-      );
+      LoggingService.log('[URL] Added booking params, new URL: ${newUri.toString()}', tag: 'URL_PARAMS');
     } catch (e) {
-      LoggingService.log(
-        '[URL] Failed to add URL params: $e',
-        tag: 'URL_PARAMS',
-      );
+      LoggingService.log('[URL] Failed to add URL params: $e', tag: 'URL_PARAMS');
     }
   }
 
@@ -553,20 +492,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     ref.invalidate(realtimeYearCalendarProvider);
     ref.invalidate(realtimeMonthCalendarProvider);
 
-    LoggingService.log(
-      '[CrossTab] Form state reset after payment completion',
-      tag: 'TAB_COMM',
-    );
+    LoggingService.log('[CrossTab] Form state reset after payment completion', tag: 'TAB_COMM');
   }
 
   /// Handle Stripe return when booking is created by webhook (NEW FLOW)
   /// URL has: stripe_status=success&session_id=cs_xxx but NO bookingId
   /// We need to poll Firestore until webhook creates the booking
   Future<void> _handleStripeReturnWithSessionId(String sessionId) async {
-    LoggingService.log(
-      '[STRIPE_RETURN] Handling Stripe return with session_id: $sessionId',
-      tag: 'STRIPE_SESSION',
-    );
+    LoggingService.log('[STRIPE_RETURN] Handling Stripe return with session_id: $sessionId', tag: 'STRIPE_SESSION');
 
     // Show loading state while we wait for webhook
     setState(() {
@@ -674,10 +607,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
       }
     } catch (e) {
-      LoggingService.log(
-        '[STRIPE_RETURN] ❌ Error: $e',
-        tag: 'STRIPE_SESSION',
-      );
+      LoggingService.log('[STRIPE_RETURN] ❌ Error: $e', tag: 'STRIPE_SESSION');
 
       if (mounted) {
         setState(() {
@@ -708,8 +638,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Check if both property and unit IDs are provided
       if (_propertyId == null || _propertyId!.isEmpty) {
         setState(() {
-          _validationError =
-              'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+          _validationError = 'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
           _isValidating = false;
         });
         return;
@@ -717,17 +646,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (_unitId.isEmpty) {
         setState(() {
-          _validationError =
-              'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+          _validationError = 'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
           _isValidating = false;
         });
         return;
       }
 
       // Fetch property data first
-      final property = await ref.read(
-        propertyByIdProvider(_propertyId!).future,
-      );
+      final property = await ref.read(propertyByIdProvider(_propertyId!).future);
 
       // HIGH: Check mounted after async operation before setState
       if (!mounted) return;
@@ -741,17 +667,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
 
       // Fetch unit data from the specific property
-      final unit = await ref.read(
-        unitByIdProvider(_propertyId!, _unitId).future,
-      );
+      final unit = await ref.read(unitByIdProvider(_propertyId!, _unitId).future);
 
       // HIGH: Check mounted after async operation before setState
       if (!mounted) return;
 
       if (unit == null) {
         setState(() {
-          _validationError =
-              'Unit not found.\n\nUnit ID: $_unitId\nProperty ID: $_propertyId';
+          _validationError = 'Unit not found.\n\nUnit ID: $_unitId\nProperty ID: $_propertyId';
           _isValidating = false;
         });
         return;
@@ -795,9 +718,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Future<void> _loadWidgetSettings(String propertyId, String unitId) async {
     try {
       // Try to load custom settings
-      final settings = await ref.read(
-        widgetSettingsOrDefaultProvider((propertyId, unitId)).future,
-      );
+      final settings = await ref.read(widgetSettingsOrDefaultProvider((propertyId, unitId)).future);
 
       setState(() {
         _widgetSettings = settings;
@@ -808,10 +729,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // If loading fails, use default settings
       final defaultSettings = ref.read(defaultWidgetSettingsProvider);
       setState(() {
-        _widgetSettings = defaultSettings.copyWith(
-          id: unitId,
-          propertyId: propertyId,
-        );
+        _widgetSettings = defaultSettings.copyWith(id: unitId, propertyId: propertyId);
         // Set default payment method based on what's enabled
         _setDefaultPaymentMethod();
       });
@@ -828,8 +746,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Check which payment methods are enabled
     final isStripeEnabled = _widgetSettings?.stripeConfig?.enabled == true;
-    final isBankTransferEnabled =
-        _widgetSettings?.bankTransferConfig?.enabled == true;
+    final isBankTransferEnabled = _widgetSettings?.bankTransferConfig?.enabled == true;
     final isPayOnArrivalEnabled = _widgetSettings?.allowPayOnArrival == true;
 
     // If current selection is valid, keep it
@@ -894,10 +811,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Save current form data to localStorage
   Future<void> _saveFormData() async {
     if (_isDisposed) return;
-    await FormPersistenceService.saveFormData(
-      _unitId,
-      _buildPersistedFormData(),
-    );
+    await FormPersistenceService.saveFormData(_unitId, _buildPersistedFormData());
   }
 
   /// Load saved form data from localStorage
@@ -1017,29 +931,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: colors.error,
-                ),
+                Icon(Icons.error_outline, size: 64, color: colors.error),
                 const SizedBox(height: 24),
                 Text(
                   _validationError!,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: colors.textPrimary,
-                  ),
+                  style: TextStyle(fontSize: 16, color: colors.textPrimary),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _validateUnitAndProperty,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.buttonPrimary,
-                    foregroundColor: colors.buttonPrimaryText,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final tr = WidgetTranslations.of(context);
+                    return ElevatedButton.icon(
+                      onPressed: _validateUnitAndProperty,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(tr.retry),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.buttonPrimary,
+                        foregroundColor: colors.buttonPrimaryText,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -1059,8 +971,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final screenWidth = constraints.maxWidth;
-            final forceMonthView =
-                screenWidth < 1024; // Year view only on desktop
+            final forceMonthView = screenWidth < 1024; // Year view only on desktop
 
             // Responsive padding for iframe embedding
             final horizontalPadding = screenWidth < 600
@@ -1069,17 +980,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 ? 16.0 // Tablet
                 : 24.0; // Desktop
 
-            final verticalPadding =
-                horizontalPadding / 2; // Half of horizontal padding
+            final verticalPadding = horizontalPadding / 2; // Half of horizontal padding
 
             final topPadding = 0.0; // Minimal padding for maximum content space
 
             // Calculate available height for calendar
             // Subtract space for logo, title, and padding
             final screenHeight = constraints.maxHeight;
-            double reservedHeight =
-                topPadding +
-                (verticalPadding * 2); // Include top + bottom padding
+            double reservedHeight = topPadding + (verticalPadding * 2); // Include top + bottom padding
 
             // Add title height if present
             if (_widgetSettings?.themeOptions?.customTitle != null &&
@@ -1092,15 +1000,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
             // Add contact pill card height for calendar-only mode
             if (widgetMode == WidgetMode.calendarOnly) {
-              reservedHeight +=
-                  70; // Contact pill card height (~50px content + 8px spacing + buffer)
+              reservedHeight += 70; // Contact pill card height (~50px content + 8px spacing + buffer)
             }
 
             // Calendar gets remaining height (ensure minimum of 400px)
-            final calendarHeight = (screenHeight - reservedHeight).clamp(
-              400.0,
-              double.infinity,
-            );
+            final calendarHeight = (screenHeight - reservedHeight).clamp(400.0, double.infinity);
 
             return Stack(
               children: [
@@ -1116,10 +1020,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     children: [
                       // Custom title header (if configured)
                       if (_widgetSettings?.themeOptions?.customTitle != null &&
-                          _widgetSettings!
-                              .themeOptions!
-                              .customTitle!
-                              .isNotEmpty)
+                          _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: Text(
@@ -1155,21 +1056,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   if (start != null && end != null) {
                                     // Use unit's minStayNights (source of truth), NOT widget_settings
                                     final minNights = _unit?.minStayNights ?? 1;
-                                    final selectedNights = end
-                                        .difference(start)
-                                        .inDays;
+                                    final selectedNights = end.difference(start).inDays;
 
                                     if (selectedNights < minNights) {
                                       // Show error message
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
+                                      final tr = WidgetTranslations.of(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text(
-                                            'Minimum $minNights ${minNights == 1 ? 'night' : 'nights'} required. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                                          ),
-                                          backgroundColor:
-                                              minimalistColors.error,
+                                          content: Text(tr.minimumNightsRequired(minNights, selectedNights)),
+                                          backgroundColor: minimalistColors.error,
                                           duration: const Duration(seconds: 3),
                                         ),
                                       );
@@ -1180,12 +1075,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   setState(() {
                                     _checkIn = start;
                                     _checkOut = end;
-                                    _pillBarPosition =
-                                        null; // Reset position when new dates selected
+                                    _pillBarPosition = null; // Reset position when new dates selected
                                     // Bug Fix: Date selection IS interaction - show booking flow
                                     _hasInteractedWithBookingFlow = true;
-                                    _pillBarDismissed =
-                                        false; // Reset dismissed flag for new date selection
+                                    _pillBarDismissed = false; // Reset dismissed flag for new date selection
                                   });
 
                                   // Bug #53: Save form data after date selection
@@ -1216,9 +1109,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           _showGuestForm = false;
                         });
                       },
-                      child: Container(
-                        color: Colors.black.withValues(alpha: 0.5),
-                      ),
+                      child: Container(color: Colors.black.withValues(alpha: 0.5)),
                     ),
                   ),
 
@@ -1230,11 +1121,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     _checkOut != null &&
                     _hasInteractedWithBookingFlow &&
                     !_pillBarDismissed)
-                  _buildFloatingDraggablePillBar(
-                    unitId,
-                    constraints,
-                    isDarkMode,
-                  ),
+                  _buildFloatingDraggablePillBar(unitId, constraints, isDarkMode),
 
                 // Rotate device overlay - HIGHEST z-index, only for year view in portrait
                 if (_shouldShowRotateOverlay(context))
@@ -1242,9 +1129,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     isDarkMode: isDarkMode,
                     colors: colors,
                     onSwitchToMonthView: () {
-                      ref.read(calendarViewProvider.notifier).state =
-                          CalendarViewType.month;
+                      ref.read(calendarViewProvider.notifier).state = CalendarViewType.month;
                     },
+                    translations: WidgetTranslations.of(context),
                   ),
               ],
             );
@@ -1255,11 +1142,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Build floating draggable pill bar that overlays the calendar
-  Widget _buildFloatingDraggablePillBar(
-    String unitId,
-    BoxConstraints constraints,
-    bool isDarkMode,
-  ) {
+  Widget _buildFloatingDraggablePillBar(String unitId, BoxConstraints constraints, bool isDarkMode) {
     // Watch price calculation with global deposit percentage (applies to all payment methods)
     final depositPercentage = _widgetSettings?.globalDepositPercentage ?? 20;
     final priceCalc = ref.watch(
@@ -1297,10 +1180,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         });
 
         // Update calculation with additional services
-        final calculation = calculationBase.copyWithServices(
-          servicesTotal,
-          depositPercentage,
-        );
+        final calculation = calculationBase.copyWithServices(servicesTotal, depositPercentage);
 
         // Calculate responsive width and height based on screen size
         final screenWidth = constraints.maxWidth;
@@ -1331,16 +1211,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           } else {
             pillBarWidth = 400.0; // Desktop/Tablet: fixed 400px
           }
-          maxHeight =
-              282.0; // Fixed height for compact view (increased by 12px)
+          maxHeight = 282.0; // Fixed height for compact view (increased by 12px)
         }
 
         // Center booking flow on screen (not calendar)
         final defaultPosition = Offset(
-          (constraints.maxWidth / 2) -
-              (pillBarWidth / 2), // Center horizontally
-          (constraints.maxHeight / 2) -
-              (maxHeight / 2), // Center vertically based on screen
+          (constraints.maxWidth / 2) - (pillBarWidth / 2), // Center horizontally
+          (constraints.maxHeight / 2) - (maxHeight / 2), // Center vertically based on screen
         );
 
         final position = _pillBarPosition ?? defaultPosition;
@@ -1349,10 +1226,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         final isMoreThanHalfOffScreen =
             position.dx < -pillBarWidth / 2 || // >50% dragged left
             position.dy < -maxHeight / 2 || // >50% dragged up
-            position.dx >
-                constraints.maxWidth - pillBarWidth / 2 || // >50% dragged right
-            position.dy >
-                constraints.maxHeight - maxHeight / 2; // >50% dragged down
+            position.dx > constraints.maxWidth - pillBarWidth / 2 || // >50% dragged right
+            position.dy > constraints.maxHeight - maxHeight / 2; // >50% dragged down
 
         // Check if pill bar is completely off-screen (dragged beyond bounds)
         final isCompletelyOffScreen =
@@ -1378,10 +1253,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           onDragUpdate: (delta) {
             setState(() {
               // Allow dragging beyond screen bounds - pill bar will hide if off-screen
-              _pillBarPosition = Offset(
-                position.dx + delta.dx,
-                position.dy + delta.dy,
-              );
+              _pillBarPosition = Offset(position.dx + delta.dx, position.dy + delta.dy);
             });
           },
           onDragEnd: () {
@@ -1401,70 +1273,71 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             }
           },
           child: PillBarContent(
-                      checkIn: _checkIn!,
-                      checkOut: _checkOut!,
-                      nights: _checkOut!.difference(_checkIn!).inDays,
-                      formattedRoomPrice: calculation.formattedRoomPrice,
-                      additionalServicesTotal: calculation.additionalServicesTotal,
-                      formattedAdditionalServices: calculation.formattedAdditionalServices,
-                      formattedTotal: calculation.formattedTotal,
-                      formattedDeposit: calculation.formattedDeposit,
-                      depositPercentage: calculation.totalPrice > 0
-                          ? ((calculation.depositAmount / calculation.totalPrice) * 100).round()
-                          : 20,
-                      isDarkMode: isDarkMode,
-                      showGuestForm: _showGuestForm,
-                      isWideScreen: MediaQuery.of(context).size.width >= 768,
-                      onClose: () {
-                        // Bug Fix: Set dismissed flag instead of clearing dates
-                        setState(() {
-                          _pillBarDismissed = true;
-                          _showGuestForm = false;
-                          _pillBarPosition = null;
-                        });
-                        _saveFormData();
-                      },
-                      onReserve: () {
-                        // Bug #64: Lock price when user starts booking process
-                        setState(() {
-                          _showGuestForm = true;
-                          _hasInteractedWithBookingFlow = true;
-                          _lockedPriceCalculation = calculation.copyWithLock();
-                        });
-                        _saveFormData();
-                      },
-                      guestFormBuilder: () => _buildGuestInfoForm(calculation, showButton: false),
-                      paymentSectionBuilder: () => _buildPaymentSection(calculation),
-                      additionalServicesBuilder: () => Consumer(
-                        builder: (context, ref, _) {
-                          final servicesAsync = ref.watch(unitAdditionalServicesProvider(_unitId));
-                          return servicesAsync.when(
-                            data: (services) {
-                              if (services.isEmpty) return const SizedBox.shrink();
-                              return Column(
-                                children: [
-                                  const SizedBox(height: SpacingTokens.m),
-                                  AdditionalServicesWidget(
-                                    unitId: _unitId,
-                                    nights: _checkOut!.difference(_checkIn!).inDays,
-                                    guests: _adults + _children,
-                                  ),
-                                  const SizedBox(height: SpacingTokens.m),
-                                ],
-                              );
-                            },
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, _) => const SizedBox.shrink(),
-                          );
-                        },
-                      ),
-                      taxLegalBuilder: () => TaxLegalDisclaimerWidget(
-                        propertyId: _propertyId ?? '',
-                        unitId: _unitId,
-                        onAcceptedChanged: (accepted) {
-                          setState(() => _taxLegalAccepted = accepted);
-                        },
-                      ),
+            checkIn: _checkIn!,
+            checkOut: _checkOut!,
+            nights: _checkOut!.difference(_checkIn!).inDays,
+            formattedRoomPrice: calculation.formattedRoomPrice,
+            additionalServicesTotal: calculation.additionalServicesTotal,
+            formattedAdditionalServices: calculation.formattedAdditionalServices,
+            formattedTotal: calculation.formattedTotal,
+            formattedDeposit: calculation.formattedDeposit,
+            depositPercentage: calculation.totalPrice > 0
+                ? ((calculation.depositAmount / calculation.totalPrice) * 100).round()
+                : 20,
+            isDarkMode: isDarkMode,
+            showGuestForm: _showGuestForm,
+            isWideScreen: MediaQuery.of(context).size.width >= 768,
+            onClose: () {
+              // Bug Fix: Set dismissed flag instead of clearing dates
+              setState(() {
+                _pillBarDismissed = true;
+                _showGuestForm = false;
+                _pillBarPosition = null;
+              });
+              _saveFormData();
+            },
+            onReserve: () {
+              // Bug #64: Lock price when user starts booking process
+              setState(() {
+                _showGuestForm = true;
+                _hasInteractedWithBookingFlow = true;
+                _lockedPriceCalculation = calculation.copyWithLock();
+              });
+              _saveFormData();
+            },
+            guestFormBuilder: () => _buildGuestInfoForm(calculation, showButton: false),
+            paymentSectionBuilder: () => _buildPaymentSection(calculation),
+            additionalServicesBuilder: () => Consumer(
+              builder: (context, ref, _) {
+                final servicesAsync = ref.watch(unitAdditionalServicesProvider(_unitId));
+                return servicesAsync.when(
+                  data: (services) {
+                    if (services.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      children: [
+                        const SizedBox(height: SpacingTokens.m),
+                        AdditionalServicesWidget(
+                          unitId: _unitId,
+                          nights: _checkOut!.difference(_checkIn!).inDays,
+                          guests: _adults + _children,
+                        ),
+                        const SizedBox(height: SpacingTokens.m),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
+                );
+              },
+            ),
+            taxLegalBuilder: () => TaxLegalDisclaimerWidget(
+              propertyId: _propertyId ?? '',
+              unitId: _unitId,
+              onAcceptedChanged: (accepted) {
+                setState(() => _taxLegalAccepted = accepted);
+              },
+            ),
+            translations: WidgetTranslations.of(context),
           ),
         );
       },
@@ -1485,8 +1358,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         (_widgetSettings?.allowPayOnArrival == true);
 
     // If no payment methods available, show error message
-    if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant &&
-        !hasAnyPaymentMethod) {
+    if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant && !hasAnyPaymentMethod) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1496,21 +1368,24 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           ),
           const SizedBox(height: SpacingTokens.m),
           // Disabled confirm button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: null, // Disabled
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderTokens.circularRounded,
+          Builder(
+            builder: (context) {
+              final tr = WidgetTranslations.of(context);
+              return SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: null, // Disabled
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+                    shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularRounded),
+                  ),
+                  child: Text(
+                    tr.bookingNotAvailable,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Booking Not Available',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
+              );
+            },
           ),
         ],
       );
@@ -1524,35 +1399,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // Count enabled payment methods
           Builder(
             builder: (context) {
-              final isStripeEnabled =
-                  _widgetSettings?.stripeConfig?.enabled == true;
-              final isBankTransferEnabled =
-                  _widgetSettings?.bankTransferConfig?.enabled == true;
-              final isPayOnArrivalEnabled =
-                  _widgetSettings?.allowPayOnArrival == true;
+              final isStripeEnabled = _widgetSettings?.stripeConfig?.enabled == true;
+              final isBankTransferEnabled = _widgetSettings?.bankTransferConfig?.enabled == true;
+              final isPayOnArrivalEnabled = _widgetSettings?.allowPayOnArrival == true;
 
               int enabledCount = 0;
               String? singleMethod;
               String? singleMethodTitle;
               String? singleMethodSubtitle;
 
+              final tr = WidgetTranslations.of(context);
+
               if (isStripeEnabled) {
                 enabledCount++;
                 singleMethod = 'stripe';
-                singleMethodTitle = 'Credit/Debit Card via Stripe';
+                singleMethodTitle = tr.creditCard;
                 singleMethodSubtitle = calculation.formattedDeposit;
               }
               if (isBankTransferEnabled) {
                 enabledCount++;
                 singleMethod = 'bank_transfer';
-                singleMethodTitle = 'Bank Transfer';
+                singleMethodTitle = tr.bankTransfer;
                 singleMethodSubtitle = calculation.formattedDeposit;
               }
               if (isPayOnArrivalEnabled) {
                 enabledCount++;
                 singleMethod = 'pay_on_arrival';
-                singleMethodTitle = 'Pay on Arrival';
-                singleMethodSubtitle = 'Payment at property';
+                singleMethodTitle = tr.payOnArrival;
+                singleMethodSubtitle = tr.paymentAtProperty;
               }
 
               // If no payment methods enabled, show error
@@ -1576,20 +1450,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Payment',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: minimalistColors.textPrimary,
-                      ),
+                      tr.payment,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: minimalistColors.textPrimary),
                     ),
                     const SizedBox(height: SpacingTokens.s),
                     PaymentMethodCard(
                       icon: singleMethod == 'stripe'
                           ? Icons.credit_card
                           : singleMethod == 'bank_transfer'
-                              ? Icons.account_balance
-                              : Icons.home_outlined,
+                          ? Icons.account_balance
+                          : Icons.home_outlined,
                       title: singleMethodTitle!,
                       subtitle: singleMethodSubtitle,
                       isDarkMode: isDarkMode,
@@ -1604,12 +1474,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Payment Method',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: minimalistColors.textPrimary,
-                    ),
+                    tr.paymentMethod,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: minimalistColors.textPrimary),
                   ),
                   const SizedBox(height: SpacingTokens.s),
                 ],
@@ -1620,12 +1486,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // Payment options - only show if multiple methods available
           Builder(
             builder: (context) {
-              final isStripeEnabled =
-                  _widgetSettings?.stripeConfig?.enabled == true;
-              final isBankTransferEnabled =
-                  _widgetSettings?.bankTransferConfig?.enabled == true;
-              final isPayOnArrivalEnabled =
-                  _widgetSettings?.allowPayOnArrival == true;
+              final isStripeEnabled = _widgetSettings?.stripeConfig?.enabled == true;
+              final isBankTransferEnabled = _widgetSettings?.bankTransferConfig?.enabled == true;
+              final isPayOnArrivalEnabled = _widgetSettings?.allowPayOnArrival == true;
 
               int enabledCount = 0;
               if (isStripeEnabled) enabledCount++;
@@ -1638,14 +1501,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               }
 
               // Multiple payment methods - show all options
+              final tr = WidgetTranslations.of(context);
               return Column(
                 children: [
                   // Stripe option
                   if (isStripeEnabled)
                     PaymentOptionWidget(
                       icon: Icons.credit_card,
-                      title: 'Credit/Debit Card',
-                      subtitle: 'Instant confirmation via Stripe',
+                      title: tr.creditCard,
+                      subtitle: tr.instantConfirmationViaStripe,
                       isSelected: _selectedPaymentMethod == 'stripe',
                       onTap: () => setState(() => _selectedPaymentMethod = 'stripe'),
                       isDarkMode: isDarkMode,
@@ -1654,37 +1518,43 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
                   // Bank Transfer option
                   if (isBankTransferEnabled)
-                    Padding(
-                      padding: EdgeInsets.only(
-                        top: isStripeEnabled ? SpacingTokens.s : 0,
-                      ),
-                      child: PaymentOptionWidget(
-                        icon: Icons.account_balance,
-                        title: 'Bank Transfer',
-                        subtitle: 'Manual confirmation (3 business days)',
-                        isSelected: _selectedPaymentMethod == 'bank_transfer',
-                        onTap: () => setState(() => _selectedPaymentMethod = 'bank_transfer'),
-                        isDarkMode: isDarkMode,
-                        depositAmount: calculation.formattedDeposit,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final tr = WidgetTranslations.of(context);
+                        return Padding(
+                          padding: EdgeInsets.only(top: isStripeEnabled ? SpacingTokens.s : 0),
+                          child: PaymentOptionWidget(
+                            icon: Icons.account_balance,
+                            title: tr.bankTransfer,
+                            subtitle: 'Manual confirmation (3 business days)',
+                            isSelected: _selectedPaymentMethod == 'bank_transfer',
+                            onTap: () => setState(() => _selectedPaymentMethod = 'bank_transfer'),
+                            isDarkMode: isDarkMode,
+                            depositAmount: calculation.formattedDeposit,
+                          ),
+                        );
+                      },
                     ),
 
                   // Pay on Arrival option
                   if (isPayOnArrivalEnabled)
-                    Padding(
-                      padding: EdgeInsets.only(
-                        top: (isStripeEnabled || isBankTransferEnabled)
-                            ? SpacingTokens.s
-                            : 0,
-                      ),
-                      child: PaymentOptionWidget(
-                        icon: Icons.home_outlined,
-                        title: 'Pay on Arrival',
-                        subtitle: 'Pay at the property',
-                        isSelected: _selectedPaymentMethod == 'pay_on_arrival',
-                        onTap: () => setState(() => _selectedPaymentMethod = 'pay_on_arrival'),
-                        isDarkMode: isDarkMode,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final tr = WidgetTranslations.of(context);
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            top: (isStripeEnabled || isBankTransferEnabled) ? SpacingTokens.s : 0,
+                          ),
+                          child: PaymentOptionWidget(
+                            icon: Icons.home_outlined,
+                            title: tr.payOnArrival,
+                            subtitle: tr.payAtTheProperty,
+                            isSelected: _selectedPaymentMethod == 'pay_on_arrival',
+                            onTap: () => setState(() => _selectedPaymentMethod = 'pay_on_arrival'),
+                            isDarkMode: isDarkMode,
+                          ),
+                        );
+                      },
                     ),
                 ],
               );
@@ -1696,10 +1566,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // Info message for bookingPending mode
         if (_widgetSettings?.widgetMode == WidgetMode.bookingPending) ...[
-          InfoCardWidget(
-            message:
-                'Your booking will be pending until confirmed by the property owner',
-            isDarkMode: isDarkMode,
+          Builder(
+            builder: (context) {
+              final tr = WidgetTranslations.of(context);
+              return InfoCardWidget(message: tr.bookingPendingUntilConfirmed, isDarkMode: isDarkMode);
+            },
           ),
           const SizedBox(height: SpacingTokens.m),
         ],
@@ -1709,16 +1580,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           width: double.infinity,
           height: 44,
           child: ElevatedButton(
-            onPressed: _isProcessing
-                ? null
-                : () => _handleConfirmBooking(calculation),
+            onPressed: _isProcessing ? null : () => _handleConfirmBooking(calculation),
             style: ElevatedButton.styleFrom(
               backgroundColor: minimalistColors.buttonPrimary,
               foregroundColor: minimalistColors.buttonPrimaryText,
               padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderTokens.circularMedium,
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
             ),
             child: _isProcessing
                 ? SizedBox(
@@ -1726,9 +1593,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        minimalistColors.buttonPrimaryText,
-                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(minimalistColors.buttonPrimaryText),
                     ),
                   )
                 : Padding(
@@ -1750,12 +1615,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-  Widget _buildGuestInfoForm(
-    BookingPriceCalculation calculation, {
-    bool showButton = true,
-  }) {
+  Widget _buildGuestInfoForm(BookingPriceCalculation calculation, {bool showButton = true}) {
     final isDarkMode = ref.watch(themeProvider);
     final minimalistColors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+    final tr = WidgetTranslations.of(context);
 
     return Form(
       key: _formKey,
@@ -1764,12 +1627,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         children: [
           // Section title
           Text(
-            'Guest Information',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: minimalistColors.textPrimary,
-            ),
+            tr.guestInformation,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: minimalistColors.textPrimary),
           ),
           const SizedBox(height: SpacingTokens.m),
 
@@ -1785,8 +1644,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           EmailFieldWithVerification(
             controller: _emailController,
             isDarkMode: isDarkMode,
-            requireVerification:
-                _widgetSettings?.emailConfig.requireEmailVerification ?? false,
+            requireVerification: _widgetSettings?.emailConfig.requireEmailVerification ?? false,
             emailVerified: _emailVerified,
             onEmailChanged: (value) {
               // Reset verification when email changes
@@ -1800,10 +1658,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               final email = _emailController.text.trim();
               final validationError = EmailValidator.validate(email);
               if (validationError != null) {
-                SnackBarHelper.showError(
-                  context: context,
-                  message: validationError,
-                );
+                SnackBarHelper.showError(context: context, message: validationError);
                 return;
               }
               _openVerificationDialog();
@@ -1843,10 +1698,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           const SizedBox(height: SpacingTokens.m),
 
           // Special requests field
-          NotesField(
-            controller: _notesController,
-            isDarkMode: isDarkMode,
-          ),
+          NotesField(controller: _notesController, isDarkMode: isDarkMode),
           const SizedBox(height: SpacingTokens.m),
 
           // Guest count picker
@@ -1866,17 +1718,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               width: double.infinity,
               height: 44,
               child: ElevatedButton(
-                onPressed: _isProcessing
-                    ? null
-                    : () => _handleConfirmBooking(calculation),
+                onPressed: _isProcessing ? null : () => _handleConfirmBooking(calculation),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: minimalistColors.buttonPrimary,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingTokens.m,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderTokens.circularMedium,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+                  shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
                 ),
                 child: _isProcessing
                     ? SizedBox(
@@ -1884,9 +1730,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            minimalistColors.buttonPrimaryText,
-                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(minimalistColors.buttonPrimaryText),
                         ),
                       )
                     : Text(
@@ -1909,39 +1753,37 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     // Calculate nights if dates are selected
+    final tr = WidgetTranslations.of(context);
     String nightsText = '';
     if (_checkIn != null && _checkOut != null) {
       final nights = _checkOut!.difference(_checkIn!).inDays;
-      nightsText = ' - $nights ${nights == 1 ? 'night' : 'nights'}';
+      nightsText = tr.nightsTextFormat(nights);
     }
 
     // bookingPending mode - no payment, just request
     if (widgetMode == WidgetMode.bookingPending) {
-      return 'Send Booking Request$nightsText';
+      return tr.sendBookingRequest(nightsText);
     }
 
     // bookingInstant mode - depends on selected payment method
     if (_selectedPaymentMethod == 'stripe') {
-      return 'Pay with Stripe$nightsText';
+      return tr.payWithStripe(nightsText);
     } else if (_selectedPaymentMethod == 'bank_transfer') {
-      return 'Continue to Bank Transfer$nightsText';
+      return tr.continueToBankTransfer(nightsText);
     } else if (_selectedPaymentMethod == 'pay_on_arrival') {
-      return 'Rezervisi$nightsText'; // Reserve in Serbian
+      return tr.reserve + nightsText;
     }
 
-    return 'Confirm Booking$nightsText';
+    return tr.confirmBookingButton(nightsText);
   }
 
-  Future<void> _handleConfirmBooking(
-    BookingPriceCalculation calculation,
-  ) async {
+  Future<void> _handleConfirmBooking(BookingPriceCalculation calculation) async {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     // Run all blocking validations using BookingValidationService
     final validationResult = BookingValidationService.validateAllBlocking(
       formKey: _formKey,
-      requireEmailVerification:
-          _widgetSettings?.emailConfig.requireEmailVerification ?? false,
+      requireEmailVerification: _widgetSettings?.emailConfig.requireEmailVerification ?? false,
       emailVerified: _emailVerified,
       taxConfig: _widgetSettings?.taxLegalConfig,
       taxLegalAccepted: _taxLegalAccepted,
@@ -1988,9 +1830,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Check same-day check-in warning (non-blocking)
     if (_checkIn != null) {
-      final sameDayResult = BookingValidationService.checkSameDayCheckIn(
-        checkIn: _checkIn!,
-      );
+      final sameDayResult = BookingValidationService.checkSameDayCheckIn(checkIn: _checkIn!);
       if (sameDayResult.isWarning && sameDayResult.errorMessage != null && mounted) {
         SnackBarHelper.showWarning(
           context: context,
@@ -2002,8 +1842,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // ✨ FINAL SAFETY CHECK: Email verification still valid?
     // This catches expired verifications (e.g., user verified 31+ minutes ago)
-    final emailVerificationValid =
-        await _validateEmailVerificationBeforeBooking();
+    final emailVerificationValid = await _validateEmailVerificationBeforeBooking();
     if (!emailVerificationValid) {
       return; // Block booking - verification expired or check failed
     }
@@ -2029,20 +1868,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
-        phoneWithCountryCode:
-            '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+        phoneWithCountryCode: '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         adults: _adults,
         children: _children,
         totalPrice: calculation.totalPrice,
-        paymentMethod: widgetMode == WidgetMode.bookingPending
-            ? 'none'
-            : _selectedPaymentMethod,
-        paymentOption: widgetMode == WidgetMode.bookingPending
-            ? 'none'
-            : _selectedPaymentOption,
+        paymentMethod: widgetMode == WidgetMode.bookingPending ? 'none' : _selectedPaymentMethod,
+        paymentOption: widgetMode == WidgetMode.bookingPending ? 'none' : _selectedPaymentOption,
         taxLegalAccepted: _taxLegalAccepted,
       );
 
@@ -2050,36 +1882,24 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Handle Stripe flow: Redirect to checkout
       if (result.isStripeFlow) {
-        await _handleStripePayment(
-          bookingData: result.stripeBookingData!,
-          guestEmail: _emailController.text.trim(),
-        );
+        await _handleStripePayment(bookingData: result.stripeBookingData!, guestEmail: _emailController.text.trim());
         // User redirected to Stripe - no further action here
         return;
       }
 
       // Handle non-Stripe flow: Navigate to confirmation
       final booking = result.booking;
-      final paymentMethod = widgetMode == WidgetMode.bookingPending
-          ? 'pending'
-          : _selectedPaymentMethod;
+      final paymentMethod = widgetMode == WidgetMode.bookingPending ? 'pending' : _selectedPaymentMethod;
 
       if (booking == null) {
         throw Exception('Booking creation failed - no booking returned');
       }
 
-      await _navigateToConfirmationAndCleanup(
-        booking: booking,
-        paymentMethod: paymentMethod,
-      );
+      await _navigateToConfirmationAndCleanup(booking: booking, paymentMethod: paymentMethod);
     } on BookingConflictException catch (e) {
       // Race condition - dates were booked by another user
       if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: e.message,
-          duration: const Duration(seconds: 7),
-        );
+        SnackBarHelper.showError(context: context, message: e.message, duration: const Duration(seconds: 7));
 
         // Reset selection so user can pick new dates
         setState(() {
@@ -2090,10 +1910,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Error creating booking: $e',
-        );
+        SnackBarHelper.showError(context: context, message: 'Error creating booking: $e');
       }
     } finally {
       if (mounted) {
@@ -2107,10 +1924,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Helper method to show confirmation screen for direct bookings
   /// Uses Navigator.push for proper back navigation and transition animation
   /// For pending/bank_transfer/pay_on_arrival modes
-  Future<void> _navigateToConfirmationAndCleanup({
-    required BookingModel booking,
-    required String paymentMethod,
-  }) async {
+  Future<void> _navigateToConfirmationAndCleanup({required BookingModel booking, required String paymentMethod}) async {
     if (!mounted) return;
 
     // CRITICAL: Invalidate calendar cache BEFORE showing confirmation
@@ -2163,10 +1977,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _clearBookingUrlParams();
     }
 
-    LoggingService.log(
-      '[Navigation] Confirmation screen closed (payment: $paymentMethod)',
-      tag: 'NAV',
-    );
+    LoggingService.log('[Navigation] Confirmation screen closed (payment: $paymentMethod)', tag: 'NAV');
   }
 
   /// Handle Stripe payment
@@ -2175,10 +1986,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// - No booking created yet - only validation passed
   /// - Pass all booking data to Stripe checkout session
   /// - Booking will be created by webhook after payment succeeds
-  Future<void> _handleStripePayment({
-    required Map<String, dynamic> bookingData,
-    required String guestEmail,
-  }) async {
+  Future<void> _handleStripePayment({required Map<String, dynamic> bookingData, required String guestEmail}) async {
     try {
       final stripeService = ref.read(stripeServiceProvider);
 
@@ -2189,21 +1997,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         scheme: baseUrl.scheme,
         host: baseUrl.host,
         port: baseUrl.port,
-        queryParameters: {
-          ...baseUrl.queryParameters,
-          'email': guestEmail,
-          'payment': 'stripe',
-        },
+        queryParameters: {...baseUrl.queryParameters, 'email': guestEmail, 'payment': 'stripe'},
       ).toString();
       // Append hash fragment for Flutter's hash-based routing
       final returnUrl = '$returnUrlWithoutHash#/calendar';
 
       // Create Stripe checkout session with ALL booking data
       // Booking will be created by webhook after successful payment
-      final checkoutResult = await stripeService.createCheckoutSession(
-        bookingData: bookingData,
-        returnUrl: returnUrl,
-      );
+      final checkoutResult = await stripeService.createCheckoutSession(bookingData: bookingData, returnUrl: returnUrl);
 
       // CRITICAL: Clear form data BEFORE redirect
       // This prevents the bug where cached form data loads on return
@@ -2221,15 +2022,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
-          throw 'Could not launch Stripe Checkout';
+          final tr = WidgetTranslations.of(context);
+          throw tr.couldNotLaunchStripeCheckout;
         }
       }
     } catch (e) {
       if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Error launching Stripe: $e',
-        );
+        SnackBarHelper.showError(context: context, message: 'Error launching Stripe: $e');
       }
     }
   }
@@ -2257,8 +2056,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           SnackBarHelper.showWarning(
             context: context,
-            message:
-                'Booking not found. Please check your email for confirmation.',
+            message: 'Booking not found. Please check your email for confirmation.',
             duration: const Duration(seconds: 5),
           );
         }
@@ -2267,8 +2065,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Bug #40 Fix: Poll for webhook update if payment still pending
       // Stripe webhook may take a few seconds to process
-      if (booking.paymentStatus == 'pending' ||
-          booking.status == BookingStatus.pending) {
+      if (booking.paymentStatus == 'pending' || booking.status == BookingStatus.pending) {
         LoggingService.log(
           '⚠️ Payment status pending after Stripe return, polling for webhook update...',
           tag: 'STRIPE_WEBHOOK_FALLBACK',
@@ -2284,8 +2081,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           if (updatedBooking == null) break;
 
           // Check if webhook has updated the booking
-          if (updatedBooking.paymentStatus == 'paid' ||
-              updatedBooking.status == BookingStatus.confirmed) {
+          if (updatedBooking.paymentStatus == 'paid' || updatedBooking.status == BookingStatus.confirmed) {
             LoggingService.log(
               '✅ Webhook update detected after ${(i + 1) * 2} seconds',
               tag: 'STRIPE_WEBHOOK_FALLBACK',
@@ -2299,8 +2095,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
 
         // If still pending after polling, log warning but proceed
-        if (booking?.paymentStatus == 'pending' ||
-            booking?.status == BookingStatus.pending) {
+        if (booking?.paymentStatus == 'pending' || booking?.status == BookingStatus.pending) {
           LoggingService.log(
             '⚠️ Webhook not received after 20 seconds. Showing confirmation with pending status.',
             tag: 'STRIPE_WEBHOOK_FALLBACK',
@@ -2317,15 +2112,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Broadcast to other tabs (in case user has multiple tabs open)
       // This is optional now since we redirect in same tab, but useful for edge cases
       if (!fromOtherTab && _tabCommunicationService != null) {
-        _tabCommunicationService!.sendPaymentComplete(
-          bookingId: bookingId,
-          ref: bookingReference,
-          email: guestEmail,
-        );
-        LoggingService.log(
-          '[CrossTab] Broadcasted payment complete to other tabs',
-          tag: 'TAB_COMM',
-        );
+        _tabCommunicationService!.sendPaymentComplete(bookingId: bookingId, ref: bookingReference, email: guestEmail);
+        LoggingService.log('[CrossTab] Broadcasted payment complete to other tabs', tag: 'TAB_COMM');
       }
 
       // CRITICAL: Invalidate calendar cache BEFORE showing confirmation
@@ -2351,9 +2139,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               checkIn: confirmedBooking.checkIn,
               checkOut: confirmedBooking.checkOut,
               totalPrice: confirmedBooking.totalPrice,
-              nights: confirmedBooking.checkOut
-                  .difference(confirmedBooking.checkIn)
-                  .inDays,
+              nights: confirmedBooking.checkOut.difference(confirmedBooking.checkIn).inDays,
               guests: confirmedBooking.guestCount,
               propertyName: _unit?.name ?? 'Property',
               unitName: _unit?.name,
@@ -2400,8 +2186,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Show only in portrait mode (aspect ratio + orientation)
     // Use both orientation enum AND aspect ratio for iframe compatibility
-    final isPortrait =
-        orientation == Orientation.portrait || screenHeight > screenWidth;
+    final isPortrait = orientation == Orientation.portrait || screenHeight > screenWidth;
 
     return isPortrait;
   }
@@ -2422,34 +2207,26 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Skip check if email is not verified in UI state
     if (!_emailVerified) {
       // This shouldn't happen (button should be disabled), but safety check
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Please verify your email before booking',
-      );
+      final tr = WidgetTranslations.of(context);
+      SnackBarHelper.showError(context: context, message: tr.pleaseVerifyEmailBeforeBooking);
       return false;
     }
 
     try {
-      LoggingService.logOperation(
-        '[BookingWidget] Final email verification check before booking',
-      );
+      LoggingService.logOperation('[BookingWidget] Final email verification check before booking');
 
       final email = _emailController.text.trim();
       final status = await EmailVerificationService.checkStatus(email);
 
       // Verification is still valid
       if (status.isValid) {
-        LoggingService.logSuccess(
-          '[BookingWidget] Email verification valid (${status.remainingMinutes}min remaining)',
-        );
+        LoggingService.logSuccess('[BookingWidget] Email verification valid (${status.remainingMinutes}min remaining)');
         return true;
       }
 
       // Verification expired between initial verification and booking submit
       if (status.expired) {
-        LoggingService.logWarning(
-          '[BookingWidget] Email verification expired during booking flow',
-        );
+        LoggingService.logWarning('[BookingWidget] Email verification expired during booking flow');
 
         if (mounted) {
           setState(() {
@@ -2458,8 +2235,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
           SnackBarHelper.showError(
             context: context,
-            message:
-                'Email verification expired. Please verify again before booking.',
+            message: 'Email verification expired. Please verify again before booking.',
           );
         }
 
@@ -2467,35 +2243,24 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
 
       // Email not verified (shouldn't happen, but safety check)
-      LoggingService.logWarning(
-        '[BookingWidget] Email not verified at final check',
-      );
+      LoggingService.logWarning('[BookingWidget] Email not verified at final check');
 
       if (mounted) {
         setState(() {
           _emailVerified = false;
         });
 
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Email verification required. Please verify your email.',
-        );
+        SnackBarHelper.showError(context: context, message: 'Email verification required. Please verify your email.');
       }
 
       return false;
     } catch (e) {
       // Network error or Cloud Function failed
-      await LoggingService.logError(
-        '[BookingWidget] Email verification check failed',
-        e,
-      );
+      await LoggingService.logError('[BookingWidget] Email verification check failed', e);
 
       // ⚠️ DECISION: Block booking on check failure (safer)
       if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Unable to verify email status. Please try again.',
-        );
+        SnackBarHelper.showError(context: context, message: 'Unable to verify email status. Please try again.');
       }
       return false;
 
@@ -2518,17 +2283,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // ✨ PRE-CHECK: Da li je email već verifikovan?
     try {
-      LoggingService.logOperation(
-        '[BookingWidget] Pre-checking email verification status',
-      );
+      LoggingService.logOperation('[BookingWidget] Pre-checking email verification status');
 
       final status = await EmailVerificationService.checkStatus(email);
 
       // Email is already verified and NOT expired
       if (status.isValid) {
-        LoggingService.logSuccess(
-          '[BookingWidget] Email already verified (expires in ${status.remainingMinutes}min)',
-        );
+        LoggingService.logSuccess('[BookingWidget] Email already verified (expires in ${status.remainingMinutes}min)');
 
         if (mounted) {
           setState(() {
@@ -2537,8 +2298,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
           SnackBarHelper.showSuccess(
             context: context,
-            message:
-                'Email already verified ✓ (valid for ${status.remainingMinutes} min)',
+            message: 'Email already verified ✓ (valid for ${status.remainingMinutes} min)',
           );
         }
 
@@ -2547,17 +2307,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Email exists but expired
       if (status.exists && status.expired) {
-        LoggingService.logWarning(
-          '[BookingWidget] Verification expired, sending new code',
-        );
+        LoggingService.logWarning('[BookingWidget] Verification expired, sending new code');
       }
 
       // Email not verified or expired - show dialog normally
     } catch (e) {
       // Pre-check failed (network issue, etc.) - fallback to normal flow
-      LoggingService.logWarning(
-        '[BookingWidget] Pre-check failed, showing dialog anyway: $e',
-      );
+      LoggingService.logWarning('[BookingWidget] Pre-check failed, showing dialog anyway: $e');
     }
 
     // Show verification dialog (either new verification or pre-check failed)

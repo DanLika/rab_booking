@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
+import '../l10n/widget_translations.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/widget_settings_provider.dart';
@@ -23,16 +24,10 @@ class MonthCalendarWidget extends ConsumerStatefulWidget {
   final String unitId;
   final Function(DateTime? start, DateTime? end)? onRangeSelected;
 
-  const MonthCalendarWidget({
-    super.key,
-    required this.propertyId,
-    required this.unitId,
-    this.onRangeSelected,
-  });
+  const MonthCalendarWidget({super.key, required this.propertyId, required this.unitId, this.onRangeSelected});
 
   @override
-  ConsumerState<MonthCalendarWidget> createState() =>
-      _MonthCalendarWidgetState();
+  ConsumerState<MonthCalendarWidget> createState() => _MonthCalendarWidgetState();
 }
 
 class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
@@ -52,12 +47,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
     // Use realtime stream provider for automatic updates when bookings change
     final calendarData = ref.watch(
-      realtimeMonthCalendarProvider(
-        widget.propertyId,
-        widget.unitId,
-        _currentMonth.year,
-        _currentMonth.month,
-      ),
+      realtimeMonthCalendarProvider(widget.propertyId, widget.unitId, _currentMonth.year, _currentMonth.month),
     );
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
@@ -69,6 +59,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           colors: colors,
           isDarkMode: isDarkMode,
           navigationWidget: _buildCompactMonthNavigation(colors),
+          translations: WidgetTranslations.of(context),
         ),
         const SizedBox(height: SpacingTokens.xs),
 
@@ -96,16 +87,17 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                       Expanded(
                         child: calendarData.when(
                           data: (data) => _buildMonthView(data, colors),
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (error, stack) => Center(
-                            child: Text(ErrorMessages.calendarError(error)),
-                          ),
+                          loading: () => const Center(child: CircularProgressIndicator()),
+                          error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
                         ),
                       ),
                       // Compact legend/info banner below calendar
                       if (minNights > 1)
-                        CalendarCompactLegend(minNights: minNights, colors: colors),
+                        CalendarCompactLegend(
+                          minNights: minNights,
+                          colors: colors,
+                          translations: WidgetTranslations.of(context),
+                        ),
                     ],
                   ),
                 ),
@@ -142,11 +134,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(
-            Icons.chevron_left,
-            size: isSmallScreen ? 16 : IconSizeTokens.small,
-            color: colors.textPrimary,
-          ),
+          icon: Icon(Icons.chevron_left, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -154,10 +142,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           onPressed: () {
             setState(() {
-              _currentMonth = DateTime(
-                _currentMonth.year,
-                _currentMonth.month - 1,
-              );
+              _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
               // Only clear range if BOTH dates are selected (complete selection)
               // Preserve _rangeStart if user is still selecting checkOut
               // This allows cross-month date range selection
@@ -173,19 +158,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         Text(
           monthYear,
           style: TextStyle(
-            fontSize: isSmallScreen
-                ? TypographyTokens.fontSizeS
-                : TypographyTokens.fontSizeM,
+            fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
             fontWeight: TypographyTokens.bold,
             color: colors.textPrimary,
           ),
         ),
         IconButton(
-          icon: Icon(
-            Icons.chevron_right,
-            size: isSmallScreen ? 16 : IconSizeTokens.small,
-            color: colors.textPrimary,
-          ),
+          icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -193,10 +172,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           onPressed: () {
             setState(() {
-              _currentMonth = DateTime(
-                _currentMonth.year,
-                _currentMonth.month + 1,
-              );
+              _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
               // Only clear range if BOTH dates are selected (complete selection)
               // Preserve _rangeStart if user is still selecting checkOut
               // This allows cross-month date range selection
@@ -213,17 +189,12 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildMonthView(
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildMonthView(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
-        final maxHeight =
-            screenHeight *
-            0.85; // 85% of screen height - booking bar is now floating overlay
+        final maxHeight = screenHeight * 0.85; // 85% of screen height - booking bar is now floating overlay
 
         // Desktop: Show 1 month + booking sidebar (>= 1024px)
         final isDesktop = screenWidth >= 1024;
@@ -252,11 +223,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildMobileLayout(
-    Map<String, CalendarDateInfo> data,
-    double maxHeight,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildMobileLayout(Map<String, CalendarDateInfo> data, double maxHeight, WidgetColorScheme colors) {
     return Center(
       child: SizedBox(
         width: 600,
@@ -281,11 +248,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         _buildWeekDayHeaders(colors),
         const SizedBox(height: SpacingTokens.xs),
         // Calendar grid - takes remaining space
-        Expanded(
-          child: SingleChildScrollView(
-            child: _buildMonthGridForMonth(month, data, colors),
-          ),
-        ),
+        Expanded(child: SingleChildScrollView(child: _buildMonthGridForMonth(month, data, colors))),
       ],
     );
   }
@@ -293,10 +256,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   Widget _buildMonthHeader(DateTime month, WidgetColorScheme colors) {
     final monthName = DateFormat.yMMMM().format(month);
     return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: SpacingTokens.xs,
-        horizontal: SpacingTokens.s,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xs, horizontal: SpacingTokens.s),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
@@ -342,11 +302,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildMonthGridForMonth(
-    DateTime month,
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildMonthGridForMonth(DateTime month, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     // Get first day of month
     final firstDay = DateTime(month.year, month.month);
 
@@ -375,8 +331,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         crossAxisCount: 7,
         mainAxisSpacing: cellGap,
         crossAxisSpacing: cellGap,
-        childAspectRatio:
-            aspectRatio, // Responsive: 1.0 on mobile, 0.95 on desktop
+        childAspectRatio: aspectRatio, // Responsive: 1.0 on mobile, 0.95 on desktop
       ),
       itemCount: weeksNeeded * 7,
       itemBuilder: (context, index) {
@@ -405,18 +360,18 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final statusStr = status == DateStatus.available
         ? 'dostupno'
         : status == DateStatus.booked
-            ? 'rezervirano'
-            : status == DateStatus.partialCheckIn
-                ? 'prijava gosta'
-                : status == DateStatus.partialCheckOut
-                    ? 'odjava gosta'
-                    : status == DateStatus.partialBoth
-                        ? 'promjena gostiju'
-                        : status == DateStatus.blocked
-                            ? 'blokirano'
-                            : status == DateStatus.disabled
-                                ? 'nedostupno'
-                                : 'prošla rezervacija';
+        ? 'rezervirano'
+        : status == DateStatus.partialCheckIn
+        ? 'prijava gosta'
+        : status == DateStatus.partialCheckOut
+        ? 'odjava gosta'
+        : status == DateStatus.partialBoth
+        ? 'promjena gostiju'
+        : status == DateStatus.blocked
+        ? 'blokirano'
+        : status == DateStatus.disabled
+        ? 'nedostupno'
+        : 'prošla rezervacija';
 
     final pendingStr = isPending ? ', čeka odobrenje' : '';
 
@@ -424,24 +379,30 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final rangeStr = isRangeStart
         ? ', datum prijave'
         : isRangeEnd
-            ? ', datum odjave'
-            : '';
+        ? ', datum odjave'
+        : '';
 
     // Format date: "15. siječnja"
     final months = [
-      'siječnja', 'veljače', 'ožujka', 'travnja', 'svibnja', 'lipnja',
-      'srpnja', 'kolovoza', 'rujna', 'listopada', 'studenog', 'prosinca'
+      'siječnja',
+      'veljače',
+      'ožujka',
+      'travnja',
+      'svibnja',
+      'lipnja',
+      'srpnja',
+      'kolovoza',
+      'rujna',
+      'listopada',
+      'studenog',
+      'prosinca',
     ];
     final dateStr = '${date.day}. ${months[date.month - 1]}';
 
     return '$dateStr, $statusStr$pendingStr$rangeStr';
   }
 
-  Widget _buildDayCell(
-    DateTime date,
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildDayCell(DateTime date, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     final key = CalendarDateUtils.getDateKey(date);
     final dateInfo = data[key];
 
@@ -479,99 +440,90 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           // Disable tap in calendar_only mode (when onRangeSelected is null)
-          onTap: widget.onRangeSelected != null
-              ? () => _onDateTapped(date, dateInfo, data, colors)
-              : null,
+          onTap: widget.onRangeSelected != null ? () => _onDateTapped(date, dateInfo, data, colors) : null,
           child: Container(
-          margin: const EdgeInsets.all(BorderTokens.widthThin),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isRangeStart || isRangeEnd
-                  ? colors.textPrimary
-                  : isToday
-                  ? colors.textPrimary
-                  : isHovered
-                  ? colors.borderStrong
-                  : _getBorderColorForDate(dateInfo.status, colors),
-              // Border width hierarchy: selected/today (thick) > hover/normal (medium)
-              width: (isRangeStart || isRangeEnd || isToday)
-                  ? BorderTokens.widthThick
-                  : BorderTokens.widthMedium,
+            margin: const EdgeInsets.all(BorderTokens.widthThin),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isRangeStart || isRangeEnd
+                    ? colors.textPrimary
+                    : isToday
+                    ? colors.textPrimary
+                    : isHovered
+                    ? colors.borderStrong
+                    : _getBorderColorForDate(dateInfo.status, colors),
+                // Border width hierarchy: selected/today (thick) > hover/normal (medium)
+                width: (isRangeStart || isRangeEnd || isToday) ? BorderTokens.widthThick : BorderTokens.widthMedium,
+              ),
+              borderRadius: BorderTokens.calendarCell,
+              boxShadow: isHovered ? ShadowTokens.hover : ShadowTokens.light,
             ),
-            borderRadius: BorderTokens.calendarCell,
-            boxShadow: isHovered ? ShadowTokens.hover : ShadowTokens.light,
-          ),
-          child: Stack(
-            children: [
-              // Background with diagonal split
-              ClipRRect(
-                borderRadius: BorderTokens.calendarCell,
-                child: CustomPaint(
-                  painter: SplitDayCalendarPainter(
-                    // Preserve partialCheckIn/Out/Both status even when in range
-                    status:
-                        isInRange &&
-                            dateInfo.status != DateStatus.partialCheckIn &&
-                            dateInfo.status != DateStatus.partialCheckOut &&
-                            dateInfo.status != DateStatus.partialBoth
-                        ? DateStatus.available
-                        : dateInfo.status,
-                    borderColor: dateInfo.status.getBorderColor(colors),
-                    colors: colors,
-                    isInRange: isInRange,
-                    isPendingBooking: dateInfo.isPendingBooking,
-                    isCheckOutPending: dateInfo.isCheckOutPending,
-                    isCheckInPending: dateInfo.isCheckInPending,
+            child: Stack(
+              children: [
+                // Background with diagonal split
+                ClipRRect(
+                  borderRadius: BorderTokens.calendarCell,
+                  child: CustomPaint(
+                    painter: SplitDayCalendarPainter(
+                      // Preserve partialCheckIn/Out/Both status even when in range
+                      status:
+                          isInRange &&
+                              dateInfo.status != DateStatus.partialCheckIn &&
+                              dateInfo.status != DateStatus.partialCheckOut &&
+                              dateInfo.status != DateStatus.partialBoth
+                          ? DateStatus.available
+                          : dateInfo.status,
+                      borderColor: dateInfo.status.getBorderColor(colors),
+                      colors: colors,
+                      isInRange: isInRange,
+                      isPendingBooking: dateInfo.isPendingBooking,
+                      isCheckOutPending: dateInfo.isCheckOutPending,
+                      isCheckInPending: dateInfo.isCheckInPending,
+                    ),
+                    child: const SizedBox.expand(),
                   ),
-                  child: const SizedBox.expand(),
                 ),
-              ),
-              // Day number overlay - centered
-              Center(
-                child: Opacity(
-                  opacity: isPast ? 0.5 : 1.0, // 50% opacity for past dates
-                  child: Text(
-                    date.day.toString(),
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeL,
-                      fontWeight: TypographyTokens.bold,
-                      color: colors.textPrimary,
-                      shadows: [
-                        Shadow(
-                          offset: const Offset(0, 1),
-                          blurRadius: 2.0,
-                          color: colors.backgroundPrimary.withValues(
-                            alpha: 0.3,
+                // Day number overlay - centered
+                Center(
+                  child: Opacity(
+                    opacity: isPast ? 0.5 : 1.0, // 50% opacity for past dates
+                    child: Text(
+                      date.day.toString(),
+                      style: TextStyle(
+                        fontSize: TypographyTokens.fontSizeL,
+                        fontWeight: TypographyTokens.bold,
+                        color: colors.textPrimary,
+                        shadows: [
+                          Shadow(
+                            offset: const Offset(0, 1),
+                            blurRadius: 2.0,
+                            color: colors.backgroundPrimary.withValues(alpha: 0.3),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Range indicators
-              if (isRangeStart || isRangeEnd)
-                Positioned(
-                  bottom: SpacingTokens.xs,
-                  right: SpacingTokens.xs,
-                  child: Container(
-                    padding: const EdgeInsets.all(SpacingTokens.xxs),
-                    decoration: BoxDecoration(
-                      color: colors.textPrimary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isRangeStart ? Icons.login : Icons.logout,
-                      size: IconSizeTokens.xs,
-                      color: colors.backgroundPrimary,
+                // Range indicators
+                if (isRangeStart || isRangeEnd)
+                  Positioned(
+                    bottom: SpacingTokens.xs,
+                    right: SpacingTokens.xs,
+                    child: Container(
+                      padding: const EdgeInsets.all(SpacingTokens.xxs),
+                      decoration: BoxDecoration(color: colors.textPrimary, shape: BoxShape.circle),
+                      child: Icon(
+                        isRangeStart ? Icons.login : Icons.logout,
+                        size: IconSizeTokens.xs,
+                        color: colors.backgroundPrimary,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ), // GestureDetector
-    ), // MouseRegion
+        ), // GestureDetector
+      ), // MouseRegion
     ); // Semantics
   }
 
@@ -583,10 +535,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         border: Border.all(color: colors.borderLight),
         borderRadius: BorderTokens.circularSubtle,
       ),
-      child: const Opacity(
-        opacity: OpacityTokens.mostlyVisible,
-        child: SizedBox.expand(),
-      ),
+      child: const Opacity(opacity: OpacityTokens.mostlyVisible, child: SizedBox.expand()),
     );
   }
 
@@ -626,10 +575,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
         // Get minNights from widget settings
-        final minNights = ref
-            .read(widgetSettingsProvider((widget.propertyId, widget.unitId)))
-            .value
-            ?.minNights ?? 1;
+        final minNights = ref.read(widgetSettingsProvider((widget.propertyId, widget.unitId))).value?.minNights ?? 1;
 
         // Get check-in date info for validation
         final startKey = DateFormat('yyyy-MM-dd').format(start);
@@ -661,11 +607,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   /// - Uses _isValidating guard to prevent concurrent validation requests
   /// - Scenario: User rapidly clicks multiple dates → only first validation executes
   /// - Without guard: Multiple async calls could overwrite each other's results
-  Future<void> _validateAndSetRange(
-    DateTime start,
-    DateTime end,
-    WidgetColorScheme colors,
-  ) async {
+  Future<void> _validateAndSetRange(DateTime start, DateTime end, WidgetColorScheme colors) async {
     // Prevent concurrent validations (race condition protection)
     if (_isValidating) return;
 
@@ -674,11 +616,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     try {
       // Check availability using backend (works across all months)
       final isAvailable = await ref.read(
-        checkDateAvailabilityProvider(
-          unitId: widget.unitId,
-          checkIn: start,
-          checkOut: end,
-        ).future,
+        checkDateAvailabilityProvider(unitId: widget.unitId, checkIn: start, checkOut: end).future,
       );
 
       if (!mounted) return;
@@ -737,5 +675,4 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         return colors.statusPastReservationBorder;
     }
   }
-
 }

@@ -7,6 +7,7 @@ import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../providers/multi_select_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Action bar for multi-select mode
 /// Shows bulk actions when bookings are selected
@@ -22,6 +23,7 @@ class MultiSelectActionBar extends ConsumerWidget {
     }
 
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final selectedCount = multiSelectState.selectionCount;
     final isDark = theme.brightness == Brightness.dark;
 
@@ -37,26 +39,15 @@ class MultiSelectActionBar extends ConsumerWidget {
           // Selection count
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(16),
-            ),
+            decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(16)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.check_circle,
-                  size: 18,
-                  color: theme.colorScheme.onPrimary,
-                ),
+                Icon(Icons.check_circle, size: 18, color: theme.colorScheme.onPrimary),
                 const SizedBox(width: 6),
                 Text(
-                  '$selectedCount ${selectedCount == 1 ? 'odabrana' : 'odabrano'}',
-                  style: TextStyle(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+                  '$selectedCount ${selectedCount == 1 ? l10n.ownerMultiSelectSelected : l10n.ownerMultiSelectSelectedPlural}',
+                  style: TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold, fontSize: 13),
                 ),
               ],
             ),
@@ -70,10 +61,8 @@ class MultiSelectActionBar extends ConsumerWidget {
               ref.read(multiSelectProvider.notifier).clearSelection();
             },
             icon: const Icon(Icons.clear, size: 18),
-            label: const Text('Poništi'),
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onPrimaryContainer,
-            ),
+            label: Text(l10n.ownerMultiSelectClear),
+            style: TextButton.styleFrom(foregroundColor: theme.colorScheme.onPrimaryContainer),
           ),
 
           const SizedBox(width: 8),
@@ -90,49 +79,25 @@ class MultiSelectActionBar extends ConsumerWidget {
                   }
                 },
                 icon: const Icon(Icons.edit_note),
-                tooltip: 'Promijeni status',
+                tooltip: l10n.ownerMultiSelectChangeStatus,
                 color: theme.colorScheme.primary,
               );
             },
             menuChildren: [
               MenuItemButton(
-                leadingIcon: Icon(
-                  Icons.check_circle,
-                  color: BookingStatus.confirmed.color,
-                  size: 20,
-                ),
-                child: const Text('Potvrđeno'),
-                onPressed: () => _bulkUpdateStatus(
-                  context,
-                  ref,
-                  BookingStatus.confirmed,
-                ),
+                leadingIcon: Icon(Icons.check_circle, color: BookingStatus.confirmed.color, size: 20),
+                child: Text(l10n.ownerStatusConfirmed),
+                onPressed: () => _bulkUpdateStatus(context, ref, BookingStatus.confirmed),
               ),
               MenuItemButton(
-                leadingIcon: Icon(
-                  Icons.hourglass_empty,
-                  color: BookingStatus.pending.color,
-                  size: 20,
-                ),
-                child: const Text('Na čekanju'),
-                onPressed: () => _bulkUpdateStatus(
-                  context,
-                  ref,
-                  BookingStatus.pending,
-                ),
+                leadingIcon: Icon(Icons.hourglass_empty, color: BookingStatus.pending.color, size: 20),
+                child: Text(l10n.ownerStatusPending),
+                onPressed: () => _bulkUpdateStatus(context, ref, BookingStatus.pending),
               ),
               MenuItemButton(
-                leadingIcon: Icon(
-                  Icons.cancel,
-                  color: BookingStatus.cancelled.color,
-                  size: 20,
-                ),
-                child: const Text('Otkazano'),
-                onPressed: () => _bulkUpdateStatus(
-                  context,
-                  ref,
-                  BookingStatus.cancelled,
-                ),
+                leadingIcon: Icon(Icons.cancel, color: BookingStatus.cancelled.color, size: 20),
+                child: Text(l10n.ownerStatusCancelled),
+                onPressed: () => _bulkUpdateStatus(context, ref, BookingStatus.cancelled),
               ),
             ],
           ),
@@ -143,7 +108,7 @@ class MultiSelectActionBar extends ConsumerWidget {
           IconButton(
             onPressed: () => _confirmBulkDelete(context, ref),
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Obriši odabrano',
+            tooltip: l10n.ownerMultiSelectDeleteSelected,
             color: theme.colorScheme.error,
           ),
         ],
@@ -152,39 +117,41 @@ class MultiSelectActionBar extends ConsumerWidget {
   }
 
   /// Bulk update booking status
-  Future<void> _bulkUpdateStatus(
-    BuildContext context,
-    WidgetRef ref,
-    BookingStatus newStatus,
-  ) async {
+  Future<void> _bulkUpdateStatus(BuildContext context, WidgetRef ref, BookingStatus newStatus) async {
+    final l10n = AppLocalizations.of(context);
     final multiSelectState = ref.read(multiSelectProvider);
     final selectedBookings = multiSelectState.selectedBookings;
 
     if (selectedBookings.isEmpty) return;
 
+    final countLabel = selectedBookings.length == 1
+        ? l10n.ownerMultiSelectReservation
+        : l10n.ownerMultiSelectReservations;
+
     // Show confirmation
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Potvrda'),
-        content: Text(
-          'Promijeni status za ${selectedBookings.length} ${selectedBookings.length == 1 ? 'rezervaciju' : 'rezervacija'} u "${_getStatusLabel(newStatus)}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Odustani'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.ownerMultiSelectConfirmation),
+          content: Text(
+            l10n.ownerMultiSelectChangeStatusConfirm(
+              selectedBookings.length,
+              countLabel,
+              _getStatusLabel(newStatus, l10n),
             ),
-            child: const Text('Potvrdi'),
           ),
-        ],
-      ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.ownerMultiSelectCancel)),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+              child: Text(l10n.ownerMultiSelectConfirm),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed != true || !context.mounted) return;
@@ -194,12 +161,14 @@ class MultiSelectActionBar extends ConsumerWidget {
 
       // Update all selected bookings
       for (final booking in selectedBookings) {
-        await bookingRepo.updateBooking(
-          booking.copyWith(status: newStatus),
-        );
+        await bookingRepo.updateBooking(booking.copyWith(status: newStatus));
       }
 
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context);
+        final countLabel = selectedBookings.length == 1
+            ? l10n.ownerMultiSelectReservation
+            : l10n.ownerMultiSelectReservations;
         // Refresh calendar
         ref.invalidate(calendarBookingsProvider);
 
@@ -208,55 +177,52 @@ class MultiSelectActionBar extends ConsumerWidget {
 
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          'Status promijenjen za ${selectedBookings.length} ${selectedBookings.length == 1 ? 'rezervaciju' : 'rezervacija'}',
+          l10n.ownerMultiSelectStatusChanged(selectedBookings.length, countLabel),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška pri promjeni statusa',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerMultiSelectStatusError);
       }
     }
   }
 
   /// Confirm bulk delete
   Future<void> _confirmBulkDelete(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final multiSelectState = ref.read(multiSelectProvider);
     final selectedBookings = multiSelectState.selectedBookings;
 
     if (selectedBookings.isEmpty) return;
 
+    final countLabel = selectedBookings.length == 1
+        ? l10n.ownerMultiSelectReservation
+        : l10n.ownerMultiSelectReservations;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.warning_amber, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('Potvrda brisanja'),
-          ],
-        ),
-        content: Text(
-          'Jeste li sigurni da želite obrisati ${selectedBookings.length} ${selectedBookings.length == 1 ? 'rezervaciju' : 'rezervacija'}?\n\nOva akcija se ne može poništiti.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Odustani'),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber, color: Colors.orange),
+              const SizedBox(width: 8),
+              Text(l10n.ownerMultiSelectDeleteConfirmTitle),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+          content: Text(l10n.ownerMultiSelectDeleteConfirmMessage(selectedBookings.length, countLabel)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.ownerMultiSelectCancel)),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              child: Text(l10n.ownerMultiSelectDelete),
             ),
-            child: const Text('Obriši'),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
 
     if (confirmed != true || !context.mounted) return;
@@ -270,6 +236,10 @@ class MultiSelectActionBar extends ConsumerWidget {
       }
 
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context);
+        final countLabel = selectedBookings.length == 1
+            ? l10n.ownerMultiSelectReservation
+            : l10n.ownerMultiSelectReservations;
         // Refresh calendar
         ref.invalidate(calendarBookingsProvider);
 
@@ -278,30 +248,27 @@ class MultiSelectActionBar extends ConsumerWidget {
 
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          'Obrisano ${selectedBookings.length} ${selectedBookings.length == 1 ? 'rezervacija' : 'rezervacije'}',
+          l10n.ownerMultiSelectDeleted(selectedBookings.length, countLabel),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška pri brisanju rezervacija',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerMultiSelectDeleteError);
       }
     }
   }
 
-  String _getStatusLabel(BookingStatus status) {
+  String _getStatusLabel(BookingStatus status, AppLocalizations l10n) {
     switch (status) {
       case BookingStatus.pending:
-        return 'Na čekanju';
+        return l10n.ownerStatusPending;
       case BookingStatus.confirmed:
-        return 'Potvrđeno';
+        return l10n.ownerStatusConfirmed;
       case BookingStatus.completed:
-        return 'Završeno';
+        return l10n.ownerStatusCompleted;
       case BookingStatus.cancelled:
-        return 'Otkazano';
+        return l10n.ownerStatusCancelled;
     }
   }
 }

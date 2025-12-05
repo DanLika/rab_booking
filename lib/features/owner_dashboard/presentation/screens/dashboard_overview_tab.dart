@@ -14,6 +14,7 @@ import '../providers/owner_bookings_provider.dart';
 import '../providers/dashboard_stats_provider.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Dashboard overview tab
 /// Shows basic overview information and recent activity
@@ -22,6 +23,7 @@ class DashboardOverviewTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final statsAsync = ref.watch(dashboardStatsProvider);
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -29,15 +31,13 @@ class DashboardOverviewTab extends ConsumerWidget {
 
     return Scaffold(
       appBar: CommonAppBar(
-        title: 'Pregled',
+        title: l10n.ownerOverview,
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(ownerPropertiesProvider);
@@ -62,8 +62,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                   isMobile ? 8 : 12,
                 ),
                 child: statsAsync.when(
-                  data: (stats) =>
-                      _buildStatsCards(context: context, stats: stats),
+                  data: (stats) => _buildStatsCards(context: context, stats: stats),
                   loading: () => const DashboardStatsSkeleton(),
                   error: (e, s) => Center(
                     child: Padding(
@@ -78,36 +77,24 @@ class DashboardOverviewTab extends ConsumerWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  theme.colorScheme.error.withAlpha(
-                                    (0.1 * 255).toInt(),
-                                  ),
-                                  theme.colorScheme.error.withAlpha(
-                                    (0.05 * 255).toInt(),
-                                  ),
+                                  theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
+                                  theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
                                 ],
                               ),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
-                              Icons.error_outline_rounded,
-                              size: 40,
-                              color: theme.colorScheme.error,
-                            ),
+                            child: Icon(Icons.error_outline_rounded, size: 40, color: theme.colorScheme.error),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Greška prilikom učitavanja podataka',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            l10n.ownerErrorLoadingData,
+                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             e.toString(),
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withAlpha(
-                                (0.7 * 255).toInt(),
-                              ),
+                              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 3,
@@ -141,24 +128,22 @@ class DashboardOverviewTab extends ConsumerWidget {
   }
 
   Widget _buildRecentActivity(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final recentBookingsAsync = ref.watch(recentOwnerBookingsProvider);
 
     return recentBookingsAsync.when(
       data: (bookings) {
-        final activities = bookings.map(_convertBookingToActivity).toList();
+        final activities = bookings.map((b) => _convertBookingToActivity(b, l10n)).toList();
 
         return RecentActivityWidget(
           activities: activities,
           onViewAll: () => context.go(OwnerRoutes.bookings),
           onActivityTap: (bookingId) {
             // Find booking and show details dialog
-            final ownerBooking = bookings.firstWhere(
-              (b) => b.booking.id == bookingId,
-            );
+            final ownerBooking = bookings.firstWhere((b) => b.booking.id == bookingId);
             showDialog(
               context: context,
-              builder: (context) =>
-                  BookingDetailsDialog(ownerBooking: ownerBooking),
+              builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
             );
           },
         );
@@ -167,20 +152,15 @@ class DashboardOverviewTab extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.spaceXL),
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).colorScheme.primary,
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
           ),
         ),
       ),
-      error: (e, s) => RecentActivityWidget(
-        activities: const [],
-        onViewAll: () => context.go(OwnerRoutes.bookings),
-      ),
+      error: (e, s) => RecentActivityWidget(activities: const [], onViewAll: () => context.go(OwnerRoutes.bookings)),
     );
   }
 
-  ActivityItem _convertBookingToActivity(OwnerBooking ownerBooking) {
+  ActivityItem _convertBookingToActivity(OwnerBooking ownerBooking, AppLocalizations l10n) {
     final booking = ownerBooking.booking;
     final property = ownerBooking.property;
     final unit = ownerBooking.unit;
@@ -193,22 +173,22 @@ class DashboardOverviewTab extends ConsumerWidget {
     switch (booking.status) {
       case BookingStatus.pending:
         type = ActivityType.booking;
-        title = 'Nova rezervacija primljena';
+        title = l10n.ownerNewBookingReceived;
         subtitle = '${property.name} - ${unit.name}';
         break;
       case BookingStatus.confirmed:
         type = ActivityType.payment;
-        title = 'Rezervacija potvrđena';
+        title = l10n.ownerBookingConfirmedActivity;
         subtitle = '${property.name} - ${unit.name}';
         break;
       case BookingStatus.cancelled:
         type = ActivityType.cancellation;
-        title = 'Rezervacija otkazana';
+        title = l10n.ownerBookingCancelledActivity;
         subtitle = '${property.name} - ${unit.name}';
         break;
       case BookingStatus.completed:
         type = ActivityType.booking;
-        title = 'Rezervacija završena';
+        title = l10n.ownerBookingCompleted;
         subtitle = '${property.name} - ${unit.name}';
         break;
     }
@@ -256,10 +236,8 @@ class DashboardOverviewTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsCards({
-    required BuildContext context,
-    required DashboardStats stats,
-  }) {
+  Widget _buildStatsCards({required BuildContext context, required DashboardStats stats}) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 900;
@@ -271,7 +249,7 @@ class DashboardOverviewTab extends ConsumerWidget {
       children: [
         _buildStatCard(
           context: context,
-          title: 'Zarada ovaj mjesec',
+          title: l10n.ownerMonthlyRevenue,
           value: '€${stats.monthlyRevenue.toStringAsFixed(0)}',
           icon: Icons.euro_rounded,
           gradient: _createThemeGradient(
@@ -283,7 +261,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         ),
         _buildStatCard(
           context: context,
-          title: 'Zarada ove godine',
+          title: l10n.ownerYearlyRevenue,
           value: '€${stats.yearlyRevenue.toStringAsFixed(0)}',
           icon: Icons.trending_up_rounded,
           gradient: _createThemeGradient(
@@ -296,7 +274,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         ),
         _buildStatCard(
           context: context,
-          title: 'Rezervacije ovaj mjesec',
+          title: l10n.ownerMonthlyBookings,
           value: '${stats.monthlyBookings}',
           icon: Icons.calendar_today_rounded,
           gradient: _createThemeGradient(
@@ -309,7 +287,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         ),
         _buildStatCard(
           context: context,
-          title: 'Nadolazeći check-in',
+          title: l10n.ownerUpcomingCheckIns,
           value: '${stats.upcomingCheckIns}',
           icon: Icons.schedule_rounded,
           gradient: _createThemeGradient(
@@ -322,7 +300,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         ),
         _buildStatCard(
           context: context,
-          title: 'Aktivne nekretnine',
+          title: l10n.ownerActiveProperties,
           value: '${stats.activeProperties}',
           icon: Icons.villa_rounded,
           gradient: _createThemeGradient(
@@ -335,7 +313,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         ),
         _buildStatCard(
           context: context,
-          title: 'Popunjenost',
+          title: l10n.ownerOccupancyRate,
           value: '${stats.occupancyRate.toStringAsFixed(1)}%',
           icon: Icons.analytics_rounded,
           gradient: _createThemeGradient(
@@ -369,8 +347,7 @@ class DashboardOverviewTab extends ConsumerWidget {
     double cardWidth;
     if (isMobile) {
       // Mobile: 2 cards per row
-      cardWidth =
-          (screenWidth - (spacing * 3 + 32)) / 2; // 32 = left/right padding
+      cardWidth = (screenWidth - (spacing * 3 + 32)) / 2; // 32 = left/right padding
     } else if (isTablet) {
       // Tablet: 3 cards per row
       cardWidth = (screenWidth - (spacing * 4 + 48)) / 3;
@@ -380,9 +357,7 @@ class DashboardOverviewTab extends ConsumerWidget {
     }
 
     // Extract primary color from gradient for shadow
-    final primaryColor = (gradient.colors.isNotEmpty)
-        ? gradient.colors.first
-        : Theme.of(context).colorScheme.primary;
+    final primaryColor = (gradient.colors.isNotEmpty) ? gradient.colors.first : Theme.of(context).colorScheme.primary;
 
     // Theme-aware text and icon colors - full opacity
     final textColor = Colors.white;
@@ -396,10 +371,7 @@ class DashboardOverviewTab extends ConsumerWidget {
       builder: (context, value, child) {
         return Opacity(
           opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 20 * (1 - value)),
-            child: child,
-          ),
+          child: Transform.translate(offset: Offset(0, 20 * (1 - value)), child: child),
         );
       },
       child: Container(
@@ -409,20 +381,13 @@ class DashboardOverviewTab extends ConsumerWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(
-              color: primaryColor.withAlpha((0.12 * 255).toInt()),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
+            BoxShadow(color: primaryColor.withAlpha((0.12 * 255).toInt()), blurRadius: 24, offset: const Offset(0, 8)),
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: BorderRadius.circular(20),
-            ),
+            decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(20)),
             padding: EdgeInsets.all(isMobile ? 14 : 18),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -431,10 +396,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                 // Icon container
                 Container(
                   padding: EdgeInsets.all(isMobile ? 10 : 12),
-                  decoration: BoxDecoration(
-                    color: iconBgColor,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                  decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(14)),
                   child: Icon(icon, color: iconColor, size: isMobile ? 22 : 26),
                 ),
                 SizedBox(height: isMobile ? 8 : 12),

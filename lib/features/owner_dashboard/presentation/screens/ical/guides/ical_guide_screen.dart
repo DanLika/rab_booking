@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/config/router_owner.dart';
 import '../../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../../core/theme/app_shadows.dart';
@@ -28,14 +29,12 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       resizeToAvoidBottomInset: true,
       drawer: const OwnerAppDrawer(currentRoute: 'guides/ical'),
       appBar: CommonAppBar(
-        title: 'iCal Sinhronizacija - Uputstvo',
+        title: AppLocalizations.of(context).icalGuideTitle,
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(16),
@@ -60,20 +59,16 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                               color: Colors.white.withAlpha((0.2 * 255).toInt()),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                              Icons.sync,
-                              size: 32,
-                              color: Colors.white,
-                            ),
+                            child: const Icon(Icons.sync, size: 32, color: Colors.white),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'iCal Sinhronizacija',
-                                  style: TextStyle(
+                                Text(
+                                  AppLocalizations.of(context).icalGuideHeaderTitle,
+                                  style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
@@ -81,11 +76,8 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Automatski sync rezervacija sa Booking.com, Airbnb i drugih platformi',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white.withAlpha((0.9 * 255).toInt()),
-                                  ),
+                                  AppLocalizations.of(context).icalGuideHeaderSubtitle,
+                                  style: TextStyle(fontSize: 14, color: Colors.white.withAlpha((0.9 * 255).toInt())),
                                 ),
                               ],
                             ),
@@ -94,13 +86,8 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        '💡 iCal sinhronizacija sprečava overbooking tako što automatski uvozi rezervacije '
-                        'sa drugih platformi i prikazuje ih kao zauzete dane u vašem kalendaru.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.5,
-                          color: Colors.white.withAlpha((0.9 * 255).toInt()),
-                        ),
+                        AppLocalizations.of(context).icalGuideHeaderTip,
+                        style: TextStyle(fontSize: 14, height: 1.5, color: Colors.white.withAlpha((0.9 * 255).toInt())),
                       ),
                     ],
                   ),
@@ -110,219 +97,216 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
               const SizedBox(height: 24),
 
               // Booking.com Instructions
-              _buildPlatformSection(
-                platformName: 'Booking.com',
-                icon: Icons.hotel,
-                steps: [
-                  '1. Ulogujte se na Extranet (admin.booking.com)',
-                  '2. Idite na: Property → Calendar → Reservations export',
-                  '3. Kopirajte "Calendar export link" (iCal URL)',
-                  '4. Zalijepite u Owner aplikaciju',
-                ],
-                placeholder: 'Slika: Booking.com Extranet - Calendar export',
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return _buildPlatformSection(
+                    platformName: 'Booking.com',
+                    icon: Icons.hotel,
+                    steps: [
+                      l10n.icalGuideBookingCom1,
+                      l10n.icalGuideBookingCom2,
+                      l10n.icalGuideBookingCom3,
+                      l10n.icalGuideBookingCom4,
+                    ],
+                    placeholder: 'Slika: Booking.com Extranet - Calendar export',
+                  );
+                },
               ),
 
               const SizedBox(height: 16),
 
               // Airbnb Instructions
-              _buildPlatformSection(
-                platformName: 'Airbnb',
-                icon: Icons.home,
-                steps: [
-                  '1. Ulogujte se na Airbnb host dashboard',
-                  '2. Odaberite property (listing)',
-                  '3. Idite na: Calendar → Availability settings → Export calendar',
-                  '4. Kopirajte iCal link',
-                  '5. Zalijepite u Owner aplikaciju',
-                ],
-                placeholder: 'Slika: Airbnb - Export calendar',
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return _buildPlatformSection(
+                    platformName: 'Airbnb',
+                    icon: Icons.home,
+                    steps: [
+                      l10n.icalGuideAirbnb1,
+                      l10n.icalGuideAirbnb2,
+                      l10n.icalGuideAirbnb3,
+                      l10n.icalGuideAirbnb4,
+                      l10n.icalGuideAirbnb5,
+                    ],
+                    placeholder: 'Slika: Airbnb - Export calendar',
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
 
               // Step-by-step in Owner App
-              const Text(
-                'Dodavanje iCal Feed-a u Owner Aplikaciju',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                AppLocalizations.of(context).icalGuideAddFeedTitle,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
 
-              _buildStep(
-                stepNumber: 1,
-                title: 'Otvorite iCal Sinhronizaciju',
-                icon: Icons.open_in_new,
-                content: Builder(
-                  builder: (context) {
-                    final theme = Theme.of(context);
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('U Owner aplikaciji:'),
-                        const SizedBox(height: 12),
-                        _buildBulletPoint('Otvorite drawer (hamburger meni)'),
-                        _buildBulletPoint(
-                          'Idite na: Integracije → iCal Sinhronizacija',
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            context.go(OwnerRoutes.icalImport);
-                          },
-                          icon: const Icon(Icons.sync),
-                          label: const Text('Idi na iCal Sinhronizaciju'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: theme.colorScheme.onPrimary,
-                            padding: const EdgeInsets.all(16),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-
-            _buildStep(
-              stepNumber: 2,
-              title: 'Dodajte novi Feed',
-              icon: Icons.add_circle,
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Kliknite na "Dodaj iCal Feed" dugme:'),
-                  const SizedBox(height: 12),
-                  _buildBulletPoint(
-                    'Odaberite Unit (apartman) za koji želite sync',
-                  ),
-                  _buildBulletPoint(
-                    'Odaberite platformu (Booking.com, Airbnb, itd.)',
-                  ),
-                  _buildBulletPoint('Zalijepite iCal URL koji ste kopirali'),
-                  _buildBulletPoint('Kliknite "Dodaj"'),
-                  const SizedBox(height: 16),
-                  _buildPlaceholder('GIF: Dodavanje iCal feed-a'),
-                ],
-              ),
-            ),
-
-              _buildStep(
-                stepNumber: 3,
-                title: 'Pokrenite Sync',
-                icon: Icons.sync,
-                content: Builder(
-                  builder: (context) {
-                    final theme = Theme.of(context);
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Nakon dodavanja feed-a:'),
-                        const SizedBox(height: 12),
-                        _buildBulletPoint('Kliknite "Sync Now" dugme pored feed-a'),
-                        _buildBulletPoint('Sačekajte par sekundi'),
-                        _buildBulletPoint('Provjerite status (Active ✓)'),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.success.withAlpha((0.1 * 255).toInt()),
-                            border: Border.all(
-                              color: theme.colorScheme.success.withAlpha((0.3 * 255).toInt()),
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle,
-                                color: theme.colorScheme.success,
-                                size: 20,
+              Builder(
+                builder: (ctx) {
+                  final l10n = AppLocalizations.of(ctx);
+                  return _buildStep(
+                    stepNumber: 1,
+                    title: l10n.icalGuideStep1Title,
+                    icon: Icons.open_in_new,
+                    content: Builder(
+                      builder: (context) {
+                        final theme = Theme.of(context);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.icalGuideStep1Desc),
+                            const SizedBox(height: 12),
+                            _buildBulletPoint(l10n.icalGuideStep1Bullet1),
+                            _buildBulletPoint(l10n.icalGuideStep1Bullet2),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                context.go(OwnerRoutes.icalImport);
+                              },
+                              icon: const Icon(Icons.sync),
+                              label: Text(l10n.icalGuideStep1Button),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
+                                padding: const EdgeInsets.all(16),
                               ),
-                              const SizedBox(width: 8),
-                              const Expanded(
-                                child: Text(
-                                  'Gotovo! Rezervacije sa drugih platformi će se automatski prikazivati kao zauzeti dani.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+
+              Builder(
+                builder: (ctx) {
+                  final l10n = AppLocalizations.of(ctx);
+                  return _buildStep(
+                    stepNumber: 2,
+                    title: l10n.icalGuideStep2Title,
+                    icon: Icons.add_circle,
+                    content: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.icalGuideStep2Desc),
+                        const SizedBox(height: 12),
+                        _buildBulletPoint(l10n.icalGuideStep2Bullet1),
+                        _buildBulletPoint(l10n.icalGuideStep2Bullet2),
+                        _buildBulletPoint(l10n.icalGuideStep2Bullet3),
+                        _buildBulletPoint(l10n.icalGuideStep2Bullet4),
+                        const SizedBox(height: 16),
+                        _buildPlaceholder('GIF: Dodavanje iCal feed-a'),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              Builder(
+                builder: (ctx) {
+                  final l10n = AppLocalizations.of(ctx);
+                  return _buildStep(
+                    stepNumber: 3,
+                    title: l10n.icalGuideStep3Title,
+                    icon: Icons.sync,
+                    content: Builder(
+                      builder: (context) {
+                        final theme = Theme.of(context);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.icalGuideStep3Desc),
+                            const SizedBox(height: 12),
+                            _buildBulletPoint(l10n.icalGuideStep3Bullet1),
+                            _buildBulletPoint(l10n.icalGuideStep3Bullet2),
+                            _buildBulletPoint(l10n.icalGuideStep3Bullet3),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.success.withAlpha((0.1 * 255).toInt()),
+                                border: Border.all(color: theme.colorScheme.success.withAlpha((0.3 * 255).toInt())),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.check_circle, color: theme.colorScheme.success, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.icalGuideStep3Success,
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
 
-              _buildStep(
-                stepNumber: 4,
-                title: 'Automatska Sinhronizacija',
-                icon: Icons.schedule,
-                content: Builder(
-                  builder: (context) {
-                    final theme = Theme.of(context);
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Sistem automatski sinhronizuje rezervacije:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildBulletPoint('Svaki sat se pokreće automatski sync'),
-                        _buildBulletPoint(
-                          'Nove rezervacije se pojavljuju u roku od 1h',
-                        ),
-                        _buildBulletPoint('Otkazane rezervacije se uklanjaju'),
-                        _buildBulletPoint('Možete ručno pokrenuti sync bilo kada'),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withAlpha(
-                              (0.1 * 255).toInt(),
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: theme.colorScheme.primary,
-                                size: 20,
+              Builder(
+                builder: (ctx) {
+                  final l10n = AppLocalizations.of(ctx);
+                  return _buildStep(
+                    stepNumber: 4,
+                    title: l10n.icalGuideStep4Title,
+                    icon: Icons.schedule,
+                    content: Builder(
+                      builder: (context) {
+                        final theme = Theme.of(context);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.icalGuideStep4Desc, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 12),
+                            _buildBulletPoint(l10n.icalGuideStep4Bullet1),
+                            _buildBulletPoint(l10n.icalGuideStep4Bullet2),
+                            _buildBulletPoint(l10n.icalGuideStep4Bullet3),
+                            _buildBulletPoint(l10n.icalGuideStep4Bullet4),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
                               ),
-                              const SizedBox(width: 8),
-                              const Expanded(
-                                child: Text(
-                                  'Vrijeme sinhronizacije: Svaki sat u 00 minuta (npr. 10:00, 11:00, 12:00...)',
-                                  style: TextStyle(fontSize: 12),
-                                ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: theme.colorScheme.primary, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(l10n.icalGuideStep4Info, style: const TextStyle(fontSize: 12))),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // FAQ Section
-            _buildFAQSection(),
+              // FAQ Section
+              _buildFAQSection(),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Troubleshooting Section
-            _buildTroubleshootingSection(),
-          ],
-        ),
+              // Troubleshooting Section
+              _buildTroubleshootingSection(),
+            ],
+          ),
         ),
       ),
     );
@@ -341,29 +325,21 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       decoration: BoxDecoration(
         gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
+        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           leading: Icon(icon, color: theme.colorScheme.primary),
-          title: Text(
-            platformName,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+          title: Text(platformName, style: const TextStyle(fontWeight: FontWeight.bold)),
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Koraci za dobijanje iCal URL-a:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Koraci za dobijanje iCal URL-a:', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   ...steps.map(_buildBulletPoint),
                   const SizedBox(height: 16),
@@ -377,12 +353,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     );
   }
 
-  Widget _buildStep({
-    required int stepNumber,
-    required String title,
-    required IconData icon,
-    required Widget content,
-  }) {
+  Widget _buildStep({required int stepNumber, required String title, required IconData icon, required Widget content}) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isExpanded = _expandedStep == stepNumber;
@@ -392,9 +363,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       decoration: BoxDecoration(
         gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
+        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Theme(
@@ -420,10 +389,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
               Icon(icon, size: 20, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+                child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -439,10 +405,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '• ',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+          const Text('• ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           Expanded(child: Text(text, style: const TextStyle(height: 1.5))),
         ],
       ),
@@ -457,10 +420,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
-          width: 2,
-        ),
+        border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,21 +429,14 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(8)),
                 child: const Icon(Icons.image, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   text,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: theme.colorScheme.primary,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: theme.colorScheme.primary),
                 ),
               ),
             ],
@@ -563,9 +516,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     height: 1.5,
-                    fontWeight: step.contains('📋')
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight: step.contains('📋') ? FontWeight.bold : FontWeight.normal,
                     color: step.contains('📋') ? theme.colorScheme.primary : null,
                   ),
                 ),
@@ -585,9 +536,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withAlpha((0.2 * 255).toInt()),
-        ),
+        border: Border.all(color: theme.colorScheme.onSurface.withAlpha((0.2 * 255).toInt())),
       ),
       child: Column(
         children: [
@@ -603,12 +552,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     );
   }
 
-  Widget _buildMiniStep(
-    String number,
-    String text,
-    IconData icon, {
-    bool isLast = false,
-  }) {
+  Widget _buildMiniStep(String number, String text, IconData icon, {bool isLast = false}) {
     final theme = Theme.of(context);
 
     return Container(
@@ -625,21 +569,14 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             backgroundColor: theme.colorScheme.primary,
             child: Text(
               number,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(width: 8),
           Icon(icon, size: 16, color: theme.colorScheme.primary),
           const SizedBox(width: 6),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            ),
+            child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
           ),
         ],
       ),
@@ -649,14 +586,13 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
   Widget _buildFAQSection() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
         gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
+        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
@@ -670,39 +606,19 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Česta Pitanja',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                    l10n.icalGuideFaqTitle,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            _buildFAQItem(
-              'Koliko često se sinhronizuje?',
-              'Automatski sync se izvršava svaki sat. Možete ručno pokrenuti sync bilo kada klikom na "Sync Now".',
-            ),
-            _buildFAQItem(
-              'Hoće li gosti vidjeti rezervacije sa drugih platformi?',
-              'Da! Rezervacije uvezene preko iCal-a će biti prikazane kao zauzeti dani u embed widgetu, sprečavajući overbooking.',
-            ),
-            _buildFAQItem(
-              'Mogu li dodati više feed-ova za isti apartman?',
-              'Da, možete dodati feed-ove sa više platformi (Booking.com, Airbnb, ili bilo koja druga iCal platforma) za isti unit. Sve rezervacije će biti sinhronizovane.',
-            ),
-            _buildFAQItem(
-              'Da li mogu vidjeti detalje gosta sa drugih platformi?',
-              'Ne. iCal protokol samo prenosi datume rezervacije (check-in i check-out), ne i lične podatke gostiju. '
-                  'Za detalje gosta, morate se ulogovat na odgovarajuću platformu.',
-            ),
-            _buildFAQItem(
-              'Šta ako URL prestane da radi?',
-              'Ako se URL promeni, jednostavno ažurirajte feed u aplikaciji. Obri šite stari feed i dodajte novi sa ažuriranim URL-om.',
-            ),
+            _buildFAQItem(l10n.icalGuideFaq1Q, l10n.icalGuideFaq1A),
+            _buildFAQItem(l10n.icalGuideFaq2Q, l10n.icalGuideFaq2A),
+            _buildFAQItem(l10n.icalGuideFaq3Q, l10n.icalGuideFaq3A),
+            _buildFAQItem(l10n.icalGuideFaq4Q, l10n.icalGuideFaq4A),
+            _buildFAQItem(l10n.icalGuideFaq5Q, l10n.icalGuideFaq5A),
           ],
         ),
       ),
@@ -712,14 +628,13 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
   Widget _buildTroubleshootingSection() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
         gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.warning.withAlpha((0.3 * 255).toInt()),
-        ),
+        border: Border.all(color: theme.colorScheme.warning.withAlpha((0.3 * 255).toInt())),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
@@ -729,42 +644,21 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.build,
-                  color: theme.colorScheme.warning,
-                ),
+                Icon(Icons.build, color: theme.colorScheme.warning),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Rješavanje Problema',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                    l10n.icalGuideTroubleshootTitle,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            _buildTroubleshootItem(
-              'Feed ima status "Error"',
-              '• Provjerite da li je URL tačan\n'
-                  '• Provjerite da li je URL još aktivan na platformi\n'
-                  '• Obrišite feed i dodajte ponovo sa novim URL-om',
-            ),
-            _buildTroubleshootItem(
-              'Rezervacije se ne prikazuju',
-              '• Kliknite "Sync Now" da ručno pokrenete sync\n'
-                  '• Provjerite da li ste odabrali tačan unit\n'
-                  '• Sačekajte par minuta i osvježite stranicu',
-            ),
-            _buildTroubleshootItem(
-              'Stare rezervacije još uvijek prikazane',
-              '• iCal sync automatski uklanja prošle rezervacije\n'
-                  '• Kliknite "Sync Now" da forsirate ažuriranje',
-            ),
+            _buildTroubleshootItem(l10n.icalGuideTrouble1Problem, l10n.icalGuideTrouble1Solution),
+            _buildTroubleshootItem(l10n.icalGuideTrouble2Problem, l10n.icalGuideTrouble2Solution),
+            _buildTroubleshootItem(l10n.icalGuideTrouble3Problem, l10n.icalGuideTrouble3Solution),
           ],
         ),
       ),
@@ -781,23 +675,12 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
         children: [
           Text(
             '❓ $question',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: theme.colorScheme.onSurface,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: theme.colorScheme.onSurface),
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
           ),
           const SizedBox(height: 6),
-          Text(
-            answer,
-            style: TextStyle(
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.5,
-            ),
-          ),
+          Text(answer, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant, height: 1.5)),
         ],
       ),
     );
@@ -813,23 +696,12 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
         children: [
           Text(
             '⚠️ $problem',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: theme.colorScheme.warning,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: theme.colorScheme.warning),
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
           ),
           const SizedBox(height: 6),
-          Text(
-            solution,
-            style: TextStyle(
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.5,
-            ),
-          ),
+          Text(solution, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant, height: 1.5)),
         ],
       ),
     );

@@ -5,6 +5,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../providers/owner_bookings_provider.dart';
@@ -31,12 +32,11 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // Check if all selected bookings are pending
-    final selectedBookings = widget.bookings
-        .where((b) => _selectedBookingIds.contains(b.booking.id))
-        .toList();
-    final allSelectedArePending = selectedBookings.isNotEmpty &&
-        selectedBookings.every((b) => b.booking.status == BookingStatus.pending);
+    final selectedBookings = widget.bookings.where((b) => _selectedBookingIds.contains(b.booking.id)).toList();
+    final allSelectedArePending =
+        selectedBookings.isNotEmpty && selectedBookings.every((b) => b.booking.status == BookingStatus.pending);
 
     return Card(
       elevation: 2,
@@ -49,18 +49,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               height: 60,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primaryContainer,
-                boxShadow: AppShadows.getElevation(
-                  2,
-                  isDark: Theme.of(context).brightness == Brightness.dark,
-                ),
+                boxShadow: AppShadows.getElevation(2, isDark: Theme.of(context).brightness == Brightness.dark),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   // Selection count badge with gradient
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(16),
@@ -68,14 +64,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.check_circle,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
+                        Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.onPrimary),
                         const SizedBox(width: 6),
                         Text(
-                          '${_selectedBookingIds.length} odabrano',
+                          l10n.ownerTableSelected(_selectedBookingIds.length),
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary,
                             fontWeight: FontWeight.w600,
@@ -94,11 +86,8 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                       setState(_selectedBookingIds.clear);
                     },
                     icon: const Icon(Icons.close, size: 18),
-                    label: const Text('Poništi odabir'),
-                    style: TextButton.styleFrom(
-                      foregroundColor:
-                          Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    label: Text(l10n.ownerTableClearSelection),
+                    style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
 
                   const SizedBox(width: 8),
@@ -115,14 +104,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                           }
                         },
                         icon: const Icon(Icons.edit_note),
-                        tooltip: 'Grupne akcije',
+                        tooltip: l10n.ownerTableBulkActions,
                         style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.1),
-                          foregroundColor:
-                              Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                          foregroundColor: Theme.of(context).colorScheme.primary,
                         ),
                       );
                     },
@@ -130,33 +115,24 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                       // Confirm action (only if all pending)
                       if (allSelectedArePending)
                         MenuItemButton(
-                          leadingIcon: const Icon(
-                            Icons.check_circle_outline,
-                            color: AppColors.success,
-                          ),
+                          leadingIcon: const Icon(Icons.check_circle_outline, color: AppColors.success),
                           onPressed: _confirmSelectedBookings,
-                          child: const Text('Potvrdi odabrane'),
+                          child: Text(l10n.ownerTableConfirmSelected),
                         ),
 
                       // Reject action (only if all pending)
                       if (allSelectedArePending)
                         MenuItemButton(
-                          leadingIcon: const Icon(
-                            Icons.cancel_outlined,
-                            color: AppColors.error,
-                          ),
+                          leadingIcon: const Icon(Icons.cancel_outlined, color: AppColors.error),
                           onPressed: _rejectSelectedBookings,
-                          child: const Text('Odbij odabrane'),
+                          child: Text(l10n.ownerTableRejectSelected),
                         ),
 
                       // Delete action (always available)
                       MenuItemButton(
-                        leadingIcon: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.error,
-                        ),
+                        leadingIcon: const Icon(Icons.delete_outline, color: AppColors.error),
                         onPressed: _deleteSelectedBookings,
-                        child: const Text('Obriši odabrane'),
+                        child: Text(l10n.ownerTableDeleteSelected),
                       ),
                     ],
                   ),
@@ -169,9 +145,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(bottom: 16),
             child: Container(
-              constraints: BoxConstraints(
-                minWidth: MediaQuery.of(context).size.width - 48,
-              ),
+              constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
               child: DataTable(
                 headingRowColor: WidgetStateProperty.resolveWith((states) {
                   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -179,19 +153,19 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                       ? Theme.of(context).colorScheme.surfaceContainerHighest
                       : Theme.of(context).colorScheme.surfaceContainerHigh;
                 }),
-                columns: const [
-                  DataColumn(label: Text('Gost')),
-                  DataColumn(label: Text('Objekt / Jedinica')),
-                  DataColumn(label: Text('Check-in')),
-                  DataColumn(label: Text('Check-out')),
-                  DataColumn(label: Text('Noći')),
-                  DataColumn(label: Text('Gostiju')),
-                  DataColumn(label: Text('Status')),
-                  DataColumn(label: Text('Cijena')),
-                  DataColumn(label: Text('Izvor')),
-                  DataColumn(label: Text('Akcije')),
+                columns: [
+                  DataColumn(label: Text(l10n.ownerTableColumnGuest)),
+                  DataColumn(label: Text(l10n.ownerTableColumnPropertyUnit)),
+                  DataColumn(label: Text(l10n.ownerTableColumnCheckIn)),
+                  DataColumn(label: Text(l10n.ownerTableColumnCheckOut)),
+                  DataColumn(label: Text(l10n.ownerTableColumnNights)),
+                  DataColumn(label: Text(l10n.ownerTableColumnGuests)),
+                  DataColumn(label: Text(l10n.ownerTableColumnStatus)),
+                  DataColumn(label: Text(l10n.ownerTableColumnPrice)),
+                  DataColumn(label: Text(l10n.ownerTableColumnSource)),
+                  DataColumn(label: Text(l10n.ownerTableColumnActions)),
                 ],
-                rows: widget.bookings.map(_buildTableRow).toList(),
+                rows: widget.bookings.map((b) => _buildTableRow(b, l10n)).toList(),
               ),
             ),
           ),
@@ -200,7 +174,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     );
   }
 
-  DataRow _buildTableRow(OwnerBooking ownerBooking) {
+  DataRow _buildTableRow(OwnerBooking ownerBooking, AppLocalizations l10n) {
     final booking = ownerBooking.booking;
     final property = ownerBooking.property;
     final unit = ownerBooking.unit;
@@ -231,10 +205,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               ),
               Text(
                 ownerBooking.guestEmail,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.textColorSecondary,
-                ),
+                style: TextStyle(fontSize: 12, color: context.textColorSecondary),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -255,10 +226,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               ),
               Text(
                 unit.name,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.textColorSecondary,
-                ),
+                style: TextStyle(fontSize: 12, color: context.textColorSecondary),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -288,11 +256,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             ),
             child: Text(
               booking.status.displayName,
-              style: TextStyle(
-                color: booking.status.color,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: booking.status.color, fontWeight: FontWeight.bold, fontSize: 12),
             ),
           ),
         ),
@@ -311,17 +275,17 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         ),
 
         // Source
-        DataCell(_buildSourceBadge(booking.source)),
+        DataCell(_buildSourceBadge(booking.source, l10n)),
 
         // Actions menu
-        DataCell(_buildActionsMenu(booking)),
+        DataCell(_buildActionsMenu(booking, l10n)),
       ],
     );
   }
 
-  Widget _buildSourceBadge(String? source) {
+  Widget _buildSourceBadge(String? source, AppLocalizations l10n) {
     if (source == null) {
-      return const Text('Direktno');
+      return Text(l10n.ownerTableSourceDirect);
     }
 
     // Map source to display name and icon
@@ -331,29 +295,29 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
     switch (source.toLowerCase()) {
       case 'ical':
-        displayName = 'iCal';
+        displayName = l10n.ownerTableSourceIcal;
         icon = Icons.sync;
         color = AppColors.authSecondary;
         break;
       case 'booking_com':
       case 'booking.com':
-        displayName = 'Booking.com';
+        displayName = l10n.ownerTableSourceBookingCom;
         icon = Icons.public;
         color = Colors.orange;
         break;
       case 'airbnb':
-        displayName = 'Airbnb';
+        displayName = l10n.ownerTableSourceAirbnb;
         icon = Icons.home;
         color = Colors.red;
         break;
       case 'widget':
-        displayName = 'Widget';
+        displayName = l10n.ownerTableSourceWidget;
         icon = Icons.web;
         color = Colors.green;
         break;
       case 'admin':
       case 'manual':
-        displayName = 'Manualno';
+        displayName = l10n.ownerTableSourceManual;
         icon = Icons.person;
         color = Colors.grey;
         break;
@@ -372,94 +336,82 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           const SizedBox(width: 4),
           Text(
             displayName,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionsMenu(BookingModel booking) {
+  Widget _buildActionsMenu(BookingModel booking, AppLocalizations l10n) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert),
-      tooltip: 'Akcije',
+      tooltip: l10n.ownerTableColumnActions,
       onSelected: (value) => _handleAction(value, booking),
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'details',
           child: Row(
             children: [
-              Icon(Icons.visibility_outlined),
-              SizedBox(width: 8),
-              Text('Detalji'),
+              const Icon(Icons.visibility_outlined),
+              const SizedBox(width: 8),
+              Text(l10n.ownerTableActionDetails),
             ],
           ),
         ),
         if (booking.status == BookingStatus.pending)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'confirm',
             child: Row(
               children: [
-                Icon(Icons.check_circle_outline, color: AppColors.success),
-                SizedBox(width: 8),
-                Text('Potvrdi'),
+                const Icon(Icons.check_circle_outline, color: AppColors.success),
+                const SizedBox(width: 8),
+                Text(l10n.ownerTableActionConfirm),
               ],
             ),
           ),
         if (booking.status == BookingStatus.confirmed && booking.isPast)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'complete',
             child: Row(
-              children: [
-                Icon(Icons.done_all),
-                SizedBox(width: 8),
-                Text('Završi'),
-              ],
+              children: [const Icon(Icons.done_all), const SizedBox(width: 8), Text(l10n.ownerTableActionComplete)],
             ),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'edit',
           child: Row(
-            children: [
-              Icon(Icons.edit_outlined),
-              SizedBox(width: 8),
-              Text('Uredi'),
-            ],
+            children: [const Icon(Icons.edit_outlined), const SizedBox(width: 8), Text(l10n.ownerTableActionEdit)],
           ),
         ),
         if (booking.canBeCancelled)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'cancel',
             child: Row(
               children: [
-                Icon(Icons.cancel_outlined, color: AppColors.error),
-                SizedBox(width: 8),
-                Text('Otkaži'),
+                const Icon(Icons.cancel_outlined, color: AppColors.error),
+                const SizedBox(width: 8),
+                Text(l10n.ownerTableActionCancel),
               ],
             ),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'email',
           child: Row(
             children: [
-              Icon(Icons.email_outlined),
-              SizedBox(width: 8),
-              Text('Pošalji email'),
+              const Icon(Icons.email_outlined),
+              const SizedBox(width: 8),
+              Text(l10n.ownerTableActionSendEmail),
             ],
           ),
         ),
         const PopupMenuDivider(),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete_outline, color: AppColors.error),
-              SizedBox(width: 8),
-              Text('Obriši', style: TextStyle(color: AppColors.error)),
+              const Icon(Icons.delete_outline, color: AppColors.error),
+              const SizedBox(width: 8),
+              Text(l10n.ownerTableActionDelete, style: const TextStyle(color: AppColors.error)),
             ],
           ),
         ),
@@ -502,31 +454,25 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
   void _showBookingDetailsById(String bookingId) {
     // Find booking in the list
-    final ownerBooking = widget.bookings.firstWhere(
-      (b) => b.booking.id == bookingId,
-    );
+    final ownerBooking = widget.bookings.firstWhere((b) => b.booking.id == bookingId);
     _showBookingDetails(ownerBooking);
   }
 
   Future<void> _confirmBooking(String bookingId) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Potvrdi rezervaciju'),
-        content: const Text(
-          'Jeste li sigurni da želite potvrditi ovu rezervaciju?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Otkaži'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Potvrdi'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.ownerTableConfirmBooking),
+          content: Text(dialogL10n.ownerTableConfirmBookingMessage),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(dialogL10n.confirm)),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -535,12 +481,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.confirmBooking(bookingId);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Rezervacija je uspješno potvrđena'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.ownerTableBookingConfirmed), backgroundColor: AppColors.success));
           ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
 
@@ -549,36 +492,32 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
         }
       }
     }
   }
 
   Future<void> _completeBooking(String bookingId) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Označi kao završeno'),
-        content: const Text(
-          'Jeste li sigurni da želite označiti ovu rezervaciju kao završenu?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Otkaži'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Završi'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.ownerTableCompleteBooking),
+          content: Text(dialogL10n.ownerTableCompleteBookingMessage),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(dialogL10n.ownerTableActionComplete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -587,12 +526,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.completeBooking(bookingId);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Rezervacija je označena kao završena'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.ownerTableBookingCompleted), backgroundColor: AppColors.success));
           ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
 
@@ -601,68 +537,66 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
         }
       }
     }
   }
 
   Future<void> _cancelBooking(String bookingId) async {
+    final l10n = AppLocalizations.of(context);
     final reasonController = TextEditingController();
     final sendEmailNotifier = ValueNotifier<bool>(true);
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Otkaži rezervaciju'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Jeste li sigurni da želite otkazati ovu rezervaciju?'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Razlog otkazivanja',
-                border: OutlineInputBorder(),
-                hintText: 'Unesite razlog...',
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.ownerTableCancelBooking),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(dialogL10n.ownerTableCancelBookingMessage),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: InputDecoration(
+                  labelText: dialogL10n.ownerTableCancellationReason,
+                  border: const OutlineInputBorder(),
+                  hintText: dialogL10n.ownerTableCancellationReasonHint,
+                ),
+                maxLines: 3,
               ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            ValueListenableBuilder<bool>(
-              valueListenable: sendEmailNotifier,
-              builder: (context, sendEmail, _) {
-                return CheckboxListTile(
-                  title: const Text('Pošalji email gostu'),
-                  value: sendEmail,
-                  onChanged: (value) {
-                    sendEmailNotifier.value = value ?? true;
-                  },
-                  contentPadding: EdgeInsets.zero,
-                );
-              },
+              const SizedBox(height: 16),
+              ValueListenableBuilder<bool>(
+                valueListenable: sendEmailNotifier,
+                builder: (context, sendEmail, _) {
+                  return CheckboxListTile(
+                    title: Text(dialogL10n.ownerTableSendEmailToGuest),
+                    value: sendEmail,
+                    onChanged: (value) {
+                      sendEmailNotifier.value = value ?? true;
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              child: Text(dialogL10n.ownerTableCancelBookingButton),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Odustani'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Otkaži rezervaciju'),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -670,19 +604,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         final repository = ref.read(ownerBookingsRepositoryProvider);
         await repository.cancelBooking(
           bookingId,
-          reasonController.text.isEmpty
-              ? 'Otkazano od strane vlasnika'
-              : reasonController.text,
+          reasonController.text.isEmpty ? l10n.ownerTableCancelledByOwner : reasonController.text,
           sendEmail: sendEmailNotifier.value,
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Rezervacija je otkazana'),
-              backgroundColor: AppColors.warning,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.ownerTableBookingCancelled), backgroundColor: AppColors.warning));
           ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
 
@@ -691,21 +620,16 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
         }
       }
     }
   }
 
   void _editBooking(String bookingId) async {
-    final ownerBooking = widget.bookings.firstWhere(
-      (b) => b.booking.id == bookingId,
-    );
+    final ownerBooking = widget.bookings.firstWhere((b) => b.booking.id == bookingId);
     await showEditBookingDialog(context, ref, ownerBooking.booking);
   }
 
@@ -714,25 +638,24 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   }
 
   Future<void> _deleteBooking(String bookingId) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Obriši rezervaciju'),
-        content: const Text(
-          'Jeste li sigurni da želite TRAJNO obrisati ovu rezervaciju? Ova akcija se ne može poništiti.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Odustani'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Obriši'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.ownerTableDeleteBooking),
+          content: Text(dialogL10n.ownerTableDeleteBookingMessage),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              child: Text(dialogL10n.delete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -741,48 +664,44 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.deleteBooking(bookingId);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Rezervacija je obrisana'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.ownerTableBookingDeleted), backgroundColor: AppColors.error));
           ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
         }
       }
     }
   }
 
   Future<void> _confirmSelectedBookings() async {
+    final l10n = AppLocalizations.of(context);
+    final count = _selectedBookingIds.length;
+    final label = count == 1 ? l10n.ownerTableBooking : l10n.ownerTableBookings;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Potvrdi odabrane rezervacije'),
-        content: Text(
-          'Jeste li sigurni da želite potvrditi ${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervaciju' : 'rezervacija'}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Odustani'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.success),
-            child: const Text('Potvrdi sve'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.ownerTableConfirmSelectedTitle),
+          content: Text(dialogL10n.ownerTableConfirmSelectedMessage(count, label)),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.success),
+              child: Text(dialogL10n.ownerTableConfirmAll),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -796,12 +715,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervacija je potvrđena' : 'rezervacija su potvrđene'}',
-              ),
-              backgroundColor: AppColors.success,
-            ),
+            SnackBar(content: Text(l10n.ownerTableBookingsConfirmed(count, label)), backgroundColor: AppColors.success),
           );
 
           setState(_selectedBookingIds.clear);
@@ -811,63 +725,59 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
         }
       }
     }
   }
 
   Future<void> _rejectSelectedBookings() async {
+    final l10n = AppLocalizations.of(context);
+    final count = _selectedBookingIds.length;
+    final label = count == 1 ? l10n.ownerTableBooking : l10n.ownerTableBookings;
     final reasonController = TextEditingController();
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Odbij odabrane rezervacije'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Jeste li sigurni da želite odbiti ${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervaciju' : 'rezervacija'}?',
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Razlog odbijanja (opcionalno)',
-                border: OutlineInputBorder(),
-                hintText: 'Unesite razlog...',
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.ownerTableRejectSelectedTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(dialogL10n.ownerTableRejectSelectedMessage(count, label)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: InputDecoration(
+                  labelText: dialogL10n.ownerTableRejectionReasonOptional,
+                  border: const OutlineInputBorder(),
+                  hintText: dialogL10n.ownerTableCancellationReasonHint,
+                ),
+                maxLines: 3,
               ),
-              maxLines: 3,
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              child: Text(dialogL10n.ownerTableRejectAll),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Odustani'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Odbij sve'),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
-        final reason = reasonController.text.trim().isEmpty
-            ? null
-            : reasonController.text.trim();
+        final reason = reasonController.text.trim().isEmpty ? null : reasonController.text.trim();
 
         // Reject all selected bookings
         for (final bookingId in _selectedBookingIds) {
@@ -876,12 +786,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervacija je odbijena' : 'rezervacija su odbijene'}',
-              ),
-              backgroundColor: AppColors.warning,
-            ),
+            SnackBar(content: Text(l10n.ownerTableBookingsRejected(count, label)), backgroundColor: AppColors.warning),
           );
 
           setState(_selectedBookingIds.clear);
@@ -891,12 +796,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
         }
       } finally {
         reasonController.dispose();
@@ -907,25 +809,27 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   }
 
   Future<void> _deleteSelectedBookings() async {
+    final l10n = AppLocalizations.of(context);
+    final count = _selectedBookingIds.length;
+    final label = count == 1 ? l10n.ownerTableBooking : l10n.ownerTableBookings;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Obriši odabrane rezervacije'),
-        content: Text(
-          'Jeste li sigurni da želite TRAJNO obrisati ${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervaciju' : 'rezervacija'}? Ova akcija se ne može poništiti.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Odustani'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Obriši sve'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.ownerTableDeleteSelectedTitle),
+          content: Text(dialogL10n.ownerTableDeleteSelectedMessage(count, label)),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              child: Text(dialogL10n.delete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -939,12 +843,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervacija je obrisana' : 'rezervacija su obrisane'}',
-              ),
-              backgroundColor: AppColors.error,
-            ),
+            SnackBar(content: Text(l10n.ownerTableBookingsDeleted(count, label)), backgroundColor: AppColors.error),
           );
 
           setState(_selectedBookingIds.clear);
@@ -954,12 +853,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
         }
       }
     }
@@ -969,9 +865,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   void _triggerIcalRegeneration(String bookingId) async {
     try {
       // Find booking in the list
-      final ownerBooking = widget.bookings.firstWhere(
-        (b) => b.booking.id == bookingId,
-      );
+      final ownerBooking = widget.bookings.firstWhere((b) => b.booking.id == bookingId);
 
       // Get iCal export service
       final icalService = ref.read(icalExportServiceProvider);

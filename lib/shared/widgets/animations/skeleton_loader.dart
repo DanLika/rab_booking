@@ -5,12 +5,7 @@ import '../../../core/theme/app_colors.dart';
 /// Skeleton loader with shimmer effect
 /// Replaces CircularProgressIndicator for better UX
 class SkeletonLoader extends StatefulWidget {
-  const SkeletonLoader({
-    this.width,
-    this.height,
-    this.borderRadius = 8.0,
-    super.key,
-  });
+  const SkeletonLoader({this.width, this.height, this.borderRadius = 8.0, super.key});
 
   final double? width;
   final double? height;
@@ -20,8 +15,7 @@ class SkeletonLoader extends StatefulWidget {
   static Widget propertyCard() => const PropertyCardSkeleton();
 
   /// Property card skeleton (horizontal)
-  static Widget propertyCardHorizontal() =>
-      const PropertyCardSkeletonHorizontal();
+  static Widget propertyCardHorizontal() => const PropertyCardSkeletonHorizontal();
 
   /// Stats cards skeleton (for profile page)
   static Widget statsCards() => const StatsCardsSkeleton();
@@ -29,22 +23,33 @@ class SkeletonLoader extends StatefulWidget {
   /// Calendar skeleton (for timeline/month/week calendar views)
   static Widget calendar() => const CalendarSkeleton();
 
+  /// Analytics page skeleton (for analytics dashboard)
+  static Widget analytics() => const AnalyticsSkeleton();
+
+  /// Analytics metric cards skeleton
+  static Widget analyticsMetricCards() => const AnalyticsMetricCardsSkeleton();
+
+  /// Analytics chart skeleton
+  static Widget analyticsChart() => const AnalyticsChartSkeleton();
+
+  /// Analytics list skeleton
+  static Widget analyticsList({int itemCount = 3}) => AnalyticsListSkeleton(itemCount: itemCount);
+
+  /// Analytics progress card skeleton
+  static Widget analyticsProgressCard() => const AnalyticsProgressCardSkeleton();
+
   @override
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
 }
 
-class _SkeletonLoaderState extends State<SkeletonLoader>
-    with SingleTickerProviderStateMixin {
+class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..repeat();
 
     _animation = Tween<double>(
       begin: -2.0,
@@ -73,9 +78,7 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
             gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
-              colors: isDark
-                  ? [Colors.grey[800]!, Colors.grey[700]!]
-                  : [Colors.grey[300]!, Colors.grey[200]!],
+              colors: isDark ? [Colors.grey[800]!, Colors.grey[700]!] : [Colors.grey[300]!, Colors.grey[200]!],
               stops: const [0.0, 0.3],
             ),
           ),
@@ -97,12 +100,8 @@ class PropertyCardSkeleton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(
-          AppDimensions.radiusS,
-        ), // 12px modern radius,
-        border: Border.all(
-          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
-        ),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
+        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
       ),
       child: const ClipRect(
         child: Column(
@@ -152,10 +151,8 @@ class PropertyListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: itemCount,
-      itemBuilder: (context, index) => const Padding(
-        padding: EdgeInsets.only(bottom: 16),
-        child: PropertyCardSkeleton(),
-      ),
+      itemBuilder: (context, index) =>
+          const Padding(padding: EdgeInsets.only(bottom: 16), child: PropertyCardSkeleton()),
     );
   }
 }
@@ -191,9 +188,7 @@ class CircleSkeleton extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: isDark
-              ? [Colors.grey[800]!, Colors.grey[700]!]
-              : [Colors.grey[300]!, Colors.grey[200]!],
+          colors: isDark ? [Colors.grey[800]!, Colors.grey[700]!] : [Colors.grey[300]!, Colors.grey[200]!],
           stops: const [0.0, 0.3],
         ),
       ),
@@ -214,12 +209,8 @@ class PropertyCardSkeletonHorizontal extends StatelessWidget {
       height: 200,
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(
-          AppDimensions.radiusS,
-        ), // 12px modern radius,
-        border: Border.all(
-          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
-        ),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
+        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
       ),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,12 +277,8 @@ class ReviewCardSkeleton extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(
-          AppDimensions.radiusS,
-        ), // 12px modern radius,
-        border: Border.all(
-          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
-        ),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
+        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,14 +341,8 @@ class BookingCardSkeleton extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(isMobile ? 12 : 16),
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.grey[800]!.withAlpha((0.3 * 255).toInt())
-                    : Colors.grey[100]!,
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
-                  ),
-                ),
+                color: isDark ? Colors.grey[800]!.withAlpha((0.3 * 255).toInt()) : Colors.grey[100]!,
+                border: Border(bottom: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[200]!)),
               ),
               child: const Row(
                 children: [
@@ -392,18 +373,12 @@ class BookingCardSkeleton extends StatelessWidget {
                           children: [
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 150),
-                              child: const SkeletonLoader(
-                                width: double.infinity,
-                                height: 16,
-                              ),
+                              child: const SkeletonLoader(width: double.infinity, height: 16),
                             ),
                             const SizedBox(height: 6),
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 180),
-                              child: const SkeletonLoader(
-                                width: double.infinity,
-                                height: 14,
-                              ),
+                              child: const SkeletonLoader(width: double.infinity, height: 14),
                             ),
                           ],
                         ),
@@ -423,18 +398,12 @@ class BookingCardSkeleton extends StatelessWidget {
                           children: [
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 140),
-                              child: const SkeletonLoader(
-                                width: double.infinity,
-                                height: 14,
-                              ),
+                              child: const SkeletonLoader(width: double.infinity, height: 14),
                             ),
                             const SizedBox(height: 4),
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 100),
-                              child: const SkeletonLoader(
-                                width: double.infinity,
-                                height: 12,
-                              ),
+                              child: const SkeletonLoader(width: double.infinity, height: 12),
                             ),
                           ],
                         ),
@@ -448,12 +417,7 @@ class BookingCardSkeleton extends StatelessWidget {
                     children: [
                       SkeletonLoader(width: 20, height: 20, borderRadius: 10),
                       SizedBox(width: 8),
-                      Flexible(
-                        child: SkeletonLoader(
-                          width: double.infinity,
-                          height: 14,
-                        ),
-                      ),
+                      Flexible(child: SkeletonLoader(width: double.infinity, height: 14)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -461,19 +425,9 @@ class BookingCardSkeleton extends StatelessWidget {
                   // Nights and guests
                   const Row(
                     children: [
-                      Flexible(
-                        child: SkeletonLoader(
-                          width: double.infinity,
-                          height: 14,
-                        ),
-                      ),
+                      Flexible(child: SkeletonLoader(width: double.infinity, height: 14)),
                       SizedBox(width: 16),
-                      Flexible(
-                        child: SkeletonLoader(
-                          width: double.infinity,
-                          height: 14,
-                        ),
-                      ),
+                      Flexible(child: SkeletonLoader(width: double.infinity, height: 14)),
                     ],
                   ),
                   SizedBox(height: isMobile ? 12 : 16),
@@ -516,11 +470,7 @@ class BookingCardSkeleton extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   // Payment progress bar
-                  const SkeletonLoader(
-                    width: double.infinity,
-                    height: 4,
-                    borderRadius: 2,
-                  ),
+                  const SkeletonLoader(width: double.infinity, height: 4, borderRadius: 2),
                 ],
               ),
             ),
@@ -529,12 +479,7 @@ class BookingCardSkeleton extends StatelessWidget {
 
             // Action buttons skeleton (2x2 grid)
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                isMobile ? 12 : 16,
-                0,
-                isMobile ? 12 : 16,
-                isMobile ? 12 : 16,
-              ),
+              padding: EdgeInsets.fromLTRB(isMobile ? 12 : 16, 0, isMobile ? 12 : 16, isMobile ? 12 : 16),
               child: const Column(
                 children: [
                   Row(
@@ -562,7 +507,6 @@ class BookingCardSkeleton extends StatelessWidget {
   }
 }
 
-
 /// Grid skeleton loader
 class SkeletonGrid extends StatelessWidget {
   const SkeletonGrid({this.itemCount = 6, this.crossAxisCount = 2, super.key});
@@ -589,11 +533,7 @@ class SkeletonGrid extends StatelessWidget {
 
 /// List item skeleton loader (for lists with leading/trailing widgets)
 class ListItemSkeleton extends StatelessWidget {
-  const ListItemSkeleton({
-    this.hasLeading = true,
-    this.hasTrailing = false,
-    super.key,
-  });
+  const ListItemSkeleton({this.hasLeading = true, this.hasTrailing = false, super.key});
 
   final bool hasLeading;
   final bool hasTrailing;
@@ -602,10 +542,7 @@ class ListItemSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (hasLeading) ...[
-          const CircleSkeleton(size: 48),
-          const SizedBox(width: 12),
-        ],
+        if (hasLeading) ...[const CircleSkeleton(size: 48), const SizedBox(width: 12)],
         const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,10 +553,7 @@ class ListItemSkeleton extends StatelessWidget {
             ],
           ),
         ),
-        if (hasTrailing) ...[
-          const SizedBox(width: 12),
-          const SkeletonLoader(width: 24, height: 24, borderRadius: 12),
-        ],
+        if (hasTrailing) ...[const SizedBox(width: 12), const SkeletonLoader(width: 24, height: 24, borderRadius: 12)],
       ],
     );
   }
@@ -666,36 +600,24 @@ class StatsCardsSkeleton extends StatelessWidget {
 
   Widget _buildStatCardSkeleton(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(
-        context.isMobile ? AppDimensions.spaceM : AppDimensions.spaceL,
-      ),
+      padding: EdgeInsets.all(context.isMobile ? AppDimensions.spaceM : AppDimensions.spaceL),
       decoration: BoxDecoration(
         color: AppColors.withOpacity(AppColors.surfaceLight, 0.5),
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        border: Border.all(
-          color: AppColors.withOpacity(AppColors.borderLight, 0.3),
-        ),
+        border: Border.all(color: AppColors.withOpacity(AppColors.borderLight, 0.3)),
       ),
       child: Column(
         children: [
           // Icon skeleton
           SkeletonLoader(
-            width: context.isMobile
-                ? AppDimensions.iconL
-                : AppDimensions.iconXL,
-            height: context.isMobile
-                ? AppDimensions.iconL
-                : AppDimensions.iconXL,
+            width: context.isMobile ? AppDimensions.iconL : AppDimensions.iconXL,
+            height: context.isMobile ? AppDimensions.iconL : AppDimensions.iconXL,
             borderRadius: AppDimensions.radiusS,
           ),
           const SizedBox(height: AppDimensions.spaceS),
 
           // Value skeleton (large number)
-          SkeletonLoader(
-            width: 60,
-            height: context.isMobile ? 32 : 48,
-            borderRadius: AppDimensions.spaceXXS,
-          ),
+          SkeletonLoader(width: 60, height: context.isMobile ? 32 : 48, borderRadius: AppDimensions.spaceXXS),
           const SizedBox(height: AppDimensions.spaceXXS),
 
           // Label skeleton
@@ -706,6 +628,346 @@ class StatsCardsSkeleton extends StatelessWidget {
           const SkeletonLoader(width: 16, height: 16),
         ],
       ),
+    );
+  }
+}
+
+/// Analytics metric cards skeleton loader - mimics AnalyticsScreen metric cards
+class AnalyticsMetricCardsSkeleton extends StatelessWidget {
+  const AnalyticsMetricCardsSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 900;
+    final spacing = isMobile ? 12.0 : 16.0;
+
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      alignment: WrapAlignment.center,
+      children: List.generate(4, (index) => _buildMetricCardSkeleton(context, isMobile, isTablet)),
+    );
+  }
+
+  Widget _buildMetricCardSkeleton(BuildContext context, bool isMobile, bool isTablet) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final spacing = isMobile ? 12.0 : 16.0;
+
+    double cardWidth;
+    if (isMobile) {
+      cardWidth = (screenWidth - (spacing * 3 + 32)) / 2;
+    } else if (isTablet) {
+      cardWidth = (screenWidth - (spacing * 4 + 48)) / 3;
+    } else {
+      cardWidth = 280.0;
+    }
+
+    return Container(
+      width: cardWidth,
+      height: isMobile ? 160 : 180,
+      constraints: const BoxConstraints(maxWidth: 320),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.grey.withValues(alpha: 0.3), Colors.grey.withValues(alpha: 0.2)],
+        ),
+      ),
+      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon skeleton
+          SkeletonLoader(width: isMobile ? 42 : 50, height: isMobile ? 42 : 50, borderRadius: 14),
+          SizedBox(height: isMobile ? 8 : 12),
+          // Value skeleton
+          SkeletonLoader(width: isMobile ? 80 : 100, height: isMobile ? 24 : 28, borderRadius: 6),
+          SizedBox(height: isMobile ? 6 : 8),
+          // Title skeleton
+          SkeletonLoader(width: isMobile ? 60 : 80, height: isMobile ? 12 : 13, borderRadius: 4),
+          const SizedBox(height: 4),
+          // Subtitle skeleton
+          SkeletonLoader(width: isMobile ? 50 : 70, height: isMobile ? 10 : 11, borderRadius: 4),
+        ],
+      ),
+    );
+  }
+}
+
+/// Analytics chart skeleton loader - mimics revenue/bookings chart cards
+class AnalyticsChartSkeleton extends StatelessWidget {
+  const AnalyticsChartSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    final chartHeight = screenWidth > 900
+        ? 400.0
+        : screenWidth > 600
+        ? 350.0
+        : 300.0;
+
+    return Container(
+      height: chartHeight,
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+      ),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          const Row(
+            children: [
+              SkeletonLoader(width: 34, height: 34),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonLoader(width: 120, height: 16, borderRadius: 4),
+                    SizedBox(height: 4),
+                    SkeletonLoader(width: 180, height: 12, borderRadius: 4),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Chart area skeleton
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(
+                isMobile ? 5 : 8,
+                (index) => Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: SkeletonLoader(height: (50 + (index * 20) % 150).toDouble(), borderRadius: 4),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // X-axis labels skeleton
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(
+              isMobile ? 5 : 8,
+              (index) => const SkeletonLoader(width: 30, height: 10, borderRadius: 4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Analytics list skeleton loader - mimics top properties list
+class AnalyticsListSkeleton extends StatelessWidget {
+  const AnalyticsListSkeleton({this.itemCount = 3, super.key});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+      ),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          const Row(
+            children: [
+              SkeletonLoader(width: 34, height: 34),
+              SizedBox(width: 12),
+              Expanded(child: SkeletonLoader(width: 140, height: 16, borderRadius: 4)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const SkeletonLoader(width: 200, height: 12, borderRadius: 4),
+          const SizedBox(height: 20),
+          // List items
+          ...List.generate(
+            itemCount,
+            (index) => const Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  CircleSkeleton(size: 32),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonLoader(width: 120, height: 14, borderRadius: 4),
+                        SizedBox(height: 4),
+                        SkeletonLoader(width: 180, height: 12, borderRadius: 4),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      SkeletonLoader(width: 60, height: 14, borderRadius: 4),
+                      SizedBox(height: 4),
+                      SkeletonLoader(width: 40, height: 12, borderRadius: 4),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Analytics progress card skeleton - mimics widget analytics card with progress bars
+class AnalyticsProgressCardSkeleton extends StatelessWidget {
+  const AnalyticsProgressCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+      ),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              SkeletonLoader(width: 34, height: 34),
+              SizedBox(width: 12),
+              Expanded(child: SkeletonLoader(width: 160, height: 16, borderRadius: 4)),
+            ],
+          ),
+          SizedBox(height: 8),
+          SkeletonLoader(width: 220, height: 12, borderRadius: 4),
+          SizedBox(height: 20),
+          // First metric
+          SkeletonLoader(width: 100, height: 14, borderRadius: 4),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              SkeletonLoader(width: 60, height: 24, borderRadius: 4),
+              SizedBox(width: 8),
+              SkeletonLoader(width: 80, height: 12, borderRadius: 4),
+            ],
+          ),
+          SizedBox(height: 8),
+          SkeletonLoader(width: double.infinity, height: 8, borderRadius: 4),
+          SizedBox(height: 20),
+          // Second metric
+          SkeletonLoader(width: 100, height: 14, borderRadius: 4),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              SkeletonLoader(width: 80, height: 24, borderRadius: 4),
+              SizedBox(width: 8),
+              SkeletonLoader(width: 80, height: 12, borderRadius: 4),
+            ],
+          ),
+          SizedBox(height: 8),
+          SkeletonLoader(width: double.infinity, height: 8, borderRadius: 4),
+        ],
+      ),
+    );
+  }
+}
+
+/// Full analytics page skeleton - combines all analytics skeletons
+class AnalyticsSkeleton extends StatelessWidget {
+  const AnalyticsSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isDesktop = screenWidth > 900;
+
+    return ListView(
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24, vertical: isMobile ? 12 : 16),
+      children: [
+        // Metric cards
+        const AnalyticsMetricCardsSkeleton(),
+        SizedBox(height: isMobile ? 16 : 20),
+
+        // Charts section
+        if (isDesktop)
+          const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: AnalyticsChartSkeleton()),
+              SizedBox(width: 16),
+              Expanded(child: AnalyticsChartSkeleton()),
+            ],
+          )
+        else ...[
+          const AnalyticsChartSkeleton(),
+          SizedBox(height: isMobile ? 16 : 20),
+          const AnalyticsChartSkeleton(),
+        ],
+
+        SizedBox(height: isMobile ? 16 : 20),
+
+        // Bottom section
+        if (isDesktop)
+          const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    AnalyticsListSkeleton(),
+                    SizedBox(height: 20),
+                    AnalyticsProgressCardSkeleton(),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(child: AnalyticsProgressCardSkeleton()),
+            ],
+          )
+        else ...[
+          const AnalyticsListSkeleton(),
+          SizedBox(height: isMobile ? 16 : 20),
+          const AnalyticsProgressCardSkeleton(),
+          SizedBox(height: isMobile ? 16 : 20),
+          const AnalyticsProgressCardSkeleton(),
+        ],
+
+        SizedBox(height: isMobile ? 12 : 16),
+      ],
     );
   }
 }
@@ -732,11 +994,7 @@ class CalendarSkeleton extends StatelessWidget {
                   3,
                   (index) => const Padding(
                     padding: EdgeInsets.only(left: 8),
-                    child: SkeletonLoader(
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                    ),
+                    child: SkeletonLoader(width: 40, height: 40, borderRadius: 20),
                   ),
                 ),
               ),
@@ -775,14 +1033,8 @@ class CalendarSkeleton extends StatelessWidget {
                       child: Container(
                         margin: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusXS,
-                          ),
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.grey[700]!
-                                : Colors.grey[200]!,
-                          ),
+                          borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
+                          border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -790,11 +1042,7 @@ class CalendarSkeleton extends StatelessWidget {
                             // Day number
                             const Padding(
                               padding: EdgeInsets.all(4),
-                              child: SkeletonLoader(
-                                width: 20,
-                                height: 14,
-                                borderRadius: 4,
-                              ),
+                              child: SkeletonLoader(width: 20, height: 14, borderRadius: 4),
                             ),
                             // Booking indicator skeleton (optional)
                             if (weekIndex < 3 && dayIndex % 2 == 0)

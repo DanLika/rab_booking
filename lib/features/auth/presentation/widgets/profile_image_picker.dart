@@ -43,7 +43,8 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
         });
         widget.onImageSelected(bytes, image.name);
       }
-    } catch (e) {
+    } catch (_) {
+      // Image picking cancelled or failed - silently ignore
     }
   }
 

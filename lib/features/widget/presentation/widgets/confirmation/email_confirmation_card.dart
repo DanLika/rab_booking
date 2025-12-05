@@ -79,7 +79,6 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
         context: context,
         message:
             'Email service is not enabled or configured. Please contact the property owner.',
-        duration: const Duration(seconds: 4),
       );
       return;
     }

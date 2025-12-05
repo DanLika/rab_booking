@@ -9,7 +9,7 @@
 
 ---
 
-## <¯ NIKADA NE MIJENJAJ
+## <ï¿½ NIKADA NE MIJENJAJ
 
 | Komponenta | Razlog |
 |------------|--------|
@@ -18,13 +18,13 @@
 | Timeline Calendar z-index | Cancelled PRVI, confirmed ZADNJI |
 | Calendar Repository (`firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
 | Owner email u `atomicBooking.ts` | UVIJEK aalje - NE vraaj conditional check |
-| Subdomain validation regex | `/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/` |
+| Subdomain validation regex | `/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/` (3-30 chars) |
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
 | Navigator.push za confirmation | NE vraaj state-based navigaciju |
 
 ---
 
-## <¨ STANDARDI
+## <ï¿½ STANDARDI
 
 ```dart
 // Gradients
@@ -44,7 +44,7 @@ currentSettings.emailConfig.copyWith(requireEmailVerification: false)
 
 ---
 
-## =Å CALENDAR SYSTEM - KRITINO
+## =ï¿½ CALENDAR SYSTEM - KRITINO
 
 **Repository**: `firebase_booking_calendar_repository.dart`
 - Koristi `DateTime.utc()` za SVE map keys
@@ -52,11 +52,11 @@ currentSettings.emailConfig.copyWith(requireEmailVerification: false)
 - Turnover detection MORA provjeriti: `partialCheckIn`, `partialCheckOut`, `booked`, `partialBoth`
 
 **DateStatus enum**:
-- `pending` ’ ~uta + dijagonalni uzorak (`#6B4C00` @ 60%)
-- `partialBoth` ’ turnover day (oba bookinga)
-- `isCheckOutPending` / `isCheckInPending` ’ prati koja polovica je pending
+- `pending` ï¿½ ~uta + dijagonalni uzorak (`#6B4C00` @ 60%)
+- `partialBoth` ï¿½ turnover day (oba bookinga)
+- `isCheckOutPending` / `isCheckInPending` ï¿½ prati koja polovica je pending
 
-**  NE REFAKTORISATI** - duplikacija `_buildCalendarMap` vs `_buildYearCalendarMap` je NAMJERNA safety net. Prethodni refaktoring uveo 5+ bugova.
+**ï¿½ NE REFAKTORISATI** - duplikacija `_buildCalendarMap` vs `_buildYearCalendarMap` je NAMJERNA safety net. Prethodni refaktoring uveo 5+ bugova.
 
 ---
 
@@ -86,7 +86,7 @@ sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 
 ---
 
-## =³ STRIPE FLOW
+## =ï¿½ STRIPE FLOW
 
 ```
 1. User klikne "Pay with Stripe"

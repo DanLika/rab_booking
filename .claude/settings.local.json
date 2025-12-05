@@ -1,20 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "SlashCommand(/misc:feature-plan)",
-      "Bash(chmod:*)",
-      "Bash(gsutil cors set:*)",
-      "Bash(gsutil ls:*)",
-      "Bash(npm run build:*)",
-      "Bash(npx eslint:*)",
-      "Bash(cat:*)",
-      "Read(//private/tmp/**)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(test:*)",
-      "Bash(git check-ignore:*)"
-    ],
-    "deny": [],
-    "ask": []
+    "allow": [],
+    "deny": []
   }
 }

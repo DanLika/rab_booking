@@ -9,6 +9,7 @@ import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -222,15 +223,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 // Safe: null initialValue is acceptable, shows hint until selection
                 initialValue: _selectedUnit,
                 hint: Text(l10n.unitPricingSelectUnitHint), // Shown when null
-                decoration: InputDecoration(
+                decoration: InputDecorationHelper.buildDecoration(
                   labelText: l10n.unitPricingUnit,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12), // Consistent with inputs
-                  ),
                   prefixIcon: const Icon(Icons.meeting_room_outlined),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  filled: true,
-                  fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                  context: context,
                 ),
                 items: units.map((unit) {
                   return DropdownMenuItem(value: unit, child: Text(unit.name));
@@ -434,13 +430,11 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   Widget _buildPriceTextField(ThemeData theme, AppLocalizations l10n) {
     return TextField(
       controller: _basePriceController,
-      decoration: InputDecoration(
+      decoration: InputDecorationHelper.buildDecoration(
         labelText: l10n.unitPricingPricePerNight,
-        prefixText: '€ ',
         prefixIcon: const Icon(Icons.euro_outlined),
-        // Match dropdown styling: exact same decoration
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+        context: context,
+      ).copyWith(prefixText: '€ '),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
     );

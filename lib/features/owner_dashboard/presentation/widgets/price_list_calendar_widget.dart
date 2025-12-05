@@ -208,31 +208,33 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Month selector
-        DropdownButtonFormField<DateTime>(
-          initialValue: _selectedMonth,
-          decoration: InputDecoration(
-            labelText: l10n.priceCalendarSelectMonth,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            prefixIcon: const Icon(Icons.calendar_month),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        Builder(
+          builder: (context) => DropdownButtonFormField<DateTime>(
+            initialValue: _selectedMonth,
+            decoration: InputDecorationHelper.buildDecoration(
+              labelText: l10n.priceCalendarSelectMonth,
+              prefixIcon: const Icon(Icons.calendar_month),
+              isMobile: true,
+              context: context,
+            ),
+            items: _cachedMonthList.map((month) {
+              return DropdownMenuItem(value: month, child: Text(DateFormat('MMMM yyyy').format(month)));
+            }).toList(),
+            onChanged: (value) {
+              if (value != null && value != _selectedMonth) {
+                setState(() {
+                  _isLoadingMonthChange = true;
+                  _selectedMonth = value;
+                  _selectedDays.clear();
+                });
+                Future.microtask(() {
+                  if (mounted) {
+                    setState(() => _isLoadingMonthChange = false);
+                  }
+                });
+              }
+            },
           ),
-          items: _cachedMonthList.map((month) {
-            return DropdownMenuItem(value: month, child: Text(DateFormat('MMMM yyyy').format(month)));
-          }).toList(),
-          onChanged: (value) {
-            if (value != null && value != _selectedMonth) {
-              setState(() {
-                _isLoadingMonthChange = true;
-                _selectedMonth = value;
-                _selectedDays.clear();
-              });
-              Future.microtask(() {
-                if (mounted) {
-                  setState(() => _isLoadingMonthChange = false);
-                }
-              });
-            }
-          },
         ),
         const SizedBox(height: 12),
         // Bulk edit toggle - full width on mobile
@@ -263,30 +265,32 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         // Month selector
         SizedBox(
           width: 250,
-          child: DropdownButtonFormField<DateTime>(
-            initialValue: _selectedMonth,
-            decoration: InputDecoration(
-              labelText: l10n.priceCalendarSelectMonth,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              prefixIcon: const Icon(Icons.calendar_month),
+          child: Builder(
+            builder: (context) => DropdownButtonFormField<DateTime>(
+              initialValue: _selectedMonth,
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.priceCalendarSelectMonth,
+                prefixIcon: const Icon(Icons.calendar_month),
+                context: context,
+              ),
+              items: _cachedMonthList.map((month) {
+                return DropdownMenuItem(value: month, child: Text(DateFormat('MMMM yyyy').format(month)));
+              }).toList(),
+              onChanged: (value) {
+                if (value != null && value != _selectedMonth) {
+                  setState(() {
+                    _isLoadingMonthChange = true;
+                    _selectedMonth = value;
+                    _selectedDays.clear();
+                  });
+                  Future.microtask(() {
+                    if (mounted) {
+                      setState(() => _isLoadingMonthChange = false);
+                    }
+                  });
+                }
+              },
             ),
-            items: _cachedMonthList.map((month) {
-              return DropdownMenuItem(value: month, child: Text(DateFormat('MMMM yyyy').format(month)));
-            }).toList(),
-            onChanged: (value) {
-              if (value != null && value != _selectedMonth) {
-                setState(() {
-                  _isLoadingMonthChange = true;
-                  _selectedMonth = value;
-                  _selectedDays.clear();
-                });
-                Future.microtask(() {
-                  if (mounted) {
-                    setState(() => _isLoadingMonthChange = false);
-                  }
-                });
-              }
-            },
           ),
         ),
         const SizedBox(width: 16),
@@ -802,7 +806,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     controller: weekendPriceController,
                                     decoration: InputDecorationHelper.buildDecoration(
                                       labelText: AppLocalizations.of(context).priceCalendarWeekendPrice,
-                                      hintText: 'Npr. 120',
+                                      hintText: AppLocalizations.of(context).priceCalendarHintExample('120'),
                                       prefixIcon: const Icon(Icons.weekend),
                                       isMobile: isMobile,
                                       context: context,
@@ -819,7 +823,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           controller: minNightsController,
                                           decoration: InputDecorationHelper.buildDecoration(
                                             labelText: AppLocalizations.of(context).priceCalendarMinNights,
-                                            hintText: 'npr. 2',
+                                            hintText: AppLocalizations.of(context).priceCalendarHintExample('2'),
                                             isMobile: isMobile,
                                             context: context,
                                           ),
@@ -833,7 +837,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           controller: maxNightsController,
                                           decoration: InputDecorationHelper.buildDecoration(
                                             labelText: AppLocalizations.of(context).priceCalendarMaxNights,
-                                            hintText: 'npr. 14',
+                                            hintText: AppLocalizations.of(context).priceCalendarHintExample('14'),
                                             isMobile: isMobile,
                                             context: context,
                                           ),
@@ -852,7 +856,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           controller: minDaysAdvanceController,
                                           decoration: InputDecorationHelper.buildDecoration(
                                             labelText: AppLocalizations.of(context).priceCalendarMinDaysAdvance,
-                                            hintText: 'npr. 1',
+                                            hintText: AppLocalizations.of(context).priceCalendarHintExample('1'),
                                             isMobile: isMobile,
                                             context: context,
                                           ),
@@ -866,7 +870,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           controller: maxDaysAdvanceController,
                                           decoration: InputDecorationHelper.buildDecoration(
                                             labelText: AppLocalizations.of(context).priceCalendarMaxDaysAdvance,
-                                            hintText: 'npr. 365',
+                                            hintText: AppLocalizations.of(context).priceCalendarHintExample('365'),
                                             isMobile: isMobile,
                                             context: context,
                                           ),
@@ -1258,7 +1262,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     labelText: l10nDialog.priceCalendarPricePerNight,
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.euro),
-                    hintText: 'Npr. 50',
+                    hintText: l10nDialog.priceCalendarHintExample('50'),
                   ),
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],

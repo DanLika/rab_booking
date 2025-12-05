@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
@@ -9,7 +11,6 @@ import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/providers/repository_providers.dart' as repos;
 import '../../../../widget/domain/models/widget_settings.dart';
-import 'package:go_router/go_router.dart';
 
 /// iCal Export Settings Card
 ///
@@ -41,6 +42,7 @@ class IcalExportCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -55,26 +57,19 @@ class IcalExportCard extends ConsumerWidget {
             // topRight → bottomLeft za section
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           child: ExpansionTile(
             initiallyExpanded: icalExportEnabled,
             leading: _buildLeadingIcon(theme),
             title: Text(
-              'iCal Export',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              l10n.icalExportTitle,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              icalExportEnabled ? 'Enabled' : 'Disabled',
+              icalExportEnabled ? l10n.icalExportEnabled : l10n.icalExportDisabled,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: icalExportEnabled
-                    ? AppColors.success
-                    : context.textColorSecondary,
+                color: icalExportEnabled ? AppColors.success : context.textColorSecondary,
               ),
             ),
             children: [
@@ -84,31 +79,27 @@ class IcalExportCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Master toggle
-                    _buildMasterToggle(),
+                    _buildMasterToggle(l10n),
 
                     if (icalExportEnabled) ...[
                       const Divider(height: 24),
                       Text(
-                        'Export Information',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        l10n.icalExportInfo,
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 12),
 
                       // Export URL display (if exists)
-                      if (settings.icalExportUrl != null)
-                        _buildExportUrlDisplay(theme),
+                      if (settings.icalExportUrl != null) _buildExportUrlDisplay(theme, l10n),
 
                       // Last generated timestamp
-                      if (settings.icalExportLastGenerated != null)
-                        _buildLastGeneratedInfo(theme),
+                      if (settings.icalExportLastGenerated != null) _buildLastGeneratedInfo(theme, l10n),
 
                       // Test iCal Export Button
                       _buildTestExportButton(context, ref),
 
                       // Info message
-                      _buildInfoMessage(theme),
+                      _buildInfoMessage(theme, l10n),
                     ],
                   ],
                 ),
@@ -124,20 +115,14 @@ class IcalExportCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withAlpha(
-          (0.12 * 255).toInt(),
-        ),
+        color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(
-        Icons.calendar_today,
-        color: theme.colorScheme.primary,
-        size: 18,
-      ),
+      child: Icon(Icons.calendar_today, color: theme.colorScheme.primary, size: 18),
     );
   }
 
-  Widget _buildMasterToggle() {
+  Widget _buildMasterToggle(AppLocalizations l10n) {
     return SwitchListTile(
       value: icalExportEnabled,
       onChanged: (value) async {
@@ -149,10 +134,8 @@ class IcalExportCard extends ConsumerWidget {
           await _generateIcalUrl();
         }
       },
-      title: const Text('Enable iCal Export'),
-      subtitle: const Text(
-        'Generate public iCal URL for external calendar sync',
-      ),
+      title: Text(l10n.icalExportToggleTitle),
+      subtitle: Text(l10n.icalExportToggleSubtitle),
       contentPadding: EdgeInsets.zero,
     );
   }
@@ -170,7 +153,7 @@ class IcalExportCard extends ConsumerWidget {
     }
   }
 
-  Widget _buildExportUrlDisplay(ThemeData theme) {
+  Widget _buildExportUrlDisplay(ThemeData theme, AppLocalizations l10n) {
     return Column(
       children: [
         Container(
@@ -178,9 +161,7 @@ class IcalExportCard extends ConsumerWidget {
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.2 * 255).toInt())),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,21 +170,14 @@ class IcalExportCard extends ConsumerWidget {
                 children: [
                   Icon(Icons.link, size: 16, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
-                  Text(
-                    'Export URL',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  Text(l10n.icalExportUrl, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 settings.icalExportUrl!,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withAlpha(
-                    (0.7 * 255).toInt(),
-                  ),
+                  color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                   fontFamily: 'monospace',
                 ),
                 maxLines: 2,
@@ -217,23 +191,17 @@ class IcalExportCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildLastGeneratedInfo(ThemeData theme) {
+  Widget _buildLastGeneratedInfo(ThemeData theme, AppLocalizations l10n) {
     return Column(
       children: [
         Row(
           children: [
-            Icon(
-              Icons.update,
-              size: 16,
-              color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-            ),
+            Icon(Icons.update, size: 16, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
             const SizedBox(width: 8),
             Text(
-              'Last generated: ${_formatLastGenerated(settings.icalExportLastGenerated!)}',
+              l10n.icalExportLastGenerated(_formatLastGenerated(settings.icalExportLastGenerated!, l10n)),
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.6 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
           ],
@@ -243,7 +211,7 @@ class IcalExportCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoMessage(ThemeData theme) {
+  Widget _buildInfoMessage(ThemeData theme, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -257,11 +225,9 @@ class IcalExportCard extends ConsumerWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'iCal export will be auto-generated when bookings change. Use the generated URL to sync with external calendars.',
+              l10n.icalExportInfoMessage,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
               ),
             ),
           ),
@@ -270,28 +236,25 @@ class IcalExportCard extends ConsumerWidget {
     );
   }
 
-  String _formatLastGenerated(DateTime dateTime) {
+  String _formatLastGenerated(DateTime dateTime, AppLocalizations l10n) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return l10n.icalExportJustNow;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return l10n.icalExportMinutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return l10n.icalExportHoursAgo(difference.inHours);
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return l10n.icalExportDaysAgo(difference.inDays);
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
   }
 
   Widget _buildTestExportButton(BuildContext context, WidgetRef ref) {
-    return _TestExportButton(
-      propertyId: propertyId,
-      unitId: unitId,
-    );
+    return _TestExportButton(propertyId: propertyId, unitId: unitId);
   }
 }
 
@@ -300,10 +263,7 @@ class _TestExportButton extends ConsumerStatefulWidget {
   final String propertyId;
   final String unitId;
 
-  const _TestExportButton({
-    required this.propertyId,
-    required this.unitId,
-  });
+  const _TestExportButton({required this.propertyId, required this.unitId});
 
   @override
   ConsumerState<_TestExportButton> createState() => _TestExportButtonState();
@@ -312,7 +272,7 @@ class _TestExportButton extends ConsumerStatefulWidget {
 class _TestExportButtonState extends ConsumerState<_TestExportButton> {
   bool _isLoading = false;
 
-  Future<void> _handleTestExport() async {
+  Future<void> _handleTestExport(AppLocalizations l10n) async {
     // Prevent concurrent requests (debouncing protection)
     if (_isLoading) return;
 
@@ -320,24 +280,15 @@ class _TestExportButtonState extends ConsumerState<_TestExportButton> {
 
     try {
       // Load unit data from property's units subcollection
-      final units = await ref
-          .read(repos.unitRepositoryProvider)
-          .fetchUnitsByProperty(widget.propertyId);
+      final units = await ref.read(repos.unitRepositoryProvider).fetchUnitsByProperty(widget.propertyId);
       final unit = units.where((u) => u.id == widget.unitId).firstOrNull;
 
       if (unit != null && mounted) {
-        await context.push(
-          OwnerRoutes.icalExport,
-          extra: {'unit': unit, 'propertyId': widget.propertyId},
-        );
+        await context.push(OwnerRoutes.icalExport, extra: {'unit': unit, 'propertyId': widget.propertyId});
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Failed to load unit data',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.icalExportFailedToLoad);
       }
     } finally {
       if (mounted) {
@@ -348,21 +299,16 @@ class _TestExportButtonState extends ConsumerState<_TestExportButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         OutlinedButton.icon(
-          onPressed: _isLoading ? null : _handleTestExport,
+          onPressed: _isLoading ? null : () => _handleTestExport(l10n),
           icon: _isLoading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.bug_report, size: 18),
-          label: Text(_isLoading ? 'Loading...' : 'Test iCal Export'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          ),
+          label: Text(_isLoading ? l10n.icalExportLoading : l10n.icalExportTestButton),
+          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16)),
         ),
         const SizedBox(height: 16),
       ],

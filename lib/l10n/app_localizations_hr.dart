@@ -4819,7 +4819,7 @@ class AppLocalizationsHr extends AppLocalizations {
       'URL za email linkove: [subdomain].rabbooking.com';
 
   @override
-  String get icalExportTitle => 'iCal Export';
+  String get icalExportTitle => 'iCal Izvoz';
 
   @override
   String get icalExportUnit => 'Jedinica';
@@ -4831,7 +4831,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalExportGenerate => 'Generiraj iCal Export';
 
   @override
-  String get icalExportUrl => 'Export URL';
+  String get icalExportUrl => 'URL za izvoz';
 
   @override
   String get icalExportCopyUrl => 'Kopiraj URL';
@@ -4886,12 +4886,12 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String icalExportMinutesAgo(int minutes) {
-    return 'prije ${minutes}m';
+    return 'Prije ${minutes}m';
   }
 
   @override
   String icalExportHoursAgo(int hours) {
-    return 'prije ${hours}h';
+    return 'Prije ${hours}h';
   }
 
   @override
@@ -6255,4 +6255,417 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get bookingCompleteDialogConfirm => 'Završi';
+
+  @override
+  String get ownerFaqGeneral1Q => 'Šta je ova platforma?';
+
+  @override
+  String get ownerFaqGeneral1A =>
+      'Ovo je multi-tenant booking platforma koja omogućava vlasnicima apartmana da upravljaju rezervacijama, primaju plaćanja i embed-uju booking widget na svoj web sajt. Platforma podržava Stripe plaćanja, iCal sinhronizaciju sa Booking.com/Airbnb, i više jezika.';
+
+  @override
+  String get ownerFaqGeneral2Q => 'Da li postoji mobilna aplikacija?';
+
+  @override
+  String get ownerFaqGeneral2A =>
+      'Da! Owner aplikacija je dostupna za Android i iOS. Možete upravljati rezervacijama, pregledati kalendar, odobriti/otkazati rezervacije, i primati notifikacije na telefonu.';
+
+  @override
+  String get ownerFaqGeneral3Q => 'Koliko košta korištenje?';
+
+  @override
+  String get ownerFaqGeneral3A =>
+      'Platforma trenutno ima trial verziju. Planirane su tri pretplate: Trial (1 property), Premium (5 properties), i Enterprise (unlimited). Stripe provizija (1.4% + 0.25€) se naplaćuje odvojeno.';
+
+  @override
+  String get ownerFaqBookings1Q => 'Kako funkcionira booking flow?';
+
+  @override
+  String get ownerFaqBookings1A =>
+      'Postoje tri moda: (1) Calendar Only - gosti vide samo dostupnost i zovu vas, (2) Booking Pending - gosti kreiraju rezervaciju koja čeka vašu potvrdu, (3) Booking Instant - gosti mogu odmah rezervisati i platiti. Vi odabirete mod u Widget Settings.';
+
+  @override
+  String get ownerFaqBookings2Q => 'Kako odobriti rezervaciju?';
+
+  @override
+  String get ownerFaqBookings2A =>
+      'Idite na Rezervacije → Pending rezervacije → Kliknite na rezervaciju → \"Odobri\". Email će automatski biti poslan gostu sa potvrdom.';
+
+  @override
+  String get ownerFaqBookings3Q => 'Mogu li otkazati rezervaciju?';
+
+  @override
+  String get ownerFaqBookings3A =>
+      'Da. Kliknite na rezervaciju → \"Otkaži\" → Unesite razlog → Potvrdi. Gost će biti obaviješten emailom. Za refund Stripe plaćanja, kontaktirajte podršku.';
+
+  @override
+  String get ownerFaqBookings4Q => 'Kako spriječiti overbooking?';
+
+  @override
+  String get ownerFaqBookings4A =>
+      'Koristite iCal sinhronizaciju da uvezete rezervacije sa Booking.com, Airbnb i drugih platformi. Sve rezervacije će se prikazati u kalendaru kao zauzeti dani.';
+
+  @override
+  String get ownerFaqBookings5Q => 'Kako ručno blokirati datume?';
+
+  @override
+  String get ownerFaqBookings5A =>
+      'U kalendaru, kliknite na datum ili raspon datuma → \"Blokiraj\" → Unesite razlog (opciono). Blokirani dani će biti prikazani kao nedostupni u widgetu.';
+
+  @override
+  String get ownerFaqPayments1Q => 'Koje metode plaćanja podržavate?';
+
+  @override
+  String get ownerFaqPayments1A =>
+      'Podržavamo: (1) Stripe plaćanja karticom (instant), (2) Bankovna uplata (ručna potvrda), (3) Plaćanje po dolasku. Možete omogućiti/onemogućiti svaku metodu u Widget Settings.';
+
+  @override
+  String get ownerFaqPayments2Q => 'Koliki depozit mogu zahtijevati?';
+
+  @override
+  String get ownerFaqPayments2A =>
+      'Možete podesiti depozit od 0% do 100% ukupne cijene. Standardno je 20%. Preostali iznos gost plaća pri dolasku. Podesite u Widget Settings.';
+
+  @override
+  String get ownerFaqPayments3Q => 'Kada dolaze isplate od Stripe-a?';
+
+  @override
+  String get ownerFaqPayments3A =>
+      'Stripe automatski prebacuje sredstva na vaš bankovni račun svakih 7 dana. Nakon prvog mjeseca možete promijeniti na dnevne isplate u Stripe dashboard-u.';
+
+  @override
+  String get ownerFaqPayments4Q => 'Šta ako gost zahtijeva refund?';
+
+  @override
+  String get ownerFaqPayments4A =>
+      'Za bankovne uplate, refund radite ručno. Za Stripe plaćanja, kontaktirajte podršku ili kreirajte refund direktno u Stripe dashboard-u.';
+
+  @override
+  String get ownerFaqWidget1Q => 'Kako dodati widget na moj sajt?';
+
+  @override
+  String get ownerFaqWidget1A =>
+      'Idite na Unit Form → \"Generiši Embed Kod\" → Kopirajte iframe kod → Zalijepite u HTML vašeg sajta. Detaljnije uputstvo je u \"Embed Widget\" sekciji uputstava.';
+
+  @override
+  String get ownerFaqWidget2Q => 'Mogu li prilagoditi izgled widgeta?';
+
+  @override
+  String get ownerFaqWidget2A =>
+      'Da! U Widget Settings možete: promijeniti primarnu boju, uploadovati logo, prilagoditi custom message, i omogućiti/onemogućiti \"Powered by\" branding.';
+
+  @override
+  String get ownerFaqWidget3Q => 'Da li widget radi na mobilnim uređajima?';
+
+  @override
+  String get ownerFaqWidget3A =>
+      'Da, widget je potpuno responsive i prilagođava se svim veličinama ekrana. Koristite responsive embed kod za najbolje rezultate.';
+
+  @override
+  String get ownerFaqWidget4Q =>
+      'Mogu li imati više widgeta na jednoj stranici?';
+
+  @override
+  String get ownerFaqWidget4A =>
+      'Da, možete embed-ovati više widgeta (za različite apartmane) na istoj stranici. Svaki widget će imati svoj jedinstveni unit ID u URL-u.';
+
+  @override
+  String get ownerFaqWidget5Q => 'Da li widget podržava više jezika?';
+
+  @override
+  String get ownerFaqWidget5A =>
+      'Da! Widget podržava hrvatski, engleski, njemački i italijanski jezik. Dodajte &language=en (ili hr, de, it) u URL ili omogućite language selector.';
+
+  @override
+  String get ownerFaqIcal1Q => 'Kako povezati Booking.com kalendar?';
+
+  @override
+  String get ownerFaqIcal1A =>
+      'Ulogujte se na Booking.com Extranet → Calendar → Reservations export → Kopirajte iCal URL → Dodajte u našu aplikaciju pod iCal Sinhronizacija. Detaljnije u \"iCal Sync\" uputstvu.';
+
+  @override
+  String get ownerFaqIcal2Q => 'Koliko često se sinhronizuje?';
+
+  @override
+  String get ownerFaqIcal2A =>
+      'Automatski sync se izvršava svaki sat. Možete ručno pokrenuti sync bilo kada klikom na \"Sync Now\" dugme.';
+
+  @override
+  String get ownerFaqIcal3Q =>
+      'Hoće li gosti vidjeti imena gostiju sa drugih platformi?';
+
+  @override
+  String get ownerFaqIcal3A =>
+      'Ne. iCal protokol prenosi samo datume rezervacije (check-in/check-out), ne i lične podatke. Rezervacije će biti prikazane kao \"Platform Gost\" u vašem kalendaru.';
+
+  @override
+  String get ownerFaqIcal4Q =>
+      'Mogu li sync-ovati sa više platformi istovremeno?';
+
+  @override
+  String get ownerFaqIcal4A =>
+      'Da! Možete dodati iCal feed-ove sa Booking.com, Airbnb ili bilo koje druge platforme koja podržava iCal format za isti apartman. Sve rezervacije će biti prikazane.';
+
+  @override
+  String get ownerFaqSupport1Q => 'Widget se ne učitava na mom sajtu';
+
+  @override
+  String get ownerFaqSupport1A =>
+      'Provjerite: (1) Da li ste zalijepili kompletan iframe kod, (2) Da li je unit ID tačan, (3) Browser konzolu za greške (F12). Ako problem persistira, kontaktirajte podršku.';
+
+  @override
+  String get ownerFaqSupport2Q => 'Zaboravio/la sam lozinku';
+
+  @override
+  String get ownerFaqSupport2A =>
+      'Na login ekranu kliknite \"Forgot Password\" → Unesite email → Provjerite inbox (i spam folder) za reset link.';
+
+  @override
+  String get ownerFaqSupport3Q => 'Email notifikacije ne stižu';
+
+  @override
+  String get ownerFaqSupport3A =>
+      'Provjerite spam folder. Ako još uvijek ne stižu, idite na Profile → Notification Settings i provjerite da su notifikacije omogućene. Dodajte duskolicanin1234@gmail.com u whitelist.';
+
+  @override
+  String get ownerFaqSupport4Q => 'Kako kontaktirati podršku?';
+
+  @override
+  String get ownerFaqSupport4A =>
+      'Pošaljite email na: duskolicanin1234@gmail.com sa detaljnim opisom problema. Uključite screenshots ako je moguće. Odgovaramo unutar 24-48h.';
+
+  @override
+  String get emailVerificationTitle => 'Verifikacija emaila';
+
+  @override
+  String get emailVerificationSubtitle =>
+      'Konfigurirajte postavke verifikacije emaila gosta';
+
+  @override
+  String get emailVerificationToggleTitle => 'Zahtijevaj verifikaciju emaila';
+
+  @override
+  String get emailVerificationToggleSubtitle =>
+      'Gost mora verificirati svoju email adresu prije završetka rezervacije';
+
+  @override
+  String get emailVerificationInfoEnabled =>
+      'Gumb za verifikaciju će biti prikazan u Koraku 2 procesa rezervacije. Gosti ne mogu nastaviti bez verifikacije emaila.';
+
+  @override
+  String get emailVerificationInfoDisabled =>
+      'Verifikacija emaila je onemogućena. Gosti mogu završiti rezervacije bez verifikacije email adrese.';
+
+  @override
+  String get icalExportEnabled => 'Omogućeno';
+
+  @override
+  String get icalExportDisabled => 'Onemogućeno';
+
+  @override
+  String get icalExportToggleTitle => 'Omogući iCal izvoz';
+
+  @override
+  String get icalExportToggleSubtitle =>
+      'Generiraj javni iCal URL za sinkronizaciju s vanjskim kalendarima';
+
+  @override
+  String get icalExportInfo => 'Informacije o izvozu';
+
+  @override
+  String get icalExportInfoMessage =>
+      'iCal izvoz će se automatski generirati kada se rezervacije promijene. Koristite generirani URL za sinkronizaciju s vanjskim kalendarima.';
+
+  @override
+  String icalExportDaysAgo(int days) {
+    return 'Prije ${days}d';
+  }
+
+  @override
+  String get icalExportTestButton => 'Testiraj iCal izvoz';
+
+  @override
+  String get icalExportLoading => 'Učitavanje...';
+
+  @override
+  String get icalExportFailedToLoad => 'Nije moguće učitati podatke o jedinici';
+
+  @override
+  String get taxLegalTitle => 'Porezna i pravna izjava';
+
+  @override
+  String get taxLegalEnabled => 'Omogućeno';
+
+  @override
+  String get taxLegalDisabled => 'Onemogućeno';
+
+  @override
+  String get taxLegalToggleTitle => 'Omogući poreznu/pravnu izjavu';
+
+  @override
+  String get taxLegalToggleSubtitle =>
+      'Prikaži izjavu gostima tijekom rezervacije';
+
+  @override
+  String get taxLegalTextSource => 'Izvor teksta izjave';
+
+  @override
+  String get taxLegalDefaultTitle => 'Koristi zadani hrvatski tekst';
+
+  @override
+  String get taxLegalDefaultSubtitle =>
+      'Standardni pravni tekst za hrvatske nekretnine';
+
+  @override
+  String get taxLegalCustomTitle => 'Koristi prilagođeni tekst';
+
+  @override
+  String get taxLegalCustomSubtitle => 'Unesite vlastiti pravni tekst';
+
+  @override
+  String get taxLegalCustomLabel => 'Prilagođeni tekst izjave';
+
+  @override
+  String get taxLegalCustomHint => 'Unesite svoj prilagođeni pravni tekst...';
+
+  @override
+  String get taxLegalPreviewButton => 'Pregledaj izjavu';
+
+  @override
+  String get bookingActionUnknownGuest => 'Nepoznati gost';
+
+  @override
+  String get bookingActionEditTitle => 'Uredi rezervaciju';
+
+  @override
+  String get bookingActionEditSubtitle => 'Promijeni detalje rezervacije';
+
+  @override
+  String get bookingActionStatusTitle => 'Promijeni status';
+
+  @override
+  String get bookingActionStatusSubtitle => 'Confirmed, Pending, Cancelled...';
+
+  @override
+  String get bookingActionDeleteTitle => 'Obriši rezervaciju';
+
+  @override
+  String get bookingActionDeleteSubtitle => 'Trajno ukloni rezervaciju';
+
+  @override
+  String get bookingActionMoveTitle => 'Prebaci rezervaciju u:';
+
+  @override
+  String get bookingActionNoOtherUnits => 'Nema drugih dostupnih jedinica';
+
+  @override
+  String bookingActionGuestsRooms(int guests, int rooms) {
+    return '$guests gostiju • $rooms spavaće sobe';
+  }
+
+  @override
+  String get bookingActionMoving => 'Prebacivanje rezervacije...';
+
+  @override
+  String bookingActionMovedTo(String unitName) {
+    return 'Rezervacija prebačena u $unitName';
+  }
+
+  @override
+  String bookingActionError(String error) {
+    return 'Greška: $error';
+  }
+
+  @override
+  String futureBookingsTitle(String unitName) {
+    return 'Nadolazeće rezervacije - $unitName';
+  }
+
+  @override
+  String get futureBookingsClose => 'Zatvori';
+
+  @override
+  String futureBookingsCount(int count) {
+    return '$count rezervacija';
+  }
+
+  @override
+  String get futureBookingsEmpty => 'Nema nadolazećih rezervacija';
+
+  @override
+  String futureBookingsEmptySubtitle(String unitName) {
+    return 'Sve buduće rezervacije za $unitName će se prikazati ovdje';
+  }
+
+  @override
+  String get futureBookingsUnknownGuest => 'Nepoznati gost';
+
+  @override
+  String futureBookingsCheckIn(String date) {
+    return 'Check-in: $date';
+  }
+
+  @override
+  String futureBookingsCheckOut(String date) {
+    return 'Check-out: $date';
+  }
+
+  @override
+  String futureBookingsGuestsNights(int guests, int nights) {
+    return '$guests gost(a) • $nights noć(i)';
+  }
+
+  @override
+  String get calendarErrorTitle => 'Ups! Nešto je pošlo po krivu';
+
+  @override
+  String get calendarErrorDefault =>
+      'Došlo je do greške pri učitavanju podataka';
+
+  @override
+  String get calendarErrorCompact => 'Greška pri učitavanju';
+
+  @override
+  String get calendarErrorRetry => 'Pokušaj ponovo';
+
+  @override
+  String get calendarErrorHelp => 'Pomoć';
+
+  @override
+  String get calendarErrorBannerTitle => 'Greška';
+
+  @override
+  String get calendarErrorClose => 'Zatvori';
+
+  @override
+  String get calendarFiltersSearchGuest => 'Pretraži gosta';
+
+  @override
+  String get calendarFiltersGuestLabel => 'Ime ili email gosta';
+
+  @override
+  String get calendarFiltersGuestHint => 'Unesite ime ili email...';
+
+  @override
+  String get calendarFiltersSearchBookingId => 'Pretraži po ID-u rezervacije';
+
+  @override
+  String get calendarFiltersBookingIdLabel => 'ID rezervacije';
+
+  @override
+  String get calendarFiltersBookingIdHint => 'Unesite ID rezervacije...';
+
+  @override
+  String get calendarFiltersClearDate => 'Očisti datum';
+
+  @override
+  String get bookingEditInternalNotes => 'Interne bilješke';
+
+  @override
+  String get bookingEditNotesHint => 'Dodajte bilješke za ovu rezervaciju...';
+
+  @override
+  String priceCalendarHintExample(String value) {
+    return 'npr. $value';
+  }
 }

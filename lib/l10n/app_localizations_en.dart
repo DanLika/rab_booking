@@ -6214,4 +6214,415 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingCompleteDialogConfirm => 'Complete';
+
+  @override
+  String get ownerFaqGeneral1Q => 'What is this platform?';
+
+  @override
+  String get ownerFaqGeneral1A =>
+      'This is a multi-tenant booking platform that allows apartment owners to manage reservations, receive payments, and embed a booking widget on their website. The platform supports Stripe payments, iCal synchronization with Booking.com/Airbnb, and multiple languages.';
+
+  @override
+  String get ownerFaqGeneral2Q => 'Is there a mobile app?';
+
+  @override
+  String get ownerFaqGeneral2A =>
+      'Yes! The Owner app is available for Android and iOS. You can manage reservations, view the calendar, approve/cancel bookings, and receive notifications on your phone.';
+
+  @override
+  String get ownerFaqGeneral3Q => 'How much does it cost?';
+
+  @override
+  String get ownerFaqGeneral3A =>
+      'The platform currently has a trial version. Three subscriptions are planned: Trial (1 property), Premium (5 properties), and Enterprise (unlimited). Stripe commission (1.4% + €0.25) is charged separately.';
+
+  @override
+  String get ownerFaqBookings1Q => 'How does the booking flow work?';
+
+  @override
+  String get ownerFaqBookings1A =>
+      'There are three modes: (1) Calendar Only - guests only see availability and call you, (2) Booking Pending - guests create a reservation that awaits your confirmation, (3) Booking Instant - guests can book and pay immediately. You choose the mode in Widget Settings.';
+
+  @override
+  String get ownerFaqBookings2Q => 'How to approve a reservation?';
+
+  @override
+  String get ownerFaqBookings2A =>
+      'Go to Bookings → Pending reservations → Click on the reservation → \"Approve\". An email will automatically be sent to the guest with confirmation.';
+
+  @override
+  String get ownerFaqBookings3Q => 'Can I cancel a reservation?';
+
+  @override
+  String get ownerFaqBookings3A =>
+      'Yes. Click on the reservation → \"Cancel\" → Enter reason → Confirm. The guest will be notified by email. For Stripe payment refunds, contact support.';
+
+  @override
+  String get ownerFaqBookings4Q => 'How to prevent overbooking?';
+
+  @override
+  String get ownerFaqBookings4A =>
+      'Use iCal synchronization to import reservations from Booking.com, Airbnb and other platforms. All reservations will be displayed in the calendar as occupied days.';
+
+  @override
+  String get ownerFaqBookings5Q => 'How to manually block dates?';
+
+  @override
+  String get ownerFaqBookings5A =>
+      'In the calendar, click on a date or date range → \"Block\" → Enter reason (optional). Blocked days will be shown as unavailable in the widget.';
+
+  @override
+  String get ownerFaqPayments1Q => 'What payment methods do you support?';
+
+  @override
+  String get ownerFaqPayments1A =>
+      'We support: (1) Stripe card payments (instant), (2) Bank transfer (manual confirmation), (3) Pay on arrival. You can enable/disable each method in Widget Settings.';
+
+  @override
+  String get ownerFaqPayments2Q => 'What deposit can I require?';
+
+  @override
+  String get ownerFaqPayments2A =>
+      'You can set a deposit from 0% to 100% of the total price. The default is 20%. The remaining amount is paid by the guest on arrival. Set it in Widget Settings.';
+
+  @override
+  String get ownerFaqPayments3Q => 'When do Stripe payouts arrive?';
+
+  @override
+  String get ownerFaqPayments3A =>
+      'Stripe automatically transfers funds to your bank account every 7 days. After the first month, you can switch to daily payouts in the Stripe dashboard.';
+
+  @override
+  String get ownerFaqPayments4Q => 'What if a guest requests a refund?';
+
+  @override
+  String get ownerFaqPayments4A =>
+      'For bank transfers, you process the refund manually. For Stripe payments, contact support or create a refund directly in the Stripe dashboard.';
+
+  @override
+  String get ownerFaqWidget1Q => 'How to add the widget to my site?';
+
+  @override
+  String get ownerFaqWidget1A =>
+      'Go to Unit Form → \"Generate Embed Code\" → Copy the iframe code → Paste into your site\'s HTML. Detailed instructions are in the \"Embed Widget\" section of the guides.';
+
+  @override
+  String get ownerFaqWidget2Q => 'Can I customize the widget appearance?';
+
+  @override
+  String get ownerFaqWidget2A =>
+      'Yes! In Widget Settings you can: change the primary color, upload a logo, customize the custom message, and enable/disable \"Powered by\" branding.';
+
+  @override
+  String get ownerFaqWidget3Q => 'Does the widget work on mobile devices?';
+
+  @override
+  String get ownerFaqWidget3A =>
+      'Yes, the widget is fully responsive and adapts to all screen sizes. Use the responsive embed code for best results.';
+
+  @override
+  String get ownerFaqWidget4Q => 'Can I have multiple widgets on one page?';
+
+  @override
+  String get ownerFaqWidget4A =>
+      'Yes, you can embed multiple widgets (for different apartments) on the same page. Each widget will have its unique unit ID in the URL.';
+
+  @override
+  String get ownerFaqWidget5Q => 'Does the widget support multiple languages?';
+
+  @override
+  String get ownerFaqWidget5A =>
+      'Yes! The widget supports Croatian, English, German and Italian. Add &language=en (or hr, de, it) to the URL or enable the language selector.';
+
+  @override
+  String get ownerFaqIcal1Q => 'How to connect Booking.com calendar?';
+
+  @override
+  String get ownerFaqIcal1A =>
+      'Log in to Booking.com Extranet → Calendar → Reservations export → Copy the iCal URL → Add to our app under iCal Synchronization. More details in the \"iCal Sync\" guide.';
+
+  @override
+  String get ownerFaqIcal2Q => 'How often does it sync?';
+
+  @override
+  String get ownerFaqIcal2A =>
+      'Automatic sync runs every hour. You can manually trigger a sync anytime by clicking the \"Sync Now\" button.';
+
+  @override
+  String get ownerFaqIcal3Q =>
+      'Will guests see guest names from other platforms?';
+
+  @override
+  String get ownerFaqIcal3A =>
+      'No. The iCal protocol only transfers reservation dates (check-in/check-out), not personal data. Reservations will be displayed as \"Platform Guest\" in your calendar.';
+
+  @override
+  String get ownerFaqIcal4Q =>
+      'Can I sync with multiple platforms simultaneously?';
+
+  @override
+  String get ownerFaqIcal4A =>
+      'Yes! You can add iCal feeds from Booking.com, Airbnb or any other platform that supports iCal format for the same apartment. All reservations will be displayed.';
+
+  @override
+  String get ownerFaqSupport1Q => 'Widget is not loading on my site';
+
+  @override
+  String get ownerFaqSupport1A =>
+      'Check: (1) Did you paste the complete iframe code, (2) Is the unit ID correct, (3) Browser console for errors (F12). If the problem persists, contact support.';
+
+  @override
+  String get ownerFaqSupport2Q => 'I forgot my password';
+
+  @override
+  String get ownerFaqSupport2A =>
+      'On the login screen click \"Forgot Password\" → Enter email → Check your inbox (and spam folder) for the reset link.';
+
+  @override
+  String get ownerFaqSupport3Q => 'Email notifications are not arriving';
+
+  @override
+  String get ownerFaqSupport3A =>
+      'Check your spam folder. If they still don\'t arrive, go to Profile → Notification Settings and verify notifications are enabled. Add duskolicanin1234@gmail.com to your whitelist.';
+
+  @override
+  String get ownerFaqSupport4Q => 'How to contact support?';
+
+  @override
+  String get ownerFaqSupport4A =>
+      'Send an email to: duskolicanin1234@gmail.com with a detailed description of the problem. Include screenshots if possible. We respond within 24-48h.';
+
+  @override
+  String get emailVerificationTitle => 'Email Verification';
+
+  @override
+  String get emailVerificationSubtitle =>
+      'Configure guest email verification settings';
+
+  @override
+  String get emailVerificationToggleTitle => 'Require Email Verification';
+
+  @override
+  String get emailVerificationToggleSubtitle =>
+      'Guest must verify their email address before completing booking';
+
+  @override
+  String get emailVerificationInfoEnabled =>
+      'Verification button will be shown in Step 2 of the booking flow. Guests cannot proceed without verifying their email.';
+
+  @override
+  String get emailVerificationInfoDisabled =>
+      'Email verification is disabled. Guests can complete bookings without verifying their email address.';
+
+  @override
+  String get icalExportEnabled => 'Enabled';
+
+  @override
+  String get icalExportDisabled => 'Disabled';
+
+  @override
+  String get icalExportToggleTitle => 'Enable iCal Export';
+
+  @override
+  String get icalExportToggleSubtitle =>
+      'Generate public iCal URL for external calendar sync';
+
+  @override
+  String get icalExportInfo => 'Export Information';
+
+  @override
+  String get icalExportInfoMessage =>
+      'iCal export will be auto-generated when bookings change. Use the generated URL to sync with external calendars.';
+
+  @override
+  String icalExportDaysAgo(int days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String get icalExportTestButton => 'Test iCal Export';
+
+  @override
+  String get icalExportLoading => 'Loading...';
+
+  @override
+  String get icalExportFailedToLoad => 'Failed to load unit data';
+
+  @override
+  String get taxLegalTitle => 'Tax & Legal Disclaimer';
+
+  @override
+  String get taxLegalEnabled => 'Enabled';
+
+  @override
+  String get taxLegalDisabled => 'Disabled';
+
+  @override
+  String get taxLegalToggleTitle => 'Enable Tax/Legal Disclaimer';
+
+  @override
+  String get taxLegalToggleSubtitle =>
+      'Show disclaimer to guests during booking';
+
+  @override
+  String get taxLegalTextSource => 'Disclaimer Text Source';
+
+  @override
+  String get taxLegalDefaultTitle => 'Use Default Croatian Text';
+
+  @override
+  String get taxLegalDefaultSubtitle =>
+      'Standard legal text for Croatian properties';
+
+  @override
+  String get taxLegalCustomTitle => 'Use Custom Text';
+
+  @override
+  String get taxLegalCustomSubtitle => 'Provide your own legal text';
+
+  @override
+  String get taxLegalCustomLabel => 'Custom Disclaimer Text';
+
+  @override
+  String get taxLegalCustomHint => 'Enter your custom legal text...';
+
+  @override
+  String get taxLegalPreviewButton => 'Preview Disclaimer';
+
+  @override
+  String get bookingActionUnknownGuest => 'Unknown guest';
+
+  @override
+  String get bookingActionEditTitle => 'Edit booking';
+
+  @override
+  String get bookingActionEditSubtitle => 'Change booking details';
+
+  @override
+  String get bookingActionStatusTitle => 'Change status';
+
+  @override
+  String get bookingActionStatusSubtitle => 'Confirmed, Pending, Cancelled...';
+
+  @override
+  String get bookingActionDeleteTitle => 'Delete booking';
+
+  @override
+  String get bookingActionDeleteSubtitle => 'Permanently remove booking';
+
+  @override
+  String get bookingActionMoveTitle => 'Move booking to:';
+
+  @override
+  String get bookingActionNoOtherUnits => 'No other available units';
+
+  @override
+  String bookingActionGuestsRooms(int guests, int rooms) {
+    return '$guests guests • $rooms bedrooms';
+  }
+
+  @override
+  String get bookingActionMoving => 'Moving booking...';
+
+  @override
+  String bookingActionMovedTo(String unitName) {
+    return 'Booking moved to $unitName';
+  }
+
+  @override
+  String bookingActionError(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String futureBookingsTitle(String unitName) {
+    return 'Upcoming bookings - $unitName';
+  }
+
+  @override
+  String get futureBookingsClose => 'Close';
+
+  @override
+  String futureBookingsCount(int count) {
+    return '$count bookings';
+  }
+
+  @override
+  String get futureBookingsEmpty => 'No upcoming bookings';
+
+  @override
+  String futureBookingsEmptySubtitle(String unitName) {
+    return 'All future bookings for $unitName will be shown here';
+  }
+
+  @override
+  String get futureBookingsUnknownGuest => 'Unknown Guest';
+
+  @override
+  String futureBookingsCheckIn(String date) {
+    return 'Check-in: $date';
+  }
+
+  @override
+  String futureBookingsCheckOut(String date) {
+    return 'Check-out: $date';
+  }
+
+  @override
+  String futureBookingsGuestsNights(int guests, int nights) {
+    return '$guests guest(s) • $nights night(s)';
+  }
+
+  @override
+  String get calendarErrorTitle => 'Oops! Something went wrong';
+
+  @override
+  String get calendarErrorDefault => 'An error occurred while loading data';
+
+  @override
+  String get calendarErrorCompact => 'Error loading';
+
+  @override
+  String get calendarErrorRetry => 'Try again';
+
+  @override
+  String get calendarErrorHelp => 'Help';
+
+  @override
+  String get calendarErrorBannerTitle => 'Error';
+
+  @override
+  String get calendarErrorClose => 'Close';
+
+  @override
+  String get calendarFiltersSearchGuest => 'Search guest';
+
+  @override
+  String get calendarFiltersGuestLabel => 'Guest name or email';
+
+  @override
+  String get calendarFiltersGuestHint => 'Enter name or email...';
+
+  @override
+  String get calendarFiltersSearchBookingId => 'Search by booking ID';
+
+  @override
+  String get calendarFiltersBookingIdLabel => 'Booking ID';
+
+  @override
+  String get calendarFiltersBookingIdHint => 'Enter booking ID...';
+
+  @override
+  String get calendarFiltersClearDate => 'Clear date';
+
+  @override
+  String get bookingEditInternalNotes => 'Internal Notes';
+
+  @override
+  String get bookingEditNotesHint => 'Add notes for this booking...';
+
+  @override
+  String priceCalendarHintExample(String value) {
+    return 'e.g. $value';
+  }
 }

@@ -9,6 +9,7 @@ import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../domain/models/ical_feed.dart';
 import '../../providers/ical_feeds_provider.dart';
@@ -769,7 +770,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
 
                     return DropdownButtonFormField<String>(
                       initialValue: validUnitId,
-                      decoration: InputDecoration(labelText: l10n.icalSelectUnit, border: const OutlineInputBorder()),
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.icalSelectUnit,
+                        context: context,
+                      ),
                       items: units.map((unit) {
                         return DropdownMenuItem(value: unit.id, child: Text(unit.name));
                       }).toList(),
@@ -803,7 +807,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
 
                     return DropdownButtonFormField<String>(
                       initialValue: validPlatform,
-                      decoration: InputDecoration(labelText: l10n.icalPlatform, border: const OutlineInputBorder()),
+                      decoration: InputDecorationHelper.buildDecoration(labelText: l10n.icalPlatform, context: context),
                       items: [
                         DropdownMenuItem(value: 'booking_com', child: Text(l10n.icalPlatformBookingCom)),
                         DropdownMenuItem(value: 'airbnb', child: Text(l10n.icalPlatformAirbnb)),
@@ -826,21 +830,23 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                     final l10n = AppLocalizations.of(context);
                     return TextFormField(
                       controller: _icalUrlController,
-                      decoration: InputDecoration(
-                        labelText: l10n.icalUrlLabel,
-                        hintText: l10n.icalUrlHint,
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.paste),
-                          onPressed: () async {
-                            final clipboardData = await Clipboard.getData('text/plain');
-                            if (clipboardData?.text != null) {
-                              _icalUrlController.text = clipboardData!.text!;
-                            }
-                          },
-                          tooltip: l10n.icalPasteFromClipboard,
-                        ),
-                      ),
+                      decoration:
+                          InputDecorationHelper.buildDecoration(
+                            labelText: l10n.icalUrlLabel,
+                            hintText: l10n.icalUrlHint,
+                            context: context,
+                          ).copyWith(
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.paste),
+                              onPressed: () async {
+                                final clipboardData = await Clipboard.getData('text/plain');
+                                if (clipboardData?.text != null) {
+                                  _icalUrlController.text = clipboardData!.text!;
+                                }
+                              },
+                              tooltip: l10n.icalPasteFromClipboard,
+                            ),
+                          ),
                       maxLines: 3,
                       validator: (value) {
                         if (value == null || value.isEmpty) {

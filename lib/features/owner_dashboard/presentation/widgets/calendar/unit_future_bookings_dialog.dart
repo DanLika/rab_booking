@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/app_dimensions.dart';
@@ -12,16 +13,12 @@ class UnitFutureBookingsDialog extends StatelessWidget {
   final List<BookingModel> bookings;
   final Function(BookingModel) onBookingTap;
 
-  const UnitFutureBookingsDialog({
-    required this.unit,
-    required this.bookings,
-    required this.onBookingTap,
-    super.key,
-  });
+  const UnitFutureBookingsDialog({required this.unit, required this.bookings, required this.onBookingTap, super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < AppDimensions.mobile;
@@ -31,15 +28,11 @@ class UnitFutureBookingsDialog extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Container(
         width: isMobile ? screenWidth * 0.95 : 600,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.8,
-        ),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -47,31 +40,19 @@ class UnitFutureBookingsDialog extends StatelessWidget {
           children: [
             // Header with gradient (matching CommonAppBar)
             Container(
-              padding: EdgeInsets.all(
-                isMobile ? AppDimensions.spaceS : AppDimensions.spaceM,
-              ),
+              padding: EdgeInsets.all(isMobile ? AppDimensions.spaceS : AppDimensions.spaceM),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(11),
-                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.calendar_today,
-                    color: Colors.white,
-                    size: isMobile ? 20 : 24,
-                  ),
+                  Icon(Icons.calendar_today, color: Colors.white, size: isMobile ? 20 : 24),
                   const SizedBox(width: AppDimensions.spaceS),
                   Expanded(
                     child: AutoSizeText(
-                      'Nadolazeće rezervacije - ${unit.name}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isMobile ? 16 : 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      l10n.futureBookingsTitle(unit.name),
+                      style: TextStyle(color: Colors.white, fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.bold),
                       maxLines: 2,
                       minFontSize: 14,
                     ),
@@ -79,7 +60,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.pop(context),
-                    tooltip: 'Zatvori',
+                    tooltip: l10n.futureBookingsClose,
                   ),
                 ],
               ),
@@ -88,16 +69,14 @@ class UnitFutureBookingsDialog extends StatelessWidget {
             // Bookings list
             Flexible(
               child: bookings.isEmpty
-                  ? _buildEmptyState(context)
+                  ? _buildEmptyState(context, l10n)
                   : ListView.separated(
-                      padding: EdgeInsets.all(
-                        isMobile ? AppDimensions.spaceS : AppDimensions.spaceM,
-                      ),
+                      padding: EdgeInsets.all(isMobile ? AppDimensions.spaceS : AppDimensions.spaceM),
                       itemCount: bookings.length,
                       separatorBuilder: (context, index) => const Divider(),
                       itemBuilder: (context, index) {
                         final booking = bookings[index];
-                        return _buildBookingTile(context, booking, isMobile);
+                        return _buildBookingTile(context, booking, isMobile, l10n);
                       },
                     ),
             ),
@@ -109,17 +88,12 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${bookings.length} rezervacija',
+                    l10n.futureBookingsCount(bookings.length),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(
-                        alpha: 0.7,
-                      ),
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Zatvori'),
-                  ),
+                  TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.futureBookingsClose)),
                 ],
               ),
             ),
@@ -129,7 +103,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
@@ -137,26 +111,13 @@ class UnitFutureBookingsDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.event_available,
-              size: 64,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            Icon(Icons.event_available, size: 64, color: theme.colorScheme.onSurfaceVariant),
             const SizedBox(height: AppDimensions.spaceM),
-            Text(
-              'Nema nadolazećih rezervacija',
-              style: TextStyle(
-                fontSize: 16,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
+            Text(l10n.futureBookingsEmpty, style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurface)),
             const SizedBox(height: AppDimensions.spaceXS),
             Text(
-              'Sve buduce rezervacije za ${unit.name} ce se prikazati ovdje',
-              style: TextStyle(
-                fontSize: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              l10n.futureBookingsEmptySubtitle(unit.name),
+              style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],
@@ -165,15 +126,10 @@ class UnitFutureBookingsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildBookingTile(
-    BuildContext context,
-    BookingModel booking,
-    bool isMobile,
-  ) {
+  Widget _buildBookingTile(BuildContext context, BookingModel booking, bool isMobile, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final now = DateTime.now();
-    final isInProgress =
-        booking.checkIn.isBefore(now) && booking.checkOut.isAfter(now);
+    final isInProgress = booking.checkIn.isBefore(now) && booking.checkOut.isAfter(now);
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
     return InkWell(
@@ -205,10 +161,8 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                 children: [
                   // Guest name
                   AutoSizeText(
-                    booking.guestName ?? 'Unknown Guest',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    booking.guestName ?? l10n.futureBookingsUnknownGuest,
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1,
                   ),
                   const SizedBox(height: AppDimensions.spaceXXS / 2),
@@ -216,19 +170,14 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   // Check-in
                   Row(
                     children: [
-                      Icon(
-                        Icons.login,
-                        size: 14,
-                        color: theme.colorScheme.tertiary,
-                      ),
+                      Icon(Icons.login, size: 14, color: theme.colorScheme.tertiary),
                       const SizedBox(width: AppDimensions.spaceXXS),
                       Expanded(
                         child: AutoSizeText(
-                          'Check-in: ${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.textTheme.bodySmall?.color,
+                          l10n.futureBookingsCheckIn(
+                            '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
                           ),
+                          style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
                           maxLines: 1,
                           minFontSize: 10,
                         ),
@@ -240,19 +189,14 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   // Check-out
                   Row(
                     children: [
-                      Icon(
-                        Icons.logout,
-                        size: 14,
-                        color: theme.colorScheme.error,
-                      ),
+                      Icon(Icons.logout, size: 14, color: theme.colorScheme.error),
                       const SizedBox(width: AppDimensions.spaceXXS),
                       Expanded(
                         child: AutoSizeText(
-                          'Check-out: ${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.textTheme.bodySmall?.color,
+                          l10n.futureBookingsCheckOut(
+                            '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
                           ),
+                          style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
                           maxLines: 1,
                           minFontSize: 10,
                         ),
@@ -263,13 +207,8 @@ class UnitFutureBookingsDialog extends StatelessWidget {
 
                   // Guest count and nights
                   AutoSizeText(
-                    '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.textTheme.bodySmall?.color?.withValues(
-                        alpha: 0.7,
-                      ),
-                    ),
+                    l10n.futureBookingsGuestsNights(booking.guestCount, nights),
+                    style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
                     maxLines: 1,
                     minFontSize: 9,
                   ),
@@ -285,10 +224,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
               height: 32,
               child: Container(
                 alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.spaceXS,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS, vertical: 4),
                 decoration: BoxDecoration(
                   color: booking.status.color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
@@ -297,11 +233,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   booking.status.displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: booking.status.color,
-                  ),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: booking.status.color),
                   textAlign: TextAlign.center,
                 ),
               ),

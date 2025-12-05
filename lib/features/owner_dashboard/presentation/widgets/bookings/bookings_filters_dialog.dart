@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/property_model.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
@@ -163,11 +164,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         // Status dropdown
         DropdownButtonFormField<BookingStatus?>(
           initialValue: _filters.status,
-          decoration: InputDecoration(
+          decoration: InputDecorationHelper.buildDecoration(
             labelText: l10n.ownerFiltersStatusLabel,
             prefixIcon: Icon(Icons.label_outline, color: theme.colorScheme.primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            context: context,
           ),
           items: [
             DropdownMenuItem(child: Text(l10n.ownerFiltersAllStatuses)),
@@ -235,11 +235,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           data: (properties) {
             return DropdownButtonFormField<String?>(
               initialValue: _filters.propertyId,
-              decoration: InputDecoration(
+              decoration: InputDecorationHelper.buildDecoration(
                 labelText: l10n.ownerFiltersPropertyLabel,
                 prefixIcon: Icon(Icons.apartment, color: theme.colorScheme.secondary),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                context: context,
               ),
               items: [
                 DropdownMenuItem(child: Text(l10n.ownerFiltersAllProperties)),

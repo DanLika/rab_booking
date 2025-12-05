@@ -116,7 +116,7 @@ class _FAQScreenState extends State<FAQScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final filteredFAQs = _filteredFAQs;
+    final filteredFAQs = _getFilteredFAQs(l10n);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -224,7 +224,7 @@ class _FAQScreenState extends State<FAQScreen> {
                         itemCount: filteredFAQs.length,
                         itemBuilder: (context, index) {
                           final faq = filteredFAQs[index];
-                          return _buildFAQCard(faq);
+                          return _buildFAQCard(faq, l10n);
                         },
                       ),
               ),
@@ -235,9 +235,10 @@ class _FAQScreenState extends State<FAQScreen> {
     );
   }
 
-  Widget _buildFAQCard(FAQItem faq) {
+  Widget _buildFAQCard(FAQItem faq, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final categoryLabel = _getCategoryLabel(faq.categoryKey, l10n);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -254,13 +255,13 @@ class _FAQScreenState extends State<FAQScreen> {
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           leading: CircleAvatar(
             backgroundColor: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-            child: Icon(_getCategoryIcon(faq.category), color: theme.colorScheme.primary, size: 20),
+            child: Icon(_getCategoryIcon(faq.categoryKey), color: theme.colorScheme.primary, size: 20),
           ),
           title: Text(faq.question, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              faq.category,
+              categoryLabel,
               style: TextStyle(fontSize: 11, color: isDark ? theme.colorScheme.onSurfaceVariant : Colors.grey.shade600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -321,19 +322,19 @@ class _FAQScreenState extends State<FAQScreen> {
     );
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Općenito':
+  IconData _getCategoryIcon(String categoryKey) {
+    switch (categoryKey) {
+      case 'general':
         return Icons.info_outline;
-      case 'Rezervacije':
+      case 'bookings':
         return Icons.event;
-      case 'Plaćanja':
+      case 'payments':
         return Icons.payment;
-      case 'Widget':
+      case 'widget':
         return Icons.widgets;
-      case 'iCal Sync':
+      case 'icalSync':
         return Icons.sync;
-      case 'Tehnička Podrška':
+      case 'support':
         return Icons.support;
       default:
         return Icons.help_outline;

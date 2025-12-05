@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
@@ -23,6 +24,7 @@ class EmailVerificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -37,10 +39,7 @@ class EmailVerificationCard extends StatelessWidget {
             // topRight → bottomLeft za section
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -48,13 +47,11 @@ class EmailVerificationCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Section header
-                _buildSectionHeader(theme),
+                _buildSectionHeader(theme, l10n),
                 const SizedBox(height: 8),
                 Text(
-                  'Configure guest email verification settings',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
+                  l10n.emailVerificationSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -64,15 +61,13 @@ class EmailVerificationCard extends StatelessWidget {
                 SwitchListTile(
                   value: requireEmailVerification,
                   onChanged: onChanged,
-                  title: const Text('Require Email Verification'),
-                  subtitle: const Text(
-                    'Guest must verify their email address before completing booking',
-                  ),
+                  title: Text(l10n.emailVerificationToggleTitle),
+                  subtitle: Text(l10n.emailVerificationToggleSubtitle),
                   contentPadding: EdgeInsets.zero,
                 ),
 
                 // Info message
-                _buildInfoMessage(theme),
+                _buildInfoMessage(theme, l10n),
               ],
             ),
           ),
@@ -81,37 +76,29 @@ class EmailVerificationCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(ThemeData theme) {
+  Widget _buildSectionHeader(ThemeData theme, AppLocalizations l10n) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withAlpha(
-              (0.12 * 255).toInt(),
-            ),
+            color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.verified_user,
-            color: theme.colorScheme.primary,
-            size: 18,
-          ),
+          child: Icon(Icons.verified_user, color: theme.colorScheme.primary, size: 18),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            'Email Verification',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            l10n.emailVerificationTitle,
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInfoMessage(ThemeData theme) {
+  Widget _buildInfoMessage(ThemeData theme, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(top: 12),
@@ -122,23 +109,12 @@ class EmailVerificationCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.info_outline,
-            size: 16,
-            color: AppColors.info,
-          ),
+          const Icon(Icons.info_outline, size: 16, color: AppColors.info),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              requireEmailVerification
-                  ? 'Verification button will be shown in Step 2 of the booking flow. Guests cannot proceed without verifying their email.'
-                  : 'Email verification is disabled. Guests can complete bookings without verifying their email address.',
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
-              ),
+              requireEmailVerification ? l10n.emailVerificationInfoEnabled : l10n.emailVerificationInfoDisabled,
+              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt())),
             ),
           ),
         ],

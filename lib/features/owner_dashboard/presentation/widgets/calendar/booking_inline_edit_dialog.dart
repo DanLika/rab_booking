@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
@@ -17,12 +18,10 @@ class BookingInlineEditDialog extends ConsumerStatefulWidget {
   const BookingInlineEditDialog({super.key, required this.booking});
 
   @override
-  ConsumerState<BookingInlineEditDialog> createState() =>
-      _BookingInlineEditDialogState();
+  ConsumerState<BookingInlineEditDialog> createState() => _BookingInlineEditDialogState();
 }
 
-class _BookingInlineEditDialogState
-    extends ConsumerState<BookingInlineEditDialog> {
+class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialog> {
   late DateTime _checkIn;
   late DateTime _checkOut;
   late int _guestCount;
@@ -49,16 +48,12 @@ class _BookingInlineEditDialogState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile =
-        MediaQuery.of(context).size.width <
-        CalendarGridCalculator.mobileBreakpoint;
+    final isMobile = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
 
     return Dialog(
       child: Container(
         width: isMobile ? double.infinity : 500,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -67,9 +62,7 @@ class _BookingInlineEditDialogState
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 gradient: GradientTokens.brandPrimary,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(4),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
               ),
               child: Row(
                 children: [
@@ -102,11 +95,7 @@ class _BookingInlineEditDialogState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Guest name (read-only)
-                    _buildInfoRow(
-                      'Guest',
-                      widget.booking.guestName ?? 'N/A',
-                      Icons.person,
-                    ),
+                    _buildInfoRow('Guest', widget.booking.guestName ?? 'N/A', Icons.person),
                     const SizedBox(height: 16),
 
                     // Check-in date
@@ -126,11 +115,7 @@ class _BookingInlineEditDialogState
                     const SizedBox(height: 16),
 
                     // Nights (calculated)
-                    _buildInfoRow(
-                      'Nights',
-                      '${_checkOut.difference(_checkIn).inDays}',
-                      Icons.nightlight_round,
-                    ),
+                    _buildInfoRow('Nights', '${_checkOut.difference(_checkIn).inDays}', Icons.nightlight_round),
                     const SizedBox(height: 16),
 
                     // Guest count
@@ -170,18 +155,13 @@ class _BookingInlineEditDialogState
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             ),
                             icon: _isSaving
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                   )
                                 : const Icon(Icons.save, color: Colors.white),
                             label: AutoSizeText(
@@ -194,14 +174,8 @@ class _BookingInlineEditDialogState
                         const SizedBox(height: 8),
                         // Cancel button (full width on mobile)
                         TextButton(
-                          onPressed: _isSaving
-                              ? null
-                              : () => Navigator.of(context).pop(),
-                          child: const AutoSizeText(
-                            'Cancel',
-                            maxLines: 1,
-                            minFontSize: 11,
-                          ),
+                          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                          child: const AutoSizeText('Cancel', maxLines: 1, minFontSize: 11),
                         ),
                       ],
                     )
@@ -210,14 +184,8 @@ class _BookingInlineEditDialogState
                       children: [
                         Flexible(
                           child: TextButton(
-                            onPressed: _isSaving
-                                ? null
-                                : () => Navigator.of(context).pop(),
-                            child: const AutoSizeText(
-                              'Cancel',
-                              maxLines: 1,
-                              minFontSize: 11,
-                            ),
+                            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                            child: const AutoSizeText('Cancel', maxLines: 1, minFontSize: 11),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -233,18 +201,13 @@ class _BookingInlineEditDialogState
                                 backgroundColor: Colors.transparent,
                                 foregroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
                               icon: _isSaving
                                   ? const SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                     )
                                   : const Icon(Icons.save, color: Colors.white),
                               label: AutoSizeText(
@@ -270,30 +233,14 @@ class _BookingInlineEditDialogState
       children: [
         Icon(icon, size: 20, color: theme.colorScheme.primary),
         const SizedBox(width: 8),
-        Text(
-          '$label:',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text('$label:', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(width: 8),
-        Expanded(
-          child: AutoSizeText(
-            value,
-            style: theme.textTheme.bodyMedium,
-            maxLines: 1,
-            minFontSize: 11,
-          ),
-        ),
+        Expanded(child: AutoSizeText(value, style: theme.textTheme.bodyMedium, maxLines: 1, minFontSize: 11)),
       ],
     );
   }
 
-  Widget _buildDateField({
-    required String label,
-    required DateTime date,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildDateField({required String label, required DateTime date, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -303,10 +250,7 @@ class _BookingInlineEditDialogState
           border: const OutlineInputBorder(),
           suffixIcon: const Icon(Icons.calendar_today),
         ),
-        child: Text(
-          '${date.day}/${date.month}/${date.year}',
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
+        child: Text('${date.day}/${date.month}/${date.year}', style: Theme.of(context).textTheme.bodyLarge),
       ),
     );
   }
@@ -316,39 +260,21 @@ class _BookingInlineEditDialogState
       children: [
         Expanded(
           child: InputDecorator(
-            decoration: const InputDecoration(
-              labelText: 'Number of Guests',
-              border: OutlineInputBorder(),
-            ),
-            child: Text(
-              '$_guestCount',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            decoration: const InputDecoration(labelText: 'Number of Guests', border: OutlineInputBorder()),
+            child: Text('$_guestCount', style: Theme.of(context).textTheme.bodyLarge),
           ),
         ),
         const SizedBox(width: 8),
         IconButton.filledTonal(
-          onPressed: _guestCount > 1
-              ? () => setState(() => _guestCount--)
-              : null,
-          icon: Icon(
-            Icons.remove,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          style: IconButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
+          onPressed: _guestCount > 1 ? () => setState(() => _guestCount--) : null,
+          icon: Icon(Icons.remove, color: Theme.of(context).colorScheme.onPrimary),
+          style: IconButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(width: 4),
         IconButton.filledTonal(
           onPressed: () => setState(() => _guestCount++),
-          icon: Icon(
-            Icons.add,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          style: IconButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
+          icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+          style: IconButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
         ),
       ],
     );
@@ -370,10 +296,7 @@ class _BookingInlineEditDialogState
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
-                  color: _getStatusColor(status),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: _getStatusColor(status), shape: BoxShape.circle),
               ),
               const SizedBox(width: 8),
               Text(status.displayName),
@@ -390,23 +313,21 @@ class _BookingInlineEditDialogState
   }
 
   Widget _buildNotesField() {
+    final l10n = AppLocalizations.of(context);
     return TextField(
       controller: _notesController,
-      decoration: const InputDecoration(
-        labelText: 'Internal Notes',
-        border: OutlineInputBorder(),
-        hintText: 'Add notes for this booking...',
-        prefixIcon: Icon(Icons.notes),
+      decoration: InputDecoration(
+        labelText: l10n.bookingEditInternalNotes,
+        border: const OutlineInputBorder(),
+        hintText: l10n.bookingEditNotesHint,
+        prefixIcon: const Icon(Icons.notes),
       ),
       maxLines: 3,
       textCapitalization: TextCapitalization.sentences,
     );
   }
 
-  Future<void> _selectDate(
-    BuildContext context, {
-    required bool isCheckIn,
-  }) async {
+  Future<void> _selectDate(BuildContext context, {required bool isCheckIn}) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: isCheckIn ? _checkIn : _checkOut,
@@ -456,10 +377,8 @@ class _BookingInlineEditDialogState
           // Show detailed error with conflicting booking info
           final conflict = conflicts.first;
           final conflictGuestName = conflict.guestName ?? 'Unknown';
-          final conflictCheckIn =
-              '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
-          final conflictCheckOut =
-              '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
+          final conflictCheckIn = '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
+          final conflictCheckOut = '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -484,9 +403,7 @@ class _BookingInlineEditDialogState
         checkOut: _checkOut,
         guestCount: _guestCount,
         status: _status,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         updatedAt: DateTime.now(),
       );
 
@@ -499,22 +416,16 @@ class _BookingInlineEditDialogState
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking updated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Booking updated successfully'), backgroundColor: Colors.green));
       }
     } catch (e) {
       setState(() => _isSaving = false);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update booking: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Failed to update booking: ${e.toString()}'), backgroundColor: Colors.red),
         );
       }
     }

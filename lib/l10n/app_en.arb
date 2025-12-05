@@ -2593,5 +2593,192 @@
   "ownerFaqSupport3Q": "Email notifications are not arriving",
   "ownerFaqSupport3A": "Check your spam folder. If they still don't arrive, go to Profile → Notification Settings and verify notifications are enabled. Add duskolicanin1234@gmail.com to your whitelist.",
   "ownerFaqSupport4Q": "How to contact support?",
-  "ownerFaqSupport4A": "Send an email to: duskolicanin1234@gmail.com with a detailed description of the problem. Include screenshots if possible. We respond within 24-48h."
+  "ownerFaqSupport4A": "Send an email to: duskolicanin1234@gmail.com with a detailed description of the problem. Include screenshots if possible. We respond within 24-48h.",
+
+  "emailVerificationTitle": "Email Verification",
+  "emailVerificationSubtitle": "Configure guest email verification settings",
+  "emailVerificationToggleTitle": "Require Email Verification",
+  "emailVerificationToggleSubtitle": "Guest must verify their email address before completing booking",
+  "emailVerificationInfoEnabled": "Verification button will be shown in Step 2 of the booking flow. Guests cannot proceed without verifying their email.",
+  "emailVerificationInfoDisabled": "Email verification is disabled. Guests can complete bookings without verifying their email address.",
+
+  "icalExportTitle": "iCal Export",
+  "icalExportEnabled": "Enabled",
+  "icalExportDisabled": "Disabled",
+  "icalExportToggleTitle": "Enable iCal Export",
+  "icalExportToggleSubtitle": "Generate public iCal URL for external calendar sync",
+  "icalExportInfo": "Export Information",
+  "icalExportUrl": "Export URL",
+  "icalExportLastGenerated": "Last generated: {time}",
+  "@icalExportLastGenerated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "icalExportInfoMessage": "iCal export will be auto-generated when bookings change. Use the generated URL to sync with external calendars.",
+  "icalExportJustNow": "Just now",
+  "icalExportMinutesAgo": "{minutes}m ago",
+  "@icalExportMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportHoursAgo": "{hours}h ago",
+  "@icalExportHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportDaysAgo": "{days}d ago",
+  "@icalExportDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportTestButton": "Test iCal Export",
+  "icalExportLoading": "Loading...",
+  "icalExportFailedToLoad": "Failed to load unit data",
+
+  "taxLegalTitle": "Tax & Legal Disclaimer",
+  "taxLegalEnabled": "Enabled",
+  "taxLegalDisabled": "Disabled",
+  "taxLegalToggleTitle": "Enable Tax/Legal Disclaimer",
+  "taxLegalToggleSubtitle": "Show disclaimer to guests during booking",
+  "taxLegalTextSource": "Disclaimer Text Source",
+  "taxLegalDefaultTitle": "Use Default Croatian Text",
+  "taxLegalDefaultSubtitle": "Standard legal text for Croatian properties",
+  "taxLegalCustomTitle": "Use Custom Text",
+  "taxLegalCustomSubtitle": "Provide your own legal text",
+  "taxLegalCustomLabel": "Custom Disclaimer Text",
+  "taxLegalCustomHint": "Enter your custom legal text...",
+  "taxLegalPreviewButton": "Preview Disclaimer",
+
+  "bookingActionUnknownGuest": "Unknown guest",
+  "bookingActionEditTitle": "Edit booking",
+  "bookingActionEditSubtitle": "Change booking details",
+  "bookingActionStatusTitle": "Change status",
+  "bookingActionStatusSubtitle": "Confirmed, Pending, Cancelled...",
+  "bookingActionDeleteTitle": "Delete booking",
+  "bookingActionDeleteSubtitle": "Permanently remove booking",
+  "bookingActionMoveTitle": "Move booking to:",
+  "bookingActionNoOtherUnits": "No other available units",
+  "bookingActionGuestsRooms": "{guests} guests • {rooms} bedrooms",
+  "@bookingActionGuestsRooms": {
+    "placeholders": {
+      "guests": {
+        "type": "int"
+      },
+      "rooms": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingActionMoving": "Moving booking...",
+  "bookingActionMovedTo": "Booking moved to {unitName}",
+  "@bookingActionMovedTo": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingActionError": "Error: {error}",
+  "@bookingActionError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "futureBookingsTitle": "Upcoming bookings - {unitName}",
+  "@futureBookingsTitle": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsClose": "Close",
+  "futureBookingsCount": "{count} bookings",
+  "@futureBookingsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "futureBookingsEmpty": "No upcoming bookings",
+  "futureBookingsEmptySubtitle": "All future bookings for {unitName} will be shown here",
+  "@futureBookingsEmptySubtitle": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsUnknownGuest": "Unknown Guest",
+  "futureBookingsCheckIn": "Check-in: {date}",
+  "@futureBookingsCheckIn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsCheckOut": "Check-out: {date}",
+  "@futureBookingsCheckOut": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsGuestsNights": "{guests} guest(s) • {nights} night(s)",
+  "@futureBookingsGuestsNights": {
+    "placeholders": {
+      "guests": {
+        "type": "int"
+      },
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
+
+  "calendarErrorTitle": "Oops! Something went wrong",
+  "calendarErrorDefault": "An error occurred while loading data",
+  "calendarErrorCompact": "Error loading",
+  "calendarErrorRetry": "Try again",
+  "calendarErrorHelp": "Help",
+  "calendarErrorBannerTitle": "Error",
+  "calendarErrorClose": "Close",
+
+  "calendarFiltersSearchGuest": "Search guest",
+  "calendarFiltersGuestLabel": "Guest name or email",
+  "calendarFiltersGuestHint": "Enter name or email...",
+  "calendarFiltersSearchBookingId": "Search by booking ID",
+  "calendarFiltersBookingIdLabel": "Booking ID",
+  "calendarFiltersBookingIdHint": "Enter booking ID...",
+  "calendarFiltersClearDate": "Clear date",
+
+  "bookingEditInternalNotes": "Internal Notes",
+  "bookingEditNotesHint": "Add notes for this booking...",
+
+  "priceCalendarHintExample": "e.g. {value}",
+  "@priceCalendarHintExample": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }

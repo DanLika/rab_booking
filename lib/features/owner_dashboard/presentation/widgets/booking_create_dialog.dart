@@ -351,10 +351,10 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       // Total Price Input (manual entry only)
                       TextFormField(
                         controller: _totalPriceController,
-                        decoration: InputDecoration(
+                        decoration: InputDecorationHelper.buildDecoration(
                           labelText: AppLocalizations.of(context).bookingCreateTotalPrice,
-                          border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.euro),
+                          context: context,
                         ),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (value) {
@@ -410,11 +410,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                       TextFormField(
                         controller: _notesController,
-                        decoration: InputDecoration(
+                        decoration: InputDecorationHelper.buildDecoration(
                           labelText: AppLocalizations.of(context).bookingCreateInternalNotes,
-                          border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.notes),
                           hintText: AppLocalizations.of(context).bookingCreateNotesHint,
+                          context: context,
                         ),
                         maxLines: 3,
                         textCapitalization: TextCapitalization.sentences,

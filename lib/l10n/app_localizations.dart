@@ -11363,6 +11363,714 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete'**
   String get bookingCompleteDialogConfirm;
+
+  /// No description provided for @ownerFaqGeneral1Q.
+  ///
+  /// In en, this message translates to:
+  /// **'What is this platform?'**
+  String get ownerFaqGeneral1Q;
+
+  /// No description provided for @ownerFaqGeneral1A.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a multi-tenant booking platform that allows apartment owners to manage reservations, receive payments, and embed a booking widget on their website. The platform supports Stripe payments, iCal synchronization with Booking.com/Airbnb, and multiple languages.'**
+  String get ownerFaqGeneral1A;
+
+  /// No description provided for @ownerFaqGeneral2Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Is there a mobile app?'**
+  String get ownerFaqGeneral2Q;
+
+  /// No description provided for @ownerFaqGeneral2A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes! The Owner app is available for Android and iOS. You can manage reservations, view the calendar, approve/cancel bookings, and receive notifications on your phone.'**
+  String get ownerFaqGeneral2A;
+
+  /// No description provided for @ownerFaqGeneral3Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How much does it cost?'**
+  String get ownerFaqGeneral3Q;
+
+  /// No description provided for @ownerFaqGeneral3A.
+  ///
+  /// In en, this message translates to:
+  /// **'The platform currently has a trial version. Three subscriptions are planned: Trial (1 property), Premium (5 properties), and Enterprise (unlimited). Stripe commission (1.4% + €0.25) is charged separately.'**
+  String get ownerFaqGeneral3A;
+
+  /// No description provided for @ownerFaqBookings1Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How does the booking flow work?'**
+  String get ownerFaqBookings1Q;
+
+  /// No description provided for @ownerFaqBookings1A.
+  ///
+  /// In en, this message translates to:
+  /// **'There are three modes: (1) Calendar Only - guests only see availability and call you, (2) Booking Pending - guests create a reservation that awaits your confirmation, (3) Booking Instant - guests can book and pay immediately. You choose the mode in Widget Settings.'**
+  String get ownerFaqBookings1A;
+
+  /// No description provided for @ownerFaqBookings2Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How to approve a reservation?'**
+  String get ownerFaqBookings2Q;
+
+  /// No description provided for @ownerFaqBookings2A.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Bookings → Pending reservations → Click on the reservation → \"Approve\". An email will automatically be sent to the guest with confirmation.'**
+  String get ownerFaqBookings2A;
+
+  /// No description provided for @ownerFaqBookings3Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I cancel a reservation?'**
+  String get ownerFaqBookings3Q;
+
+  /// No description provided for @ownerFaqBookings3A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes. Click on the reservation → \"Cancel\" → Enter reason → Confirm. The guest will be notified by email. For Stripe payment refunds, contact support.'**
+  String get ownerFaqBookings3A;
+
+  /// No description provided for @ownerFaqBookings4Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How to prevent overbooking?'**
+  String get ownerFaqBookings4Q;
+
+  /// No description provided for @ownerFaqBookings4A.
+  ///
+  /// In en, this message translates to:
+  /// **'Use iCal synchronization to import reservations from Booking.com, Airbnb and other platforms. All reservations will be displayed in the calendar as occupied days.'**
+  String get ownerFaqBookings4A;
+
+  /// No description provided for @ownerFaqBookings5Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How to manually block dates?'**
+  String get ownerFaqBookings5Q;
+
+  /// No description provided for @ownerFaqBookings5A.
+  ///
+  /// In en, this message translates to:
+  /// **'In the calendar, click on a date or date range → \"Block\" → Enter reason (optional). Blocked days will be shown as unavailable in the widget.'**
+  String get ownerFaqBookings5A;
+
+  /// No description provided for @ownerFaqPayments1Q.
+  ///
+  /// In en, this message translates to:
+  /// **'What payment methods do you support?'**
+  String get ownerFaqPayments1Q;
+
+  /// No description provided for @ownerFaqPayments1A.
+  ///
+  /// In en, this message translates to:
+  /// **'We support: (1) Stripe card payments (instant), (2) Bank transfer (manual confirmation), (3) Pay on arrival. You can enable/disable each method in Widget Settings.'**
+  String get ownerFaqPayments1A;
+
+  /// No description provided for @ownerFaqPayments2Q.
+  ///
+  /// In en, this message translates to:
+  /// **'What deposit can I require?'**
+  String get ownerFaqPayments2Q;
+
+  /// No description provided for @ownerFaqPayments2A.
+  ///
+  /// In en, this message translates to:
+  /// **'You can set a deposit from 0% to 100% of the total price. The default is 20%. The remaining amount is paid by the guest on arrival. Set it in Widget Settings.'**
+  String get ownerFaqPayments2A;
+
+  /// No description provided for @ownerFaqPayments3Q.
+  ///
+  /// In en, this message translates to:
+  /// **'When do Stripe payouts arrive?'**
+  String get ownerFaqPayments3Q;
+
+  /// No description provided for @ownerFaqPayments3A.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe automatically transfers funds to your bank account every 7 days. After the first month, you can switch to daily payouts in the Stripe dashboard.'**
+  String get ownerFaqPayments3A;
+
+  /// No description provided for @ownerFaqPayments4Q.
+  ///
+  /// In en, this message translates to:
+  /// **'What if a guest requests a refund?'**
+  String get ownerFaqPayments4Q;
+
+  /// No description provided for @ownerFaqPayments4A.
+  ///
+  /// In en, this message translates to:
+  /// **'For bank transfers, you process the refund manually. For Stripe payments, contact support or create a refund directly in the Stripe dashboard.'**
+  String get ownerFaqPayments4A;
+
+  /// No description provided for @ownerFaqWidget1Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How to add the widget to my site?'**
+  String get ownerFaqWidget1Q;
+
+  /// No description provided for @ownerFaqWidget1A.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Unit Form → \"Generate Embed Code\" → Copy the iframe code → Paste into your site\'s HTML. Detailed instructions are in the \"Embed Widget\" section of the guides.'**
+  String get ownerFaqWidget1A;
+
+  /// No description provided for @ownerFaqWidget2Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I customize the widget appearance?'**
+  String get ownerFaqWidget2Q;
+
+  /// No description provided for @ownerFaqWidget2A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes! In Widget Settings you can: change the primary color, upload a logo, customize the custom message, and enable/disable \"Powered by\" branding.'**
+  String get ownerFaqWidget2A;
+
+  /// No description provided for @ownerFaqWidget3Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Does the widget work on mobile devices?'**
+  String get ownerFaqWidget3Q;
+
+  /// No description provided for @ownerFaqWidget3A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, the widget is fully responsive and adapts to all screen sizes. Use the responsive embed code for best results.'**
+  String get ownerFaqWidget3A;
+
+  /// No description provided for @ownerFaqWidget4Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I have multiple widgets on one page?'**
+  String get ownerFaqWidget4Q;
+
+  /// No description provided for @ownerFaqWidget4A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, you can embed multiple widgets (for different apartments) on the same page. Each widget will have its unique unit ID in the URL.'**
+  String get ownerFaqWidget4A;
+
+  /// No description provided for @ownerFaqWidget5Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Does the widget support multiple languages?'**
+  String get ownerFaqWidget5Q;
+
+  /// No description provided for @ownerFaqWidget5A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes! The widget supports Croatian, English, German and Italian. Add &language=en (or hr, de, it) to the URL or enable the language selector.'**
+  String get ownerFaqWidget5A;
+
+  /// No description provided for @ownerFaqIcal1Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How to connect Booking.com calendar?'**
+  String get ownerFaqIcal1Q;
+
+  /// No description provided for @ownerFaqIcal1A.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to Booking.com Extranet → Calendar → Reservations export → Copy the iCal URL → Add to our app under iCal Synchronization. More details in the \"iCal Sync\" guide.'**
+  String get ownerFaqIcal1A;
+
+  /// No description provided for @ownerFaqIcal2Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How often does it sync?'**
+  String get ownerFaqIcal2Q;
+
+  /// No description provided for @ownerFaqIcal2A.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic sync runs every hour. You can manually trigger a sync anytime by clicking the \"Sync Now\" button.'**
+  String get ownerFaqIcal2A;
+
+  /// No description provided for @ownerFaqIcal3Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Will guests see guest names from other platforms?'**
+  String get ownerFaqIcal3Q;
+
+  /// No description provided for @ownerFaqIcal3A.
+  ///
+  /// In en, this message translates to:
+  /// **'No. The iCal protocol only transfers reservation dates (check-in/check-out), not personal data. Reservations will be displayed as \"Platform Guest\" in your calendar.'**
+  String get ownerFaqIcal3A;
+
+  /// No description provided for @ownerFaqIcal4Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I sync with multiple platforms simultaneously?'**
+  String get ownerFaqIcal4Q;
+
+  /// No description provided for @ownerFaqIcal4A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes! You can add iCal feeds from Booking.com, Airbnb or any other platform that supports iCal format for the same apartment. All reservations will be displayed.'**
+  String get ownerFaqIcal4A;
+
+  /// No description provided for @ownerFaqSupport1Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget is not loading on my site'**
+  String get ownerFaqSupport1Q;
+
+  /// No description provided for @ownerFaqSupport1A.
+  ///
+  /// In en, this message translates to:
+  /// **'Check: (1) Did you paste the complete iframe code, (2) Is the unit ID correct, (3) Browser console for errors (F12). If the problem persists, contact support.'**
+  String get ownerFaqSupport1A;
+
+  /// No description provided for @ownerFaqSupport2Q.
+  ///
+  /// In en, this message translates to:
+  /// **'I forgot my password'**
+  String get ownerFaqSupport2Q;
+
+  /// No description provided for @ownerFaqSupport2A.
+  ///
+  /// In en, this message translates to:
+  /// **'On the login screen click \"Forgot Password\" → Enter email → Check your inbox (and spam folder) for the reset link.'**
+  String get ownerFaqSupport2A;
+
+  /// No description provided for @ownerFaqSupport3Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Email notifications are not arriving'**
+  String get ownerFaqSupport3Q;
+
+  /// No description provided for @ownerFaqSupport3A.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your spam folder. If they still don\'t arrive, go to Profile → Notification Settings and verify notifications are enabled. Add duskolicanin1234@gmail.com to your whitelist.'**
+  String get ownerFaqSupport3A;
+
+  /// No description provided for @ownerFaqSupport4Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How to contact support?'**
+  String get ownerFaqSupport4Q;
+
+  /// No description provided for @ownerFaqSupport4A.
+  ///
+  /// In en, this message translates to:
+  /// **'Send an email to: duskolicanin1234@gmail.com with a detailed description of the problem. Include screenshots if possible. We respond within 24-48h.'**
+  String get ownerFaqSupport4A;
+
+  /// No description provided for @emailVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Verification'**
+  String get emailVerificationTitle;
+
+  /// No description provided for @emailVerificationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure guest email verification settings'**
+  String get emailVerificationSubtitle;
+
+  /// No description provided for @emailVerificationToggleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Require Email Verification'**
+  String get emailVerificationToggleTitle;
+
+  /// No description provided for @emailVerificationToggleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest must verify their email address before completing booking'**
+  String get emailVerificationToggleSubtitle;
+
+  /// No description provided for @emailVerificationInfoEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification button will be shown in Step 2 of the booking flow. Guests cannot proceed without verifying their email.'**
+  String get emailVerificationInfoEnabled;
+
+  /// No description provided for @emailVerificationInfoDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verification is disabled. Guests can complete bookings without verifying their email address.'**
+  String get emailVerificationInfoDisabled;
+
+  /// No description provided for @icalExportEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get icalExportEnabled;
+
+  /// No description provided for @icalExportDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get icalExportDisabled;
+
+  /// No description provided for @icalExportToggleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable iCal Export'**
+  String get icalExportToggleTitle;
+
+  /// No description provided for @icalExportToggleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate public iCal URL for external calendar sync'**
+  String get icalExportToggleSubtitle;
+
+  /// No description provided for @icalExportInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Information'**
+  String get icalExportInfo;
+
+  /// No description provided for @icalExportInfoMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'iCal export will be auto-generated when bookings change. Use the generated URL to sync with external calendars.'**
+  String get icalExportInfoMessage;
+
+  /// No description provided for @icalExportDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String icalExportDaysAgo(int days);
+
+  /// No description provided for @icalExportTestButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Test iCal Export'**
+  String get icalExportTestButton;
+
+  /// No description provided for @icalExportLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get icalExportLoading;
+
+  /// No description provided for @icalExportFailedToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load unit data'**
+  String get icalExportFailedToLoad;
+
+  /// No description provided for @taxLegalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax & Legal Disclaimer'**
+  String get taxLegalTitle;
+
+  /// No description provided for @taxLegalEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get taxLegalEnabled;
+
+  /// No description provided for @taxLegalDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get taxLegalDisabled;
+
+  /// No description provided for @taxLegalToggleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Tax/Legal Disclaimer'**
+  String get taxLegalToggleTitle;
+
+  /// No description provided for @taxLegalToggleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show disclaimer to guests during booking'**
+  String get taxLegalToggleSubtitle;
+
+  /// No description provided for @taxLegalTextSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Disclaimer Text Source'**
+  String get taxLegalTextSource;
+
+  /// No description provided for @taxLegalDefaultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Default Croatian Text'**
+  String get taxLegalDefaultTitle;
+
+  /// No description provided for @taxLegalDefaultSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard legal text for Croatian properties'**
+  String get taxLegalDefaultSubtitle;
+
+  /// No description provided for @taxLegalCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Custom Text'**
+  String get taxLegalCustomTitle;
+
+  /// No description provided for @taxLegalCustomSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provide your own legal text'**
+  String get taxLegalCustomSubtitle;
+
+  /// No description provided for @taxLegalCustomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Disclaimer Text'**
+  String get taxLegalCustomLabel;
+
+  /// No description provided for @taxLegalCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your custom legal text...'**
+  String get taxLegalCustomHint;
+
+  /// No description provided for @taxLegalPreviewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Disclaimer'**
+  String get taxLegalPreviewButton;
+
+  /// No description provided for @bookingActionUnknownGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown guest'**
+  String get bookingActionUnknownGuest;
+
+  /// No description provided for @bookingActionEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit booking'**
+  String get bookingActionEditTitle;
+
+  /// No description provided for @bookingActionEditSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change booking details'**
+  String get bookingActionEditSubtitle;
+
+  /// No description provided for @bookingActionStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change status'**
+  String get bookingActionStatusTitle;
+
+  /// No description provided for @bookingActionStatusSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed, Pending, Cancelled...'**
+  String get bookingActionStatusSubtitle;
+
+  /// No description provided for @bookingActionDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete booking'**
+  String get bookingActionDeleteTitle;
+
+  /// No description provided for @bookingActionDeleteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently remove booking'**
+  String get bookingActionDeleteSubtitle;
+
+  /// No description provided for @bookingActionMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move booking to:'**
+  String get bookingActionMoveTitle;
+
+  /// No description provided for @bookingActionNoOtherUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'No other available units'**
+  String get bookingActionNoOtherUnits;
+
+  /// No description provided for @bookingActionGuestsRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'{guests} guests • {rooms} bedrooms'**
+  String bookingActionGuestsRooms(int guests, int rooms);
+
+  /// No description provided for @bookingActionMoving.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving booking...'**
+  String get bookingActionMoving;
+
+  /// No description provided for @bookingActionMovedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking moved to {unitName}'**
+  String bookingActionMovedTo(String unitName);
+
+  /// No description provided for @bookingActionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String bookingActionError(String error);
+
+  /// No description provided for @futureBookingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming bookings - {unitName}'**
+  String futureBookingsTitle(String unitName);
+
+  /// No description provided for @futureBookingsClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get futureBookingsClose;
+
+  /// No description provided for @futureBookingsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} bookings'**
+  String futureBookingsCount(int count);
+
+  /// No description provided for @futureBookingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming bookings'**
+  String get futureBookingsEmpty;
+
+  /// No description provided for @futureBookingsEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All future bookings for {unitName} will be shown here'**
+  String futureBookingsEmptySubtitle(String unitName);
+
+  /// No description provided for @futureBookingsUnknownGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Guest'**
+  String get futureBookingsUnknownGuest;
+
+  /// No description provided for @futureBookingsCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in: {date}'**
+  String futureBookingsCheckIn(String date);
+
+  /// No description provided for @futureBookingsCheckOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-out: {date}'**
+  String futureBookingsCheckOut(String date);
+
+  /// No description provided for @futureBookingsGuestsNights.
+  ///
+  /// In en, this message translates to:
+  /// **'{guests} guest(s) • {nights} night(s)'**
+  String futureBookingsGuestsNights(int guests, int nights);
+
+  /// No description provided for @calendarErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Oops! Something went wrong'**
+  String get calendarErrorTitle;
+
+  /// No description provided for @calendarErrorDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while loading data'**
+  String get calendarErrorDefault;
+
+  /// No description provided for @calendarErrorCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading'**
+  String get calendarErrorCompact;
+
+  /// No description provided for @calendarErrorRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get calendarErrorRetry;
+
+  /// No description provided for @calendarErrorHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get calendarErrorHelp;
+
+  /// No description provided for @calendarErrorBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get calendarErrorBannerTitle;
+
+  /// No description provided for @calendarErrorClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get calendarErrorClose;
+
+  /// No description provided for @calendarFiltersSearchGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Search guest'**
+  String get calendarFiltersSearchGuest;
+
+  /// No description provided for @calendarFiltersGuestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest name or email'**
+  String get calendarFiltersGuestLabel;
+
+  /// No description provided for @calendarFiltersGuestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter name or email...'**
+  String get calendarFiltersGuestHint;
+
+  /// No description provided for @calendarFiltersSearchBookingId.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by booking ID'**
+  String get calendarFiltersSearchBookingId;
+
+  /// No description provided for @calendarFiltersBookingIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking ID'**
+  String get calendarFiltersBookingIdLabel;
+
+  /// No description provided for @calendarFiltersBookingIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter booking ID...'**
+  String get calendarFiltersBookingIdHint;
+
+  /// No description provided for @calendarFiltersClearDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date'**
+  String get calendarFiltersClearDate;
+
+  /// No description provided for @bookingEditInternalNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal Notes'**
+  String get bookingEditInternalNotes;
+
+  /// No description provided for @bookingEditNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add notes for this booking...'**
+  String get bookingEditNotesHint;
+
+  /// No description provided for @priceCalendarHintExample.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. {value}'**
+  String priceCalendarHintExample(String value);
 }
 
 class _AppLocalizationsDelegate

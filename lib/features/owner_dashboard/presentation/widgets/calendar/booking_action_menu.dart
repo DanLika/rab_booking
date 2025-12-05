@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
@@ -11,14 +12,12 @@ import '../../providers/owner_calendar_provider.dart';
 class BookingActionBottomSheet extends ConsumerWidget {
   final BookingModel booking;
 
-  const BookingActionBottomSheet({
-    super.key,
-    required this.booking,
-  });
+  const BookingActionBottomSheet({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -47,17 +46,13 @@ class BookingActionBottomSheet extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    booking.guestName ?? 'Nepoznati gost',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    booking.guestName ?? l10n.bookingActionUnknownGuest,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${_formatDate(booking.checkIn)} - ${_formatDate(booking.checkOut)}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.textTheme.bodySmall?.color,
-                    ),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodySmall?.color),
                   ),
                 ],
               ),
@@ -73,16 +68,10 @@ class BookingActionBottomSheet extends ConsumerWidget {
                   color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.edit,
-                  color: AppColors.primary,
-                ),
+                child: const Icon(Icons.edit, color: AppColors.primary),
               ),
-              title: const Text(
-                'Uredi rezervaciju',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: const Text('Promijeni detalje rezervacije'),
+              title: Text(l10n.bookingActionEditTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(l10n.bookingActionEditSubtitle),
               onTap: () {
                 Navigator.pop(context, 'edit');
               },
@@ -96,16 +85,10 @@ class BookingActionBottomSheet extends ConsumerWidget {
                   color: AppColors.info.withAlpha((0.1 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.sync_alt,
-                  color: AppColors.info,
-                ),
+                child: const Icon(Icons.sync_alt, color: AppColors.info),
               ),
-              title: const Text(
-                'Promijeni status',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: const Text('Confirmed, Pending, Cancelled...'),
+              title: Text(l10n.bookingActionStatusTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(l10n.bookingActionStatusSubtitle),
               onTap: () {
                 Navigator.pop(context, 'status');
               },
@@ -119,16 +102,10 @@ class BookingActionBottomSheet extends ConsumerWidget {
                   color: AppColors.error.withAlpha((0.1 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.delete_outline,
-                  color: AppColors.error,
-                ),
+                child: const Icon(Icons.delete_outline, color: AppColors.error),
               ),
-              title: const Text(
-                'Obriši rezervaciju',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: const Text('Trajno ukloni rezervaciju'),
+              title: Text(l10n.bookingActionDeleteTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(l10n.bookingActionDeleteSubtitle),
               onTap: () {
                 Navigator.pop(context, 'delete');
               },
@@ -151,10 +128,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
 class BookingMoveToUnitMenu extends ConsumerStatefulWidget {
   final BookingModel booking;
 
-  const BookingMoveToUnitMenu({
-    super.key,
-    required this.booking,
-  });
+  const BookingMoveToUnitMenu({super.key, required this.booking});
 
   @override
   ConsumerState<BookingMoveToUnitMenu> createState() => _BookingMoveToUnitMenuState();
@@ -166,6 +140,7 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final unitsAsync = ref.watch(allOwnerUnitsProvider);
 
     return Container(
@@ -195,17 +170,13 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Prebaci rezervaciju u:',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    l10n.bookingActionMoveTitle,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    widget.booking.guestName ?? 'Nepoznati gost',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.textTheme.bodySmall?.color,
-                    ),
+                    widget.booking.guestName ?? l10n.bookingActionUnknownGuest,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodySmall?.color),
                   ),
                 ],
               ),
@@ -220,16 +191,11 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                 final otherUnits = units.where((u) => u.id != widget.booking.unitId).toList();
 
                 if (otherUnits.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text('Nema drugih dostupnih jedinica'),
-                  );
+                  return Padding(padding: const EdgeInsets.all(24), child: Text(l10n.bookingActionNoOtherUnits));
                 }
 
                 return ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.5,
-                  ),
+                  constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
                   child: ListView.builder(
                     shrinkWrap: true,
                     itemCount: otherUnits.length,
@@ -242,25 +208,16 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                             color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(
-                            _getUnitIcon(unit),
-                            color: AppColors.primary,
-                            size: 20,
-                          ),
+                          child: Icon(_getUnitIcon(unit), color: AppColors.primary, size: 20),
                         ),
-                        title: Text(
-                          unit.name,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(
-                          '${unit.maxGuests} gostiju • ${unit.bedrooms} spavaće sobe',
-                        ),
+                        title: Text(unit.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(l10n.bookingActionGuestsRooms(unit.maxGuests, unit.bedrooms)),
                         enabled: !_isProcessing,
                         onTap: _isProcessing
                             ? null
                             : () async {
                                 Navigator.pop(context);
-                                await _moveBookingToUnit(context, unit);
+                                await _moveBookingToUnit(context, unit, l10n);
                               },
                       );
                     },
@@ -271,10 +228,8 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                 padding: EdgeInsets.all(24),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (error, stack) => Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text('Greška: $error'),
-              ),
+              error: (error, stack) =>
+                  Padding(padding: const EdgeInsets.all(24), child: Text(l10n.bookingActionError(error.toString()))),
             ),
 
             const SizedBox(height: 16),
@@ -290,10 +245,7 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
     return Icons.hotel;
   }
 
-  Future<void> _moveBookingToUnit(
-    BuildContext context,
-    UnitModel targetUnit,
-  ) async {
+  Future<void> _moveBookingToUnit(BuildContext context, UnitModel targetUnit, AppLocalizations l10n) async {
     if (_isProcessing) return; // Prevent double-tap
 
     setState(() => _isProcessing = true);
@@ -302,22 +254,19 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
       // Show loading
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 16,
                 height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(Colors.white),
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
               ),
-              SizedBox(width: 12),
-              Text('Prebacivanje rezervacije...'),
+              const SizedBox(width: 12),
+              Text(l10n.bookingActionMoving),
             ],
           ),
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -333,20 +282,14 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Rezervacija prebačena u ${targetUnit.name}'),
-          backgroundColor: AppColors.success,
-        ),
+        SnackBar(content: Text(l10n.bookingActionMovedTo(targetUnit.name)), backgroundColor: AppColors.success),
       );
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Greška: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.bookingActionError(e.toString())), backgroundColor: AppColors.error));
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);

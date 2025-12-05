@@ -2593,5 +2593,192 @@
   "ownerFaqSupport3Q": "Email notifikacije ne stižu",
   "ownerFaqSupport3A": "Provjerite spam folder. Ako još uvijek ne stižu, idite na Profile → Notification Settings i provjerite da su notifikacije omogućene. Dodajte duskolicanin1234@gmail.com u whitelist.",
   "ownerFaqSupport4Q": "Kako kontaktirati podršku?",
-  "ownerFaqSupport4A": "Pošaljite email na: duskolicanin1234@gmail.com sa detaljnim opisom problema. Uključite screenshots ako je moguće. Odgovaramo unutar 24-48h."
+  "ownerFaqSupport4A": "Pošaljite email na: duskolicanin1234@gmail.com sa detaljnim opisom problema. Uključite screenshots ako je moguće. Odgovaramo unutar 24-48h.",
+
+  "emailVerificationTitle": "Verifikacija emaila",
+  "emailVerificationSubtitle": "Konfigurirajte postavke verifikacije emaila gosta",
+  "emailVerificationToggleTitle": "Zahtijevaj verifikaciju emaila",
+  "emailVerificationToggleSubtitle": "Gost mora verificirati svoju email adresu prije završetka rezervacije",
+  "emailVerificationInfoEnabled": "Gumb za verifikaciju će biti prikazan u Koraku 2 procesa rezervacije. Gosti ne mogu nastaviti bez verifikacije emaila.",
+  "emailVerificationInfoDisabled": "Verifikacija emaila je onemogućena. Gosti mogu završiti rezervacije bez verifikacije email adrese.",
+
+  "icalExportTitle": "iCal Izvoz",
+  "icalExportEnabled": "Omogućeno",
+  "icalExportDisabled": "Onemogućeno",
+  "icalExportToggleTitle": "Omogući iCal izvoz",
+  "icalExportToggleSubtitle": "Generiraj javni iCal URL za sinkronizaciju s vanjskim kalendarima",
+  "icalExportInfo": "Informacije o izvozu",
+  "icalExportUrl": "URL za izvoz",
+  "icalExportLastGenerated": "Zadnje generirano: {time}",
+  "@icalExportLastGenerated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "icalExportInfoMessage": "iCal izvoz će se automatski generirati kada se rezervacije promijene. Koristite generirani URL za sinkronizaciju s vanjskim kalendarima.",
+  "icalExportJustNow": "Upravo sada",
+  "icalExportMinutesAgo": "Prije {minutes}m",
+  "@icalExportMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportHoursAgo": "Prije {hours}h",
+  "@icalExportHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportDaysAgo": "Prije {days}d",
+  "@icalExportDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportTestButton": "Testiraj iCal izvoz",
+  "icalExportLoading": "Učitavanje...",
+  "icalExportFailedToLoad": "Nije moguće učitati podatke o jedinici",
+
+  "taxLegalTitle": "Porezna i pravna izjava",
+  "taxLegalEnabled": "Omogućeno",
+  "taxLegalDisabled": "Onemogućeno",
+  "taxLegalToggleTitle": "Omogući poreznu/pravnu izjavu",
+  "taxLegalToggleSubtitle": "Prikaži izjavu gostima tijekom rezervacije",
+  "taxLegalTextSource": "Izvor teksta izjave",
+  "taxLegalDefaultTitle": "Koristi zadani hrvatski tekst",
+  "taxLegalDefaultSubtitle": "Standardni pravni tekst za hrvatske nekretnine",
+  "taxLegalCustomTitle": "Koristi prilagođeni tekst",
+  "taxLegalCustomSubtitle": "Unesite vlastiti pravni tekst",
+  "taxLegalCustomLabel": "Prilagođeni tekst izjave",
+  "taxLegalCustomHint": "Unesite svoj prilagođeni pravni tekst...",
+  "taxLegalPreviewButton": "Pregledaj izjavu",
+
+  "bookingActionUnknownGuest": "Nepoznati gost",
+  "bookingActionEditTitle": "Uredi rezervaciju",
+  "bookingActionEditSubtitle": "Promijeni detalje rezervacije",
+  "bookingActionStatusTitle": "Promijeni status",
+  "bookingActionStatusSubtitle": "Confirmed, Pending, Cancelled...",
+  "bookingActionDeleteTitle": "Obriši rezervaciju",
+  "bookingActionDeleteSubtitle": "Trajno ukloni rezervaciju",
+  "bookingActionMoveTitle": "Prebaci rezervaciju u:",
+  "bookingActionNoOtherUnits": "Nema drugih dostupnih jedinica",
+  "bookingActionGuestsRooms": "{guests} gostiju • {rooms} spavaće sobe",
+  "@bookingActionGuestsRooms": {
+    "placeholders": {
+      "guests": {
+        "type": "int"
+      },
+      "rooms": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingActionMoving": "Prebacivanje rezervacije...",
+  "bookingActionMovedTo": "Rezervacija prebačena u {unitName}",
+  "@bookingActionMovedTo": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingActionError": "Greška: {error}",
+  "@bookingActionError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "futureBookingsTitle": "Nadolazeće rezervacije - {unitName}",
+  "@futureBookingsTitle": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsClose": "Zatvori",
+  "futureBookingsCount": "{count} rezervacija",
+  "@futureBookingsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "futureBookingsEmpty": "Nema nadolazećih rezervacija",
+  "futureBookingsEmptySubtitle": "Sve buduće rezervacije za {unitName} će se prikazati ovdje",
+  "@futureBookingsEmptySubtitle": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsUnknownGuest": "Nepoznati gost",
+  "futureBookingsCheckIn": "Check-in: {date}",
+  "@futureBookingsCheckIn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsCheckOut": "Check-out: {date}",
+  "@futureBookingsCheckOut": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsGuestsNights": "{guests} gost(a) • {nights} noć(i)",
+  "@futureBookingsGuestsNights": {
+    "placeholders": {
+      "guests": {
+        "type": "int"
+      },
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
+
+  "calendarErrorTitle": "Ups! Nešto je pošlo po krivu",
+  "calendarErrorDefault": "Došlo je do greške pri učitavanju podataka",
+  "calendarErrorCompact": "Greška pri učitavanju",
+  "calendarErrorRetry": "Pokušaj ponovo",
+  "calendarErrorHelp": "Pomoć",
+  "calendarErrorBannerTitle": "Greška",
+  "calendarErrorClose": "Zatvori",
+
+  "calendarFiltersSearchGuest": "Pretraži gosta",
+  "calendarFiltersGuestLabel": "Ime ili email gosta",
+  "calendarFiltersGuestHint": "Unesite ime ili email...",
+  "calendarFiltersSearchBookingId": "Pretraži po ID-u rezervacije",
+  "calendarFiltersBookingIdLabel": "ID rezervacije",
+  "calendarFiltersBookingIdHint": "Unesite ID rezervacije...",
+  "calendarFiltersClearDate": "Očisti datum",
+
+  "bookingEditInternalNotes": "Interne bilješke",
+  "bookingEditNotesHint": "Dodajte bilješke za ovu rezervaciju...",
+
+  "priceCalendarHintExample": "npr. {value}",
+  "@priceCalendarHintExample": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }

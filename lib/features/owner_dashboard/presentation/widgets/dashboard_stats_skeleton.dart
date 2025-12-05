@@ -28,12 +28,7 @@ class DashboardStatsSkeleton extends StatelessWidget {
     );
   }
 
-  Widget _buildSkeletonCard(
-    BuildContext context,
-    int animationDelay,
-    bool isMobile,
-    bool isTablet,
-  ) {
+  Widget _buildSkeletonCard(BuildContext context, int animationDelay, bool isMobile, bool isTablet) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -56,7 +51,8 @@ class DashboardStatsSkeleton extends StatelessWidget {
     final cardHeight = isMobile ? 160.0 : 180.0;
 
     // Grey background for skeleton (theme-aware)
-    final bgColor = isDark ? Colors.grey[800]! : Colors.grey[200]!;
+    // FIXED: Lighter color for better visibility in dark mode
+    final bgColor = isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!;
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 600 + animationDelay),
@@ -65,10 +61,7 @@ class DashboardStatsSkeleton extends StatelessWidget {
       builder: (context, value, child) {
         return Opacity(
           opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 20 * (1 - value)),
-            child: child,
-          ),
+          child: Transform.translate(offset: Offset(0, 20 * (1 - value)), child: child),
         );
       },
       child: Container(
@@ -79,11 +72,7 @@ class DashboardStatsSkeleton extends StatelessWidget {
           color: bgColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withAlpha((0.08 * 255).toInt()),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
+            BoxShadow(color: Colors.grey.withAlpha((0.08 * 255).toInt()), blurRadius: 24, offset: const Offset(0, 8)),
           ],
         ),
         padding: EdgeInsets.all(isMobile ? 14 : 18),
@@ -101,18 +90,12 @@ class DashboardStatsSkeleton extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Title bar
-            SkeletonLoader(
-              width: cardWidth * 0.7,
-              height: 14,
-            ),
+            SkeletonLoader(width: cardWidth * 0.7, height: 14),
 
             const SizedBox(height: 8),
 
             // Value bar (larger, bold visual)
-            SkeletonLoader(
-              width: cardWidth * 0.5,
-              height: 20,
-            ),
+            SkeletonLoader(width: cardWidth * 0.5, height: 20),
           ],
         ),
       ),

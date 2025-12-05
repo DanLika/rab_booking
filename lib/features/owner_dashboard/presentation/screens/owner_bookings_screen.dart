@@ -198,14 +198,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 orElse: () {
                   // Initial loading
                   if (viewMode == BookingsViewMode.table) {
-                    // Table view: Show spinner instead of skeleton
-                    // Reason: Table skeleton with 10 columns causes overflow on small screens
-                    return SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                        ),
+                    // Table view: Show responsive table skeleton
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+                        child: SkeletonLoader.bookingsTable(rowCount: 5),
                       ),
                     );
                   } else {

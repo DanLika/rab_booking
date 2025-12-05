@@ -712,17 +712,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ),
               )
             else
-              ...units.map((unit) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: _buildUnitListTile(
-                  theme,
-                  isDark,
-                  unit: unit,
-                  propertyName: property.name,
-                  isSelected: _selectedUnit?.id == unit.id,
-                  onUnitSelected: onUnitSelected,
-                ),
-              )),
+              _buildReorderableUnitList(
+                theme,
+                isDark,
+                units: units,
+                property: property,
+                onUnitSelected: onUnitSelected,
+              ),
           ],
         ),
       ),
@@ -880,14 +876,114 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     }
   }
 
-  /// Unit list tile - single unit in master panel
-  Widget _buildUnitListTile(
+  /// Reorderable unit list with drag and drop
+  Widget _buildReorderableUnitList(
+    ThemeData theme,
+    bool isDark, {
+    required List<UnitModel> units,
+    required PropertyModel property,
+    VoidCallback? onUnitSelected,
+  }) {
+    // Sort units by sortOrder
+    final sortedUnits = List<UnitModel>.from(units)
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    // Calculate height: each unit tile is approximately 110px + 8px margin
+    final listHeight = sortedUnits.length * 118.0;
+
+    return SizedBox(
+      height: listHeight,
+      child: ReorderableListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        buildDefaultDragHandles: false,
+        itemCount: sortedUnits.length,
+        onReorder: (oldIndex, newIndex) => _handleUnitReorder(
+          sortedUnits,
+          oldIndex,
+          newIndex,
+        ),
+        proxyDecorator: (child, index, animation) {
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) {
+              final elevation = Tween<double>(begin: 0, end: 8).animate(animation).value;
+              return Material(
+                elevation: elevation,
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                child: child,
+              );
+            },
+            child: child,
+          );
+        },
+        itemBuilder: (context, index) {
+          final unit = sortedUnits[index];
+          return Padding(
+            key: ValueKey(unit.id),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: _buildDraggableUnitListTile(
+              theme,
+              isDark,
+              unit: unit,
+              propertyName: property.name,
+              isSelected: _selectedUnit?.id == unit.id,
+              onUnitSelected: onUnitSelected,
+              dragIndex: index,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Handle unit reorder
+  Future<void> _handleUnitReorder(
+    List<UnitModel> units,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    // Adjust newIndex for removal
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+
+    // Create reordered list
+    final reorderedUnits = List<UnitModel>.from(units);
+    final movedUnit = reorderedUnits.removeAt(oldIndex);
+    reorderedUnits.insert(newIndex, movedUnit);
+
+    // Update sort order for all units
+    final updatedUnits = <UnitModel>[];
+    for (int i = 0; i < reorderedUnits.length; i++) {
+      updatedUnits.add(reorderedUnits[i].copyWith(sortOrder: i));
+    }
+
+    // Save to Firestore
+    try {
+      await ref.read(unitRepositoryProvider).updateUnitsSortOrder(updatedUnits);
+      // Invalidate to refresh UI
+      ref.invalidate(ownerUnitsProvider);
+    } catch (e) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          'Greška pri spremanju redoslijeda: $e',
+        );
+      }
+    }
+  }
+
+  /// Draggable unit list tile with drag handle
+  Widget _buildDraggableUnitListTile(
     ThemeData theme,
     bool isDark, {
     required UnitModel unit,
     required String propertyName,
     required bool isSelected,
     VoidCallback? onUnitSelected,
+    required int dragIndex,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -903,144 +999,186 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
         boxShadow: AppShadows.getElevation(1, isDark: isDark),
       ),
-      child: InkWell(
-        onTap: () async {
-          // Fetch property details for selected unit
-          final property = await ref.read(
-            propertyByIdProvider(unit.propertyId).future,
-          );
-          if (mounted) {
-            setState(() {
-              _selectedUnit = unit;
-              _selectedProperty = property;
-            });
-            onUnitSelected?.call();
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Unit name + status
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      unit.name,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? (isDark ? Colors.white : theme.colorScheme.onPrimaryContainer)
-                            : theme.colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: unit.isAvailable
-                          ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
-                          : _kUnavailableColor.withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      unit.isAvailable ? 'Dostupan' : 'Nedostupan',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: isSelected
-                            ? Colors.white
-                            : (unit.isAvailable
-                                ? _kAvailableColor
-                                : _kUnavailableColor),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  // Delete button
-                  SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: IconButton(
-                      onPressed: () => _confirmDeleteUnit(context, unit),
-                      icon: Icon(
-                        Icons.delete_outline,
-                        size: 16,
-                        color: isSelected
-                            ? Colors.white.withValues(alpha: 0.7)
-                            : theme.colorScheme.error,
-                      ),
-                      tooltip: 'Obriši jedinicu',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ),
-                ],
+      child: Row(
+        children: [
+          // Drag handle
+          ReorderableDragStartListener(
+            index: dragIndex,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: Icon(
+                Icons.drag_indicator,
+                color: isSelected
+                    ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                    : theme.colorScheme.onSurfaceVariant,
+                size: 20,
               ),
-
-              const SizedBox(height: 4),
-
-              // Property name
-              Text(
-                propertyName,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isSelected
-                      ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                      : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          // Unit content
+          Expanded(
+            child: InkWell(
+              onTap: () async {
+                final property = await ref.read(
+                  propertyByIdProvider(unit.propertyId).future,
+                );
+                if (mounted) {
+                  setState(() {
+                    _selectedUnit = unit;
+                    _selectedProperty = property;
+                  });
+                  onUnitSelected?.call();
+                }
+              },
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(12),
+                bottomRight: Radius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 12, right: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Unit name + status + actions
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            unit.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isSelected
+                                  ? (isDark ? Colors.white : theme.colorScheme.onPrimaryContainer)
+                                  : theme.colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: unit.isAvailable
+                                ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
+                                : _kUnavailableColor.withAlpha((0.2 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            unit.isAvailable ? 'Dostupan' : 'Nedostupan',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: isSelected
+                                  ? Colors.white
+                                  : (unit.isAvailable
+                                      ? _kAvailableColor
+                                      : _kUnavailableColor),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        // Duplicate button
+                        SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: IconButton(
+                            onPressed: () {
+                              context.push(
+                                '${OwnerRoutes.unitWizard}?propertyId=${unit.propertyId}&duplicateFromId=${unit.id}',
+                              );
+                            },
+                            icon: Icon(
+                              Icons.copy_outlined,
+                              size: 16,
+                              color: isSelected
+                                  ? Colors.white.withValues(alpha: 0.7)
+                                  : theme.colorScheme.primary,
+                            ),
+                            tooltip: 'Kopiraj jedinicu',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        // Delete button
+                        SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: IconButton(
+                            onPressed: () => _confirmDeleteUnit(context, unit),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              size: 16,
+                              color: isSelected
+                                  ? Colors.white.withValues(alpha: 0.7)
+                                  : theme.colorScheme.error,
+                            ),
+                            tooltip: 'Obriši jedinicu',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    // Property name
+                    Text(
+                      propertyName,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isSelected
+                            ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Max guests + price
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 16,
+                          color: isSelected
+                              ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${unit.maxGuests}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isSelected
+                                ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Icon(
+                          Icons.euro_outlined,
+                          size: 16,
+                          color: isSelected
+                              ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${unit.pricePerNight.toStringAsFixed(0)}/noć',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isSelected
+                                ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                                : theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 8),
-
-              // Max guests + price
-              Row(
-                children: [
-                  Icon(
-                    Icons.people_outline,
-                    size: 16,
-                    color: isSelected
-                        ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${unit.maxGuests}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isSelected
-                          ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.euro_outlined,
-                    size: 16,
-                    color: isSelected
-                        ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${unit.pricePerNight.toStringAsFixed(0)}/noć',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isSelected
-                          ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -548,7 +548,11 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.unitWizard,
         builder: (context, state) {
           final propertyId = state.uri.queryParameters['propertyId'];
-          return UnitWizardScreen(propertyId: propertyId);
+          final duplicateFromId = state.uri.queryParameters['duplicateFromId'];
+          return UnitWizardScreen(
+            propertyId: propertyId,
+            duplicateFromId: duplicateFromId,
+          );
         },
       ),
       GoRoute(

@@ -176,9 +176,20 @@ class EmbedUrlParams {
       // Invalid preset, ignore
     }
 
+    // Sanitize IDs - remove any path segments (e.g., /calendar suffix)
+    String? sanitizeId(String? id) {
+      if (id == null) return null;
+      // Remove any path segments after the ID
+      final slashIndex = id.indexOf('/');
+      if (slashIndex > 0) {
+        return id.substring(0, slashIndex);
+      }
+      return id;
+    }
+
     return EmbedUrlParams(
-      propertyId: params['propertyId'] ?? params['property'],
-      unitId: params['unitId'] ?? params['unit'],
+      propertyId: sanitizeId(params['propertyId'] ?? params['property']),
+      unitId: sanitizeId(params['unitId'] ?? params['unit']),
       primaryColor: _parseColor(params['primaryColor']),
       accentColor: _parseColor(params['accentColor']),
       backgroundColor: _parseColor(params['backgroundColor']),

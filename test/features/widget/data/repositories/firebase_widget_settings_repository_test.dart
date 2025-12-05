@@ -12,6 +12,7 @@ void main() {
 
     const testPropertyId = 'property123';
     const testUnitId = 'unit123';
+    const testOwnerId = 'owner123';
 
     setUp(() {
       fakeFirestore = FakeFirebaseFirestore();
@@ -105,6 +106,7 @@ void main() {
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: testUnitId,
+          ownerId: testOwnerId,
           ownerEmail: 'owner@test.com',
           ownerPhone: '+385911234567',
         );
@@ -130,6 +132,7 @@ void main() {
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: testUnitId,
+          ownerId: testOwnerId,
         );
 
         // Get and update settings
@@ -162,6 +165,7 @@ void main() {
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: testUnitId,
+          ownerId: testOwnerId,
         );
 
         // Update mode
@@ -188,6 +192,7 @@ void main() {
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: testUnitId,
+          ownerId: testOwnerId,
         );
 
         await repository.updateContactOptions(
@@ -217,6 +222,7 @@ void main() {
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: testUnitId,
+          ownerId: testOwnerId,
         );
 
         // Verify exists
@@ -255,6 +261,7 @@ void main() {
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: testUnitId,
+          ownerId: testOwnerId,
         );
 
         final exists = await repository.settingsExist(
@@ -277,14 +284,17 @@ void main() {
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: 'unit1',
+          ownerId: testOwnerId,
         );
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: 'unit2',
+          ownerId: testOwnerId,
         );
         await repository.createDefaultSettings(
           propertyId: testPropertyId,
           unitId: 'unit3',
+          ownerId: testOwnerId,
         );
 
         final settings = await repository.getAllPropertySettings(testPropertyId);

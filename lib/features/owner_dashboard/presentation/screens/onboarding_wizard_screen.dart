@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../domain/models/onboarding_state.dart';
 import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_property_step.dart';
@@ -176,7 +177,8 @@ class OnboardingWizardScreen extends ConsumerWidget {
 
       // Create unit if provided (Step 2)
       if (state.unitData != null) {
-        await notifier.createUnit(propertyId);
+        final ownerId = ref.read(enhancedAuthProvider).firebaseUser?.uid ?? '';
+        await notifier.createUnit(propertyId, ownerId);
       }
 
       // Complete onboarding

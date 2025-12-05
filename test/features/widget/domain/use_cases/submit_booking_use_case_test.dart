@@ -41,6 +41,7 @@ void main() {
   final testUnit = UnitModel(
     id: 'unit-1',
     propertyId: 'property-1',
+    ownerId: 'owner-1',
     name: 'Test Villa',
     maxGuests: 4,
     pricePerNight: 100.0,

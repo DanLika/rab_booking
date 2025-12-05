@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -78,7 +79,12 @@ class _WidgetAdvancedSettingsScreenState
     setState(() => _isSaving = true);
 
     try {
+      // Get current user ID for owner_id migration (legacy docs may not have it)
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
       final updatedSettings = currentSettings.copyWith(
+        // Ensure owner_id is set for legacy document migration
+        ownerId: currentSettings.ownerId ?? currentUserId,
         emailConfig: currentSettings.emailConfig.copyWith(
           requireEmailVerification: _requireEmailVerification,
         ),

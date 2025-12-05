@@ -21,10 +21,34 @@ service cloud.firestore {
       return isAuthenticated() && resource.data.owner_id == request.auth.uid;
     }
 
+    // Helper function for legacy documents that may not have owner_id yet
+    // Allows update if: owner_id matches OR owner_id doesn't exist/is null (legacy)
+    // IMPORTANT: For legacy docs, we rely on the update including owner_id to migrate them
+    function isResourceOwnerOrLegacy() {
+      return isAuthenticated() && (
+        resource.data.owner_id == request.auth.uid ||
+        !('owner_id' in resource.data) ||
+        resource.data.owner_id == null ||
+        resource.data.owner_id == ''
+      );
+    }
+
     // Helper function to check if user is creating resource as themselves (for create)
     // CRITICAL SECURITY: Ensures owner_id in new document matches authenticated user
     function canCreateAsOwner() {
       return isAuthenticated() && request.resource.data.owner_id == request.auth.uid;
+    }
+
+    // Helper function for legacy create operations (owner_id optional for migration)
+    // Allows create if: owner_id matches OR owner_id is not provided (legacy)
+    // IMPORTANT: This is for backward compatibility during migration
+    function canCreateAsOwnerOrLegacy() {
+      return isAuthenticated() && (
+        !('owner_id' in request.resource.data) ||
+        request.resource.data.owner_id == null ||
+        request.resource.data.owner_id == '' ||
+        request.resource.data.owner_id == request.auth.uid
+      );
     }
 
     // Helper function to check if user owns the document by userId param
@@ -69,8 +93,9 @@ service cloud.firestore {
     match /{path=**}/widget_settings/{unitId} {
       allow read: if true; // Widget needs to read settings
       // CRITICAL SECURITY: Only resource owner can modify their own widget_settings
+      // Uses isResourceOwnerOrLegacy to support legacy docs without owner_id
       allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow update, delete: if isResourceOwnerOrLegacy();
     }
 
     // Properties - owners can CRUD, anyone can read (for widget)
@@ -88,10 +113,11 @@ service cloud.firestore {
       }
 
       // Widget settings subcollection - public read, owner write
+      // Uses isResourceOwnerOrLegacy to support legacy docs without owner_id
       match /widget_settings/{unitId} {
         allow read: if true; // Widget needs to read settings
         allow create: if canCreateAsOwner();
-        allow update, delete: if isResourceOwner();
+        allow update, delete: if isResourceOwnerOrLegacy();
       }
     }
 
@@ -144,11 +170,13 @@ service cloud.firestore {
     }
 
     // Daily prices - owners manage, anyone can read
+    // Uses legacy functions to support docs without owner_id during migration
     match /daily_prices/{priceId} {
       allow read: if true; // Widget needs to read prices
       // CRITICAL SECURITY: Only resource owner can modify their own prices
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      // Legacy support: allows create/update without owner_id for backward compatibility
+      allow create: if canCreateAsOwnerOrLegacy();
+      allow update, delete: if isResourceOwnerOrLegacy();
     }
 
     // Additional services - owners manage, anyone can read

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -835,8 +836,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
         );
       } else {
         // Create new unit
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser == null) {
+          throw Exception('User not authenticated');
+        }
         await repository.createUnit(
           propertyId: widget.propertyId,
+          ownerId: currentUser.uid,
           name: _nameController.text,
           slug: _slugController.text,
           description: _descriptionController.text.isEmpty

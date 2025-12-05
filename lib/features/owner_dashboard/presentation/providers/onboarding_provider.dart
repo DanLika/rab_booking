@@ -145,7 +145,7 @@ class OnboardingNotifier extends _$OnboardingNotifier {
   }
 
   /// Create unit in Firebase (from Step 2 data)
-  Future<String?> createUnit(String propertyId) async {
+  Future<String?> createUnit(String propertyId, String ownerId) async {
     if (state.unitData == null) {
       return null; // Optional step
     }
@@ -156,6 +156,7 @@ class OnboardingNotifier extends _$OnboardingNotifier {
     final unit = UnitModel(
       id: '', // Will be set by repository
       propertyId: propertyId,
+      ownerId: ownerId,
       name: data.name,
       maxGuests: data.maxGuests,
       bedrooms: data.numBeds ?? 1,

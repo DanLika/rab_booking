@@ -27,6 +27,7 @@ export 'settings/settings.dart'
 class WidgetSettings {
   final String id; // unitId
   final String propertyId;
+  final String? ownerId; // Required for Firestore security rules
 
   // Display Mode
   final WidgetMode widgetMode;
@@ -73,6 +74,7 @@ class WidgetSettings {
   const WidgetSettings({
     required this.id,
     required this.propertyId,
+    this.ownerId,
     this.widgetMode = WidgetMode.bookingInstant,
     this.globalDepositPercentage = 20, // Default 20% deposit
     this.stripeConfig,
@@ -122,6 +124,7 @@ class WidgetSettings {
     return WidgetSettings(
       id: doc.id,
       propertyId: safeCastString(data['property_id']) ?? '',
+      ownerId: safeCastString(data['owner_id']),
       widgetMode: WidgetMode.fromString(
         safeCastString(data['widget_mode']) ?? 'booking_instant',
       ),
@@ -172,6 +175,7 @@ class WidgetSettings {
   Map<String, dynamic> toFirestore() {
     return {
       'property_id': propertyId,
+      'owner_id': ownerId,
       'widget_mode': widgetMode.toStringValue(),
       'global_deposit_percentage': globalDepositPercentage,
       'stripe_config': stripeConfig?.toMap(),
@@ -267,6 +271,7 @@ class WidgetSettings {
   WidgetSettings copyWith({
     String? id,
     String? propertyId,
+    String? ownerId,
     WidgetMode? widgetMode,
     int? globalDepositPercentage,
     StripePaymentConfig? stripeConfig,
@@ -292,6 +297,7 @@ class WidgetSettings {
     return WidgetSettings(
       id: id ?? this.id,
       propertyId: propertyId ?? this.propertyId,
+      ownerId: ownerId ?? this.ownerId,
       widgetMode: widgetMode ?? this.widgetMode,
       globalDepositPercentage:
           globalDepositPercentage ?? this.globalDepositPercentage,

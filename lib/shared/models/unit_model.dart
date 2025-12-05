@@ -14,6 +14,9 @@ class UnitModel with _$UnitModel {
     /// Parent property ID
     @JsonKey(name: 'property_id') required String propertyId,
 
+    /// Owner user ID (required for Firestore security rules)
+    @JsonKey(name: 'owner_id') required String ownerId,
+
     /// Unit name/title (e.g., "Apartment A1", "Studio 2")
     required String name,
 
@@ -58,6 +61,9 @@ class UnitModel with _$UnitModel {
 
     /// Maximum stay in nights (null = unlimited)
     @JsonKey(name: 'max_stay_nights') int? maxStayNights,
+
+    /// Sort order for display (lower = first, null = end of list)
+    @JsonKey(name: 'sort_order') @Default(0) int sortOrder,
 
     /// Unit creation timestamp
     @JsonKey(name: 'created_at')

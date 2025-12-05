@@ -206,4 +206,26 @@ class FirebaseUnitRepository implements UnitRepository {
 
     return units;
   }
+
+  @override
+  Future<void> updateUnitsSortOrder(List<UnitModel> units) async {
+    // Use batch write to update all units atomically
+    final batch = _firestore.batch();
+
+    for (int i = 0; i < units.length; i++) {
+      final unit = units[i];
+      final docRef = _firestore
+          .collection('properties')
+          .doc(unit.propertyId)
+          .collection('units')
+          .doc(unit.id);
+
+      batch.update(docRef, {
+        'sort_order': i,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+  }
 }

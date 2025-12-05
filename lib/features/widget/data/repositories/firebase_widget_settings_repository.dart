@@ -58,6 +58,7 @@ class FirebaseWidgetSettingsRepository {
   Future<void> createDefaultSettings({
     required String propertyId,
     required String unitId,
+    required String ownerId,
     String? ownerEmail,
     String? ownerPhone,
   }) async {
@@ -65,6 +66,7 @@ class FirebaseWidgetSettingsRepository {
       final settings = WidgetSettings(
         id: unitId,
         propertyId: propertyId,
+        ownerId: ownerId, // Required for Firestore security rules
         widgetMode: WidgetMode
             .calendarOnly, // Default to calendar only (show availability + contact)
         contactOptions: ContactOptions(

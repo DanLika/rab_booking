@@ -24,14 +24,17 @@ import 'steps/step_5_review.dart';
 /// - Skip optional step (Photos)
 /// - Responsive design (mobile + desktop)
 /// - Pre-select property when creating from property context
+/// - Duplicate existing unit with pre-filled data
 class UnitWizardScreen extends ConsumerStatefulWidget {
   final String? unitId; // null = new unit, non-null = edit existing
   final String? propertyId; // Pre-select property when creating new unit
+  final String? duplicateFromId; // ID of unit to duplicate (pre-fill data)
 
   const UnitWizardScreen({
     super.key,
     this.unitId,
     this.propertyId,
+    this.duplicateFromId,
   });
 
   @override
@@ -44,14 +47,52 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-populate propertyId if provided (when creating from property context)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeWizard();
+    });
+  }
+
+  /// Initialize wizard with appropriate data
+  Future<void> _initializeWizard() async {
+    final notifier = ref.read(unitWizardNotifierProvider(widget.unitId).notifier);
+
+    // Case 1: Duplicate existing unit
+    if (widget.duplicateFromId != null && widget.unitId == null) {
+      await _loadDuplicateData(notifier);
+      return;
+    }
+
+    // Case 2: Create new unit with pre-selected property
     if (widget.propertyId != null && widget.unitId == null) {
-      // Schedule after first build to ensure provider is ready
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(unitWizardNotifierProvider(widget.unitId).notifier)
-            .updateField('propertyId', widget.propertyId);
-      });
+      notifier.updateField('propertyId', widget.propertyId);
+    }
+  }
+
+  /// Load data from existing unit for duplication
+  Future<void> _loadDuplicateData(UnitWizardNotifier notifier) async {
+    try {
+      final unitRepository = ref.read(unitRepositoryProvider);
+      final sourceUnit = await unitRepository.fetchUnitById(widget.duplicateFromId!);
+
+      if (sourceUnit != null) {
+        // Pre-fill all fields from source unit (except id and name)
+        notifier.updateField('propertyId', sourceUnit.propertyId);
+        notifier.updateField('name', '${sourceUnit.name} (kopija)');
+        notifier.updateField('description', sourceUnit.description);
+        notifier.updateField('pricePerNight', sourceUnit.pricePerNight);
+        notifier.updateField('weekendBasePrice', sourceUnit.weekendBasePrice);
+        notifier.updateField('weekendDays', sourceUnit.weekendDays);
+        notifier.updateField('maxGuests', sourceUnit.maxGuests);
+        notifier.updateField('bedrooms', sourceUnit.bedrooms);
+        notifier.updateField('bathrooms', sourceUnit.bathrooms);
+        notifier.updateField('areaSqm', sourceUnit.areaSqm);
+        notifier.updateField('minStayNights', sourceUnit.minStayNights);
+        notifier.updateField('maxStayNights', sourceUnit.maxStayNights);
+        // Note: Images are not copied - owner should upload new ones
+      }
+    } catch (e) {
+      // If loading fails, continue with empty wizard
+      debugPrint('Failed to load unit for duplication: $e');
     }
   }
 
@@ -227,20 +268,29 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         );
       }
 
-      // Get propertyId - use draft's propertyId or fetch owner's first property
+      // Get propertyId and ownerId - use draft's propertyId or fetch owner's first property
       String propertyId;
+      String ownerId;
+      final properties = await ref.read(ownerPropertiesProvider.future);
+      if (properties.isEmpty) {
+        throw PropertyException(
+          'No properties found. Please create a property first.',
+          code: 'property/no-properties',
+        );
+      }
+
       if (draft.propertyId != null && draft.propertyId!.isNotEmpty) {
         propertyId = draft.propertyId!;
+        // Find property to get ownerId
+        final property = properties.firstWhere(
+          (p) => p.id == propertyId,
+          orElse: () => properties.first,
+        );
+        ownerId = property.ownerId;
       } else {
-        // Fetch owner's properties and use the first one
-        final properties = await ref.read(ownerPropertiesProvider.future);
-        if (properties.isEmpty) {
-          throw PropertyException(
-            'No properties found. Please create a property first.',
-            code: 'property/no-properties',
-          );
-        }
+        // Use the first property
         propertyId = properties.first.id;
+        ownerId = properties.first.ownerId;
       }
 
       // Generate slug from name if not set
@@ -254,6 +304,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       final unit = UnitModel(
         id: widget.unitId ?? '',
         propertyId: propertyId,
+        ownerId: ownerId,
         name: draft.name!,
         slug: slug,
         description: draft.description,
@@ -284,6 +335,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
             .createDefaultSettings(
               propertyId: propertyId,
               unitId: savedUnit.id,
+              ownerId: ownerId,
             );
       }
 

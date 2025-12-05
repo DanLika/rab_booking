@@ -397,6 +397,7 @@ class FirebaseOwnerPropertiesRepository {
   /// Create unit (in property subcollection)
   Future<UnitModel> createUnit({
     required String propertyId,
+    required String ownerId,
     required String name,
     String? slug,
     String? description,
@@ -418,6 +419,7 @@ class FirebaseOwnerPropertiesRepository {
           .collection('units')
           .add({
         'property_id': propertyId, // Keep for reference
+        'owner_id': ownerId, // Required for Firestore security rules
         'name': name,
         'slug': slug,
         'description': description,
@@ -444,6 +446,7 @@ class FirebaseOwnerPropertiesRepository {
         await _widgetSettingsRepository.createDefaultSettings(
           propertyId: propertyId,
           unitId: unitId,
+          ownerId: ownerId,
         );
         LoggingService.log('Widget settings auto-created for unit: $unitId', tag: 'OwnerPropertiesRepository');
       } catch (e) {

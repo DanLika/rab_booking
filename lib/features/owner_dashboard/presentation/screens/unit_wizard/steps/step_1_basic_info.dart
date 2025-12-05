@@ -22,7 +22,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
   final _descriptionController = TextEditingController();
 
   bool _isManualSlugEdit = false;
-  bool _isInitialized = false;
+  String? _lastLoadedName; // Track last loaded name to detect duplicate data arriving
 
   @override
   void initState() {
@@ -46,7 +46,13 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
   }
 
   void _loadData(dynamic draft) {
-    if (_isInitialized) return;
+    final draftName = draft.name ?? '';
+
+    // Skip if controllers already have this data (no change)
+    // This allows duplicate data to load when it arrives after initial empty state
+    if (_lastLoadedName == draftName && _nameController.text == draftName) {
+      return;
+    }
 
     // Remove listeners temporarily to avoid triggering provider updates during build
     _nameController.removeListener(_onNameChanged);
@@ -54,11 +60,11 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
     _descriptionController.removeListener(_onDescriptionChanged);
 
     // Set initial values
-    _nameController.text = draft.name ?? '';
+    _nameController.text = draftName;
     _slugController.text = draft.slug ?? '';
     _descriptionController.text = draft.description ?? '';
     _isManualSlugEdit = draft.slug != null && draft.slug!.isNotEmpty;
-    _isInitialized = true;
+    _lastLoadedName = draftName;
 
     // Re-attach listeners after setting initial values
     _nameController.addListener(_onNameChanged);

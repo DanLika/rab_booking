@@ -407,9 +407,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     try {
       final repository = ref.read(widgetSettingsRepositoryProvider);
 
+      // Get current user ID for owner_id (required for Firestore security rules)
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
       final settings = WidgetSettings(
         id: widget.unitId,
         propertyId: widget.propertyId,
+        // Ensure owner_id is set for legacy document migration
+        ownerId: _existingSettings?.ownerId ?? currentUserId,
         widgetMode: _selectedMode,
         globalDepositPercentage: _globalDepositPercentage,
         stripeConfig: _stripeEnabled

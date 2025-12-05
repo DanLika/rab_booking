@@ -44,4 +44,7 @@ abstract class UnitRepository {
     int? minGuests,
     bool? availableOnly,
   });
+
+  /// Update sort order for multiple units (for drag-and-drop reordering)
+  Future<void> updateUnitsSortOrder(List<UnitModel> units);
 }

@@ -14,8 +14,9 @@ class UnitModel with _$UnitModel {
     /// Parent property ID
     @JsonKey(name: 'property_id') required String propertyId,
 
-    /// Owner user ID (required for Firestore security rules)
-    @JsonKey(name: 'owner_id') required String ownerId,
+    /// Owner user ID (for Firestore security rules)
+    /// Made nullable for backwards compatibility with legacy units
+    @JsonKey(name: 'owner_id') String? ownerId,
 
     /// Unit name/title (e.g., "Apartment A1", "Studio 2")
     required String name,

@@ -281,17 +281,18 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
 
       if (draft.propertyId != null && draft.propertyId!.isNotEmpty) {
         propertyId = draft.propertyId!;
-        // Find property to get ownerId
-        final property = properties.firstWhere(
-          (p) => p.id == propertyId,
-          orElse: () => properties.first,
-        );
-        ownerId = property.ownerId;
       } else {
         // Use the first property
         propertyId = properties.first.id;
-        ownerId = properties.first.ownerId;
       }
+
+      // ownerId is optional - security rules check parent property's owner_id
+      // We still set it for backwards compatibility from parent property
+      final property = properties.firstWhere(
+        (p) => p.id == propertyId,
+        orElse: () => properties.first,
+      );
+      ownerId = property.ownerId ?? '';
 
       // Generate slug from name if not set
       final slug = draft.slug ??

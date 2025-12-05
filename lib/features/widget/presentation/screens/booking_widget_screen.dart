@@ -73,6 +73,20 @@ class BookingWidgetScreen extends ConsumerStatefulWidget {
 
 class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // ============================================
+  // URL SANITIZATION HELPER
+  // ============================================
+  /// Sanitize ID from URL - removes any path segments (e.g., /calendar suffix)
+  /// This prevents Firestore "invalid document reference" errors
+  static String? _sanitizeId(String? id) {
+    if (id == null || id.isEmpty) return id;
+    final slashIndex = id.indexOf('/');
+    if (slashIndex > 0) {
+      return id.substring(0, slashIndex);
+    }
+    return id;
+  }
+
+  // ============================================
   // UNIT & PROPERTY DATA
   // ============================================
   late String _unitId;
@@ -154,8 +168,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     super.initState();
     // Parse property and unit IDs from URL
     final uri = Uri.base;
-    _propertyId = uri.queryParameters['property'];
-    _unitId = uri.queryParameters['unit'] ?? '';
+    _propertyId = _sanitizeId(uri.queryParameters['property']);
+    _unitId = _sanitizeId(uri.queryParameters['unit']) ?? '';
 
     // Bug #53: Add listeners to text controllers for auto-save (debounced)
     _firstNameController.addListener(_saveFormDataDebounced);
@@ -1041,6 +1055,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       resizeToAvoidBottomInset: true, // Bug #46: Resize when keyboard appears
       backgroundColor: minimalistColors.backgroundPrimary,
       body: SafeArea(
+        bottom: false, // No bottom padding - widget embedded in iframe, host handles safe area
         child: LayoutBuilder(
           builder: (context, constraints) {
             final screenWidth = constraints.maxWidth;
@@ -1078,7 +1093,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             // Add contact pill card height for calendar-only mode
             if (widgetMode == WidgetMode.calendarOnly) {
               reservedHeight +=
-                  180; // Contact pill card height (header + subtitle + pill + spacing)
+                  70; // Contact pill card height (~50px content + 8px spacing + buffer)
             }
 
             // Calendar gets remaining height (ensure minimum of 400px)

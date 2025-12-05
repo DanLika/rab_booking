@@ -18,12 +18,12 @@ final unitAdditionalServicesProvider = FutureProvider.family<List<AdditionalServ
 
   // Get property to find owner
   final property = await propertyRepo.fetchPropertyById(unit.propertyId);
-  if (property == null) {
+  if (property == null || property.ownerId == null || property.ownerId!.isEmpty) {
     return [];
   }
 
   // Get all services for this owner (includes soft delete check + sort order)
-  final allServices = await serviceRepo.fetchByOwner(property.ownerId);
+  final allServices = await serviceRepo.fetchByOwner(property.ownerId!);
 
   // Filter to only show available services (client-side filter)
   final services = allServices.where((s) => s.isAvailable).toList();

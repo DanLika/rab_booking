@@ -11,7 +11,7 @@ _$UnitModelImpl _$$UnitModelImplFromJson(
 ) => _$UnitModelImpl(
   id: json['id'] as String,
   propertyId: json['property_id'] as String,
-  ownerId: json['owner_id'] as String,
+  ownerId: json['owner_id'] as String?,
   name: json['name'] as String,
   slug: json['slug'] as String?,
   description: json['description'] as String?,

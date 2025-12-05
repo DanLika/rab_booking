@@ -94,10 +94,12 @@ class _TimelineCalendarWidgetState
   late ScrollController _verticalScrollController;
   late ScrollController _headerScrollController;
   late ScrollController _summaryScrollController;
+  late ScrollController _unitNamesScrollController;
   late TransformationController _transformationController;
 
   // Scroll sync listener reference for cleanup
   late VoidCallback _scrollSyncListener;
+  late VoidCallback _verticalScrollSyncListener;
 
   // Scroll sync state to prevent circular updates
   bool _isSyncingScroll = false;
@@ -184,6 +186,7 @@ class _TimelineCalendarWidgetState
     _verticalScrollController = ScrollController();
     _headerScrollController = ScrollController();
     _summaryScrollController = ScrollController();
+    _unitNamesScrollController = ScrollController();
     _transformationController = TransformationController();
 
     // Initialize visible range to show initial scroll date (or today if not provided)
@@ -230,6 +233,32 @@ class _TimelineCalendarWidgetState
 
     // Add the single scroll sync listener
     _horizontalScrollController.addListener(_scrollSyncListener);
+
+    // Create vertical scroll sync listener for unit names column
+    _verticalScrollSyncListener = () {
+      if (_isSyncingScroll) return;
+
+      final mainOffset = _verticalScrollController.offset;
+
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        _isSyncingScroll = true;
+
+        try {
+          // Sync unit names scroll with main vertical scroll
+          if (_unitNamesScrollController.hasClients &&
+              (_unitNamesScrollController.offset - mainOffset).abs() > 0.5) {
+            _unitNamesScrollController.jumpTo(mainOffset);
+          }
+        } finally {
+          _isSyncingScroll = false;
+        }
+      });
+    };
+
+    // Add vertical scroll sync listener
+    _verticalScrollController.addListener(_verticalScrollSyncListener);
 
     // Add windowing listener to update visible range based on scroll position
     _horizontalScrollController.addListener(_updateVisibleRange);
@@ -325,6 +354,7 @@ class _TimelineCalendarWidgetState
     // Remove listeners before disposing controllers
     _horizontalScrollController.removeListener(_scrollSyncListener);
     _horizontalScrollController.removeListener(_updateVisibleRange);
+    _verticalScrollController.removeListener(_verticalScrollSyncListener);
     _transformationController.removeListener(_onTransformChanged);
 
     // Dispose all controllers
@@ -332,6 +362,7 @@ class _TimelineCalendarWidgetState
     _verticalScrollController.dispose();
     _headerScrollController.dispose();
     _summaryScrollController.dispose();
+    _unitNamesScrollController.dispose();
     _transformationController.dispose();
     super.dispose();
   }
@@ -753,26 +784,30 @@ class _TimelineCalendarWidgetState
     final unitColumnWidth = _getUnitColumnWidth(context);
     final baseRowHeight = _getUnitRowHeight(context);
 
-    return Container(
+    return SizedBox(
       width: unitColumnWidth,
-      color: Colors.transparent, // Transparent to show parent gradient
-      child: Column(
-        children: units.map((unit) {
-          // Calculate dynamic height for this unit based on booking stacks
-          final bookings = bookingsByUnit[unit.id] ?? [];
-          final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(
-            bookings,
-          );
-          final dynamicHeight = baseRowHeight * maxStackCount;
+      child: SingleChildScrollView(
+        controller: _unitNamesScrollController,
+        physics:
+            const NeverScrollableScrollPhysics(), // Disable manual scroll, sync only
+        child: Column(
+          children: units.map((unit) {
+            // Calculate dynamic height for this unit based on booking stacks
+            final bookings = bookingsByUnit[unit.id] ?? [];
+            final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(
+              bookings,
+            );
+            final dynamicHeight = baseRowHeight * maxStackCount;
 
-          return TimelineUnitNameCell(
-            unit: unit,
-            unitRowHeight: dynamicHeight,
-            onTap: widget.onUnitNameTap != null
-                ? () => widget.onUnitNameTap!(unit)
-                : null,
-          );
-        }).toList(),
+            return TimelineUnitNameCell(
+              unit: unit,
+              unitRowHeight: dynamicHeight,
+              onTap: widget.onUnitNameTap != null
+                  ? () => widget.onUnitNameTap!(unit)
+                  : null,
+            );
+          }).toList(),
+        ),
       ),
     );
   }

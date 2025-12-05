@@ -10,7 +10,7 @@ _$PropertyModelImpl _$$PropertyModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$PropertyModelImpl(
   id: json['id'] as String,
-  ownerId: json['owner_id'] as String,
+  ownerId: json['owner_id'] as String?,
   name: json['name'] as String,
   slug: json['slug'] as String?,
   subdomain: json['subdomain'] as String?,

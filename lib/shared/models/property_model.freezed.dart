@@ -24,9 +24,9 @@ mixin _$PropertyModel {
   /// Property ID (UUID)
   String get id => throw _privateConstructorUsedError;
 
-  /// Owner user ID
+  /// Owner user ID (nullable for backwards compatibility with legacy properties)
   @JsonKey(name: 'owner_id')
-  String get ownerId => throw _privateConstructorUsedError;
+  String? get ownerId => throw _privateConstructorUsedError;
 
   /// Property name/title
   String get name => throw _privateConstructorUsedError;
@@ -146,7 +146,7 @@ abstract class $PropertyModelCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    @JsonKey(name: 'owner_id') String ownerId,
+    @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
     String? subdomain,
@@ -198,7 +198,7 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
   @override
   $Res call({
     Object? id = null,
-    Object? ownerId = null,
+    Object? ownerId = freezed,
     Object? name = null,
     Object? slug = freezed,
     Object? subdomain = freezed,
@@ -233,10 +233,10 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                       as String,
-            ownerId: null == ownerId
+            ownerId: freezed == ownerId
                 ? _value.ownerId
                 : ownerId // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
             name: null == name
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
@@ -376,7 +376,7 @@ abstract class _$$PropertyModelImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
-    @JsonKey(name: 'owner_id') String ownerId,
+    @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
     String? subdomain,
@@ -428,7 +428,7 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? ownerId = null,
+    Object? ownerId = freezed,
     Object? name = null,
     Object? slug = freezed,
     Object? subdomain = freezed,
@@ -463,10 +463,10 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
                   as String,
-        ownerId: null == ownerId
+        ownerId: freezed == ownerId
             ? _value.ownerId
             : ownerId // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
         name: null == name
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
@@ -585,7 +585,7 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
 class _$PropertyModelImpl extends _PropertyModel {
   const _$PropertyModelImpl({
     required this.id,
-    @JsonKey(name: 'owner_id') required this.ownerId,
+    @JsonKey(name: 'owner_id') this.ownerId,
     required this.name,
     this.slug,
     this.subdomain,
@@ -625,10 +625,10 @@ class _$PropertyModelImpl extends _PropertyModel {
   @override
   final String id;
 
-  /// Owner user ID
+  /// Owner user ID (nullable for backwards compatibility with legacy properties)
   @override
   @JsonKey(name: 'owner_id')
-  final String ownerId;
+  final String? ownerId;
 
   /// Property name/title
   @override
@@ -888,7 +888,7 @@ class _$PropertyModelImpl extends _PropertyModel {
 abstract class _PropertyModel extends PropertyModel {
   const factory _PropertyModel({
     required final String id,
-    @JsonKey(name: 'owner_id') required final String ownerId,
+    @JsonKey(name: 'owner_id') final String? ownerId,
     required final String name,
     final String? slug,
     final String? subdomain,
@@ -931,10 +931,10 @@ abstract class _PropertyModel extends PropertyModel {
   @override
   String get id;
 
-  /// Owner user ID
+  /// Owner user ID (nullable for backwards compatibility with legacy properties)
   @override
   @JsonKey(name: 'owner_id')
-  String get ownerId;
+  String? get ownerId;
 
   /// Property name/title
   @override

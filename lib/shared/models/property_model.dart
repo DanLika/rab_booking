@@ -15,8 +15,8 @@ class PropertyModel with _$PropertyModel {
     /// Property ID (UUID)
     required String id,
 
-    /// Owner user ID
-    @JsonKey(name: 'owner_id') required String ownerId,
+    /// Owner user ID (nullable for backwards compatibility with legacy properties)
+    @JsonKey(name: 'owner_id') String? ownerId,
 
     /// Property name/title
     required String name,

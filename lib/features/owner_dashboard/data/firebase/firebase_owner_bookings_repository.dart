@@ -147,11 +147,16 @@ class FirebaseOwnerBookingsRepository {
         }
 
         final bookingsSnapshot = await query.get();
-        bookings.addAll(
-          bookingsSnapshot.docs.map(
-            (doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}),
-          ),
-        );
+        for (final doc in bookingsSnapshot.docs) {
+          try {
+            final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
+            bookings.add(booking);
+          } catch (e) {
+            // Skip invalid bookings - log for debugging but don't fail entire query
+            // ignore: avoid_print
+            print('WARNING: Failed to parse booking ${doc.id}: $e');
+          }
+        }
       }
 
       // Step 4: Get properties data

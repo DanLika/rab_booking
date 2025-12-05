@@ -28,9 +28,10 @@ mixin _$UnitModel {
   @JsonKey(name: 'property_id')
   String get propertyId => throw _privateConstructorUsedError;
 
-  /// Owner user ID (required for Firestore security rules)
+  /// Owner user ID (for Firestore security rules)
+  /// Made nullable for backwards compatibility with legacy units
   @JsonKey(name: 'owner_id')
-  String get ownerId => throw _privateConstructorUsedError;
+  String? get ownerId => throw _privateConstructorUsedError;
 
   /// Unit name/title (e.g., "Apartment A1", "Studio 2")
   String get name => throw _privateConstructorUsedError;
@@ -121,7 +122,7 @@ abstract class $UnitModelCopyWith<$Res> {
   $Res call({
     String id,
     @JsonKey(name: 'property_id') String propertyId,
-    @JsonKey(name: 'owner_id') String ownerId,
+    @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
     String? description,
@@ -163,7 +164,7 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
   $Res call({
     Object? id = null,
     Object? propertyId = null,
-    Object? ownerId = null,
+    Object? ownerId = freezed,
     Object? name = null,
     Object? slug = freezed,
     Object? description = freezed,
@@ -194,10 +195,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.propertyId
                 : propertyId // ignore: cast_nullable_to_non_nullable
                       as String,
-            ownerId: null == ownerId
+            ownerId: freezed == ownerId
                 ? _value.ownerId
                 : ownerId // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
             name: null == name
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
@@ -292,7 +293,7 @@ abstract class _$$UnitModelImplCopyWith<$Res>
   $Res call({
     String id,
     @JsonKey(name: 'property_id') String propertyId,
-    @JsonKey(name: 'owner_id') String ownerId,
+    @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
     String? description,
@@ -333,7 +334,7 @@ class __$$UnitModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? propertyId = null,
-    Object? ownerId = null,
+    Object? ownerId = freezed,
     Object? name = null,
     Object? slug = freezed,
     Object? description = freezed,
@@ -364,10 +365,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.propertyId
             : propertyId // ignore: cast_nullable_to_non_nullable
                   as String,
-        ownerId: null == ownerId
+        ownerId: freezed == ownerId
             ? _value.ownerId
             : ownerId // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
         name: null == name
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
@@ -455,7 +456,7 @@ class _$UnitModelImpl extends _UnitModel {
   const _$UnitModelImpl({
     required this.id,
     @JsonKey(name: 'property_id') required this.propertyId,
-    @JsonKey(name: 'owner_id') required this.ownerId,
+    @JsonKey(name: 'owner_id') this.ownerId,
     required this.name,
     this.slug,
     this.description,
@@ -491,10 +492,11 @@ class _$UnitModelImpl extends _UnitModel {
   @JsonKey(name: 'property_id')
   final String propertyId;
 
-  /// Owner user ID (required for Firestore security rules)
+  /// Owner user ID (for Firestore security rules)
+  /// Made nullable for backwards compatibility with legacy units
   @override
   @JsonKey(name: 'owner_id')
-  final String ownerId;
+  final String? ownerId;
 
   /// Unit name/title (e.g., "Apartment A1", "Studio 2")
   @override
@@ -704,7 +706,7 @@ abstract class _UnitModel extends UnitModel {
   const factory _UnitModel({
     required final String id,
     @JsonKey(name: 'property_id') required final String propertyId,
-    @JsonKey(name: 'owner_id') required final String ownerId,
+    @JsonKey(name: 'owner_id') final String? ownerId,
     required final String name,
     final String? slug,
     final String? description,
@@ -743,10 +745,11 @@ abstract class _UnitModel extends UnitModel {
   @JsonKey(name: 'property_id')
   String get propertyId;
 
-  /// Owner user ID (required for Firestore security rules)
+  /// Owner user ID (for Firestore security rules)
+  /// Made nullable for backwards compatibility with legacy units
   @override
   @JsonKey(name: 'owner_id')
-  String get ownerId;
+  String? get ownerId;
 
   /// Unit name/title (e.g., "Apartment A1", "Studio 2")
   @override

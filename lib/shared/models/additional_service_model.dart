@@ -10,8 +10,8 @@ class AdditionalServiceModel with _$AdditionalServiceModel {
     /// Service ID (UUID)
     required String id,
 
-    /// Owner ID
-    @JsonKey(name: 'owner_id') required String ownerId,
+    /// Owner ID (nullable for backwards compatibility with legacy services)
+    @JsonKey(name: 'owner_id') String? ownerId,
 
     /// Service name
     required String name,

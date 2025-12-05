@@ -56,6 +56,14 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // 🆕 NEW: Query-safe read function for owner documents
+    // Use this for collections where owners query their own data
+    // Handles both queries (resource == null) and individual document reads
+    function canReadAsOwner() {
+      return isAuthenticated() &&
+        (resource == null || resource.data.owner_id == request.auth.uid);
+    }
+
     // Users collection - users can only read their own data (MEDIUM SECURITY FIX)
     match /users/{userId} {
       allow read: if isOwner(userId); // Changed from isAuthenticated() - users can only read their own profile
@@ -82,42 +90,68 @@ service cloud.firestore {
     }
 
     // Collection group query for units (allows searching across all properties)
+    // For writes, we look up the parent property using the unit's property_id field
     match /{path=**}/units/{unitId} {
       allow read: if true; // Widget and owner app need to read units across properties
-      // CRITICAL SECURITY: Only resource owner can modify their own units
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      // Check ownership via parent property (using property_id field from the document)
+      allow create: if isAuthenticated() &&
+        ('property_id' in request.resource.data) &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
     // Collection group query for widget_settings
+    // Widget settings have property_id field - we look up the parent property to verify ownership
     match /{path=**}/widget_settings/{unitId} {
       allow read: if true; // Widget needs to read settings
-      // CRITICAL SECURITY: Only resource owner can modify their own widget_settings
-      // Uses isResourceOwnerOrLegacy to support legacy docs without owner_id
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwnerOrLegacy();
+      // Check ownership via parent property (using property_id field from the document)
+      allow create: if isAuthenticated() &&
+        ('property_id' in request.resource.data) &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+    }
+
+    // Helper function to check if user owns the parent property
+    // Used for subcollections (units, widget_settings) that inherit ownership from property
+    function isPropertyOwner(propertyId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
+    }
+
+    // Helper for legacy properties without owner_id
+    function isPropertyOwnerOrLegacy(propertyId) {
+      let propertyData = get(/databases/$(database)/documents/properties/$(propertyId)).data;
+      return isAuthenticated() && (
+        propertyData.owner_id == request.auth.uid ||
+        !('owner_id' in propertyData) ||
+        propertyData.owner_id == null ||
+        propertyData.owner_id == ''
+      );
     }
 
     // Properties - owners can CRUD, anyone can read (for widget)
     match /properties/{propertyId} {
       allow read: if true; // Public read for widget
-      // CRITICAL SECURITY: Only resource owner can modify their own properties
       allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow update, delete: if isResourceOwnerOrLegacy();
 
-      // Units subcollection - same permissions as properties
+      // Units subcollection - inherits ownership from parent property
+      // NO owner_id needed on units - we check the property's owner_id
       match /units/{unitId} {
         allow read: if true; // Public read for widget
-        allow create: if canCreateAsOwner();
-        allow update, delete: if isResourceOwner();
+        allow create: if isPropertyOwnerOrLegacy(propertyId);
+        allow update, delete: if isPropertyOwnerOrLegacy(propertyId);
       }
 
-      // Widget settings subcollection - public read, owner write
-      // Uses isResourceOwnerOrLegacy to support legacy docs without owner_id
+      // Widget settings subcollection - inherits ownership from parent property
       match /widget_settings/{unitId} {
         allow read: if true; // Widget needs to read settings
-        allow create: if canCreateAsOwner();
-        allow update, delete: if isResourceOwnerOrLegacy();
+        allow create: if isPropertyOwnerOrLegacy(propertyId);
+        allow update, delete: if isPropertyOwnerOrLegacy(propertyId);
       }
     }
 
@@ -125,48 +159,33 @@ service cloud.firestore {
     // Keeping for backwards compatibility if there are any old documents
     match /units/{unitId} {
       allow read: if true; // Public read for widget
+      // ✅ FIXED: Use legacy support for documents without owner_id
       allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow update, delete: if isResourceOwnerOrLegacy();
     }
 
     // ========================================================================
-    // CRITICAL SECURITY FIX: BOOKINGS COLLECTION
+    // BOOKINGS COLLECTION
     // ========================================================================
-    // Bookings - secure access with minimal exceptions
+    // Bookings - top-level collection with owner_id field
     match /bookings/{bookingId} {
-      // EXCEPTION #1: Stripe return flow polling (temporary, ~20s window)
-      // Allows: WHERE stripe_session_id == "cs_xxx" LIMIT 1
-      // Safe: stripe_session_id is cryptographically random (64+ chars)
-      allow read: if request.query.where.keys().hasOnly(['stripe_session_id']) &&
-                     request.query.limit <= 1;
-
-      // EXCEPTION #2: Guest email link access (booking view screen)
-      // Allows: WHERE booking_reference == "REF123" LIMIT 1
-      // Safe: booking_reference is random 8-10 chars, only in email link
-      allow read: if request.query.where.keys().hasOnly(['booking_reference']) &&
-                     request.query.limit <= 1;
-
-      // EXCEPTION #3: Owner authenticated access (dashboard)
-      // Allows: Authenticated owner to read their own bookings
-      allow read: if isAuthenticated() &&
-                     resource.data.owner_id == request.auth.uid;
-
-      // EXCEPTION #4: Calendar widget availability check
-      // NOTE: Using permissive rule because request.query.where.keys() doesn't work
-      // reliably with whereIn queries. Security mitigated by:
-      // - unit_id is required in all widget queries (random UUID)
-      // - Booking data is not highly sensitive (no payment details stored)
-      // - Write access remains locked (Cloud Functions only)
-      // TODO: Consider Cloud Function for calendar data if stricter security needed
+      // READ: Multiple scenarios need read access
+      // 1. Owner dashboard: authenticated owner reads their own bookings
+      // 2. Widget calendar: public read for availability display
+      // 3. Stripe webhook polling: query by stripe_session_id
+      // 4. Guest booking view: query by booking_reference
+      // Using permissive read because complex query conditions don't work reliably
+      // Security: booking data is not highly sensitive (no payment card details stored)
       allow read: if true;
 
       // WRITES:
-      // - CREATE: Only Cloud Functions (atomicBooking.ts) - prevents double-booking
+      // - CREATE: Owner can create bookings from dashboard (manual/phone bookings)
+      //           Widget/guest bookings go through Cloud Functions (atomicBooking.ts)
       // - UPDATE: Owner can update their own bookings (confirm/reject/cancel)
-      // - DELETE: Never from client (data integrity)
-      allow create: if false;
-      allow update: if isResourceOwner();
-      allow delete: if false;
+      // - DELETE: Owner can delete their own bookings from dashboard
+      allow create: if canCreateAsOwner();
+      allow update: if isResourceOwnerOrLegacy();
+      allow delete: if isResourceOwnerOrLegacy();
     }
 
     // Daily prices - owners manage, anyone can read
@@ -182,9 +201,9 @@ service cloud.firestore {
     // Additional services - owners manage, anyone can read
     match /additional_services/{serviceId} {
       allow read: if true; // Widget needs to read services
-      // CRITICAL SECURITY: Only resource owner can modify their own services
+      // ✅ FIXED: Use legacy support for documents without owner_id
       allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow update, delete: if isResourceOwnerOrLegacy();
     }
 
     // ========================================================================
@@ -210,18 +229,18 @@ service cloud.firestore {
     // ========================================================================
 
     // iCal feeds - Owner Dashboard manages external calendar imports
-    // SECURITY FIX: Only resource owner can read/write their own feeds
+    // ✅ CRITICAL FIX: Use query-safe read for listing feeds
     match /ical_feeds/{feedId} {
-      allow read: if isResourceOwner();
+      allow read: if canReadAsOwner();  // ✅ FIXED: Query-safe read
       allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow update, delete: if isResourceOwnerOrLegacy();  // ✅ FIXED: Legacy support
     }
 
     // iCal events - Widget needs to read for availability calendar
     match /ical_events/{eventId} {
       allow read: if true; // Widget needs to read events for availability
       allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow update, delete: if isResourceOwnerOrLegacy();  // ✅ FIXED: Legacy support
     }
 
     // ========================================================================
@@ -237,8 +256,8 @@ service cloud.firestore {
       // This prevents unauthenticated users from creating arbitrary booking_services
       allow create: if false;
 
-      // CRITICAL SECURITY: Only resource owner can modify their own booking_services
-      allow update, delete: if isResourceOwner();
+      // ✅ FIXED: Use legacy support for documents without owner_id
+      allow update, delete: if isResourceOwnerOrLegacy();
     }
 
     // Notifications - owner notifications for new bookings

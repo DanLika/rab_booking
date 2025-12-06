@@ -9,6 +9,7 @@ import '../providers/owner_bookings_view_preference_provider.dart';
 import '../../domain/models/bookings_view_mode.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -607,7 +608,10 @@ class _BookingCard extends ConsumerWidget {
                   // Guest info
                   BookingCardGuestInfo(ownerBooking: ownerBooking, isMobile: isMobile),
 
-                  Divider(height: isMobile ? 16 : 24),
+                  Divider(
+                    height: isMobile ? 16 : 24,
+                    color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                  ),
 
                   // Property and unit info
                   BookingCardPropertyInfo(property: property, unit: unit, isMobile: isMobile),
@@ -628,7 +632,10 @@ class _BookingCard extends ConsumerWidget {
                     ),
                   ),
 
-                  Divider(height: isMobile ? 16 : 24),
+                  Divider(
+                    height: isMobile ? 16 : 24,
+                    color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                  ),
 
                   // Payment info
                   BookingCardPaymentInfo(booking: booking, isMobile: isMobile),

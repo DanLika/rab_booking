@@ -116,7 +116,7 @@ class _LanguageSwitcherButton extends StatelessWidget {
           Icon(Icons.arrow_drop_down, size: isSmallScreen ? 14 : 16, color: colors.textPrimary),
         ],
       ),
-      tooltip: 'Change Language',
+      tooltip: WidgetTranslations.of(context).tooltipChangeLanguage,
       padding: EdgeInsets.zero,
       constraints: BoxConstraints(
         minWidth: isSmallScreen ? 40 : 48,
@@ -125,9 +125,7 @@ class _LanguageSwitcherButton extends StatelessWidget {
       offset: const Offset(0, 40),
       shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
       color: colors.backgroundPrimary,
-      onSelected: (String languageCode) {
-        _changeLanguage(languageCode);
-      },
+      onSelected: _changeLanguage,
       itemBuilder: (BuildContext context) => [
         _buildLanguageItem('hr', 'Hrvatski', '🇭🇷'),
         _buildLanguageItem('en', 'English', '🇬🇧'),

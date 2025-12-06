@@ -243,56 +243,43 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  /// Generate semantic label for screen readers (Croatian) - year view
+  /// Generate semantic label for screen readers (localized) - year view
   String _getSemanticLabelForDateYear(
     DateTime date,
     DateStatus status,
     bool isPending,
     bool isRangeStart,
     bool isRangeEnd,
+    WidgetTranslations translations,
   ) {
-    // Status description
+    // Status description (localized)
     final statusStr = status == DateStatus.available
-        ? 'dostupno'
+        ? translations.semanticAvailable
         : status == DateStatus.booked
-        ? 'rezervirano'
+        ? translations.semanticBooked
         : status == DateStatus.partialCheckIn
-        ? 'prijava gosta'
+        ? translations.semanticCheckIn
         : status == DateStatus.partialCheckOut
-        ? 'odjava gosta'
+        ? translations.semanticCheckOut
         : status == DateStatus.partialBoth
-        ? 'promjena gostiju'
+        ? translations.semanticTurnover
         : status == DateStatus.blocked
-        ? 'blokirano'
+        ? translations.semanticBlocked
         : status == DateStatus.disabled
-        ? 'nedostupno'
-        : 'prošla rezervacija';
+        ? translations.semanticUnavailable
+        : translations.semanticPastReservation;
 
-    final pendingStr = isPending ? ', čeka odobrenje' : '';
+    final pendingStr = isPending ? ', ${translations.semanticPendingApproval}' : '';
 
-    // Range indicators
+    // Range indicators (localized)
     final rangeStr = isRangeStart
-        ? ', datum prijave'
+        ? ', ${translations.semanticCheckInDate}'
         : isRangeEnd
-        ? ', datum odjave'
+        ? ', ${translations.semanticCheckOutDate}'
         : '';
 
-    // Format date: "15. siječnja"
-    final months = [
-      'siječnja',
-      'veljače',
-      'ožujka',
-      'travnja',
-      'svibnja',
-      'lipnja',
-      'srpnja',
-      'kolovoza',
-      'rujna',
-      'listopada',
-      'studenog',
-      'prosinca',
-    ];
-    final dateStr = '${date.day}. ${months[date.month - 1]}';
+    // Format date (localized)
+    final dateStr = translations.formatDateForSemantic(date);
 
     return '$dateStr, $statusStr$pendingStr$rangeStr';
   }
@@ -343,13 +330,15 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       // Show tooltip on all dates except disabled/past dates
       final showTooltip = dateInfo.status != DateStatus.disabled;
 
-      // Generate semantic label for screen readers
+      // Generate semantic label for screen readers (localized)
+      final translations = WidgetTranslations.of(context);
       final String semanticLabel = _getSemanticLabelForDateYear(
         date,
         dateInfo.status,
         dateInfo.isPendingBooking,
         isRangeStart,
         isRangeEnd,
+        translations,
       );
 
       return Semantics(

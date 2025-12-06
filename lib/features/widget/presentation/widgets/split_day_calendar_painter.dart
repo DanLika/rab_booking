@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/calendar_date_status.dart';
+import '../l10n/widget_translations.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Custom painter for calendar cells with diagonal split for check-in/check-out days
@@ -34,21 +35,13 @@ class SplitDayCalendarPainter extends CustomPainter {
       case DateStatus.available:
         // Solid available color
         paint.color = status.getColor(colors);
-        canvas.drawRect(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          paint,
-        );
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
         break;
 
       case DateStatus.booked:
         // Solid booked color (or pending yellow if isPendingBooking)
-        paint.color = isPendingBooking
-            ? colors.statusPendingBackground
-            : status.getColor(colors);
-        canvas.drawRect(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          paint,
-        );
+        paint.color = isPendingBooking ? colors.statusPendingBackground : status.getColor(colors);
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
         // Draw diagonal pattern for pending bookings
         if (isPendingBooking) {
           _drawDiagonalPattern(canvas, size, DateStatus.pending.getPatternLineColor(colors));
@@ -59,10 +52,7 @@ class SplitDayCalendarPainter extends CustomPainter {
         // Pending uses RED background (same as booked) with diagonal pattern
         // This visually indicates "blocks dates" while distinguishing from confirmed bookings
         paint.color = status.getColor(colors);
-        canvas.drawRect(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          paint,
-        );
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
 
         // Draw diagonal line pattern on top
         _drawDiagonalPattern(canvas, size, status.getPatternLineColor(colors));
@@ -71,28 +61,19 @@ class SplitDayCalendarPainter extends CustomPainter {
       case DateStatus.blocked:
         // Solid blocked color
         paint.color = status.getColor(colors);
-        canvas.drawRect(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          paint,
-        );
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
         break;
 
       case DateStatus.disabled:
         // Solid disabled color (past dates)
         paint.color = status.getColor(colors);
-        canvas.drawRect(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          paint,
-        );
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
         break;
 
       case DateStatus.pastReservation:
         // Past reservation - red with reduced opacity (50%)
         paint.color = status.getColor(colors);
-        canvas.drawRect(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          paint,
-        );
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
         break;
 
       case DateStatus.partialCheckIn:
@@ -162,8 +143,9 @@ class SplitDayCalendarPainter extends CustomPainter {
 
         // Draw top-left triangle (checkout half)
         paint.color = isCheckOutPending
-            ? colors.statusPendingBackground  // Yellow for pending checkout
-            : colors.statusBookedBackground;   // Red for confirmed checkout
+            ? colors
+                  .statusPendingBackground // Yellow for pending checkout
+            : colors.statusBookedBackground; // Red for confirmed checkout
         final Path checkoutPath = Path()
           ..moveTo(0, 0) // Top-left
           ..lineTo(size.width, 0) // Top-right
@@ -173,8 +155,9 @@ class SplitDayCalendarPainter extends CustomPainter {
 
         // Draw bottom-right triangle (checkin half)
         paint.color = isCheckInPending
-            ? colors.statusPendingBackground  // Yellow for pending checkin
-            : colors.statusBookedBackground;   // Red for confirmed checkin
+            ? colors
+                  .statusPendingBackground // Yellow for pending checkin
+            : colors.statusBookedBackground; // Red for confirmed checkin
         final Path checkinPath = Path()
           ..moveTo(0, size.height) // Bottom-left
           ..lineTo(size.width, size.height) // Bottom-right
@@ -199,10 +182,7 @@ class SplitDayCalendarPainter extends CustomPainter {
       final overlayPaint = Paint()
         ..style = PaintingStyle.fill
         ..color = colors.buttonPrimary.withValues(alpha: 0.2);
-      canvas.drawRect(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        overlayPaint,
-      );
+      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), overlayPaint);
     }
 
     // Draw price text in center of cell - prominent and readable
@@ -217,8 +197,8 @@ class SplitDayCalendarPainter extends CustomPainter {
             fontSize: size.width > ConstraintTokens.calendarDayCellMinSize
                 ? TypographyTokens.fontSizeS2
                 : (size.width > ConstraintTokens.calendarDayCellMinSize * 0.75
-                    ? TypographyTokens.fontSizeXS2
-                    : TypographyTokens.poweredBySize),
+                      ? TypographyTokens.fontSizeXS2
+                      : TypographyTokens.poweredBySize),
             // Bold font weight for prominence (was w600)
             fontWeight: TypographyTokens.bold,
           ),
@@ -251,11 +231,7 @@ class SplitDayCalendarPainter extends CustomPainter {
     // Draw diagonal lines from top-left to bottom-right
     // Start from negative to cover the entire cell
     for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
+      canvas.drawLine(Offset(i, 0), Offset(i + size.height, size.height), paint);
     }
   }
 
@@ -293,13 +269,13 @@ class SplitDayCalendarPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant SplitDayCalendarPainter oldDelegate) {
     return oldDelegate.status != status ||
-           oldDelegate.borderColor != borderColor ||
-           oldDelegate.priceText != priceText ||
-           oldDelegate.colors != colors ||
-           oldDelegate.isInRange != isInRange ||
-           oldDelegate.isPendingBooking != isPendingBooking ||
-           oldDelegate.isCheckOutPending != isCheckOutPending ||
-           oldDelegate.isCheckInPending != isCheckInPending;
+        oldDelegate.borderColor != borderColor ||
+        oldDelegate.priceText != priceText ||
+        oldDelegate.colors != colors ||
+        oldDelegate.isInRange != isInRange ||
+        oldDelegate.isPendingBooking != isPendingBooking ||
+        oldDelegate.isCheckOutPending != isCheckOutPending ||
+        oldDelegate.isCheckInPending != isCheckInPending;
   }
 }
 
@@ -312,6 +288,7 @@ class SplitDayCalendarCell extends StatelessWidget {
   final WidgetColorScheme colors;
   final DateTime? date; // For semantic label
   final bool isPending; // For semantic label
+  final WidgetTranslations? translations; // For localized semantic labels
 
   const SplitDayCalendarCell({
     super.key,
@@ -322,35 +299,31 @@ class SplitDayCalendarCell extends StatelessWidget {
     required this.colors,
     this.date,
     this.isPending = false,
+    this.translations,
   });
 
-  /// Generate semantic label for screen readers
-  String _getSemanticLabel() {
+  /// Generate semantic label for screen readers (localized)
+  String _getSemanticLabel(WidgetTranslations t) {
     final statusStr = status == DateStatus.available
-        ? 'dostupno'
+        ? t.semanticAvailable
         : status == DateStatus.booked
-            ? 'rezervirano'
-            : status == DateStatus.partialCheckIn
-                ? 'prijava gosta'
-                : status == DateStatus.partialCheckOut
-                    ? 'odjava gosta'
-                    : status == DateStatus.partialBoth
-                        ? 'promjena gostiju'
-                        : status == DateStatus.blocked
-                            ? 'blokirano'
-                            : status == DateStatus.disabled
-                                ? 'nedostupno'
-                                : 'prošla rezervacija';
+        ? t.semanticBooked
+        : status == DateStatus.partialCheckIn
+        ? t.semanticCheckIn
+        : status == DateStatus.partialCheckOut
+        ? t.semanticCheckOut
+        : status == DateStatus.partialBoth
+        ? t.semanticTurnover
+        : status == DateStatus.blocked
+        ? t.semanticBlocked
+        : status == DateStatus.disabled
+        ? t.semanticUnavailable
+        : t.semanticPastReservation;
 
-    final pendingStr = isPending ? ', čeka odobrenje' : '';
+    final pendingStr = isPending ? ', ${t.semanticPendingApproval}' : '';
 
     if (date != null) {
-      // Format: "15. siječnja, dostupno"
-      final months = [
-        'siječnja', 'veljače', 'ožujka', 'travnja', 'svibnja', 'lipnja',
-        'srpnja', 'kolovoza', 'rujna', 'listopada', 'studenog', 'prosinca'
-      ];
-      final dateStr = '${date!.day}. ${months[date!.month - 1]}';
+      final dateStr = t.formatDateForSemantic(date!);
       return '$dateStr, $statusStr$pendingStr';
     }
 
@@ -359,8 +332,9 @@ class SplitDayCalendarCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = translations ?? WidgetTranslations.of(context);
     return Semantics(
-      label: _getSemanticLabel(),
+      label: _getSemanticLabel(t),
       button: onTap != null,
       enabled: status == DateStatus.available && onTap != null,
       selected: isSelected,
@@ -370,9 +344,7 @@ class SplitDayCalendarCell extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            border: isSelected
-                ? Border.all(color: colors.borderFocus, width: BorderTokens.widthThick)
-                : null,
+            border: isSelected ? Border.all(color: colors.borderFocus, width: BorderTokens.widthThick) : null,
           ),
           child: CustomPaint(
             painter: SplitDayCalendarPainter(

@@ -3373,4 +3373,375 @@ class WidgetTranslations {
         return 'Verify Email';
     }
   }
+
+  // ============================================================================
+  // SEMANTIC LABELS FOR ACCESSIBILITY (SCREEN READERS)
+  // ============================================================================
+
+  String get semanticAvailable {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'dostupno';
+      case 'de':
+        return 'verfügbar';
+      case 'it':
+        return 'disponibile';
+      case 'en':
+      default:
+        return 'available';
+    }
+  }
+
+  String get semanticBooked {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'rezervirano';
+      case 'de':
+        return 'gebucht';
+      case 'it':
+        return 'prenotato';
+      case 'en':
+      default:
+        return 'booked';
+    }
+  }
+
+  String get semanticCheckIn {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'prijava gosta';
+      case 'de':
+        return 'Gast Check-in';
+      case 'it':
+        return 'check-in ospite';
+      case 'en':
+      default:
+        return 'guest check-in';
+    }
+  }
+
+  String get semanticCheckOut {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'odjava gosta';
+      case 'de':
+        return 'Gast Check-out';
+      case 'it':
+        return 'check-out ospite';
+      case 'en':
+      default:
+        return 'guest check-out';
+    }
+  }
+
+  String get semanticTurnover {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'promjena gostiju';
+      case 'de':
+        return 'Gästewechsel';
+      case 'it':
+        return 'cambio ospiti';
+      case 'en':
+      default:
+        return 'guest turnover';
+    }
+  }
+
+  String get semanticBlocked {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'blokirano';
+      case 'de':
+        return 'blockiert';
+      case 'it':
+        return 'bloccato';
+      case 'en':
+      default:
+        return 'blocked';
+    }
+  }
+
+  String get semanticUnavailable {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'nedostupno';
+      case 'de':
+        return 'nicht verfügbar';
+      case 'it':
+        return 'non disponibile';
+      case 'en':
+      default:
+        return 'unavailable';
+    }
+  }
+
+  String get semanticPastReservation {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'prošla rezervacija';
+      case 'de':
+        return 'vergangene Reservierung';
+      case 'it':
+        return 'prenotazione passata';
+      case 'en':
+      default:
+        return 'past reservation';
+    }
+  }
+
+  String get semanticPendingApproval {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'čeka odobrenje';
+      case 'de':
+        return 'wartet auf Genehmigung';
+      case 'it':
+        return 'in attesa di approvazione';
+      case 'en':
+      default:
+        return 'pending approval';
+    }
+  }
+
+  String get semanticCheckInDate {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'datum prijave';
+      case 'de':
+        return 'Check-in Datum';
+      case 'it':
+        return 'data check-in';
+      case 'en':
+      default:
+        return 'check-in date';
+    }
+  }
+
+  String get semanticCheckOutDate {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'datum odjave';
+      case 'de':
+        return 'Check-out Datum';
+      case 'it':
+        return 'data check-out';
+      case 'en':
+      default:
+        return 'check-out date';
+    }
+  }
+
+  /// Localized month names in genitive case (for date formatting)
+  List<String> get monthsGenitive {
+    switch (locale.languageCode) {
+      case 'hr':
+        return [
+          'siječnja',
+          'veljače',
+          'ožujka',
+          'travnja',
+          'svibnja',
+          'lipnja',
+          'srpnja',
+          'kolovoza',
+          'rujna',
+          'listopada',
+          'studenog',
+          'prosinca',
+        ];
+      case 'de':
+        return [
+          'Januar',
+          'Februar',
+          'März',
+          'April',
+          'Mai',
+          'Juni',
+          'Juli',
+          'August',
+          'September',
+          'Oktober',
+          'November',
+          'Dezember',
+        ];
+      case 'it':
+        return [
+          'gennaio',
+          'febbraio',
+          'marzo',
+          'aprile',
+          'maggio',
+          'giugno',
+          'luglio',
+          'agosto',
+          'settembre',
+          'ottobre',
+          'novembre',
+          'dicembre',
+        ];
+      case 'en':
+      default:
+        return [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ];
+    }
+  }
+
+  /// Format date for semantic label: "15. siječnja" (HR) / "January 15" (EN)
+  String formatDateForSemantic(DateTime date) {
+    final monthName = monthsGenitive[date.month - 1];
+    switch (locale.languageCode) {
+      case 'hr':
+        return '${date.day}. $monthName';
+      case 'de':
+        return '${date.day}. $monthName';
+      case 'it':
+        return '${date.day} $monthName';
+      case 'en':
+      default:
+        return '$monthName ${date.day}';
+    }
+  }
+
+  // ============================================================================
+  // CALENDAR TOOLTIP TRANSLATIONS
+  // ============================================================================
+
+  String get tooltipChangeLanguage {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Promijeni jezik';
+      case 'de':
+        return 'Sprache ändern';
+      case 'it':
+        return 'Cambia lingua';
+      case 'en':
+      default:
+        return 'Change Language';
+    }
+  }
+
+  String get tooltipClickToSelect {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kliknite za odabir';
+      case 'de':
+        return 'Klicken zum Auswählen';
+      case 'it':
+        return 'Clicca per selezionare';
+      case 'en':
+      default:
+        return 'Click to select';
+    }
+  }
+
+  String get tooltipPending {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Na čekanju';
+      case 'de':
+        return 'Ausstehend';
+      case 'it':
+        return 'In attesa';
+      case 'en':
+      default:
+        return 'Pending';
+    }
+  }
+
+  String get tooltipCheckInDay {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Dan prijave';
+      case 'de':
+        return 'Check-in Tag';
+      case 'it':
+        return 'Giorno check-in';
+      case 'en':
+      default:
+        return 'Check-In Day';
+    }
+  }
+
+  String get tooltipCheckOutDay {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Dan odjave';
+      case 'de':
+        return 'Check-out Tag';
+      case 'it':
+        return 'Giorno check-out';
+      case 'en':
+      default:
+        return 'Check-Out Day';
+    }
+  }
+
+  String get tooltipTurnoverDay {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Dan promjene gostiju';
+      case 'de':
+        return 'Gästewechsel Tag';
+      case 'it':
+        return 'Giorno cambio ospiti';
+      case 'en':
+      default:
+        return 'Turnover Day';
+    }
+  }
+
+  String get tooltipPastDate {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Prošli datum';
+      case 'de':
+        return 'Vergangenes Datum';
+      case 'it':
+        return 'Data passata';
+      case 'en':
+      default:
+        return 'Past Date';
+    }
+  }
+
+  String get tooltipPastReservation {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Prošla rezervacija';
+      case 'de':
+        return 'Vergangene Reservierung';
+      case 'it':
+        return 'Prenotazione passata';
+      case 'en':
+      default:
+        return 'Past Reservation';
+    }
+  }
+
+  String get perNightShort {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'noć';
+      case 'de':
+        return 'Nacht';
+      case 'it':
+        return 'notte';
+      case 'en':
+      default:
+        return 'night';
+    }
+  }
 }

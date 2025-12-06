@@ -55,25 +55,26 @@ class TimelineSummaryCell extends StatelessWidget {
 
     // Responsive sizing
     final isNarrow = dayWidth < 60;
+    final isVeryNarrow = dayWidth < 45;
 
     return Container(
       width: dayWidth,
       decoration: BoxDecoration(
         color: isToday
-            ? AppColors.primary.withAlpha((0.15 * 255).toInt())
+            ? AppColors.primary.withAlpha((0.18 * 255).toInt())
             : isWeekend
-            ? (isDark ? const Color(0xFF2A2A35) : const Color(0xFFF5F5FA))
+            ? (isDark ? const Color(0xFF2A2535) : const Color(0xFFF8F5FC))
             : (isDark ? const Color(0xFF1E1E28) : Colors.white),
         border: Border(left: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight)),
       ),
-      padding: EdgeInsets.symmetric(vertical: isNarrow ? 2 : 4, horizontal: isNarrow ? 2 : 4),
+      padding: EdgeInsets.symmetric(vertical: isVeryNarrow ? 3 : 6, horizontal: isVeryNarrow ? 2 : 4),
       child: Builder(
         builder: (context) {
           final l10n = AppLocalizations.of(context);
           return FittedBox(
             fit: BoxFit.scaleDown,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Guests badge
@@ -85,7 +86,7 @@ class TimelineSummaryCell extends StatelessWidget {
                   l10n.ownerCalendarSummaryGuests,
                   isNarrow,
                 ),
-                SizedBox(height: isNarrow ? 3 : 4),
+                SizedBox(height: isVeryNarrow ? 4 : 6),
                 // Check-ins/Check-outs combined badge
                 _buildCheckInOutBadge(context, checkIns, checkOuts, l10n, isNarrow),
               ],

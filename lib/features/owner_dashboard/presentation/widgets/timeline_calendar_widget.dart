@@ -893,13 +893,15 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: dayWidth,
       decoration: BoxDecoration(
         color: isToday
-            ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
+            ? theme.colorScheme.primary.withAlpha((0.12 * 255).toInt())
             : isWeekend
-            ? theme.dividerColor.withAlpha((0.05 * 255).toInt())
+            ? (isDark ? const Color(0xFF2A2535) : const Color(0xFFF8F5FC))
             : Colors.transparent, // Transparent to show parent gradient
         border: Border(
           left: BorderSide(

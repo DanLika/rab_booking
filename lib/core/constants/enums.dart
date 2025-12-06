@@ -33,15 +33,11 @@ enum UserRole {
   bool get isAdmin => this == UserRole.admin;
 
   /// Check if user can manage properties
-  bool get canManageProperties =>
-      this == UserRole.owner || this == UserRole.admin;
+  bool get canManageProperties => this == UserRole.owner || this == UserRole.admin;
 
   /// Parse from string value
   static UserRole fromString(String value) {
-    return UserRole.values.firstWhere(
-      (role) => role.value == value,
-      orElse: () => UserRole.guest,
-    );
+    return UserRole.values.firstWhere((role) => role.value == value, orElse: () => UserRole.guest);
   }
 }
 
@@ -221,10 +217,7 @@ enum PropertyAmenity {
 
   /// Parse from string value
   static PropertyAmenity fromString(String value) {
-    return PropertyAmenity.values.firstWhere(
-      (amenity) => amenity.value == value,
-      orElse: () => PropertyAmenity.wifi,
-    );
+    return PropertyAmenity.values.firstWhere((amenity) => amenity.value == value, orElse: () => PropertyAmenity.wifi);
   }
 
   /// Parse list from string list
@@ -294,10 +287,7 @@ enum PropertyType {
 
   /// Parse from string value
   static PropertyType fromString(String value) {
-    return PropertyType.values.firstWhere(
-      (type) => type.value == value,
-      orElse: () => PropertyType.apartment,
-    );
+    return PropertyType.values.firstWhere((type) => type.value == value, orElse: () => PropertyType.apartment);
   }
 }
 
@@ -341,7 +331,7 @@ enum BookingStatus {
       case BookingStatus.pending:
         return const Color(0xFFFFA726); // Orange - for dashboard badge
       case BookingStatus.confirmed:
-        return const Color(0xFF66BB6A); // Green
+        return const Color(0xFF4CAF50); // Green (softer, less saturated)
       case BookingStatus.cancelled:
         return const Color(0xFFEF5350); // Red
       case BookingStatus.completed:
@@ -385,9 +375,6 @@ enum BookingStatus {
   }
 
   static BookingStatus fromString(String value) {
-    return BookingStatus.values.firstWhere(
-      (status) => status.value == value,
-      orElse: () => BookingStatus.pending,
-    );
+    return BookingStatus.values.firstWhere((status) => status.value == value, orElse: () => BookingStatus.pending);
   }
 }

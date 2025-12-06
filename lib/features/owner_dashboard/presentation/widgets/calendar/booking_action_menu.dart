@@ -28,143 +28,149 @@ class BookingActionBottomSheet extends ConsumerWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 4),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.black12,
-                borderRadius: BorderRadius.circular(2),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 4),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black12,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
 
-            // Gradient header with booking info
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  // Guest name and status
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                          borderRadius: BorderRadius.circular(12),
+              // Gradient header with booking info
+              Container(
+                margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: context.gradients.brandPrimary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    // Guest name and status
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.person, color: Colors.white, size: 24),
                         ),
-                        child: const Icon(Icons.person, color: Colors.white, size: 24),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              booking.guestName ?? l10n.bookingActionUnknownGuest,
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${_formatDate(booking.checkIn)} - ${_formatDate(booking.checkOut)}',
-                              style: TextStyle(fontSize: 14, color: Colors.white.withAlpha((0.9 * 255).toInt())),
-                            ),
-                          ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                booking.guestName ?? l10n.bookingActionUnknownGuest,
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_formatDate(booking.checkIn)} - ${_formatDate(booking.checkOut)}',
+                                style: TextStyle(fontSize: 14, color: Colors.white.withAlpha((0.9 * 255).toInt())),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      // Status badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              booking.status.displayName,
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: booking.status.color),
-                            ),
-                          ],
+                        // Status badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                booking.status.displayName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: booking.status.color,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Info row: nights, guests, price
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildInfoChip(Icons.nights_stay, '$nights ${nights == 1 ? 'noć' : 'noći'}'),
-                      _buildInfoChip(
-                        Icons.people_outline,
-                        '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''}',
-                      ),
-                      _buildInfoChip(Icons.euro, '${booking.totalPrice.toStringAsFixed(0)} €'),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Info row: nights, guests, price
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildInfoChip(Icons.nights_stay, '$nights ${nights == 1 ? 'noć' : 'noći'}'),
+                        _buildInfoChip(
+                          Icons.people_outline,
+                          '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''}',
+                        ),
+                        _buildInfoChip(Icons.euro, '${booking.totalPrice.toStringAsFixed(0)} €'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Actions
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  // Edit action
-                  _buildActionTile(
-                    context,
-                    icon: Icons.edit_outlined,
-                    iconColor: AppColors.primary,
-                    title: l10n.bookingActionEditTitle,
-                    subtitle: l10n.bookingActionEditSubtitle,
-                    onTap: () => Navigator.pop(context, 'edit'),
-                    isDark: isDark,
-                  ),
-                  const SizedBox(height: 8),
-                  // Change status action
-                  _buildActionTile(
-                    context,
-                    icon: Icons.sync_alt,
-                    iconColor: AppColors.info,
-                    title: l10n.bookingActionStatusTitle,
-                    subtitle: l10n.bookingActionStatusSubtitle,
-                    onTap: () => Navigator.pop(context, 'status'),
-                    isDark: isDark,
-                  ),
-                  const SizedBox(height: 8),
-                  // Delete action
-                  _buildActionTile(
-                    context,
-                    icon: Icons.delete_outline,
-                    iconColor: AppColors.error,
-                    title: l10n.bookingActionDeleteTitle,
-                    subtitle: l10n.bookingActionDeleteSubtitle,
-                    onTap: () => Navigator.pop(context, 'delete'),
-                    isDark: isDark,
-                    isDestructive: true,
-                  ),
-                ],
+              // Actions
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    // Edit action
+                    _buildActionTile(
+                      context,
+                      icon: Icons.edit_outlined,
+                      iconColor: AppColors.primary,
+                      title: l10n.bookingActionEditTitle,
+                      subtitle: l10n.bookingActionEditSubtitle,
+                      onTap: () => Navigator.pop(context, 'edit'),
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 8),
+                    // Change status action
+                    _buildActionTile(
+                      context,
+                      icon: Icons.sync_alt,
+                      iconColor: AppColors.info,
+                      title: l10n.bookingActionStatusTitle,
+                      subtitle: l10n.bookingActionStatusSubtitle,
+                      onTap: () => Navigator.pop(context, 'status'),
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 8),
+                    // Delete action
+                    _buildActionTile(
+                      context,
+                      icon: Icons.delete_outline,
+                      iconColor: AppColors.error,
+                      title: l10n.bookingActionDeleteTitle,
+                      subtitle: l10n.bookingActionDeleteSubtitle,
+                      onTap: () => Navigator.pop(context, 'delete'),
+                      isDark: isDark,
+                      isDestructive: true,
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

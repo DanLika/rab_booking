@@ -949,11 +949,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           dialogClosed = true;
                                           navigator.pop();
                                           messenger.showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                AppLocalizations.of(context).priceCalendarRevertedToBasePrice,
-                                              ),
-                                            ),
+                                            SnackBar(content: Text(l10nDialog.priceCalendarRevertedToBasePrice)),
                                           );
                                         }
                                       } catch (e) {

@@ -80,7 +80,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                           child: statsAsync.when(
                             data: (stats) => _buildHeroCard(context, stats),
                             loading: () => _buildHeroCard(context, null),
-                            error: (_, __) => _buildHeroCard(context, null),
+                            error: (_, _) => _buildHeroCard(context, null),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -96,7 +96,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                                 child: feedsAsync.when(
                                   data: (feeds) => _buildFeedsSection(context, feeds),
                                   loading: () => _buildFeedsLoading(context),
-                                  error: (_, __) => _buildFeedsError(context),
+                                  error: (_, _) => _buildFeedsError(context),
                                 ),
                               ),
                             ],
@@ -117,7 +117,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                           feedsAsync.when(
                             data: (feeds) => _buildFeedsSection(context, feeds),
                             loading: () => _buildFeedsLoading(context),
-                            error: (_, __) => _buildFeedsError(context),
+                            error: (_, _) => _buildFeedsError(context),
                           ),
                           const SizedBox(height: 24),
                           _buildPlatformInstructions(context),
@@ -745,8 +745,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       await repository.updateFeedStatus(feed.id, 'paused');
       if (mounted) ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedPaused);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).icalFeedPauseError);
+      }
     }
   }
 
@@ -757,8 +758,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       await repository.updateFeedStatus(feed.id, 'active');
       if (mounted) ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedResumed);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).icalFeedResumeError);
+      }
     }
   }
 
@@ -782,15 +784,17 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 await repository.deleteIcalFeed(feed.id);
                 ref.invalidate(icalFeedsStreamProvider);
                 ref.invalidate(icalStatisticsProvider);
-                if (mounted)
+                if (mounted) {
                   messenger.showSnackBar(
                     SnackBar(content: Text(l10n.icalFeedDeleted), backgroundColor: theme.colorScheme.success),
                   );
+                }
               } catch (e) {
-                if (mounted)
+                if (mounted) {
                   messenger.showSnackBar(
                     SnackBar(content: Text(l10n.icalFeedDeleteError), backgroundColor: theme.colorScheme.danger),
                   );
+                }
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Theme.of(dialogContext).colorScheme.error),
@@ -885,11 +889,12 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
               children: [
                 unitsAsync.when(
                   data: (units) {
-                    if (units.isEmpty)
+                    if (units.isEmpty) {
                       return Text(l10n.icalNoUnitsCreated, style: const TextStyle(color: AppColors.error));
+                    }
                     final validUnitId = units.any((u) => u.id == _selectedUnitId) ? _selectedUnitId : null;
                     return DropdownButtonFormField<String>(
-                      value: validUnitId,
+                      initialValue: validUnitId,
                       decoration: InputDecorationHelper.buildDecoration(
                         labelText: l10n.icalSelectUnit,
                         context: context,
@@ -900,11 +905,11 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                     );
                   },
                   loading: () => const CircularProgressIndicator(),
-                  error: (_, __) => Text(l10n.icalErrorLoadingUnits),
+                  error: (_, _) => Text(l10n.icalErrorLoadingUnits),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedPlatform,
+                  initialValue: _selectedPlatform,
                   decoration: InputDecorationHelper.buildDecoration(labelText: l10n.icalPlatform, context: context),
                   items: [
                     DropdownMenuItem(value: 'booking_com', child: Text(l10n.icalPlatformBookingCom)),
@@ -965,9 +970,6 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           propertyId: propertyId,
           icalUrl: _icalUrlController.text.trim(),
           platform: _selectedPlatform,
-          status: 'active',
-          syncCount: 0,
-          eventCount: 0,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );

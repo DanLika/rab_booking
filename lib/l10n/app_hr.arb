@@ -2889,6 +2889,7 @@
   "calendarErrorBannerTitle": "Greška",
   "calendarErrorClose": "Zatvori",
 
+  "calendarFiltersTitle": "Filteri kalendara",
   "calendarFiltersSearchGuest": "Pretraži gosta",
   "calendarFiltersGuestLabel": "Ime ili email gosta",
   "calendarFiltersGuestHint": "Unesite ime ili email...",
@@ -2896,6 +2897,40 @@
   "calendarFiltersBookingIdLabel": "ID rezervacije",
   "calendarFiltersBookingIdHint": "Unesite ID rezervacije...",
   "calendarFiltersClearDate": "Očisti datum",
+  "calendarFiltersApply": "Primijeni",
+  "calendarFiltersCancel": "Otkaži",
+  "calendarFiltersClear": "Očisti",
+  "calendarFiltersClearAll": "Očisti sve",
+
+  "calendarSearchTitle": "Pretraga rezervacija",
+  "calendarSearchHint": "Pretražite po imenu gosta, email-u, ID-u ili jedinici...",
+  "calendarSearchResultsCount": "Pronađeno {count} rezultata",
+  "@calendarSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarSearchEnterTerm": "Unesite termin za pretragu",
+  "calendarSearchDescription": "Pretražite po imenu gosta, email-u, ID-u ili jedinici",
+  "calendarSearchNoResults": "Nema rezultata",
+  "calendarSearchTryAnother": "Pokušajte sa drugim terminom pretrage",
+
+  "calendarStatusCurrent": "Trenutni",
+
+  "bookingInlineEditTitle": "Brzo uređivanje",
+  "bookingInlineEditGuest": "Gost",
+  "bookingInlineEditCheckIn": "Dolazak",
+  "bookingInlineEditCheckOut": "Odlazak",
+  "bookingInlineEditNights": "Noćenja",
+  "bookingInlineEditGuestCount": "Broj gostiju",
+  "bookingInlineEditSave": "Spremi promjene",
+  "bookingInlineEditSaving": "Spremanje...",
+  "bookingInlineEditCancel": "Otkaži",
+  "bookingInlineEditDates": "Datumi",
+  "bookingInlineEditNightSingular": "noć",
+  "bookingInlineEditNightPlural": "noći",
 
   "bookingEditInternalNotes": "Interne bilješke",
   "bookingEditNotesHint": "Dodajte bilješke za ovu rezervaciju...",

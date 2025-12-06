@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/enums.dart';
-import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../../domain/models/calendar_filter_options.dart';
@@ -43,29 +44,47 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
+    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < CalendarGridCalculator.mobileBreakpoint;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
       child: Container(
         width: isMobile ? double.infinity : 700,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient (using brand gradient)
+            // Header with gradient
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.filter_list, color: Colors.white),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.filter_list, color: Colors.white, size: 20),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Filteri kalendara',
+                      l10n.calendarFiltersTitle,
                       style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -80,7 +99,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -117,9 +136,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
             // Footer buttons (responsive)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: theme.dividerColor)),
+                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
+                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: isMobile
                   ? Column(
@@ -127,19 +148,19 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                       children: [
                         // Apply button (full width on mobile) with brand gradient
                         Container(
-                          decoration: const BoxDecoration(
-                            gradient: GradientTokens.brandPrimary,
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                          decoration: BoxDecoration(
+                            gradient: context.gradients.brandPrimary,
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
                           ),
                           child: ElevatedButton.icon(
                             onPressed: _applyFilters,
                             icon: const Icon(Icons.check),
-                            label: const AutoSizeText('Primijeni', maxLines: 1),
+                            label: AutoSizeText(l10n.calendarFiltersApply, maxLines: 1),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
                         ),
@@ -150,7 +171,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: const AutoSizeText('Otkaži', maxLines: 1, minFontSize: 11),
+                                child: AutoSizeText(l10n.calendarFiltersCancel, maxLines: 1, minFontSize: 11),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -166,7 +187,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                       }
                                     : null,
                                 icon: const Icon(Icons.clear_all, size: 16),
-                                label: const AutoSizeText('Očisti', maxLines: 1, minFontSize: 11),
+                                label: AutoSizeText(l10n.calendarFiltersClear, maxLines: 1, minFontSize: 11),
                               ),
                             ),
                           ],
@@ -188,7 +209,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 }
                               : null,
                           icon: const Icon(Icons.clear_all),
-                          label: const AutoSizeText('Očisti sve', maxLines: 1),
+                          label: AutoSizeText(l10n.calendarFiltersClearAll, maxLines: 1),
                         ),
 
                         // Apply filters button
@@ -198,24 +219,24 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                             children: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: const AutoSizeText('Otkaži', maxLines: 1),
+                                child: AutoSizeText(l10n.calendarFiltersCancel, maxLines: 1),
                               ),
                               const SizedBox(width: 8),
                               // Apply button with brand gradient
                               Container(
-                                decoration: const BoxDecoration(
-                                  gradient: GradientTokens.brandPrimary,
-                                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                                decoration: BoxDecoration(
+                                  gradient: context.gradients.brandPrimary,
+                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                                 ),
                                 child: ElevatedButton.icon(
                                   onPressed: _applyFilters,
                                   icon: const Icon(Icons.check),
-                                  label: const AutoSizeText('Primijeni', maxLines: 1),
+                                  label: AutoSizeText(l10n.calendarFiltersApply, maxLines: 1),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.transparent,
                                     foregroundColor: Colors.white,
                                     shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                   ),
                                 ),
                               ),

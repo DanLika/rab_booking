@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/enums.dart';
 import '../providers/owner_calendar_provider.dart';
@@ -1023,19 +1024,116 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   /// Show status change dialog
   Future<void> _showStatusChangeDialog(BookingModel booking) async {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final newStatus = await showDialog<BookingStatus>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.ownerCalendarChangeStatus),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: BookingStatus.values.map((status) {
-            return ListTile(
-              title: Text(status.displayName),
-              leading: Icon(Icons.circle, color: status.color),
-              onTap: () => Navigator.of(context).pop(status),
-            );
-          }).toList(),
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          width: 320,
+          decoration: BoxDecoration(
+            gradient: context.gradients.sectionBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with gradient
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: context.gradients.brandPrimary,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.swap_horiz, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.ownerCalendarChangeStatus,
+                        style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+              // Status options
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: BookingStatus.values.map((status) {
+                    final isCurrentStatus = status == booking.status;
+                    return ListTile(
+                      title: Text(
+                        status.displayName,
+                        style: TextStyle(fontWeight: isCurrentStatus ? FontWeight.bold : FontWeight.normal),
+                      ),
+                      leading: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: status.color,
+                          shape: BoxShape.circle,
+                          border: isCurrentStatus ? Border.all(color: theme.colorScheme.primary, width: 2) : null,
+                        ),
+                        child: isCurrentStatus ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                      ),
+                      trailing: isCurrentStatus
+                          ? Text(
+                              l10n.calendarStatusCurrent,
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            )
+                          : null,
+                      onTap: isCurrentStatus ? null : () => Navigator.of(dialogContext).pop(status),
+                    );
+                  }).toList(),
+                ),
+              ),
+              // Footer
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
+                  border: Border(
+                    top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+                  ),
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(l10n.ownerMultiSelectCancel),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

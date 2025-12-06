@@ -1,6 +1,8 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -73,7 +75,7 @@ class BookingDetailsDialog extends ConsumerWidget {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -86,7 +88,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                       valueColor: booking.status.color,
                     ),
 
-                    const Divider(height: 24),
+                    _ThemedDivider(),
 
                     // Guest Information
                     _SectionHeader(icon: Icons.person_outline, title: l10n.ownerDetailsGuestInfo),
@@ -96,7 +98,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     if (ownerBooking.guestPhone != null)
                       _DetailRow(label: l10n.ownerDetailsPhone, value: ownerBooking.guestPhone!),
 
-                    const Divider(height: 24),
+                    _ThemedDivider(),
 
                     // Property Information
                     _SectionHeader(icon: Icons.home_outlined, title: l10n.ownerDetailsPropertyInfo),
@@ -105,7 +107,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     _DetailRow(label: l10n.ownerDetailsUnit, value: unit.name),
                     _DetailRow(label: l10n.ownerDetailsLocation, value: property.location),
 
-                    const Divider(height: 24),
+                    _ThemedDivider(),
 
                     // Booking Details
                     _SectionHeader(icon: Icons.calendar_today_outlined, title: l10n.ownerDetailsStayInfo),
@@ -121,7 +123,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     _DetailRow(label: l10n.ownerDetailsNights, value: '${booking.numberOfNights}'),
                     _DetailRow(label: l10n.ownerDetailsGuests, value: '${booking.guestCount}'),
 
-                    const Divider(height: 24),
+                    _ThemedDivider(),
 
                     // Payment Information
                     _SectionHeader(icon: Icons.payment_outlined, title: l10n.ownerDetailsPaymentInfo),
@@ -141,14 +143,14 @@ class BookingDetailsDialog extends ConsumerWidget {
                       _DetailRow(label: 'Payment Intent ID', value: booking.paymentIntentId!),
 
                     if (booking.notes != null && booking.notes!.isNotEmpty) ...[
-                      const Divider(height: 24),
+                      _ThemedDivider(),
                       _SectionHeader(icon: Icons.note_outlined, title: l10n.ownerDetailsNotes),
                       const SizedBox(height: 12),
                       Text(booking.notes!, style: TextStyle(color: theme.colorScheme.onSurface)),
                     ],
 
                     if (booking.status == BookingStatus.cancelled) ...[
-                      const Divider(height: 24),
+                      _ThemedDivider(),
                       _SectionHeader(icon: Icons.cancel_outlined, title: l10n.ownerDetailsCancellationInfo),
                       const SizedBox(height: 12),
                       if (booking.cancelledAt != null)
@@ -161,7 +163,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                         _DetailRow(label: l10n.ownerDetailsReason, value: booking.cancellationReason!),
                     ],
 
-                    const Divider(height: 24),
+                    _ThemedDivider(),
 
                     // Timestamps
                     _DetailRow(
@@ -180,56 +182,82 @@ class BookingDetailsDialog extends ConsumerWidget {
               ),
             ),
 
-            // Actions
+            // Actions - responsive layout
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
+                border: Border(
+                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                ),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
-              child: Wrap(
-                spacing: 4,
-                runSpacing: 8,
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Left side - Edit, Email, and Resend
-                  Wrap(
+                  // Primary actions row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (booking.status != BookingStatus.cancelled)
-                        TextButton.icon(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            showEditBookingDialog(context, ref, booking);
-                          },
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          label: Text(l10n.ownerDetailsEdit),
+                        Expanded(
+                          child: _ActionButton(
+                            icon: Icons.edit_outlined,
+                            label: l10n.ownerDetailsEdit,
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              showEditBookingDialog(context, ref, booking);
+                            },
+                          ),
                         ),
-                      TextButton.icon(
-                        onPressed: () {
-                          showSendEmailDialog(context, ref, booking);
-                        },
-                        icon: const Icon(Icons.email_outlined, size: 18),
-                        label: Text(l10n.ownerDetailsEmail),
+                      Expanded(
+                        child: _ActionButton(
+                          icon: Icons.email_outlined,
+                          label: l10n.ownerDetailsEmail,
+                          onPressed: () => showSendEmailDialog(context, ref, booking),
+                        ),
                       ),
                       if (booking.status != BookingStatus.cancelled)
-                        TextButton.icon(
-                          onPressed: () => _resendConfirmationEmail(context, ref, l10n),
-                          icon: const Icon(Icons.replay_outlined, size: 18),
-                          label: Text(l10n.ownerDetailsResend),
+                        Expanded(
+                          child: _ActionButton(
+                            icon: Icons.replay_outlined,
+                            label: l10n.ownerDetailsResend,
+                            onPressed: () => _resendConfirmationEmail(context, ref, l10n),
+                          ),
                         ),
                     ],
                   ),
-
-                  // Right side - Cancel and Close
-                  Wrap(
+                  // Divider between action groups
+                  if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(
+                        height: 1,
+                        color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                      ),
+                    ),
+                  // Secondary actions row (Cancel + Close)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed)
-                        TextButton.icon(
+                        _ActionButton(
+                          icon: Icons.cancel_outlined,
+                          label: l10n.ownerDetailsCancel,
                           onPressed: () => _confirmCancellation(context, ref, l10n),
-                          icon: Icon(Icons.cancel_outlined, color: theme.colorScheme.error, size: 18),
-                          label: Text(l10n.ownerDetailsCancel, style: TextStyle(color: theme.colorScheme.error)),
+                          isDestructive: true,
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: AutoSizeText(
+                          l10n.ownerDetailsClose,
+                          style: const TextStyle(fontSize: 13),
+                          maxLines: 1,
+                          minFontSize: 10,
                         ),
-                      TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.ownerDetailsClose)),
+                      ),
                     ],
                   ),
                 ],
@@ -406,6 +434,19 @@ class BookingDetailsDialog extends ConsumerWidget {
   }
 }
 
+/// Themed divider that uses consistent colors from design system
+class _ThemedDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Divider(
+      height: 24,
+      thickness: 1,
+      color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+    );
+  }
+}
+
 /// Section header widget with icon and gradient accent
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.icon, required this.title});
@@ -446,30 +487,81 @@ class _DetailRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 400;
-          final labelWidth = isMobile ? 100.0 : 140.0;
+          // More responsive label width based on available space
+          final isVeryNarrow = constraints.maxWidth < 320;
+          final isNarrow = constraints.maxWidth < 400;
+          final labelWidth = isVeryNarrow ? 70.0 : (isNarrow ? 85.0 : 120.0);
+          final fontSize = isVeryNarrow ? 12.0 : 14.0;
 
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
                 width: labelWidth,
-                child: Text(
+                child: AutoSizeText(
                   label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.textColorSecondary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: context.textColorSecondary, fontSize: fontSize),
+                  maxLines: 1,
+                  minFontSize: 10,
                 ),
               ),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   value,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: valueColor),
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: valueColor, fontSize: fontSize),
                 ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Action button with AutoSizeText to prevent text breaking
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({required this.icon, required this.label, required this.onPressed, this.isDestructive = false});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final bool isDestructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = isDestructive ? theme.colorScheme.error.withAlpha((0.8 * 255).toInt()) : null;
+
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: color,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 4),
+          Flexible(
+            child: AutoSizeText(
+              label,
+              style: const TextStyle(fontSize: 13),
+              maxLines: 1,
+              minFontSize: 9,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

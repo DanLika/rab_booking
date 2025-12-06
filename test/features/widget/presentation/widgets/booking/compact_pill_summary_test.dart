@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rab_booking/features/widget/presentation/l10n/widget_translations.dart';
 import 'package:rab_booking/features/widget/presentation/widgets/booking/compact_pill_summary.dart';
+
+WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');
 
 void main() {
   group('CompactPillSummary', () {
@@ -11,7 +14,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(
+            body: CompactPillSummary(translations: testTranslations, 
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -37,7 +40,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(
+            body: CompactPillSummary(translations: testTranslations, 
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -63,7 +66,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(
+            body: CompactPillSummary(translations: testTranslations, 
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -85,12 +88,11 @@ void main() {
       expect(find.text('3 nights'), findsOneWidget);
     });
 
-    testWidgets('renders Reserve button when showReserveButton is true',
-        (tester) async {
+    testWidgets('renders Reserve button when showReserveButton is true', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(
+            body: CompactPillSummary(translations: testTranslations, 
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -112,12 +114,11 @@ void main() {
       expect(find.text('Reserve'), findsOneWidget);
     });
 
-    testWidgets('hides Reserve button when showReserveButton is false',
-        (tester) async {
+    testWidgets('hides Reserve button when showReserveButton is false', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(
+            body: CompactPillSummary(translations: testTranslations, 
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -145,7 +146,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(
+            body: CompactPillSummary(translations: testTranslations, 
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -174,7 +175,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(
+            body: CompactPillSummary(translations: testTranslations, 
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -201,7 +202,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(
+            body: CompactPillSummary(translations: testTranslations, 
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,

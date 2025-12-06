@@ -12390,6 +12390,12 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get calendarErrorClose;
 
+  /// No description provided for @calendarFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Filters'**
+  String get calendarFiltersTitle;
+
   /// No description provided for @calendarFiltersSearchGuest.
   ///
   /// In en, this message translates to:
@@ -12431,6 +12437,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear date'**
   String get calendarFiltersClearDate;
+
+  /// No description provided for @calendarFiltersApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get calendarFiltersApply;
+
+  /// No description provided for @calendarFiltersCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get calendarFiltersCancel;
+
+  /// No description provided for @calendarFiltersClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get calendarFiltersClear;
+
+  /// No description provided for @calendarFiltersClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get calendarFiltersClearAll;
+
+  /// No description provided for @calendarSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Bookings'**
+  String get calendarSearchTitle;
+
+  /// No description provided for @calendarSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by guest name, email, ID or unit...'**
+  String get calendarSearchHint;
+
+  /// No description provided for @calendarSearchResultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} results'**
+  String calendarSearchResultsCount(int count);
+
+  /// No description provided for @calendarSearchEnterTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter search term'**
+  String get calendarSearchEnterTerm;
+
+  /// No description provided for @calendarSearchDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by guest name, email, ID or unit'**
+  String get calendarSearchDescription;
+
+  /// No description provided for @calendarSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get calendarSearchNoResults;
+
+  /// No description provided for @calendarSearchTryAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search term'**
+  String get calendarSearchTryAnother;
+
+  /// No description provided for @calendarStatusCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get calendarStatusCurrent;
+
+  /// No description provided for @bookingInlineEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Edit'**
+  String get bookingInlineEditTitle;
+
+  /// No description provided for @bookingInlineEditGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get bookingInlineEditGuest;
+
+  /// No description provided for @bookingInlineEditCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in'**
+  String get bookingInlineEditCheckIn;
+
+  /// No description provided for @bookingInlineEditCheckOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-out'**
+  String get bookingInlineEditCheckOut;
+
+  /// No description provided for @bookingInlineEditNights.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights'**
+  String get bookingInlineEditNights;
+
+  /// No description provided for @bookingInlineEditGuestCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of Guests'**
+  String get bookingInlineEditGuestCount;
+
+  /// No description provided for @bookingInlineEditSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get bookingInlineEditSave;
+
+  /// No description provided for @bookingInlineEditSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get bookingInlineEditSaving;
+
+  /// No description provided for @bookingInlineEditCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get bookingInlineEditCancel;
+
+  /// No description provided for @bookingInlineEditDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Dates'**
+  String get bookingInlineEditDates;
+
+  /// No description provided for @bookingInlineEditNightSingular.
+  ///
+  /// In en, this message translates to:
+  /// **'night'**
+  String get bookingInlineEditNightSingular;
+
+  /// No description provided for @bookingInlineEditNightPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'nights'**
+  String get bookingInlineEditNightPlural;
 
   /// No description provided for @bookingEditInternalNotes.
   ///

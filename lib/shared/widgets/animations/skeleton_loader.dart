@@ -2,6 +2,24 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 
+/// Consistent skeleton colors for light and dark themes
+/// These colors provide good visibility and match the app's design system
+class SkeletonColors {
+  // Dark theme colors - lighter grays with subtle purple tint
+  static const Color darkPrimary = Color(0xFF3D3D3D);
+  static const Color darkSecondary = Color(0xFF4A4A4A);
+  static const Color darkCardBackground = Color(0xFF252330);
+  static const Color darkBorder = Color(0xFF35323D);
+  static const Color darkHeader = Color(0xFF2D2D3A);
+
+  // Light theme colors - subtle grays
+  static const Color lightPrimary = Color(0xFFE0E0E0);
+  static const Color lightSecondary = Color(0xFFEEEEEE);
+  static const Color lightCardBackground = Colors.white;
+  static const Color lightBorder = Color(0xFFE0DCE8);
+  static const Color lightHeader = Color(0xFFF5F5F5);
+}
+
 /// Skeleton loader with shimmer effect
 /// Replaces CircularProgressIndicator for better UX
 class SkeletonLoader extends StatefulWidget {
@@ -81,10 +99,9 @@ class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProvid
             gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
-              // FIXED: Lighter skeleton colors for better visibility
               colors: isDark
-                  ? [const Color(0xFF3D3D3D), const Color(0xFF4A4A4A)]
-                  : [Colors.grey[300]!, Colors.grey[200]!],
+                  ? [SkeletonColors.darkPrimary, SkeletonColors.darkSecondary]
+                  : [SkeletonColors.lightPrimary, SkeletonColors.lightSecondary],
               stops: const [0.0, 0.3],
             ),
           ),
@@ -105,9 +122,9 @@ class PropertyCardSkeleton extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
-        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+        color: isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+        border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
       ),
       child: const ClipRect(
         child: Column(
@@ -194,8 +211,9 @@ class CircleSkeleton extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          // FIXED: Lighter skeleton colors for better visibility
-          colors: isDark ? [const Color(0xFF3D3D3D), const Color(0xFF4A4A4A)] : [Colors.grey[300]!, Colors.grey[200]!],
+          colors: isDark
+              ? [SkeletonColors.darkPrimary, SkeletonColors.darkSecondary]
+              : [SkeletonColors.lightPrimary, SkeletonColors.lightSecondary],
           stops: const [0.0, 0.3],
         ),
       ),
@@ -215,9 +233,9 @@ class PropertyCardSkeletonHorizontal extends StatelessWidget {
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
-        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+        color: isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+        border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
       ),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,9 +301,9 @@ class ReviewCardSkeleton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
-        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+        color: isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+        border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,9 +352,9 @@ class BookingCardSkeleton extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     // Use consistent colors with real booking cards
-    final cardBackground = isDark ? const Color(0xFF252330) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF35323D) : const Color(0xFFE0DCE8);
-    final headerColor = isDark ? const Color(0xFF2D2D3A) : Colors.grey[100]!;
+    final cardBackground = isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground;
+    final borderColor = isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder;
+    final headerColor = isDark ? SkeletonColors.darkHeader : SkeletonColors.lightHeader;
 
     return Container(
       decoration: BoxDecoration(
@@ -695,8 +713,9 @@ class AnalyticsMetricCardsSkeleton extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          // FIXED: Lighter skeleton colors for better visibility in dark mode
-          colors: isDark ? [const Color(0xFF3D3D3D), const Color(0xFF2A2A2A)] : [Colors.grey[300]!, Colors.grey[200]!],
+          colors: isDark
+              ? [SkeletonColors.darkPrimary, SkeletonColors.darkCardBackground]
+              : [SkeletonColors.lightPrimary, SkeletonColors.lightSecondary],
         ),
       ),
       padding: EdgeInsets.all(isMobile ? 14 : 18),
@@ -740,9 +759,9 @@ class AnalyticsChartSkeleton extends StatelessWidget {
     return Container(
       height: chartHeight,
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surface : Colors.white,
+        color: isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+        border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
       ),
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       child: Column(
@@ -810,9 +829,9 @@ class AnalyticsListSkeleton extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surface : Colors.white,
+        color: isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+        border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
       ),
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       child: Column(
@@ -878,9 +897,9 @@ class AnalyticsProgressCardSkeleton extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surface : Colors.white,
+        color: isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+        border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
       ),
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       child: const Column(
@@ -1053,7 +1072,7 @@ class CalendarSkeleton extends StatelessWidget {
                         margin: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
-                          border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+                          border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1103,9 +1122,9 @@ class BookingsTableSkeleton extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     // Use consistent colors
-    final cardBackground = isDark ? const Color(0xFF252330) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF35323D) : const Color(0xFFE0DCE8);
-    final headerColor = isDark ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.surfaceContainerHigh;
+    final cardBackground = isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground;
+    final borderColor = isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder;
+    final headerColor = isDark ? SkeletonColors.darkHeader : SkeletonColors.lightHeader;
 
     return Container(
       decoration: BoxDecoration(
@@ -1170,7 +1189,7 @@ class BookingsTableSkeleton extends StatelessWidget {
 
   Widget _buildTableRowSkeleton(BuildContext context, bool isDark, bool isMobile, int index) {
     // Use consistent border colors
-    final borderColor = isDark ? const Color(0xFF35323D) : const Color(0xFFE0DCE8);
+    final borderColor = isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 10 : 14),

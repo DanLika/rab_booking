@@ -123,11 +123,7 @@ class CalendarTopToolbar extends StatelessWidget {
           if (isCompact)
             // COMPACT MODE: Only overflow menu
             PopupMenuButton<String>(
-              icon: Badge(
-                label: (notificationCount ?? 0) > 0 ? Text('$notificationCount') : null,
-                isLabelVisible: (notificationCount ?? 0) > 0,
-                child: const Icon(Icons.more_vert),
-              ),
+              icon: _buildCompactMenuIcon(theme, notificationCount),
               tooltip: l10n.ownerCalendarOptions,
               position: PopupMenuPosition.under, // Dropdown opens below button
               offset: const Offset(0, 8), // 8px below button
@@ -334,16 +330,41 @@ class CalendarTopToolbar extends StatelessWidget {
         ),
         if (count != null && count > 0)
           Positioned(
-            right: 8,
-            top: 8,
+            right: 6,
+            top: 6,
             child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(8)),
+              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
               child: Text(
                 count > 9 ? '9+' : '$count',
                 style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Build compact menu icon with subtle notification indicator
+  Widget _buildCompactMenuIcon(ThemeData theme, int? notificationCount) {
+    final hasNotifications = (notificationCount ?? 0) > 0;
+
+    return Stack(
+      children: [
+        const Icon(Icons.more_vert),
+        if (hasNotifications)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: theme.scaffoldBackgroundColor),
               ),
             ),
           ),

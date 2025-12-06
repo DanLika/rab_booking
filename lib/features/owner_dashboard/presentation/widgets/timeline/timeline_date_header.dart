@@ -121,7 +121,8 @@ class TimelineDayHeader extends StatelessWidget {
               fontWeight: FontWeight.bold,
               fontSize: fontSize,
               height: 1.2,
-              color: isToday ? theme.colorScheme.onPrimary : (isWeekend ? theme.colorScheme.error : null),
+              // Weekend: use softer orange instead of error red
+              color: isToday ? theme.colorScheme.onPrimary : (isWeekend ? const Color(0xFFE67E22) : null),
             ),
           ),
         ),

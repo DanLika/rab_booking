@@ -6868,6 +6868,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get calendarErrorClose => 'Zatvori';
 
   @override
+  String get calendarFiltersTitle => 'Filteri kalendara';
+
+  @override
   String get calendarFiltersSearchGuest => 'Pretraži gosta';
 
   @override
@@ -6887,6 +6890,83 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get calendarFiltersClearDate => 'Očisti datum';
+
+  @override
+  String get calendarFiltersApply => 'Primijeni';
+
+  @override
+  String get calendarFiltersCancel => 'Otkaži';
+
+  @override
+  String get calendarFiltersClear => 'Očisti';
+
+  @override
+  String get calendarFiltersClearAll => 'Očisti sve';
+
+  @override
+  String get calendarSearchTitle => 'Pretraga rezervacija';
+
+  @override
+  String get calendarSearchHint =>
+      'Pretražite po imenu gosta, email-u, ID-u ili jedinici...';
+
+  @override
+  String calendarSearchResultsCount(int count) {
+    return 'Pronađeno $count rezultata';
+  }
+
+  @override
+  String get calendarSearchEnterTerm => 'Unesite termin za pretragu';
+
+  @override
+  String get calendarSearchDescription =>
+      'Pretražite po imenu gosta, email-u, ID-u ili jedinici';
+
+  @override
+  String get calendarSearchNoResults => 'Nema rezultata';
+
+  @override
+  String get calendarSearchTryAnother =>
+      'Pokušajte sa drugim terminom pretrage';
+
+  @override
+  String get calendarStatusCurrent => 'Trenutni';
+
+  @override
+  String get bookingInlineEditTitle => 'Brzo uređivanje';
+
+  @override
+  String get bookingInlineEditGuest => 'Gost';
+
+  @override
+  String get bookingInlineEditCheckIn => 'Dolazak';
+
+  @override
+  String get bookingInlineEditCheckOut => 'Odlazak';
+
+  @override
+  String get bookingInlineEditNights => 'Noćenja';
+
+  @override
+  String get bookingInlineEditGuestCount => 'Broj gostiju';
+
+  @override
+  String get bookingInlineEditSave => 'Spremi promjene';
+
+  @override
+  String get bookingInlineEditSaving => 'Spremanje...';
+
+  @override
+  String get bookingInlineEditCancel => 'Otkaži';
+
+  @override
+  String get bookingInlineEditDates => 'Datumi';
+
+  @override
+  String get bookingInlineEditNightSingular => 'noć';
+
+  @override
+  String get bookingInlineEditNightPlural => 'noći';
 
   @override
   String get bookingEditInternalNotes => 'Interne bilješke';

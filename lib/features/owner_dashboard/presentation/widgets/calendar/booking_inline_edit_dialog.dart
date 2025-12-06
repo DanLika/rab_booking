@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
@@ -49,39 +50,54 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
+    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < CalendarGridCalculator.mobileBreakpoint;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
       child: Container(
         width: isMobile ? double.infinity : 500,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient (matching CommonAppBar)
+            // Header with gradient
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.edit, color: theme.colorScheme.onPrimary),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: AutoSizeText(
-                      'Quick Edit Booking',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      l10n.bookingInlineEditTitle,
+                      style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                       maxLines: 1,
                       minFontSize: 14,
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, color: theme.colorScheme.onPrimary),
+                    icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -91,32 +107,86 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Guest name (read-only)
-                    _buildInfoRow('Guest', widget.booking.guestName ?? 'N/A', Icons.person),
+                    _buildInfoRow(l10n.bookingInlineEditGuest, widget.booking.guestName ?? 'N/A', Icons.person),
                     const SizedBox(height: 16),
 
-                    // Check-in date
-                    _buildDateField(
-                      label: 'Check-in',
-                      date: _checkIn,
-                      onTap: () => _selectDate(context, isCheckIn: true),
+                    // Dates section title
+                    Text(
+                      l10n.bookingInlineEditDates,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
 
-                    // Check-out date
-                    _buildDateField(
-                      label: 'Check-out',
-                      date: _checkOut,
-                      onTap: () => _selectDate(context, isCheckIn: false),
+                    // Date fields - responsive layout
+                    if (isMobile)
+                      Column(
+                        children: [
+                          _buildDateField(
+                            label: l10n.bookingInlineEditCheckIn,
+                            date: _checkIn,
+                            onTap: () => _selectDate(context, isCheckIn: true),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildDateField(
+                            label: l10n.bookingInlineEditCheckOut,
+                            date: _checkOut,
+                            onTap: () => _selectDate(context, isCheckIn: false),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDateField(
+                              label: l10n.bookingInlineEditCheckIn,
+                              date: _checkIn,
+                              onTap: () => _selectDate(context, isCheckIn: true),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildDateField(
+                              label: l10n.bookingInlineEditCheckOut,
+                              date: _checkOut,
+                              onTap: () => _selectDate(context, isCheckIn: false),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 12),
+
+                    // Nights badge - styled like booking_create_dialog
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.nights_stay, size: 18, color: theme.colorScheme.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_checkOut.difference(_checkIn).inDays} ${_checkOut.difference(_checkIn).inDays == 1 ? l10n.bookingInlineEditNightSingular : l10n.bookingInlineEditNightPlural}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
 
-                    // Nights (calculated)
-                    _buildInfoRow('Nights', '${_checkOut.difference(_checkIn).inDays}', Icons.nightlight_round),
                     const SizedBox(height: 16),
 
                     // Guest count
@@ -136,9 +206,11 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
 
             // Footer buttons
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: theme.dividerColor)),
+                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
+                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: isMobile
                   ? Column(
@@ -146,9 +218,9 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
                       children: [
                         // Save button (full width on mobile) with gradient
                         Container(
-                          decoration: const BoxDecoration(
-                            gradient: GradientTokens.brandPrimary,
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                          decoration: BoxDecoration(
+                            gradient: context.gradients.brandPrimary,
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
                           ),
                           child: ElevatedButton.icon(
                             onPressed: _isSaving ? null : _saveChanges,
@@ -156,7 +228,7 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                             icon: _isSaving
                                 ? const SizedBox(
@@ -166,7 +238,7 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
                                   )
                                 : const Icon(Icons.save, color: Colors.white),
                             label: AutoSizeText(
-                              _isSaving ? 'Saving...' : 'Save Changes',
+                              _isSaving ? l10n.bookingInlineEditSaving : l10n.bookingInlineEditSave,
                               style: const TextStyle(color: Colors.white),
                               maxLines: 1,
                             ),
@@ -176,7 +248,7 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
                         // Cancel button (full width on mobile)
                         TextButton(
                           onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-                          child: const AutoSizeText('Cancel', maxLines: 1, minFontSize: 11),
+                          child: AutoSizeText(l10n.bookingInlineEditCancel, maxLines: 1, minFontSize: 11),
                         ),
                       ],
                     )
@@ -186,15 +258,15 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
                         Flexible(
                           child: TextButton(
                             onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-                            child: const AutoSizeText('Cancel', maxLines: 1, minFontSize: 11),
+                            child: AutoSizeText(l10n.bookingInlineEditCancel, maxLines: 1, minFontSize: 11),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Container(
-                            decoration: const BoxDecoration(
-                              gradient: GradientTokens.brandPrimary,
-                              borderRadius: BorderRadius.all(Radius.circular(20)),
+                            decoration: BoxDecoration(
+                              gradient: context.gradients.brandPrimary,
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: ElevatedButton.icon(
                               onPressed: _isSaving ? null : _saveChanges,
@@ -202,7 +274,7 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
                                 backgroundColor: Colors.transparent,
                                 foregroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
                               icon: _isSaving
                                   ? const SizedBox(
@@ -212,7 +284,7 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
                                     )
                                   : const Icon(Icons.save, color: Colors.white),
                               label: AutoSizeText(
-                                _isSaving ? 'Saving...' : 'Save Changes',
+                                _isSaving ? l10n.bookingInlineEditSaving : l10n.bookingInlineEditSave,
                                 style: const TextStyle(color: Colors.white),
                                 maxLines: 1,
                               ),
@@ -258,12 +330,16 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
   }
 
   Widget _buildGuestCountField() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
           child: Builder(
             builder: (ctx) => InputDecorator(
-              decoration: InputDecorationHelper.buildDecoration(labelText: 'Number of Guests', context: ctx),
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.bookingInlineEditGuestCount,
+                context: ctx,
+              ),
               child: Text('$_guestCount', style: Theme.of(context).textTheme.bodyLarge),
             ),
           ),

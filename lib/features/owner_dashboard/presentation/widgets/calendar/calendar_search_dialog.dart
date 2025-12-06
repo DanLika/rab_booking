@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
@@ -111,27 +113,47 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.8,
+        width: screenWidth * 0.8,
         height: MediaQuery.of(context).size.height * 0.8,
         constraints: BoxConstraints(maxWidth: 800, maxHeight: MediaQuery.of(context).size.height * 0.6),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
         child: Column(
           children: [
-            // Header with gradient (using brand gradient)
+            // Header with gradient
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search, color: Colors.white),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.search, color: Colors.white, size: 20),
+                  ),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Pretraga rezervacija',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  Text(
+                    l10n.calendarSearchTitle,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   const Spacer(),
                   IconButton(
@@ -144,14 +166,14 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
             // Search field
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
               child: Builder(
                 builder: (ctx) => TextField(
                   controller: _searchController,
                   autofocus: true,
                   decoration:
                       InputDecorationHelper.buildDecoration(
-                        labelText: 'Pretražite po imenu gosta, email-u, ID-u ili jedinici...',
+                        labelText: l10n.calendarSearchHint,
                         prefixIcon: const Icon(Icons.search),
                         context: ctx,
                       ).copyWith(
@@ -173,20 +195,18 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             // Search info
             if (_searchQuery.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 12 : 16),
                 child: Row(
                   children: [
                     Text(
-                      'Pronađeno ${_searchResults.length} rezultata',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      l10n.calendarSearchResultsCount(_searchResults.length),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
               ),
 
-            const Divider(),
+            Divider(color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
 
             // Results list
             Expanded(child: _buildResultsList()),
@@ -198,6 +218,9 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   /// Build search results list
   Widget _buildResultsList() {
+    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
     if (_isSearching) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -210,12 +233,12 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             Icon(Icons.search, size: 64, color: Theme.of(context).disabledColor),
             const SizedBox(height: 16),
             Text(
-              'Unesite termin za pretragu',
+              l10n.calendarSearchEnterTerm,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).disabledColor),
             ),
             const SizedBox(height: 8),
             Text(
-              'Pretražite po imenu gosta, email-u, ID-u ili jedinici',
+              l10n.calendarSearchDescription,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).disabledColor),
               textAlign: TextAlign.center,
             ),
@@ -232,12 +255,12 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             Icon(Icons.search_off, size: 64, color: Theme.of(context).disabledColor),
             const SizedBox(height: 16),
             Text(
-              'Nema rezultata',
+              l10n.calendarSearchNoResults,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).disabledColor),
             ),
             const SizedBox(height: 8),
             Text(
-              'Pokušajte sa drugim terminom pretrage',
+              l10n.calendarSearchTryAnother,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).disabledColor),
             ),
           ],
@@ -246,7 +269,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final booking = _searchResults[index];

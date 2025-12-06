@@ -91,6 +91,11 @@ class TimelineBookingBlock extends StatelessWidget {
                   child: Builder(
                     builder: (context) {
                       final l10n = AppLocalizations.of(context);
+                      // Determine text color based on background luminance
+                      final textColor = _getContrastTextColor(booking.status.color);
+                      final secondaryTextColor = textColor.withValues(alpha: 0.85);
+                      final iconColor = textColor.withValues(alpha: 0.7);
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -99,9 +104,12 @@ class TimelineBookingBlock extends StatelessWidget {
                           Text(
                             booking.guestName ?? l10n.ownerCalendarDefaultGuest,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: textColor,
                               fontWeight: FontWeight.w600,
                               fontSize: guestNameFontSize,
+                              shadows: _shouldAddTextShadow(booking.status.color)
+                                  ? [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 2)]
+                                  : null,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -110,25 +118,19 @@ class TimelineBookingBlock extends StatelessWidget {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.person, size: metadataFontSize + 2, color: Colors.white70),
+                              Icon(Icons.person, size: metadataFontSize + 2, color: iconColor),
                               const SizedBox(width: 2),
                               Text(
                                 '${booking.guestCount}',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  fontSize: metadataFontSize,
-                                ),
+                                style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
                               ),
                               const SizedBox(width: 6),
-                              Icon(Icons.nights_stay, size: metadataFontSize + 2, color: Colors.white70),
+                              Icon(Icons.nights_stay, size: metadataFontSize + 2, color: iconColor),
                               const SizedBox(width: 2),
                               Flexible(
                                 child: Text(
                                   '$nights',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                    fontSize: metadataFontSize,
-                                  ),
+                                  style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -169,5 +171,20 @@ class TimelineBookingBlock extends StatelessWidget {
     );
 
     return conflicts.isNotEmpty;
+  }
+
+  /// Get contrasting text color based on background luminance
+  static Color _getContrastTextColor(Color backgroundColor) {
+    // Calculate relative luminance
+    final luminance = backgroundColor.computeLuminance();
+    // Use white text for dark backgrounds, dark text for light backgrounds
+    return luminance > 0.5 ? const Color(0xFF1A1A1A) : Colors.white;
+  }
+
+  /// Determine if text shadow should be added for better readability
+  static bool _shouldAddTextShadow(Color backgroundColor) {
+    final luminance = backgroundColor.computeLuminance();
+    // Add shadow for medium luminance colors where contrast might be borderline
+    return luminance > 0.3 && luminance < 0.7;
   }
 }

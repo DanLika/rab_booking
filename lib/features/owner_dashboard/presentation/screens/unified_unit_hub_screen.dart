@@ -281,7 +281,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                       context: context,
                     ).copyWith(
                       hintText: l10n.unitHubSearch,
-                      labelText: null,
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(icon: const Icon(Icons.clear, size: 20), onPressed: _searchController.clear)
                           : null,

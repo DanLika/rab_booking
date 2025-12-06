@@ -240,6 +240,7 @@ class _ActivityTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
     return ListTile(
@@ -277,14 +278,25 @@ class _ActivityTile extends StatelessWidget {
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(6),
+          // Subtle tinted background that works in both themes
+          color: isDark
+              ? const Color(0xFF2D2D3A) // Dark: subtle purple-gray
+              : const Color(0xFFF0EDF5), // Light: subtle purple-tinted gray
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isDark
+                ? const Color(0xFF3D3D4A) // Dark: subtle border
+                : const Color(0xFFE0DCE8), // Light: subtle border
+            width: 1,
+          ),
         ),
         child: Text(
           _formatTimestamp(activity.timestamp, l10n),
           style: theme.textTheme.labelSmall?.copyWith(
-            fontWeight: FontWeight.w500,
-            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+            color: isDark
+                ? const Color(0xFFB0B0C0) // Dark: lighter text for better contrast
+                : const Color(0xFF6B6B80), // Light: darker text for better contrast
           ),
           textAlign: TextAlign.center,
         ),

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/booking_model.dart';
-import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -58,166 +58,223 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final nights = _checkOut.difference(_checkIn).inDays;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isMobile = Breakpoints.isMobile(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return AlertDialog(
-      title: Text(l10n.editBookingTitle, style: const TextStyle(color: Colors.white)),
-      content: Container(
-        width: isMobile ? screenWidth * 0.9 : 500,
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.8),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Booking Info
-              Text(
-                l10n.editBookingBookingId(widget.booking.id),
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        width: screenWidth < 400 ? double.infinity : 500,
+        constraints: BoxConstraints(maxWidth: screenWidth * 0.9, maxHeight: screenHeight * 0.85),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Gradient Header
+            Container(
+              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
-              Text(
-                l10n.editBookingGuest(widget.booking.guestName ?? ''),
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.editBookingTitle,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
+            ),
 
-              // Check-in Date
-              ListTile(
-                leading: const Icon(Icons.login),
-                title: Text(l10n.editBookingCheckIn),
-                subtitle: Text(DateFormat('MMM dd, yyyy').format(_checkIn)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.edit_calendar),
-                  onPressed: () => _selectDate(isCheckIn: true),
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              // Check-out Date
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: Text(l10n.editBookingCheckOut),
-                subtitle: Text(DateFormat('MMM dd, yyyy').format(_checkOut)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.edit_calendar),
-                  onPressed: () => _selectDate(isCheckIn: false),
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  l10n.editBookingNights(nights),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.authSecondary),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Guest Count
-              ListTile(
-                leading: const Icon(Icons.people),
-                title: Text(l10n.editBookingGuests),
-                trailing: Row(
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Minus button
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: _guestCount > 1
-                            ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)
-                            : Colors.grey[400],
-                        shape: BoxShape.circle,
+                    // Booking Info
+                    Text(
+                      l10n.editBookingBookingId(widget.booking.id),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+                    ),
+                    Text(
+                      l10n.editBookingGuest(widget.booking.guestName ?? ''),
+                      style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Check-in Date
+                    ListTile(
+                      leading: const Icon(Icons.login),
+                      title: Text(l10n.editBookingCheckIn),
+                      subtitle: Text(DateFormat('MMM dd, yyyy').format(_checkIn)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit_calendar),
+                        onPressed: () => _selectDate(isCheckIn: true),
                       ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          Icons.remove,
-                          size: 16,
-                          color: _guestCount > 1
-                              ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white)
-                              : Colors.grey[600],
-                        ),
-                        onPressed: _guestCount > 1 ? () => setState(() => _guestCount--) : null,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+
+                    // Check-out Date
+                    ListTile(
+                      leading: const Icon(Icons.logout),
+                      title: Text(l10n.editBookingCheckOut),
+                      subtitle: Text(DateFormat('MMM dd, yyyy').format(_checkOut)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit_calendar),
+                        onPressed: () => _selectDate(isCheckIn: false),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        l10n.editBookingNights(nights),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.authSecondary),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Text(_guestCount.toString(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 12),
-                    // Plus button
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
-                        shape: BoxShape.circle,
+                    const SizedBox(height: 12),
+
+                    // Guest Count
+                    ListTile(
+                      leading: const Icon(Icons.people),
+                      title: Text(l10n.editBookingGuests),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: _guestCount > 1 ? (isDark ? Colors.white : Colors.black) : Colors.grey[400],
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(
+                                Icons.remove,
+                                size: 16,
+                                color: _guestCount > 1 ? (isDark ? Colors.black : Colors.white) : Colors.grey[600],
+                              ),
+                              onPressed: _guestCount > 1 ? () => setState(() => _guestCount--) : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            _guestCount.toString(),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white : Colors.black,
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.add, size: 16, color: isDark ? Colors.black : Colors.white),
+                              onPressed: () => setState(() => _guestCount++),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          Icons.add,
-                          size: 16,
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
-                        ),
-                        onPressed: () => setState(() => _guestCount++),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+
+                    // Notes
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _notesController,
+                      maxLines: 3,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.editBookingInternalNotes,
+                        hintText: l10n.editBookingNotesHint,
+                        context: context,
                       ),
                     ),
                   ],
                 ),
-                contentPadding: EdgeInsets.zero,
               ),
+            ),
 
-              // Notes
-              const SizedBox(height: 16),
-              TextField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: InputDecorationHelper.buildDecoration(
-                  labelText: l10n.editBookingInternalNotes,
-                  hintText: l10n.editBookingNotesHint,
-                  context: context,
-                ),
+            // Footer
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
+                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
-            ],
-          ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    child: Text(l10n.cancel),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: context.gradients.brandPrimary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveChanges,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : Text(l10n.editBookingSaveChanges),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(onPressed: _isLoading ? null : () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
-        Container(
-          decoration: const BoxDecoration(
-            gradient: GradientTokens.brandPrimary,
-            borderRadius: BorderRadius.all(Radius.circular(4)),
-          ),
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _saveChanges,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              foregroundColor: Colors.white,
-              shadowColor: Colors.transparent,
-            ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(l10n.editBookingSaveChanges),
-          ),
-        ),
-      ],
     );
   }
 

@@ -131,7 +131,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -232,14 +232,14 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
+                          color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
+                          border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.nights_stay, size: 18, color: theme.colorScheme.tertiary),
+                            Icon(Icons.nights_stay, size: 18, color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
                             Text(
                               AppLocalizations.of(
@@ -248,7 +248,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.tertiary,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                           ],
@@ -427,9 +427,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
             // Footer buttons
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
               decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
                 border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,

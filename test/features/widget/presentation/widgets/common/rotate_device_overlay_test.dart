@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rab_booking/features/widget/presentation/l10n/widget_translations.dart';
 import 'package:rab_booking/features/widget/presentation/widgets/common/rotate_device_overlay.dart';
 import 'package:rab_booking/features/widget/presentation/theme/minimalist_colors.dart';
+
+WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');
 
 void main() {
   group('RotateDeviceOverlay', () {
@@ -11,6 +14,7 @@ void main() {
           home: Stack(
             children: [
               RotateDeviceOverlay(
+                translations: testTranslations,
                 isDarkMode: false,
                 colors: const MinimalistColorSchemeAdapter(),
                 onSwitchToMonthView: () {},
@@ -20,11 +24,10 @@ void main() {
         ),
       );
 
-      expect(find.text('Rotate Your Device'), findsOneWidget);
+      // HR translations
+      expect(find.text('Okrenite uređaj'), findsOneWidget);
       expect(
-        find.text(
-          'For the best year view experience, please rotate your device to landscape mode.',
-        ),
+        find.text('Za najbolji prikaz godišnjeg kalendara, molimo okrenite uređaj u pejzažni način.'),
         findsOneWidget,
       );
     });
@@ -35,6 +38,7 @@ void main() {
           home: Stack(
             children: [
               RotateDeviceOverlay(
+                translations: testTranslations,
                 isDarkMode: false,
                 colors: const MinimalistColorSchemeAdapter(),
                 onSwitchToMonthView: () {},
@@ -44,12 +48,12 @@ void main() {
         ),
       );
 
-      expect(find.text('Switch to Month View'), findsOneWidget);
+      // HR translation: "Prebaci na mjesečni prikaz"
+      expect(find.text('Prebaci na mjesečni prikaz'), findsOneWidget);
       expect(find.byType(ElevatedButton), findsOneWidget);
     });
 
-    testWidgets('calls onSwitchToMonthView when button is pressed',
-        (tester) async {
+    testWidgets('calls onSwitchToMonthView when button is pressed', (tester) async {
       var wasCalled = false;
 
       await tester.pumpWidget(
@@ -57,6 +61,7 @@ void main() {
           home: Stack(
             children: [
               RotateDeviceOverlay(
+                translations: testTranslations,
                 isDarkMode: false,
                 colors: const MinimalistColorSchemeAdapter(),
                 onSwitchToMonthView: () {
@@ -80,6 +85,7 @@ void main() {
           home: Stack(
             children: [
               RotateDeviceOverlay(
+                translations: testTranslations,
                 isDarkMode: false,
                 colors: const MinimalistColorSchemeAdapter(),
                 onSwitchToMonthView: () {},
@@ -92,13 +98,13 @@ void main() {
       expect(find.byIcon(Icons.screen_rotation), findsOneWidget);
     });
 
-    testWidgets('applies dark mode styling when isDarkMode is true',
-        (tester) async {
+    testWidgets('applies dark mode styling when isDarkMode is true', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Stack(
             children: [
               RotateDeviceOverlay(
+                translations: testTranslations,
                 isDarkMode: true,
                 colors: const MinimalistColorSchemeAdapter(dark: true),
                 onSwitchToMonthView: () {},

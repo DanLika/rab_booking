@@ -33,12 +33,14 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: Container(
-        width: 450,
+        width: screenWidth < 400 ? double.infinity : 450,
+        constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
@@ -50,7 +52,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
           children: [
             // Gradient Header
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
@@ -58,12 +60,12 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.cancel_outlined, color: Colors.white, size: 24),
+                    child: const Icon(Icons.cancel_outlined, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -78,13 +80,13 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
 
             // Content
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(l10n.bookingCancelMessage, style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface)),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _reasonController,
                     decoration: InputDecorationHelper.buildDecoration(
@@ -95,7 +97,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                     ),
                     maxLines: 3,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   CheckboxListTile(
                     title: Text(l10n.bookingCancelSendEmail, style: TextStyle(color: theme.colorScheme.onSurface)),
                     value: _sendEmail,
@@ -106,39 +108,39 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                     },
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: Text(l10n.bookingCancelCancel),
-                      ),
-                      const SizedBox(width: 12),
-                      FilledButton(
-                        onPressed: () {
-                          // Return reason and sendEmail flag
-                          Navigator.of(context).pop({
-                            'reason': _reasonController.text.trim().isEmpty
-                                ? l10n.bookingCancelDefaultReason
-                                : _reasonController.text.trim(),
-                            'sendEmail': _sendEmail,
-                          });
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.error,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          elevation: 0,
-                        ),
-                        child: Text(l10n.bookingCancelConfirm),
-                      ),
-                    ],
+                ],
+              ),
+            ),
+
+            // Footer
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
+                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.bookingCancelCancel)),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.of(context).pop({
+                        'reason': _reasonController.text.trim().isEmpty
+                            ? l10n.bookingCancelDefaultReason
+                            : _reasonController.text.trim(),
+                        'sendEmail': _sendEmail,
+                      });
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.error,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      elevation: 0,
+                    ),
+                    child: Text(l10n.bookingCancelConfirm),
                   ),
                 ],
               ),

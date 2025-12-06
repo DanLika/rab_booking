@@ -2889,6 +2889,7 @@
   "calendarErrorBannerTitle": "Error",
   "calendarErrorClose": "Close",
 
+  "calendarFiltersTitle": "Calendar Filters",
   "calendarFiltersSearchGuest": "Search guest",
   "calendarFiltersGuestLabel": "Guest name or email",
   "calendarFiltersGuestHint": "Enter name or email...",
@@ -2896,6 +2897,40 @@
   "calendarFiltersBookingIdLabel": "Booking ID",
   "calendarFiltersBookingIdHint": "Enter booking ID...",
   "calendarFiltersClearDate": "Clear date",
+  "calendarFiltersApply": "Apply",
+  "calendarFiltersCancel": "Cancel",
+  "calendarFiltersClear": "Clear",
+  "calendarFiltersClearAll": "Clear all",
+
+  "calendarSearchTitle": "Search Bookings",
+  "calendarSearchHint": "Search by guest name, email, ID or unit...",
+  "calendarSearchResultsCount": "Found {count} results",
+  "@calendarSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarSearchEnterTerm": "Enter search term",
+  "calendarSearchDescription": "Search by guest name, email, ID or unit",
+  "calendarSearchNoResults": "No results",
+  "calendarSearchTryAnother": "Try a different search term",
+
+  "calendarStatusCurrent": "Current",
+
+  "bookingInlineEditTitle": "Quick Edit",
+  "bookingInlineEditGuest": "Guest",
+  "bookingInlineEditCheckIn": "Check-in",
+  "bookingInlineEditCheckOut": "Check-out",
+  "bookingInlineEditNights": "Nights",
+  "bookingInlineEditGuestCount": "Number of Guests",
+  "bookingInlineEditSave": "Save Changes",
+  "bookingInlineEditSaving": "Saving...",
+  "bookingInlineEditCancel": "Cancel",
+  "bookingInlineEditDates": "Dates",
+  "bookingInlineEditNightSingular": "night",
+  "bookingInlineEditNightPlural": "nights",
 
   "bookingEditInternalNotes": "Internal Notes",
   "bookingEditNotesHint": "Add notes for this booking...",

@@ -87,9 +87,9 @@ class PaymentOptionWidget extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, color: isSelected ? colors.textPrimary : colors.textSecondary, size: 24),
-                if (secondaryIcon != null) ...[
+                if (secondaryIcon case final icon?) ...[
                   const SizedBox(width: 4),
-                  Icon(secondaryIcon!, color: isSelected ? colors.textPrimary : colors.textSecondary, size: 20),
+                  Icon(icon, color: isSelected ? colors.textPrimary : colors.textSecondary, size: 20),
                 ],
               ],
             ),
@@ -120,9 +120,9 @@ class PaymentOptionWidget extends StatelessWidget {
             ),
 
             // Deposit amount (only show if not null)
-            if (depositAmount != null)
+            if (depositAmount case final amount?)
               Text(
-                depositAmount!,
+                amount,
                 style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold, color: colors.textPrimary),
               ),
           ],

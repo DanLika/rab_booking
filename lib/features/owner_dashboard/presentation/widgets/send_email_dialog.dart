@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -147,51 +149,179 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(Icons.email, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(l10n.sendEmailTitle),
-        ],
-      ),
-      content: SizedBox(
-        width: 500,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Guest Info
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(8),
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        width: screenWidth < 400 ? double.infinity : 500,
+        constraints: BoxConstraints(maxWidth: screenWidth * 0.9, maxHeight: screenHeight * 0.85),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Gradient Header
+            Container(
+              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.email, color: Colors.white, size: 20),
                   ),
-                  child: Row(
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.sendEmailTitle,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.person, color: theme.colorScheme.secondary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      // Guest Info
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
                           children: [
-                            Text(
-                              widget.booking.guestName ?? 'Gost',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSecondaryContainer,
+                            Icon(Icons.person, color: theme.colorScheme.secondary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.booking.guestName ?? 'Gost',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.onSecondaryContainer,
+                                    ),
+                                  ),
+                                  Text(
+                                    widget.booking.guestEmail ?? '',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.colorScheme.onSecondaryContainer.withAlpha((0.7 * 255).toInt()),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            Text(
-                              widget.booking.guestEmail ?? '',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: theme.colorScheme.onSecondaryContainer.withAlpha((0.7 * 255).toInt()),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Template selector
+                      Text(l10n.sendEmailTemplate, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: EmailTemplate.values.map((template) {
+                          final isSelected = _selectedTemplate == template;
+                          return ChoiceChip(
+                            label: Text(template.getDisplayName(l10n)),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) _loadTemplate(template);
+                            },
+                            selectedColor: theme.colorScheme.primaryContainer,
+                            backgroundColor: theme.colorScheme.surface,
+                            labelStyle: TextStyle(
+                              color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              fontSize: 12,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Subject
+                      TextFormField(
+                        controller: _subjectController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: l10n.sendEmailSubject,
+                          hintText: l10n.sendEmailSubjectHint,
+                          prefixIcon: const Icon(Icons.subject),
+                          context: context,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) return l10n.sendEmailSubjectRequired;
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Message
+                      TextFormField(
+                        controller: _messageController,
+                        maxLines: 8,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: l10n.sendEmailMessage,
+                          hintText: l10n.sendEmailMessageHint,
+                          context: context,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) return l10n.sendEmailMessageRequired;
+                          if (value.trim().length < 10) return l10n.sendEmailMessageTooShort;
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Info box
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, size: 20, color: theme.colorScheme.tertiary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                l10n.sendEmailInfo,
+                                style: TextStyle(fontSize: 12, color: theme.colorScheme.onTertiaryContainer),
                               ),
                             ),
                           ],
@@ -200,122 +330,47 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // Template selector
-                Text(l10n.sendEmailTemplate, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: EmailTemplate.values.map((template) {
-                    final isSelected = _selectedTemplate == template;
-                    return ChoiceChip(
-                      label: Text(template.getDisplayName(l10n)),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          _loadTemplate(template);
-                        }
-                      },
-                      selectedColor: theme.colorScheme.primaryContainer,
-                      backgroundColor: theme.colorScheme.surface,
-                      labelStyle: TextStyle(
-                        color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                        fontSize: 12,
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20),
-
-                // Subject
-                TextFormField(
-                  controller: _subjectController,
-                  decoration: InputDecorationHelper.buildDecoration(
-                    labelText: l10n.sendEmailSubject,
-                    hintText: l10n.sendEmailSubjectHint,
-                    prefixIcon: const Icon(Icons.subject),
-                    context: context,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.sendEmailSubjectRequired;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Message
-                TextFormField(
-                  controller: _messageController,
-                  maxLines: 10,
-                  decoration: InputDecorationHelper.buildDecoration(
-                    labelText: l10n.sendEmailMessage,
-                    hintText: l10n.sendEmailMessageHint,
-                    context: context,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.sendEmailMessageRequired;
-                    }
-                    if (value.trim().length < 10) {
-                      return l10n.sendEmailMessageTooShort;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                // Info box
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.tertiaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, size: 20, color: theme.colorScheme.tertiary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          l10n.sendEmailInfo,
-                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onTertiaryContainer),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+
+            // Footer
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
+                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    child: Text(l10n.sendEmailCancel),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _sendEmail,
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.send),
+                    label: Text(_isLoading ? l10n.sendEmailSending : l10n.sendEmailSend),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(onPressed: _isLoading ? null : () => Navigator.of(context).pop(), child: Text(l10n.sendEmailCancel)),
-        ElevatedButton.icon(
-          onPressed: _isLoading ? null : _sendEmail,
-          icon: _isLoading
-              ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
-                  ),
-                )
-              : const Icon(Icons.send),
-          label: Text(_isLoading ? l10n.sendEmailSending : l10n.sendEmailSend),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
-          ),
-        ),
-      ],
     );
   }
 

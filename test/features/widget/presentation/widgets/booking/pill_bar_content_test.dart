@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rab_booking/features/widget/presentation/l10n/widget_translations.dart';
 import 'package:rab_booking/features/widget/presentation/widgets/booking/pill_bar_content.dart';
 import 'package:rab_booking/features/widget/presentation/widgets/booking/compact_pill_summary.dart';
+
+WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');
 
 void main() {
   group('PillBarContent', () {
     final testCheckIn = DateTime(2025, 1, 15);
     final testCheckOut = DateTime(2025, 1, 18);
 
-    Widget buildTestWidget({
-      bool showGuestForm = false,
-      double screenWidth = 400,
-      bool isDarkMode = false,
-    }) {
+    Widget buildTestWidget({bool showGuestForm = false, double screenWidth = 400, bool isDarkMode = false}) {
       return MaterialApp(
         home: Scaffold(
           body: MediaQuery(
             data: MediaQueryData(size: Size(screenWidth, 800)),
             child: PillBarContent(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -42,8 +42,7 @@ void main() {
       );
     }
 
-    testWidgets('renders CompactPillSummary when not showing guest form',
-        (tester) async {
+    testWidgets('renders CompactPillSummary when not showing guest form', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
       expect(find.byType(CompactPillSummary), findsOneWidget);
@@ -56,6 +55,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: PillBarContent(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -94,6 +94,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: PillBarContent(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -117,20 +118,20 @@ void main() {
         ),
       );
 
-      // Find Reserve button and tap it
-      final reserveButton = find.text('Reserve');
+      // Find Reserve button (HR: "Rezerviraj") and tap it
+      final reserveButton = find.text('Rezerviraj');
       expect(reserveButton, findsOneWidget);
       await tester.tap(reserveButton);
 
       expect(reserveCalled, isTrue);
     });
 
-    testWidgets('shows guest form in mobile layout when showGuestForm is true',
-        (tester) async {
+    testWidgets('shows guest form in mobile layout when showGuestForm is true', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: PillBarContent(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -160,13 +161,13 @@ void main() {
       expect(find.text('Payment Section'), findsOneWidget);
     });
 
-    testWidgets('shows 2-column layout on wide screen with guest form',
-        (tester) async {
+    testWidgets('shows 2-column layout on wide screen with guest form', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: PillBarContent(
+                translations: testTranslations,
                 checkIn: testCheckIn,
                 checkOut: testCheckOut,
                 nights: 3,
@@ -204,6 +205,7 @@ void main() {
           home: Scaffold(
             body: SingleChildScrollView(
               child: PillBarContent(
+                translations: testTranslations,
                 checkIn: testCheckIn,
                 checkOut: testCheckOut,
                 nights: 3,

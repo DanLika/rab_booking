@@ -6823,6 +6823,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarErrorClose => 'Close';
 
   @override
+  String get calendarFiltersTitle => 'Calendar Filters';
+
+  @override
   String get calendarFiltersSearchGuest => 'Search guest';
 
   @override
@@ -6842,6 +6845,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarFiltersClearDate => 'Clear date';
+
+  @override
+  String get calendarFiltersApply => 'Apply';
+
+  @override
+  String get calendarFiltersCancel => 'Cancel';
+
+  @override
+  String get calendarFiltersClear => 'Clear';
+
+  @override
+  String get calendarFiltersClearAll => 'Clear all';
+
+  @override
+  String get calendarSearchTitle => 'Search Bookings';
+
+  @override
+  String get calendarSearchHint => 'Search by guest name, email, ID or unit...';
+
+  @override
+  String calendarSearchResultsCount(int count) {
+    return 'Found $count results';
+  }
+
+  @override
+  String get calendarSearchEnterTerm => 'Enter search term';
+
+  @override
+  String get calendarSearchDescription =>
+      'Search by guest name, email, ID or unit';
+
+  @override
+  String get calendarSearchNoResults => 'No results';
+
+  @override
+  String get calendarSearchTryAnother => 'Try a different search term';
+
+  @override
+  String get calendarStatusCurrent => 'Current';
+
+  @override
+  String get bookingInlineEditTitle => 'Quick Edit';
+
+  @override
+  String get bookingInlineEditGuest => 'Guest';
+
+  @override
+  String get bookingInlineEditCheckIn => 'Check-in';
+
+  @override
+  String get bookingInlineEditCheckOut => 'Check-out';
+
+  @override
+  String get bookingInlineEditNights => 'Nights';
+
+  @override
+  String get bookingInlineEditGuestCount => 'Number of Guests';
+
+  @override
+  String get bookingInlineEditSave => 'Save Changes';
+
+  @override
+  String get bookingInlineEditSaving => 'Saving...';
+
+  @override
+  String get bookingInlineEditCancel => 'Cancel';
+
+  @override
+  String get bookingInlineEditDates => 'Dates';
+
+  @override
+  String get bookingInlineEditNightSingular => 'night';
+
+  @override
+  String get bookingInlineEditNightPlural => 'nights';
 
   @override
   String get bookingEditInternalNotes => 'Internal Notes';

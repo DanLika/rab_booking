@@ -161,20 +161,9 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                   return const SizedBox.shrink();
                 }
 
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: context.gradients.brandPrimary,
-                    borderRadius: const BorderRadius.all(Radius.circular(16)),
-                  ),
-                  child: FloatingActionButton(
-                    onPressed: _showCreateBookingDialog,
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    hoverElevation: 0,
-                    focusElevation: 0,
-                    highlightElevation: 0,
-                    child: const Icon(Icons.add, color: Colors.white),
-                  ),
+                return _AnimatedGradientFAB(
+                  onPressed: _showCreateBookingDialog,
+                  gradient: context.gradients.brandPrimary,
                 );
               },
             ),
@@ -296,4 +285,61 @@ class _NextPeriodIntent extends Intent {
 
 class _TodayIntent extends Intent {
   const _TodayIntent();
+}
+
+/// Animated gradient FAB with hover and press effects
+class _AnimatedGradientFAB extends StatefulWidget {
+  final VoidCallback onPressed;
+  final LinearGradient gradient;
+
+  const _AnimatedGradientFAB({required this.onPressed, required this.gradient});
+
+  @override
+  State<_AnimatedGradientFAB> createState() => _AnimatedGradientFABState();
+}
+
+class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          widget.onPressed();
+        },
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          width: 56,
+          height: 56,
+          transform: Matrix4.identity()..scale(_isPressed ? 0.92 : (_isHovered ? 1.08 : 1.0)),
+          transformAlignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: widget.gradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: widget.gradient.colors.first.withAlpha((_isHovered ? 0.5 : 0.35 * 255).toInt()),
+                blurRadius: _isHovered ? 20 : 12,
+                offset: Offset(0, _isHovered ? 8 : 4),
+                spreadRadius: _isHovered ? 2 : 0,
+              ),
+            ],
+          ),
+          child: AnimatedRotation(
+            duration: const Duration(milliseconds: 200),
+            turns: _isHovered ? 0.125 : 0, // 45 degree rotation on hover
+            child: const Icon(Icons.add, color: Colors.white, size: 28),
+          ),
+        ),
+      ),
+    );
+  }
 }

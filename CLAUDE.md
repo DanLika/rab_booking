@@ -129,6 +129,26 @@ ne sekcije
 
 ---
 
-**Last Updated**: 2025-12-06 | **Version**: 4.2
+---
 
-**Changelog 4.2**: Dodana lokalizacija za embedani booking widget (multi-language support).
+## 🎨 UI/UX STANDARDI
+
+**Filozofija**: Less colorful, more professional - neutralne pozadine sa jednom accent bojom na ikonama.
+
+**Dialogs**:
+- Footer: `AppColors.dialogFooterDark/Light`, border: `AppColors.sectionDividerDark/Light`
+- Padding: 12px mobile (<400px), 16-20px desktop
+- Border radius: 11-12px
+
+**Cards/Tiles**:
+- Ikone: jedna boja (primary) sa 10-12% opacity pozadinom
+- Shadows: `AppShadows.elevation1` za većinu, `elevation2` za istaknute
+- Border radius: 12px standard
+
+**Skeleton loaders**: `SkeletonColors.baseColor/highlightColor` iz `skeleton_loader.dart`
+
+---
+
+**Last Updated**: 2025-12-06 | **Version**: 4.3
+
+**Changelog 4.3**: UI/UX optimizacije - kompaktniji profil, notifikacije, dashboard, analytics. Manje šareno, profesionalnije.

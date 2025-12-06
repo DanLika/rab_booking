@@ -1362,10 +1362,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          NoPaymentInfo(
-            isDarkMode: isDarkMode,
-            message: 'No payment methods available. Please contact property owner.',
-          ),
+          NoPaymentInfo(isDarkMode: isDarkMode, message: WidgetTranslations.of(context).noPaymentMethodsAvailable),
           const SizedBox(height: SpacingTokens.m),
           // Disabled confirm button
           Builder(
@@ -1504,10 +1501,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               final tr = WidgetTranslations.of(context);
               return Column(
                 children: [
-                  // Stripe option
+                  // Stripe option - credit card + secure payment icons
                   if (isStripeEnabled)
                     PaymentOptionWidget(
-                      icon: Icons.credit_card,
+                      icon: Icons.payment_rounded,
+                      secondaryIcon: Icons.credit_card_rounded,
                       title: tr.creditCard,
                       subtitle: tr.instantConfirmationViaStripe,
                       isSelected: _selectedPaymentMethod == 'stripe',
@@ -1516,7 +1514,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       depositAmount: calculation.formattedDeposit,
                     ),
 
-                  // Bank Transfer option
+                  // Bank Transfer option - bank building icon
                   if (isBankTransferEnabled)
                     Builder(
                       builder: (context) {
@@ -1524,7 +1522,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         return Padding(
                           padding: EdgeInsets.only(top: isStripeEnabled ? SpacingTokens.s : 0),
                           child: PaymentOptionWidget(
-                            icon: Icons.account_balance,
+                            icon: Icons.account_balance_rounded,
+                            secondaryIcon: Icons.receipt_long_rounded,
                             title: tr.bankTransfer,
                             subtitle: 'Manual confirmation (3 business days)',
                             isSelected: _selectedPaymentMethod == 'bank_transfer',
@@ -1536,7 +1535,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       },
                     ),
 
-                  // Pay on Arrival option
+                  // Pay on Arrival option - house + key icons
                   if (isPayOnArrivalEnabled)
                     Builder(
                       builder: (context) {
@@ -1546,7 +1545,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             top: (isStripeEnabled || isBankTransferEnabled) ? SpacingTokens.s : 0,
                           ),
                           child: PaymentOptionWidget(
-                            icon: Icons.home_outlined,
+                            icon: Icons.villa_rounded,
+                            secondaryIcon: Icons.key_rounded,
                             title: tr.payOnArrival,
                             subtitle: tr.payAtTheProperty,
                             isSelected: _selectedPaymentMethod == 'pay_on_arrival',

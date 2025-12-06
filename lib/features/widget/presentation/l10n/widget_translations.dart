@@ -3913,6 +3913,20 @@ class WidgetTranslations {
     }
   }
 
+  String get noPaymentMethodsAvailable {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nema dostupnih načina plaćanja. Molimo kontaktirajte vlasnika smještaja.';
+      case 'de':
+        return 'Keine Zahlungsmethoden verfügbar. Bitte kontaktieren Sie den Eigentümer.';
+      case 'it':
+        return 'Nessun metodo di pagamento disponibile. Contatta il proprietario.';
+      case 'en':
+      default:
+        return 'No payment methods available. Please contact property owner.';
+    }
+  }
+
   String get tooltipSwitchToLightMode {
     switch (locale.languageCode) {
       case 'hr':

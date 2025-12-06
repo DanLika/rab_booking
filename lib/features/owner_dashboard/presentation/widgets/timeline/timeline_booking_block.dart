@@ -13,7 +13,7 @@ import '../../../../../l10n/app_localizations.dart';
 /// Includes check-in/out diagonal indicators, guest info, and hover tooltips.
 ///
 /// Extracted from timeline_calendar_widget.dart for better maintainability.
-class TimelineBookingBlock extends StatelessWidget {
+class TimelineBookingBlock extends StatefulWidget {
   /// The booking to display
   final BookingModel booking;
 
@@ -43,7 +43,18 @@ class TimelineBookingBlock extends StatelessWidget {
   });
 
   @override
+  State<TimelineBookingBlock> createState() => _TimelineBookingBlockState();
+}
+
+class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final booking = widget.booking;
+    final width = widget.width;
+    final unitRowHeight = widget.unitRowHeight;
+    final allBookingsByUnit = widget.allBookingsByUnit;
     final blockHeight = unitRowHeight - 16;
     final nights = calculateNights(booking.checkIn, booking.checkOut);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -59,90 +70,106 @@ class TimelineBookingBlock extends StatelessWidget {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: PlatformUtils.supportsHover
-          ? (event) => SmartBookingTooltip.show(context: context, booking: booking, position: event.position)
+          ? (event) {
+              setState(() => _isHovered = true);
+              SmartBookingTooltip.show(context: context, booking: booking, position: event.position);
+            }
           : null,
-      onExit: PlatformUtils.supportsHover ? (_) => SmartBookingTooltip.hide() : null,
+      onExit: PlatformUtils.supportsHover
+          ? (_) {
+              setState(() => _isHovered = false);
+              SmartBookingTooltip.hide();
+            }
+          : null,
       child: GestureDetector(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Container(
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
           width: width - 2,
           height: blockHeight,
           margin: const EdgeInsets.symmetric(horizontal: 1),
-          child: Stack(
-            children: [
-              // Background layer with skewed parallelogram
-              CustomPaint(
-                painter: SkewedBookingPainter(
-                  backgroundColor: booking.status.color,
-                  borderColor: booking.status.color,
-                  hasConflict: hasConflict,
+          transform: _isHovered ? (Matrix4.identity()..scale(1.02)) : Matrix4.identity(),
+          transformAlignment: Alignment.center,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 150),
+            opacity: _isHovered ? 1.0 : 0.92,
+            child: Stack(
+              children: [
+                // Background layer with skewed parallelogram
+                CustomPaint(
+                  painter: SkewedBookingPainter(
+                    backgroundColor: booking.status.color,
+                    borderColor: booking.status.color,
+                    hasConflict: hasConflict,
+                  ),
+                  size: Size(width - 2, blockHeight),
                 ),
-                size: Size(width - 2, blockHeight),
-              ),
 
-              // Content layer - clipped to skewed shape
-              ClipPath(
-                clipper: SkewedBookingClipper(),
-                child: Padding(
-                  padding: bookingPadding.copyWith(
-                    left: bookingPadding.left + 12,
-                  ), // Increased from 8 to 12 for better spacing
-                  child: Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context);
-                      // Determine text color based on background luminance
-                      final textColor = _getContrastTextColor(booking.status.color);
-                      final secondaryTextColor = textColor.withValues(alpha: 0.85);
-                      final iconColor = textColor.withValues(alpha: 0.7);
+                // Content layer - clipped to skewed shape
+                ClipPath(
+                  clipper: SkewedBookingClipper(),
+                  child: Padding(
+                    padding: bookingPadding.copyWith(
+                      left: bookingPadding.left + 12,
+                    ), // Increased from 8 to 12 for better spacing
+                    child: Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        // Determine text color based on background luminance
+                        final textColor = _getContrastTextColor(booking.status.color);
+                        final secondaryTextColor = textColor.withValues(alpha: 0.85);
+                        final iconColor = textColor.withValues(alpha: 0.7);
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            booking.guestName ?? l10n.ownerCalendarDefaultGuest,
-                            style: TextStyle(
-                              color: textColor,
-                              fontWeight: FontWeight.w600,
-                              fontSize: guestNameFontSize,
-                              shadows: _shouldAddTextShadow(booking.status.color)
-                                  ? [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 2)]
-                                  : null,
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              booking.guestName ?? l10n.ownerCalendarDefaultGuest,
+                              style: TextStyle(
+                                color: textColor,
+                                fontWeight: FontWeight.w600,
+                                fontSize: guestNameFontSize,
+                                shadows: _shouldAddTextShadow(booking.status.color)
+                                    ? [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 2)]
+                                    : null,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 1),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.person, size: metadataFontSize + 2, color: iconColor),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${booking.guestCount}',
-                                style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
-                              ),
-                              const SizedBox(width: 6),
-                              Icon(Icons.nights_stay, size: metadataFontSize + 2, color: iconColor),
-                              const SizedBox(width: 2),
-                              Flexible(
-                                child: Text(
-                                  '$nights',
+                            const SizedBox(height: 1),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.person, size: metadataFontSize + 2, color: iconColor),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '${booking.guestCount}',
                                   style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
+                                const SizedBox(width: 6),
+                                Icon(Icons.nights_stay, size: metadataFontSize + 2, color: iconColor),
+                                const SizedBox(width: 2),
+                                Flexible(
+                                  child: Text(
+                                    '$nights',
+                                    style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

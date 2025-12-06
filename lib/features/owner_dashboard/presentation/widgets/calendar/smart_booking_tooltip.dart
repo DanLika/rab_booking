@@ -34,25 +34,31 @@ class SmartBookingTooltip {
   }
 
   /// Desktop/Web: Hover overlay tooltip
-  static void _showHoverTooltip(
-    BuildContext context,
-    BookingModel booking,
-    Offset position,
-  ) {
+  static void _showHoverTooltip(BuildContext context, BookingModel booking, Offset position) {
     // Remove previous tooltip before showing new one
     hide();
 
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     entry = OverlayEntry(
       builder: (context) => Positioned(
-        left: position.dx + 10,
-        top: position.dy + 10,
+        left: position.dx + 12,
+        top: position.dy + 12,
         child: Material(
-          elevation: 8,
-          borderRadius: BorderRadius.circular(8),
-          child: _TooltipContent(booking: booking, isCompact: true),
+          elevation: 12,
+          shadowColor: Colors.black.withAlpha((0.3 * 255).toInt()),
+          borderRadius: BorderRadius.circular(12),
+          color: isDark ? const Color(0xFF252330) : Colors.white,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+            ),
+            child: _TooltipContent(booking: booking, isCompact: true),
+          ),
         ),
       ),
     );
@@ -79,9 +85,7 @@ class SmartBookingTooltip {
           color: Theme.of(context).scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -90,10 +94,7 @@ class SmartBookingTooltip {
               margin: const EdgeInsets.only(top: 12, bottom: 8),
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
             ),
             _TooltipContent(booking: booking, isCompact: false),
             const SizedBox(height: 20),
@@ -120,9 +121,7 @@ class _TooltipContent extends StatelessWidget {
     return Container(
       width: isCompact ? 280 : double.infinity,
       padding: EdgeInsets.all(isCompact ? 12 : 20),
-      constraints: isCompact
-          ? const BoxConstraints(maxWidth: 320)
-          : const BoxConstraints(maxWidth: 500),
+      constraints: isCompact ? const BoxConstraints(maxWidth: 320) : const BoxConstraints(maxWidth: 500),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,12 +164,7 @@ class _TooltipContent extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _InfoRow(
-                  icon: Icons.nightlight_round,
-                  label: 'Noći',
-                  value: '$nights',
-                  isCompact: isCompact,
-                ),
+                child: _InfoRow(icon: Icons.nightlight_round, label: 'Noći', value: '$nights', isCompact: isCompact),
               ),
               Expanded(
                 child: _InfoRow(
@@ -198,33 +192,18 @@ class _TooltipContent extends StatelessWidget {
           // Source
           if (booking.source != null && booking.source != 'manual') ...[
             const Divider(height: 16),
-            _InfoRow(
-              icon: Icons.source,
-              label: 'Izvor',
-              value: _formatSource(booking.source!),
-              isCompact: isCompact,
-            ),
+            _InfoRow(icon: Icons.source, label: 'Izvor', value: _formatSource(booking.source!), isCompact: isCompact),
           ],
 
           // Notes (if available and not compact)
-          if (!isCompact &&
-              booking.notes != null &&
-              booking.notes!.isNotEmpty) ...[
+          if (!isCompact && booking.notes != null && booking.notes!.isNotEmpty) ...[
             const Divider(height: 16),
             Text(
               'Napomena:',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w600,
-              ),
+              style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey[600], fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
-            Text(
-              booking.notes!,
-              style: theme.textTheme.bodySmall,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
+            Text(booking.notes!, style: theme.textTheme.bodySmall, maxLines: 3, overflow: TextOverflow.ellipsis),
           ],
         ],
       ),
@@ -278,11 +257,7 @@ class _InfoRow extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: isCompact ? 3 : 4),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: isCompact ? 14 : 16,
-            color: isHighlight ? AppColors.success : Colors.grey[600],
-          ),
+          Icon(icon, size: isCompact ? 14 : 16, color: isHighlight ? AppColors.success : Colors.grey[600]),
           const SizedBox(width: 8),
           Expanded(
             child: Row(
@@ -290,10 +265,7 @@ class _InfoRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                    fontSize: isCompact ? 11 : 13,
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: isCompact ? 11 : 13),
                 ),
                 Text(
                   value,
@@ -329,11 +301,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         _getStatusText(status),
-        style: TextStyle(
-          color: status.color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: status.color, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }

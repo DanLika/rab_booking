@@ -2120,6 +2120,36 @@ class WidgetTranslations {
     }
   }
 
+  /// Part 1 of email check message (before email address)
+  String get checkYourEmailAt {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Provjerite email na';
+      case 'de':
+        return 'Überprüfen Sie Ihre E-Mail unter';
+      case 'it':
+        return 'Controlla la tua email a';
+      case 'en':
+      default:
+        return 'Check your email at';
+    }
+  }
+
+  /// Part 2 of email check message (after email address)
+  String get forBookingDetails {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'za detalje rezervacije.';
+      case 'de':
+        return 'für Buchungsdetails.';
+      case 'it':
+        return 'per i dettagli della prenotazione.';
+      case 'en':
+      default:
+        return 'for booking details.';
+    }
+  }
+
   String get emailSent {
     switch (locale.languageCode) {
       case 'hr':
@@ -3924,6 +3954,25 @@ class WidgetTranslations {
       case 'en':
       default:
         return 'No payment methods available. Please contact property owner.';
+    }
+  }
+
+  // IBAN and SWIFT are international standards, no translation needed
+  // but we add getters for consistency
+  String get labelIban => 'IBAN';
+  String get labelSwiftBic => 'SWIFT/BIC';
+
+  String get bankTransferSubtitle {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ručna potvrda (3 radna dana)';
+      case 'de':
+        return 'Manuelle Bestätigung (3 Werktage)';
+      case 'it':
+        return 'Conferma manuale (3 giorni lavorativi)';
+      case 'en':
+      default:
+        return 'Manual confirmation (3 business days)';
     }
   }
 

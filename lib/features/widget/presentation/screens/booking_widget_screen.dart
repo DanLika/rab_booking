@@ -1525,7 +1525,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             icon: Icons.account_balance_rounded,
                             secondaryIcon: Icons.receipt_long_rounded,
                             title: tr.bankTransfer,
-                            subtitle: 'Manual confirmation (3 business days)',
+                            subtitle: tr.bankTransferSubtitle,
                             isSelected: _selectedPaymentMethod == 'bank_transfer',
                             onTap: () => setState(() => _selectedPaymentMethod = 'bank_transfer'),
                             isDarkMode: isDarkMode,

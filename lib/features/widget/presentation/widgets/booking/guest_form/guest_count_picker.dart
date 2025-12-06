@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 
 /// A widget for selecting adult and children guest counts.
@@ -58,9 +59,7 @@ class GuestCountPicker extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,11 +70,7 @@ class GuestCountPicker extends StatelessWidget {
             children: [
               Text(
                 'Number of Guests',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textPrimary,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
               ),
               Text(
                 'Max: $maxGuests',
@@ -92,7 +87,7 @@ class GuestCountPicker extends StatelessWidget {
           // Adults row
           _buildGuestRow(
             icon: Icons.person,
-            label: 'Adults',
+            label: WidgetTranslations.of(context).adults,
             count: adults,
             canDecrement: adults > 1,
             canIncrement: !isAtCapacity && adults < maxGuests,
@@ -107,7 +102,7 @@ class GuestCountPicker extends StatelessWidget {
           // Children row
           _buildGuestRow(
             icon: Icons.child_care,
-            label: 'Children',
+            label: WidgetTranslations.of(context).children,
             count: children,
             canDecrement: children > 0,
             canIncrement: !isAtCapacity && children < maxGuests,
@@ -118,10 +113,7 @@ class GuestCountPicker extends StatelessWidget {
           ),
 
           // Capacity warning
-          if (isAtCapacity) ...[
-            const SizedBox(height: 12),
-            _buildCapacityWarning(colors),
-          ],
+          if (isAtCapacity) ...[const SizedBox(height: 12), _buildCapacityWarning(colors)],
         ],
       ),
     );
@@ -143,49 +135,30 @@ class GuestCountPicker extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(
-              icon,
-              color: colors.textPrimary,
-              size: 20,
-            ),
+            Icon(icon, color: colors.textPrimary, size: 20),
             const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: colors.textPrimary,
-              ),
-            ),
+            Text(label, style: TextStyle(fontSize: 14, color: colors.textPrimary)),
           ],
         ),
         Row(
           children: [
             IconButton(
               onPressed: canDecrement ? onDecrement : null,
-              icon: Icon(
-                Icons.remove_circle_outline,
-                color: colors.textPrimary,
-              ),
+              icon: Icon(Icons.remove_circle_outline, color: colors.textPrimary),
             ),
             Container(
               width: 40,
               alignment: Alignment.center,
               child: Text(
                 '$count',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary),
               ),
             ),
             IconButton(
               onPressed: canIncrement ? onIncrement : null,
               icon: Icon(
                 Icons.add_circle_outline,
-                color: isAtCapacity
-                    ? colors.textSecondary.withValues(alpha: 0.5)
-                    : colors.textPrimary,
+                color: isAtCapacity ? colors.textSecondary.withValues(alpha: 0.5) : colors.textPrimary,
               ),
             ),
           ],
@@ -200,26 +173,16 @@ class GuestCountPicker extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: colors.error,
-        ),
+        border: Border.all(color: colors.error),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.warning,
-            color: colors.error,
-            size: 14,
-          ),
+          Icon(Icons.warning, color: colors.error, size: 14),
           const SizedBox(width: 6),
           Text(
             'Max capacity: $maxGuests guests',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: colors.error,
-            ),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.error),
           ),
         ],
       ),

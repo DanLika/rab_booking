@@ -17,8 +17,7 @@ class EnhancedLoginScreen extends ConsumerStatefulWidget {
   const EnhancedLoginScreen({super.key});
 
   @override
-  ConsumerState<EnhancedLoginScreen> createState() =>
-      _EnhancedLoginScreenState();
+  ConsumerState<EnhancedLoginScreen> createState() => _EnhancedLoginScreenState();
 }
 
 class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
@@ -74,9 +73,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
               content: Text(authState.error!),
               backgroundColor: Theme.of(context).colorScheme.error,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           );
           return;
@@ -91,14 +88,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         // Success - show welcome message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Welcome back, ${authState.userModel?.firstName ?? "User"}!',
-            ),
+            content: Text('Welcome back, ${authState.userModel?.firstName ?? "User"}!'),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -127,9 +120,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
               content: Text(errorMessage),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
@@ -153,9 +144,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
             content: Text(authState.error ?? e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -178,9 +167,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
             content: Text(authState.error ?? e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -203,9 +190,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
             content: Text(authState.error ?? e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -215,6 +200,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: AuthBackground(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -232,22 +218,15 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Animated Logo - adapts to dark mode
-                        Center(
-                          child: AuthLogoIcon(
-                            isWhite:
-                                Theme.of(context).brightness == Brightness.dark,
-                          ),
-                        ),
+                        Center(child: AuthLogoIcon(isWhite: Theme.of(context).brightness == Brightness.dark)),
                         const SizedBox(height: 24),
 
                         // Title
                         Text(
                           'Owner Login',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 28,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 28),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
@@ -255,13 +234,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                         // Subtitle
                         Text(
                           'Manage your properties and bookings',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                fontSize: 15,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 15,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 40),
@@ -284,17 +260,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                           obscureText: _obscurePassword,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                             onPressed: () {
-                              setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              );
+                              setState(() => _obscurePassword = !_obscurePassword);
                             },
                           ),
                           validator: (value) {
@@ -313,8 +283,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                           children: [
                             Expanded(
                               child: InkWell(
-                                onTap: () =>
-                                    setState(() => _rememberMe = !_rememberMe),
+                                onTap: () => setState(() => _rememberMe = !_rememberMe),
                                 child: Row(
                                   children: [
                                     SizedBox(
@@ -322,35 +291,23 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                                       width: 24,
                                       child: Checkbox(
                                         value: _rememberMe,
-                                        onChanged: (value) => setState(
-                                          () => _rememberMe = value!,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
-                                        activeColor: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        materialTapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
+                                        onChanged: (value) => setState(() => _rememberMe = value!),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                        activeColor: Theme.of(context).colorScheme.primary,
+                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       'Remember me',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(fontSize: 14),
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 14),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
                             TextButton(
-                              onPressed: () =>
-                                  context.push(OwnerRoutes.forgotPassword),
+                              onPressed: () => context.push(OwnerRoutes.forgotPassword),
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 minimumSize: Size.zero,
@@ -358,14 +315,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                               ),
                               child: Text(
                                 'Forgot password?',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      fontSize: 14,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontSize: 14,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
@@ -384,31 +338,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                         // Divider
                         Row(
                           children: [
-                            Expanded(
-                              child: Divider(
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                            ),
+                            Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
                                 'or continue with',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                      fontSize: 13,
-                                    ),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
-                            Expanded(
-                              child: Divider(
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                            ),
+                            Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -448,26 +389,17 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                           child: TextButton(
                             onPressed: () => context.go(OwnerRoutes.register),
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 16,
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                             ),
                             child: RichText(
                               text: TextSpan(
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.copyWith(fontSize: 14),
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
                                 children: [
-                                  const TextSpan(
-                                    text: "Don't have an account? ",
-                                  ),
+                                  const TextSpan(text: "Don't have an account? "),
                                   TextSpan(
                                     text: 'Create Account',
                                     style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
+                                      color: Theme.of(context).colorScheme.primary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -495,15 +427,8 @@ class _SocialLoginButton extends StatefulWidget {
   final String label;
   final VoidCallback onPressed;
 
-  const _SocialLoginButton({
-    this.icon,
-    this.customIcon,
-    required this.label,
-    required this.onPressed,
-  }) : assert(
-         icon != null || customIcon != null,
-         'Either icon or customIcon must be provided',
-       );
+  const _SocialLoginButton({this.icon, this.customIcon, required this.label, required this.onPressed})
+    : assert(icon != null || customIcon != null, 'Either icon or customIcon must be provided');
 
   @override
   State<_SocialLoginButton> createState() => _SocialLoginButtonState();
@@ -523,17 +448,10 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _isHovered
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline,
-            width: 1.5,
-          ),
+          border: Border.all(color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.outline, width: 1.5),
           color: _isHovered
               ? theme.colorScheme.primary.withAlpha((0.08 * 255).toInt())
-              : theme.colorScheme.surfaceContainerHighest.withAlpha(
-                  (0.3 * 255).toInt(),
-                ),
+              : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
         ),
         child: Material(
           color: Colors.transparent,
@@ -551,9 +469,7 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
                     Icon(
                       widget.icon,
                       size: 22,
-                      color: _isHovered
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface,
+                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                     ),
                   const SizedBox(width: 8),
                   Text(
@@ -561,9 +477,7 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _isHovered
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface,
+                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -582,11 +496,7 @@ class _GoogleIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 22,
-      height: 22,
-      child: CustomPaint(painter: _GoogleLogoPainter()),
-    );
+    return SizedBox(width: 22, height: 22, child: CustomPaint(painter: _GoogleLogoPainter()));
   }
 }
 
@@ -671,11 +581,7 @@ class _GoogleLogoPainter extends CustomPainter {
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(center.dx + barWidth / 4, center.dy),
-          width: barWidth,
-          height: barHeight,
-        ),
+        Rect.fromCenter(center: Offset(center.dx + barWidth / 4, center.dy), width: barWidth, height: barHeight),
         Radius.circular(barHeight / 2),
       ),
       barPaint,
@@ -696,9 +602,7 @@ class _AppleIcon extends StatelessWidget {
     return SizedBox(
       width: 22,
       height: 22,
-      child: CustomPaint(
-        painter: _AppleLogoPainter(color: theme.colorScheme.onSurface),
-      ),
+      child: CustomPaint(painter: _AppleLogoPainter(color: theme.colorScheme.onSurface)),
     );
   }
 }
@@ -772,12 +676,7 @@ class _AppleLogoPainter extends CustomPainter {
 
     // Bite (small circle cutout on the right side)
     final bitePath = Path();
-    bitePath.addOval(
-      Rect.fromCircle(
-        center: Offset(centerX + 5 * scale, centerY - 3 * scale),
-        radius: 2.5 * scale,
-      ),
-    );
+    bitePath.addOval(Rect.fromCircle(center: Offset(centerX + 5 * scale, centerY - 3 * scale), radius: 2.5 * scale));
 
     // Subtract bite from apple
     final applePath = Path.combine(PathOperation.difference, path, bitePath);

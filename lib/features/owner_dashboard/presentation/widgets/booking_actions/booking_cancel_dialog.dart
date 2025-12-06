@@ -79,36 +79,38 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
             ),
 
             // Content
-            Padding(
-              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.bookingCancelMessage, style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface)),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _reasonController,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.bookingCancelReason,
-                      hintText: l10n.bookingCancelReasonHint,
-                      prefixIcon: const Icon(Icons.edit_note),
-                      context: context,
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.bookingCancelMessage, style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface)),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _reasonController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.bookingCancelReason,
+                        hintText: l10n.bookingCancelReasonHint,
+                        prefixIcon: const Icon(Icons.edit_note),
+                        context: context,
+                      ),
+                      maxLines: 3,
                     ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  CheckboxListTile(
-                    title: Text(l10n.bookingCancelSendEmail, style: TextStyle(color: theme.colorScheme.onSurface)),
-                    value: _sendEmail,
-                    onChanged: (value) {
-                      setState(() {
-                        _sendEmail = value ?? true;
-                      });
-                    },
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    CheckboxListTile(
+                      title: Text(l10n.bookingCancelSendEmail, style: TextStyle(color: theme.colorScheme.onSurface)),
+                      value: _sendEmail,
+                      onChanged: (value) {
+                        setState(() {
+                          _sendEmail = value ?? true;
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
               ),
             ),
 

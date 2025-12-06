@@ -15,8 +15,7 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -37,9 +36,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref
-          .read(enhancedAuthProvider.notifier)
-          .resetPassword(_emailController.text.trim());
+      await ref.read(enhancedAuthProvider.notifier).resetPassword(_emailController.text.trim());
 
       setState(() {
         _emailSent = true;
@@ -53,9 +50,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             content: Text(e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -65,6 +60,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: AuthBackground(
         child: SafeArea(
           child: LayoutBuilder(
@@ -72,9 +68,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               return Center(
                 child: SingleChildScrollView(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight,
-                    ),
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
                     child: IntrinsicHeight(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -84,9 +78,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
                               vertical: 24,
                             ),
-                            child: GlassCard(
-                              child: _emailSent ? _buildSuccessView() : _buildFormView(),
-                            ),
+                            child: GlassCard(child: _emailSent ? _buildSuccessView() : _buildFormView()),
                           ),
                         ],
                       ),
@@ -108,12 +100,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Animated Logo - adapts to dark mode
-          Center(
-            child: AuthLogoIcon(
-              size: 90,
-              isWhite: Theme.of(context).brightness == Brightness.dark,
-            ),
-          ),
+          Center(child: AuthLogoIcon(size: 90, isWhite: Theme.of(context).brightness == Brightness.dark)),
           const SizedBox(height: 24),
 
           // Title
@@ -131,10 +118,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           // Subtitle
           Text(
             'Enter your email address and we\'ll send you instructions to reset your password.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 15,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 15),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
@@ -162,20 +148,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Center(
             child: TextButton(
               onPressed: () => context.go('/login'),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: 16,
-                ),
-              ),
+              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.arrow_back,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  Icon(Icons.arrow_back, size: 16, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 8),
                   Text(
                     'Back to Login',
@@ -216,11 +193,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.check_circle_outline,
-              size: 50,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.check_circle_outline, size: 50, color: Colors.white),
           ),
         ),
         const SizedBox(height: 32),
@@ -240,10 +213,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         // Subtitle
         Text(
           'We\'ve sent password reset instructions to:',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: 15,
-          ),
+          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 15),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
@@ -261,27 +231,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const SizedBox(height: 40),
 
         // Return to Login Button
-        GradientAuthButton(
-          text: 'Return to Login',
-          onPressed: () => context.go('/login'),
-          icon: Icons.arrow_forward,
-        ),
+        GradientAuthButton(text: 'Return to Login', onPressed: () => context.go('/login'), icon: Icons.arrow_forward),
         const SizedBox(height: 16),
 
         // Resend email option
         Center(
           child: TextButton(
             onPressed: () => setState(() => _emailSent = false),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            ),
+            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16)),
             child: Text(
               'Didn\'t receive the email? Resend',
-              style: TextStyle(
-                fontSize: 14,
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 14, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
             ),
           ),
         ),

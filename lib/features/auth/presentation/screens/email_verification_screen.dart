@@ -244,6 +244,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     final email = authState.firebaseUser?.email ?? 'your email';
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: CommonAppBar(
         title: 'Verify Email',
         leadingIcon: Icons.arrow_back,

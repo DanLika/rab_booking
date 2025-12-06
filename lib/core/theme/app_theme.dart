@@ -244,6 +244,49 @@ class AppTheme {
         }),
       ),
 
+      // Popup menu theme - Modern styling
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surfaceLight,
+        elevation: 8,
+        shadowColor: Colors.black26,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: AppColors.sectionDividerLight),
+        ),
+        textStyle: AppTypography.textTheme.bodyMedium,
+      ),
+
+      // Dropdown menu theme - Modern styling
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: AppTypography.textTheme.bodyMedium,
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.surfaceLight),
+          elevation: WidgetStateProperty.all(8),
+          shadowColor: WidgetStateProperty.all(Colors.black26),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.sectionDividerLight),
+            ),
+          ),
+        ),
+      ),
+
+      // Menu theme - For MenuAnchor and MenuBar
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.surfaceLight),
+          elevation: WidgetStateProperty.all(8),
+          shadowColor: WidgetStateProperty.all(Colors.black26),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.sectionDividerLight),
+            ),
+          ),
+        ),
+      ),
+
       // Date picker theme - Modern styling with brand colors
       datePickerTheme: DatePickerThemeData(
         backgroundColor: AppColors.surfaceLight,
@@ -514,6 +557,49 @@ class AppTheme {
           }
           return AppColors.borderWarmDark;
         }),
+      ),
+
+      // Popup menu theme - Modern styling (dark mode)
+      popupMenuTheme: PopupMenuThemeData(
+        color: const Color(0xFF252330),
+        elevation: 12,
+        shadowColor: Colors.black54,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: AppColors.sectionDividerDark),
+        ),
+        textStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimaryDark),
+      ),
+
+      // Dropdown menu theme - Modern styling (dark mode)
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimaryDark),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(const Color(0xFF252330)),
+          elevation: WidgetStateProperty.all(12),
+          shadowColor: WidgetStateProperty.all(Colors.black54),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.sectionDividerDark),
+            ),
+          ),
+        ),
+      ),
+
+      // Menu theme - For MenuAnchor and MenuBar (dark mode)
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(const Color(0xFF252330)),
+          elevation: WidgetStateProperty.all(12),
+          shadowColor: WidgetStateProperty.all(Colors.black54),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.sectionDividerDark),
+            ),
+          ),
+        ),
       ),
 
       // Date picker theme - Modern styling with brand colors (dark mode)

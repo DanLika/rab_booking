@@ -619,7 +619,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
         SnackBarHelper.showError(
           context: context,
-          message: 'Cannot select dates. There are already booked dates in this range.',
+          message: WidgetTranslations.of(context).errorCannotSelectBookedDates,
           duration: const Duration(seconds: 3),
         );
         return;

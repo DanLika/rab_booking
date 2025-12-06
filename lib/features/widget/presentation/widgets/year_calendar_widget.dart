@@ -173,7 +173,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
     return Row(
       children: [
-        // Static "Month" label in top-left corner
+        // Static "Month" label in top-left corner (localized)
         Container(
           width: ConstraintTokens.monthLabelWidth,
           height: cellSize,
@@ -184,7 +184,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             borderRadius: const BorderRadius.only(topLeft: Radius.circular(BorderTokens.radiusSubtle)),
           ),
           child: Text(
-            'Month',
+            WidgetTranslations.of(context).monthView,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: headerFontSize, color: colors.textPrimary),
           ),
         ),
@@ -576,11 +576,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         if (_wouldCreateOrphanGap(start, end, data, minNights)) {
           _rangeStart = null;
           _rangeEnd = null;
-          SnackBarHelper.showError(
-            context: context,
-            message:
-                'This selection would leave a gap smaller than the $minNights-night minimum stay. Please choose different dates or extend your stay.',
-          );
+          SnackBarHelper.showError(context: context, message: WidgetTranslations.of(context).errorOrphanGap(minNights));
           return;
         }
 
@@ -590,7 +586,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           _rangeEnd = null;
           SnackBarHelper.showError(
             context: context,
-            message: 'Cannot select dates. There are already booked dates in this range.',
+            message: WidgetTranslations.of(context).errorCannotSelectBookedDates,
             duration: const Duration(seconds: 3),
           );
           return;

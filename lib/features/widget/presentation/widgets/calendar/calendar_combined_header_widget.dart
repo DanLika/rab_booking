@@ -72,7 +72,7 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
               onPressed: () {
                 ref.read(themeProvider.notifier).state = !isDarkMode;
               },
-              tooltip: isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              tooltip: isDarkMode ? translations.tooltipSwitchToLightMode : translations.tooltipSwitchToDarkMode,
               padding: EdgeInsets.zero,
               constraints: BoxConstraints(
                 minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,

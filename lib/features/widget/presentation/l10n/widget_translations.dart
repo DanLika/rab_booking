@@ -3744,4 +3744,226 @@ class WidgetTranslations {
         return 'night';
     }
   }
+
+  String get tooltipSwitchToLightMode {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Prebaci na svijetli način';
+      case 'de':
+        return 'Zum hellen Modus wechseln';
+      case 'it':
+        return 'Passa alla modalità chiara';
+      case 'en':
+      default:
+        return 'Switch to Light Mode';
+    }
+  }
+
+  String get tooltipSwitchToDarkMode {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Prebaci na tamni način';
+      case 'de':
+        return 'Zum dunklen Modus wechseln';
+      case 'it':
+        return 'Passa alla modalità scura';
+      case 'en':
+      default:
+        return 'Switch to Dark Mode';
+    }
+  }
+
+  // ============================================================================
+  // CALENDAR ERROR MESSAGES
+  // ============================================================================
+
+  String get errorCannotSelectBookedDates {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nije moguće odabrati datume. U ovom rasponu već postoje rezervirani datumi.';
+      case 'de':
+        return 'Daten können nicht ausgewählt werden. In diesem Zeitraum sind bereits gebuchte Daten vorhanden.';
+      case 'it':
+        return 'Impossibile selezionare le date. Ci sono già date prenotate in questo intervallo.';
+      case 'en':
+      default:
+        return 'Cannot select dates. There are already booked dates in this range.';
+    }
+  }
+
+  String get errorCannotSelectPastDates {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nije moguće odabrati prošle datume.';
+      case 'de':
+        return 'Vergangene Daten können nicht ausgewählt werden.';
+      case 'it':
+        return 'Impossibile selezionare date passate.';
+      case 'en':
+      default:
+        return 'Cannot select past dates.';
+    }
+  }
+
+  String errorOrphanGap(int minNights) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ovaj odabir bi ostavio prazninu manju od minimalnog boravka od $minNights noći. Molimo odaberite druge datume ili produžite boravak.';
+      case 'de':
+        return 'Diese Auswahl würde eine Lücke kleiner als der Mindestaufenthalt von $minNights Nächten hinterlassen. Bitte wählen Sie andere Daten oder verlängern Sie Ihren Aufenthalt.';
+      case 'it':
+        return 'Questa selezione lascerebbe un vuoto inferiore al soggiorno minimo di $minNights notti. Scegli date diverse o estendi il soggiorno.';
+      case 'en':
+      default:
+        return 'This selection would leave a gap smaller than the $minNights-night minimum stay. Please choose different dates or extend your stay.';
+    }
+  }
+
+  String errorMinDaysAdvance(int days) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ovaj datum zahtijeva rezervaciju najmanje $days dana unaprijed.';
+      case 'de':
+        return 'Dieses Datum erfordert eine Buchung mindestens $days Tage im Voraus.';
+      case 'it':
+        return 'Questa data richiede una prenotazione con almeno $days giorni di anticipo.';
+      case 'en':
+      default:
+        return 'This date requires booking at least $days days in advance.';
+    }
+  }
+
+  String errorMaxDaysAdvance(int days) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ovaj datum se može rezervirati najviše $days dana unaprijed.';
+      case 'de':
+        return 'Dieses Datum kann nur bis zu $days Tage im Voraus gebucht werden.';
+      case 'it':
+        return 'Questa data può essere prenotata solo fino a $days giorni in anticipo.';
+      case 'en':
+      default:
+        return 'This date can only be booked up to $days days in advance.';
+    }
+  }
+
+  String get errorCheckInNotAllowed {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Prijava nije dozvoljena na ovaj datum.';
+      case 'de':
+        return 'Check-in ist an diesem Datum nicht erlaubt.';
+      case 'it':
+        return 'Il check-in non è consentito in questa data.';
+      case 'en':
+      default:
+        return 'Check-in is not allowed on this date.';
+    }
+  }
+
+  String get errorCheckOutNotAllowed {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Odjava nije dozvoljena na ovaj datum.';
+      case 'de':
+        return 'Check-out ist an diesem Datum nicht erlaubt.';
+      case 'it':
+        return 'Il check-out non è consentito in questa data.';
+      case 'en':
+      default:
+        return 'Check-out is not allowed on this date.';
+    }
+  }
+
+  String get errorDateNotAvailableCheckIn {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ovaj datum nije dostupan za prijavu. Molimo odaberite dostupan datum.';
+      case 'de':
+        return 'Dieses Datum ist für den Check-in nicht verfügbar. Bitte wählen Sie ein verfügbares Datum.';
+      case 'it':
+        return 'Questa data non è disponibile per il check-in. Seleziona una data disponibile.';
+      case 'en':
+      default:
+        return 'This date is not available for check-in. Please select an available date.';
+    }
+  }
+
+  String get errorDateNotAvailableCheckOut {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ovaj datum nije dostupan za odjavu. Molimo odaberite dostupan datum.';
+      case 'de':
+        return 'Dieses Datum ist für den Check-out nicht verfügbar. Bitte wählen Sie ein verfügbares Datum.';
+      case 'it':
+        return 'Questa data non è disponibile per il check-out. Seleziona una data disponibile.';
+      case 'en':
+      default:
+        return 'This date is not available for check-out. Please select an available date.';
+    }
+  }
+
+  String errorMinNights(int minNights, int selectedNights) {
+    final minWord = _nightWord(minNights);
+    final selectedWord = _nightWord(selectedNights);
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Minimalni boravak je $minNights $minWord. Odabrali ste $selectedNights $selectedWord.';
+      case 'de':
+        return 'Mindestaufenthalt ist $minNights $minWord. Sie haben $selectedNights $selectedWord ausgewählt.';
+      case 'it':
+        return 'Il soggiorno minimo è di $minNights $minWord. Hai selezionato $selectedNights $selectedWord.';
+      case 'en':
+      default:
+        return 'Minimum stay is $minNights $minWord. You selected $selectedNights $selectedWord.';
+    }
+  }
+
+  String errorMinNightsOnArrival(int minNights, int selectedNights) {
+    final minWord = _nightWord(minNights);
+    final selectedWord = _nightWord(selectedNights);
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Minimalni boravak za ovaj datum dolaska je $minNights $minWord. Odabrali ste $selectedNights $selectedWord.';
+      case 'de':
+        return 'Mindestaufenthalt für dieses Anreisedatum ist $minNights $minWord. Sie haben $selectedNights $selectedWord ausgewählt.';
+      case 'it':
+        return 'Il soggiorno minimo per questa data di arrivo è di $minNights $minWord. Hai selezionato $selectedNights $selectedWord.';
+      case 'en':
+      default:
+        return 'Minimum stay for this arrival date is $minNights $minWord. You selected $selectedNights $selectedWord.';
+    }
+  }
+
+  String errorMaxNightsOnArrival(int maxNights, int selectedNights) {
+    final maxWord = _nightWord(maxNights);
+    final selectedWord = _nightWord(selectedNights);
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Maksimalni boravak za ovaj datum dolaska je $maxNights $maxWord. Odabrali ste $selectedNights $selectedWord.';
+      case 'de':
+        return 'Maximaler Aufenthalt für dieses Anreisedatum ist $maxNights $maxWord. Sie haben $selectedNights $selectedWord ausgewählt.';
+      case 'it':
+        return 'Il soggiorno massimo per questa data di arrivo è di $maxNights $maxWord. Hai selezionato $selectedNights $selectedWord.';
+      case 'en':
+      default:
+        return 'Maximum stay for this arrival date is $maxNights $maxWord. You selected $selectedNights $selectedWord.';
+    }
+  }
+
+  /// Helper for night/nights word
+  String _nightWord(int count) {
+    switch (locale.languageCode) {
+      case 'hr':
+        if (count == 1) return 'noć';
+        return 'noći';
+      case 'de':
+        return count == 1 ? 'Nacht' : 'Nächte';
+      case 'it':
+        return count == 1 ? 'notte' : 'notti';
+      case 'en':
+      default:
+        return count == 1 ? 'night' : 'nights';
+    }
+  }
 }

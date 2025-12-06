@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../domain/models/calendar_date_status.dart';
+import '../../l10n/widget_translations.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
 /// Validation result with optional error message.
@@ -39,7 +40,7 @@ class CalendarDateSelectionValidator {
   /// Returns invalid if date status is disabled (past).
   ValidationResult validatePastDate(DateStatus status) {
     if (status == DateStatus.disabled) {
-      return const ValidationResult.invalid('Cannot select past dates.');
+      return ValidationResult.invalid(WidgetTranslations.of(context).errorCannotSelectPastDates);
     }
     return const ValidationResult.valid();
   }
@@ -58,18 +59,16 @@ class CalendarDateSelectionValidator {
     final todayNormalized = DateTime(today.year, today.month, today.day);
     final daysInAdvance = date.difference(todayNormalized).inDays;
 
+    final t = WidgetTranslations.of(context);
+
     // Check minDaysAdvance
     if (minDaysAdvance != null && daysInAdvance < minDaysAdvance) {
-      return ValidationResult.invalid(
-        'This date requires booking at least $minDaysAdvance days in advance.',
-      );
+      return ValidationResult.invalid(t.errorMinDaysAdvance(minDaysAdvance));
     }
 
     // Check maxDaysAdvance
     if (maxDaysAdvance != null && daysInAdvance > maxDaysAdvance) {
-      return ValidationResult.invalid(
-        'This date can only be booked up to $maxDaysAdvance days in advance.',
-      );
+      return ValidationResult.invalid(t.errorMaxDaysAdvance(maxDaysAdvance));
     }
 
     return const ValidationResult.valid();
@@ -82,16 +81,14 @@ class CalendarDateSelectionValidator {
     required bool isSelectingCheckIn,
     required bool isSelectingCheckOut,
   }) {
+    final t = WidgetTranslations.of(context);
+
     if (isSelectingCheckIn && blockCheckIn) {
-      return const ValidationResult.invalid(
-        'Check-in is not allowed on this date.',
-      );
+      return ValidationResult.invalid(t.errorCheckInNotAllowed);
     }
 
     if (isSelectingCheckOut && blockCheckOut) {
-      return const ValidationResult.invalid(
-        'Check-out is not allowed on this date.',
-      );
+      return ValidationResult.invalid(t.errorCheckOutNotAllowed);
     }
 
     return const ValidationResult.valid();
@@ -100,15 +97,13 @@ class CalendarDateSelectionValidator {
   /// Checks if date can be selected for check-in.
   /// Allows: available, partialCheckOut (checkout day of previous booking)
   bool canSelectForCheckIn(DateStatus status) {
-    return status == DateStatus.available ||
-        status == DateStatus.partialCheckOut;
+    return status == DateStatus.available || status == DateStatus.partialCheckOut;
   }
 
   /// Checks if date can be selected for check-out.
   /// Allows: available, partialCheckIn (checkin day of next booking)
   bool canSelectForCheckOut(DateStatus status) {
-    return status == DateStatus.available ||
-        status == DateStatus.partialCheckIn;
+    return status == DateStatus.available || status == DateStatus.partialCheckIn;
   }
 
   /// Validates if date can be selected based on status.
@@ -118,65 +113,42 @@ class CalendarDateSelectionValidator {
     required bool isSelectingCheckIn,
     required bool isSelectingCheckOut,
   }) {
+    final t = WidgetTranslations.of(context);
+
     if (isSelectingCheckIn && !canSelectForCheckIn(status)) {
-      return const ValidationResult.invalid(
-        'This date is not available for check-in. Please select an available date.',
-      );
+      return ValidationResult.invalid(t.errorDateNotAvailableCheckIn);
     }
 
     if (isSelectingCheckOut && !canSelectForCheckOut(status)) {
-      return const ValidationResult.invalid(
-        'This date is not available for check-out. Please select an available date.',
-      );
+      return ValidationResult.invalid(t.errorDateNotAvailableCheckOut);
     }
 
     return const ValidationResult.valid();
   }
 
   /// Validates global minimum nights requirement.
-  ValidationResult validateMinNights({
-    required int selectedNights,
-    required int minNights,
-  }) {
+  ValidationResult validateMinNights({required int selectedNights, required int minNights}) {
     if (selectedNights < minNights) {
-      final nightWord = minNights == 1 ? 'night' : 'nights';
-      final selectedWord = selectedNights == 1 ? 'night' : 'nights';
-      return ValidationResult.invalid(
-        'Minimum stay is $minNights $nightWord. You selected $selectedNights $selectedWord.',
-      );
+      return ValidationResult.invalid(WidgetTranslations.of(context).errorMinNights(minNights, selectedNights));
     }
     return const ValidationResult.valid();
   }
 
   /// Validates per-date minNightsOnArrival requirement.
-  ValidationResult validateMinNightsOnArrival({
-    required int selectedNights,
-    required int? minNightsOnArrival,
-  }) {
-    if (minNightsOnArrival != null &&
-        minNightsOnArrival > 0 &&
-        selectedNights < minNightsOnArrival) {
-      final nightWord = minNightsOnArrival == 1 ? 'night' : 'nights';
-      final selectedWord = selectedNights == 1 ? 'night' : 'nights';
+  ValidationResult validateMinNightsOnArrival({required int selectedNights, required int? minNightsOnArrival}) {
+    if (minNightsOnArrival != null && minNightsOnArrival > 0 && selectedNights < minNightsOnArrival) {
       return ValidationResult.invalid(
-        'Minimum stay for this arrival date is $minNightsOnArrival $nightWord. You selected $selectedNights $selectedWord.',
+        WidgetTranslations.of(context).errorMinNightsOnArrival(minNightsOnArrival, selectedNights),
       );
     }
     return const ValidationResult.valid();
   }
 
   /// Validates per-date maxNightsOnArrival requirement.
-  ValidationResult validateMaxNightsOnArrival({
-    required int selectedNights,
-    required int? maxNightsOnArrival,
-  }) {
-    if (maxNightsOnArrival != null &&
-        maxNightsOnArrival > 0 &&
-        selectedNights > maxNightsOnArrival) {
-      final nightWord = maxNightsOnArrival == 1 ? 'night' : 'nights';
-      final selectedWord = selectedNights == 1 ? 'night' : 'nights';
+  ValidationResult validateMaxNightsOnArrival({required int selectedNights, required int? maxNightsOnArrival}) {
+    if (maxNightsOnArrival != null && maxNightsOnArrival > 0 && selectedNights > maxNightsOnArrival) {
       return ValidationResult.invalid(
-        'Maximum stay for this arrival date is $maxNightsOnArrival $nightWord. You selected $selectedNights $selectedWord.',
+        WidgetTranslations.of(context).errorMaxNightsOnArrival(maxNightsOnArrival, selectedNights),
       );
     }
     return const ValidationResult.valid();
@@ -189,10 +161,7 @@ class CalendarDateSelectionValidator {
   }) {
     final isSelectingCheckIn = rangeStart == null || rangeEnd != null;
     final isSelectingCheckOut = rangeStart != null && rangeEnd == null;
-    return (
-      isSelectingCheckIn: isSelectingCheckIn,
-      isSelectingCheckOut: isSelectingCheckOut,
-    );
+    return (isSelectingCheckIn: isSelectingCheckIn, isSelectingCheckOut: isSelectingCheckOut);
   }
 
   /// Full pre-selection validation (before setting range).
@@ -268,10 +237,7 @@ class CalendarDateSelectionValidator {
     // 3. Fallback to global minNights (only if no per-date minNightsOnArrival)
     final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
     if (minNightsOnArrival == null || minNightsOnArrival == 0) {
-      final result = validateMinNights(
-        selectedNights: selectedNights,
-        minNights: minNights,
-      );
+      final result = validateMinNights(selectedNights: selectedNights, minNights: minNights);
       if (!result.isValid) return result;
     }
 
@@ -281,11 +247,7 @@ class CalendarDateSelectionValidator {
   /// Shows error snackbar for invalid result.
   void showError(ValidationResult result) {
     if (!result.isValid && result.errorMessage != null) {
-      SnackBarHelper.showError(
-        context: context,
-        message: result.errorMessage!,
-        duration: const Duration(seconds: 3),
-      );
+      SnackBarHelper.showError(context: context, message: result.errorMessage!, duration: const Duration(seconds: 3));
     }
   }
 }

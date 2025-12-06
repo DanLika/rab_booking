@@ -64,7 +64,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       LoggingService.logSuccess('[EmailVerification] Code sent successfully');
 
       if (mounted) {
-        SnackBarHelper.showSuccess(context: context, message: 'Verification code sent! Check your inbox.');
+        SnackBarHelper.showSuccess(context: context, message: WidgetTranslations.of(context).verificationCodeSent);
 
         // Start 60-second cooldown
         setState(() {

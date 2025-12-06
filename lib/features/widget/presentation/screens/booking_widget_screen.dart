@@ -1910,7 +1910,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
-        SnackBarHelper.showError(context: context, message: 'Error creating booking: $e');
+        SnackBarHelper.showError(
+          context: context,
+          message: WidgetTranslations.of(context).errorCreatingBooking(e.toString()),
+        );
       }
     } finally {
       if (mounted) {
@@ -2028,7 +2031,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
-        SnackBarHelper.showError(context: context, message: 'Error launching Stripe: $e');
+        SnackBarHelper.showError(
+          context: context,
+          message: WidgetTranslations.of(context).errorLaunchingStripe(e.toString()),
+        );
       }
     }
   }
@@ -2250,7 +2256,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           _emailVerified = false;
         });
 
-        SnackBarHelper.showError(context: context, message: 'Email verification required. Please verify your email.');
+        SnackBarHelper.showError(
+          context: context,
+          message: WidgetTranslations.of(context).errorEmailVerificationRequired,
+        );
       }
 
       return false;
@@ -2260,7 +2269,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // ⚠️ DECISION: Block booking on check failure (safer)
       if (mounted) {
-        SnackBarHelper.showError(context: context, message: 'Unable to verify email status. Please try again.');
+        SnackBarHelper.showError(context: context, message: WidgetTranslations.of(context).errorUnableToVerifyEmail);
       }
       return false;
 

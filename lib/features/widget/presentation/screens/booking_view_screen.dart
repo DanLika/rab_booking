@@ -90,7 +90,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
     if (widget.bookingRef == null || widget.email == null) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Missing booking reference or email in URL';
+        _errorMessage = WidgetTranslations.of(context).errorMissingBookingParams;
       });
       return;
     }

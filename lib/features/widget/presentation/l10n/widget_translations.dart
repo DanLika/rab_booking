@@ -3773,6 +3773,90 @@ class WidgetTranslations {
     }
   }
 
+  String get errorMissingBookingParams {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nedostaje referenca rezervacije ili email u URL-u';
+      case 'de':
+        return 'Buchungsreferenz oder E-Mail fehlt in der URL';
+      case 'it':
+        return 'Riferimento prenotazione o email mancante nell\'URL';
+      case 'en':
+      default:
+        return 'Missing booking reference or email in URL';
+    }
+  }
+
+  String errorCreatingBooking(String error) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Greška pri kreiranju rezervacije: $error';
+      case 'de':
+        return 'Fehler beim Erstellen der Buchung: $error';
+      case 'it':
+        return 'Errore nella creazione della prenotazione: $error';
+      case 'en':
+      default:
+        return 'Error creating booking: $error';
+    }
+  }
+
+  String errorLaunchingStripe(String error) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Greška pri pokretanju Stripe: $error';
+      case 'de':
+        return 'Fehler beim Starten von Stripe: $error';
+      case 'it':
+        return 'Errore nell\'avvio di Stripe: $error';
+      case 'en':
+      default:
+        return 'Error launching Stripe: $error';
+    }
+  }
+
+  String get errorEmailVerificationRequired {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Potrebna je potvrda emaila. Molimo potvrdite svoj email.';
+      case 'de':
+        return 'E-Mail-Verifizierung erforderlich. Bitte bestätigen Sie Ihre E-Mail.';
+      case 'it':
+        return 'Verifica email richiesta. Per favore verifica la tua email.';
+      case 'en':
+      default:
+        return 'Email verification required. Please verify your email.';
+    }
+  }
+
+  String get errorUnableToVerifyEmail {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nije moguće provjeriti status emaila. Molimo pokušajte ponovo.';
+      case 'de':
+        return 'E-Mail-Status konnte nicht überprüft werden. Bitte versuchen Sie es erneut.';
+      case 'it':
+        return 'Impossibile verificare lo stato dell\'email. Per favore riprova.';
+      case 'en':
+      default:
+        return 'Unable to verify email status. Please try again.';
+    }
+  }
+
+  String get verificationCodeSent {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Verifikacijski kod poslan! Provjerite inbox.';
+      case 'de':
+        return 'Verifizierungscode gesendet! Überprüfen Sie Ihren Posteingang.';
+      case 'it':
+        return 'Codice di verifica inviato! Controlla la tua casella di posta.';
+      case 'en':
+      default:
+        return 'Verification code sent! Check your inbox.';
+    }
+  }
+
   String get tooltipSwitchToLightMode {
     switch (locale.languageCode) {
       case 'hr':

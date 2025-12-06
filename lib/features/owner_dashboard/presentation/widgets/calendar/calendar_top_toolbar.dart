@@ -77,32 +77,43 @@ class CalendarTopToolbar extends StatelessWidget {
             padding: EdgeInsets.zero,
           ),
 
-          // Date range display (centered)
-          InkWell(
-            onTap: onDatePickerTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              constraints: isCompact ? const BoxConstraints(maxWidth: 120) : null,
-              padding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 12, vertical: isCompact ? 6 : 8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    dateRange.toDisplayString(isWeek: isWeekView),
-                    style: (isCompact ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          // Date range display (centered) - styled badge
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onDatePickerTap,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                constraints: isCompact ? const BoxConstraints(maxWidth: 120) : null,
+                padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 6 : 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                      theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
+                    ],
                   ),
-                  SizedBox(width: isCompact ? 2 : 4),
-                  Icon(Icons.arrow_drop_down, size: isCompact ? 14 : 20, color: theme.colorScheme.primary),
-                ],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.calendar_month, size: isCompact ? 14 : 18, color: theme.colorScheme.primary),
+                    SizedBox(width: isCompact ? 4 : 8),
+                    Text(
+                      dateRange.toDisplayString(isWeek: isWeekView),
+                      style: (isCompact ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(width: isCompact ? 2 : 4),
+                    Icon(Icons.arrow_drop_down, size: isCompact ? 14 : 20, color: theme.colorScheme.primary),
+                  ],
+                ),
               ),
             ),
           ),
@@ -209,55 +220,57 @@ class CalendarTopToolbar extends StatelessWidget {
               },
             )
           else
-            // DESKTOP MODE: Show all buttons
+            // DESKTOP MODE: Show all buttons with styled containers
             Flexible(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Search button
                   if (onSearchTap != null)
-                    IconButton(
-                      icon: const Icon(Icons.search),
-                      onPressed: onSearchTap,
+                    _buildStyledIconButton(
+                      icon: Icons.search,
+                      color: AppColors.info,
+                      onPressed: onSearchTap!,
                       tooltip: l10n.ownerCalendarSearchBookings,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      isDark: theme.brightness == Brightness.dark,
                     ),
 
                   // Refresh button
                   if (onRefresh != null)
-                    IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: onRefresh,
+                    _buildStyledIconButton(
+                      icon: Icons.refresh,
+                      color: AppColors.success,
+                      onPressed: onRefresh!,
                       tooltip: l10n.ownerCalendarRefresh,
-                      color: Colors.green,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      isDark: theme.brightness == Brightness.dark,
                     ),
 
-                  // Filter button (desktop also gets it now)
+                  // Filter button
                   if (onFilterTap != null)
-                    IconButton(
-                      icon: const Icon(Icons.tune),
-                      onPressed: onFilterTap,
+                    _buildStyledIconButton(
+                      icon: Icons.tune,
+                      color: AppColors.warning,
+                      onPressed: onFilterTap!,
                       tooltip: l10n.ownerCalendarFilters,
-                      color: Colors.orange,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      isDark: theme.brightness == Brightness.dark,
                     ),
 
                   // Today button
-                  _buildTodayButton(theme, l10n),
+                  _buildStyledTodayButton(theme, l10n),
 
                   // Notifications button
                   if (onNotificationsTap != null)
-                    _buildNotificationsButton(theme, l10n, onNotificationsTap, notificationCount),
+                    _buildStyledNotificationsButton(theme, l10n, onNotificationsTap!, notificationCount),
 
-                  // Analytics toggle (DESKTOP MODE - icon only to save space)
+                  // Analytics toggle
                   if (showSummaryToggle && onSummaryToggleChanged != null)
-                    IconButton(
-                      icon: Icon(isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined),
+                    _buildStyledIconButton(
+                      icon: isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
+                      color: isSummaryVisible ? AppColors.primary : AppColors.info,
                       onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
                       tooltip: isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats,
-                      color: isSummaryVisible ? theme.colorScheme.primary : Colors.blue,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      isDark: theme.brightness == Brightness.dark,
+                      isActive: isSummaryVisible,
                     ),
                 ],
               ),
@@ -267,63 +280,148 @@ class CalendarTopToolbar extends StatelessWidget {
     );
   }
 
-  /// Build Today button with day badge
-  Widget _buildTodayButton(ThemeData theme, AppLocalizations l10n) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.calendar_today_outlined),
-          onPressed: onToday,
-          tooltip: l10n.ownerCalendarGoToToday,
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-        ),
-        // Positioned must be direct child of Stack, IgnorePointer inside
-        Positioned(
-          bottom: 10,
-          child: IgnorePointer(
+  /// Build styled icon button with background container
+  Widget _buildStyledIconButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+    required String tooltip,
+    required bool isDark,
+    bool isActive = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(10),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-              decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(3)),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 12),
-              child: Text(
-                '${DateTime.now().day}',
-                style: TextStyle(color: theme.colorScheme.onPrimary, fontSize: 9, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? color.withAlpha((0.2 * 255).toInt())
+                    : (isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5FA)),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isActive
+                      ? color.withAlpha((0.4 * 255).toInt())
+                      : (isDark ? const Color(0xFF3D3D4A) : const Color(0xFFE8E8F0)),
+                ),
               ),
+              child: Icon(icon, size: 20, color: color),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
-  /// Build Notifications button with badge
-  Widget _buildNotificationsButton(ThemeData theme, AppLocalizations l10n, VoidCallback? onTap, int? count) {
-    return Stack(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: onTap,
-          tooltip: l10n.ownerCalendarNotifications,
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-        ),
-        if (count != null && count > 0)
-          Positioned(
-            right: 6,
-            top: 6,
+  /// Build styled Today button with day badge
+  Widget _buildStyledTodayButton(ThemeData theme, AppLocalizations l10n) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Tooltip(
+        message: l10n.ownerCalendarGoToToday,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onToday,
+            borderRadius: BorderRadius.circular(10),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(8)),
-              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
-              child: Text(
-                count > 9 ? '9+' : '$count',
-                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5FA),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: isDark ? const Color(0xFF3D3D4A) : const Color(0xFFE8E8F0)),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(Icons.calendar_today_outlined, size: 20, color: AppColors.primary),
+                  Positioned(
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                      decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(3)),
+                      child: Text(
+                        '${DateTime.now().day}',
+                        style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-      ],
+        ),
+      ),
+    );
+  }
+
+  /// Build styled Notifications button with badge
+  Widget _buildStyledNotificationsButton(ThemeData theme, AppLocalizations l10n, VoidCallback onTap, int? count) {
+    final isDark = theme.brightness == Brightness.dark;
+    final hasNotifications = (count ?? 0) > 0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Tooltip(
+        message: l10n.ownerCalendarNotifications,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: hasNotifications
+                    ? AppColors.warning.withAlpha((0.15 * 255).toInt())
+                    : (isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5FA)),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: hasNotifications
+                      ? AppColors.warning.withAlpha((0.4 * 255).toInt())
+                      : (isDark ? const Color(0xFF3D3D4A) : const Color(0xFFE8E8F0)),
+                ),
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    Icons.notifications_outlined,
+                    size: 20,
+                    color: hasNotifications ? AppColors.warning : AppColors.warning,
+                  ),
+                  if (hasNotifications)
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? const Color(0xFF2D2D3A) : Colors.white, width: 1.5),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          count! > 9 ? '9+' : '$count',
+                          style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

@@ -1459,6 +1459,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerCalendarTryAgain => 'Try again';
 
   @override
+  String get ownerCalendarLoading => 'Loading...';
+
+  @override
+  String get ownerCalendarChangeStatus => 'Change status';
+
+  @override
+  String get ownerCalendarDefaultGuest => 'Guest';
+
+  @override
+  String get ownerCalendarSummaryGuests => 'Guests';
+
+  @override
+  String ownerCalendarSummaryArrivals(int arrivals, int departures) {
+    return '$arrivals arrival • $departures departure';
+  }
+
+  @override
   String ownerCalendarZoom(int percent) {
     return 'Zoom: $percent%';
   }
@@ -1656,6 +1673,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerBookingsCancelError => 'Error cancelling booking';
+
+  @override
+  String get ownerBookingCardNight => 'night';
+
+  @override
+  String get ownerBookingCardNights => 'nights';
+
+  @override
+  String get ownerBookingCardTotal => 'Total';
+
+  @override
+  String get ownerBookingCardPaid => 'Paid';
+
+  @override
+  String get ownerBookingCardRemaining => 'Remaining';
+
+  @override
+  String get ownerBookingCardFullyPaid => 'Fully paid';
+
+  @override
+  String ownerBookingCardPercentPaid(String percent) {
+    return '$percent% paid';
+  }
+
+  @override
+  String get ownerBookingCardNotes => 'Notes';
+
+  @override
+  String get ownerBookingCardDetails => 'Details';
+
+  @override
+  String get ownerBookingCardApprove => 'Approve';
+
+  @override
+  String get ownerBookingCardReject => 'Reject';
+
+  @override
+  String get ownerBookingCardComplete => 'Complete';
+
+  @override
+  String get ownerBookingCardCancel => 'Cancel';
 
   @override
   String ownerTableSelected(int count) {
@@ -2726,6 +2784,70 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationsDeleteNotificationDesc =>
       'Are you sure you want to delete this notification?';
+
+  @override
+  String get notificationBookingCreatedTitle => 'New Booking';
+
+  @override
+  String get notificationBookingUpdatedTitle => 'Booking Updated';
+
+  @override
+  String get notificationBookingCancelledTitle => 'Booking Cancelled';
+
+  @override
+  String get notificationPaymentReceivedTitle => 'Payment Received';
+
+  @override
+  String notificationBookingCreatedMessage(String guestName) {
+    return '$guestName created a new booking.';
+  }
+
+  @override
+  String notificationBookingUpdatedMessage(String guestName) {
+    return 'Booking for $guestName was updated.';
+  }
+
+  @override
+  String notificationBookingCancelledMessage(String guestName) {
+    return 'Booking for $guestName was cancelled.';
+  }
+
+  @override
+  String notificationPaymentReceivedMessage(String guestName, double amount) {
+    final intl.NumberFormat amountNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String amountString = amountNumberFormat.format(amount);
+
+    return 'Received payment from $guestName for €$amountString.';
+  }
+
+  @override
+  String get notificationTimeJustNow => 'Just now';
+
+  @override
+  String notificationTimeMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String notificationTimeHoursAgo(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String notificationTimeDaysAgo(int days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String notificationTimeWeeksAgo(int weeks) {
+    return '${weeks}w ago';
+  }
+
+  @override
+  String notificationTimeMonthsAgo(int months) {
+    return '${months}mo ago';
+  }
 
   @override
   String get bankAccountTitle => 'Bank Account';
@@ -4152,7 +4274,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalSyncLoadingUnits => 'Loading units...';
 
   @override
-  String get embedGuideTitle => 'Embed Widget - Guide';
+  String get embedGuideTitle => 'Widget Embedding Guide';
 
   @override
   String get embedGuideHeaderTitle => 'Embed Booking Widget';
@@ -4166,7 +4288,7 @@ class AppLocalizationsEn extends AppLocalizations {
       '💡 Embed widget allows your guests to see availability and create reservations directly from your website, without redirection.';
 
   @override
-  String get embedGuideStep1Title => 'Configure Widget Settings';
+  String get embedGuideStep1Title => 'Configure Widget';
 
   @override
   String get embedGuideStep2Title => 'Generate Embed Code';
@@ -4201,7 +4323,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get embedGuideStep1Nav3 => 'Click \"Widget Settings\"';
 
   @override
-  String get embedGuideStep1SelectMode => 'Select widget mode:';
+  String get embedGuideStep1SelectMode => 'Select operating mode:';
 
   @override
   String get embedGuideWidgetModeCalendar => '📅 Calendar Only';
@@ -4898,6 +5020,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportListAddProperty => 'Add Property';
+
+  @override
+  String get icalExportReady => 'Ready to Export';
+
+  @override
+  String icalExportUnitsAvailable(int count) {
+    return '$count units available for export';
+  }
+
+  @override
+  String get icalExportWhyExport => 'Why Export Your Calendar?';
+
+  @override
+  String get icalExportBenefit1Title => 'Personal Calendar Sync';
+
+  @override
+  String get icalExportBenefit1Desc =>
+      'See all your bookings in Google Calendar, Apple Calendar, or Outlook.';
+
+  @override
+  String get icalExportBenefit2Title => 'Automatic Updates';
+
+  @override
+  String get icalExportBenefit2Desc =>
+      'Calendar apps automatically sync new bookings every few hours.';
+
+  @override
+  String get icalExportBenefit3Title => 'Multi-Device Access';
+
+  @override
+  String get icalExportBenefit3Desc =>
+      'View your bookings on phone, tablet, and computer.';
+
+  @override
+  String get icalExportBenefit4Title => 'Reminders & Notifications';
+
+  @override
+  String get icalExportBenefit4Desc =>
+      'Get calendar notifications for upcoming check-ins and check-outs.';
+
+  @override
+  String get icalExportSelectUnit => 'Select Unit';
+
+  @override
+  String get icalExportHowItWorks => 'How It Works';
+
+  @override
+  String get icalExportStep1 => 'Select a unit from the list below';
+
+  @override
+  String get icalExportStep2 => 'Click \'Generate\' to create the iCal URL';
+
+  @override
+  String get icalExportStep3 => 'Copy the URL and add it to your calendar app';
+
+  @override
+  String get icalExportStep4 =>
+      'Your calendar will automatically sync bookings';
+
+  @override
+  String get icalExportFaqTitle => 'Frequently Asked Questions';
+
+  @override
+  String get icalExportFaq1Q => 'How often does the calendar sync?';
+
+  @override
+  String get icalExportFaq1A =>
+      'Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.';
+
+  @override
+  String get icalExportFaq2Q => 'Will deleted bookings be removed?';
+
+  @override
+  String get icalExportFaq2A =>
+      'Yes, when you regenerate the export, cancelled bookings will be removed from your calendar.';
+
+  @override
+  String get icalExportFaq3Q => 'Can I share this URL with others?';
+
+  @override
+  String get icalExportFaq3A =>
+      'Yes, but be careful - anyone with the URL can see your booking schedule.';
+
+  @override
+  String get icalExportUrlReady => 'URL Ready';
+
+  @override
+  String get icalExportUrlPending => 'URL Not Generated';
+
+  @override
+  String get icalExportUrlReadyDesc =>
+      'Your iCal URL is ready. Copy it and add to your calendar app.';
+
+  @override
+  String get icalExportUrlPendingDesc =>
+      'Click the button below to generate your iCal export URL.';
+
+  @override
+  String get icalExportRegenerate => 'Regenerate URL';
+
+  @override
+  String get icalExportNoUrl => 'No URL Generated';
+
+  @override
+  String get icalExportNoUrlDesc =>
+      'Generate an iCal URL to sync your bookings with external calendars.';
 
   @override
   String errorWithMessage(String message) {

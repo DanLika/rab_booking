@@ -31,7 +31,7 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(isSmallScreen ? 2 : 4),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: colors.backgroundTertiary,
         borderRadius: BorderRadius.circular(isSmallScreen ? 16 : 20),
         border: Border.all(color: colors.borderLight),
       ),

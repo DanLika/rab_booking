@@ -66,9 +66,13 @@ class CancelConfirmationDialog extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(SpacingTokens.m),
             decoration: BoxDecoration(
-              color: colors.backgroundSecondary,
+              // Use backgroundTertiary in dark mode for better contrast
+              color: isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary,
               borderRadius: BorderTokens.circularMedium,
-              border: Border.all(color: colors.borderDefault),
+              border: Border.all(
+                color: isDarkMode ? colors.borderMedium : colors.borderDefault,
+                width: isDarkMode ? 1.5 : 1.0,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

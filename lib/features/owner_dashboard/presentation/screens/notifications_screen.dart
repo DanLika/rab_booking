@@ -6,6 +6,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/notification_localizer.dart';
 import '../providers/notifications_provider.dart';
 import '../../domain/models/notification_model.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -275,15 +276,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       drawer: const OwnerAppDrawer(currentRoute: 'notifications'),
       // FAB for actions when not in selection mode
       floatingActionButton: !_isSelectionMode && allNotifications.isNotEmpty
-          ? SizedBox(
-              width: 100,
-              child: FloatingActionButton.extended(
-                onPressed: _toggleSelectionMode,
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white,
-                icon: const Icon(Icons.checklist_rounded, size: 18),
-                label: Text(l10n.notificationsSelect),
-              ),
+          ? FloatingActionButton.extended(
+              onPressed: _toggleSelectionMode,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              extendedPadding: const EdgeInsets.symmetric(horizontal: 24),
+              icon: const Icon(Icons.checklist_rounded, size: 18),
+              label: Text(l10n.notificationsSelect),
             )
           : null,
     );
@@ -576,6 +575,8 @@ class _SelectableNotificationCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isUnread = !notification.isRead;
+    final l10n = AppLocalizations.of(context);
+    final localizer = NotificationLocalizer(l10n);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -640,7 +641,7 @@ class _SelectableNotificationCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              notification.title,
+                              localizer.getTitle(notification),
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
@@ -661,7 +662,7 @@ class _SelectableNotificationCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        notification.message,
+                        localizer.getMessage(notification),
                         style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -704,6 +705,8 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isUnread = !widget.notification.isRead;
+    final l10n = AppLocalizations.of(context);
+    final localizer = NotificationLocalizer(l10n);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -773,7 +776,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                           children: [
                             Expanded(
                               child: Text(
-                                widget.notification.title,
+                                localizer.getTitle(widget.notification),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
@@ -805,7 +808,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
 
                         // Message
                         Text(
-                          widget.notification.message,
+                          localizer.getMessage(widget.notification),
                           style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant, height: 1.5),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -823,7 +826,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              widget.notification.getRelativeTime(),
+                              localizer.getRelativeTime(widget.notification),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: theme.colorScheme.primary.withAlpha((0.7 * 255).toInt()),

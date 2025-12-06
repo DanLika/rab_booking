@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Context menu for booking blocks (right-click menu)
 class BookingContextMenu extends StatelessWidget {
@@ -55,32 +56,21 @@ class BookingContextMenu extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.authPrimary.withAlpha(
-                        (0.1 * 255).toInt(),
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
+                      color: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
+                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
                     ),
                     child: Row(
                       children: [
                         Container(
                           width: 8,
                           height: 8,
-                          decoration: BoxDecoration(
-                            color: booking.status.color,
-                            shape: BoxShape.circle,
-                          ),
+                          decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             booking.guestName ?? 'N/A',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -89,19 +79,29 @@ class BookingContextMenu extends StatelessWidget {
                   ),
 
                   // Edit
-                  _buildMenuItem(
-                    icon: Icons.edit,
-                    label: 'Uredi rezervaciju',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onEdit();
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return _buildMenuItem(
+                        icon: Icons.edit,
+                        label: l10n.editBookingTitle,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onEdit();
+                        },
+                      );
                     },
                   ),
 
                   const Divider(height: 1),
 
                   // Change status submenu
-                  _buildSubmenuHeader('Promijeni status'),
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return _buildSubmenuHeader(l10n.ownerCalendarChangeStatus);
+                    },
+                  ),
 
                   if (booking.status != BookingStatus.confirmed)
                     _buildStatusMenuItem(
@@ -142,25 +142,35 @@ class BookingContextMenu extends StatelessWidget {
                   const Divider(height: 1),
 
                   // Send email
-                  _buildMenuItem(
-                    icon: Icons.email_outlined,
-                    label: 'Pošalji email',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSendEmail();
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return _buildMenuItem(
+                        icon: Icons.email_outlined,
+                        label: l10n.ownerTableActionSendEmail,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onSendEmail();
+                        },
+                      );
                     },
                   ),
 
                   const Divider(height: 1),
 
                   // Delete
-                  _buildMenuItem(
-                    icon: Icons.delete_outline,
-                    label: 'Obriši rezervaciju',
-                    color: AppColors.error,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onDelete();
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return _buildMenuItem(
+                        icon: Icons.delete_outline,
+                        label: l10n.ownerTableDeleteBooking,
+                        color: AppColors.error,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onDelete();
+                        },
+                      );
                     },
                   ),
                 ],
@@ -172,12 +182,7 @@ class BookingContextMenu extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
+  Widget _buildMenuItem({required IconData icon, required String label, required VoidCallback onTap, Color? color}) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -200,19 +205,12 @@ class BookingContextMenu extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Text(
         label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
-        ),
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
       ),
     );
   }
 
-  Widget _buildStatusMenuItem({
-    required BookingStatus status,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildStatusMenuItem({required BookingStatus status, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -223,18 +221,10 @@ class BookingContextMenu extends StatelessWidget {
             Container(
               width: 10,
               height: 10,
-              decoration: BoxDecoration(
-                color: status.color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: status.color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                status.displayName,
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
+            Expanded(child: Text(status.displayName, style: const TextStyle(fontSize: 13))),
           ],
         ),
       ),

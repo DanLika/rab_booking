@@ -33,7 +33,6 @@ import '../../features/owner_dashboard/presentation/screens/onboarding_welcome_s
 import '../../features/owner_dashboard/presentation/screens/onboarding_wizard_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/onboarding_success_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/ical/guides/ical_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_export_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart';
@@ -511,8 +510,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // Guide routes
-      // iCal Guide - NEW
-      GoRoute(path: OwnerRoutes.icalGuide, builder: (context, state) => const IcalGuideScreen()),
       GoRoute(path: OwnerRoutes.guideEmbedWidget, builder: (context, state) => const EmbedWidgetGuideScreen()),
       GoRoute(path: OwnerRoutes.guideFaq, builder: (context, state) => const FAQScreen()),
 

@@ -63,7 +63,7 @@ class CalendarTopToolbar extends StatelessWidget {
         color: Colors.transparent, // Transparent to show parent gradient
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
-      padding: EdgeInsets.only(left: isCompact ? 4 : 16),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 4 : 16),
       child: Row(
         children: [
           // Previous period - LEFT of month selector

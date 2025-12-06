@@ -124,20 +124,21 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
 
   Widget _buildBankCard(AppLocalizations l10n) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.sectionBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: theme.dividerColor.withAlpha((0.4 * 255).toInt()), width: 1.5),
+            color: context.gradients.cardBackground,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.gradients.sectionBorder),
           ),
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
@@ -202,13 +203,21 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-        border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
+        color: context.gradients.cardBackground,
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline, color: theme.colorScheme.tertiary, size: 20),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.info_outline, color: theme.colorScheme.primary, size: 20),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -216,15 +225,14 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
               children: [
                 Text(
                   l10n.bankAccountInfoTitle,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? theme.colorScheme.tertiary : theme.colorScheme.onSurface,
-                  ),
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.bankAccountInfoDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                  ),
                 ),
               ],
             ),

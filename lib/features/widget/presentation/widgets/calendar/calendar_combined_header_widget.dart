@@ -50,7 +50,7 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
           vertical: SpacingTokens.xxs,
         ),
         decoration: BoxDecoration(
-          color: colors.backgroundSecondary,
+          color: colors.backgroundTertiary,
           borderRadius: BorderTokens.circularRounded,
           boxShadow: ShadowTokens.light,
         ),

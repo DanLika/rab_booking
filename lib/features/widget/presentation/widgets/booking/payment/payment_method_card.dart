@@ -44,19 +44,13 @@ class PaymentMethodCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: colors.backgroundTertiary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: colors.textPrimary,
-            size: 24,
-          ),
+          Icon(icon, color: colors.textPrimary, size: 24),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Column(
@@ -64,20 +58,9 @@ class PaymentMethodCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
                 ),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colors.textSecondary,
-                    ),
-                  ),
+                if (subtitle != null) Text(subtitle!, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
               ],
             ),
           ),

@@ -122,13 +122,17 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
     final colors = widget.colors;
     final canResend = widget.emailConfig != null && widget.booking != null;
     final tr = WidgetTranslations.of(context);
+    // Detect dark mode for better contrast
+    final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: cardBackground,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: colors.borderDefault),
+        border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Row(
         children: [
@@ -147,23 +151,58 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
                   ),
                 ),
                 const SizedBox(height: SpacingTokens.xxs),
-                Text(
-                  tr.checkEmailAt(widget.guestEmail),
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: tr.checkYourEmailAt,
+                        style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                      ),
+                      TextSpan(
+                        text: ' ${widget.guestEmail} ',
+                        style: TextStyle(
+                          fontSize: TypographyTokens.fontSizeS,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      TextSpan(
+                        text: tr.forBookingDetails,
+                        style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                      ),
+                    ],
+                  ),
                 ),
                 if (canResend) ...[
-                  const SizedBox(height: SpacingTokens.xs),
-                  TextButton.icon(
-                    onPressed: _isResendingEmail ? null : () => _resendConfirmationEmail(tr),
-                    icon: _isResendingEmail
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Icon(_emailResent ? Icons.check : Icons.refresh, size: 16),
-                    label: Text(_emailResent ? tr.emailSent : tr.didntReceiveResendEmail),
-                    style: TextButton.styleFrom(
-                      foregroundColor: colors.textPrimary,
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  const SizedBox(height: SpacingTokens.s),
+                  InkWell(
+                    onTap: _isResendingEmail ? null : () => _resendConfirmationEmail(tr),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xxs),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_isResendingEmail)
+                            SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: colors.textSecondary),
+                            )
+                          else
+                            Icon(_emailResent ? Icons.check : Icons.refresh, size: 14, color: colors.textSecondary),
+                          const SizedBox(width: SpacingTokens.xxs),
+                          Text(
+                            _emailResent ? tr.emailSent : tr.didntReceiveResendEmail,
+                            style: TextStyle(
+                              fontSize: TypographyTokens.fontSizeS,
+                              color: colors.textSecondary,
+                              decoration: TextDecoration.underline,
+                              decorationColor: colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

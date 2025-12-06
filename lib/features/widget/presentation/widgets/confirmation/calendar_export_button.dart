@@ -83,6 +83,9 @@ class _CalendarExportButtonState extends State<CalendarExportButton> {
   Widget build(BuildContext context) {
     final colors = widget.colors;
     final tr = WidgetTranslations.of(context);
+    // Detect dark mode for better contrast
+    final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+    final buttonBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: SpacingTokens.l),
@@ -91,7 +94,7 @@ class _CalendarExportButtonState extends State<CalendarExportButton> {
         icon: Icon(_isGeneratingIcs ? Icons.hourglass_empty : Icons.calendar_today),
         label: Text(_isGeneratingIcs ? tr.generating : tr.addToMyCalendar),
         style: ElevatedButton.styleFrom(
-          backgroundColor: colors.backgroundSecondary,
+          backgroundColor: buttonBackground,
           foregroundColor: colors.textPrimary,
           minimumSize: const Size(double.infinity, 48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderTokens.radiusMedium)),

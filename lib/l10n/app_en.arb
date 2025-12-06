@@ -525,6 +525,17 @@
   "ownerCalendarLoadingUnits": "Loading units...",
   "ownerCalendarErrorLoadingUnits": "Error loading units",
   "ownerCalendarTryAgain": "Try again",
+  "ownerCalendarLoading": "Loading...",
+  "ownerCalendarChangeStatus": "Change status",
+  "ownerCalendarDefaultGuest": "Guest",
+  "ownerCalendarSummaryGuests": "Guests",
+  "ownerCalendarSummaryArrivals": "{arrivals} arrival • {departures} departure",
+  "@ownerCalendarSummaryArrivals": {
+    "placeholders": {
+      "arrivals": {"type": "int"},
+      "departures": {"type": "int"}
+    }
+  },
   "ownerCalendarZoom": "Zoom: {percent}%",
   "@ownerCalendarZoom": {
     "placeholders": {
@@ -621,6 +632,25 @@
   "ownerBookingsCompleteError": "Error completing booking",
   "ownerBookingsCancelled": "Booking cancelled",
   "ownerBookingsCancelError": "Error cancelling booking",
+
+  "ownerBookingCardNight": "night",
+  "ownerBookingCardNights": "nights",
+  "ownerBookingCardTotal": "Total",
+  "ownerBookingCardPaid": "Paid",
+  "ownerBookingCardRemaining": "Remaining",
+  "ownerBookingCardFullyPaid": "Fully paid",
+  "ownerBookingCardPercentPaid": "{percent}% paid",
+  "@ownerBookingCardPercentPaid": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "ownerBookingCardNotes": "Notes",
+  "ownerBookingCardDetails": "Details",
+  "ownerBookingCardApprove": "Approve",
+  "ownerBookingCardReject": "Reject",
+  "ownerBookingCardComplete": "Complete",
+  "ownerBookingCardCancel": "Cancel",
 
   "ownerTableSelected": "{count} selected",
   "@ownerTableSelected": {
@@ -1089,6 +1119,67 @@
   "notificationsTryAgain": "Try again",
   "notificationsDeleteNotification": "Delete notification",
   "notificationsDeleteNotificationDesc": "Are you sure you want to delete this notification?",
+
+  "notificationBookingCreatedTitle": "New Booking",
+  "notificationBookingUpdatedTitle": "Booking Updated",
+  "notificationBookingCancelledTitle": "Booking Cancelled",
+  "notificationPaymentReceivedTitle": "Payment Received",
+  "notificationBookingCreatedMessage": "{guestName} created a new booking.",
+  "@notificationBookingCreatedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationBookingUpdatedMessage": "Booking for {guestName} was updated.",
+  "@notificationBookingUpdatedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationBookingCancelledMessage": "Booking for {guestName} was cancelled.",
+  "@notificationBookingCancelledMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationPaymentReceivedMessage": "Received payment from {guestName} for €{amount}.",
+  "@notificationPaymentReceivedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"},
+      "amount": {"type": "double", "format": "decimalPattern"}
+    }
+  },
+  "notificationTimeJustNow": "Just now",
+  "notificationTimeMinutesAgo": "{minutes} min ago",
+  "@notificationTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationTimeHoursAgo": "{hours}h ago",
+  "@notificationTimeHoursAgo": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "notificationTimeDaysAgo": "{days}d ago",
+  "@notificationTimeDaysAgo": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "notificationTimeWeeksAgo": "{weeks}w ago",
+  "@notificationTimeWeeksAgo": {
+    "placeholders": {
+      "weeks": {"type": "int"}
+    }
+  },
+  "notificationTimeMonthsAgo": "{months}mo ago",
+  "@notificationTimeMonthsAgo": {
+    "placeholders": {
+      "months": {"type": "int"}
+    }
+  },
 
   "bankAccountTitle": "Bank Account",
   "bankAccountBankDetails": "Bank Details",
@@ -1682,11 +1773,11 @@
   "icalSyncSave": "Save",
   "icalSyncLoadingUnits": "Loading units...",
 
-  "embedGuideTitle": "Embed Widget - Guide",
+  "embedGuideTitle": "Widget Embedding Guide",
   "embedGuideHeaderTitle": "Embed Booking Widget",
   "embedGuideHeaderSubtitle": "Add calendar and booking system to your website",
   "embedGuideHeaderTip": "💡 Embed widget allows your guests to see availability and create reservations directly from your website, without redirection.",
-  "embedGuideStep1Title": "Configure Widget Settings",
+  "embedGuideStep1Title": "Configure Widget",
   "embedGuideStep2Title": "Generate Embed Code",
   "embedGuideStep3Title": "Add to Your Website",
   "embedGuideStep4Title": "Test Widget",
@@ -1698,7 +1789,7 @@
   "embedGuideStep1Nav1": "Go to: Configuration → Accommodation Units",
   "embedGuideStep1Nav2": "Click \"Edit\" on desired unit",
   "embedGuideStep1Nav3": "Click \"Widget Settings\"",
-  "embedGuideStep1SelectMode": "Select widget mode:",
+  "embedGuideStep1SelectMode": "Select operating mode:",
   "embedGuideWidgetModeCalendar": "📅 Calendar Only",
   "embedGuideWidgetModeCalendarDesc": "Guests see only availability and contact info. For clients like jasko-rab.com.",
   "embedGuideWidgetModeBooking": "📝 Booking without Payment",
@@ -1976,6 +2067,42 @@
   "icalExportListNoUnits": "No accommodation units",
   "icalExportListNoUnitsDesc": "First create a property and add accommodation units.",
   "icalExportListAddProperty": "Add Property",
+  "icalExportReady": "Ready to Export",
+  "icalExportUnitsAvailable": "{count} units available for export",
+  "@icalExportUnitsAvailable": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalExportWhyExport": "Why Export Your Calendar?",
+  "icalExportBenefit1Title": "Personal Calendar Sync",
+  "icalExportBenefit1Desc": "See all your bookings in Google Calendar, Apple Calendar, or Outlook.",
+  "icalExportBenefit2Title": "Automatic Updates",
+  "icalExportBenefit2Desc": "Calendar apps automatically sync new bookings every few hours.",
+  "icalExportBenefit3Title": "Multi-Device Access",
+  "icalExportBenefit3Desc": "View your bookings on phone, tablet, and computer.",
+  "icalExportBenefit4Title": "Reminders & Notifications",
+  "icalExportBenefit4Desc": "Get calendar notifications for upcoming check-ins and check-outs.",
+  "icalExportSelectUnit": "Select Unit",
+  "icalExportHowItWorks": "How It Works",
+  "icalExportStep1": "Select a unit from the list below",
+  "icalExportStep2": "Click 'Generate' to create the iCal URL",
+  "icalExportStep3": "Copy the URL and add it to your calendar app",
+  "icalExportStep4": "Your calendar will automatically sync bookings",
+  "icalExportFaqTitle": "Frequently Asked Questions",
+  "icalExportFaq1Q": "How often does the calendar sync?",
+  "icalExportFaq1A": "Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.",
+  "icalExportFaq2Q": "Will deleted bookings be removed?",
+  "icalExportFaq2A": "Yes, when you regenerate the export, cancelled bookings will be removed from your calendar.",
+  "icalExportFaq3Q": "Can I share this URL with others?",
+  "icalExportFaq3A": "Yes, but be careful - anyone with the URL can see your booking schedule.",
+  "icalExportUrlReady": "URL Ready",
+  "icalExportUrlPending": "URL Not Generated",
+  "icalExportUrlReadyDesc": "Your iCal URL is ready. Copy it and add to your calendar app.",
+  "icalExportUrlPendingDesc": "Click the button below to generate your iCal export URL.",
+  "icalExportRegenerate": "Regenerate URL",
+  "icalExportNoUrl": "No URL Generated",
+  "icalExportNoUrlDesc": "Generate an iCal URL to sync your bookings with external calendars.",
 
   "errorWithMessage": "Error: {message}",
   "@errorWithMessage": {

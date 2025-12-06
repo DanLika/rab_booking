@@ -1,4 +1,3 @@
-import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -239,3 +238,763 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       ),
     );
   }
+
+  Widget _buildBenefitsSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
+    final benefits = [
+      (Icons.sync_rounded, l10n.icalAutoSync, l10n.icalAutoSyncDesc),
+      (Icons.calendar_today_rounded, l10n.icalPreventDoubleBooking, l10n.icalPreventDoubleBookingDesc),
+      (Icons.check_circle_outline_rounded, l10n.icalCompatibility, l10n.icalCompatibilityDesc),
+      (Icons.security_rounded, l10n.icalSecure, l10n.icalSecureDesc),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.star, color: theme.colorScheme.primary, size: 22),
+              const SizedBox(width: 8),
+              Text(l10n.icalWhySync, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...benefits.map((b) => _buildBenefitItem(context, b.$1, b.$2, b.$3)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitItem(BuildContext context, IconData icon, String title, String description) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedsSection(BuildContext context, List<IcalFeed> feeds) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Icon(Icons.rss_feed, color: theme.colorScheme.primary, size: 22),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.icalYourFeeds,
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Text(
+                  '${feeds.length}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (feeds.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withAlpha((0.05 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.sync_disabled, size: 48, color: theme.colorScheme.outline),
+                    const SizedBox(height: 12),
+                    Text(l10n.icalNoFeedsTitle, style: theme.textTheme.titleSmall),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.icalNoFeedsSubtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            const Divider(height: 1),
+            ...feeds.map((feed) => _buildFeedItem(context, feed)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedItem(BuildContext context, IcalFeed feed) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final statusColor = _getStatusColor(feed.status, theme);
+
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: statusColor.withAlpha((0.15 * 255).toInt()),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(_getStatusIcon(feed.status), color: statusColor, size: 20),
+          ),
+          title: Text(feed.platformDisplayName, style: const TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(l10n.icalLastSynced(feed.getTimeSinceLastSync()), style: theme.textTheme.bodySmall),
+              if (feed.hasError && feed.lastError != null)
+                Text(
+                  l10n.icalErrorPrefix(feed.lastError!),
+                  style: theme.textTheme.bodySmall?.copyWith(color: _kStatusErrorColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) => _handleFeedAction(value, feed),
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'sync',
+                child: Row(
+                  children: [const Icon(Icons.sync, size: 18), const SizedBox(width: 8), Text(l10n.icalSyncNow)],
+                ),
+              ),
+              PopupMenuItem(
+                value: feed.isActive ? 'pause' : 'resume',
+                child: Row(
+                  children: [
+                    Icon(feed.isActive ? Icons.pause : Icons.play_arrow, size: 18),
+                    const SizedBox(width: 8),
+                    Text(feed.isActive ? l10n.icalPause : l10n.icalResume),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'edit',
+                child: Row(children: [const Icon(Icons.edit, size: 18), const SizedBox(width: 8), Text(l10n.edit)]),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete, size: 18, color: AppColors.error),
+                    const SizedBox(width: 8),
+                    Text(l10n.delete, style: const TextStyle(color: AppColors.error)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, indent: 20, endIndent: 20),
+      ],
+    );
+  }
+
+  Widget _buildFeedsLoading(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(color: context.gradients.cardBackground, borderRadius: BorderRadius.circular(16)),
+      child: Center(child: CircularProgressIndicator(color: theme.colorScheme.primary)),
+    );
+  }
+
+  Widget _buildFeedsError(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(color: context.gradients.cardBackground, borderRadius: BorderRadius.circular(16)),
+      child: Center(
+        child: Text(l10n.icalErrorLoadingFeeds, style: TextStyle(color: theme.colorScheme.error)),
+      ),
+    );
+  }
+
+  Widget _buildPlatformInstructions(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Icon(Icons.help_outline, color: theme.colorScheme.primary, size: 22),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.icalGuideHeaderTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          _buildPlatformItem(context, 0, 'Booking.com', Icons.hotel, [
+            l10n.icalGuideBookingCom1,
+            l10n.icalGuideBookingCom2,
+            l10n.icalGuideBookingCom3,
+            l10n.icalGuideBookingCom4,
+          ]),
+          const Divider(height: 1, indent: 20, endIndent: 20),
+          _buildPlatformItem(context, 1, 'Airbnb', Icons.home, [
+            l10n.icalGuideAirbnb1,
+            l10n.icalGuideAirbnb2,
+            l10n.icalGuideAirbnb3,
+            l10n.icalGuideAirbnb4,
+            l10n.icalGuideAirbnb5,
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlatformItem(BuildContext context, int index, String name, IconData icon, List<String> steps) {
+    final theme = Theme.of(context);
+    final isExpanded = _expandedPlatform == index;
+
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => setState(() => _expandedPlatform = isExpanded ? null : index),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                ),
+                Icon(isExpanded ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.outline),
+              ],
+            ),
+          ),
+        ),
+        if (isExpanded)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: steps
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 10,
+                            backgroundColor: theme.colorScheme.primary,
+                            child: Text(
+                              '${e.key + 1}',
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(e.value, style: theme.textTheme.bodySmall?.copyWith(height: 1.4))),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFaqSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
+    final faqs = [
+      (l10n.icalGuideFaq1Q, l10n.icalGuideFaq1A),
+      (l10n.icalGuideFaq2Q, l10n.icalGuideFaq2A),
+      (l10n.icalGuideFaq3Q, l10n.icalGuideFaq3A),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _showFaq = !_showFaq),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Icon(Icons.question_answer, color: theme.colorScheme.primary, size: 22),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.icalGuideFaqTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Icon(_showFaq ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.outline),
+                ],
+              ),
+            ),
+          ),
+          if (_showFaq) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: faqs
+                    .map(
+                      (faq) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '❓ ${faq.$1}',
+                              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              faq.$2,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status, ThemeData theme) {
+    switch (status) {
+      case 'active':
+        return _kStatusActiveColor;
+      case 'error':
+        return _kStatusErrorColor;
+      case 'paused':
+        return _kStatusPausedColor;
+      default:
+        return theme.colorScheme.outline;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'active':
+        return Icons.check_circle;
+      case 'error':
+        return Icons.error;
+      case 'paused':
+        return Icons.pause_circle;
+      default:
+        return Icons.help;
+    }
+  }
+
+  void _handleFeedAction(String action, IcalFeed feed) {
+    switch (action) {
+      case 'sync':
+        _syncFeedNow(feed);
+        break;
+      case 'pause':
+        _pauseFeed(feed);
+        break;
+      case 'resume':
+        _resumeFeed(feed);
+        break;
+      case 'edit':
+        _showEditFeedDialog(context, feed);
+        break;
+      case 'delete':
+        _confirmDeleteFeed(context, feed);
+        break;
+    }
+  }
+
+  void _syncFeedNow(IcalFeed feed) async {
+    final l10n = AppLocalizations.of(context);
+    ErrorDisplayUtils.showInfoSnackBar(context, l10n.icalSyncStarted(feed.platformDisplayName));
+
+    try {
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('syncIcalFeedNow');
+      final result = await callable.call({'feedId': feed.id});
+
+      if (mounted) {
+        final data = result.data as Map<String, dynamic>?;
+        final success = data?['success'] ?? false;
+        final message = data?['message'] as String?;
+        final bookingsCreated = data?['bookingsCreated'] as int? ?? 0;
+
+        if (success) {
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalSyncSuccess(bookingsCreated));
+        } else {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            message ?? l10n.icalUnknownError,
+            userMessage: l10n.icalSyncErrorMessage,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).icalSyncErrorMessage);
+      }
+    }
+  }
+
+  void _pauseFeed(IcalFeed feed) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      final repository = ref.read(icalRepositoryProvider);
+      await repository.updateFeedStatus(feed.id, 'paused');
+      if (mounted) ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedPaused);
+    } catch (e) {
+      if (mounted)
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).icalFeedPauseError);
+    }
+  }
+
+  void _resumeFeed(IcalFeed feed) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      final repository = ref.read(icalRepositoryProvider);
+      await repository.updateFeedStatus(feed.id, 'active');
+      if (mounted) ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedResumed);
+    } catch (e) {
+      if (mounted)
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).icalFeedResumeError);
+    }
+  }
+
+  void _confirmDeleteFeed(BuildContext context, IcalFeed feed) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.icalDeleteFeedTitle),
+        content: Text(l10n.icalDeleteFeedMessage(feed.platformDisplayName, feed.eventCount)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
+          ElevatedButton(
+            onPressed: () async {
+              final navigator = Navigator.of(dialogContext);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
+              try {
+                final repository = ref.read(icalRepositoryProvider);
+                await repository.deleteIcalFeed(feed.id);
+                ref.invalidate(icalFeedsStreamProvider);
+                ref.invalidate(icalStatisticsProvider);
+                if (mounted)
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(l10n.icalFeedDeleted), backgroundColor: theme.colorScheme.success),
+                  );
+              } catch (e) {
+                if (mounted)
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(l10n.icalFeedDeleteError), backgroundColor: theme.colorScheme.danger),
+                  );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(dialogContext).colorScheme.error),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddFeedDialog(BuildContext context) {
+    showDialog(context: context, builder: (context) => const AddIcalFeedDialog());
+  }
+
+  void _showEditFeedDialog(BuildContext context, IcalFeed feed) {
+    showDialog(
+      context: context,
+      builder: (context) => AddIcalFeedDialog(existingFeed: feed),
+    );
+  }
+}
+
+/// Dialog for adding/editing iCal feed
+class AddIcalFeedDialog extends ConsumerStatefulWidget {
+  final IcalFeed? existingFeed;
+  const AddIcalFeedDialog({super.key, this.existingFeed});
+
+  @override
+  ConsumerState<AddIcalFeedDialog> createState() => _AddIcalFeedDialogState();
+}
+
+class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _icalUrlController;
+  String? _selectedUnitId;
+  String _selectedPlatform = 'booking_com';
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _icalUrlController = TextEditingController(text: widget.existingFeed?.icalUrl ?? '');
+    if (widget.existingFeed != null) {
+      _selectedUnitId = widget.existingFeed!.unitId;
+      _selectedPlatform = widget.existingFeed!.platform;
+    }
+  }
+
+  @override
+  void dispose() {
+    _icalUrlController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final unitsAsync = ref.watch(ownerUnitsProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth > _kDialogMaxWidth ? _kDialogMaxWidth : screenWidth * _kDialogWidthFactor;
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.sync, color: theme.colorScheme.primary, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              widget.existingFeed == null ? l10n.icalAddFeedTitle : l10n.icalEditFeedTitle,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: dialogWidth,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                unitsAsync.when(
+                  data: (units) {
+                    if (units.isEmpty)
+                      return Text(l10n.icalNoUnitsCreated, style: const TextStyle(color: AppColors.error));
+                    final validUnitId = units.any((u) => u.id == _selectedUnitId) ? _selectedUnitId : null;
+                    return DropdownButtonFormField<String>(
+                      value: validUnitId,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.icalSelectUnit,
+                        context: context,
+                      ),
+                      items: units.map((unit) => DropdownMenuItem(value: unit.id, child: Text(unit.name))).toList(),
+                      onChanged: (value) => setState(() => _selectedUnitId = value),
+                      validator: (value) => (value == null || value.isEmpty) ? l10n.icalSelectUnitRequired : null,
+                    );
+                  },
+                  loading: () => const CircularProgressIndicator(),
+                  error: (_, __) => Text(l10n.icalErrorLoadingUnits),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedPlatform,
+                  decoration: InputDecorationHelper.buildDecoration(labelText: l10n.icalPlatform, context: context),
+                  items: [
+                    DropdownMenuItem(value: 'booking_com', child: Text(l10n.icalPlatformBookingCom)),
+                    DropdownMenuItem(value: 'airbnb', child: Text(l10n.icalPlatformAirbnb)),
+                    DropdownMenuItem(value: 'other', child: Text(l10n.icalPlatformOther)),
+                  ],
+                  onChanged: (value) => setState(() => _selectedPlatform = value!),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _icalUrlController,
+                  decoration: InputDecorationHelper.buildDecoration(
+                    labelText: l10n.icalUrlLabel,
+                    hintText: l10n.icalUrlHint,
+                    context: context,
+                  ),
+                  maxLines: 2,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return l10n.icalUrlRequired;
+                    if (!value.startsWith('http://') && !value.startsWith('https://')) return l10n.icalUrlInvalid;
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        FilledButton(
+          onPressed: _isSaving ? null : _saveFeed,
+          child: _isSaving
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : Text(widget.existingFeed == null ? l10n.icalAddFeedButton : l10n.save),
+        ),
+      ],
+    );
+  }
+
+  void _saveFeed() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
+
+    final l10n = AppLocalizations.of(context);
+    try {
+      final repository = ref.read(icalRepositoryProvider);
+
+      // Get propertyId from selected unit
+      final units = ref.read(ownerUnitsProvider).valueOrNull ?? [];
+      final selectedUnit = units.firstWhere((u) => u.id == _selectedUnitId);
+      final propertyId = selectedUnit.propertyId;
+
+      if (widget.existingFeed == null) {
+        final newFeed = IcalFeed(
+          id: '',
+          unitId: _selectedUnitId!,
+          propertyId: propertyId,
+          icalUrl: _icalUrlController.text.trim(),
+          platform: _selectedPlatform,
+          status: 'active',
+          syncCount: 0,
+          eventCount: 0,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        await repository.createIcalFeed(newFeed);
+      } else {
+        final updatedFeed = widget.existingFeed!.copyWith(
+          icalUrl: _icalUrlController.text.trim(),
+          platform: _selectedPlatform,
+        );
+        await repository.updateIcalFeed(updatedFeed);
+      }
+
+      ref.invalidate(icalFeedsStreamProvider);
+      ref.invalidate(icalStatisticsProvider);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          widget.existingFeed == null ? l10n.icalAddFeedTitle : l10n.icalFeedUpdated,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.icalFeedSaveError);
+      }
+    }
+  }
+}

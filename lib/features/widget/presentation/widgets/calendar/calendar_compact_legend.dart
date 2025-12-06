@@ -33,7 +33,7 @@ class CalendarCompactLegend extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xs),
         decoration: BoxDecoration(
-          color: colors.backgroundSecondary,
+          color: colors.backgroundTertiary,
           borderRadius: BorderTokens.circularMedium,
           border: Border.all(color: colors.borderLight),
         ),

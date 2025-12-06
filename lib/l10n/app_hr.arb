@@ -525,6 +525,17 @@
   "ownerCalendarLoadingUnits": "Učitavanje jedinica...",
   "ownerCalendarErrorLoadingUnits": "Greška pri učitavanju jedinica",
   "ownerCalendarTryAgain": "Pokušaj ponovno",
+  "ownerCalendarLoading": "Učitavanje...",
+  "ownerCalendarChangeStatus": "Promijeni status",
+  "ownerCalendarDefaultGuest": "Gost",
+  "ownerCalendarSummaryGuests": "Gosti",
+  "ownerCalendarSummaryArrivals": "{arrivals} dolazak • {departures} odlazak",
+  "@ownerCalendarSummaryArrivals": {
+    "placeholders": {
+      "arrivals": {"type": "int"},
+      "departures": {"type": "int"}
+    }
+  },
   "ownerCalendarZoom": "Zoom: {percent}%",
   "@ownerCalendarZoom": {
     "placeholders": {
@@ -621,6 +632,25 @@
   "ownerBookingsCompleteError": "Greška pri završavanju rezervacije",
   "ownerBookingsCancelled": "Rezervacija je otkazana",
   "ownerBookingsCancelError": "Greška pri otkazivanju rezervacije",
+
+  "ownerBookingCardNight": "noć",
+  "ownerBookingCardNights": "noći",
+  "ownerBookingCardTotal": "Ukupno",
+  "ownerBookingCardPaid": "Plaćeno",
+  "ownerBookingCardRemaining": "Preostalo",
+  "ownerBookingCardFullyPaid": "Plaćeno u potpunosti",
+  "ownerBookingCardPercentPaid": "{percent}% plaćeno",
+  "@ownerBookingCardPercentPaid": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "ownerBookingCardNotes": "Napomene",
+  "ownerBookingCardDetails": "Detalji",
+  "ownerBookingCardApprove": "Odobri",
+  "ownerBookingCardReject": "Odbij",
+  "ownerBookingCardComplete": "Završi",
+  "ownerBookingCardCancel": "Otkaži",
 
   "ownerTableSelected": "{count} odabrano",
   "@ownerTableSelected": {
@@ -1089,6 +1119,67 @@
   "notificationsTryAgain": "Pokušaj ponovno",
   "notificationsDeleteNotification": "Obriši obavještenje",
   "notificationsDeleteNotificationDesc": "Jeste li sigurni da želite obrisati ovo obavještenje?",
+
+  "notificationBookingCreatedTitle": "Nova rezervacija",
+  "notificationBookingUpdatedTitle": "Rezervacija ažurirana",
+  "notificationBookingCancelledTitle": "Rezervacija otkazana",
+  "notificationPaymentReceivedTitle": "Plaćanje primljeno",
+  "notificationBookingCreatedMessage": "{guestName} je kreirao novu rezervaciju.",
+  "@notificationBookingCreatedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationBookingUpdatedMessage": "Rezervacija za {guestName} je ažurirana.",
+  "@notificationBookingUpdatedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationBookingCancelledMessage": "Rezervacija za {guestName} je otkazana.",
+  "@notificationBookingCancelledMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationPaymentReceivedMessage": "Primljeno plaćanje od {guestName} u iznosu od €{amount}.",
+  "@notificationPaymentReceivedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"},
+      "amount": {"type": "double", "format": "decimalPattern"}
+    }
+  },
+  "notificationTimeJustNow": "Upravo sada",
+  "notificationTimeMinutesAgo": "{minutes} min prije",
+  "@notificationTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationTimeHoursAgo": "{hours}h prije",
+  "@notificationTimeHoursAgo": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "notificationTimeDaysAgo": "{days}d prije",
+  "@notificationTimeDaysAgo": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "notificationTimeWeeksAgo": "{weeks}t prije",
+  "@notificationTimeWeeksAgo": {
+    "placeholders": {
+      "weeks": {"type": "int"}
+    }
+  },
+  "notificationTimeMonthsAgo": "{months}mj prije",
+  "@notificationTimeMonthsAgo": {
+    "placeholders": {
+      "months": {"type": "int"}
+    }
+  },
 
   "bankAccountTitle": "Bankovni Račun",
   "bankAccountBankDetails": "Bankovni Podaci",
@@ -1682,11 +1773,11 @@
   "icalSyncSave": "Sačuvaj",
   "icalSyncLoadingUnits": "Učitavanje jedinica...",
 
-  "embedGuideTitle": "Embed Widget - Uputstvo",
+  "embedGuideTitle": "Ugradnja Widgeta",
   "embedGuideHeaderTitle": "Embed Booking Widget",
   "embedGuideHeaderSubtitle": "Dodajte kalendar i booking sistem na vaš web sajt",
   "embedGuideHeaderTip": "💡 Embed widget omogućava vašim gostima da vide dostupnost i kreiraju rezervacije direktno sa vašeg sajta, bez potrebe za redirekcijom.",
-  "embedGuideStep1Title": "Konfigurišite Widget Postavke",
+  "embedGuideStep1Title": "Konfigurirajte Widget",
   "embedGuideStep2Title": "Generiši Embed Kod",
   "embedGuideStep3Title": "Dodajte na Vaš Sajt",
   "embedGuideStep4Title": "Testirajte Widget",
@@ -1698,7 +1789,7 @@
   "embedGuideStep1Nav1": "Idite na: Konfiguracija → Smještajne jedinice",
   "embedGuideStep1Nav2": "Kliknite \"Uredi\" na željeni unit",
   "embedGuideStep1Nav3": "Kliknite \"Postavke Widgeta\"",
-  "embedGuideStep1SelectMode": "Odaberite widget mod:",
+  "embedGuideStep1SelectMode": "Odaberite način rada:",
   "embedGuideWidgetModeCalendar": "📅 Samo Kalendar",
   "embedGuideWidgetModeCalendarDesc": "Gosti vide samo dostupnost i kontakt info. Za klijente kao jasko-rab.com.",
   "embedGuideWidgetModeBooking": "📝 Rezervacija bez Plaćanja",
@@ -1976,6 +2067,42 @@
   "icalExportListNoUnits": "Nema smještajnih jedinica",
   "icalExportListNoUnitsDesc": "Prvo kreirajte nekretninu i dodajte smještajne jedinice.",
   "icalExportListAddProperty": "Dodaj Nekretninu",
+  "icalExportReady": "Spremno za Export",
+  "icalExportUnitsAvailable": "{count} jedinica dostupno za export",
+  "@icalExportUnitsAvailable": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalExportWhyExport": "Zašto Exportirati Kalendar?",
+  "icalExportBenefit1Title": "Sinkronizacija s Osobnim Kalendarom",
+  "icalExportBenefit1Desc": "Pregledajte sve rezervacije u Google Calendar, Apple Calendar ili Outlook.",
+  "icalExportBenefit2Title": "Automatska Ažuriranja",
+  "icalExportBenefit2Desc": "Kalendarske aplikacije automatski sinkroniziraju nove rezervacije svakih nekoliko sati.",
+  "icalExportBenefit3Title": "Pristup s Više Uređaja",
+  "icalExportBenefit3Desc": "Pregledajte rezervacije na mobitelu, tabletu i računalu.",
+  "icalExportBenefit4Title": "Podsjetnici i Obavijesti",
+  "icalExportBenefit4Desc": "Primajte kalendarske obavijesti za nadolazeće prijave i odjave gostiju.",
+  "icalExportSelectUnit": "Odaberi Jedinicu",
+  "icalExportHowItWorks": "Kako Funkcionira",
+  "icalExportStep1": "Odaberite jedinicu s popisa ispod",
+  "icalExportStep2": "Kliknite 'Generiraj' za kreiranje iCal URL-a",
+  "icalExportStep3": "Kopirajte URL i dodajte ga u svoju kalendarsku aplikaciju",
+  "icalExportStep4": "Vaš kalendar će automatski sinkronizirati rezervacije",
+  "icalExportFaqTitle": "Često Postavljana Pitanja",
+  "icalExportFaq1Q": "Koliko često se kalendar sinkronizira?",
+  "icalExportFaq1A": "Većina kalendarskih aplikacija sinkronizira svakih 5-15 minuta. Možete i ručno osvježiti u svojoj aplikaciji.",
+  "icalExportFaq2Q": "Hoće li obrisane rezervacije biti uklonjene?",
+  "icalExportFaq2A": "Da, kada regenerirate export, otkazane rezervacije će biti uklonjene iz vašeg kalendara.",
+  "icalExportFaq3Q": "Mogu li podijeliti ovaj URL s drugima?",
+  "icalExportFaq3A": "Da, ali budite oprezni - svatko s URL-om može vidjeti vaš raspored rezervacija.",
+  "icalExportUrlReady": "URL Spreman",
+  "icalExportUrlPending": "URL Nije Generiran",
+  "icalExportUrlReadyDesc": "Vaš iCal URL je spreman. Kopirajte ga i dodajte u svoju kalendarsku aplikaciju.",
+  "icalExportUrlPendingDesc": "Kliknite gumb ispod za generiranje vašeg iCal export URL-a.",
+  "icalExportRegenerate": "Regeneriraj URL",
+  "icalExportNoUrl": "URL Nije Generiran",
+  "icalExportNoUrlDesc": "Generirajte iCal URL za sinkronizaciju rezervacija s vanjskim kalendarima.",
 
   "errorWithMessage": "Greška: {message}",
   "@errorWithMessage": {

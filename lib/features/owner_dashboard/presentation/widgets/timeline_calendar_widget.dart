@@ -1022,10 +1022,11 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
   /// Show status change dialog
   Future<void> _showStatusChangeDialog(BookingModel booking) async {
+    final l10n = AppLocalizations.of(context);
     final newStatus = await showDialog<BookingStatus>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Promijeni status'),
+        title: Text(l10n.ownerCalendarChangeStatus),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: BookingStatus.values.map((status) {

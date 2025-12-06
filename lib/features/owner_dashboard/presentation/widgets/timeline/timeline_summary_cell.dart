@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/constants/app_dimensions.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Timeline summary cell widget
 ///
@@ -17,12 +18,7 @@ class TimelineSummaryCell extends StatelessWidget {
   /// Width of the day cell
   final double dayWidth;
 
-  const TimelineSummaryCell({
-    super.key,
-    required this.date,
-    required this.bookingsByUnit,
-    required this.dayWidth,
-  });
+  const TimelineSummaryCell({super.key, required this.date, required this.bookingsByUnit, required this.dayWidth});
 
   @override
   Widget build(BuildContext context) {
@@ -54,10 +50,8 @@ class TimelineSummaryCell extends StatelessWidget {
     }
 
     final now = DateTime.now();
-    final isToday =
-        date.year == now.year && date.month == now.month && date.day == now.day;
-    final isWeekend =
-        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
+    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
     return Container(
       width: dayWidth,
@@ -67,28 +61,23 @@ class TimelineSummaryCell extends StatelessWidget {
             : isWeekend
             ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
             : theme.cardColor,
-        border: Border(
-          left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
-        ),
+        border: Border(left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3))),
       ),
-      padding: const EdgeInsets.symmetric(
-        vertical: AppDimensions.spaceXS,
-        horizontal: AppDimensions.spaceXXS,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Guests
-          _buildSummaryItem(
-            Icons.people,
-            totalGuests.toString(),
-            Colors.blue,
-            'Gosti',
-          ),
-          const SizedBox(height: 8),
-          // Check-ins/Check-outs (combined)
-          _buildCombinedCheckInOut(checkIns, checkOuts),
-        ],
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spaceXS, horizontal: AppDimensions.spaceXXS),
+      child: Builder(
+        builder: (context) {
+          final l10n = AppLocalizations.of(context);
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Guests
+              _buildSummaryItem(Icons.people, totalGuests.toString(), Colors.blue, l10n.ownerCalendarSummaryGuests),
+              const SizedBox(height: 8),
+              // Check-ins/Check-outs (combined)
+              _buildCombinedCheckInOut(checkIns, checkOuts, l10n),
+            ],
+          );
+        },
       ),
     );
   }
@@ -99,12 +88,7 @@ class TimelineSummaryCell extends StatelessWidget {
   }
 
   /// Build a summary item row with icon, value, and tooltip
-  Widget _buildSummaryItem(
-    IconData icon,
-    String value,
-    Color color,
-    String tooltip,
-  ) {
+  Widget _buildSummaryItem(IconData icon, String value, Color color, String tooltip) {
     return Tooltip(
       message: tooltip,
       child: Row(
@@ -114,11 +98,7 @@ class TimelineSummaryCell extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
           ),
         ],
       ),
@@ -126,9 +106,9 @@ class TimelineSummaryCell extends StatelessWidget {
   }
 
   /// Build combined check-in/check-out item
-  Widget _buildCombinedCheckInOut(int checkIns, int checkOuts) {
+  Widget _buildCombinedCheckInOut(int checkIns, int checkOuts, AppLocalizations l10n) {
     return Tooltip(
-      message: '$checkIns dolazak • $checkOuts odlazak',
+      message: l10n.ownerCalendarSummaryArrivals(checkIns, checkOuts),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -136,11 +116,7 @@ class TimelineSummaryCell extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '$checkIns/$checkOuts',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.purple,
-            ),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.purple),
           ),
         ],
       ),

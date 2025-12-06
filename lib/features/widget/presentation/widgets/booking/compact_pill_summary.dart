@@ -137,10 +137,17 @@ class CompactPillSummary extends StatelessWidget {
               const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: colors.buttonPrimary, borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(
+                  color: colors.statusAvailableBackground,
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Text(
                   translations.nightCount(nights),
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: colors.buttonPrimaryText),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
                 ),
               ),
             ],

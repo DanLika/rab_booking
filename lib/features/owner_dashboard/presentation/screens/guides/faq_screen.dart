@@ -248,9 +248,9 @@ class _FAQScreenState extends State<FAQScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: context.gradients.sectionBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Theme(

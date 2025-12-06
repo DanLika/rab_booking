@@ -342,9 +342,9 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+        border: Border.all(color: context.gradients.sectionBorder),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       padding: const EdgeInsets.all(20),
@@ -416,9 +416,9 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+        border: Border.all(color: context.gradients.sectionBorder),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Column(
@@ -519,9 +519,9 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+        border: Border.all(color: context.gradients.sectionBorder),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Column(

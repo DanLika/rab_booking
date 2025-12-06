@@ -85,19 +85,15 @@ class BookingPillBar extends StatelessWidget {
           onDragEnd();
         },
         child: Material(
-          elevation: 8,
+          elevation: 2,
+          shadowColor: isDarkMode ? Colors.white24 : Colors.black26,
           borderRadius: BorderRadius.circular(30),
           child: Container(
-            constraints: BoxConstraints(
-              maxWidth: width,
-              maxHeight: maxHeight,
-            ),
+            constraints: BoxConstraints(maxWidth: width, maxHeight: maxHeight),
             decoration: BoxDecoration(
               color: colors.backgroundPrimary,
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: colors.borderLight,
-              ),
+              border: Border.all(color: colors.borderLight),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(30),

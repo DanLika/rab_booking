@@ -55,17 +55,11 @@ class ContactPillCardWidget extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: colors.backgroundSecondary,
+            color: colors.backgroundTertiary,
             borderRadius: BorderRadius.circular(12), // Pill style
-            border: Border.all(
-              color: colors.borderDefault,
-            ),
+            border: Border.all(color: colors.borderDefault),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
             ],
           ),
           child: useRowLayout
@@ -77,11 +71,7 @@ class ContactPillCardWidget extends StatelessWidget {
   }
 
   /// Desktop layout: email + phone in same row with divider
-  Widget _buildDesktopContactRow(
-    bool hasEmail,
-    bool hasPhone,
-    MinimalistColorSchemeAdapter colors,
-  ) {
+  Widget _buildDesktopContactRow(bool hasEmail, bool hasPhone, MinimalistColorSchemeAdapter colors) {
     // Defensive check: if no items, return empty widget to avoid empty Row
     if (!hasEmail && !hasPhone) {
       return const SizedBox.shrink();
@@ -126,11 +116,7 @@ class ContactPillCardWidget extends StatelessWidget {
   }
 
   /// Mobile layout: email and phone stacked vertically
-  Widget _buildMobileContactColumn(
-    bool hasEmail,
-    bool hasPhone,
-    MinimalistColorSchemeAdapter colors,
-  ) {
+  Widget _buildMobileContactColumn(bool hasEmail, bool hasPhone, MinimalistColorSchemeAdapter colors) {
     // Defensive check: if no items, return empty widget to avoid empty Column
     if (!hasEmail && !hasPhone) {
       return const SizedBox.shrink();
@@ -148,12 +134,7 @@ class ContactPillCardWidget extends StatelessWidget {
           ),
 
         // Horizontal divider between email and phone
-        if (hasEmail && hasPhone)
-          Divider(
-            color: colors.borderDefault,
-            height: 12,
-            thickness: 1,
-          ),
+        if (hasEmail && hasPhone) Divider(color: colors.borderDefault, height: 12, thickness: 1),
 
         // Phone
         if (hasPhone)

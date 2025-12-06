@@ -15,15 +15,18 @@ class NextStepsSection extends StatelessWidget {
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final tr = WidgetTranslations.of(context);
     final steps = _getStepsForPaymentMethod(tr);
+    // Use backgroundTertiary in dark mode for better contrast
+    final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Padding(
       padding: const EdgeInsets.only(top: SpacingTokens.l),
       child: Container(
         padding: const EdgeInsets.all(SpacingTokens.m),
         decoration: BoxDecoration(
-          color: colors.backgroundSecondary,
+          color: cardBackground,
           borderRadius: BorderTokens.circularMedium,
-          border: Border.all(color: colors.borderDefault),
+          border: Border.all(color: cardBorder, width: isDarkMode ? 1.5 : 1.0),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,14 +125,17 @@ class NextStepsSection extends StatelessWidget {
           ],
         ),
         if (!isLast) ...[
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: SpacingTokens.s),
           Container(
-            margin: const EdgeInsets.only(left: 20),
-            width: 2,
-            height: 24,
-            color: colors.textPrimary.withValues(alpha: 0.3),
+            margin: const EdgeInsets.only(left: 19),
+            width: 3,
+            height: 28,
+            decoration: BoxDecoration(
+              color: colors.textPrimary.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(1.5),
+            ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: SpacingTokens.s),
         ],
       ],
     );

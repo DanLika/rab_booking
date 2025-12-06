@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Payment information section for booking card
 ///
@@ -11,15 +12,12 @@ class BookingCardPaymentInfo extends StatelessWidget {
   final BookingModel booking;
   final bool isMobile;
 
-  const BookingCardPaymentInfo({
-    super.key,
-    required this.booking,
-    required this.isMobile,
-  });
+  const BookingCardPaymentInfo({super.key, required this.booking, required this.isMobile});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,7 +33,7 @@ class BookingCardPaymentInfo extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _PaymentInfoColumn(
-                    label: 'Ukupno',
+                    label: l10n.ownerBookingCardTotal,
                     value: booking.formattedTotalPrice,
                     valueStyle: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -47,24 +45,20 @@ class BookingCardPaymentInfo extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _PaymentInfoColumn(
-                          label: 'Plaćeno',
+                          label: l10n.ownerBookingCardPaid,
                           value: booking.formattedPaidAmount,
-                          valueStyle: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          valueStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _PaymentInfoColumn(
-                          label: 'Preostalo',
+                          label: l10n.ownerBookingCardRemaining,
                           value: booking.formattedRemainingBalance,
-                          valueStyle: theme.textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: booking.isFullyPaid
-                                    ? AppColors.success
-                                    : AppColors.warning,
-                              ),
+                          valueStyle: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: booking.isFullyPaid ? AppColors.success : AppColors.warning,
+                          ),
                         ),
                       ),
                     ],
@@ -78,7 +72,7 @@ class BookingCardPaymentInfo extends StatelessWidget {
               children: [
                 Expanded(
                   child: _PaymentInfoColumn(
-                    label: 'Ukupno',
+                    label: l10n.ownerBookingCardTotal,
                     value: booking.formattedTotalPrice,
                     valueStyle: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -88,22 +82,18 @@ class BookingCardPaymentInfo extends StatelessWidget {
                 ),
                 Expanded(
                   child: _PaymentInfoColumn(
-                    label: 'Plaćeno',
+                    label: l10n.ownerBookingCardPaid,
                     value: booking.formattedPaidAmount,
-                    valueStyle: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    valueStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
                 Expanded(
                   child: _PaymentInfoColumn(
-                    label: 'Preostalo',
+                    label: l10n.ownerBookingCardRemaining,
                     value: booking.formattedRemainingBalance,
                     valueStyle: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: booking.isFullyPaid
-                          ? AppColors.success
-                          : AppColors.warning,
+                      color: booking.isFullyPaid ? AppColors.success : AppColors.warning,
                     ),
                   ),
                 ),
@@ -116,23 +106,18 @@ class BookingCardPaymentInfo extends StatelessWidget {
         SizedBox(height: isMobile ? 8 : 12),
         LinearProgressIndicator(
           value: booking.paymentPercentage / 100,
-          backgroundColor: theme.colorScheme.surfaceContainerHighest
-              .withAlpha((0.3 * 255).toInt()),
+          backgroundColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
           valueColor: AlwaysStoppedAnimation<Color>(
-            booking.isFullyPaid
-                ? AppColors.success
-                : theme.colorScheme.primary,
+            booking.isFullyPaid ? AppColors.success : theme.colorScheme.primary,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           booking.isFullyPaid
-              ? 'Plaćeno u potpunosti'
-              : '${booking.paymentPercentage.toStringAsFixed(0)}% plaćeno',
+              ? l10n.ownerBookingCardFullyPaid
+              : l10n.ownerBookingCardPercentPaid(booking.paymentPercentage.toStringAsFixed(0)),
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withAlpha(
-              (0.6 * 255).toInt(),
-            ),
+            color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -143,11 +128,7 @@ class BookingCardPaymentInfo extends StatelessWidget {
 
 /// Helper widget for payment info column
 class _PaymentInfoColumn extends StatelessWidget {
-  const _PaymentInfoColumn({
-    required this.label,
-    required this.value,
-    this.valueStyle,
-  });
+  const _PaymentInfoColumn({required this.label, required this.value, this.valueStyle});
 
   final String label;
   final String value;
@@ -168,10 +149,7 @@ class _PaymentInfoColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          value,
-          style: valueStyle ?? theme.textTheme.titleMedium,
-        ),
+        Text(value, style: valueStyle ?? theme.textTheme.titleMedium),
       ],
     );
   }

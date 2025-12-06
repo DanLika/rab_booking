@@ -82,7 +82,7 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
             ),
             drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
             body: Container(
-              decoration: BoxDecoration(color: context.gradients.cardBackground),
+              decoration: BoxDecoration(gradient: context.gradients.pageBackground),
               child: Column(
                 children: [
                   // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row

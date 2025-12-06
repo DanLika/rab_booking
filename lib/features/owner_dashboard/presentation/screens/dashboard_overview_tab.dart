@@ -172,22 +172,22 @@ class DashboardOverviewTab extends ConsumerWidget {
 
     switch (booking.status) {
       case BookingStatus.pending:
-        type = ActivityType.booking;
+        type = ActivityType.booking; // Purple - new booking icon
         title = l10n.ownerNewBookingReceived;
         subtitle = '${property.name} - ${unit.name}';
         break;
       case BookingStatus.confirmed:
-        type = ActivityType.payment;
+        type = ActivityType.confirmed; // Green - checkmark icon
         title = l10n.ownerBookingConfirmedActivity;
         subtitle = '${property.name} - ${unit.name}';
         break;
       case BookingStatus.cancelled:
-        type = ActivityType.cancellation;
+        type = ActivityType.cancellation; // Red - cancel icon
         title = l10n.ownerBookingCancelledActivity;
         subtitle = '${property.name} - ${unit.name}';
         break;
       case BookingStatus.completed:
-        type = ActivityType.booking;
+        type = ActivityType.completed; // Gray - task complete icon
         title = l10n.ownerBookingCompleted;
         subtitle = '${property.name} - ${unit.name}';
         break;

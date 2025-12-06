@@ -39,138 +39,150 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     final allSelectedArePending =
         selectedBookings.isNotEmpty && selectedBookings.every((b) => b.booking.status == BookingStatus.pending);
 
-    return Card(
-      elevation: 2,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Premium selection action bar with MenuAnchor
-          if (_selectedBookingIds.isNotEmpty)
-            Container(
-              height: 60,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                boxShadow: AppShadows.getElevation(2, isDark: Theme.of(context).brightness == Brightness.dark),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  // Selection count badge with gradient
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.onPrimary),
-                        const SizedBox(width: 6),
-                        Text(
-                          l10n.ownerTableSelected(_selectedBookingIds.length),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Use consistent colors with booking cards and skeletons
+    final cardBackground = isDark ? const Color(0xFF252330) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF35323D) : const Color(0xFFE0DCE8);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor.withAlpha((0.5 * 255).toInt())),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Premium selection action bar with MenuAnchor
+            if (_selectedBookingIds.isNotEmpty)
+              Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  boxShadow: AppShadows.getElevation(2, isDark: isDark),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    // Selection count badge with gradient
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.onPrimary),
+                          const SizedBox(width: 6),
+                          Text(
+                            l10n.ownerTableSelected(_selectedBookingIds.length),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    // Clear selection button
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(_selectedBookingIds.clear);
+                      },
+                      icon: const Icon(Icons.close, size: 18),
+                      label: Text(l10n.ownerTableClearSelection),
+                      style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Bulk actions MenuAnchor
+                    MenuAnchor(
+                      builder: (context, controller, child) {
+                        return IconButton(
+                          onPressed: () {
+                            if (controller.isOpen) {
+                              controller.close();
+                            } else {
+                              controller.open();
+                            }
+                          },
+                          icon: const Icon(Icons.edit_note),
+                          tooltip: l10n.ownerTableBulkActions,
+                          style: IconButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                            foregroundColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        );
+                      },
+                      menuChildren: [
+                        // Confirm action (only if all pending)
+                        if (allSelectedArePending)
+                          MenuItemButton(
+                            leadingIcon: const Icon(Icons.check_circle_outline, color: AppColors.success),
+                            onPressed: _confirmSelectedBookings,
+                            child: Text(l10n.ownerTableConfirmSelected),
+                          ),
+
+                        // Reject action (only if all pending)
+                        if (allSelectedArePending)
+                          MenuItemButton(
+                            leadingIcon: const Icon(Icons.cancel_outlined, color: AppColors.error),
+                            onPressed: _rejectSelectedBookings,
+                            child: Text(l10n.ownerTableRejectSelected),
+                          ),
+
+                        // Delete action (always available)
+                        MenuItemButton(
+                          leadingIcon: const Icon(Icons.delete_outline, color: AppColors.error),
+                          onPressed: _deleteSelectedBookings,
+                          child: Text(l10n.ownerTableDeleteSelected),
                         ),
                       ],
                     ),
-                  ),
-
-                  const Spacer(),
-
-                  // Clear selection button
-                  TextButton.icon(
-                    onPressed: () {
-                      setState(_selectedBookingIds.clear);
-                    },
-                    icon: const Icon(Icons.close, size: 18),
-                    label: Text(l10n.ownerTableClearSelection),
-                    style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  // Bulk actions MenuAnchor
-                  MenuAnchor(
-                    builder: (context, controller, child) {
-                      return IconButton(
-                        onPressed: () {
-                          if (controller.isOpen) {
-                            controller.close();
-                          } else {
-                            controller.open();
-                          }
-                        },
-                        icon: const Icon(Icons.edit_note),
-                        tooltip: l10n.ownerTableBulkActions,
-                        style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                          foregroundColor: Theme.of(context).colorScheme.primary,
-                        ),
-                      );
-                    },
-                    menuChildren: [
-                      // Confirm action (only if all pending)
-                      if (allSelectedArePending)
-                        MenuItemButton(
-                          leadingIcon: const Icon(Icons.check_circle_outline, color: AppColors.success),
-                          onPressed: _confirmSelectedBookings,
-                          child: Text(l10n.ownerTableConfirmSelected),
-                        ),
-
-                      // Reject action (only if all pending)
-                      if (allSelectedArePending)
-                        MenuItemButton(
-                          leadingIcon: const Icon(Icons.cancel_outlined, color: AppColors.error),
-                          onPressed: _rejectSelectedBookings,
-                          child: Text(l10n.ownerTableRejectSelected),
-                        ),
-
-                      // Delete action (always available)
-                      MenuItemButton(
-                        leadingIcon: const Icon(Icons.delete_outline, color: AppColors.error),
-                        onPressed: _deleteSelectedBookings,
-                        child: Text(l10n.ownerTableDeleteSelected),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
+              ),
+            // Table - no fixed height, parent CustomScrollView controls vertical scrolling
+            // Only horizontal scroll for wide table, vertical scroll removed to work with parent
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Container(
+                constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.resolveWith((states) {
+                    return isDark ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.surfaceContainerHigh;
+                  }),
+                  columns: [
+                    DataColumn(label: Text(l10n.ownerTableColumnGuest)),
+                    DataColumn(label: Text(l10n.ownerTableColumnPropertyUnit)),
+                    DataColumn(label: Text(l10n.ownerTableColumnCheckIn)),
+                    DataColumn(label: Text(l10n.ownerTableColumnCheckOut)),
+                    DataColumn(label: Text(l10n.ownerTableColumnNights)),
+                    DataColumn(label: Text(l10n.ownerTableColumnGuests)),
+                    DataColumn(label: Text(l10n.ownerTableColumnStatus)),
+                    DataColumn(label: Text(l10n.ownerTableColumnPrice)),
+                    DataColumn(label: Text(l10n.ownerTableColumnSource)),
+                    DataColumn(label: Text(l10n.ownerTableColumnActions)),
+                  ],
+                  rows: widget.bookings.map((b) => _buildTableRow(b, l10n)).toList(),
+                ),
               ),
             ),
-          // Table - no fixed height, parent CustomScrollView controls vertical scrolling
-          // Only horizontal scroll for wide table, vertical scroll removed to work with parent
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Container(
-              constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.resolveWith((states) {
-                  final isDark = Theme.of(context).brightness == Brightness.dark;
-                  return isDark
-                      ? Theme.of(context).colorScheme.surfaceContainerHighest
-                      : Theme.of(context).colorScheme.surfaceContainerHigh;
-                }),
-                columns: [
-                  DataColumn(label: Text(l10n.ownerTableColumnGuest)),
-                  DataColumn(label: Text(l10n.ownerTableColumnPropertyUnit)),
-                  DataColumn(label: Text(l10n.ownerTableColumnCheckIn)),
-                  DataColumn(label: Text(l10n.ownerTableColumnCheckOut)),
-                  DataColumn(label: Text(l10n.ownerTableColumnNights)),
-                  DataColumn(label: Text(l10n.ownerTableColumnGuests)),
-                  DataColumn(label: Text(l10n.ownerTableColumnStatus)),
-                  DataColumn(label: Text(l10n.ownerTableColumnPrice)),
-                  DataColumn(label: Text(l10n.ownerTableColumnSource)),
-                  DataColumn(label: Text(l10n.ownerTableColumnActions)),
-                ],
-                rows: widget.bookings.map((b) => _buildTableRow(b, l10n)).toList(),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

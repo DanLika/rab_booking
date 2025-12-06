@@ -39,12 +39,16 @@ class BookingReferenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tr = WidgetTranslations.of(context);
+    // Detect dark mode from background color
+    final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        // Slightly elevated background in dark mode for better contrast
+        color: isDark ? colors.backgroundTertiary : colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: colors.borderDefault),
+        border: Border.all(color: isDark ? colors.borderMedium : colors.borderDefault, width: isDark ? 1.5 : 1.0),
       ),
       child: Column(
         children: [

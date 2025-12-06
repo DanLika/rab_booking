@@ -45,7 +45,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundPrimary,
+        color: colors.backgroundTertiary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(color: colors.borderDefault),
         boxShadow: isDarkMode ? MinimalistShadows.medium : MinimalistShadows.light,

@@ -151,7 +151,7 @@ class PillBarContent extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: colors.backgroundSecondary,
+                  color: colors.backgroundTertiary,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: colors.borderLight),
                 ),

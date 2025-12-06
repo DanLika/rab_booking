@@ -213,7 +213,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: widget.colors.backgroundSecondary,
+                  color: widget.colors.backgroundTertiary,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: widget.colors.borderDefault),
                 ),

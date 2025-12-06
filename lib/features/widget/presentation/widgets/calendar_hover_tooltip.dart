@@ -68,7 +68,7 @@ class CalendarHoverTooltip extends StatelessWidget {
                     onTap: onClose,
                     child: Container(
                       padding: const EdgeInsets.all(SpacingTokens.xxs),
-                      decoration: BoxDecoration(color: colors.backgroundSecondary, shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: colors.backgroundTertiary, shape: BoxShape.circle),
                       child: Icon(Icons.close, size: TypographyTokens.fontSizeS, color: colors.textPrimary),
                     ),
                   ),
@@ -125,7 +125,7 @@ class CalendarHoverTooltip extends StatelessWidget {
               const SizedBox(height: SpacingTokens.xs),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs, vertical: SpacingTokens.xxs),
-                decoration: BoxDecoration(color: colors.backgroundSecondary, borderRadius: BorderTokens.circularTiny),
+                decoration: BoxDecoration(color: colors.backgroundTertiary, borderRadius: BorderTokens.circularTiny),
                 child: Text(
                   t.tooltipClickToSelect,
                   style: TextStyle(

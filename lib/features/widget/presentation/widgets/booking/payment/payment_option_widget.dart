@@ -5,14 +5,15 @@ import '../../../theme/minimalist_colors.dart';
 
 /// A selectable payment option card with radio button styling.
 ///
-/// Displays payment method information including icon, title, subtitle,
+/// Displays payment method information including icon(s), title, subtitle,
 /// and optional deposit amount. Shows selected state with highlighted border
 /// and filled radio indicator.
 ///
 /// Usage:
 /// ```dart
 /// PaymentOptionWidget(
-///   icon: Icons.credit_card,
+///   icon: Icons.payment_rounded,
+///   secondaryIcon: Icons.credit_card_rounded,
 ///   title: 'Credit Card',
 ///   subtitle: 'Pay securely online',
 ///   isSelected: _selectedMethod == 'stripe',
@@ -22,8 +23,11 @@ import '../../../theme/minimalist_colors.dart';
 /// )
 /// ```
 class PaymentOptionWidget extends StatelessWidget {
-  /// Icon representing the payment method
+  /// Primary icon representing the payment method
   final IconData icon;
+
+  /// Optional secondary icon for visual distinction
+  final IconData? secondaryIcon;
 
   /// Payment method title
   final String title;
@@ -46,6 +50,7 @@ class PaymentOptionWidget extends StatelessWidget {
   const PaymentOptionWidget({
     super.key,
     required this.icon,
+    this.secondaryIcon,
     required this.title,
     required this.subtitle,
     required this.isSelected,
@@ -65,12 +70,8 @@ class PaymentOptionWidget extends StatelessWidget {
         padding: const EdgeInsets.all(SpacingTokens.m),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected
-                ? colors.borderFocus
-                : colors.borderDefault,
-            width: isSelected
-                ? BorderTokens.widthMedium
-                : BorderTokens.widthThin,
+            color: isSelected ? colors.borderFocus : colors.borderDefault,
+            width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
           ),
           borderRadius: BorderTokens.circularMedium,
           color: isSelected ? colors.backgroundSecondary : null,
@@ -81,11 +82,16 @@ class PaymentOptionWidget extends StatelessWidget {
             _buildRadioIndicator(colors),
             const SizedBox(width: SpacingTokens.s),
 
-            // Icon
-            Icon(
-              icon,
-              color: isSelected ? colors.textPrimary : colors.textSecondary,
-              size: 28,
+            // Icons (primary + optional secondary)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: isSelected ? colors.textPrimary : colors.textSecondary, size: 24),
+                if (secondaryIcon != null) ...[
+                  const SizedBox(width: 4),
+                  Icon(secondaryIcon!, color: isSelected ? colors.textPrimary : colors.textSecondary, size: 20),
+                ],
+              ],
             ),
             const SizedBox(width: SpacingTokens.s),
 
@@ -98,11 +104,7 @@ class PaymentOptionWidget extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   AutoSizeText(
@@ -111,10 +113,7 @@ class PaymentOptionWidget extends StatelessWidget {
                     minFontSize: 10,
                     maxFontSize: 12,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
                   ),
                 ],
               ),
@@ -124,11 +123,7 @@ class PaymentOptionWidget extends StatelessWidget {
             if (depositAmount != null)
               Text(
                 depositAmount!,
-                style: TextStyle(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
+                style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold, color: colors.textPrimary),
               ),
           ],
         ),
@@ -142,20 +137,14 @@ class PaymentOptionWidget extends StatelessWidget {
       height: 24,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(
-          color: isSelected ? colors.borderFocus : colors.textSecondary,
-          width: 2,
-        ),
+        border: Border.all(color: isSelected ? colors.borderFocus : colors.textSecondary, width: 2),
       ),
       child: isSelected
           ? Center(
               child: Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colors.buttonPrimary,
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: colors.buttonPrimary),
               ),
             )
           : null,

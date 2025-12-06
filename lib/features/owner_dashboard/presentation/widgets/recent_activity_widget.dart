@@ -6,7 +6,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Activity type enum
-enum ActivityType { booking, review, message, payment, cancellation }
+enum ActivityType { booking, confirmed, review, message, payment, cancellation, completed }
 
 /// Activity item model
 class ActivityItem {
@@ -29,7 +29,9 @@ class ActivityItem {
   IconData get icon {
     switch (type) {
       case ActivityType.booking:
-        return Icons.event_available_rounded;
+        return Icons.notification_add_rounded; // New booking received
+      case ActivityType.confirmed:
+        return Icons.check_circle_outline_rounded; // Booking confirmed
       case ActivityType.review:
         return Icons.star_rounded;
       case ActivityType.message:
@@ -37,14 +39,18 @@ class ActivityItem {
       case ActivityType.payment:
         return Icons.payments_rounded;
       case ActivityType.cancellation:
-        return Icons.event_busy_rounded;
+        return Icons.cancel_outlined; // Booking cancelled
+      case ActivityType.completed:
+        return Icons.task_alt_rounded; // Booking completed
     }
   }
 
   Color get color {
     switch (type) {
       case ActivityType.booking:
-        return AppColors.activityBooking;
+        return AppColors.activityBooking; // Purple - new booking
+      case ActivityType.confirmed:
+        return AppColors.activityConfirmed; // Green - confirmed
       case ActivityType.review:
         return AppColors.activityReview;
       case ActivityType.message:
@@ -52,7 +58,9 @@ class ActivityItem {
       case ActivityType.payment:
         return AppColors.activityPayment;
       case ActivityType.cancellation:
-        return AppColors.activityCancellation;
+        return AppColors.activityCancellation; // Red - cancelled
+      case ActivityType.completed:
+        return AppColors.activityCompleted; // Gray - completed
     }
   }
 }

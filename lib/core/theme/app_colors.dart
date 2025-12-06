@@ -188,11 +188,13 @@ class AppColors {
   static const Color statusCompleted = Color(0xFF6B7280); // Gray 500
 
   /// Activity type colors
-  static const Color activityBooking = Color(0xFF7C3AED); // Purple 600
+  static const Color activityBooking = Color(0xFF7C3AED); // Purple 600 - new booking
+  static const Color activityConfirmed = Color(0xFF10B981); // Emerald 500 - confirmed
   static const Color activityReview = Color(0xFFD97706); // Amber 600
   static const Color activityMessage = Color(0xFF5B8DEE); // Blue 500
   static const Color activityPayment = Color(0xFF0891B2); // Cyan 600
   static const Color activityCancellation = Color(0xFFDC2626); // Red 600
+  static const Color activityCompleted = Color(0xFF6B7280); // Gray 500 - completed
 
   // ============================================================================
   // AUTH SCREEN COLORS (Premium Purple-Blue Theme)

@@ -17,12 +17,7 @@ class BookingsFilters {
   final DateTime? startDate;
   final DateTime? endDate;
 
-  const BookingsFilters({
-    this.status,
-    this.propertyId,
-    this.startDate,
-    this.endDate,
-  });
+  const BookingsFilters({this.status, this.propertyId, this.startDate, this.endDate});
 
   BookingsFilters copyWith({
     BookingStatus? status,
@@ -42,8 +37,7 @@ class BookingsFilters {
     );
   }
 
-  bool get hasActiveFilters =>
-      status != null || propertyId != null || startDate != null || endDate != null;
+  bool get hasActiveFilters => status != null || propertyId != null || startDate != null || endDate != null;
 }
 
 /// Pagination state for bookings
@@ -52,17 +46,9 @@ class BookingsPagination {
   final int pageSize; // How many to load per "load more"
   final bool isLoadingMore;
 
-  const BookingsPagination({
-    this.displayLimit = 10,
-    this.pageSize = 10,
-    this.isLoadingMore = false,
-  });
+  const BookingsPagination({this.displayLimit = 10, this.pageSize = 10, this.isLoadingMore = false});
 
-  BookingsPagination copyWith({
-    int? displayLimit,
-    int? pageSize,
-    bool? isLoadingMore,
-  }) {
+  BookingsPagination copyWith({int? displayLimit, int? pageSize, bool? isLoadingMore}) {
     return BookingsPagination(
       displayLimit: displayLimit ?? this.displayLimit,
       pageSize: pageSize ?? this.pageSize,
@@ -147,21 +133,26 @@ Future<List<OwnerBooking>> allOwnerBookings(Ref ref) async {
     endDate: filters.endDate,
   );
 
-  // Sort bookings by status priority (pending > confirmed > cancelled/completed)
+  // Sort bookings by status priority (pending > confirmed > completed > cancelled)
   // then by creation date descending (newest first)
   final sortedBookings = List<OwnerBooking>.from(bookings)
     ..sort((a, b) {
-      // Priority order: pending (3), confirmed (2), cancelled/completed (1)
-      final aPriority = a.booking.status == BookingStatus.pending
-          ? 3
-          : a.booking.status == BookingStatus.confirmed
-              ? 2
-              : 1;
-      final bPriority = b.booking.status == BookingStatus.pending
-          ? 3
-          : b.booking.status == BookingStatus.confirmed
-              ? 2
-              : 1;
+      // Priority order: pending (4), confirmed (3), completed (2), cancelled (1)
+      int getPriority(BookingStatus status) {
+        switch (status) {
+          case BookingStatus.pending:
+            return 4;
+          case BookingStatus.confirmed:
+            return 3;
+          case BookingStatus.completed:
+            return 2;
+          case BookingStatus.cancelled:
+            return 1;
+        }
+      }
+
+      final aPriority = getPriority(a.booking.status);
+      final bPriority = getPriority(b.booking.status);
 
       // First sort by status priority (descending)
       if (aPriority != bPriority) {

@@ -246,10 +246,12 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
 
                           const SizedBox(height: SpacingTokens.xl),
 
-                          // Close button
+                          const SizedBox(height: SpacingTokens.m),
+
+                          // Close button with extra bottom padding
                           _buildCloseButton(colors, isDark: isDarkMode),
 
-                          const SizedBox(height: SpacingTokens.m),
+                          const SizedBox(height: SpacingTokens.xl),
 
                           // Helpful info
                           Text(

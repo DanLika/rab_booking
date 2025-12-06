@@ -333,11 +333,25 @@ class BookingCardSkeleton extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    return Card(
-      elevation: 0.5,
-      shape: RoundedRectangleBorder(
+    // Use consistent colors with real booking cards
+    final cardBackground = isDark ? const Color(0xFF252330) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF35323D) : const Color(0xFFE0DCE8);
+    final headerColor = isDark ? const Color(0xFF2D2D3A) : Colors.grey[100]!;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBackground,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+        border: Border.all(color: borderColor.withAlpha((0.5 * 255).toInt())),
+        boxShadow: isDark
+            ? [BoxShadow(color: Colors.black.withAlpha((0.3 * 255).toInt()), blurRadius: 8, offset: const Offset(0, 2))]
+            : [
+                BoxShadow(
+                  color: Colors.black.withAlpha((0.08 * 255).toInt()),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -348,9 +362,8 @@ class BookingCardSkeleton extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(isMobile ? 12 : 16),
               decoration: BoxDecoration(
-                // FIXED: Lighter header color for better visibility
-                color: isDark ? const Color(0xFF2A2A2A).withAlpha((0.5 * 255).toInt()) : Colors.grey[100]!,
-                border: Border(bottom: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[200]!)),
+                color: headerColor,
+                border: Border(bottom: BorderSide(color: borderColor.withAlpha((0.5 * 255).toInt()))),
               ),
               child: const Row(
                 children: [
@@ -1089,8 +1102,26 @@ class BookingsTableSkeleton extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    return Card(
-      elevation: 2,
+    // Use consistent colors
+    final cardBackground = isDark ? const Color(0xFF252330) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF35323D) : const Color(0xFFE0DCE8);
+    final headerColor = isDark ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.surfaceContainerHigh;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor.withAlpha((0.5 * 255).toInt())),
+        boxShadow: isDark
+            ? [BoxShadow(color: Colors.black.withAlpha((0.3 * 255).toInt()), blurRadius: 8, offset: const Offset(0, 2))]
+            : [
+                BoxShadow(
+                  color: Colors.black.withAlpha((0.08 * 255).toInt()),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1098,7 +1129,7 @@ class BookingsTableSkeleton extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 12 : 16),
             decoration: BoxDecoration(
-              color: isDark ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.surfaceContainerHigh,
+              color: headerColor,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
@@ -1138,10 +1169,13 @@ class BookingsTableSkeleton extends StatelessWidget {
   }
 
   Widget _buildTableRowSkeleton(BuildContext context, bool isDark, bool isMobile, int index) {
+    // Use consistent border colors
+    final borderColor = isDark ? const Color(0xFF35323D) : const Color(0xFFE0DCE8);
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 10 : 14),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[200]!)),
+        border: Border(bottom: BorderSide(color: borderColor.withAlpha((0.5 * 255).toInt()))),
       ),
       child: Row(
         children: [

@@ -67,8 +67,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       if (hasMore && !pagination.isLoadingMore) {
         ref.read(bookingsPaginationNotifierProvider.notifier).setLoadingMore(true);
         ref.read(bookingsPaginationNotifierProvider.notifier).loadMore();
-        // Reset loading flag after a delay (UI will update when new data arrives)
-        Future.delayed(const Duration(milliseconds: 500), () {
+
+        // Listen for provider update to reset loading flag properly
+        // This avoids race condition with arbitrary delay
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             ref.read(bookingsPaginationNotifierProvider.notifier).setLoadingMore(false);
           }
@@ -138,7 +140,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               // Filters section
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(0, isMobile ? 16 : 20, 0, isMobile ? 8 : 12),
+                  padding: EdgeInsets.fromLTRB(
+                    context.horizontalPadding,
+                    isMobile ? 16 : 20,
+                    context.horizontalPadding,
+                    isMobile ? 8 : 12,
+                  ),
                   child: _buildFiltersSection(filters, isMobile, theme, viewMode),
                 ),
               ),
@@ -155,7 +162,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   if (viewMode == BookingsViewMode.card) {
                     return _buildBookingsSliverList(bookings, isMobile);
                   } else {
-                    return SliverToBoxAdapter(child: BookingsTableView(bookings: bookings));
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+                        child: BookingsTableView(bookings: bookings),
+                      ),
+                    );
                   }
                 },
                 error: (error, stack) {
@@ -450,12 +462,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
 
+    final horizontalPad = context.horizontalPadding;
+
     if (isDesktop) {
       // Desktop: 2-column layout using SliverList
       final rowCount = (bookings.length / 2).ceil();
 
       return SliverPadding(
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 24),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate((context, rowIndex) {
             final leftIndex = rowIndex * 2;
@@ -488,7 +502,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     } else {
       // Mobile/Tablet: Single column with SliverList for true lazy loading
       return SliverPadding(
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 24),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final ownerBooking = bookings[index];

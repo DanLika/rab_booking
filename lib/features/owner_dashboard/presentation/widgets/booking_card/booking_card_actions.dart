@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Action buttons section for booking card
 ///
@@ -31,13 +32,10 @@ class BookingCardActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        isMobile ? 12 : 16,
-        0,
-        isMobile ? 12 : 16,
-        isMobile ? 12 : 16,
-      ),
+      padding: EdgeInsets.fromLTRB(isMobile ? 12 : 16, 0, isMobile ? 12 : 16, isMobile ? 12 : 16),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final theme = Theme.of(context);
@@ -60,52 +58,32 @@ class BookingCardActions extends StatelessWidget {
             icon: Icon(
               Icons.visibility_outlined,
               size: iconSize,
-              color: theme.brightness == Brightness.dark
-                  ? Colors.grey[300]
-                  : Colors.grey[700],
+              color: theme.brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700],
             ),
             label: Text(
-              'Detalji',
+              l10n.ownerBookingCardDetails,
               style: TextStyle(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.grey[300]
-                    : Colors.grey[700],
+                color: theme.brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700],
                 fontSize: fontSize,
               ),
             ),
             style: OutlinedButton.styleFrom(
-              backgroundColor: theme.brightness == Brightness.dark
-                  ? Colors.grey[850]
-                  : Colors.grey[50],
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: verticalPadding,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              side: BorderSide(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.grey[700]!
-                    : Colors.grey[300]!,
-              ),
+              backgroundColor: theme.brightness == Brightness.dark ? Colors.grey[850] : Colors.grey[50],
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              side: BorderSide(color: theme.brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[300]!),
             ),
           );
 
           final approveBtn = FilledButton.icon(
             onPressed: onApprove,
             icon: Icon(Icons.check_circle_outline, size: iconSize),
-            label: Text('Odobri', style: TextStyle(fontSize: fontSize)),
+            label: Text(l10n.ownerBookingCardApprove, style: TextStyle(fontSize: fontSize)),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF66BB6A), // Confirmed badge color
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: verticalPadding,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
           );
@@ -113,17 +91,12 @@ class BookingCardActions extends StatelessWidget {
           final rejectBtn = FilledButton.icon(
             onPressed: onReject,
             icon: Icon(Icons.cancel_outlined, size: iconSize),
-            label: Text('Odbij', style: TextStyle(fontSize: fontSize)),
+            label: Text(l10n.ownerBookingCardReject, style: TextStyle(fontSize: fontSize)),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFEF5350), // Cancelled badge color
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: verticalPadding,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
           );
@@ -131,17 +104,12 @@ class BookingCardActions extends StatelessWidget {
           final completeBtn = FilledButton.icon(
             onPressed: onComplete,
             icon: Icon(Icons.done_all_outlined, size: iconSize),
-            label: Text('Završi', style: TextStyle(fontSize: fontSize)),
+            label: Text(l10n.ownerBookingCardComplete, style: TextStyle(fontSize: fontSize)),
             style: FilledButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: verticalPadding,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
           );
@@ -151,35 +119,20 @@ class BookingCardActions extends StatelessWidget {
             icon: Icon(
               Icons.close,
               size: iconSize,
-              color: theme.brightness == Brightness.dark
-                  ? Colors.grey[300]
-                  : Colors.grey[700],
+              color: theme.brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700],
             ),
             label: Text(
-              'Otkaži',
+              l10n.ownerBookingCardCancel,
               style: TextStyle(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.grey[300]
-                    : Colors.grey[700],
+                color: theme.brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700],
                 fontSize: fontSize,
               ),
             ),
             style: OutlinedButton.styleFrom(
-              backgroundColor: theme.brightness == Brightness.dark
-                  ? Colors.grey[850]
-                  : Colors.grey[50],
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: verticalPadding,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              side: BorderSide(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.grey[700]!
-                    : Colors.grey[300]!,
-              ),
+              backgroundColor: theme.brightness == Brightness.dark ? Colors.grey[850] : Colors.grey[50],
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              side: BorderSide(color: theme.brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[300]!),
             ),
           );
 
@@ -213,14 +166,12 @@ class BookingCardActions extends StatelessWidget {
           actionButtons.add(detailsBtn);
 
           // Mark as Completed button (only for confirmed and past check-out)
-          if (booking.status == BookingStatus.confirmed &&
-              booking.isPast && onComplete != null) {
+          if (booking.status == BookingStatus.confirmed && booking.isPast && onComplete != null) {
             actionButtons.add(completeBtn);
           }
 
           // Cancel button (only if cancellable and not pending - pending handled above)
-          if (booking.canBeCancelled &&
-              booking.status != BookingStatus.pending && onCancel != null) {
+          if (booking.canBeCancelled && booking.status != BookingStatus.pending && onCancel != null) {
             actionButtons.add(cancelBtn);
           }
 
@@ -231,10 +182,7 @@ class BookingCardActions extends StatelessWidget {
           // 2 buttons: Row with Expanded
           // >2 buttons: Column (fallback)
           if (actionButtons.length == 1) {
-            return SizedBox(
-              width: double.infinity,
-              child: actionButtons.first,
-            );
+            return SizedBox(width: double.infinity, child: actionButtons.first);
           }
 
           if (actionButtons.length == 2) {
@@ -250,10 +198,7 @@ class BookingCardActions extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: actionButtons
-                .map((btn) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: btn,
-                    ))
+                .map((btn) => Padding(padding: const EdgeInsets.only(bottom: 8), child: btn))
                 .toList(),
           );
         },

@@ -21,12 +21,10 @@ class TaxLegalDisclaimerWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TaxLegalDisclaimerWidget> createState() =>
-      _TaxLegalDisclaimerWidgetState();
+  ConsumerState<TaxLegalDisclaimerWidget> createState() => _TaxLegalDisclaimerWidgetState();
 }
 
-class _TaxLegalDisclaimerWidgetState
-    extends ConsumerState<TaxLegalDisclaimerWidget> {
+class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWidget> {
   bool _isExpanded = false;
   bool _isAccepted = false;
 
@@ -36,9 +34,7 @@ class _TaxLegalDisclaimerWidgetState
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Get tax/legal config from Firestore (Sync Point 1 integration)
-    final widgetSettingsAsync = ref.watch(
-      widgetSettingsProvider((widget.propertyId, widget.unitId)),
-    );
+    final widgetSettingsAsync = ref.watch(widgetSettingsProvider((widget.propertyId, widget.unitId)));
 
     return widgetSettingsAsync.when(
       data: (widgetSettings) {
@@ -63,37 +59,24 @@ class _TaxLegalDisclaimerWidgetState
     MinimalistColorSchemeAdapter colors,
   ) {
     return Container(
-      margin: const EdgeInsets.only(
-        left: SpacingTokens.m,
-        right: SpacingTokens.m,
-        top: SpacingTokens.m,
-      ),
+      margin: const EdgeInsets.only(left: SpacingTokens.m, right: SpacingTokens.m, top: SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        color: colors.backgroundTertiary,
+        border: Border.all(color: colors.borderDefault),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        boxShadow: isDarkMode
-            ? MinimalistShadows.medium
-            : MinimalistShadows.light,
+        boxShadow: isDarkMode ? MinimalistShadows.medium : MinimalistShadows.light,
       ),
       child: Column(
         children: [
           // Collapsible header
           InkWell(
             onTap: () => setState(() => _isExpanded = !_isExpanded),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(BorderTokens.radiusMedium),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(BorderTokens.radiusMedium)),
             child: Padding(
               padding: const EdgeInsets.all(SpacingTokens.m),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: colors.textSecondary,
-                  ),
+                  Icon(Icons.info_outline, color: colors.textSecondary),
                   const SizedBox(width: SpacingTokens.m),
                   Expanded(
                     child: Text(
@@ -106,10 +89,7 @@ class _TaxLegalDisclaimerWidgetState
                       ),
                     ),
                   ),
-                  Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: colors.textSecondary,
-                  ),
+                  Icon(_isExpanded ? Icons.expand_less : Icons.expand_more, color: colors.textSecondary),
                 ],
               ),
             ),
@@ -117,10 +97,7 @@ class _TaxLegalDisclaimerWidgetState
 
           // Expandable content
           if (_isExpanded) ...[
-            Divider(
-              height: 1,
-              color: colors.borderDefault,
-            ),
+            Divider(height: 1, color: colors.borderDefault),
             Container(
               constraints: const BoxConstraints(maxHeight: 200),
               child: SingleChildScrollView(
@@ -138,10 +115,7 @@ class _TaxLegalDisclaimerWidgetState
             ),
           ],
 
-          Divider(
-            height: 1,
-            color: colors.borderDefault,
-          ),
+          Divider(height: 1, color: colors.borderDefault),
 
           // Accept checkbox
           CheckboxListTile(
@@ -163,9 +137,7 @@ class _TaxLegalDisclaimerWidgetState
             controlAffinity: ListTileControlAffinity.leading,
             activeColor: colors.buttonPrimary,
             checkColor: colors.backgroundPrimary,
-            side: BorderSide(
-              color: colors.borderDefault,
-            ),
+            side: BorderSide(color: colors.borderDefault),
             dense: true,
           ),
         ],

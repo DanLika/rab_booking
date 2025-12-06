@@ -1465,6 +1465,23 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerCalendarTryAgain => 'Pokušaj ponovno';
 
   @override
+  String get ownerCalendarLoading => 'Učitavanje...';
+
+  @override
+  String get ownerCalendarChangeStatus => 'Promijeni status';
+
+  @override
+  String get ownerCalendarDefaultGuest => 'Gost';
+
+  @override
+  String get ownerCalendarSummaryGuests => 'Gosti';
+
+  @override
+  String ownerCalendarSummaryArrivals(int arrivals, int departures) {
+    return '$arrivals dolazak • $departures odlazak';
+  }
+
+  @override
   String ownerCalendarZoom(int percent) {
     return 'Zoom: $percent%';
   }
@@ -1662,6 +1679,47 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerBookingsCancelError => 'Greška pri otkazivanju rezervacije';
+
+  @override
+  String get ownerBookingCardNight => 'noć';
+
+  @override
+  String get ownerBookingCardNights => 'noći';
+
+  @override
+  String get ownerBookingCardTotal => 'Ukupno';
+
+  @override
+  String get ownerBookingCardPaid => 'Plaćeno';
+
+  @override
+  String get ownerBookingCardRemaining => 'Preostalo';
+
+  @override
+  String get ownerBookingCardFullyPaid => 'Plaćeno u potpunosti';
+
+  @override
+  String ownerBookingCardPercentPaid(String percent) {
+    return '$percent% plaćeno';
+  }
+
+  @override
+  String get ownerBookingCardNotes => 'Napomene';
+
+  @override
+  String get ownerBookingCardDetails => 'Detalji';
+
+  @override
+  String get ownerBookingCardApprove => 'Odobri';
+
+  @override
+  String get ownerBookingCardReject => 'Odbij';
+
+  @override
+  String get ownerBookingCardComplete => 'Završi';
+
+  @override
+  String get ownerBookingCardCancel => 'Otkaži';
 
   @override
   String ownerTableSelected(int count) {
@@ -2738,6 +2796,70 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get notificationsDeleteNotificationDesc =>
       'Jeste li sigurni da želite obrisati ovo obavještenje?';
+
+  @override
+  String get notificationBookingCreatedTitle => 'Nova rezervacija';
+
+  @override
+  String get notificationBookingUpdatedTitle => 'Rezervacija ažurirana';
+
+  @override
+  String get notificationBookingCancelledTitle => 'Rezervacija otkazana';
+
+  @override
+  String get notificationPaymentReceivedTitle => 'Plaćanje primljeno';
+
+  @override
+  String notificationBookingCreatedMessage(String guestName) {
+    return '$guestName je kreirao novu rezervaciju.';
+  }
+
+  @override
+  String notificationBookingUpdatedMessage(String guestName) {
+    return 'Rezervacija za $guestName je ažurirana.';
+  }
+
+  @override
+  String notificationBookingCancelledMessage(String guestName) {
+    return 'Rezervacija za $guestName je otkazana.';
+  }
+
+  @override
+  String notificationPaymentReceivedMessage(String guestName, double amount) {
+    final intl.NumberFormat amountNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String amountString = amountNumberFormat.format(amount);
+
+    return 'Primljeno plaćanje od $guestName u iznosu od €$amountString.';
+  }
+
+  @override
+  String get notificationTimeJustNow => 'Upravo sada';
+
+  @override
+  String notificationTimeMinutesAgo(int minutes) {
+    return '$minutes min prije';
+  }
+
+  @override
+  String notificationTimeHoursAgo(int hours) {
+    return '${hours}h prije';
+  }
+
+  @override
+  String notificationTimeDaysAgo(int days) {
+    return '${days}d prije';
+  }
+
+  @override
+  String notificationTimeWeeksAgo(int weeks) {
+    return '${weeks}t prije';
+  }
+
+  @override
+  String notificationTimeMonthsAgo(int months) {
+    return '${months}mj prije';
+  }
 
   @override
   String get bankAccountTitle => 'Bankovni Račun';
@@ -4172,7 +4294,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalSyncLoadingUnits => 'Učitavanje jedinica...';
 
   @override
-  String get embedGuideTitle => 'Embed Widget - Uputstvo';
+  String get embedGuideTitle => 'Ugradnja Widgeta';
 
   @override
   String get embedGuideHeaderTitle => 'Embed Booking Widget';
@@ -4186,7 +4308,7 @@ class AppLocalizationsHr extends AppLocalizations {
       '💡 Embed widget omogućava vašim gostima da vide dostupnost i kreiraju rezervacije direktno sa vašeg sajta, bez potrebe za redirekcijom.';
 
   @override
-  String get embedGuideStep1Title => 'Konfigurišite Widget Postavke';
+  String get embedGuideStep1Title => 'Konfigurirajte Widget';
 
   @override
   String get embedGuideStep2Title => 'Generiši Embed Kod';
@@ -4221,7 +4343,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get embedGuideStep1Nav3 => 'Kliknite \"Postavke Widgeta\"';
 
   @override
-  String get embedGuideStep1SelectMode => 'Odaberite widget mod:';
+  String get embedGuideStep1SelectMode => 'Odaberite način rada:';
 
   @override
   String get embedGuideWidgetModeCalendar => '📅 Samo Kalendar';
@@ -4919,6 +5041,114 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportListAddProperty => 'Dodaj Nekretninu';
+
+  @override
+  String get icalExportReady => 'Spremno za Export';
+
+  @override
+  String icalExportUnitsAvailable(int count) {
+    return '$count jedinica dostupno za export';
+  }
+
+  @override
+  String get icalExportWhyExport => 'Zašto Exportirati Kalendar?';
+
+  @override
+  String get icalExportBenefit1Title => 'Sinkronizacija s Osobnim Kalendarom';
+
+  @override
+  String get icalExportBenefit1Desc =>
+      'Pregledajte sve rezervacije u Google Calendar, Apple Calendar ili Outlook.';
+
+  @override
+  String get icalExportBenefit2Title => 'Automatska Ažuriranja';
+
+  @override
+  String get icalExportBenefit2Desc =>
+      'Kalendarske aplikacije automatski sinkroniziraju nove rezervacije svakih nekoliko sati.';
+
+  @override
+  String get icalExportBenefit3Title => 'Pristup s Više Uređaja';
+
+  @override
+  String get icalExportBenefit3Desc =>
+      'Pregledajte rezervacije na mobitelu, tabletu i računalu.';
+
+  @override
+  String get icalExportBenefit4Title => 'Podsjetnici i Obavijesti';
+
+  @override
+  String get icalExportBenefit4Desc =>
+      'Primajte kalendarske obavijesti za nadolazeće prijave i odjave gostiju.';
+
+  @override
+  String get icalExportSelectUnit => 'Odaberi Jedinicu';
+
+  @override
+  String get icalExportHowItWorks => 'Kako Funkcionira';
+
+  @override
+  String get icalExportStep1 => 'Odaberite jedinicu s popisa ispod';
+
+  @override
+  String get icalExportStep2 =>
+      'Kliknite \'Generiraj\' za kreiranje iCal URL-a';
+
+  @override
+  String get icalExportStep3 =>
+      'Kopirajte URL i dodajte ga u svoju kalendarsku aplikaciju';
+
+  @override
+  String get icalExportStep4 =>
+      'Vaš kalendar će automatski sinkronizirati rezervacije';
+
+  @override
+  String get icalExportFaqTitle => 'Često Postavljana Pitanja';
+
+  @override
+  String get icalExportFaq1Q => 'Koliko često se kalendar sinkronizira?';
+
+  @override
+  String get icalExportFaq1A =>
+      'Većina kalendarskih aplikacija sinkronizira svakih 5-15 minuta. Možete i ručno osvježiti u svojoj aplikaciji.';
+
+  @override
+  String get icalExportFaq2Q => 'Hoće li obrisane rezervacije biti uklonjene?';
+
+  @override
+  String get icalExportFaq2A =>
+      'Da, kada regenerirate export, otkazane rezervacije će biti uklonjene iz vašeg kalendara.';
+
+  @override
+  String get icalExportFaq3Q => 'Mogu li podijeliti ovaj URL s drugima?';
+
+  @override
+  String get icalExportFaq3A =>
+      'Da, ali budite oprezni - svatko s URL-om može vidjeti vaš raspored rezervacija.';
+
+  @override
+  String get icalExportUrlReady => 'URL Spreman';
+
+  @override
+  String get icalExportUrlPending => 'URL Nije Generiran';
+
+  @override
+  String get icalExportUrlReadyDesc =>
+      'Vaš iCal URL je spreman. Kopirajte ga i dodajte u svoju kalendarsku aplikaciju.';
+
+  @override
+  String get icalExportUrlPendingDesc =>
+      'Kliknite gumb ispod za generiranje vašeg iCal export URL-a.';
+
+  @override
+  String get icalExportRegenerate => 'Regeneriraj URL';
+
+  @override
+  String get icalExportNoUrl => 'URL Nije Generiran';
+
+  @override
+  String get icalExportNoUrlDesc =>
+      'Generirajte iCal URL za sinkronizaciju rezervacija s vanjskim kalendarima.';
 
   @override
   String errorWithMessage(String message) {

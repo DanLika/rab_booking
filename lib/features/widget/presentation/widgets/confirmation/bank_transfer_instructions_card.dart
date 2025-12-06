@@ -38,13 +38,16 @@ class BankTransferInstructionsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tr = WidgetTranslations.of(context);
+    // Detect dark mode for better contrast
+    final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+
     return Container(
       margin: const EdgeInsets.only(bottom: SpacingTokens.l),
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: isDark ? colors.backgroundTertiary : colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: colors.borderDefault, width: 2),
+        border: Border.all(color: isDark ? colors.borderMedium : colors.borderDefault, width: isDark ? 1.5 : 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +103,7 @@ class BankTransferInstructionsCard extends StatelessWidget {
           const SizedBox(height: SpacingTokens.m),
           Container(
             padding: const EdgeInsets.all(SpacingTokens.s),
-            decoration: BoxDecoration(color: colors.backgroundSecondary, borderRadius: BorderTokens.circularSmall),
+            decoration: BoxDecoration(color: colors.backgroundTertiary, borderRadius: BorderTokens.circularSmall),
             child: Row(
               children: [
                 Icon(Icons.info_outline, size: 16, color: colors.textSecondary),
@@ -177,7 +180,7 @@ class _BankTransferDetailRow extends StatelessWidget {
                       : null,
                   decoration: highlight
                       ? BoxDecoration(
-                          color: colors.backgroundSecondary,
+                          color: colors.backgroundTertiary,
                           borderRadius: BorderTokens.circularSmall,
                           border: Border.all(color: colors.borderDefault),
                         )

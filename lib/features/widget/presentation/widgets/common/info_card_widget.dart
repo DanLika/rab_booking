@@ -60,22 +60,16 @@ class InfoCardWidget extends StatelessWidget {
         vertical: hasTitle ? SpacingTokens.m : SpacingTokens.xs,
       ),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: colors.backgroundTertiary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: EdgeInsets.only(top: hasTitle ? 0 : 1),
-            child: Icon(
-              icon,
-              color: colors.textSecondary,
-              size: effectiveIconSize,
-            ),
+            child: Icon(icon, color: colors.textSecondary, size: effectiveIconSize),
           ),
           SizedBox(width: hasTitle ? SpacingTokens.s : 6),
           Expanded(
@@ -94,19 +88,13 @@ class InfoCardWidget extends StatelessWidget {
                       const SizedBox(height: SpacingTokens.xs),
                       Text(
                         message,
-                        style: TextStyle(
-                          fontSize: TypographyTokens.fontSizeS,
-                          color: colors.textSecondary,
-                        ),
+                        style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                       ),
                     ],
                   )
                 : Text(
                     message,
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
-                      color: colors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                   ),
           ),
         ],

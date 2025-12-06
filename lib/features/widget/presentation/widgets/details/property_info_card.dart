@@ -40,12 +40,16 @@ class PropertyInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tr = WidgetTranslations.of(context);
+    // Use backgroundTertiary in dark mode for better contrast
+    final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
+
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: cardBackground,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: colors.borderDefault),
+        border: Border.all(color: cardBorder, width: isDarkMode ? 1.5 : 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

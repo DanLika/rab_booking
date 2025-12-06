@@ -46,12 +46,17 @@ class CancellationPolicyCard extends StatelessWidget {
 
     final statusColor = canCancel ? colors.success : colors.warning;
 
+    // Detect dark mode for better contrast
+    final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
+
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: cardBackground,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: colors.borderDefault),
+        border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -5,6 +5,7 @@ import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/booking_overlap_detector.dart';
 import '../calendar/skewed_booking_painter.dart';
 import '../calendar/smart_booking_tooltip.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Timeline booking block widget
 ///
@@ -48,14 +49,9 @@ class TimelineBookingBlock extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Get responsive dimensions from CalendarGridCalculator
-    final guestNameFontSize =
-        CalendarGridCalculator.getBookingGuestNameFontSize(screenWidth);
-    final metadataFontSize = CalendarGridCalculator.getBookingMetadataFontSize(
-      screenWidth,
-    );
-    final bookingPadding = CalendarGridCalculator.getBookingPadding(
-      screenWidth,
-    );
+    final guestNameFontSize = CalendarGridCalculator.getBookingGuestNameFontSize(screenWidth);
+    final metadataFontSize = CalendarGridCalculator.getBookingMetadataFontSize(screenWidth);
+    final bookingPadding = CalendarGridCalculator.getBookingPadding(screenWidth);
 
     // ENHANCED: Detect conflicts with other bookings in the same unit
     final hasConflict = hasBookingConflict(booking, allBookingsByUnit);
@@ -63,23 +59,17 @@ class TimelineBookingBlock extends StatelessWidget {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: PlatformUtils.supportsHover
-          ? (event) => SmartBookingTooltip.show(
-              context: context,
-              booking: booking,
-              position: event.position,
-            )
+          ? (event) => SmartBookingTooltip.show(context: context, booking: booking, position: event.position)
           : null,
-      onExit: PlatformUtils.supportsHover
-          ? (_) => SmartBookingTooltip.hide()
-          : null,
+      onExit: PlatformUtils.supportsHover ? (_) => SmartBookingTooltip.hide() : null,
       child: GestureDetector(
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
-            width: width - 2,
-            height: blockHeight,
-            margin: const EdgeInsets.symmetric(horizontal: 1),
-            child: Stack(
+          width: width - 2,
+          height: blockHeight,
+          margin: const EdgeInsets.symmetric(horizontal: 1),
+          child: Stack(
             children: [
               // Background layer with skewed parallelogram
               CustomPaint(
@@ -95,93 +85,81 @@ class TimelineBookingBlock extends StatelessWidget {
               ClipPath(
                 clipper: SkewedBookingClipper(),
                 child: Padding(
-                  padding: bookingPadding.copyWith(left: bookingPadding.left + 12), // Increased from 8 to 12 for better spacing
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        booking.guestName ?? 'Gost',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: guestNameFontSize,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 1),
-                      Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.person,
-                              size: metadataFontSize + 2,
-                              color: Colors.white70,
+                  padding: bookingPadding.copyWith(
+                    left: bookingPadding.left + 12,
+                  ), // Increased from 8 to 12 for better spacing
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            booking.guestName ?? l10n.ownerCalendarDefaultGuest,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: guestNameFontSize,
                             ),
-                            const SizedBox(width: 2),
-                            Text(
-                              '${booking.guestCount}',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: metadataFontSize,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Icon(
-                              Icons.nights_stay,
-                              size: metadataFontSize + 2,
-                              color: Colors.white70,
-                            ),
-                            const SizedBox(width: 2),
-                            Flexible(
-                              child: Text(
-                                '$nights',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 1),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.person, size: metadataFontSize + 2, color: Colors.white70),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${booking.guestCount}',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: metadataFontSize,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
-                        ),
-                    ],
+                              const SizedBox(width: 6),
+                              Icon(Icons.nights_stay, size: metadataFontSize + 2, color: Colors.white70),
+                              const SizedBox(width: 2),
+                              Flexible(
+                                child: Text(
+                                  '$nights',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontSize: metadataFontSize,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
             ],
-            ),
           ),
         ),
-      );
+      ),
+    );
   }
 
   /// Calculate number of nights between check-in and check-out
   ///
   /// Normalizes dates to midnight for accurate day difference calculation.
   static int calculateNights(DateTime checkIn, DateTime checkOut) {
-    final normalizedCheckIn = DateTime(
-      checkIn.year,
-      checkIn.month,
-      checkIn.day,
-    );
-    final normalizedCheckOut = DateTime(
-      checkOut.year,
-      checkOut.month,
-      checkOut.day,
-    );
+    final normalizedCheckIn = DateTime(checkIn.year, checkIn.month, checkIn.day);
+    final normalizedCheckOut = DateTime(checkOut.year, checkOut.month, checkOut.day);
     return normalizedCheckOut.difference(normalizedCheckIn).inDays;
   }
 
   /// Check if a booking has conflicts with other bookings in the same unit
   ///
   /// Uses BookingOverlapDetector to find overlapping bookings.
-  static bool hasBookingConflict(
-    BookingModel booking,
-    Map<String, List<BookingModel>> allBookingsByUnit,
-  ) {
+  static bool hasBookingConflict(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
     final conflicts = BookingOverlapDetector.getConflictingBookings(
       unitId: booking.unitId,
       newCheckIn: booking.checkIn,

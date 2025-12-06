@@ -42,14 +42,12 @@ class TimelineMonthHeader extends StatelessWidget {
         color: Colors.transparent, // Transparent to show parent gradient
         border: Border(
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
-          right: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.6),
-          ),
+          right: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6)),
         ),
       ),
       child: Center(
         child: Text(
-          DateFormat('MMMM yyyy', 'hr_HR').format(date),
+          DateFormat('MMMM yyyy', Localizations.localeOf(context).languageCode).format(date),
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: fontSize,
@@ -72,22 +70,14 @@ class TimelineDayHeader extends StatelessWidget {
   /// Screen width for responsive sizing (optional)
   final double? screenWidth;
 
-  const TimelineDayHeader({
-    super.key,
-    required this.date,
-    required this.dayWidth,
-    this.screenWidth,
-  });
+  const TimelineDayHeader({super.key, required this.date, required this.dayWidth, this.screenWidth});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final now = DateTime.now();
-    final isToday = date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
-    final isWeekend =
-        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
+    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
     // Responsive sizing based on screen width
@@ -109,9 +99,7 @@ class TimelineDayHeader extends StatelessWidget {
             : Colors.transparent, // Transparent to show parent gradient
         border: Border(
           left: BorderSide(
-            color: isFirstDayOfMonth
-                ? theme.colorScheme.primary
-                : theme.dividerColor.withValues(alpha: 0.5),
+            color: isFirstDayOfMonth ? theme.colorScheme.primary : theme.dividerColor.withValues(alpha: 0.5),
             width: isFirstDayOfMonth ? 2 : 1,
           ),
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
@@ -125,12 +113,7 @@ class TimelineDayHeader extends StatelessWidget {
         child: Container(
           width: circleSize,
           height: circleSize,
-          decoration: isToday
-              ? BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  shape: BoxShape.circle,
-                )
-              : null,
+          decoration: isToday ? BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle) : null,
           alignment: Alignment.center,
           child: Text(
             '${date.day}',
@@ -138,9 +121,7 @@ class TimelineDayHeader extends StatelessWidget {
               fontWeight: FontWeight.bold,
               fontSize: fontSize,
               height: 1.2,
-              color: isToday
-                  ? theme.colorScheme.onPrimary
-                  : (isWeekend ? theme.colorScheme.error : null),
+              color: isToday ? theme.colorScheme.onPrimary : (isWeekend ? theme.colorScheme.error : null),
             ),
           ),
         ),

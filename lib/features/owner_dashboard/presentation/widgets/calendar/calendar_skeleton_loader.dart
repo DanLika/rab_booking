@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 /// Skeleton loader for calendar
 /// Shows animated placeholders while loading data
@@ -6,28 +7,20 @@ class CalendarSkeletonLoader extends StatefulWidget {
   final int unitCount;
   final int dayCount;
 
-  const CalendarSkeletonLoader({
-    super.key,
-    this.unitCount = 5,
-    this.dayCount = 7,
-  });
+  const CalendarSkeletonLoader({super.key, this.unitCount = 5, this.dayCount = 7});
 
   @override
   State<CalendarSkeletonLoader> createState() => _CalendarSkeletonLoaderState();
 }
 
-class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader>
-    with SingleTickerProviderStateMixin {
+class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat(reverse: true);
+    _controller = AnimationController(duration: const Duration(milliseconds: 1500), vsync: this)..repeat(reverse: true);
 
     _animation = Tween<double>(
       begin: 0.3,
@@ -79,11 +72,7 @@ class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader>
       child: Row(
         children: [
           // Left controls - responsive width
-          _SkeletonBox(
-            width: isMobile ? 80 : 120,
-            height: 36,
-            borderRadius: 8,
-          ),
+          _SkeletonBox(width: isMobile ? 80 : 120, height: 36, borderRadius: 8),
           const Spacer(),
           // Right controls - fewer on mobile
           Row(
@@ -107,10 +96,7 @@ class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader>
   Widget _buildGridSkeleton(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-        children: List.generate(
-          widget.unitCount,
-          (unitIndex) => _buildUnitRowSkeleton(context, unitIndex),
-        ),
+        children: List.generate(widget.unitCount, (unitIndex) => _buildUnitRowSkeleton(context, unitIndex)),
       ),
     );
   }
@@ -126,11 +112,7 @@ class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader>
       margin: const EdgeInsets.only(bottom: 1),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        border: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.3 * 255).toInt()))),
       ),
       child: Row(
         children: [
@@ -187,11 +169,11 @@ class _SkeletonBox extends StatelessWidget {
   final double height;
   final double borderRadius;
 
-  const _SkeletonBox({
-    required this.width,
-    required this.height,
-    this.borderRadius = 4,
-  });
+  const _SkeletonBox({required this.width, required this.height, this.borderRadius = 4});
+
+  // Consistent skeleton colors (matching BookingCardSkeleton)
+  static const Color _darkBackground = Color(0xFF3D3D3D);
+  static const Color _lightBackground = Color(0xFFE0E0E0);
 
   @override
   Widget build(BuildContext context) {
@@ -202,9 +184,7 @@ class _SkeletonBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withAlpha((0.1 * 255).toInt())
-            : Colors.grey.shade300,
+        color: isDark ? _darkBackground : _lightBackground,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     );
@@ -219,6 +199,7 @@ class CalendarSkeletonCompact extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Column(
@@ -230,19 +211,15 @@ class CalendarSkeletonCompact extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation(
-                isDark
-                    ? Colors.white.withAlpha((0.5 * 255).toInt())
-                    : Colors.grey.shade400,
+                isDark ? Colors.white.withAlpha((0.5 * 255).toInt()) : Colors.grey.shade400,
               ),
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            'Učitavanje...',
+            l10n.ownerCalendarLoading,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodyLarge?.color?.withAlpha(
-                (0.5 * 255).toInt(),
-              ),
+              color: theme.textTheme.bodyLarge?.color?.withAlpha((0.5 * 255).toInt()),
             ),
           ),
         ],

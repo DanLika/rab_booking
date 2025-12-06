@@ -155,6 +155,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             });
           },
         ),
+        const SizedBox(width: SpacingTokens.xxs),
         Text(
           monthYear,
           style: TextStyle(
@@ -163,6 +164,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             color: colors.textPrimary,
           ),
         ),
+        const SizedBox(width: SpacingTokens.xxs),
         IconButton(
           icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
@@ -258,7 +260,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xs, horizontal: SpacingTokens.s),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: colors.backgroundTertiary,
         borderRadius: BorderTokens.circularMedium,
         boxShadow: ShadowTokens.subtle,
       ),
@@ -474,22 +476,20 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 ),
                 // Day number overlay - centered
                 Center(
-                  child: Opacity(
-                    opacity: isPast ? 0.5 : 1.0, // 50% opacity for past dates
-                    child: Text(
-                      date.day.toString(),
-                      style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeL,
-                        fontWeight: TypographyTokens.bold,
-                        color: colors.textPrimary,
-                        shadows: [
-                          Shadow(
-                            offset: const Offset(0, 1),
-                            blurRadius: 2.0,
-                            color: colors.backgroundPrimary.withValues(alpha: 0.3),
-                          ),
-                        ],
-                      ),
+                  child: Text(
+                    date.day.toString(),
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeL,
+                      fontWeight: TypographyTokens.bold,
+                      // Past dates use secondary color for cleaner "disabled" look
+                      color: isPast ? colors.textSecondary : colors.textPrimary,
+                      shadows: [
+                        Shadow(
+                          offset: const Offset(0, 1),
+                          blurRadius: 2.0,
+                          color: colors.backgroundPrimary.withValues(alpha: 0.3),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -520,7 +520,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Container(
       margin: const EdgeInsets.all(BorderTokens.widthThin),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: colors.backgroundTertiary,
         border: Border.all(color: colors.borderLight),
         borderRadius: BorderTokens.circularSubtle,
       ),

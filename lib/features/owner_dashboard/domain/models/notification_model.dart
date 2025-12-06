@@ -12,6 +12,10 @@ class NotificationModel {
   final String? bookingId; // Optional link to booking
   final Map<String, dynamic>? metadata; // Additional data
 
+  // Localization keys (new fields for i18n support)
+  final String? titleKey;
+  final String? messageKey;
+
   const NotificationModel({
     required this.id,
     required this.ownerId,
@@ -22,6 +26,8 @@ class NotificationModel {
     this.isRead = false,
     this.bookingId,
     this.metadata,
+    this.titleKey,
+    this.messageKey,
   });
 
   /// Create from Firestore document
@@ -38,6 +44,8 @@ class NotificationModel {
       isRead: data['isRead'] ?? false,
       bookingId: data['bookingId'],
       metadata: data['metadata'],
+      titleKey: data['titleKey'],
+      messageKey: data['messageKey'],
     );
   }
 
@@ -52,6 +60,8 @@ class NotificationModel {
       'isRead': isRead,
       if (bookingId != null) 'bookingId': bookingId,
       if (metadata != null) 'metadata': metadata,
+      if (titleKey != null) 'titleKey': titleKey,
+      if (messageKey != null) 'messageKey': messageKey,
     };
   }
 
@@ -66,6 +76,8 @@ class NotificationModel {
     bool? isRead,
     String? bookingId,
     Map<String, dynamic>? metadata,
+    String? titleKey,
+    String? messageKey,
   }) {
     return NotificationModel(
       id: id ?? this.id,
@@ -77,6 +89,8 @@ class NotificationModel {
       isRead: isRead ?? this.isRead,
       bookingId: bookingId ?? this.bookingId,
       metadata: metadata ?? this.metadata,
+      titleKey: titleKey ?? this.titleKey,
+      messageKey: messageKey ?? this.messageKey,
     );
   }
 
@@ -95,31 +109,6 @@ class NotificationModel {
         return 'notifications';
       default:
         return 'notifications';
-    }
-  }
-
-  /// Get relative time string (e.g., "2 hours ago")
-  String getRelativeTime() {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inSeconds < 60) {
-      return 'Upravo sada';
-    } else if (difference.inMinutes < 60) {
-      final minutes = difference.inMinutes;
-      return '$minutes ${minutes == 1 ? 'minut' : 'minuta'} prije';
-    } else if (difference.inHours < 24) {
-      final hours = difference.inHours;
-      return '$hours ${hours == 1 ? 'sat' : hours < 5 ? 'sata' : 'sati'} prije';
-    } else if (difference.inDays < 7) {
-      final days = difference.inDays;
-      return '$days ${days == 1 ? 'dan' : 'dana'} prije';
-    } else if (difference.inDays < 30) {
-      final weeks = (difference.inDays / 7).floor();
-      return '$weeks ${weeks == 1 ? 'sedmica' : weeks < 5 ? 'sedmice' : 'sedmica'} prije';
-    } else {
-      final months = (difference.inDays / 30).floor();
-      return '$months ${months == 1 ? 'mjesec' : months < 5 ? 'mjeseca' : 'mjeseci'} prije';
     }
   }
 }

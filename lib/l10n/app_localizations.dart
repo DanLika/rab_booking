@@ -2840,6 +2840,36 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get ownerCalendarTryAgain;
 
+  /// No description provided for @ownerCalendarLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get ownerCalendarLoading;
+
+  /// No description provided for @ownerCalendarChangeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Change status'**
+  String get ownerCalendarChangeStatus;
+
+  /// No description provided for @ownerCalendarDefaultGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get ownerCalendarDefaultGuest;
+
+  /// No description provided for @ownerCalendarSummaryGuests.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests'**
+  String get ownerCalendarSummaryGuests;
+
+  /// No description provided for @ownerCalendarSummaryArrivals.
+  ///
+  /// In en, this message translates to:
+  /// **'{arrivals} arrival • {departures} departure'**
+  String ownerCalendarSummaryArrivals(int arrivals, int departures);
+
   /// No description provided for @ownerCalendarZoom.
   ///
   /// In en, this message translates to:
@@ -3209,6 +3239,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error cancelling booking'**
   String get ownerBookingsCancelError;
+
+  /// No description provided for @ownerBookingCardNight.
+  ///
+  /// In en, this message translates to:
+  /// **'night'**
+  String get ownerBookingCardNight;
+
+  /// No description provided for @ownerBookingCardNights.
+  ///
+  /// In en, this message translates to:
+  /// **'nights'**
+  String get ownerBookingCardNights;
+
+  /// No description provided for @ownerBookingCardTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get ownerBookingCardTotal;
+
+  /// No description provided for @ownerBookingCardPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get ownerBookingCardPaid;
+
+  /// No description provided for @ownerBookingCardRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get ownerBookingCardRemaining;
+
+  /// No description provided for @ownerBookingCardFullyPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully paid'**
+  String get ownerBookingCardFullyPaid;
+
+  /// No description provided for @ownerBookingCardPercentPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% paid'**
+  String ownerBookingCardPercentPaid(String percent);
+
+  /// No description provided for @ownerBookingCardNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get ownerBookingCardNotes;
+
+  /// No description provided for @ownerBookingCardDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get ownerBookingCardDetails;
+
+  /// No description provided for @ownerBookingCardApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get ownerBookingCardApprove;
+
+  /// No description provided for @ownerBookingCardReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get ownerBookingCardReject;
+
+  /// No description provided for @ownerBookingCardComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get ownerBookingCardComplete;
+
+  /// No description provided for @ownerBookingCardCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get ownerBookingCardCancel;
 
   /// No description provided for @ownerTableSelected.
   ///
@@ -5159,6 +5267,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this notification?'**
   String get notificationsDeleteNotificationDesc;
+
+  /// No description provided for @notificationBookingCreatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Booking'**
+  String get notificationBookingCreatedTitle;
+
+  /// No description provided for @notificationBookingUpdatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Updated'**
+  String get notificationBookingUpdatedTitle;
+
+  /// No description provided for @notificationBookingCancelledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Cancelled'**
+  String get notificationBookingCancelledTitle;
+
+  /// No description provided for @notificationPaymentReceivedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Received'**
+  String get notificationPaymentReceivedTitle;
+
+  /// No description provided for @notificationBookingCreatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{guestName} created a new booking.'**
+  String notificationBookingCreatedMessage(String guestName);
+
+  /// No description provided for @notificationBookingUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking for {guestName} was updated.'**
+  String notificationBookingUpdatedMessage(String guestName);
+
+  /// No description provided for @notificationBookingCancelledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking for {guestName} was cancelled.'**
+  String notificationBookingCancelledMessage(String guestName);
+
+  /// No description provided for @notificationPaymentReceivedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Received payment from {guestName} for €{amount}.'**
+  String notificationPaymentReceivedMessage(String guestName, double amount);
+
+  /// No description provided for @notificationTimeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get notificationTimeJustNow;
+
+  /// No description provided for @notificationTimeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String notificationTimeMinutesAgo(int minutes);
+
+  /// No description provided for @notificationTimeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String notificationTimeHoursAgo(int hours);
+
+  /// No description provided for @notificationTimeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String notificationTimeDaysAgo(int days);
+
+  /// No description provided for @notificationTimeWeeksAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks}w ago'**
+  String notificationTimeWeeksAgo(int weeks);
+
+  /// No description provided for @notificationTimeMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{months}mo ago'**
+  String notificationTimeMonthsAgo(int months);
 
   /// No description provided for @bankAccountTitle.
   ///
@@ -7797,7 +7989,7 @@ abstract class AppLocalizations {
   /// No description provided for @embedGuideTitle.
   ///
   /// In en, this message translates to:
-  /// **'Embed Widget - Guide'**
+  /// **'Widget Embedding Guide'**
   String get embedGuideTitle;
 
   /// No description provided for @embedGuideHeaderTitle.
@@ -7821,7 +8013,7 @@ abstract class AppLocalizations {
   /// No description provided for @embedGuideStep1Title.
   ///
   /// In en, this message translates to:
-  /// **'Configure Widget Settings'**
+  /// **'Configure Widget'**
   String get embedGuideStep1Title;
 
   /// No description provided for @embedGuideStep2Title.
@@ -7887,7 +8079,7 @@ abstract class AppLocalizations {
   /// No description provided for @embedGuideStep1SelectMode.
   ///
   /// In en, this message translates to:
-  /// **'Select widget mode:'**
+  /// **'Select operating mode:'**
   String get embedGuideStep1SelectMode;
 
   /// No description provided for @embedGuideWidgetModeCalendar.
@@ -9143,6 +9335,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Property'**
   String get icalExportListAddProperty;
+
+  /// No description provided for @icalExportReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to Export'**
+  String get icalExportReady;
+
+  /// No description provided for @icalExportUnitsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} units available for export'**
+  String icalExportUnitsAvailable(int count);
+
+  /// No description provided for @icalExportWhyExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Why Export Your Calendar?'**
+  String get icalExportWhyExport;
+
+  /// No description provided for @icalExportBenefit1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Calendar Sync'**
+  String get icalExportBenefit1Title;
+
+  /// No description provided for @icalExportBenefit1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'See all your bookings in Google Calendar, Apple Calendar, or Outlook.'**
+  String get icalExportBenefit1Desc;
+
+  /// No description provided for @icalExportBenefit2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic Updates'**
+  String get icalExportBenefit2Title;
+
+  /// No description provided for @icalExportBenefit2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar apps automatically sync new bookings every few hours.'**
+  String get icalExportBenefit2Desc;
+
+  /// No description provided for @icalExportBenefit3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Device Access'**
+  String get icalExportBenefit3Title;
+
+  /// No description provided for @icalExportBenefit3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'View your bookings on phone, tablet, and computer.'**
+  String get icalExportBenefit3Desc;
+
+  /// No description provided for @icalExportBenefit4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders & Notifications'**
+  String get icalExportBenefit4Title;
+
+  /// No description provided for @icalExportBenefit4Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get calendar notifications for upcoming check-ins and check-outs.'**
+  String get icalExportBenefit4Desc;
+
+  /// No description provided for @icalExportSelectUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Unit'**
+  String get icalExportSelectUnit;
+
+  /// No description provided for @icalExportHowItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How It Works'**
+  String get icalExportHowItWorks;
+
+  /// No description provided for @icalExportStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a unit from the list below'**
+  String get icalExportStep1;
+
+  /// No description provided for @icalExportStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Click \'Generate\' to create the iCal URL'**
+  String get icalExportStep2;
+
+  /// No description provided for @icalExportStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the URL and add it to your calendar app'**
+  String get icalExportStep3;
+
+  /// No description provided for @icalExportStep4.
+  ///
+  /// In en, this message translates to:
+  /// **'Your calendar will automatically sync bookings'**
+  String get icalExportStep4;
+
+  /// No description provided for @icalExportFaqTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently Asked Questions'**
+  String get icalExportFaqTitle;
+
+  /// No description provided for @icalExportFaq1Q.
+  ///
+  /// In en, this message translates to:
+  /// **'How often does the calendar sync?'**
+  String get icalExportFaq1Q;
+
+  /// No description provided for @icalExportFaq1A.
+  ///
+  /// In en, this message translates to:
+  /// **'Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.'**
+  String get icalExportFaq1A;
+
+  /// No description provided for @icalExportFaq2Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Will deleted bookings be removed?'**
+  String get icalExportFaq2Q;
+
+  /// No description provided for @icalExportFaq2A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, when you regenerate the export, cancelled bookings will be removed from your calendar.'**
+  String get icalExportFaq2A;
+
+  /// No description provided for @icalExportFaq3Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I share this URL with others?'**
+  String get icalExportFaq3Q;
+
+  /// No description provided for @icalExportFaq3A.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, but be careful - anyone with the URL can see your booking schedule.'**
+  String get icalExportFaq3A;
+
+  /// No description provided for @icalExportUrlReady.
+  ///
+  /// In en, this message translates to:
+  /// **'URL Ready'**
+  String get icalExportUrlReady;
+
+  /// No description provided for @icalExportUrlPending.
+  ///
+  /// In en, this message translates to:
+  /// **'URL Not Generated'**
+  String get icalExportUrlPending;
+
+  /// No description provided for @icalExportUrlReadyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your iCal URL is ready. Copy it and add to your calendar app.'**
+  String get icalExportUrlReadyDesc;
+
+  /// No description provided for @icalExportUrlPendingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the button below to generate your iCal export URL.'**
+  String get icalExportUrlPendingDesc;
+
+  /// No description provided for @icalExportRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate URL'**
+  String get icalExportRegenerate;
+
+  /// No description provided for @icalExportNoUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'No URL Generated'**
+  String get icalExportNoUrl;
+
+  /// No description provided for @icalExportNoUrlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate an iCal URL to sync your bookings with external calendars.'**
+  String get icalExportNoUrlDesc;
 
   /// No description provided for @errorWithMessage.
   ///

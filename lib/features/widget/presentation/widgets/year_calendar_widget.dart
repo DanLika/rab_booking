@@ -111,6 +111,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             });
           },
         ),
+        const SizedBox(width: SpacingTokens.xxs),
         Text(
           _currentYear.toString(),
           style: TextStyle(
@@ -119,6 +120,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             color: colors.textPrimary,
           ),
         ),
+        const SizedBox(width: SpacingTokens.xxs),
         IconButton(
           icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
@@ -179,7 +181,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           height: cellSize,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: colors.backgroundSecondary,
+            color: colors.backgroundTertiary,
             border: Border.all(color: colors.borderLight),
             borderRadius: const BorderRadius.only(topLeft: Radius.circular(BorderTokens.radiusSubtle)),
           ),
@@ -195,7 +197,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             height: cellSize,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: colors.backgroundSecondary,
+              color: colors.backgroundTertiary,
               border: Border.all(color: colors.borderLight),
               borderRadius: dayIndex == 30
                   ? const BorderRadius.only(topRight: Radius.circular(BorderTokens.radiusSubtle))
@@ -223,7 +225,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           height: cellSize,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: colors.backgroundSecondary,
+            color: colors.backgroundTertiary,
             border: Border.all(color: colors.borderLight),
             borderRadius: month == 12
                 ? const BorderRadius.only(bottomLeft: Radius.circular(BorderTokens.radiusSubtle))
@@ -435,15 +437,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                     ),
                   // Day number in center
                   Center(
-                    child: Opacity(
-                      opacity: isPast ? 0.5 : 1.0, // 50% opacity for past dates
-                      child: Text(
-                        day.toString(),
-                        style: TextStyle(
-                          fontSize: (cellSize * 0.45).clamp(8.0, 14.0),
-                          fontWeight: FontWeight.w600,
-                          color: colors.textPrimary,
-                        ),
+                    child: Text(
+                      day.toString(),
+                      style: TextStyle(
+                        fontSize: (cellSize * 0.45).clamp(8.0, 14.0),
+                        fontWeight: FontWeight.w600,
+                        // Past dates use secondary color for cleaner "disabled" look
+                        color: isPast ? colors.textSecondary : colors.textPrimary,
                       ),
                     ),
                   ),
@@ -510,7 +510,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       width: cellSize,
       height: cellSize,
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: colors.backgroundTertiary,
         border: Border.all(color: colors.borderLight),
         borderRadius: BorderTokens.circularTiny,
       ),

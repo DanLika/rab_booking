@@ -7,7 +7,7 @@ class NotificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _collectionName = 'notifications';
 
-  /// Create a new notification
+  /// Create a new notification with localization support
   Future<void> createNotification({
     required String ownerId,
     required String type,
@@ -15,6 +15,8 @@ class NotificationService {
     required String message,
     String? bookingId,
     Map<String, dynamic>? metadata,
+    String? titleKey,
+    String? messageKey,
   }) async {
     try {
       final notification = NotificationModel(
@@ -26,11 +28,11 @@ class NotificationService {
         timestamp: DateTime.now(),
         bookingId: bookingId,
         metadata: metadata,
+        titleKey: titleKey,
+        messageKey: messageKey,
       );
 
-      await _firestore
-          .collection(_collectionName)
-          .add(notification.toFirestore());
+      await _firestore.collection(_collectionName).add(notification.toFirestore());
     } catch (e) {
       throw NotificationException.creationFailed(e);
     }
@@ -62,9 +64,7 @@ class NotificationService {
   /// Mark notification as read
   Future<void> markAsRead(String notificationId) async {
     try {
-      await _firestore.collection(_collectionName).doc(notificationId).update({
-        'isRead': true,
-      });
+      await _firestore.collection(_collectionName).doc(notificationId).update({'isRead': true});
     } catch (e) {
       throw NotificationException.updateFailed(e);
     }
@@ -76,9 +76,7 @@ class NotificationService {
       final batch = _firestore.batch();
 
       for (final id in notificationIds) {
-        batch.update(_firestore.collection(_collectionName).doc(id), {
-          'isRead': true,
-        });
+        batch.update(_firestore.collection(_collectionName).doc(id), {'isRead': true});
       }
 
       await batch.commit();
@@ -141,14 +139,10 @@ class NotificationService {
 
       for (var i = 0; i < notificationIds.length; i += batchLimit) {
         final batch = _firestore.batch();
-        final end = (i + batchLimit < notificationIds.length)
-            ? i + batchLimit
-            : notificationIds.length;
+        final end = (i + batchLimit < notificationIds.length) ? i + batchLimit : notificationIds.length;
 
         for (var j = i; j < end; j++) {
-          batch.delete(
-            _firestore.collection(_collectionName).doc(notificationIds[j]),
-          );
+          batch.delete(_firestore.collection(_collectionName).doc(notificationIds[j]));
         }
 
         await batch.commit();
@@ -166,10 +160,7 @@ class NotificationService {
   /// Note: Handles Firestore batch limit of 500 operations
   Future<void> deleteAllNotifications(String ownerId) async {
     try {
-      final snapshot = await _firestore
-          .collection(_collectionName)
-          .where('ownerId', isEqualTo: ownerId)
-          .get();
+      final snapshot = await _firestore.collection(_collectionName).where('ownerId', isEqualTo: ownerId).get();
 
       // Firestore batch limit is 500 operations
       const batchLimit = 500;
@@ -195,36 +186,49 @@ class NotificationService {
     }
   }
 
-  /// Helper: Create booking notification
+  /// Helper: Create booking notification with localization keys
   Future<void> createBookingNotification({
     required String ownerId,
     required String bookingId,
     required String guestName,
     required String action, // 'created', 'updated', 'cancelled'
   }) async {
-    final titles = {
-      'created': 'Nova rezervacija',
-      'updated': 'Rezervacija ažurirana',
-      'cancelled': 'Rezervacija otkazana',
+    // Fallback titles (for backward compatibility)
+    final fallbackTitles = {'created': 'New Booking', 'updated': 'Booking Updated', 'cancelled': 'Booking Cancelled'};
+
+    // Fallback messages (for backward compatibility)
+    final fallbackMessages = {
+      'created': '$guestName created a new booking.',
+      'updated': 'Booking for $guestName was updated.',
+      'cancelled': 'Booking for $guestName was cancelled.',
     };
 
-    final messages = {
-      'created': '$guestName je kreirao novu rezervaciju.',
-      'updated': 'Rezervacija za $guestName je ažurirana.',
-      'cancelled': 'Rezervacija za $guestName je otkazana.',
+    // Localization keys
+    final titleKeys = {
+      'created': 'notificationBookingCreatedTitle',
+      'updated': 'notificationBookingUpdatedTitle',
+      'cancelled': 'notificationBookingCancelledTitle',
+    };
+
+    final messageKeys = {
+      'created': 'notificationBookingCreatedMessage',
+      'updated': 'notificationBookingUpdatedMessage',
+      'cancelled': 'notificationBookingCancelledMessage',
     };
 
     await createNotification(
       ownerId: ownerId,
       type: 'booking_$action',
-      title: titles[action] ?? 'Obavještenje',
-      message: messages[action] ?? 'Nova aktivnost na rezervaciji.',
+      title: fallbackTitles[action] ?? 'Notification',
+      message: fallbackMessages[action] ?? 'New booking activity.',
       bookingId: bookingId,
       metadata: {'guestName': guestName},
+      titleKey: titleKeys[action],
+      messageKey: messageKeys[action],
     );
   }
 
-  /// Helper: Create payment notification
+  /// Helper: Create payment notification with localization keys
   Future<void> createPaymentNotification({
     required String ownerId,
     required String bookingId,
@@ -234,11 +238,12 @@ class NotificationService {
     await createNotification(
       ownerId: ownerId,
       type: 'payment_received',
-      title: 'Plaćanje primljeno',
-      message:
-          'Primljeno plaćanje od $guestName u iznosu od €${amount.toStringAsFixed(2)}.',
+      title: 'Payment Received',
+      message: 'Received payment from $guestName for €${amount.toStringAsFixed(2)}.',
       bookingId: bookingId,
       metadata: {'guestName': guestName, 'amount': amount},
+      titleKey: 'notificationPaymentReceivedTitle',
+      messageKey: 'notificationPaymentReceivedMessage',
     );
   }
 }

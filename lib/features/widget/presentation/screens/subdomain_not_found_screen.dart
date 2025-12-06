@@ -60,7 +60,7 @@ class SubdomainNotFoundScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
                     decoration: BoxDecoration(
-                      color: colors.backgroundSecondary,
+                      color: colors.backgroundTertiary,
                       borderRadius: BorderTokens.circularMedium,
                       border: Border.all(color: colors.borderDefault),
                     ),
@@ -91,7 +91,7 @@ class SubdomainNotFoundScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(SpacingTokens.l),
                     decoration: BoxDecoration(
-                      color: colors.backgroundSecondary,
+                      color: colors.backgroundTertiary,
                       borderRadius: BorderTokens.circularLarge,
                       border: Border.all(color: colors.borderDefault),
                     ),

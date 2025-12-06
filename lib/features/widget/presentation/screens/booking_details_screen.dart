@@ -263,6 +263,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                               );
                             },
                           ),
+
+                          // Extra bottom padding for safe area
+                          const SizedBox(height: SpacingTokens.xl),
                         ],
                       ),
                     ),

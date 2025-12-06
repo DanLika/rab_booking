@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
@@ -48,7 +48,7 @@ class PhoneField extends StatelessWidget {
       inputFormatters: [PhoneNumberFormatter(dialCode)],
       style: TextStyle(color: colors.textPrimary),
       decoration: WidgetInputDecorationHelper.buildDecoration(
-        labelText: 'Phone Number *',
+        labelText: WidgetTranslations.of(context).labelPhone,
         hintText: '99 123 4567',
         prefixIcon: Icon(Icons.phone_outlined, color: colors.textSecondary),
         isDarkMode: isDarkMode,

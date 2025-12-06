@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../../core/localization/error_messages.dart';
+import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
@@ -67,6 +68,8 @@ class EmailFieldWithVerification extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
+    final tr = WidgetTranslations.of(context);
+
     if (!requireVerification) {
       // Standard email field without verification
       return TextFormField(
@@ -75,7 +78,7 @@ class EmailFieldWithVerification extends StatelessWidget {
         keyboardType: TextInputType.emailAddress,
         style: TextStyle(color: colors.textPrimary),
         decoration: WidgetInputDecorationHelper.buildDecoration(
-          labelText: 'Email *',
+          labelText: tr.labelEmail,
           hintText: 'john@example.com',
           prefixIcon: Icon(Icons.email_outlined, color: colors.textPrimary),
           isDarkMode: isDarkMode,
@@ -99,7 +102,7 @@ class EmailFieldWithVerification extends StatelessWidget {
             keyboardType: TextInputType.emailAddress,
             style: TextStyle(color: colors.textPrimary),
             decoration: WidgetInputDecorationHelper.buildDecoration(
-              labelText: 'Email *',
+              labelText: tr.labelEmail,
               hintText: 'john@example.com',
               prefixIcon: Icon(Icons.email_outlined, color: colors.textPrimary),
               isDarkMode: isDarkMode,

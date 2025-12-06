@@ -3976,6 +3976,94 @@ class WidgetTranslations {
     }
   }
 
+  // ============================================================================
+  // GUEST FORM LABELS AND HINTS
+  // ============================================================================
+
+  String get labelFirstName {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ime *';
+      case 'de':
+        return 'Vorname *';
+      case 'it':
+        return 'Nome *';
+      case 'en':
+      default:
+        return 'First Name *';
+    }
+  }
+
+  String get labelLastName {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Prezime *';
+      case 'de':
+        return 'Nachname *';
+      case 'it':
+        return 'Cognome *';
+      case 'en':
+      default:
+        return 'Last Name *';
+    }
+  }
+
+  String get labelEmail {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Email *';
+      case 'de':
+        return 'E-Mail *';
+      case 'it':
+        return 'Email *';
+      case 'en':
+      default:
+        return 'Email *';
+    }
+  }
+
+  String get labelPhone {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Broj telefona *';
+      case 'de':
+        return 'Telefonnummer *';
+      case 'it':
+        return 'Numero di telefono *';
+      case 'en':
+      default:
+        return 'Phone Number *';
+    }
+  }
+
+  String get labelSpecialRequests {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Posebni zahtjevi (opcionalno)';
+      case 'de':
+        return 'Besondere Wünsche (optional)';
+      case 'it':
+        return 'Richieste speciali (facoltativo)';
+      case 'en':
+      default:
+        return 'Special Requests (Optional)';
+    }
+  }
+
+  String get hintSpecialRequests {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Posebni zahtjevi ili preferencije...';
+      case 'de':
+        return 'Besondere Anforderungen oder Präferenzen...';
+      case 'it':
+        return 'Requisiti speciali o preferenze...';
+      case 'en':
+      default:
+        return 'Any special requirements or preferences...';
+    }
+  }
+
   String get tooltipSwitchToLightMode {
     switch (locale.languageCode) {
       case 'hr':

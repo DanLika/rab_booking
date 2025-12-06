@@ -57,7 +57,7 @@ class GuestCountPicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
+        color: colors.backgroundTertiary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(color: colors.borderDefault),
       ),

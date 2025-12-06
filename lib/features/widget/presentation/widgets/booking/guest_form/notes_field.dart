@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
@@ -37,8 +37,8 @@ class NotesField extends StatelessWidget {
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: NotesValidator.validate,
       decoration: WidgetInputDecorationHelper.buildDecoration(
-        labelText: 'Special Requests (Optional)',
-        hintText: 'Any special requirements or preferences...',
+        labelText: WidgetTranslations.of(context).labelSpecialRequests,
+        hintText: WidgetTranslations.of(context).hintSpecialRequests,
         prefixIcon: Icon(Icons.notes, color: colors.textSecondary),
         isDarkMode: isDarkMode,
         hideCounter: false,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
@@ -48,7 +49,7 @@ class GuestNameFields extends StatelessWidget {
             maxLength: 50,
             style: TextStyle(color: colors.textPrimary),
             decoration: WidgetInputDecorationHelper.buildDecoration(
-              labelText: 'First Name *',
+              labelText: WidgetTranslations.of(context).labelFirstName,
               hintText: 'John',
               prefixIcon: Icon(Icons.person_outline, color: colors.textPrimary),
               isDarkMode: isDarkMode,
@@ -67,7 +68,7 @@ class GuestNameFields extends StatelessWidget {
             maxLength: 50,
             style: TextStyle(color: colors.textPrimary),
             decoration: WidgetInputDecorationHelper.buildDecoration(
-              labelText: 'Last Name *',
+              labelText: WidgetTranslations.of(context).labelLastName,
               hintText: 'Doe',
               isDarkMode: isDarkMode,
               isDense: true,

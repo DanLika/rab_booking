@@ -151,6 +151,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                           return DropdownButtonFormField<String>(
                             initialValue: _selectedUnitId,
+                            dropdownColor: InputDecorationHelper.getDropdownColor(context),
+                            borderRadius: InputDecorationHelper.dropdownBorderRadius,
                             decoration: InputDecorationHelper.buildDecoration(
                               labelText: AppLocalizations.of(context).bookingCreateSelectUnit,
                               prefixIcon: const Icon(Icons.bed_outlined),

@@ -400,6 +400,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                       // Property Type
                       DropdownButtonFormField<PropertyType>(
                         initialValue: _selectedType,
+                        dropdownColor: InputDecorationHelper.getDropdownColor(context),
+                        borderRadius: InputDecorationHelper.dropdownBorderRadius,
                         decoration: InputDecorationHelper.buildDecoration(
                           labelText: l10n.propertyFormPropertyType,
                           isMobile: isMobile,

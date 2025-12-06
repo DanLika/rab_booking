@@ -164,6 +164,8 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         // Status dropdown
         DropdownButtonFormField<BookingStatus?>(
           initialValue: _filters.status,
+          dropdownColor: InputDecorationHelper.getDropdownColor(context),
+          borderRadius: InputDecorationHelper.dropdownBorderRadius,
           decoration: InputDecorationHelper.buildDecoration(
             labelText: l10n.ownerFiltersStatusLabel,
             prefixIcon: Icon(Icons.label_outline, color: theme.colorScheme.primary),
@@ -235,6 +237,8 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           data: (properties) {
             return DropdownButtonFormField<String?>(
               initialValue: _filters.propertyId,
+              dropdownColor: InputDecorationHelper.getDropdownColor(context),
+              borderRadius: InputDecorationHelper.dropdownBorderRadius,
               decoration: InputDecorationHelper.buildDecoration(
                 labelText: l10n.ownerFiltersPropertyLabel,
                 prefixIcon: Icon(Icons.apartment, color: theme.colorScheme.secondary),

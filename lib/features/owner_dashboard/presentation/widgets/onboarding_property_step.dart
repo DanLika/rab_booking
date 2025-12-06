@@ -126,6 +126,8 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
             // Property Type (REQUIRED)
             DropdownButtonFormField<PropertyType>(
               initialValue: _selectedType,
+              dropdownColor: InputDecorationHelper.getDropdownColor(context),
+              borderRadius: InputDecorationHelper.dropdownBorderRadius,
               decoration: InputDecorationHelper.buildDecoration(
                 labelText: l10n.onboardingPropertyType,
                 context: context,

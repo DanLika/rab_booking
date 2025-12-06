@@ -1,9 +1,32 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../theme/gradient_extensions.dart';
 
 /// Centralized helper for creating consistent InputDecoration across the app
 class InputDecorationHelper {
   InputDecorationHelper._();
+
+  /// Get dropdown menu color based on theme
+  static Color getDropdownColor(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFF252330) : Colors.white;
+  }
+
+  /// Get dropdown border radius
+  static BorderRadius get dropdownBorderRadius => BorderRadius.circular(12);
+
+  /// Build dropdown menu decoration
+  static BoxDecoration getDropdownDecoration(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return BoxDecoration(
+      color: getDropdownColor(context),
+      borderRadius: dropdownBorderRadius,
+      border: Border.all(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withAlpha((0.15 * 255).toInt()), blurRadius: 12, offset: const Offset(0, 4)),
+      ],
+    );
+  }
 
   /// Creates modern input decoration for form fields
   /// Uses design system colors: inputFillColor for background, sectionBorder for borders

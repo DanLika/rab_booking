@@ -164,8 +164,13 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                 constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
                 child: DataTable(
                   headingRowColor: WidgetStateProperty.resolveWith((states) {
-                    return isDark ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.surfaceContainerHigh;
+                    return theme.colorScheme.primary.withAlpha((0.12 * 255).toInt());
                   }),
+                  headingTextStyle: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: theme.colorScheme.primary,
+                  ),
                   columns: [
                     DataColumn(label: Text(l10n.ownerTableColumnGuest)),
                     DataColumn(label: Text(l10n.ownerTableColumnPropertyUnit)),

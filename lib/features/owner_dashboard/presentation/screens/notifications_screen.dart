@@ -274,15 +274,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'notifications'),
-      // FAB for actions when not in selection mode
+      // FAB for actions when not in selection mode - kompaktniji dizajn
       floatingActionButton: !_isSelectionMode && allNotifications.isNotEmpty
-          ? FloatingActionButton.extended(
+          ? FloatingActionButton.small(
               onPressed: _toggleSelectionMode,
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.white,
-              extendedPadding: const EdgeInsets.symmetric(horizontal: 24),
-              icon: const Icon(Icons.checklist_rounded, size: 18),
-              label: Text(l10n.notificationsSelect),
+              tooltip: l10n.notificationsSelect,
+              child: const Icon(Icons.checklist_rounded, size: 20),
             )
           : null,
     );
@@ -580,21 +579,19 @@ class _SelectableNotificationCard extends StatelessWidget {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isSelected ? theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()) : context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+        color: isSelected
+            ? theme.colorScheme.primary.withAlpha((0.06 * 255).toInt())
+            : context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected
-              ? theme.colorScheme.primary
-              : isUnread
-              ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+              ? theme.colorScheme.primary.withAlpha((0.4 * 255).toInt())
               : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-          width: isSelected ? 2 : 1,
+          width: 1,
         ),
-        boxShadow: isSelected
-            ? (isDark ? AppShadows.elevation3Dark : AppShadows.elevation3)
-            : (isDark ? AppShadows.elevation2Dark : AppShadows.elevation2),
+        boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
       ),
       child: Material(
         color: Colors.transparent,
@@ -602,35 +599,36 @@ class _SelectableNotificationCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                // Checkbox
-                Checkbox(
-                  value: isSelected,
-                  onChanged: (_) => onTap(),
-                  activeColor: theme.colorScheme.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                ),
-
-                const SizedBox(width: 8),
-
-                // Icon
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [iconColor.withAlpha((0.15 * 255).toInt()), iconColor.withAlpha((0.08 * 255).toInt())],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
+                // Checkbox - kompaktniji
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: isSelected,
+                    onChanged: (_) => onTap(),
+                    activeColor: theme.colorScheme.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: Icon(iconData, color: iconColor, size: 22),
                 ),
 
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
+
+                // Icon - jednostavnija pozadina
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: iconColor.withAlpha((0.1 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(iconData, color: iconColor, size: 18),
+                ),
+
+                const SizedBox(width: 10),
 
                 // Content
                 Expanded(
@@ -716,52 +714,34 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: context.gradients.cardBackground,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _isHovered
                 ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
-                : isUnread
-                ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
                 : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-            width: _isHovered ? 2 : 1,
+            width: 1,
           ),
-          boxShadow: _isHovered
-              ? (isDark ? AppShadows.elevation3Dark : AppShadows.elevation3)
-              : (isDark ? AppShadows.elevation2Dark : AppShadows.elevation2),
+          boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Premium icon container with gradient
+                  // Icon container - jednostavniji dizajn bez gradienta
                   Container(
-                    width: 52,
-                    height: 52,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          widget.iconColor.withAlpha((0.15 * 255).toInt()),
-                          widget.iconColor.withAlpha((0.08 * 255).toInt()),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.iconColor.withAlpha((0.2 * 255).toInt()),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      color: widget.iconColor.withAlpha((0.12 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(widget.iconData, color: widget.iconColor, size: 26),
+                    child: Icon(widget.iconData, color: widget.iconColor, size: 22),
                   ),
 
                   const SizedBox(width: 16),
@@ -786,20 +766,9 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                             ),
                             if (isUnread)
                               Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
-                                  ),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: theme.colorScheme.primary.withAlpha((0.4 * 255).toInt()),
-                                      blurRadius: 4,
-                                    ),
-                                  ],
-                                ),
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
                               ),
                           ],
                         ),

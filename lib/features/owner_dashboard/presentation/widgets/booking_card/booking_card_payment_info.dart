@@ -57,7 +57,10 @@ class BookingCardPaymentInfo extends StatelessWidget {
                           value: booking.formattedRemainingBalance,
                           valueStyle: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: booking.isFullyPaid ? AppColors.success : AppColors.warning,
+                            // Suptilnija boja - ne crvena/narančasta
+                            color: booking.isFullyPaid
+                                ? AppColors.success
+                                : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                           ),
                         ),
                       ),
@@ -93,7 +96,10 @@ class BookingCardPaymentInfo extends StatelessWidget {
                     value: booking.formattedRemainingBalance,
                     valueStyle: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: booking.isFullyPaid ? AppColors.success : AppColors.warning,
+                      // Suptilnija boja - ne crvena/narančasta
+                      color: booking.isFullyPaid
+                          ? AppColors.success
+                          : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                     ),
                   ),
                 ),

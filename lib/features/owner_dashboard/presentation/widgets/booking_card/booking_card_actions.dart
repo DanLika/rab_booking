@@ -75,12 +75,13 @@ class BookingCardActions extends StatelessWidget {
             ),
           );
 
+          // Softirane boje za gumbe - manje agresivne
           final approveBtn = FilledButton.icon(
             onPressed: onApprove,
             icon: Icon(Icons.check_circle_outline, size: iconSize),
             label: Text(l10n.ownerBookingCardApprove, style: TextStyle(fontSize: fontSize)),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF66BB6A), // Confirmed badge color
+              backgroundColor: const Color(0xFF4CAF50), // Softirana zelena
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -93,7 +94,7 @@ class BookingCardActions extends StatelessWidget {
             icon: Icon(Icons.cancel_outlined, size: iconSize),
             label: Text(l10n.ownerBookingCardReject, style: TextStyle(fontSize: fontSize)),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEF5350), // Cancelled badge color
+              backgroundColor: const Color(0xFFE57373), // Softirana crvena (manje agresivna)
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

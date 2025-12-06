@@ -64,21 +64,20 @@ class ProfileScreen extends ConsumerWidget {
                       user.email ?? (isAnonymous ? l10n.ownerProfileAnonymousAccount : l10n.ownerProfileNoEmail);
                   final screenWidth = MediaQuery.of(context).size.width;
                   final isMobile = screenWidth < 600;
-                  final headerPadding = isMobile ? 16.0 : 32.0;
 
                   return SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
                     child: Column(
                       children: [
-                        // Premium Profile header
+                        // Compact Profile header
                         Container(
                           decoration: BoxDecoration(
                             gradient: context.gradients.brandPrimary,
-                            borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
-                            boxShadow: isDark ? AppShadows.elevation3Dark : AppShadows.elevation3,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
                           ),
                           child: Padding(
-                            padding: EdgeInsets.all(headerPadding),
+                            padding: EdgeInsets.all(isMobile ? 16 : 20),
                             child: Column(
                               children: [
                                 Container(
@@ -86,13 +85,13 @@ class ProfileScreen extends ConsumerWidget {
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.3),
-                                      width: isMobile ? 3 : 4,
+                                      width: 3,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.2),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 8),
+                                        color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.15),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
                                       ),
                                     ],
                                   ),
@@ -102,17 +101,17 @@ class ProfileScreen extends ConsumerWidget {
                                       ? ClipOval(
                                           child: Image.network(
                                             authState.userModel!.avatarUrl!,
-                                            width: isMobile ? 100 : 120,
-                                            height: isMobile ? 100 : 120,
+                                            width: isMobile ? 72 : 88,
+                                            height: isMobile ? 72 : 88,
                                             fit: BoxFit.cover,
                                             errorBuilder: (context, error, stackTrace) {
                                               return CircleAvatar(
-                                                radius: isMobile ? 50 : 60,
+                                                radius: isMobile ? 36 : 44,
                                                 backgroundColor: isDark ? AppColors.primary : Colors.white,
                                                 child: Text(
                                                   displayName.substring(0, 1).toUpperCase(),
                                                   style: TextStyle(
-                                                    fontSize: isMobile ? 40 : 48,
+                                                    fontSize: isMobile ? 28 : 34,
                                                     fontWeight: FontWeight.bold,
                                                     color: isDark ? Colors.white : AppColors.primary,
                                                   ),
@@ -122,19 +121,19 @@ class ProfileScreen extends ConsumerWidget {
                                           ),
                                         )
                                       : CircleAvatar(
-                                          radius: isMobile ? 50 : 60,
+                                          radius: isMobile ? 36 : 44,
                                           backgroundColor: isDark ? AppColors.primary : Colors.white,
                                           child: Text(
                                             displayName.substring(0, 1).toUpperCase(),
                                             style: TextStyle(
-                                              fontSize: isMobile ? 40 : 48,
+                                              fontSize: isMobile ? 28 : 34,
                                               fontWeight: FontWeight.bold,
                                               color: isDark ? Colors.white : AppColors.primary,
                                             ),
                                           ),
                                         ),
                                 ),
-                                SizedBox(height: isMobile ? 16 : 20),
+                                SizedBox(height: isMobile ? 12 : 14),
                                 ConstrainedBox(
                                   constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 400),
                                   child: Text(
@@ -143,30 +142,18 @@ class ProfileScreen extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: isMobile ? 24 : 28,
+                                      fontSize: isMobile ? 20 : 22,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
-                                      shadows: isDark
-                                          ? null
-                                          : [
-                                              Shadow(
-                                                color: Colors.black.withValues(alpha: 0.1),
-                                                offset: const Offset(0, 2),
-                                                blurRadius: 4,
-                                              ),
-                                            ],
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: isMobile ? 8 : 12),
+                                const SizedBox(height: 6),
                                 Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: isMobile ? 12 : 16,
-                                    vertical: isMobile ? 6 : 8,
-                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.25),
-                                    borderRadius: BorderRadius.circular(20),
+                                    color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.2),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Text(
                                     email,
@@ -174,8 +161,8 @@ class ProfileScreen extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: isMobile ? 13 : 15,
-                                      color: Colors.white.withValues(alpha: 0.95),
+                                      fontSize: isMobile ? 12 : 13,
+                                      color: Colors.white.withValues(alpha: 0.9),
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -184,15 +171,15 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
-                        // Account settings - Premium
+                        // Account settings
                         Container(
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
-                            borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
                           ),
                           child: Column(
                             children: [
@@ -224,15 +211,15 @@ class ProfileScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
 
-                        // App settings - Premium
+                        // App settings
                         Container(
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
-                            borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
                           ),
                           child: Column(
                             children: [
@@ -242,7 +229,7 @@ class ProfileScreen extends ConsumerWidget {
                                 subtitle: languageName,
                                 onTap: () => showLanguageSelectionBottomSheet(context, ref),
                               ),
-                              const Divider(height: 1, indent: 72),
+                              const Divider(height: 1, indent: 56),
                               _PremiumListTile(
                                 icon: Icons.brightness_6_outlined,
                                 title: l10n.ownerProfileTheme,
@@ -253,15 +240,15 @@ class ProfileScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
 
-                        // Account actions - Premium
+                        // Account actions
                         Container(
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
-                            borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
                           ),
                           child: Column(
                             children: [
@@ -273,53 +260,64 @@ class ProfileScreen extends ConsumerWidget {
                                   ErrorDisplayUtils.showInfoSnackBar(context, l10n.ownerProfileHelpSupportComingSoon);
                                 },
                               ),
-                              const Divider(height: 1, indent: 72),
+                              const Divider(height: 1, indent: 56),
                               _PremiumListTile(
                                 icon: Icons.info_outline,
                                 title: l10n.ownerProfileAbout,
                                 subtitle: l10n.ownerProfileAboutSubtitle,
                                 onTap: () => context.push(OwnerRoutes.about),
-                              ),
-                              const Divider(height: 1, indent: 72),
-                              _LogoutTile(
-                                onLogout: () async {
-                                  await ref.read(enhancedAuthProvider.notifier).signOut();
-                                  if (context.mounted) {
-                                    context.go(OwnerRoutes.login);
-                                  }
-                                },
+                                isLast: true,
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
 
-                        // Legal Documents - Premium
+                        // Logout section - separate for emphasis
                         Container(
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
-                            borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
+                          ),
+                          child: _LogoutTile(
+                            onLogout: () async {
+                              await ref.read(enhancedAuthProvider.notifier).signOut();
+                              if (context.mounted) {
+                                context.go(OwnerRoutes.login);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Legal Documents
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
                           ),
                           child: Column(
                             children: [
                               _PremiumListTile(
-                                icon: Icons.description,
+                                icon: Icons.description_outlined,
                                 title: l10n.ownerProfileTermsConditions,
                                 subtitle: l10n.ownerProfileTermsConditionsSubtitle,
                                 onTap: () => context.push(OwnerRoutes.termsConditions),
                               ),
-                              const Divider(height: 1, indent: 72),
+                              const Divider(height: 1, indent: 56),
                               _PremiumListTile(
-                                icon: Icons.privacy_tip,
+                                icon: Icons.privacy_tip_outlined,
                                 title: l10n.ownerProfilePrivacyPolicy,
                                 subtitle: l10n.ownerProfilePrivacyPolicySubtitle,
                                 onTap: () => context.push(OwnerRoutes.privacyPolicy),
                               ),
-                              const Divider(height: 1, indent: 72),
+                              const Divider(height: 1, indent: 56),
                               _PremiumListTile(
-                                icon: Icons.cookie,
+                                icon: Icons.cookie_outlined,
                                 title: l10n.ownerProfileCookiesPolicy,
                                 subtitle: l10n.ownerProfileCookiesPolicySubtitle,
                                 onTap: () => context.push(OwnerRoutes.cookiesPolicy),
@@ -328,7 +326,7 @@ class ProfileScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   );
@@ -420,7 +418,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-/// Premium List Tile widget
+/// Compact List Tile widget
 class _PremiumListTile extends StatefulWidget {
   final IconData icon;
   final String title;
@@ -449,32 +447,31 @@ class _PremiumListTileState extends State<_PremiumListTile> {
       onExit: (_) => !isDisabled ? setState(() => _isHovered = false) : null,
       cursor: isDisabled ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
           color: _isHovered && !isDisabled ? AppColors.primary.withValues(alpha: 0.04) : Colors.transparent,
           borderRadius: widget.isLast
-              ? BorderRadius.only(
-                  bottomLeft: Radius.circular(isMobile ? 12 : 16),
-                  bottomRight: Radius.circular(isMobile ? 12 : 16),
-                )
+              ? const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12))
               : BorderRadius.zero,
         ),
         child: Opacity(
           opacity: isDisabled ? 0.4 : 1.0,
           child: ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: isMobile ? 10 : 12),
+            dense: true,
+            visualDensity: const VisualDensity(vertical: -1),
+            contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 4 : 6),
             leading: Container(
-              padding: EdgeInsets.all(isMobile ? 8 : 10),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(widget.icon, color: AppColors.primary, size: isMobile ? 20 : 22),
+              child: Icon(widget.icon, color: AppColors.primary, size: isMobile ? 18 : 20),
             ),
             title: Text(
               widget.title,
               style: TextStyle(
-                fontSize: isMobile ? 15 : 16,
+                fontSize: isMobile ? 14 : 15,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
               ),
@@ -483,15 +480,15 @@ class _PremiumListTileState extends State<_PremiumListTile> {
                 ? Text(
                     widget.subtitle as String,
                     style: TextStyle(
-                      fontSize: isMobile ? 13 : 14,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: isMobile ? 12 : 13,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                     ),
                   )
                 : widget.subtitle as Widget?,
             trailing: Icon(
               Icons.chevron_right_rounded,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              size: isMobile ? 20 : 24,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              size: isMobile ? 18 : 20,
             ),
             onTap: widget.onTap,
           ),
@@ -501,7 +498,7 @@ class _PremiumListTileState extends State<_PremiumListTile> {
   }
 }
 
-/// Premium Logout Tile
+/// Compact Logout Tile
 class _LogoutTile extends StatefulWidget {
   final VoidCallback onLogout;
 
@@ -525,33 +522,36 @@ class _LogoutTileState extends State<_LogoutTile> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: _isHovered ? AppColors.error.withValues(alpha: 0.06) : Colors.transparent,
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(isMobile ? 12 : 16),
-            bottomRight: Radius.circular(isMobile ? 12 : 16),
-          ),
+          color: _isHovered ? AppColors.error.withValues(alpha: 0.05) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: isMobile ? 10 : 12),
+          dense: true,
+          visualDensity: const VisualDensity(vertical: -1),
+          contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 4 : 6),
           leading: Container(
-            padding: EdgeInsets.all(isMobile ? 8 : 10),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: AppColors.error.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.logout_rounded, color: AppColors.error, size: isMobile ? 20 : 22),
+            child: Icon(Icons.logout_rounded, color: AppColors.error, size: isMobile ? 18 : 20),
           ),
           title: Text(
             l10n.ownerProfileLogout,
-            style: TextStyle(fontSize: isMobile ? 15 : 16, fontWeight: FontWeight.w600, color: AppColors.error),
+            style: TextStyle(fontSize: isMobile ? 14 : 15, fontWeight: FontWeight.w600, color: AppColors.error),
           ),
           subtitle: Text(
             l10n.ownerProfileLogoutSubtitle,
-            style: TextStyle(fontSize: isMobile ? 13 : 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+            style: TextStyle(fontSize: isMobile ? 12 : 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.55)),
           ),
-          trailing: Icon(Icons.chevron_right_rounded, color: AppColors.error, size: isMobile ? 20 : 24),
+          trailing: Icon(
+            Icons.chevron_right_rounded,
+            color: AppColors.error.withValues(alpha: 0.7),
+            size: isMobile ? 18 : 20,
+          ),
           onTap: widget.onLogout,
         ),
       ),

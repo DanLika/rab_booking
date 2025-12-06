@@ -221,29 +221,11 @@ class _AnalyticsContent extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Revenue Chart (left)
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SectionTitle(title: l10n.ownerAnalyticsRevenueOverTime),
-              const SizedBox(height: 12),
-              _RevenueChart(data: analytics.revenueHistory),
-            ],
-          ),
-        ),
+        // Revenue Chart (left) - header je unutar kartice
+        Expanded(child: _RevenueChart(data: analytics.revenueHistory)),
         const SizedBox(width: 16), // Spacing between charts
-        // Bookings Chart (right)
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SectionTitle(title: l10n.ownerAnalyticsBookingsOverTime),
-              const SizedBox(height: 12),
-              _BookingsChart(data: analytics.bookingHistory),
-            ],
-          ),
-        ),
+        // Bookings Chart (right) - header je unutar kartice
+        Expanded(child: _BookingsChart(data: analytics.bookingHistory)),
       ],
     );
   }
@@ -253,15 +235,11 @@ class _AnalyticsContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Revenue Chart
-        _SectionTitle(title: l10n.ownerAnalyticsRevenueOverTime),
-        const SizedBox(height: 12),
+        // Revenue Chart - header je unutar kartice
         _RevenueChart(data: analytics.revenueHistory),
         SizedBox(height: isMobile ? 16 : 20),
 
-        // Bookings Chart
-        _SectionTitle(title: l10n.ownerAnalyticsBookingsOverTime),
-        const SizedBox(height: 12),
+        // Bookings Chart - header je unutar kartice
         _BookingsChart(data: analytics.bookingHistory),
       ],
     );
@@ -272,13 +250,11 @@ class _AnalyticsContent extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top Properties + Bookings by Source (left)
+        // Top Properties + Bookings by Source (left) - headeri su unutar kartica
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _SectionTitle(title: l10n.ownerAnalyticsTopProperties),
-              const SizedBox(height: 12),
               _TopPropertiesList(properties: analytics.topPerformingProperties),
               const SizedBox(height: 20),
               _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
@@ -286,20 +262,13 @@ class _AnalyticsContent extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16), // Spacing between sections
-        // Widget Analytics (right)
+        // Widget Analytics (right) - header je unutar kartice
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SectionTitle(title: l10n.ownerAnalyticsWidgetPerformance),
-              const SizedBox(height: 12),
-              _WidgetAnalyticsCard(
-                widgetBookings: analytics.widgetBookings,
-                totalBookings: analytics.totalBookings,
-                widgetRevenue: analytics.widgetRevenue,
-                totalRevenue: analytics.totalRevenue,
-              ),
-            ],
+          child: _WidgetAnalyticsCard(
+            widgetBookings: analytics.widgetBookings,
+            totalBookings: analytics.totalBookings,
+            widgetRevenue: analytics.widgetRevenue,
+            totalRevenue: analytics.totalRevenue,
           ),
         ),
       ],
@@ -311,15 +280,11 @@ class _AnalyticsContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top Properties
-        _SectionTitle(title: l10n.ownerAnalyticsTopProperties),
-        const SizedBox(height: 12),
+        // Top Properties - header je unutar kartice
         _TopPropertiesList(properties: analytics.topPerformingProperties),
         SizedBox(height: isMobile ? 16 : 20),
 
-        // Widget Analytics
-        _SectionTitle(title: l10n.ownerAnalyticsWidgetPerformance),
-        const SizedBox(height: 12),
+        // Widget Analytics - header je unutar kartice
         _WidgetAnalyticsCard(
           widgetBookings: analytics.widgetBookings,
           totalBookings: analytics.totalBookings,
@@ -329,21 +294,6 @@ class _AnalyticsContent extends StatelessWidget {
         const SizedBox(height: 12),
         _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
       ],
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle({required this.title}); // ignore: prefer_const_constructors_in_immutables
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Text(
-      title,
-      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
     );
   }
 }
@@ -436,6 +386,7 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final spacing = isMobile ? 12.0 : 16.0;
 
@@ -452,88 +403,90 @@ class _MetricCard extends StatelessWidget {
       cardWidth = 280.0;
     }
 
-    // Use the provided color for shadow
-    final primaryColor = gradientColor;
+    // Neutralna pozadina umjesto šarenih gradijenata
+    final cardBgColor = isDark ? const Color(0xFF1E1E28) : Colors.white;
+    final borderColor = isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight;
 
-    // Create theme-aware gradient with alpha fade
-    final gradient = _createThemeGradient(context, gradientColor);
+    // Accent boja samo za ikonu
+    final accentColor = gradientColor;
 
-    // Theme-aware text and icon colors - white on gradient
-    const textColor = Colors.white;
-    const iconColor = Colors.white;
-    final iconBgColor = Colors.white.withValues(alpha: 0.2);
+    // Tekst boje - prilagođene temi
+    final valueColor = theme.colorScheme.onSurface;
+    final titleColor = theme.colorScheme.onSurface.withValues(alpha: 0.8);
+    final subtitleColor = theme.colorScheme.onSurface.withValues(alpha: 0.6);
 
     return Container(
       width: cardWidth,
       height: isMobile ? 160 : 180,
       constraints: const BoxConstraints(maxWidth: 320),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
+        color: cardBgColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(20)),
-          padding: EdgeInsets.all(isMobile ? 14 : 18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Icon container
-              Container(
-                padding: EdgeInsets.all(isMobile ? 10 : 12),
-                decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(14)),
-                child: Icon(icon, color: iconColor, size: isMobile ? 22 : 26),
+      child: Padding(
+        padding: EdgeInsets.all(isMobile ? 14 : 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Icon container - jedini element s bojom
+            Container(
+              padding: EdgeInsets.all(isMobile ? 10 : 12),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
-              SizedBox(height: isMobile ? 8 : 12),
+              child: Icon(icon, color: accentColor, size: isMobile ? 22 : 26),
+            ),
+            SizedBox(height: isMobile ? 8 : 12),
 
-              // Value
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  value,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                    height: 1.0,
-                    letterSpacing: 0,
-                    fontSize: isMobile ? 24 : 28,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                ),
-              ),
-              SizedBox(height: isMobile ? 6 : 8),
-
-              // Title
-              Text(
-                title,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.w500,
-                  height: 1.3,
-                  fontSize: isMobile ? 12 : 13,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              // Subtitle
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: textColor.withValues(alpha: 0.9),
-                  height: 1.2,
-                  fontSize: isMobile ? 10 : 11,
+            // Value - velika vrijednost
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: valueColor,
+                  height: 1.0,
+                  letterSpacing: 0,
+                  fontSize: isMobile ? 24 : 28,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-            ],
-          ),
+            ),
+            SizedBox(height: isMobile ? 6 : 8),
+
+            // Title
+            Text(
+              title,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: titleColor,
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+                fontSize: isMobile ? 12 : 13,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            // Subtitle
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: subtitleColor,
+                height: 1.2,
+                fontSize: isMobile ? 10 : 11,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -553,17 +506,17 @@ class _RevenueChart extends StatelessWidget {
 
     if (data.isEmpty) {
       return SizedBox(
-        height: 300,
+        height: 200,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.insert_chart_outlined_rounded,
-                size: 48,
+                size: 40,
                 color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
                 l10n.ownerAnalyticsNoData,
                 style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -576,64 +529,67 @@ class _RevenueChart extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Responsive chart height - INCREASED
+        // Responsive chart height - optimized for less scrolling
         final screenWidth = constraints.maxWidth;
         final chartHeight = screenWidth > 900
-            ? 400.0 // Desktop (was 300)
+            ? 300.0 // Desktop
             : screenWidth > 600
-            ? 350.0 // Tablet (was 250)
-            : 300.0; // Mobile (was 200)
+            ? 260.0 // Tablet
+            : 220.0; // Mobile
 
         return SizedBox(
           height: chartHeight,
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
               child: Container(
                 decoration: BoxDecoration(
                   color: context.gradients.cardBackground,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(isMobile ? 16 : 20),
+                  padding: EdgeInsets.all(isMobile ? 12 : 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Section header with minimalist icon
+                      // Section header - compact
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(Icons.show_chart, color: theme.colorScheme.primary, size: 18),
+                            child: Icon(Icons.show_chart, color: theme.colorScheme.primary, size: 16),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   l10n.ownerAnalyticsRevenueTitle,
-                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
                                   l10n.ownerAnalyticsRevenueSubtitle,
-                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       // Chart
                       Expanded(
                         child: Chart(
@@ -706,17 +662,17 @@ class _BookingsChart extends StatelessWidget {
 
     if (data.isEmpty) {
       return SizedBox(
-        height: 300,
+        height: 200,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.event_busy_rounded,
-                size: 48,
+                size: 40,
                 color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
                 l10n.ownerAnalyticsNoData,
                 style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -729,64 +685,67 @@ class _BookingsChart extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Responsive chart height - INCREASED
+        // Responsive chart height - optimized for less scrolling
         final screenWidth = constraints.maxWidth;
         final chartHeight = screenWidth > 900
-            ? 400.0 // Desktop (was 300)
+            ? 300.0 // Desktop
             : screenWidth > 600
-            ? 350.0 // Tablet (was 250)
-            : 300.0; // Mobile (was 200)
+            ? 260.0 // Tablet
+            : 220.0; // Mobile
 
         return SizedBox(
           height: chartHeight,
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
               child: Container(
                 decoration: BoxDecoration(
                   color: context.gradients.cardBackground,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(isMobile ? 16 : 20),
+                  padding: EdgeInsets.all(isMobile ? 12 : 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Section header with minimalist icon
+                      // Section header - compact
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(Icons.event, color: theme.colorScheme.primary, size: 18),
+                            child: Icon(Icons.event, color: theme.colorScheme.primary, size: 16),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   l10n.ownerAnalyticsBookingsTitle,
-                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
                                   l10n.ownerAnalyticsBookingsSubtitle,
-                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       // Chart
                       Expanded(
                         child: Chart(
@@ -855,28 +814,28 @@ class _TopPropertiesList extends StatelessWidget {
     if (properties.isEmpty) {
       return Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           child: Container(
             decoration: BoxDecoration(
               color: context.gradients.cardBackground,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(24),
               child: Center(
                 child: Column(
                   children: [
                     Icon(
                       Icons.home_work_outlined,
-                      size: 48,
+                      size: 40,
                       color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     Text(
                       l10n.ownerAnalyticsNoData,
                       style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -892,50 +851,57 @@ class _TopPropertiesList extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
           ),
           child: Padding(
-            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section header with minimalist icon
+                // Section header - compact
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.home_work, color: theme.colorScheme.primary, size: 18),
+                      child: Icon(Icons.home_work, color: theme.colorScheme.primary, size: 16),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        l10n.ownerAnalyticsTopProperties,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.ownerAnalyticsTopProperties,
+                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            l10n.ownerAnalyticsPropertiesSubtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.ownerAnalyticsPropertiesSubtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
 
                 // Properties list
                 ListView.separated(
@@ -984,20 +950,23 @@ class _TopPropertiesList extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.star, size: 14, color: AppColors.star),
-                                const SizedBox(width: 2),
-                                Text(
-                                  property.rating.toStringAsFixed(1),
-                                  style: AppTypography.bodySmall,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
+                            // Prikaži rating samo ako postoji (> 0)
+                            if (property.rating > 0) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.star, size: 14, color: AppColors.star),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    property.rating.toStringAsFixed(1),
+                                    style: AppTypography.bodySmall,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -1039,50 +1008,57 @@ class _WidgetAnalyticsCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
           ),
           child: Padding(
-            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section header with minimalist icon
+                // Section header - compact
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.widgets, color: theme.colorScheme.primary, size: 18),
+                      child: Icon(Icons.widgets, color: theme.colorScheme.primary, size: 16),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        l10n.ownerAnalyticsWidgetPerformance,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.ownerAnalyticsWidgetPerformance,
+                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            l10n.ownerAnalyticsWidgetSubtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.ownerAnalyticsWidgetSubtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
 
                 // Widget Bookings Row
                 Row(
@@ -1272,46 +1248,53 @@ class _BookingsBySourceChart extends StatelessWidget {
         boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
           ),
           child: Padding(
-            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section header with minimalist icon
+                // Section header - compact
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.source, color: theme.colorScheme.primary, size: 18),
+                      child: Icon(Icons.source, color: theme.colorScheme.primary, size: 16),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        l10n.ownerAnalyticsBookingsBySource,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.ownerAnalyticsBookingsBySource,
+                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            l10n.ownerAnalyticsSourceSubtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.ownerAnalyticsSourceSubtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 ...displayEntries.map((sourceEntry) {
                   final source = sourceEntry.key;
                   final count = sourceEntry.value;
@@ -1427,17 +1410,4 @@ class _BookingsBySourceChart extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Helper function to create theme-aware gradient with alpha fade
-/// Uses single color with alpha fade for consistent purple-fade pattern
-Gradient _createThemeGradient(BuildContext context, Color baseColor) {
-  return LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      baseColor,
-      baseColor.withValues(alpha: 0.7), // 70% opacity fade
-    ],
-  );
 }

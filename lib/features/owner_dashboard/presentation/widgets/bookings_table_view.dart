@@ -67,46 +67,59 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                   color: theme.colorScheme.primaryContainer,
                   boxShadow: AppShadows.getElevation(2, isDark: isDark),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
                     // Selection count badge with gradient
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.onPrimary),
-                          const SizedBox(width: 6),
-                          Text(
-                            l10n.ownerTableSelected(_selectedBookingIds.length),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.onPrimary),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                l10n.ownerTableSelected(_selectedBookingIds.length),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-
-                    const Spacer(),
-
-                    // Clear selection button
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(_selectedBookingIds.clear);
-                      },
-                      icon: const Icon(Icons.close, size: 18),
-                      label: Text(l10n.ownerTableClearSelection),
-                      style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
 
                     const SizedBox(width: 8),
+
+                    // Clear selection button - icon only on narrow screens
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Use icon-only button to save space
+                        return TextButton.icon(
+                          onPressed: () {
+                            setState(_selectedBookingIds.clear);
+                          },
+                          icon: const Icon(Icons.close, size: 18),
+                          label: Text(l10n.ownerTableClearSelection, overflow: TextOverflow.ellipsis),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(width: 4),
 
                     // Bulk actions MenuAnchor
                     MenuAnchor(

@@ -242,9 +242,10 @@ class DashboardOverviewTab extends ConsumerWidget {
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 900;
 
+    // Samo 4 najvažnije metrike za Overview - ostale su na Analytics
     return Wrap(
-      spacing: isMobile ? 12.0 : 16.0,
-      runSpacing: isMobile ? 12.0 : 16.0,
+      spacing: isMobile ? 10.0 : 12.0,
+      runSpacing: isMobile ? 10.0 : 12.0,
       alignment: WrapAlignment.center,
       children: [
         _buildStatCard(
@@ -261,9 +262,9 @@ class DashboardOverviewTab extends ConsumerWidget {
         ),
         _buildStatCard(
           context: context,
-          title: l10n.ownerYearlyRevenue,
-          value: '€${stats.yearlyRevenue.toStringAsFixed(0)}',
-          icon: Icons.trending_up_rounded,
+          title: l10n.ownerMonthlyBookings,
+          value: '${stats.monthlyBookings}',
+          icon: Icons.calendar_today_rounded,
           gradient: _createThemeGradient(
             context,
             _getPurpleShade(context, 4), // Light purple
@@ -274,9 +275,9 @@ class DashboardOverviewTab extends ConsumerWidget {
         ),
         _buildStatCard(
           context: context,
-          title: l10n.ownerMonthlyBookings,
-          value: '${stats.monthlyBookings}',
-          icon: Icons.calendar_today_rounded,
+          title: l10n.ownerUpcomingCheckIns,
+          value: '${stats.upcomingCheckIns}',
+          icon: Icons.schedule_rounded,
           gradient: _createThemeGradient(
             context,
             _getPurpleShade(context, 5), // Lighter purple
@@ -287,9 +288,9 @@ class DashboardOverviewTab extends ConsumerWidget {
         ),
         _buildStatCard(
           context: context,
-          title: l10n.ownerUpcomingCheckIns,
-          value: '${stats.upcomingCheckIns}',
-          icon: Icons.schedule_rounded,
+          title: l10n.ownerOccupancyRate,
+          value: '${stats.occupancyRate.toStringAsFixed(1)}%',
+          icon: Icons.analytics_rounded,
           gradient: _createThemeGradient(
             context,
             _getPurpleShade(context, 2), // Dark purple
@@ -297,32 +298,6 @@ class DashboardOverviewTab extends ConsumerWidget {
           isMobile: isMobile,
           isTablet: isTablet,
           animationDelay: 300,
-        ),
-        _buildStatCard(
-          context: context,
-          title: l10n.ownerActiveProperties,
-          value: '${stats.activeProperties}',
-          icon: Icons.villa_rounded,
-          gradient: _createThemeGradient(
-            context,
-            _getPurpleShade(context, 2), // Dark purple (darker shade)
-          ),
-          isMobile: isMobile,
-          isTablet: isTablet,
-          animationDelay: 400,
-        ),
-        _buildStatCard(
-          context: context,
-          title: l10n.ownerOccupancyRate,
-          value: '${stats.occupancyRate.toStringAsFixed(1)}%',
-          icon: Icons.analytics_rounded,
-          gradient: _createThemeGradient(
-            context,
-            _getPurpleShade(context, 1), // Darkest purple
-          ),
-          isMobile: isMobile,
-          isTablet: isTablet,
-          animationDelay: 500,
         ),
       ],
     );
@@ -339,6 +314,7 @@ class DashboardOverviewTab extends ConsumerWidget {
     int animationDelay = 0,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Calculate responsive width
     final screenWidth = MediaQuery.of(context).size.width;
@@ -356,13 +332,18 @@ class DashboardOverviewTab extends ConsumerWidget {
       cardWidth = 280.0;
     }
 
-    // Extract primary color from gradient for shadow
-    final primaryColor = (gradient.colors.isNotEmpty) ? gradient.colors.first : Theme.of(context).colorScheme.primary;
+    // Extract accent color from gradient for icon
+    final accentColor = (gradient.colors.isNotEmpty) ? gradient.colors.first : Theme.of(context).colorScheme.primary;
 
-    // Theme-aware text and icon colors - full opacity
-    final textColor = Colors.white;
-    final iconColor = Colors.white;
-    final iconBgColor = Colors.white.withAlpha((0.2 * 255).toInt());
+    // Neutralna pozadina umjesto šarenih gradijenata
+    final cardBgColor = isDark ? const Color(0xFF1E1E28) : Colors.white;
+    final borderColor = isDark
+        ? const Color(0xFF3D3D4A) // AppColors.sectionDividerDark
+        : const Color(0xFFE8E8F0); // AppColors.sectionDividerLight
+
+    // Tekst boje - prilagođene temi
+    final valueColor = theme.colorScheme.onSurface;
+    final titleColor = theme.colorScheme.onSurface.withValues(alpha: 0.8);
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 600 + animationDelay),
@@ -376,62 +357,59 @@ class DashboardOverviewTab extends ConsumerWidget {
       },
       child: Container(
         width: cardWidth,
-        height: isMobile ? 160 : 180,
-        constraints: const BoxConstraints(maxWidth: 320),
+        height: isMobile ? 130 : 150, // Kompaktnije kartice
+        constraints: const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: primaryColor.withAlpha((0.12 * 255).toInt()), blurRadius: 24, offset: const Offset(0, 8)),
-          ],
+          color: cardBgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+          boxShadow: isDark
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(0, 2))]
+              : [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 6, offset: const Offset(0, 2))],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(20)),
-            padding: EdgeInsets.all(isMobile ? 14 : 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Icon container
-                Container(
-                  padding: EdgeInsets.all(isMobile ? 10 : 12),
-                  decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(14)),
-                  child: Icon(icon, color: iconColor, size: isMobile ? 22 : 26),
+        child: Padding(
+          padding: EdgeInsets.all(isMobile ? 12 : 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon container - kompaktniji
+              Container(
+                padding: EdgeInsets.all(isMobile ? 8 : 10),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                SizedBox(height: isMobile ? 8 : 12),
+                child: Icon(icon, color: accentColor, size: isMobile ? 20 : 22),
+              ),
+              SizedBox(height: isMobile ? 6 : 8),
 
-                // Value
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    value,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                      height: 1.0,
-                      letterSpacing: 0,
-                      fontSize: 32,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(height: isMobile ? 6 : 8),
-
-                // Title
-                Text(
-                  title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w500,
-                    height: 1.3,
+              // Value - velika vrijednost
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  value,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: valueColor,
+                    height: 1.0,
+                    letterSpacing: 0,
+                    fontSize: isMobile ? 24 : 28,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+              SizedBox(height: isMobile ? 4 : 6),
+
+              // Title
+              Text(
+                title,
+                style: theme.textTheme.bodySmall?.copyWith(color: titleColor, fontWeight: FontWeight.w500, height: 1.2),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ),

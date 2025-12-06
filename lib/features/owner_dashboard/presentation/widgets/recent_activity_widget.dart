@@ -139,44 +139,40 @@ class RecentActivityWidget extends StatelessWidget {
           // Activities list
           if (activities.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 56, horizontal: AppDimensions.spaceL),
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: AppDimensions.spaceL),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Enhanced icon with gradient background
+                    // Kompaktnija ikona
                     Container(
-                      width: 100,
-                      height: 100,
+                      width: 64,
+                      height: 64,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
-                            theme.colorScheme.primary.withAlpha((0.05 * 255).toInt()),
-                          ],
-                        ),
+                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.notifications_none_rounded,
-                        size: 48,
+                        size: 32,
                         color: theme.colorScheme.primary.withAlpha((0.6 * 255).toInt()),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     // Title
                     Text(
                       l10n.ownerNoRecentActivities,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     // Subtitle
                     Text(
                       l10n.ownerRecentActivitiesDescription,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                     ),
@@ -222,35 +218,27 @@ class _ActivityTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: Container(
-        width: 48,
-        height: 48,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [activity.color.withAlpha((0.15 * 255).toInt()), activity.color.withAlpha((0.08 * 255).toInt())],
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: activity.color.withAlpha((0.2 * 255).toInt())),
+          color: activity.color.withAlpha((0.12 * 255).toInt()),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(activity.icon, color: activity.color, size: 24),
+        child: Icon(activity.icon, color: activity.color, size: 20),
       ),
       title: Text(
         activity.title,
-        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Text(
-          activity.subtitle,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+      subtitle: Text(
+        activity.subtitle,
+        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

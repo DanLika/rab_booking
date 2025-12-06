@@ -218,23 +218,23 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     // Create vertical scroll sync listener for unit names column
     _verticalScrollSyncListener = () {
       if (_isSyncingScroll) return;
+      if (!_verticalScrollController.hasClients) return;
 
       final mainOffset = _verticalScrollController.offset;
 
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-
-        _isSyncingScroll = true;
-
-        try {
-          // Sync unit names scroll with main vertical scroll
-          if (_unitNamesScrollController.hasClients && (_unitNamesScrollController.offset - mainOffset).abs() > 0.5) {
-            _unitNamesScrollController.jumpTo(mainOffset);
+      // Sync immediately for smoother scrolling
+      _isSyncingScroll = true;
+      try {
+        if (_unitNamesScrollController.hasClients) {
+          final maxExtent = _unitNamesScrollController.position.maxScrollExtent;
+          final clampedOffset = mainOffset.clamp(0.0, maxExtent);
+          if ((_unitNamesScrollController.offset - clampedOffset).abs() > 0.5) {
+            _unitNamesScrollController.jumpTo(clampedOffset);
           }
-        } finally {
-          _isSyncingScroll = false;
         }
-      });
+      } finally {
+        _isSyncingScroll = false;
+      }
     };
 
     // Add vertical scroll sync listener
@@ -740,22 +740,42 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
     return SizedBox(
       width: unitColumnWidth,
-      child: SingleChildScrollView(
-        controller: _unitNamesScrollController,
-        physics: const NeverScrollableScrollPhysics(), // Disable manual scroll, sync only
-        child: Column(
-          children: units.map((unit) {
-            // Calculate dynamic height for this unit based on booking stacks
-            final bookings = bookingsByUnit[unit.id] ?? [];
-            final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
-            final dynamicHeight = baseRowHeight * maxStackCount;
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          // Sync main vertical scroll when unit names column is scrolled
+          if (notification is ScrollUpdateNotification && !_isSyncingScroll) {
+            _isSyncingScroll = true;
+            try {
+              if (_verticalScrollController.hasClients) {
+                final maxExtent = _verticalScrollController.position.maxScrollExtent;
+                final clampedOffset = _unitNamesScrollController.offset.clamp(0.0, maxExtent);
+                if ((_verticalScrollController.offset - clampedOffset).abs() > 0.5) {
+                  _verticalScrollController.jumpTo(clampedOffset);
+                }
+              }
+            } finally {
+              _isSyncingScroll = false;
+            }
+          }
+          return false;
+        },
+        child: SingleChildScrollView(
+          controller: _unitNamesScrollController,
+          physics: const ClampingScrollPhysics(), // Enable manual scroll with sync
+          child: Column(
+            children: units.map((unit) {
+              // Calculate dynamic height for this unit based on booking stacks
+              final bookings = bookingsByUnit[unit.id] ?? [];
+              final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
+              final dynamicHeight = baseRowHeight * maxStackCount;
 
-            return TimelineUnitNameCell(
-              unit: unit,
-              unitRowHeight: dynamicHeight,
-              onTap: widget.onUnitNameTap != null ? () => widget.onUnitNameTap!(unit) : null,
-            );
-          }).toList(),
+              return TimelineUnitNameCell(
+                unit: unit,
+                unitRowHeight: dynamicHeight,
+                onTap: widget.onUnitNameTap != null ? () => widget.onUnitNameTap!(unit) : null,
+              );
+            }).toList(),
+          ),
         ),
       ),
     );

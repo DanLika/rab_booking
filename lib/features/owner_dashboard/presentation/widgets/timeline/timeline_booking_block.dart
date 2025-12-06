@@ -42,6 +42,30 @@ class TimelineBookingBlock extends StatefulWidget {
     required this.onLongPress,
   });
 
+  /// Calculate number of nights between check-in and check-out
+  ///
+  /// Normalizes dates to midnight for accurate day difference calculation.
+  static int calculateNights(DateTime checkIn, DateTime checkOut) {
+    final normalizedCheckIn = DateTime(checkIn.year, checkIn.month, checkIn.day);
+    final normalizedCheckOut = DateTime(checkOut.year, checkOut.month, checkOut.day);
+    return normalizedCheckOut.difference(normalizedCheckIn).inDays;
+  }
+
+  /// Check if a booking has conflicts with other bookings in the same unit
+  ///
+  /// Uses BookingOverlapDetector to find overlapping bookings.
+  static bool hasBookingConflict(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
+    final conflicts = BookingOverlapDetector.getConflictingBookings(
+      unitId: booking.unitId,
+      newCheckIn: booking.checkIn,
+      newCheckOut: booking.checkOut,
+      bookingIdToExclude: booking.id,
+      allBookings: allBookingsByUnit,
+    );
+
+    return conflicts.isNotEmpty;
+  }
+
   @override
   State<TimelineBookingBlock> createState() => _TimelineBookingBlockState();
 }
@@ -56,7 +80,7 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
     final unitRowHeight = widget.unitRowHeight;
     final allBookingsByUnit = widget.allBookingsByUnit;
     final blockHeight = unitRowHeight - 16;
-    final nights = calculateNights(booking.checkIn, booking.checkOut);
+    final nights = TimelineBookingBlock.calculateNights(booking.checkIn, booking.checkOut);
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Get responsive dimensions from CalendarGridCalculator
@@ -65,7 +89,7 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
     final bookingPadding = CalendarGridCalculator.getBookingPadding(screenWidth);
 
     // ENHANCED: Detect conflicts with other bookings in the same unit
-    final hasConflict = hasBookingConflict(booking, allBookingsByUnit);
+    final hasConflict = TimelineBookingBlock.hasBookingConflict(booking, allBookingsByUnit);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -174,30 +198,6 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
         ),
       ),
     );
-  }
-
-  /// Calculate number of nights between check-in and check-out
-  ///
-  /// Normalizes dates to midnight for accurate day difference calculation.
-  static int calculateNights(DateTime checkIn, DateTime checkOut) {
-    final normalizedCheckIn = DateTime(checkIn.year, checkIn.month, checkIn.day);
-    final normalizedCheckOut = DateTime(checkOut.year, checkOut.month, checkOut.day);
-    return normalizedCheckOut.difference(normalizedCheckIn).inDays;
-  }
-
-  /// Check if a booking has conflicts with other bookings in the same unit
-  ///
-  /// Uses BookingOverlapDetector to find overlapping bookings.
-  static bool hasBookingConflict(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
-    final conflicts = BookingOverlapDetector.getConflictingBookings(
-      unitId: booking.unitId,
-      newCheckIn: booking.checkIn,
-      newCheckOut: booking.checkOut,
-      bookingIdToExclude: booking.id,
-      allBookings: allBookingsByUnit,
-    );
-
-    return conflicts.isNotEmpty;
   }
 
   /// Get contrasting text color based on background luminance

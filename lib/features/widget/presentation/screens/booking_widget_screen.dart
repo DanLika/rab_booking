@@ -616,7 +616,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         SnackBarHelper.showError(
           context: context,
-          message: 'Error loading booking: $e',
+          message: WidgetTranslations.of(context).errorLoadingBooking(e.toString()),
           duration: const Duration(seconds: 5),
         );
 
@@ -2062,7 +2062,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           SnackBarHelper.showWarning(
             context: context,
-            message: 'Booking not found. Please check your email for confirmation.',
+            message: WidgetTranslations.of(context).bookingNotFoundCheckEmail,
             duration: const Duration(seconds: 5),
           );
         }
@@ -2169,7 +2169,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: 'Error loading booking: $e',
+          message: WidgetTranslations.of(context).errorLoadingBooking(e.toString()),
           duration: const Duration(seconds: 5),
         );
       }
@@ -2241,7 +2241,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
           SnackBarHelper.showError(
             context: context,
-            message: 'Email verification expired. Please verify again before booking.',
+            message: WidgetTranslations.of(context).errorEmailVerificationExpired,
           );
         }
 
@@ -2307,7 +2307,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
           SnackBarHelper.showSuccess(
             context: context,
-            message: 'Email already verified ✓ (valid for ${status.remainingMinutes} min)',
+            message: WidgetTranslations.of(context).emailAlreadyVerified(status.remainingMinutes),
           );
         }
 

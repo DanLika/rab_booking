@@ -1156,20 +1156,6 @@ class WidgetTranslations {
   // ERROR MESSAGES
   // ============================================================================
 
-  String get errorLoadingBooking {
-    switch (locale.languageCode) {
-      case 'hr':
-        return 'Greška pri učitavanju rezervacije';
-      case 'de':
-        return 'Fehler beim Laden der Buchung';
-      case 'it':
-        return 'Errore nel caricamento della prenotazione';
-      case 'en':
-      default:
-        return 'Error loading booking';
-    }
-  }
-
   String get missingPropertyParameter {
     switch (locale.languageCode) {
       case 'hr':
@@ -3854,6 +3840,76 @@ class WidgetTranslations {
       case 'en':
       default:
         return 'Verification code sent! Check your inbox.';
+    }
+  }
+
+  String errorLoadingBooking(String error) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Greška pri učitavanju rezervacije: $error';
+      case 'de':
+        return 'Fehler beim Laden der Buchung: $error';
+      case 'it':
+        return 'Errore nel caricamento della prenotazione: $error';
+      case 'en':
+      default:
+        return 'Error loading booking: $error';
+    }
+  }
+
+  String get bookingNotFoundCheckEmail {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Rezervacija nije pronađena. Molimo provjerite email za potvrdu.';
+      case 'de':
+        return 'Buchung nicht gefunden. Bitte überprüfen Sie Ihre E-Mail zur Bestätigung.';
+      case 'it':
+        return 'Prenotazione non trovata. Controlla la tua email per la conferma.';
+      case 'en':
+      default:
+        return 'Booking not found. Please check your email for confirmation.';
+    }
+  }
+
+  String get errorEmailVerificationExpired {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Verifikacija emaila je istekla. Molimo potvrdite ponovo prije rezervacije.';
+      case 'de':
+        return 'E-Mail-Verifizierung abgelaufen. Bitte vor der Buchung erneut bestätigen.';
+      case 'it':
+        return 'Verifica email scaduta. Per favore verifica di nuovo prima di prenotare.';
+      case 'en':
+      default:
+        return 'Email verification expired. Please verify again before booking.';
+    }
+  }
+
+  String emailAlreadyVerified(int minutes) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Email već potvrđen ✓ (vrijedi još $minutes min)';
+      case 'de':
+        return 'E-Mail bereits verifiziert ✓ (gültig für $minutes Min.)';
+      case 'it':
+        return 'Email già verificata ✓ (valida per $minutes min)';
+      case 'en':
+      default:
+        return 'Email already verified ✓ (valid for $minutes min)';
+    }
+  }
+
+  String maxQuantityReached(int max) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Maksimalna količina: $max';
+      case 'de':
+        return 'Maximale Menge: $max';
+      case 'it':
+        return 'Quantità massima: $max';
+      case 'en':
+      default:
+        return 'Maximum quantity: $max';
     }
   }
 

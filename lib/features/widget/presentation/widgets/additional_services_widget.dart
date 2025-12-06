@@ -207,7 +207,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                       if (service.maxQuantity != null && quantity >= service.maxQuantity!) {
                         SnackBarHelper.showWarning(
                           context: context,
-                          message: 'Maximum quantity: ${service.maxQuantity}',
+                          message: WidgetTranslations.of(context).maxQuantityReached(service.maxQuantity!),
                           duration: const Duration(seconds: 2),
                         );
                         return;

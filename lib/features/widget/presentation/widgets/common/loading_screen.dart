@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/widget_translations.dart';
 import '../../theme/minimalist_colors.dart';
 
 /// Loading screen displayed while booking widget is initializing.
@@ -16,18 +17,15 @@ class WidgetLoadingScreen extends StatelessWidget {
   /// Whether dark mode is active
   final bool isDarkMode;
 
-  /// Optional custom loading message
-  final String message;
+  /// Optional custom loading message (if null, uses localized default)
+  final String? message;
 
-  const WidgetLoadingScreen({
-    super.key,
-    required this.isDarkMode,
-    this.message = 'Loading booking widget...',
-  });
+  const WidgetLoadingScreen({super.key, required this.isDarkMode, this.message});
 
   @override
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+    final displayMessage = message ?? WidgetTranslations.of(context).loadingBookingWidget;
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
@@ -35,17 +33,9 @@ class WidgetLoadingScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: colors.buttonPrimary,
-            ),
+            CircularProgressIndicator(color: colors.buttonPrimary),
             const SizedBox(height: 24),
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: 16,
-                color: colors.textSecondary,
-              ),
-            ),
+            Text(displayMessage, style: TextStyle(fontSize: 16, color: colors.textSecondary)),
           ],
         ),
       ),

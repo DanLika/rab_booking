@@ -35,7 +35,7 @@ class CalendarHoverTooltip extends StatelessWidget {
     final formattedDate = dateFormatter.format(date);
 
     // Format price: "€85 / night" (localized)
-    final formattedPrice = price != null ? '€${price!.toStringAsFixed(0)} / ${t.perNightShort}' : 'N/A';
+    final formattedPrice = price != null ? '€${price!.toStringAsFixed(0)} / ${t.perNightShort}' : t.notAvailableShort;
 
     // Get status label (localized)
     final statusLabel = _getStatusLabel(status, t);

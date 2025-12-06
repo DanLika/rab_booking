@@ -275,7 +275,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   Widget _buildWeekDayHeaders(WidgetColorScheme colors) {
-    final weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final weekDays = WidgetTranslations.of(context).weekdaysShort;
 
     return Row(
       children: weekDays.map((day) {

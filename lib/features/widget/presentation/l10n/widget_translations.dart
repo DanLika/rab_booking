@@ -3745,6 +3745,34 @@ class WidgetTranslations {
     }
   }
 
+  String get loadingBookingWidget {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Učitavanje widgeta za rezervacije...';
+      case 'de':
+        return 'Buchungs-Widget wird geladen...';
+      case 'it':
+        return 'Caricamento widget prenotazioni...';
+      case 'en':
+      default:
+        return 'Loading booking widget...';
+    }
+  }
+
+  String get notAvailableShort {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'N/D';
+      case 'de':
+        return 'k.A.';
+      case 'it':
+        return 'N/D';
+      case 'en':
+      default:
+        return 'N/A';
+    }
+  }
+
   String get tooltipSwitchToLightMode {
     switch (locale.languageCode) {
       case 'hr':

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/constants/app_dimensions.dart';
 import '../../../../../l10n/app_localizations.dart';
 
 /// Timeline summary cell widget
 ///
-/// Displays daily statistics (guests, meals, check-ins, check-outs) in summary row.
+/// Displays daily statistics (guests, check-ins, check-outs) in summary row.
 /// Extracted from timeline_calendar_widget.dart for better maintainability.
 class TimelineSummaryCell extends StatelessWidget {
   /// The date for this summary
@@ -23,6 +22,7 @@ class TimelineSummaryCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Calculate statistics for this date
     int totalGuests = 0;
@@ -53,28 +53,38 @@ class TimelineSummaryCell extends StatelessWidget {
     final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
     final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
+    // Responsive sizing
+    final isNarrow = dayWidth < 60;
+
     return Container(
       width: dayWidth,
       decoration: BoxDecoration(
         color: isToday
-            ? AppColors.primary.withValues(alpha: 0.1)
+            ? AppColors.primary.withAlpha((0.15 * 255).toInt())
             : isWeekend
-            ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-            : theme.cardColor,
-        border: Border(left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3))),
+            ? (isDark ? const Color(0xFF2A2A35) : const Color(0xFFF5F5FA))
+            : (isDark ? const Color(0xFF1E1E28) : Colors.white),
+        border: Border(left: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight)),
       ),
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spaceXS, horizontal: AppDimensions.spaceXXS),
+      padding: EdgeInsets.symmetric(vertical: isNarrow ? 4 : 6, horizontal: isNarrow ? 2 : 4),
       child: Builder(
         builder: (context) {
           final l10n = AppLocalizations.of(context);
           return Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Guests
-              _buildSummaryItem(Icons.people, totalGuests.toString(), Colors.blue, l10n.ownerCalendarSummaryGuests),
-              const SizedBox(height: 8),
-              // Check-ins/Check-outs (combined)
-              _buildCombinedCheckInOut(checkIns, checkOuts, l10n),
+              // Guests badge
+              _buildStatBadge(
+                context,
+                Icons.people_alt_outlined,
+                totalGuests.toString(),
+                theme.colorScheme.primary,
+                l10n.ownerCalendarSummaryGuests,
+                isNarrow,
+              ),
+              SizedBox(height: isNarrow ? 4 : 6),
+              // Check-ins/Check-outs combined badge
+              _buildCheckInOutBadge(context, checkIns, checkOuts, l10n, isNarrow),
             ],
           );
         },
@@ -87,38 +97,81 @@ class TimelineSummaryCell extends StatelessWidget {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  /// Build a summary item row with icon, value, and tooltip
-  Widget _buildSummaryItem(IconData icon, String value, Color color, String tooltip) {
+  /// Build a stat badge with background
+  Widget _buildStatBadge(
+    BuildContext context,
+    IconData icon,
+    String value,
+    Color color,
+    String tooltip,
+    bool isNarrow,
+  ) {
     return Tooltip(
       message: tooltip,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
-          ),
-        ],
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 6, vertical: isNarrow ? 2 : 3),
+        decoration: BoxDecoration(color: color.withAlpha((0.15 * 255).toInt()), borderRadius: BorderRadius.circular(6)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: isNarrow ? 12 : 14, color: color),
+            SizedBox(width: isNarrow ? 2 : 4),
+            Text(
+              value,
+              style: TextStyle(fontSize: isNarrow ? 10 : 12, fontWeight: FontWeight.w700, color: color),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  /// Build combined check-in/check-out item
-  Widget _buildCombinedCheckInOut(int checkIns, int checkOuts, AppLocalizations l10n) {
+  /// Build combined check-in/check-out badge
+  Widget _buildCheckInOutBadge(
+    BuildContext context,
+    int checkIns,
+    int checkOuts,
+    AppLocalizations l10n,
+    bool isNarrow,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Tooltip(
       message: l10n.ownerCalendarSummaryArrivals(checkIns, checkOuts),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.swap_vert, size: 14, color: Colors.purple),
-          const SizedBox(width: 4),
-          Text(
-            '$checkIns/$checkOuts',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.purple),
-          ),
-        ],
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 6, vertical: isNarrow ? 2 : 3),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF0F0F5),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.login, size: isNarrow ? 10 : 12, color: AppColors.success),
+            SizedBox(width: isNarrow ? 1 : 2),
+            Text(
+              '$checkIns',
+              style: TextStyle(fontSize: isNarrow ? 9 : 11, fontWeight: FontWeight.w600, color: AppColors.success),
+            ),
+            Text(
+              '/',
+              style: TextStyle(
+                fontSize: isNarrow ? 9 : 11,
+                fontWeight: FontWeight.w400,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            Text(
+              '$checkOuts',
+              style: TextStyle(fontSize: isNarrow ? 9 : 11, fontWeight: FontWeight.w600, color: AppColors.error),
+            ),
+            SizedBox(width: isNarrow ? 1 : 2),
+            Icon(Icons.logout, size: isNarrow ? 10 : 12, color: AppColors.error),
+          ],
+        ),
       ),
     );
   }

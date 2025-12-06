@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../domain/models/date_range_selection.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/theme/app_colors.dart';
 
 /// Calendar top toolbar widget
 /// Shows date range picker, search, refresh, today button, add room, summary toggle, and notifications
@@ -121,12 +122,15 @@ class CalendarTopToolbar extends StatelessWidget {
 
           // Action buttons - FIXED OVERFLOW
           if (isCompact)
-            // COMPACT MODE: Only overflow menu
+            // COMPACT MODE: Only overflow menu with styled items
             PopupMenuButton<String>(
               icon: _buildCompactMenuIcon(theme, notificationCount),
               tooltip: l10n.ownerCalendarOptions,
-              position: PopupMenuPosition.under, // Dropdown opens below button
-              offset: const Offset(0, 8), // 8px below button
+              position: PopupMenuPosition.under,
+              offset: const Offset(0, 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              color: theme.brightness == Brightness.dark ? const Color(0xFF252530) : Colors.white,
+              elevation: 8,
               onSelected: (value) {
                 switch (value) {
                   case 'today':
@@ -151,79 +155,55 @@ class CalendarTopToolbar extends StatelessWidget {
               },
               itemBuilder: (context) {
                 final l10n = AppLocalizations.of(context);
+                final isDark = Theme.of(context).brightness == Brightness.dark;
                 return [
-                  PopupMenuItem(
+                  _buildStyledMenuItem(
                     value: 'today',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.today, size: 20),
-                        const SizedBox(width: 12),
-                        Text(l10n.ownerCalendarToday),
-                      ],
-                    ),
+                    icon: Icons.today,
+                    iconColor: AppColors.primary,
+                    label: l10n.ownerCalendarToday,
+                    isDark: isDark,
                   ),
                   if (onNotificationsTap != null)
-                    PopupMenuItem(
+                    _buildStyledMenuItem(
                       value: 'notifications',
-                      child: Row(
-                        children: [
-                          Badge(
-                            label: (notificationCount ?? 0) > 0 ? Text('$notificationCount') : null,
-                            isLabelVisible: (notificationCount ?? 0) > 0,
-                            child: const Icon(Icons.notifications, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(l10n.ownerCalendarNotifications),
-                        ],
-                      ),
+                      icon: Icons.notifications_outlined,
+                      iconColor: AppColors.warning,
+                      label: l10n.ownerCalendarNotifications,
+                      isDark: isDark,
+                      badge: notificationCount,
                     ),
                   if (onSearchTap != null)
-                    PopupMenuItem(
+                    _buildStyledMenuItem(
                       value: 'search',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.search, size: 20),
-                          const SizedBox(width: 12),
-                          Text(l10n.ownerCalendarSearch),
-                        ],
-                      ),
+                      icon: Icons.search,
+                      iconColor: AppColors.info,
+                      label: l10n.ownerCalendarSearch,
+                      isDark: isDark,
                     ),
                   if (onRefresh != null)
-                    PopupMenuItem(
+                    _buildStyledMenuItem(
                       value: 'refresh',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.refresh, size: 20, color: Colors.green),
-                          const SizedBox(width: 12),
-                          Text(l10n.ownerCalendarRefresh),
-                        ],
-                      ),
+                      icon: Icons.refresh,
+                      iconColor: AppColors.success,
+                      label: l10n.ownerCalendarRefresh,
+                      isDark: isDark,
                     ),
                   if (onFilterTap != null)
-                    PopupMenuItem(
+                    _buildStyledMenuItem(
                       value: 'filter',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.tune, size: 20, color: Colors.orange),
-                          const SizedBox(width: 12),
-                          Text(l10n.ownerCalendarFilters),
-                        ],
-                      ),
+                      icon: Icons.tune,
+                      iconColor: AppColors.warning,
+                      label: l10n.ownerCalendarFilters,
+                      isDark: isDark,
                     ),
                   if (showSummaryToggle && onSummaryToggleChanged != null)
-                    PopupMenuItem(
+                    _buildStyledMenuItem(
                       value: 'analytics',
-                      child: Row(
-                        children: [
-                          Icon(
-                            isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
-                            size: 20,
-                            color: isSummaryVisible ? theme.colorScheme.primary : Colors.blue,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats),
-                        ],
-                      ),
+                      icon: isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
+                      iconColor: isSummaryVisible ? AppColors.primary : AppColors.info,
+                      label: isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats,
+                      isDark: isDark,
                     ),
                 ];
               },
@@ -369,6 +349,49 @@ class CalendarTopToolbar extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+
+  /// Build styled popup menu item with icon badge
+  PopupMenuItem<String> _buildStyledMenuItem({
+    required String value,
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required bool isDark,
+    int? badge,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF8F8FA),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: iconColor.withAlpha((0.15 * 255).toInt()),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: badge != null && badge > 0
+                  ? Badge(
+                      label: Text(badge > 9 ? '9+' : '$badge', style: const TextStyle(fontSize: 10)),
+                      child: Icon(icon, size: 20, color: iconColor),
+                    )
+                  : Icon(icon, size: 20, color: iconColor),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

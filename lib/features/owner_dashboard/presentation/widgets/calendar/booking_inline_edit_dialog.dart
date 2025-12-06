@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
@@ -116,11 +117,8 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
                     const SizedBox(height: 16),
 
                     // Dates section title
-                    Text(
-                      l10n.bookingInlineEditDates,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
+                    _SectionHeader(icon: Icons.calendar_today_outlined, title: l10n.bookingInlineEditDates),
+                    const SizedBox(height: 12),
 
                     // Date fields - responsive layout
                     if (isMobile)
@@ -208,8 +206,10 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
             Container(
               padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
-                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
+                border: Border(
+                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                ),
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: isMobile
@@ -518,5 +518,31 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
   Color _getStatusColor(BookingStatus status) {
     // Use the color defined in the status enum
     return status.color;
+  }
+}
+
+/// Section header widget with icon and gradient accent
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: context.gradients.brandPrimary,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+      ],
+    );
   }
 }

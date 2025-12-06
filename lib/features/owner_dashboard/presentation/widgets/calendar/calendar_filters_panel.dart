@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
@@ -83,9 +84,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
+                    child: AutoSizeText(
                       l10n.calendarFiltersTitle,
                       style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      minFontSize: 14,
                     ),
                   ),
                   IconButton(
@@ -138,8 +141,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
-                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
+                border: Border(
+                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                ),
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: isMobile
@@ -253,7 +258,6 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildPropertyFilter() {
-    final theme = Theme.of(context);
     final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
 
     return propertiesAsync.when(
@@ -265,14 +269,8 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Objekti',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
+            _SectionHeader(icon: Icons.home_outlined, title: 'Objekti'),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -328,7 +326,6 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildUnitFilter() {
-    final theme = Theme.of(context);
     final unitsAsync = ref.watch(allOwnerUnitsProvider);
 
     return unitsAsync.when(
@@ -349,14 +346,8 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Jedinice',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
+            _SectionHeader(icon: Icons.meeting_room_outlined, title: 'Jedinice'),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -410,8 +401,6 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildStatusFilter() {
-    final theme = Theme.of(context);
-
     // Only show active booking statuses (pending, confirmed, cancelled, completed)
     final activeStatuses = [
       BookingStatus.pending,
@@ -423,11 +412,8 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Statusi',
-          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        const SizedBox(height: 8),
+        _SectionHeader(icon: Icons.info_outline, title: 'Statusi'),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -492,11 +478,8 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Izvori rezervacija',
-          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        const SizedBox(height: 8),
+        _SectionHeader(icon: Icons.source_outlined, title: 'Izvori rezervacija'),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -547,16 +530,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildDateRangeFilter() {
-    final theme = Theme.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Raspon datuma',
-          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        const SizedBox(height: 8),
+        _SectionHeader(icon: Icons.date_range_outlined, title: 'Raspon datuma'),
+        const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: _showDateRangePicker,
           icon: const Icon(Icons.date_range),
@@ -585,17 +563,13 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildGuestSearchField() {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.calendarFiltersSearchGuest,
-          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        const SizedBox(height: 8),
+        _SectionHeader(icon: Icons.person_search_outlined, title: l10n.calendarFiltersSearchGuest),
+        const SizedBox(height: 12),
         Builder(
           builder: (ctx) => TextField(
             controller: _guestSearchController,
@@ -617,17 +591,13 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildBookingIdSearchField() {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.calendarFiltersSearchBookingId,
-          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        const SizedBox(height: 8),
+        _SectionHeader(icon: Icons.tag_outlined, title: l10n.calendarFiltersSearchBookingId),
+        const SizedBox(height: 12),
         Builder(
           builder: (ctx) => TextField(
             controller: _bookingIdSearchController,
@@ -677,5 +647,38 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
     // Close dialog
     Navigator.of(context).pop(true);
+  }
+}
+
+/// Section header widget with icon and gradient accent
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: context.gradients.brandPrimary,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: AutoSizeText(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            maxLines: 1,
+            minFontSize: 12,
+          ),
+        ),
+      ],
+    );
   }
 }

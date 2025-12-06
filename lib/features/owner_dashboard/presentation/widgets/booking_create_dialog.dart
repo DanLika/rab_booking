@@ -8,6 +8,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
@@ -139,11 +140,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Unit Selection
-                      Text(
-                        AppLocalizations.of(context).bookingCreateUnit,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
+                      _SectionHeader(icon: Icons.bed_outlined, title: AppLocalizations.of(context).bookingCreateUnit),
+                      const SizedBox(height: 12),
 
                       unitsAsync.when(
                         data: (units) {
@@ -182,11 +180,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 24),
 
                       // Dates
-                      Text(
-                        AppLocalizations.of(context).bookingCreateDates,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      _SectionHeader(
+                        icon: Icons.calendar_today_outlined,
+                        title: AppLocalizations.of(context).bookingCreateDates,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
 
                       // Responsive date fields: Column on mobile, Row on desktop
                       if (isMobile)
@@ -258,11 +256,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 24),
 
                       // Guest Information
-                      Text(
-                        AppLocalizations.of(context).bookingCreateGuestInfo,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      _SectionHeader(
+                        icon: Icons.person_outline,
+                        title: AppLocalizations.of(context).bookingCreateGuestInfo,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
 
                       TextFormField(
                         controller: _guestNameController,
@@ -320,11 +318,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 24),
 
                       // Booking Details
-                      Text(
-                        AppLocalizations.of(context).bookingCreateBookingDetails,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      _SectionHeader(
+                        icon: Icons.receipt_long_outlined,
+                        title: AppLocalizations.of(context).bookingCreateBookingDetails,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
 
                       TextFormField(
                         controller: _guestCountController,
@@ -402,11 +400,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 16),
 
                       // Notes
-                      Text(
-                        AppLocalizations.of(context).bookingCreateNotes,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
+                      _SectionHeader(icon: Icons.note_outlined, title: AppLocalizations.of(context).bookingCreateNotes),
+                      const SizedBox(height: 12),
 
                       TextFormField(
                         controller: _notesController,
@@ -429,8 +424,10 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
-                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
+                border: Border(
+                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                ),
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: Row(
@@ -732,5 +729,31 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           ),
         ) ??
         false; // Return false if dialog dismissed
+  }
+}
+
+/// Section header widget with icon and gradient accent
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: context.gradients.brandPrimary,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+      ],
+    );
   }
 }

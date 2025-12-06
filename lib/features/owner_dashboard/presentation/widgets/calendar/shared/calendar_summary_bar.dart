@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/theme/app_colors.dart';
-import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../shared/models/booking_model.dart';
 import '../../../../utils/date_range_utils.dart';
 
 /// Shared Calendar Summary Bar Widget
-/// Displays daily statistics: guests, meals, check-ins, check-outs
+/// Displays daily statistics: guests, check-ins, check-outs
 /// Used in both Week and Timeline calendar views
 class CalendarSummaryBar extends StatelessWidget {
   final List<DateTime> dates;
@@ -24,6 +23,7 @@ class CalendarSummaryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return SingleChildScrollView(
       controller: scrollController,
@@ -32,16 +32,11 @@ class CalendarSummaryBar extends StatelessWidget {
           ? const NeverScrollableScrollPhysics() // Synced scroll
           : const AlwaysScrollableScrollPhysics(),
       child: Container(
-        height: 120,
+        height: 72,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-            (0.3 * 255).toInt(),
-          ),
+          color: isDark ? const Color(0xFF1A1A24) : const Color(0xFFFAFAFC),
           border: Border(
-            top: BorderSide(
-              color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
-              width: 2,
-            ),
+            top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight, width: 1),
           ),
         ),
         child: Row(
@@ -55,6 +50,7 @@ class CalendarSummaryBar extends StatelessWidget {
 
   Widget _buildSummaryCell(BuildContext context, DateTime date) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Calculate statistics for this date
     int totalGuests = 0;
@@ -81,106 +77,111 @@ class CalendarSummaryBar extends StatelessWidget {
       }
     }
 
-    // Calculate meals (2 meals per guest per day)
-    final int meals = totalGuests * 2;
-
     final isToday = DateRangeUtils.isToday(date);
     final isWeekend = DateRangeUtils.isWeekend(date);
+    final isNarrow = cellWidth < 60;
 
     return Container(
       width: cellWidth,
       decoration: BoxDecoration(
         color: isToday
-            ? AppColors.primary.withValues(alpha: 0.1)
+            ? AppColors.primary.withAlpha((0.15 * 255).toInt())
             : isWeekend
-                ? theme.colorScheme.surfaceContainerHighest.withAlpha(
-                    (0.5 * 255).toInt(),
-                  )
-                : theme.cardColor,
-        border: Border(
-          left: BorderSide(
-            color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
-          ),
-        ),
+            ? (isDark ? const Color(0xFF2A2A35) : const Color(0xFFF5F5FA))
+            : (isDark ? const Color(0xFF1E1E28) : Colors.white),
+        border: Border(left: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight)),
       ),
-      padding: const EdgeInsets.symmetric(
-        vertical: AppDimensions.spaceXS,
-        horizontal: AppDimensions.spaceXXS,
-      ),
+      padding: EdgeInsets.symmetric(vertical: isNarrow ? 4 : 6, horizontal: isNarrow ? 2 : 4),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Guests
-          _buildSummaryItem(
-            Icons.people,
+          // Guests badge
+          _buildStatBadge(
+            context,
+            Icons.people_alt_outlined,
             totalGuests.toString(),
-            Colors.blue,
+            theme.colorScheme.primary,
             'Gosti',
-            cellWidth,
+            isNarrow,
           ),
-          // Meals
-          _buildSummaryItem(
-            Icons.restaurant,
-            meals.toString(),
-            Colors.orange,
-            'Obroci',
-            cellWidth,
-          ),
-          // Check-ins
-          _buildSummaryItem(
-            Icons.login,
-            checkIns.toString(),
-            Colors.green,
-            'Dolasci',
-            cellWidth,
-          ),
-          // Check-outs
-          _buildSummaryItem(
-            Icons.logout,
-            checkOuts.toString(),
-            Colors.red,
-            'Odlasci',
-            cellWidth,
-          ),
+          SizedBox(height: isNarrow ? 4 : 6),
+          // Check-ins/Check-outs combined badge
+          _buildCheckInOutBadge(context, checkIns, checkOuts, isNarrow),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryItem(
+  /// Build a stat badge with background
+  Widget _buildStatBadge(
+    BuildContext context,
     IconData icon,
     String value,
     Color color,
     String tooltip,
-    double cellWidth,
+    bool isNarrow,
   ) {
-    // Responsive sizing based on cell width
-    final isNarrow = cellWidth < 80;
-    final iconSize = isNarrow ? 12.0 : 14.0;
-    final fontSize = isNarrow ? 10.0 : 12.0;
-    final spacing = isNarrow ? 2.0 : 4.0;
-
     return Tooltip(
       message: tooltip,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: iconSize, color: color),
-          SizedBox(width: spacing),
-          Flexible(
-            child: Text(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 6, vertical: isNarrow ? 2 : 3),
+        decoration: BoxDecoration(color: color.withAlpha((0.15 * 255).toInt()), borderRadius: BorderRadius.circular(6)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: isNarrow ? 12 : 14, color: color),
+            SizedBox(width: isNarrow ? 2 : 4),
+            Text(
               value,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: isNarrow ? 10 : 12, fontWeight: FontWeight.w700, color: color),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build combined check-in/check-out badge
+  Widget _buildCheckInOutBadge(BuildContext context, int checkIns, int checkOuts, bool isNarrow) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Tooltip(
+      message: 'Dolasci: $checkIns / Odlasci: $checkOuts',
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 6, vertical: isNarrow ? 2 : 3),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF0F0F5),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.login, size: isNarrow ? 10 : 12, color: AppColors.success),
+            SizedBox(width: isNarrow ? 1 : 2),
+            Text(
+              '$checkIns',
+              style: TextStyle(fontSize: isNarrow ? 9 : 11, fontWeight: FontWeight.w600, color: AppColors.success),
+            ),
+            Text(
+              '/',
+              style: TextStyle(
+                fontSize: isNarrow ? 9 : 11,
+                fontWeight: FontWeight.w400,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            Text(
+              '$checkOuts',
+              style: TextStyle(fontSize: isNarrow ? 9 : 11, fontWeight: FontWeight.w600, color: AppColors.error),
+            ),
+            SizedBox(width: isNarrow ? 1 : 2),
+            Icon(Icons.logout, size: isNarrow ? 10 : 12, color: AppColors.error),
+          ],
+        ),
       ),
     );
   }

@@ -1,13 +1,14 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../providers/owner_calendar_provider.dart';
 
 /// Calendar search dialog
@@ -151,11 +152,14 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                     child: const Icon(Icons.search, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    l10n.calendarSearchTitle,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  Expanded(
+                    child: AutoSizeText(
+                      l10n.calendarSearchTitle,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      maxLines: 1,
+                      minFontSize: 14,
+                    ),
                   ),
-                  const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
@@ -198,15 +202,24 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                 padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 12 : 16),
                 child: Row(
                   children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: context.gradients.brandPrimary,
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      ),
+                      child: const Icon(Icons.format_list_numbered, color: Colors.white, size: 14),
+                    ),
+                    const SizedBox(width: 10),
                     Text(
                       l10n.calendarSearchResultsCount(_searchResults.length),
-                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
               ),
 
-            Divider(color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
+            Divider(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight, height: 24),
 
             // Results list
             Expanded(child: _buildResultsList()),
@@ -281,119 +294,124 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   /// Build result card
   Widget _buildResultCard(BookingModel booking, UnitModel? unit) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final dateFormat = DateFormat('d.M.yyyy', 'hr_HR');
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => Navigator.of(context).pop(booking),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with status
-              Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      booking.guestName ?? 'N/A',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Text(
-                    booking.status.displayName,
-                    style: TextStyle(fontSize: 12, color: booking.status.color, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Unit name
-              if (unit != null) ...[
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => Navigator.of(context).pop(booking),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with status
                 Row(
                   children: [
-                    const Icon(Icons.bed_outlined, size: 16),
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
+                    ),
                     const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        booking.guestName ?? 'N/A',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                     Text(
-                      unit.name,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                      booking.status.displayName,
+                      style: TextStyle(fontSize: 12, color: booking.status.color, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-              ],
 
-              // Dates
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${dateFormat.format(booking.checkIn)} - ${dateFormat.format(booking.checkOut)}',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                const SizedBox(height: 12),
+
+                // Unit name
+                if (unit != null) ...[
+                  Row(
+                    children: [
+                      Icon(Icons.bed_outlined, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 8),
+                      Text(unit.name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$nights noć${nights > 1 ? 'i' : ''}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                  const SizedBox(height: 8),
+                ],
+
+                // Dates
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${dateFormat.format(booking.checkIn)} - ${dateFormat.format(booking.checkOut)}',
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              // Email
-              Row(
-                children: [
-                  const Icon(Icons.email_outlined, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      booking.guestEmail ?? 'N/A',
-                      style: Theme.of(context).textTheme.bodySmall,
-                      overflow: TextOverflow.ellipsis,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$nights noć${nights > 1 ? 'i' : ''}',
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
-              // Price
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.euro, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${booking.totalPrice.toStringAsFixed(2)} €',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.tertiary,
+                const SizedBox(height: 8),
+
+                // Email
+                Row(
+                  children: [
+                    Icon(Icons.email_outlined, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        booking.guestEmail ?? 'N/A',
+                        style: theme.textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+
+                // Price
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.euro, size: 16, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${booking.totalPrice.toStringAsFixed(2)} €',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

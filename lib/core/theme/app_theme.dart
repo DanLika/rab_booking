@@ -243,6 +243,48 @@ class AppTheme {
           return AppColors.borderWarmLight;
         }),
       ),
+
+      // Date picker theme - Modern styling with brand colors
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        headerBackgroundColor: AppColors.primary,
+        headerForegroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        dayStyle: AppTypography.textTheme.bodyMedium,
+        weekdayStyle: AppTypography.textTheme.labelSmall?.copyWith(
+          color: AppColors.textSecondaryLight,
+          fontWeight: FontWeight.w600,
+        ),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          if (states.contains(WidgetState.disabled)) return AppColors.textTertiaryLight;
+          return AppColors.textPrimaryLight;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return Colors.transparent;
+        }),
+        todayForegroundColor: WidgetStateProperty.all(AppColors.primary),
+        todayBackgroundColor: WidgetStateProperty.all(AppColors.primary.withAlpha((0.1 * 255).toInt())),
+        todayBorder: BorderSide(color: AppColors.primary, width: 1),
+        yearStyle: AppTypography.textTheme.bodyLarge,
+        yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return AppColors.textPrimaryLight;
+        }),
+        yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return Colors.transparent;
+        }),
+        rangePickerBackgroundColor: AppColors.surfaceLight,
+        rangePickerHeaderBackgroundColor: AppColors.primary,
+        rangePickerHeaderForegroundColor: Colors.white,
+        rangeSelectionBackgroundColor: AppColors.primary.withAlpha((0.2 * 255).toInt()),
+        dividerColor: AppColors.sectionDividerLight,
+        cancelButtonStyle: TextButton.styleFrom(foregroundColor: AppColors.textSecondaryLight),
+        confirmButtonStyle: TextButton.styleFrom(foregroundColor: AppColors.primary),
+      ),
     );
   }
 
@@ -472,6 +514,48 @@ class AppTheme {
           }
           return AppColors.borderWarmDark;
         }),
+      ),
+
+      // Date picker theme - Modern styling with brand colors (dark mode)
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: const Color(0xFF1E1E28),
+        headerBackgroundColor: AppColors.primary,
+        headerForegroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        dayStyle: AppTypography.textTheme.bodyMedium,
+        weekdayStyle: AppTypography.textTheme.labelSmall?.copyWith(
+          color: AppColors.textSecondaryDark,
+          fontWeight: FontWeight.w600,
+        ),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          if (states.contains(WidgetState.disabled)) return AppColors.textTertiaryDark;
+          return AppColors.textPrimaryDark;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primaryLight;
+          return Colors.transparent;
+        }),
+        todayForegroundColor: WidgetStateProperty.all(AppColors.primaryLight),
+        todayBackgroundColor: WidgetStateProperty.all(AppColors.primaryLight.withAlpha((0.15 * 255).toInt())),
+        todayBorder: BorderSide(color: AppColors.primaryLight, width: 1),
+        yearStyle: AppTypography.textTheme.bodyLarge,
+        yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return AppColors.textPrimaryDark;
+        }),
+        yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primaryLight;
+          return Colors.transparent;
+        }),
+        rangePickerBackgroundColor: const Color(0xFF1E1E28),
+        rangePickerHeaderBackgroundColor: AppColors.primary,
+        rangePickerHeaderForegroundColor: Colors.white,
+        rangeSelectionBackgroundColor: AppColors.primaryLight.withAlpha((0.25 * 255).toInt()),
+        dividerColor: AppColors.sectionDividerDark,
+        cancelButtonStyle: TextButton.styleFrom(foregroundColor: AppColors.textSecondaryDark),
+        confirmButtonStyle: TextButton.styleFrom(foregroundColor: AppColors.primaryLight),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -42,9 +43,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Use consistent colors with booking cards and skeletons
-    final cardBackground = isDark ? const Color(0xFF252330) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF35323D) : const Color(0xFFE0DCE8);
+    // Use design system colors for consistency
+    final cardBackground = context.gradients.cardBackground;
+    final borderColor = isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight;
 
     return Container(
       decoration: BoxDecoration(

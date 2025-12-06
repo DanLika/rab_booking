@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -92,67 +93,43 @@ class RecentActivityWidget extends StatelessWidget {
           // Header
           Padding(
             padding: const EdgeInsets.all(AppDimensions.spaceL),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Very narrow screen - stack vertically
-                if (constraints.maxWidth < 300) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.ownerRecentActivities,
-                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (onViewAll != null) ...[
-                        const SizedBox(height: AppDimensions.spaceXS),
-                        TextButton(
-                          onPressed: onViewAll,
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppDimensions.spaceS,
-                              vertical: AppDimensions.spaceXS,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(l10n.ownerViewAll),
-                        ),
-                      ],
-                    ],
-                  );
-                }
-
-                // Normal width - horizontal layout
-                return Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.ownerRecentActivities,
-                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: AutoSizeText(
+                    l10n.ownerRecentActivities,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    minFontSize: 14,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (onViewAll != null) ...[
+                  const SizedBox(width: AppDimensions.spaceS),
+                  TextButton(
+                    onPressed: onViewAll,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      foregroundColor: theme.colorScheme.primary,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    if (onViewAll != null) ...[
-                      const SizedBox(width: AppDimensions.spaceS),
-                      TextButton.icon(
-                        onPressed: onViewAll,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          foregroundColor: theme.colorScheme.primary,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        icon: const Icon(Icons.arrow_forward, size: 16),
-                        label: Text(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AutoSizeText(
                           l10n.ownerViewAll,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+                          maxLines: 1,
+                          minFontSize: 11,
                         ),
-                      ),
-                    ],
-                  ],
-                );
-              },
+                        const SizedBox(width: 4),
+                        Icon(Icons.arrow_forward, size: 16, color: theme.colorScheme.primary),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
 

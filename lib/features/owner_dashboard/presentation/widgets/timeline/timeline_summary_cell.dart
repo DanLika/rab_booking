@@ -66,26 +66,30 @@ class TimelineSummaryCell extends StatelessWidget {
             : (isDark ? const Color(0xFF1E1E28) : Colors.white),
         border: Border(left: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight)),
       ),
-      padding: EdgeInsets.symmetric(vertical: isNarrow ? 4 : 6, horizontal: isNarrow ? 2 : 4),
+      padding: EdgeInsets.symmetric(vertical: isNarrow ? 2 : 4, horizontal: isNarrow ? 2 : 4),
       child: Builder(
         builder: (context) {
           final l10n = AppLocalizations.of(context);
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Guests badge
-              _buildStatBadge(
-                context,
-                Icons.people_alt_outlined,
-                totalGuests.toString(),
-                theme.colorScheme.primary,
-                l10n.ownerCalendarSummaryGuests,
-                isNarrow,
-              ),
-              SizedBox(height: isNarrow ? 4 : 6),
-              // Check-ins/Check-outs combined badge
-              _buildCheckInOutBadge(context, checkIns, checkOuts, l10n, isNarrow),
-            ],
+          return FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Guests badge
+                _buildStatBadge(
+                  context,
+                  Icons.people_alt_outlined,
+                  totalGuests.toString(),
+                  theme.colorScheme.primary,
+                  l10n.ownerCalendarSummaryGuests,
+                  isNarrow,
+                ),
+                SizedBox(height: isNarrow ? 3 : 4),
+                // Check-ins/Check-outs combined badge
+                _buildCheckInOutBadge(context, checkIns, checkOuts, l10n, isNarrow),
+              ],
+            ),
           );
         },
       ),

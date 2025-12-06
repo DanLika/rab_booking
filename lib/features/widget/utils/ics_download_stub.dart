@@ -53,6 +53,8 @@ Future<void> downloadIcsFile(String content, String filename) async {
 
     // 4. Share the file via native share sheet
     // XFile is a cross-platform file representation from cross_file package
+    // Note: These strings are not localized as they appear in native OS share dialogs
+    // which typically use the device's system language
     await Share.shareXFiles(
       [XFile(file.path)],
       text: 'Add this booking to your calendar',
@@ -63,11 +65,7 @@ Future<void> downloadIcsFile(String content, String filename) async {
     // The share sheet will just close if user cancels
   } catch (e, stackTrace) {
     // Log error using LoggingService instead of print
-    await LoggingService.logError(
-      '[ICS Download] Failed to share ICS file on mobile/desktop',
-      e,
-      stackTrace,
-    );
+    await LoggingService.logError('[ICS Download] Failed to share ICS file on mobile/desktop', e, stackTrace);
     // Throw typed exception for better error handling upstream
     throw FileException.icsShareFailed(e);
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/utils/debouncer.dart';
+import '../../core/utils/input_decoration_helper.dart';
 
 /// Search text field with debouncing
 ///
@@ -97,32 +98,26 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      enabled: widget.enabled,
-      decoration: InputDecoration(
-        hintText: widget.hintText,
-        prefixIcon: Icon(widget.prefixIcon),
-        suffixIcon: _showClearButton
-            ? IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: _clearSearch,
-                tooltip: 'Očisti',
-              )
-            : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
+    return Builder(
+      builder: (ctx) => TextField(
+        controller: _controller,
+        enabled: widget.enabled,
+        decoration:
+            InputDecorationHelper.buildDecoration(
+              labelText: widget.hintText,
+              prefixIcon: Icon(widget.prefixIcon),
+              context: ctx,
+            ).copyWith(
+              suffixIcon: _showClearButton
+                  ? IconButton(icon: const Icon(Icons.clear), onPressed: _clearSearch, tooltip: 'Očisti')
+                  : null,
+            ),
+        onSubmitted: (_) {
+          // Cancel debounce and trigger immediately on submit
+          _debouncer.cancel();
+          widget.onSearch(_controller.text);
+        },
       ),
-      onSubmitted: (_) {
-        // Cancel debounce and trigger immediately on submit
-        _debouncer.cancel();
-        widget.onSearch(_controller.text);
-      },
     );
   }
 }
@@ -145,12 +140,10 @@ class CompactDebouncedSearchField extends StatefulWidget {
   final VoidCallback? onClose;
 
   @override
-  State<CompactDebouncedSearchField> createState() =>
-      _CompactDebouncedSearchFieldState();
+  State<CompactDebouncedSearchField> createState() => _CompactDebouncedSearchFieldState();
 }
 
-class _CompactDebouncedSearchFieldState
-    extends State<CompactDebouncedSearchField> {
+class _CompactDebouncedSearchFieldState extends State<CompactDebouncedSearchField> {
   late final TextEditingController _controller;
   late final Debouncer _debouncer;
   late final FocusNode _focusNode;
@@ -210,11 +203,7 @@ class _CompactDebouncedSearchFieldState
                 },
                 tooltip: 'Očisti',
               ),
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: _close,
-              tooltip: 'Zatvori pretragu',
-            ),
+            IconButton(icon: const Icon(Icons.close), onPressed: _close, tooltip: 'Zatvori pretragu'),
           ],
         ),
       ),

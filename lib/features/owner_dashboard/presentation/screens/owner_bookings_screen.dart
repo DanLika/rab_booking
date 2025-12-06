@@ -202,7 +202,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     return SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-                        child: SkeletonLoader.bookingsTable(rowCount: 5),
+                        child: SkeletonLoader.bookingsTable(),
                       ),
                     );
                   } else {

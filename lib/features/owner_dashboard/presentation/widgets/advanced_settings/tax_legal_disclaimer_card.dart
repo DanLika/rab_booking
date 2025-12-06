@@ -4,6 +4,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
 
 /// Tax & Legal Disclaimer Settings Card
 ///
@@ -160,16 +161,18 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
         // Custom text editor (shown when custom is selected)
         if (!useDefaultText) ...[
           const SizedBox(height: 12),
-          TextFormField(
-            controller: customDisclaimerController,
-            decoration: InputDecoration(
-              labelText: l10n.taxLegalCustomLabel,
-              border: const OutlineInputBorder(),
-              hintText: l10n.taxLegalCustomHint,
+          Builder(
+            builder: (ctx) => TextFormField(
+              controller: customDisclaimerController,
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.taxLegalCustomLabel,
+                hintText: l10n.taxLegalCustomHint,
+                context: ctx,
+              ),
+              maxLines: 10,
+              maxLength: 2000,
+              validator: customTextValidator,
             ),
-            maxLines: 10,
-            maxLength: 2000,
-            validator: customTextValidator,
           ),
         ],
       ],

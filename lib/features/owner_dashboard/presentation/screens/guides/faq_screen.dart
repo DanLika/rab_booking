@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../widgets/owner_app_drawer.dart';
 
@@ -134,29 +135,33 @@ class _FAQScreenState extends State<FAQScreen> {
               // Search Bar
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: l10n.ownerFaqSearchHint,
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                _searchQuery = '';
-                              });
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                child: Builder(
+                  builder: (ctx) => TextField(
+                    controller: _searchController,
+                    decoration:
+                        InputDecorationHelper.buildDecoration(
+                          labelText: l10n.ownerFaqSearchHint,
+                          prefixIcon: const Icon(Icons.search),
+                          context: ctx,
+                        ).copyWith(
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    setState(() {
+                                      _searchController.clear();
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                        ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
                 ),
               ),
 

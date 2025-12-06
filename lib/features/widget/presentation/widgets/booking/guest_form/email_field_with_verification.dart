@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../../core/localization/error_messages.dart';
 import '../../../theme/minimalist_colors.dart';
+import '../../../utils/widget_input_decoration_helper.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
 
 /// Email field with optional verification button.
@@ -70,65 +71,16 @@ class EmailFieldWithVerification extends StatelessWidget {
       // Standard email field without verification
       return TextFormField(
         controller: controller,
-        maxLength: 100, // Bug #60: Maximum field length validation
+        maxLength: 100,
         keyboardType: TextInputType.emailAddress,
-        style: TextStyle(
-          color: colors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          counterText: '', // Hide character counter
+        style: TextStyle(color: colors.textPrimary),
+        decoration: WidgetInputDecorationHelper.buildDecoration(
           labelText: 'Email *',
           hintText: 'john@example.com',
-          labelStyle: TextStyle(
-            color: colors.textPrimary,
-          ),
-          hintStyle: TextStyle(
-            color: colors.textSecondary,
-          ),
-          filled: true,
-          fillColor: colors.backgroundSecondary,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
+          prefixIcon: Icon(Icons.email_outlined, color: colors.textPrimary),
+          isDarkMode: isDarkMode,
           isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: BorderSide(
-              color: colors.textSecondary,
-            ),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: BorderSide(
-              color: colors.textSecondary,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: BorderSide(
-              color: colors.textPrimary,
-              width: 2,
-            ),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: BorderSide(color: colors.error, width: 1.5),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: BorderSide(color: colors.error, width: 2),
-          ),
-          errorStyle: TextStyle(
-            color: colors.error,
-            fontSize: 12,
-            height: 1.0,
-          ),
           errorMaxLines: 1,
-          prefixIcon: Icon(
-            Icons.email_outlined,
-            color: colors.textPrimary,
-          ),
         ),
         autovalidateMode: AutovalidateMode.onUserInteraction,
         validator: EmailValidator.validate,
@@ -143,65 +95,16 @@ class EmailFieldWithVerification extends StatelessWidget {
         Expanded(
           child: TextFormField(
             controller: controller,
-            maxLength: 100, // Bug #60: Maximum field length validation
+            maxLength: 100,
             keyboardType: TextInputType.emailAddress,
-            style: TextStyle(
-              color: colors.textPrimary,
-            ),
-            decoration: InputDecoration(
-              counterText: '', // Hide character counter
+            style: TextStyle(color: colors.textPrimary),
+            decoration: WidgetInputDecorationHelper.buildDecoration(
               labelText: 'Email *',
               hintText: 'john@example.com',
-              labelStyle: TextStyle(
-                color: colors.textPrimary,
-              ),
-              hintStyle: TextStyle(
-                color: colors.textSecondary,
-              ),
-              filled: true,
-              fillColor: colors.backgroundSecondary,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              prefixIcon: Icon(Icons.email_outlined, color: colors.textPrimary),
+              isDarkMode: isDarkMode,
               isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textSecondary,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textSecondary,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textPrimary,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(color: colors.error, width: 1.5),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(color: colors.error, width: 2),
-              ),
-              errorStyle: TextStyle(
-                color: colors.error,
-                fontSize: 12,
-                height: 1.0,
-              ),
               errorMaxLines: 1,
-              prefixIcon: Icon(
-                Icons.email_outlined,
-                color: colors.textPrimary,
-              ),
             ),
             autovalidateMode: AutovalidateMode.onUserInteraction,
             validator: EmailValidator.validate,
@@ -219,13 +122,7 @@ class EmailFieldWithVerification extends StatelessWidget {
               borderRadius: BorderTokens.circularMedium,
               border: Border.all(color: colors.success, width: 1.5),
             ),
-            child: Center(
-              child: Icon(
-                Icons.verified,
-                color: colors.success,
-                size: 24,
-              ),
-            ),
+            child: Center(child: Icon(Icons.verified, color: colors.success, size: 24)),
           )
         else
           SizedBox(
@@ -237,9 +134,7 @@ class EmailFieldWithVerification extends StatelessWidget {
                 backgroundColor: colors.textPrimary,
                 foregroundColor: colors.backgroundPrimary,
                 padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderTokens.circularMedium,
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
               ),
               child: const Text(ErrorMessages.verifyButton),
             ),

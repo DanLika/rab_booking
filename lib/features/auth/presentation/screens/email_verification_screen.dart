@@ -6,6 +6,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Email Verification Screen with resend functionality
@@ -129,23 +130,13 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
               ),
               const SizedBox(height: 20),
               Builder(
-                builder: (context) => TextFormField(
+                builder: (ctx) => TextFormField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
+                  decoration: InputDecorationHelper.buildDecoration(
                     labelText: 'New Email *',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: context.gradients.sectionBorder),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                    ),
                     prefixIcon: const Icon(Icons.email),
-                    filled: true,
-                    fillColor: context.gradients.inputFillColor,
+                    context: ctx,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -160,24 +151,14 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
               ),
               const SizedBox(height: 16),
               Builder(
-                builder: (context) => TextFormField(
+                builder: (ctx) => TextFormField(
                   controller: passwordController,
                   obscureText: true,
-                  decoration: InputDecoration(
+                  decoration: InputDecorationHelper.buildDecoration(
                     labelText: 'Current Password *',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: context.gradients.sectionBorder),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                    ),
                     prefixIcon: const Icon(Icons.lock),
                     helperText: 'Required to confirm identity',
-                    filled: true,
-                    fillColor: context.gradients.inputFillColor,
+                    context: ctx,
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {

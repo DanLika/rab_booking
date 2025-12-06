@@ -6,6 +6,7 @@ import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 
@@ -180,10 +181,10 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
               TextField(
                 controller: _notesController,
                 maxLines: 3,
-                decoration: InputDecoration(
+                decoration: InputDecorationHelper.buildDecoration(
                   labelText: l10n.editBookingInternalNotes,
                   hintText: l10n.editBookingNotesHint,
-                  border: const OutlineInputBorder(),
+                  context: context,
                 ),
               ),
             ],

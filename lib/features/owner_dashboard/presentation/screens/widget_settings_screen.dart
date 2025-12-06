@@ -7,6 +7,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../widget/domain/models/widget_settings.dart';
@@ -868,25 +869,26 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     const SizedBox(height: 12),
 
                     // Payment deadline dropdown
-                    DropdownButtonFormField<int>(
-                      initialValue: _bankPaymentDeadlineDays,
-                      decoration: InputDecoration(
-                        labelText: l10n.widgetSettingsPaymentDeadline,
-                        border: const OutlineInputBorder(),
-                        isDense: true,
+                    Builder(
+                      builder: (ctx) => DropdownButtonFormField<int>(
+                        value: _bankPaymentDeadlineDays,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: l10n.widgetSettingsPaymentDeadline,
+                          context: ctx,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: 1, child: Text('1 ${l10n.widgetSettingsDay}')),
+                          DropdownMenuItem(value: 3, child: Text('3 ${l10n.widgetSettingsDays}')),
+                          DropdownMenuItem(value: 5, child: Text('5 ${l10n.widgetSettingsDays}')),
+                          DropdownMenuItem(value: 7, child: Text('7 ${l10n.widgetSettingsDays}')),
+                          DropdownMenuItem(value: 14, child: Text('14 ${l10n.widgetSettingsDays}')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _bankPaymentDeadlineDays = value);
+                          }
+                        },
                       ),
-                      items: [
-                        DropdownMenuItem(value: 1, child: Text('1 ${l10n.widgetSettingsDay}')),
-                        DropdownMenuItem(value: 3, child: Text('3 ${l10n.widgetSettingsDays}')),
-                        DropdownMenuItem(value: 5, child: Text('5 ${l10n.widgetSettingsDays}')),
-                        DropdownMenuItem(value: 7, child: Text('7 ${l10n.widgetSettingsDays}')),
-                        DropdownMenuItem(value: 14, child: Text('14 ${l10n.widgetSettingsDays}')),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _bankPaymentDeadlineDays = value);
-                        }
-                      },
                     ),
 
                     const SizedBox(height: 16),
@@ -932,16 +934,17 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     // Custom notes text field (conditional)
                     if (_bankUseCustomNotes) ...[
                       const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _bankCustomNotesController,
-                        decoration: InputDecoration(
-                          labelText: l10n.widgetSettingsNoteMaxChars,
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          helperText: l10n.widgetSettingsNoteHelper,
+                      Builder(
+                        builder: (ctx) => TextFormField(
+                          controller: _bankCustomNotesController,
+                          decoration: InputDecorationHelper.buildDecoration(
+                            labelText: l10n.widgetSettingsNoteMaxChars,
+                            helperText: l10n.widgetSettingsNoteHelper,
+                            context: ctx,
+                          ),
+                          maxLines: 3,
+                          maxLength: 500,
                         ),
-                        maxLines: 3,
-                        maxLength: 500,
                       ),
                     ],
                   ],
@@ -1484,26 +1487,28 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   final isDesktop = constraints.maxWidth >= 600;
 
                   final l10nInner = AppLocalizations.of(context);
-                  final phoneInput = TextFormField(
-                    controller: _phoneController,
-                    decoration: InputDecoration(
-                      labelText: l10nInner.widgetSettingsPhoneNumber,
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      prefixIcon: const Icon(Icons.phone),
+                  final phoneInput = Builder(
+                    builder: (ctx) => TextFormField(
+                      controller: _phoneController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10nInner.widgetSettingsPhoneNumber,
+                        prefixIcon: const Icon(Icons.phone),
+                        context: ctx,
+                      ),
+                      keyboardType: TextInputType.phone,
                     ),
-                    keyboardType: TextInputType.phone,
                   );
 
-                  final emailInput = TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: l10nInner.widgetSettingsEmailAddress,
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      prefixIcon: const Icon(Icons.email),
+                  final emailInput = Builder(
+                    builder: (ctx) => TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10nInner.widgetSettingsEmailAddress,
+                        prefixIcon: const Icon(Icons.email),
+                        context: ctx,
+                      ),
+                      keyboardType: TextInputType.emailAddress,
                     ),
-                    keyboardType: TextInputType.emailAddress,
                   );
 
                   if (isDesktop) {

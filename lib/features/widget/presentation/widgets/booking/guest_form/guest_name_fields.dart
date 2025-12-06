@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
+import '../../../utils/widget_input_decoration_helper.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
 
 /// Row containing first name and last name text fields.
@@ -44,69 +45,16 @@ class GuestNameFields extends StatelessWidget {
         Expanded(
           child: TextFormField(
             controller: firstNameController,
-            maxLength: 50, // Bug #60: Maximum field length validation
-            style: TextStyle(
-              color: colors.textPrimary,
-            ),
-            decoration: InputDecoration(
-              counterText: '', // Hide character counter
+            maxLength: 50,
+            style: TextStyle(color: colors.textPrimary),
+            decoration: WidgetInputDecorationHelper.buildDecoration(
               labelText: 'First Name *',
               hintText: 'John',
-              labelStyle: TextStyle(
-                color: colors.textPrimary,
-              ),
-              hintStyle: TextStyle(
-                color: colors.textSecondary,
-              ),
-              filled: true,
-              fillColor: colors.backgroundSecondary,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              prefixIcon: Icon(Icons.person_outline, color: colors.textPrimary),
+              isDarkMode: isDarkMode,
               isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textPrimary,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textSecondary,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textPrimary,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.error,
-                  width: 1.5,
-                ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(color: colors.error, width: 2),
-              ),
-              errorStyle: TextStyle(
-                color: colors.error,
-                fontSize: 12,
-                height: 1.0,
-              ),
               errorMaxLines: 1,
-              prefixIcon: Icon(
-                Icons.person_outline,
-                color: colors.textPrimary,
-              ),
             ),
-            // Real-time validation
             autovalidateMode: AutovalidateMode.onUserInteraction,
             validator: FirstNameValidator.validate,
           ),
@@ -116,65 +64,15 @@ class GuestNameFields extends StatelessWidget {
         Expanded(
           child: TextFormField(
             controller: lastNameController,
-            maxLength: 50, // Bug #60: Maximum field length validation
-            style: TextStyle(
-              color: colors.textPrimary,
-            ),
-            decoration: InputDecoration(
-              counterText: '', // Hide character counter
+            maxLength: 50,
+            style: TextStyle(color: colors.textPrimary),
+            decoration: WidgetInputDecorationHelper.buildDecoration(
               labelText: 'Last Name *',
               hintText: 'Doe',
-              labelStyle: TextStyle(
-                color: colors.textPrimary,
-              ),
-              hintStyle: TextStyle(
-                color: colors.textSecondary,
-              ),
-              filled: true,
-              fillColor: colors.backgroundSecondary,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              isDarkMode: isDarkMode,
               isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textPrimary,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textSecondary,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.textPrimary,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: colors.error,
-                  width: 1.5,
-                ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(color: colors.error, width: 2),
-              ),
-              errorStyle: TextStyle(
-                color: colors.error,
-                fontSize: 12,
-                height: 1.0,
-              ),
               errorMaxLines: 1,
             ),
-            // Real-time validation
             autovalidateMode: AutovalidateMode.onUserInteraction,
             validator: LastNameValidator.validate,
           ),

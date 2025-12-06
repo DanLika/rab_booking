@@ -475,15 +475,17 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   }
 
   Widget _buildDateField({required String label, required DateTime date, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          prefixIcon: const Icon(Icons.calendar_today),
+    return Builder(
+      builder: (ctx) => InkWell(
+        onTap: onTap,
+        child: InputDecorator(
+          decoration: InputDecorationHelper.buildDecoration(
+            labelText: label,
+            prefixIcon: const Icon(Icons.calendar_today),
+            context: ctx,
+          ),
+          child: Text(DateFormat('d.M.yyyy').format(date), style: const TextStyle(fontSize: 16)),
         ),
-        child: Text(DateFormat('d.M.yyyy').format(date), style: const TextStyle(fontSize: 16)),
       ),
     );
   }

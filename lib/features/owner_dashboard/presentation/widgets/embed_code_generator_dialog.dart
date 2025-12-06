@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/slug_utils.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Dialog that generates and displays embed code for widget
@@ -173,40 +174,42 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                               const SizedBox(height: 12),
 
                               // Language
-                              DropdownButtonFormField<String>(
-                                initialValue: _selectedLanguage,
-                                decoration: InputDecoration(
-                                  labelText: l10n.embedCodeLanguage,
-                                  border: const OutlineInputBorder(),
-                                  isDense: true,
+                              Builder(
+                                builder: (ctx) => DropdownButtonFormField<String>(
+                                  value: _selectedLanguage,
+                                  decoration: InputDecorationHelper.buildDecoration(
+                                    labelText: l10n.embedCodeLanguage,
+                                    context: ctx,
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(value: 'hr', child: Text('Hrvatski')),
+                                    DropdownMenuItem(value: 'en', child: Text('English')),
+                                    DropdownMenuItem(value: 'de', child: Text('Deutsch')),
+                                    DropdownMenuItem(value: 'it', child: Text('Italiano')),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() => _selectedLanguage = value);
+                                    }
+                                  },
                                 ),
-                                items: const [
-                                  DropdownMenuItem(value: 'hr', child: Text('Hrvatski')),
-                                  DropdownMenuItem(value: 'en', child: Text('English')),
-                                  DropdownMenuItem(value: 'de', child: Text('Deutsch')),
-                                  DropdownMenuItem(value: 'it', child: Text('Italiano')),
-                                ],
-                                onChanged: (value) {
-                                  if (value != null) {
-                                    setState(() => _selectedLanguage = value);
-                                  }
-                                },
                               ),
 
                               const SizedBox(height: 12),
 
                               // Height
-                              TextFormField(
-                                initialValue: _widgetHeight,
-                                decoration: InputDecoration(
-                                  labelText: l10n.embedCodeHeight,
-                                  border: const OutlineInputBorder(),
-                                  isDense: true,
+                              Builder(
+                                builder: (ctx) => TextFormField(
+                                  initialValue: _widgetHeight,
+                                  decoration: InputDecorationHelper.buildDecoration(
+                                    labelText: l10n.embedCodeHeight,
+                                    context: ctx,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (value) {
+                                    setState(() => _widgetHeight = value);
+                                  },
                                 ),
-                                keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  setState(() => _widgetHeight = value);
-                                },
                               ),
                             ],
                           ),

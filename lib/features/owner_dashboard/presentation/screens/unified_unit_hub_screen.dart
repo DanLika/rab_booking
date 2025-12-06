@@ -8,6 +8,7 @@ import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../providers/owner_properties_provider.dart';
@@ -273,18 +274,19 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
               // Search bar
               TextField(
                 controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: l10n.unitHubSearch,
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(icon: const Icon(Icons.clear, size: 20), onPressed: _searchController.clear)
-                      : null,
-                  filled: true,
-                  fillColor: theme.colorScheme.surfaceContainerHighest,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  isDense: true,
-                ),
+                decoration:
+                    InputDecorationHelper.buildDecoration(
+                      labelText: l10n.unitHubSearch,
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      context: context,
+                    ).copyWith(
+                      hintText: l10n.unitHubSearch,
+                      labelText: null,
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(icon: const Icon(Icons.clear, size: 20), onPressed: _searchController.clear)
+                          : null,
+                      isDense: true,
+                    ),
               ),
             ],
           ),

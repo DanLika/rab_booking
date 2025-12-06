@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
@@ -241,16 +242,17 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
   }
 
   Widget _buildDateField({required String label, required DateTime date, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_today),
+    return Builder(
+      builder: (ctx) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: InputDecorator(
+          decoration: InputDecorationHelper.buildDecoration(
+            labelText: label,
+            context: ctx,
+          ).copyWith(suffixIcon: const Icon(Icons.calendar_today)),
+          child: Text('${date.day}/${date.month}/${date.year}', style: Theme.of(context).textTheme.bodyLarge),
         ),
-        child: Text('${date.day}/${date.month}/${date.year}', style: Theme.of(context).textTheme.bodyLarge),
       ),
     );
   }
@@ -259,9 +261,11 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
     return Row(
       children: [
         Expanded(
-          child: InputDecorator(
-            decoration: const InputDecoration(labelText: 'Number of Guests', border: OutlineInputBorder()),
-            child: Text('$_guestCount', style: Theme.of(context).textTheme.bodyLarge),
+          child: Builder(
+            builder: (ctx) => InputDecorator(
+              decoration: InputDecorationHelper.buildDecoration(labelText: 'Number of Guests', context: ctx),
+              child: Text('$_guestCount', style: Theme.of(context).textTheme.bodyLarge),
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -281,49 +285,53 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
   }
 
   Widget _buildStatusField() {
-    return DropdownButtonFormField<BookingStatus>(
-      initialValue: _status,
-      decoration: const InputDecoration(
-        labelText: 'Status',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.info_outline),
+    return Builder(
+      builder: (ctx) => DropdownButtonFormField<BookingStatus>(
+        value: _status,
+        decoration: InputDecorationHelper.buildDecoration(
+          labelText: 'Status',
+          prefixIcon: const Icon(Icons.info_outline),
+          context: ctx,
+        ),
+        items: BookingStatus.values.map((status) {
+          return DropdownMenuItem(
+            value: status,
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(color: _getStatusColor(status), shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Text(status.displayName),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value != null) {
+            setState(() => _status = value);
+          }
+        },
       ),
-      items: BookingStatus.values.map((status) {
-        return DropdownMenuItem(
-          value: status,
-          child: Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(color: _getStatusColor(status), shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-              Text(status.displayName),
-            ],
-          ),
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          setState(() => _status = value);
-        }
-      },
     );
   }
 
   Widget _buildNotesField() {
     final l10n = AppLocalizations.of(context);
-    return TextField(
-      controller: _notesController,
-      decoration: InputDecoration(
-        labelText: l10n.bookingEditInternalNotes,
-        border: const OutlineInputBorder(),
-        hintText: l10n.bookingEditNotesHint,
-        prefixIcon: const Icon(Icons.notes),
+    return Builder(
+      builder: (ctx) => TextField(
+        controller: _notesController,
+        decoration: InputDecorationHelper.buildDecoration(
+          labelText: l10n.bookingEditInternalNotes,
+          hintText: l10n.bookingEditNotesHint,
+          prefixIcon: const Icon(Icons.notes),
+          context: ctx,
+        ),
+        maxLines: 3,
+        textCapitalization: TextCapitalization.sentences,
       ),
-      maxLines: 3,
-      textCapitalization: TextCapitalization.sentences,
     );
   }
 

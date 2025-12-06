@@ -14,7 +14,8 @@
 | Komponenta | Razlog |
 |------------|--------|
 | Cjenovnik tab (`unified_unit_hub_screen.dart`) | FROZEN - referentna implementacija |
-| Unit Wizard publish flow | 3 Firestore docs redoslijed kritian |
+| Unit Wizard publish flow | 3 Firestore docs redoslijed kriti
+an |
 | Timeline Calendar z-index | Cancelled PRVI, confirmed ZADNJI |
 | Calendar Repository (`firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
 | Owner email u `atomicBooking.ts` | UVIJEK aalje - NE vraaj conditional check |
@@ -98,7 +99,8 @@ sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 7. Confirmation screen
 ```
 
-**KRITINO**: Placeholder booking sprjeava race condition gdje 2 korisnika plate za iste datume.
+**KRITINO**: Placeholder booking sprje
+ava race condition gdje 2 korisnika plate za iste datume.
 
 ---
 
@@ -114,7 +116,9 @@ sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 
 **Prije commitanja:**
 - [ ] `flutter analyze` = 0 issues
-- [ ] Proitaj CLAUDE.md ako diraa kritine sekcije
+- [ ] Pro
+itaj CLAUDE.md ako diraa kriti
+ne sekcije
 - [ ] `ref.invalidate()` POSLIJE repository poziva
 - [ ] `mounted` check prije async setState/navigation
 
@@ -125,4 +129,6 @@ sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 
 ---
 
-**Last Updated**: 2025-12-04 | **Version**: 4.1
+**Last Updated**: 2025-12-06 | **Version**: 4.2
+
+**Changelog 4.2**: Dodana lokalizacija za embedani booking widget (multi-language support).

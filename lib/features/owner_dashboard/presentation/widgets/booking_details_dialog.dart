@@ -5,6 +5,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -255,14 +256,16 @@ class BookingDetailsDialog extends ConsumerWidget {
           children: [
             Text(l10n.ownerDetailsCancelConfirmMessage, style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(
-                labelText: l10n.ownerDetailsCancellationReason,
-                border: const OutlineInputBorder(),
-                hintText: l10n.ownerDetailsCancellationHint,
+            Builder(
+              builder: (ctx) => TextField(
+                controller: reasonController,
+                decoration: InputDecorationHelper.buildDecoration(
+                  labelText: l10n.ownerDetailsCancellationReason,
+                  hintText: l10n.ownerDetailsCancellationHint,
+                  context: ctx,
+                ),
+                maxLines: 3,
               ),
-              maxLines: 3,
             ),
           ],
         ),

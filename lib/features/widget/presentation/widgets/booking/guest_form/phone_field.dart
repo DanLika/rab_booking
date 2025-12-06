@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
+import '../../../utils/widget_input_decoration_helper.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
 
 /// Phone number input field with country-specific formatting and validation.
@@ -34,12 +35,7 @@ class PhoneField extends StatelessWidget {
   /// Country dial code for formatting and validation (e.g., '+385')
   final String dialCode;
 
-  const PhoneField({
-    super.key,
-    required this.controller,
-    required this.isDarkMode,
-    required this.dialCode,
-  });
+  const PhoneField({super.key, required this.controller, required this.isDarkMode, required this.dialCode});
 
   @override
   Widget build(BuildContext context) {
@@ -47,70 +43,18 @@ class PhoneField extends StatelessWidget {
 
     return TextFormField(
       controller: controller,
-      maxLength: 20, // Bug #60: Maximum field length validation
+      maxLength: 20,
       keyboardType: TextInputType.phone,
-      inputFormatters: [
-        PhoneNumberFormatter(dialCode),
-      ],
-      style: TextStyle(
-        color: colors.textPrimary,
-      ),
-      decoration: InputDecoration(
-        counterText: '', // Hide character counter
+      inputFormatters: [PhoneNumberFormatter(dialCode)],
+      style: TextStyle(color: colors.textPrimary),
+      decoration: WidgetInputDecorationHelper.buildDecoration(
         labelText: 'Phone Number *',
         hintText: '99 123 4567',
-        labelStyle: TextStyle(
-          color: colors.textSecondary,
-        ),
-        hintStyle: TextStyle(
-          color: colors.textSecondary.withValues(alpha: 0.5),
-        ),
-        filled: true,
-        fillColor: colors.backgroundSecondary,
-        border: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.textSecondary,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.textSecondary,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.textPrimary,
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.error,
-            width: 1.5,
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(color: colors.error, width: 2),
-        ),
-        errorStyle: TextStyle(
-          color: colors.error,
-          fontSize: 12,
-        ),
-        prefixIcon: Icon(
-          Icons.phone_outlined,
-          color: colors.textSecondary,
-        ),
+        prefixIcon: Icon(Icons.phone_outlined, color: colors.textSecondary),
+        isDarkMode: isDarkMode,
       ),
-      // Real-time validation with country-specific rules
       autovalidateMode: AutovalidateMode.onUserInteraction,
-      validator: (value) {
-        return PhoneValidator.validate(value, dialCode);
-      },
+      validator: (value) => PhoneValidator.validate(value, dialCode),
     );
   }
 }

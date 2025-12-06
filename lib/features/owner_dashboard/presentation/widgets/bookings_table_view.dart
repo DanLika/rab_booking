@@ -5,6 +5,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
@@ -562,14 +563,16 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             children: [
               Text(dialogL10n.ownerTableCancelBookingMessage),
               const SizedBox(height: 16),
-              TextField(
-                controller: reasonController,
-                decoration: InputDecoration(
-                  labelText: dialogL10n.ownerTableCancellationReason,
-                  border: const OutlineInputBorder(),
-                  hintText: dialogL10n.ownerTableCancellationReasonHint,
+              Builder(
+                builder: (ctx) => TextField(
+                  controller: reasonController,
+                  decoration: InputDecorationHelper.buildDecoration(
+                    labelText: dialogL10n.ownerTableCancellationReason,
+                    hintText: dialogL10n.ownerTableCancellationReasonHint,
+                    context: ctx,
+                  ),
+                  maxLines: 3,
                 ),
-                maxLines: 3,
               ),
               const SizedBox(height: 16),
               ValueListenableBuilder<bool>(
@@ -751,14 +754,16 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             children: [
               Text(dialogL10n.ownerTableRejectSelectedMessage(count, label)),
               const SizedBox(height: 16),
-              TextField(
-                controller: reasonController,
-                decoration: InputDecoration(
-                  labelText: dialogL10n.ownerTableRejectionReasonOptional,
-                  border: const OutlineInputBorder(),
-                  hintText: dialogL10n.ownerTableCancellationReasonHint,
+              Builder(
+                builder: (ctx) => TextField(
+                  controller: reasonController,
+                  decoration: InputDecorationHelper.buildDecoration(
+                    labelText: dialogL10n.ownerTableRejectionReasonOptional,
+                    hintText: dialogL10n.ownerTableCancellationReasonHint,
+                    context: ctx,
+                  ),
+                  maxLines: 3,
                 ),
-                maxLines: 3,
               ),
             ],
           ),

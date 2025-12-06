@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
+import '../../../utils/widget_input_decoration_helper.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
 
 /// Multi-line text field for special requests/notes.
@@ -22,11 +23,7 @@ class NotesField extends StatelessWidget {
   /// Whether dark mode is active
   final bool isDarkMode;
 
-  const NotesField({
-    super.key,
-    required this.controller,
-    required this.isDarkMode,
-  });
+  const NotesField({super.key, required this.controller, required this.isDarkMode});
 
   @override
   Widget build(BuildContext context) {
@@ -36,70 +33,16 @@ class NotesField extends StatelessWidget {
       controller: controller,
       maxLines: 3,
       maxLength: 500,
-      style: TextStyle(
-        color: colors.textPrimary,
-      ),
+      style: TextStyle(color: colors.textPrimary),
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: NotesValidator.validate,
-      decoration: InputDecoration(
+      decoration: WidgetInputDecorationHelper.buildDecoration(
         labelText: 'Special Requests (Optional)',
         hintText: 'Any special requirements or preferences...',
-        labelStyle: TextStyle(
-          color: colors.textSecondary,
-        ),
-        hintStyle: TextStyle(
-          color: colors.textSecondary.withValues(alpha: 0.5),
-        ),
-        filled: true,
-        fillColor: colors.backgroundSecondary,
-        border: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.textSecondary,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.textSecondary,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.textPrimary,
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.error,
-            width: 1.5,
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.circularMedium,
-          borderSide: BorderSide(
-            color: colors.error,
-            width: 2,
-          ),
-        ),
-        errorStyle: TextStyle(
-          color: colors.error,
-          fontSize: 12,
-          height: 1.0,
-        ),
-        errorMaxLines: 2,
-        prefixIcon: Icon(
-          Icons.notes,
-          color: colors.textSecondary,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 7,
-        ), // Reduced by 10px total (5px top + 5px bottom)
-      ),
+        prefixIcon: Icon(Icons.notes, color: colors.textSecondary),
+        isDarkMode: isDarkMode,
+        hideCounter: false,
+      ).copyWith(contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7)),
     );
   }
 }

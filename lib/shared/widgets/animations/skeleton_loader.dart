@@ -1113,9 +1113,9 @@ class BookingsTableSkeleton extends StatelessWidget {
                   const Expanded(flex: 2, child: SkeletonLoader(height: 14, borderRadius: 4)),
                   const SizedBox(width: 12),
                 ],
-                const Expanded(flex: 1, child: SkeletonLoader(height: 14, borderRadius: 4)),
+                const Expanded(child: SkeletonLoader(height: 14, borderRadius: 4)),
                 const SizedBox(width: 12),
-                const Expanded(flex: 1, child: SkeletonLoader(height: 14, borderRadius: 4)),
+                const Expanded(child: SkeletonLoader(height: 14, borderRadius: 4)),
                 const SizedBox(width: 12),
                 if (!isMobile) ...[
                   const SkeletonLoader(width: 50, height: 14, borderRadius: 4),
@@ -1180,11 +1180,11 @@ class BookingsTableSkeleton extends StatelessWidget {
           ],
 
           // Check-in date
-          const Expanded(flex: 1, child: SkeletonLoader(height: 14, borderRadius: 4)),
+          const Expanded(child: SkeletonLoader(height: 14, borderRadius: 4)),
           const SizedBox(width: 12),
 
           // Check-out date
-          const Expanded(flex: 1, child: SkeletonLoader(height: 14, borderRadius: 4)),
+          const Expanded(child: SkeletonLoader(height: 14, borderRadius: 4)),
           const SizedBox(width: 12),
 
           // Nights & Guests (desktop only)
@@ -1196,7 +1196,7 @@ class BookingsTableSkeleton extends StatelessWidget {
           ],
 
           // Status badge
-          SkeletonLoader(width: 70 + (index * 5 % 20).toDouble(), height: 26, borderRadius: 8),
+          SkeletonLoader(width: 70 + (index * 5 % 20).toDouble(), height: 26),
           const SizedBox(width: 12),
 
           // Actions menu

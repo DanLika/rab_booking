@@ -1253,26 +1253,28 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           final l10nDialog = AppLocalizations.of(context);
           return AlertDialog(
             title: Text(l10nDialog.priceCalendarSetPriceForDays(_selectedDays.length)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: priceController,
-                  decoration: InputDecoration(
-                    labelText: l10nDialog.priceCalendarPricePerNight,
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.euro),
-                    hintText: l10nDialog.priceCalendarHintExample('50'),
+            content: Builder(
+              builder: (ctx) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: priceController,
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: l10nDialog.priceCalendarPricePerNight,
+                      prefixIcon: const Icon(Icons.euro),
+                      hintText: l10nDialog.priceCalendarHintExample('50'),
+                      context: ctx,
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10nDialog.priceCalendarWillSetPriceForAllDates,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(
+                    l10nDialog.priceCalendarWillSetPriceForAllDates,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(

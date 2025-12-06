@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 
 /// Email templates for guest communication
@@ -232,11 +233,11 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 // Subject
                 TextFormField(
                   controller: _subjectController,
-                  decoration: InputDecoration(
+                  decoration: InputDecorationHelper.buildDecoration(
                     labelText: l10n.sendEmailSubject,
                     hintText: l10n.sendEmailSubjectHint,
-                    border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.subject),
+                    context: context,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -251,11 +252,10 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 TextFormField(
                   controller: _messageController,
                   maxLines: 10,
-                  decoration: InputDecoration(
+                  decoration: InputDecorationHelper.buildDecoration(
                     labelText: l10n.sendEmailMessage,
                     hintText: l10n.sendEmailMessageHint,
-                    border: const OutlineInputBorder(),
-                    alignLabelWithHint: true,
+                    context: context,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {

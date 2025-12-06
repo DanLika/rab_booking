@@ -4,6 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../../domain/models/calendar_filter_options.dart';
 import '../../providers/calendar_filters_provider.dart';
@@ -574,19 +575,21 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
         ),
         const SizedBox(height: 8),
-        TextField(
-          controller: _guestSearchController,
-          decoration: InputDecoration(
-            labelText: l10n.calendarFiltersGuestLabel,
-            border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.search),
-            hintText: l10n.calendarFiltersGuestHint,
+        Builder(
+          builder: (ctx) => TextField(
+            controller: _guestSearchController,
+            decoration: InputDecorationHelper.buildDecoration(
+              labelText: l10n.calendarFiltersGuestLabel,
+              prefixIcon: const Icon(Icons.search),
+              hintText: l10n.calendarFiltersGuestHint,
+              context: ctx,
+            ),
+            onChanged: (value) {
+              setState(() {
+                _filters = _filters.copyWith(guestSearchQuery: value.isEmpty ? null : value);
+              });
+            },
           ),
-          onChanged: (value) {
-            setState(() {
-              _filters = _filters.copyWith(guestSearchQuery: value.isEmpty ? null : value);
-            });
-          },
         ),
       ],
     );
@@ -604,19 +607,21 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
         ),
         const SizedBox(height: 8),
-        TextField(
-          controller: _bookingIdSearchController,
-          decoration: InputDecoration(
-            labelText: l10n.calendarFiltersBookingIdLabel,
-            border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.tag),
-            hintText: l10n.calendarFiltersBookingIdHint,
+        Builder(
+          builder: (ctx) => TextField(
+            controller: _bookingIdSearchController,
+            decoration: InputDecorationHelper.buildDecoration(
+              labelText: l10n.calendarFiltersBookingIdLabel,
+              prefixIcon: const Icon(Icons.tag),
+              hintText: l10n.calendarFiltersBookingIdHint,
+              context: ctx,
+            ),
+            onChanged: (value) {
+              setState(() {
+                _filters = _filters.copyWith(bookingIdSearch: value.isEmpty ? null : value);
+              });
+            },
           ),
-          onChanged: (value) {
-            setState(() {
-              _filters = _filters.copyWith(bookingIdSearch: value.isEmpty ? null : value);
-            });
-          },
         ),
       ],
     );

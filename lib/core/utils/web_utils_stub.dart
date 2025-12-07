@@ -1,3 +1,5 @@
+library;
+
 /// Stub implementation of web utilities for non-web platforms.
 /// These functions are no-ops on mobile/desktop.
 

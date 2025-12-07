@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/calendar_filter_options.dart';
@@ -8,12 +7,9 @@ import 'owner_calendar_provider.dart';
 
 /// Provider for calendar and bookings list filters
 /// Unified filter state shared across Week, Month, Timeline, and Bookings List
-final calendarFiltersProvider =
-    StateNotifierProvider<CalendarFiltersNotifier, CalendarFilterOptions>((
-      ref,
-    ) {
-      return CalendarFiltersNotifier();
-    });
+final calendarFiltersProvider = StateNotifierProvider<CalendarFiltersNotifier, CalendarFilterOptions>((ref) {
+  return CalendarFiltersNotifier();
+});
 
 /// State notifier for calendar filters
 class CalendarFiltersNotifier extends StateNotifier<CalendarFilterOptions> {
@@ -72,18 +68,12 @@ class _FilterParams {
   final CalendarFilterOptions filters;
   final List<UnitModel> units;
 
-  const _FilterParams({
-    required this.bookingsMap,
-    required this.filters,
-    required this.units,
-  });
+  const _FilterParams({required this.bookingsMap, required this.filters, required this.units});
 }
 
 /// PERFORMANCE: Background filtering function for compute()
 /// Runs in separate isolate to avoid blocking UI thread
-Map<String, List<BookingModel>> _applyFiltersInBackground(
-  _FilterParams params,
-) {
+Map<String, List<BookingModel>> _applyFiltersInBackground(_FilterParams params) {
   final bookingsMap = params.bookingsMap;
   final filters = params.filters;
   final units = params.units;
@@ -105,32 +95,26 @@ Map<String, List<BookingModel>> _applyFiltersInBackground(
 
     // Filter by property IDs if specified
     final propertyId = unitToProperty[unitId];
-    if (filters.propertyIds.isNotEmpty &&
-        propertyId != null &&
-        !filters.propertyIds.contains(propertyId)) {
+    if (filters.propertyIds.isNotEmpty && propertyId != null && !filters.propertyIds.contains(propertyId)) {
       return; // Skip this unit (wrong property)
     }
 
     // Filter bookings in this unit
     final filteredBookings = bookings.where((booking) {
       // Filter by status
-      if (filters.statuses.isNotEmpty &&
-          !filters.statuses.contains(booking.status.name)) {
+      if (filters.statuses.isNotEmpty && !filters.statuses.contains(booking.status.name)) {
         return false;
       }
 
       // Filter by source
-      if (filters.sources.isNotEmpty &&
-          booking.source != null &&
-          !filters.sources.contains(booking.source)) {
+      if (filters.sources.isNotEmpty && booking.source != null && !filters.sources.contains(booking.source)) {
         return false;
       }
 
       // Filter by date range (check-in dates)
       if (filters.startDate != null || filters.endDate != null) {
         final checkInDate = booking.checkIn;
-        if (filters.startDate != null &&
-            checkInDate.isBefore(filters.startDate!)) {
+        if (filters.startDate != null && checkInDate.isBefore(filters.startDate!)) {
           return false;
         }
         if (filters.endDate != null && checkInDate.isAfter(filters.endDate!)) {
@@ -139,8 +123,7 @@ Map<String, List<BookingModel>> _applyFiltersInBackground(
       }
 
       // Filter by guest search
-      if (filters.guestSearchQuery != null &&
-          filters.guestSearchQuery!.isNotEmpty) {
+      if (filters.guestSearchQuery != null && filters.guestSearchQuery!.isNotEmpty) {
         final query = filters.guestSearchQuery!.toLowerCase();
         final guestName = booking.guestName?.toLowerCase() ?? '';
         final guestEmail = booking.guestEmail?.toLowerCase() ?? '';
@@ -150,8 +133,7 @@ Map<String, List<BookingModel>> _applyFiltersInBackground(
       }
 
       // Filter by booking ID
-      if (filters.bookingIdSearch != null &&
-          filters.bookingIdSearch!.isNotEmpty) {
+      if (filters.bookingIdSearch != null && filters.bookingIdSearch!.isNotEmpty) {
         final query = filters.bookingIdSearch!.toLowerCase();
         if (!booking.id.toLowerCase().contains(query)) {
           return false;
@@ -172,107 +154,71 @@ Map<String, List<BookingModel>> _applyFiltersInBackground(
 /// Filtered bookings provider
 /// Applies filter state to calendar bookings
 /// PERFORMANCE: Uses compute() for background filtering on large datasets
-final filteredCalendarBookingsProvider =
-    FutureProvider<Map<String, List<BookingModel>>>((ref) async {
-      final allBookingsAsync = await ref.watch(calendarBookingsProvider.future);
-      final filters = ref.watch(calendarFiltersProvider);
-      final units = await ref.watch(allOwnerUnitsProvider.future);
+final filteredCalendarBookingsProvider = FutureProvider<Map<String, List<BookingModel>>>((ref) async {
+  final allBookingsAsync = await ref.watch(calendarBookingsProvider.future);
+  final filters = ref.watch(calendarFiltersProvider);
+  final units = await ref.watch(allOwnerUnitsProvider.future);
 
-      if (!filters.hasActiveFilters) {
-        return allBookingsAsync;
-      }
+  if (!filters.hasActiveFilters) {
+    return allBookingsAsync;
+  }
 
-      // Count total bookings to decide if compute() is worth the overhead
-      final totalBookings = allBookingsAsync.values.fold<int>(
-        0,
-        (sum, list) => sum + list.length,
+  // Count total bookings to decide if compute() is worth the overhead
+  final totalBookings = allBookingsAsync.values.fold<int>(0, (sum, list) => sum + list.length);
+
+  // PERFORMANCE: Use compute() for large datasets (>100 bookings)
+  // For smaller datasets, the compute() overhead isn't worth it
+  if (totalBookings > 100) {
+    try {
+      return await compute(
+        _applyFiltersInBackground,
+        _FilterParams(bookingsMap: allBookingsAsync, filters: filters, units: units),
       );
-
-      // PERFORMANCE: Use compute() for large datasets (>100 bookings)
-      // For smaller datasets, the compute() overhead isn't worth it
-      if (totalBookings > 100) {
-        try {
-          return await compute(
-            _applyFiltersInBackground,
-            _FilterParams(
-              bookingsMap: allBookingsAsync,
-              filters: filters,
-              units: units,
-            ),
-          );
-        } catch (e) {
-          // Fallback to synchronous filtering if compute() fails
-          return _applyFiltersInBackground(
-            _FilterParams(
-              bookingsMap: allBookingsAsync,
-              filters: filters,
-              units: units,
-            ),
-          );
-        }
-      } else {
-        // Small dataset - use synchronous filtering (no compute() overhead)
-        return _applyFiltersInBackground(
-          _FilterParams(
-            bookingsMap: allBookingsAsync,
-            filters: filters,
-            units: units,
-          ),
-        );
-      }
-    });
+    } catch (e) {
+      // Fallback to synchronous filtering if compute() fails
+      return _applyFiltersInBackground(_FilterParams(bookingsMap: allBookingsAsync, filters: filters, units: units));
+    }
+  } else {
+    // Small dataset - use synchronous filtering (no compute() overhead)
+    return _applyFiltersInBackground(_FilterParams(bookingsMap: allBookingsAsync, filters: filters, units: units));
+  }
+});
 
 /// Timeline calendar bookings provider
 /// Shows ALL booking statuses (ignores status filter) for proper overlap visualization
 /// Applies other filters (property, unit, date range, search)
-final timelineCalendarBookingsProvider =
-    FutureProvider<Map<String, List<BookingModel>>>((ref) async {
-      final allBookingsAsync = await ref.watch(calendarBookingsProvider.future);
-      final filters = ref.watch(calendarFiltersProvider);
-      final units = await ref.watch(allOwnerUnitsProvider.future);
+final timelineCalendarBookingsProvider = FutureProvider<Map<String, List<BookingModel>>>((ref) async {
+  final allBookingsAsync = await ref.watch(calendarBookingsProvider.future);
+  final filters = ref.watch(calendarFiltersProvider);
+  final units = await ref.watch(allOwnerUnitsProvider.future);
 
-      // Create filter WITHOUT status filter (timeline shows all statuses)
-      final timelineFilters = filters.copyWith(statuses: []);
+  // Create filter WITHOUT status filter (timeline shows all statuses)
+  final timelineFilters = filters.copyWith(statuses: []);
 
-      if (!timelineFilters.hasActiveFilters) {
-        return allBookingsAsync;
-      }
+  if (!timelineFilters.hasActiveFilters) {
+    return allBookingsAsync;
+  }
 
-      // Count total bookings to decide if compute() is worth the overhead
-      final totalBookings = allBookingsAsync.values.fold<int>(
-        0,
-        (sum, list) => sum + list.length,
+  // Count total bookings to decide if compute() is worth the overhead
+  final totalBookings = allBookingsAsync.values.fold<int>(0, (sum, list) => sum + list.length);
+
+  // PERFORMANCE: Use compute() for large datasets (>100 bookings)
+  if (totalBookings > 100) {
+    try {
+      return await compute(
+        _applyFiltersInBackground,
+        _FilterParams(bookingsMap: allBookingsAsync, filters: timelineFilters, units: units),
       );
-
-      // PERFORMANCE: Use compute() for large datasets (>100 bookings)
-      if (totalBookings > 100) {
-        try {
-          return await compute(
-            _applyFiltersInBackground,
-            _FilterParams(
-              bookingsMap: allBookingsAsync,
-              filters: timelineFilters,
-              units: units,
-            ),
-          );
-        } catch (e) {
-          // Fallback to synchronous filtering if compute() fails
-          return _applyFiltersInBackground(
-            _FilterParams(
-              bookingsMap: allBookingsAsync,
-              filters: timelineFilters,
-              units: units,
-            ),
-          );
-        }
-      } else {
-        // Small dataset - use synchronous filtering (no compute() overhead)
-        return _applyFiltersInBackground(
-          _FilterParams(
-            bookingsMap: allBookingsAsync,
-            filters: timelineFilters,
-            units: units,
-          ),
-        );
-      }
-    });
+    } catch (e) {
+      // Fallback to synchronous filtering if compute() fails
+      return _applyFiltersInBackground(
+        _FilterParams(bookingsMap: allBookingsAsync, filters: timelineFilters, units: units),
+      );
+    }
+  } else {
+    // Small dataset - use synchronous filtering (no compute() overhead)
+    return _applyFiltersInBackground(
+      _FilterParams(bookingsMap: allBookingsAsync, filters: timelineFilters, units: units),
+    );
+  }
+});

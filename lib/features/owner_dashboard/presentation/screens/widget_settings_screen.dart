@@ -647,14 +647,28 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      l10n.widgetSettingsWidgetMode,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.widgetSettingsWidgetMode,
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 2,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 l10n.widgetSettingsWidgetModeDesc,
                 style: TextStyle(
@@ -769,14 +783,28 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      l10n.widgetSettingsPaymentMethods,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.widgetSettingsPaymentMethods,
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 2,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               // Info text
               Text(
                 l10n.widgetSettingsPaymentMethodsDesc,
@@ -893,6 +921,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     Builder(
                       builder: (ctx) => DropdownButtonFormField<int>(
                         initialValue: _bankPaymentDeadlineDays,
+                        dropdownColor: InputDecorationHelper.getDropdownColor(ctx),
                         decoration: InputDecorationHelper.buildDecoration(
                           labelText: l10n.widgetSettingsPaymentDeadline,
                           context: ctx,
@@ -1214,9 +1243,23 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      l10n.widgetSettingsBookingBehavior,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.widgetSettingsBookingBehavior,
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 2,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1474,14 +1517,28 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      l10n.widgetSettingsContactInfo,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.widgetSettingsContactInfo,
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 2,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 l10n.widgetSettingsContactDesc,
                 style: TextStyle(
@@ -1567,42 +1624,75 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     TextInputType? keyboardType,
   }) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Toggle row
-        Row(
-          children: [
-            Icon(icon, size: 18, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: enabled
+            ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
+            : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: enabled
+              ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
+              : theme.colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Toggle row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: enabled
+                      ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+                      : theme.colorScheme.onSurface.withAlpha((0.08 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: enabled ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: enabled ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Switch(
+                value: enabled,
+                onChanged: onToggle,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                activeTrackColor: theme.colorScheme.primary,
+              ),
+            ],
+          ),
+          if (enabled) ...[
+            const SizedBox(height: 10),
+            Builder(
+              builder: (ctx) => TextFormField(
+                controller: controller,
+                decoration: InputDecorationHelper.buildDecoration(
+                  labelText: label,
+                  prefixIcon: Icon(icon, size: 18),
+                  context: ctx,
+                ).copyWith(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
+                keyboardType: keyboardType,
+                style: const TextStyle(fontSize: 14),
               ),
             ),
-            Switch(
-              value: enabled,
-              onChanged: onToggle,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              activeThumbColor: theme.colorScheme.primary,
-              activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
-              inactiveThumbColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              inactiveTrackColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
-            ),
           ],
-        ),
-        if (enabled) ...[
-          const SizedBox(height: 8),
-          Builder(
-            builder: (ctx) => TextFormField(
-              controller: controller,
-              decoration: InputDecorationHelper.buildDecoration(labelText: label, prefixIcon: Icon(icon), context: ctx),
-              keyboardType: keyboardType,
-            ),
-          ),
         ],
-      ],
+      ),
     );
   }
 

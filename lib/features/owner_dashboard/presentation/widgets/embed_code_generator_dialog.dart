@@ -215,6 +215,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                               Builder(
                                 builder: (ctx) => DropdownButtonFormField<String>(
                                   initialValue: _selectedLanguage,
+                                  dropdownColor: InputDecorationHelper.getDropdownColor(ctx),
                                   decoration: InputDecorationHelper.buildDecoration(
                                     labelText: l10n.embedCodeLanguage,
                                     context: ctx,

@@ -37,11 +37,8 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     try {
       final l10n = AppLocalizations.of(context);
 
-      // Fetch bookings for this unit
-      final bookings = await ref.read(bookingRepositoryProvider).fetchUnitBookings(unit.id);
-
       // Generate iCal content
-      final icsContent = await ref
+      await ref
           .read(icalExportServiceProvider)
           .generateAndUploadIcal(propertyId: propertyId, unitId: unit.id, unit: unit);
 
@@ -389,7 +386,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               ),
             )
           else ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: theme.dividerColor),
             ..._allUnits.map((item) => _buildUnitItem(context, item)),
           ],
         ],
@@ -422,7 +419,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               : Icon(Icons.download, color: theme.colorScheme.primary),
           onTap: _generatingUnitId == null ? () => _generateAndDownloadIcal(unit, property.id) : null,
         ),
-        const Divider(height: 1, indent: 20, endIndent: 20),
+        Divider(height: 1, indent: 20, endIndent: 20, color: theme.dividerColor),
       ],
     );
   }
@@ -522,7 +519,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
             ),
           ),
           if (_showFaq) ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: theme.dividerColor),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(

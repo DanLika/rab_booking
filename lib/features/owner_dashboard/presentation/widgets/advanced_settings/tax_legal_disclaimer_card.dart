@@ -5,6 +5,7 @@ import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/design_tokens/gradient_tokens.dart';
 
 /// Tax & Legal Disclaimer Settings Card
 ///
@@ -61,15 +62,32 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
               tilePadding: EdgeInsets.symmetric(horizontal: isMobile ? 14 : 18, vertical: 8),
               childrenPadding: EdgeInsets.fromLTRB(isMobile ? 14 : 18, 0, isMobile ? 14 : 18, isMobile ? 14 : 18),
               leading: _buildLeadingIcon(theme),
-              title: Text(
-                l10n.taxLegalTitle,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.taxLegalTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    height: 2,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      gradient: GradientTokens.brandPrimary,
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                  ),
+                ],
               ),
-              subtitle: Text(
-                taxLegalEnabled ? l10n.taxLegalEnabled : l10n.taxLegalDisabled,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: taxLegalEnabled ? AppColors.success : context.textColorSecondary,
-                  fontSize: 12,
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  taxLegalEnabled ? l10n.taxLegalEnabled : l10n.taxLegalDisabled,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: taxLegalEnabled ? AppColors.success : context.textColorSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               children: [

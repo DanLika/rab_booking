@@ -319,7 +319,11 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> with SingleT
           curve: Curves.easeOutCubic,
           width: 56,
           height: 56,
-          transform: Matrix4.identity()..scale(_isPressed ? 0.92 : (_isHovered ? 1.08 : 1.0)),
+          transform: Matrix4.diagonal3Values(
+            _isPressed ? 0.92 : (_isHovered ? 1.08 : 1.0),
+            _isPressed ? 0.92 : (_isHovered ? 1.08 : 1.0),
+            1.0,
+          ),
           transformAlignment: Alignment.center,
           decoration: BoxDecoration(
             gradient: widget.gradient,

@@ -192,11 +192,7 @@ class ProfileScreen extends ConsumerWidget {
                                 onTap: isAnonymous ? null : () => context.push(OwnerRoutes.profileEdit),
                               ),
                               if (!isAnonymous) ...[
-                                Divider(
-                                  height: 1,
-                                  indent: 72,
-                                  color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
-                                ),
+                                Divider(height: 1, indent: 72, color: theme.dividerColor),
                                 _PremiumListTile(
                                   icon: Icons.lock_outline,
                                   title: l10n.ownerProfileChangePassword,
@@ -204,11 +200,7 @@ class ProfileScreen extends ConsumerWidget {
                                   onTap: () => context.push(OwnerRoutes.profileChangePassword),
                                 ),
                               ],
-                              Divider(
-                                height: 1,
-                                indent: 72,
-                                color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
-                              ),
+                              Divider(height: 1, indent: 72, color: theme.dividerColor),
                               _PremiumListTile(
                                 icon: Icons.notifications_outlined,
                                 title: l10n.ownerProfileNotificationSettings,
@@ -237,11 +229,7 @@ class ProfileScreen extends ConsumerWidget {
                                 subtitle: languageName,
                                 onTap: () => showLanguageSelectionBottomSheet(context, ref),
                               ),
-                              Divider(
-                                height: 1,
-                                indent: 56,
-                                color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
-                              ),
+                              Divider(height: 1, indent: 56, color: theme.dividerColor),
                               _PremiumListTile(
                                 icon: Icons.brightness_6_outlined,
                                 title: l10n.ownerProfileTheme,
@@ -272,11 +260,7 @@ class ProfileScreen extends ConsumerWidget {
                                   ErrorDisplayUtils.showInfoSnackBar(context, l10n.ownerProfileHelpSupportComingSoon);
                                 },
                               ),
-                              Divider(
-                                height: 1,
-                                indent: 56,
-                                color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
-                              ),
+                              Divider(height: 1, indent: 56, color: theme.dividerColor),
                               _PremiumListTile(
                                 icon: Icons.info_outline,
                                 title: l10n.ownerProfileAbout,
@@ -324,22 +308,14 @@ class ProfileScreen extends ConsumerWidget {
                                 subtitle: l10n.ownerProfileTermsConditionsSubtitle,
                                 onTap: () => context.push(OwnerRoutes.termsConditions),
                               ),
-                              Divider(
-                                height: 1,
-                                indent: 56,
-                                color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
-                              ),
+                              Divider(height: 1, indent: 56, color: theme.dividerColor),
                               _PremiumListTile(
                                 icon: Icons.privacy_tip_outlined,
                                 title: l10n.ownerProfilePrivacyPolicy,
                                 subtitle: l10n.ownerProfilePrivacyPolicySubtitle,
                                 onTap: () => context.push(OwnerRoutes.privacyPolicy),
                               ),
-                              Divider(
-                                height: 1,
-                                indent: 56,
-                                color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
-                              ),
+                              Divider(height: 1, indent: 56, color: theme.dividerColor),
                               _PremiumListTile(
                                 icon: Icons.cookie_outlined,
                                 title: l10n.ownerProfileCookiesPolicy,

@@ -374,7 +374,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               ),
             )
           else ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: theme.dividerColor),
             ...feeds.map((feed) => _buildFeedItem(context, feed)),
           ],
         ],
@@ -451,7 +451,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             ],
           ),
         ),
-        const Divider(height: 1, indent: 20, endIndent: 20),
+        Divider(height: 1, indent: 20, endIndent: 20, color: theme.dividerColor),
       ],
     );
   }
@@ -506,14 +506,14 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: theme.dividerColor),
           _buildPlatformItem(context, 0, 'Booking.com', Icons.hotel, [
             l10n.icalGuideBookingCom1,
             l10n.icalGuideBookingCom2,
             l10n.icalGuideBookingCom3,
             l10n.icalGuideBookingCom4,
           ]),
-          const Divider(height: 1, indent: 20, endIndent: 20),
+          Divider(height: 1, indent: 20, endIndent: 20, color: theme.dividerColor),
           _buildPlatformItem(context, 1, 'Airbnb', Icons.home, [
             l10n.icalGuideAirbnb1,
             l10n.icalGuideAirbnb2,
@@ -624,7 +624,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             ),
           ),
           if (_showFaq) ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: theme.dividerColor),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -895,6 +895,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                     final validUnitId = units.any((u) => u.id == _selectedUnitId) ? _selectedUnitId : null;
                     return DropdownButtonFormField<String>(
                       initialValue: validUnitId,
+                      dropdownColor: InputDecorationHelper.getDropdownColor(context),
                       decoration: InputDecorationHelper.buildDecoration(
                         labelText: l10n.icalSelectUnit,
                         context: context,
@@ -910,6 +911,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedPlatform,
+                  dropdownColor: InputDecorationHelper.getDropdownColor(context),
                   decoration: InputDecorationHelper.buildDecoration(labelText: l10n.icalPlatform, context: context),
                   items: [
                     DropdownMenuItem(value: 'booking_com', child: Text(l10n.icalPlatformBookingCom)),

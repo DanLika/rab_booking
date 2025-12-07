@@ -180,7 +180,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               onTap: () => context.go(OwnerRoutes.profile),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
           ],
         ),
       ),

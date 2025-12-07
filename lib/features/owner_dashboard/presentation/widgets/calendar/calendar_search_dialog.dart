@@ -221,7 +221,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                 ),
               ),
 
-            Divider(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight, height: 24),
+            Divider(color: theme.dividerColor, height: 24),
 
             // Results list
             Expanded(child: _buildResultsList()),

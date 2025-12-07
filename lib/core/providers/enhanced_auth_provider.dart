@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../../core/exceptions/app_exceptions.dart';
 import '../../core/services/rate_limit_service.dart';
 import '../../core/services/security_events_service.dart';
@@ -195,6 +194,13 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         throw _rateLimit.getRateLimitMessage(rateLimit);
       }
 
+      // Set persistence BEFORE sign in based on rememberMe
+      if (rememberMe) {
+        await _auth.setPersistence(Persistence.LOCAL);
+      } else {
+        await _auth.setPersistence(Persistence.SESSION);
+      }
+
       // Attempt sign in
       LoggingService.log('Calling Firebase signInWithEmailAndPassword...', tag: 'ENHANCED_AUTH');
       final credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
@@ -227,11 +233,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       } catch (e) {
         // Don't block login if security logging fails
         LoggingService.log('Security event logging failed: $e', tag: 'AUTH_WARNING');
-      }
-
-      // Set persistence based on rememberMe
-      if (!rememberMe) {
-        await _auth.setPersistence(Persistence.SESSION);
       }
 
       // Auth state listener will handle the rest
@@ -392,11 +393,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         LoggingService.log('Security event logging failed during registration: $e', tag: 'AUTH_WARNING');
       }
 
-      state = EnhancedAuthState(
-        firebaseUser: credential.user,
-        userModel: userModel,
-        requiresEmailVerification: true,
-      );
+      state = EnhancedAuthState(firebaseUser: credential.user, userModel: userModel, requiresEmailVerification: true);
     } on FirebaseAuthException catch (e) {
       // Determine error message, with rate limit check wrapped in try-catch
       // to ensure isLoading is ALWAYS reset even if rate limit operations fail
@@ -469,6 +466,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
+      // Set persistence to LOCAL for anonymous sign in
+      await _auth.setPersistence(Persistence.LOCAL);
+
       final UserCredential userCredential = await _auth.signInAnonymously();
 
       if (userCredential.user == null) {
@@ -551,6 +551,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
+      // Set persistence to LOCAL for Google sign in
+      await _auth.setPersistence(Persistence.LOCAL);
+
       // Create Google Auth Provider
       final GoogleAuthProvider googleProvider = GoogleAuthProvider();
 
@@ -612,6 +615,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
+      // Set persistence to LOCAL for Apple sign in
+      await _auth.setPersistence(Persistence.LOCAL);
+
       // Create Apple Auth Provider
       final OAuthProvider appleProvider = OAuthProvider('apple.com');
 

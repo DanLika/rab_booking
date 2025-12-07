@@ -10,7 +10,6 @@ class LoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     // Use system colors for overlay background
     final bgColor = backgroundColor ?? theme.colorScheme.surface.withValues(alpha: 0.95);

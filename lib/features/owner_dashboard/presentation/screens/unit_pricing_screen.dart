@@ -222,6 +222,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               DropdownButtonFormField<UnitModel>(
                 // Safe: null initialValue is acceptable, shows hint until selection
                 initialValue: _selectedUnit,
+                dropdownColor: InputDecorationHelper.getDropdownColor(context),
                 hint: Text(l10n.unitPricingSelectUnitHint), // Shown when null
                 decoration: InputDecorationHelper.buildDecoration(
                   labelText: l10n.unitPricingUnit,
@@ -371,14 +372,28 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        l10n.unitPricingBasePrice,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.unitPricingBasePrice,
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 2,
+                            width: 40,
+                            decoration: BoxDecoration(
+                              gradient: GradientTokens.brandPrimary,
+                              borderRadius: BorderRadius.circular(1),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
                   l10n.unitPricingBasePriceDesc,
                   style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary),

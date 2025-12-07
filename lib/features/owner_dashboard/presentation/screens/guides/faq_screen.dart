@@ -194,7 +194,7 @@ class _FAQScreenState extends State<FAQScreen> {
                 ),
               ),
 
-              const Divider(),
+              Divider(color: theme.dividerColor),
 
               // Results Count
               if (_searchQuery.isNotEmpty || _selectedCategoryKey != 'all')

@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../../../../shared/models/booking_model.dart';
 
 /// Resize mode enum
 enum ResizeMode {
   none,
   resizingStart, // Dragging left edge (check-in date)
-  resizingEnd,   // Dragging right edge (check-out date)
+  resizingEnd, // Dragging right edge (check-out date)
 }
 
 /// Resize state model
@@ -73,10 +72,7 @@ class BookingResizeNotifier extends StateNotifier<BookingResizeState> {
   }
 
   /// Update preview dates during drag
-  void updatePreview({
-    DateTime? checkIn,
-    DateTime? checkOut,
-  }) {
+  void updatePreview({DateTime? checkIn, DateTime? checkOut}) {
     if (!state.isResizing) return;
 
     final newCheckIn = checkIn ?? state.previewCheckIn!;
@@ -90,9 +86,7 @@ class BookingResizeNotifier extends StateNotifier<BookingResizeState> {
     final nights = newCheckOut.difference(newCheckIn).inDays;
     final hasMinimumNights = nights >= 1;
     final finalIsValid = isValid && hasMinimumNights;
-    final finalErrorMessage = !hasMinimumNights
-        ? 'Minimalno trajanje je 1 noć'
-        : errorMessage;
+    final finalErrorMessage = !hasMinimumNights ? 'Minimalno trajanje je 1 noć' : errorMessage;
 
     state = state.copyWith(
       previewCheckIn: newCheckIn,
@@ -111,10 +105,7 @@ class BookingResizeNotifier extends StateNotifier<BookingResizeState> {
   BookingModel? getUpdatedBooking() {
     if (!state.isResizing || !state.isValid) return null;
 
-    return state.bookingBeingResized!.copyWith(
-      checkIn: state.previewCheckIn!,
-      checkOut: state.previewCheckOut!,
-    );
+    return state.bookingBeingResized!.copyWith(checkIn: state.previewCheckIn!, checkOut: state.previewCheckOut!);
   }
 
   /// Clear state after successful save
@@ -124,7 +115,6 @@ class BookingResizeNotifier extends StateNotifier<BookingResizeState> {
 }
 
 /// Booking resize provider
-final bookingResizeProvider =
-    StateNotifierProvider<BookingResizeNotifier, BookingResizeState>((ref) {
+final bookingResizeProvider = StateNotifierProvider<BookingResizeNotifier, BookingResizeState>((ref) {
   return BookingResizeNotifier();
 });

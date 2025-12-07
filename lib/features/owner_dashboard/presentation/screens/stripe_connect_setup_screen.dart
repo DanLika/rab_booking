@@ -439,7 +439,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: theme.dividerColor),
           // Steps
           ...steps.map((s) => _buildStepItem(context, s.$1, s.$2, s.$3, s.$4)),
         ],
@@ -499,7 +499,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
               ),
             ),
           ),
-        if (number < 4) const Divider(height: 1, indent: 20, endIndent: 20),
+        if (number < 4) Divider(height: 1, indent: 20, endIndent: 20, color: theme.dividerColor),
       ],
     );
   }
@@ -552,7 +552,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
           ),
           // FAQ items
           if (_showFaq) ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: theme.dividerColor),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(children: faqs.map((faq) => _buildFaqItem(context, faq.$1, faq.$2)).toList()),

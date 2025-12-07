@@ -212,6 +212,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         Builder(
           builder: (context) => DropdownButtonFormField<DateTime>(
             initialValue: _selectedMonth,
+            dropdownColor: InputDecorationHelper.getDropdownColor(context),
             decoration: InputDecorationHelper.buildDecoration(
               labelText: l10n.priceCalendarSelectMonth,
               prefixIcon: const Icon(Icons.calendar_month),
@@ -290,6 +291,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           child: Builder(
             builder: (context) => DropdownButtonFormField<DateTime>(
               initialValue: _selectedMonth,
+              dropdownColor: InputDecorationHelper.getDropdownColor(context),
               decoration: InputDecorationHelper.buildDecoration(
                 labelText: l10n.priceCalendarSelectMonth,
                 prefixIcon: const Icon(Icons.calendar_month),
@@ -461,14 +463,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             side: BorderSide(
               color: _selectedDays.isEmpty
                   ? Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt())
-                  : context.borderColor,
+                  : context.primaryColor,
               width: 1.5,
             ),
             labelStyle: TextStyle(
               color: _selectedDays.isEmpty
                   ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38)
-                  : context.textColorSecondary,
-              fontWeight: FontWeight.w500,
+                  : context.primaryColor,
+              fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1333,216 +1335,314 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           final l10nDialog = AppLocalizations.of(context);
-          return AlertDialog(
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: context.primaryColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.euro, color: context.primaryColor, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l10nDialog.priceCalendarSetPriceForDays(_selectedDays.length),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
-                  ),
-                ),
-              ],
-            ),
-            content: Builder(
-              builder: (ctx) => SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: priceController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        labelText: l10nDialog.priceCalendarPricePerNight,
-                        prefixIcon: const Icon(Icons.euro),
-                        hintText: l10nDialog.priceCalendarHintExample('50'),
-                        context: ctx,
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      autofocus: true,
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.info_outline, size: 18, color: context.primaryColor),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              l10nDialog.priceCalendarWillSetPriceForAllDates,
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            clipBehavior: Clip.antiAlias,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              decoration: BoxDecoration(
+                color: context.gradients.cardBackground,
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
-                child: Text(l10nDialog.cancel),
-              ),
-              ElevatedButton(
-                onPressed: isProcessing
-                    ? null
-                    : () async {
-                        // Debounce: prevent duplicate clicks within 2 seconds
-                        final now = DateTime.now();
-                        if (lastClickTime != null && now.difference(lastClickTime!).inSeconds < 2) {
-                          return;
-                        }
-                        lastClickTime = now;
-                        final messenger = ScaffoldMessenger.of(context);
-                        final navigator = Navigator.of(context);
-
-                        final priceText = priceController.text.trim();
-                        if (priceText.isEmpty) {
-                          messenger.showSnackBar(SnackBar(content: Text(l10nDialog.priceCalendarEnterPrice)));
-                          return;
-                        }
-
-                        final price = double.tryParse(priceText);
-                        if (price == null || price <= 0) {
-                          messenger.showSnackBar(
-                            SnackBar(content: Text(l10nDialog.priceCalendarPriceMustBeGreaterThanZero)),
-                          );
-                          return;
-                        }
-
-                        // Show confirmation dialog before bulk update
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(l10nDialog.priceCalendarConfirmation),
-                            content: Text(
-                              l10nDialog.priceCalendarConfirmSetPrice(price.toStringAsFixed(0), _selectedDays.length),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(false),
-                                child: Text(l10nDialog.cancel),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.of(context).pop(true),
-                                style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
-                                child: Text(l10nDialog.confirm),
-                              ),
-                            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header with gradient
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: context.gradients.brandPrimary,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        );
+                          child: const Icon(Icons.euro, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            l10nDialog.priceCalendarSetPriceForDays(_selectedDays.length),
+                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => Navigator.of(context).pop(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ),
 
-                        if (confirmed != true) return;
-
-                        setState(() => isProcessing = true);
-
-                        // Get current prices for rollback
-                        final currentPrices = <DateTime, DailyPriceModel>{};
-                        final newPrices = <DateTime, DailyPriceModel>{};
-                        final cachedMonth = _localState.getMonthPrices(_selectedMonth);
-
-                        for (final date in _selectedDays) {
-                          final dateKey = DateTime(date.year, date.month, date.day);
-                          final existing = cachedMonth?[dateKey];
-
-                          if (existing != null) {
-                            currentPrices[dateKey] = existing;
-                            newPrices[dateKey] = existing.copyWith(price: price);
-                          } else {
-                            // Create new price entry
-                            newPrices[dateKey] = DailyPriceModel(
-                              id: '',
-                              unitId: widget.unit.id,
-                              date: date,
-                              price: price,
-                              createdAt: DateTime.now(),
-                              updatedAt: DateTime.now(),
-                            );
-                          }
-                        }
-
-                        // OPTIMISTIC UPDATE: Update UI immediately
-                        _localState.updateDatesOptimistically(
-                          _selectedMonth,
-                          _selectedDays.toList(),
-                          currentPrices,
-                          newPrices,
-                        );
-
-                        final count = _selectedDays.length;
-                        // Save dates before clearing for API call
-                        final datesToUpdate = _selectedDays.toList();
-
-                        // Close dialog and clear selection immediately
-                        if (mounted) {
-                          navigator.pop();
-                          _selectedDays.clear();
-                          this.setState(() => isProcessing = false);
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(l10nDialog.priceCalendarUpdatedPrices(count)),
-                              duration: const Duration(seconds: 2),
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Builder(
+                      builder: (ctx) => SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextField(
+                              controller: priceController,
+                              decoration: InputDecorationHelper.buildDecoration(
+                                labelText: l10nDialog.priceCalendarPricePerNight,
+                                prefixIcon: const Icon(Icons.euro),
+                                hintText: l10nDialog.priceCalendarHintExample('50'),
+                                context: ctx,
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              autofocus: true,
                             ),
-                          );
-                        }
-
-                        // Save to server in background
-                        try {
-                          final repository = ref.read(dailyPriceRepositoryProvider);
-
-                          await repository.bulkPartialUpdate(
-                            unitId: widget.unit.id,
-                            dates: datesToUpdate,
-                            partialData: {'price': price},
-                          );
-
-                          // Refresh from server
-                          ref.invalidate(
-                            monthlyPricesProvider(MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth)),
-                          );
-                        } catch (e) {
-                          // ROLLBACK on error
-                          _localState.rollbackUpdate(_selectedMonth, currentPrices);
-
-                          if (mounted) {
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content: Text('${l10n.error}: $e'),
-                                backgroundColor: AppColors.error,
-                                action: SnackBarAction(
-                                  label: l10nDialog.priceCalendarUndo,
-                                  onPressed: _localState.undo,
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
                                 ),
                               ),
-                            );
-                          }
-                        }
-                      },
-                child: isProcessing
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(l10nDialog.save),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, size: 18, color: context.primaryColor),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      l10nDialog.priceCalendarWillSetPriceForAllDates,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Footer with buttons
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5F7),
+                      border: Border(top: BorderSide(color: theme.dividerColor)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text(l10nDialog.cancel),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: context.gradients.brandPrimary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: isProcessing
+                                    ? null
+                                    : () async {
+                                        // Debounce: prevent duplicate clicks within 2 seconds
+                                        final now = DateTime.now();
+                                        if (lastClickTime != null && now.difference(lastClickTime!).inSeconds < 2) {
+                                          return;
+                                        }
+                                        lastClickTime = now;
+                                        final messenger = ScaffoldMessenger.of(context);
+                                        final navigator = Navigator.of(context);
+
+                                        final priceText = priceController.text.trim();
+                                        if (priceText.isEmpty) {
+                                          messenger.showSnackBar(
+                                            SnackBar(content: Text(l10nDialog.priceCalendarEnterPrice)),
+                                          );
+                                          return;
+                                        }
+
+                                        final price = double.tryParse(priceText);
+                                        if (price == null || price <= 0) {
+                                          messenger.showSnackBar(
+                                            SnackBar(content: Text(l10nDialog.priceCalendarPriceMustBeGreaterThanZero)),
+                                          );
+                                          return;
+                                        }
+
+                                        // Show confirmation dialog before bulk update
+                                        final confirmed = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: Text(l10nDialog.priceCalendarConfirmation),
+                                            content: Text(
+                                              l10nDialog.priceCalendarConfirmSetPrice(
+                                                price.toStringAsFixed(0),
+                                                _selectedDays.length,
+                                              ),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.of(context).pop(false),
+                                                child: Text(l10nDialog.cancel),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () => Navigator.of(context).pop(true),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                                ),
+                                                child: Text(l10nDialog.confirm),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+
+                                        if (confirmed != true) return;
+
+                                        setState(() => isProcessing = true);
+
+                                        // Get current prices for rollback
+                                        final currentPrices = <DateTime, DailyPriceModel>{};
+                                        final newPrices = <DateTime, DailyPriceModel>{};
+                                        final cachedMonth = _localState.getMonthPrices(_selectedMonth);
+
+                                        for (final date in _selectedDays) {
+                                          final dateKey = DateTime(date.year, date.month, date.day);
+                                          final existing = cachedMonth?[dateKey];
+
+                                          if (existing != null) {
+                                            currentPrices[dateKey] = existing;
+                                            newPrices[dateKey] = existing.copyWith(price: price);
+                                          } else {
+                                            // Create new price entry
+                                            newPrices[dateKey] = DailyPriceModel(
+                                              id: '',
+                                              unitId: widget.unit.id,
+                                              date: date,
+                                              price: price,
+                                              createdAt: DateTime.now(),
+                                              updatedAt: DateTime.now(),
+                                            );
+                                          }
+                                        }
+
+                                        // OPTIMISTIC UPDATE: Update UI immediately
+                                        _localState.updateDatesOptimistically(
+                                          _selectedMonth,
+                                          _selectedDays.toList(),
+                                          currentPrices,
+                                          newPrices,
+                                        );
+
+                                        final count = _selectedDays.length;
+                                        // Save dates before clearing for API call
+                                        final datesToUpdate = _selectedDays.toList();
+
+                                        // Close dialog and clear selection immediately
+                                        if (mounted) {
+                                          navigator.pop();
+                                          _selectedDays.clear();
+                                          this.setState(() => isProcessing = false);
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text(l10nDialog.priceCalendarUpdatedPrices(count)),
+                                              duration: const Duration(seconds: 2),
+                                            ),
+                                          );
+                                        }
+
+                                        // Save to server in background
+                                        try {
+                                          final repository = ref.read(dailyPriceRepositoryProvider);
+
+                                          await repository.bulkPartialUpdate(
+                                            unitId: widget.unit.id,
+                                            dates: datesToUpdate,
+                                            partialData: {'price': price},
+                                          );
+
+                                          // Refresh from server
+                                          ref.invalidate(
+                                            monthlyPricesProvider(
+                                              MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          // ROLLBACK on error
+                                          _localState.rollbackUpdate(_selectedMonth, currentPrices);
+
+                                          if (mounted) {
+                                            messenger.showSnackBar(
+                                              SnackBar(
+                                                content: Text('${l10n.error}: $e'),
+                                                backgroundColor: AppColors.error,
+                                                action: SnackBarAction(
+                                                  label: l10nDialog.priceCalendarUndo,
+                                                  onPressed: _localState.undo,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  alignment: Alignment.center,
+                                  child: isProcessing
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        )
+                                      : Text(
+                                          l10nDialog.save,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           );
         },
       ),
@@ -1563,383 +1663,471 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         builder: (context, setState) {
           final l10nDialog = AppLocalizations.of(context);
           final theme = Theme.of(context);
-          return AlertDialog(
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: context.primaryColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.block, color: context.primaryColor, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l10nDialog.priceCalendarAvailabilityForDays(_selectedDays.length),
-                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 18),
-                  ),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, size: 18, color: context.primaryColor),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          l10nDialog.priceCalendarSelectActionForDays(_selectedDays.length),
-                          style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                FilterChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isProcessing)
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      else
-                        const Icon(Icons.check_circle, size: 18, color: Colors.white),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(l10nDialog.priceCalendarMarkAsAvailable)),
-                    ],
-                  ),
-                  selected: true,
-                  onSelected: isProcessing
-                      ? null
-                      : (_) async {
-                          final navigator = Navigator.of(context);
-                          final messenger = ScaffoldMessenger.of(context);
+          final isDark = theme.brightness == Brightness.dark;
 
-                          setState(() => isProcessing = true);
-
-                          try {
-                            final repository = ref.read(dailyPriceRepositoryProvider);
-
-                            // Use PARTIAL update to preserve existing data
-                            // Only update 'available' field, keep custom prices
-                            await repository.bulkPartialUpdate(
-                              unitId: widget.unit.id,
-                              dates: _selectedDays.toList(),
-                              partialData: {'available': true},
-                            );
-
-                            // Save count before clearing for snackbar message
-                            final count = _selectedDays.length;
-
-                            // Invalidate provider to trigger reload with fresh data
-                            ref.invalidate(
-                              monthlyPricesProvider(MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth)),
-                            );
-
-                            if (mounted) {
-                              dialogClosed = true;
-                              navigator.pop();
-                              // Clear selection AFTER dialog closes
-                              _selectedDays.clear();
-                              // Trigger parent widget rebuild
-                              this.setState(() {});
-                              messenger.showSnackBar(
-                                SnackBar(content: Text(l10nDialog.priceCalendarDaysMarkedAvailable(count))),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(content: Text('${l10nDialog.error}: $e'), backgroundColor: AppColors.error),
-                              );
-                            }
-                          } finally {
-                            // Only reset if dialog still open
-                            if (mounted && !dialogClosed) {
-                              setState(() => isProcessing = false);
-                            }
-                          }
-                        },
-                  selectedColor: context.successColor,
-                  backgroundColor: context.successColor,
-                  side: BorderSide(color: context.successColor, width: 1.5),
-                  labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
-                  checkmarkColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 2,
-                  shadowColor: context.successColor.withValues(alpha: 0.3),
-                ),
-                const SizedBox(height: 12),
-                FilterChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isProcessing)
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      else
-                        const Icon(Icons.block, size: 18, color: Colors.white),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(l10nDialog.priceCalendarBlockDates)),
-                    ],
-                  ),
-                  selected: true,
-                  onSelected: isProcessing
-                      ? null
-                      : (_) async {
-                          // Capture context-dependent values before async gap
-                          final navigator = Navigator.of(context);
-                          final messenger = ScaffoldMessenger.of(context);
-                          final errorColor = context.errorColor;
-
-                          // Show confirmation dialog before blocking dates
-                          final confirmed = await showDialog<bool>(
-                            context: context,
-                            builder: (dialogContext) => AlertDialog(
-                              title: Text(l10nDialog.priceCalendarConfirmation),
-                              content: Text(l10nDialog.priceCalendarConfirmBlockDays(_selectedDays.length)),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                                  child: Text(l10nDialog.cancel),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: errorColor,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  child: Text(l10nDialog.priceCalendarBlock),
-                                ),
-                              ],
-                            ),
-                          );
-
-                          if (confirmed != true) return;
-
-                          setState(() => isProcessing = true);
-
-                          try {
-                            final repository = ref.read(dailyPriceRepositoryProvider);
-
-                            // Use PARTIAL update to preserve existing data
-                            // Only update 'available' field, keep custom prices
-                            await repository.bulkPartialUpdate(
-                              unitId: widget.unit.id,
-                              dates: _selectedDays.toList(),
-                              partialData: {
-                                'available': false, // Block dates
-                              },
-                            );
-
-                            // Save count before clearing for snackbar message
-                            final count = _selectedDays.length;
-
-                            // Invalidate provider to trigger reload with fresh data
-                            ref.invalidate(
-                              monthlyPricesProvider(MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth)),
-                            );
-
-                            if (mounted) {
-                              dialogClosed = true;
-                              navigator.pop();
-                              // Clear selection AFTER dialog closes
-                              _selectedDays.clear();
-                              // Trigger parent widget rebuild
-                              this.setState(() {});
-                              messenger.showSnackBar(
-                                SnackBar(content: Text(l10nDialog.priceCalendarDaysBlocked(count))),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(content: Text('${l10nDialog.error}: $e'), backgroundColor: AppColors.error),
-                              );
-                            }
-                          } finally {
-                            // Only reset if dialog still open
-                            if (mounted && !dialogClosed) {
-                              setState(() => isProcessing = true);
-                            }
-                          }
-                        },
-                  selectedColor: context.errorColor,
-                  backgroundColor: context.errorColor,
-                  side: BorderSide(color: context.errorColor, width: 1.5),
-                  labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
-                  checkmarkColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 2,
-                  shadowColor: context.errorColor.withValues(alpha: 0.3),
-                ),
-                const SizedBox(height: 12),
-                FilterChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      isProcessing
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.login, size: 18),
-                      const SizedBox(width: 10),
-                      Flexible(child: Text(l10nDialog.priceCalendarBlockCheckInButton)),
-                    ],
-                  ),
-                  onSelected: isProcessing
-                      ? null
-                      : (_) async {
-                          final navigator = Navigator.of(context);
-                          final messenger = ScaffoldMessenger.of(context);
-
-                          setState(() => isProcessing = true);
-
-                          try {
-                            final repository = ref.read(dailyPriceRepositoryProvider);
-
-                            // Use PARTIAL update to preserve existing data
-                            // Only update 'block_checkin' field, keep prices
-                            await repository.bulkPartialUpdate(
-                              unitId: widget.unit.id,
-                              dates: _selectedDays.toList(),
-                              partialData: {
-                                'block_checkin': true, // Block check-in
-                              },
-                            );
-
-                            // Invalidate provider to trigger reload with fresh data
-                            ref.invalidate(
-                              monthlyPricesProvider(MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth)),
-                            );
-
-                            if (mounted) {
-                              dialogClosed = true;
-                              navigator.pop();
-                              // Clear selection AFTER dialog closes
-                              _selectedDays.clear();
-                              // Trigger parent widget rebuild
-                              this.setState(() {});
-                              messenger.showSnackBar(
-                                SnackBar(content: Text(l10nDialog.priceCalendarCheckInBlockedForDays)),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(content: Text('${l10nDialog.error}: $e'), backgroundColor: AppColors.error),
-                              );
-                            }
-                          } finally {
-                            // Only reset if dialog still open
-                            if (mounted && !dialogClosed) {
-                              setState(() => isProcessing = false);
-                            }
-                          }
-                        },
-                  backgroundColor: context.gradients.cardBackground,
-                  selectedColor: theme.colorScheme.primary,
-                  side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), width: 1.5),
-                  labelStyle: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 14),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                const SizedBox(height: 8),
-                FilterChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      isProcessing
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.logout, size: 18),
-                      const SizedBox(width: 10),
-                      Flexible(child: Text(l10nDialog.priceCalendarBlockCheckOutButton)),
-                    ],
-                  ),
-                  onSelected: isProcessing
-                      ? null
-                      : (_) async {
-                          final navigator = Navigator.of(context);
-                          final messenger = ScaffoldMessenger.of(context);
-
-                          setState(() => isProcessing = true);
-
-                          try {
-                            final repository = ref.read(dailyPriceRepositoryProvider);
-
-                            // Use PARTIAL update to preserve existing data
-                            // Only update 'block_checkout' field, keep prices
-                            await repository.bulkPartialUpdate(
-                              unitId: widget.unit.id,
-                              dates: _selectedDays.toList(),
-                              partialData: {
-                                'block_checkout': true, // Block check-out
-                              },
-                            );
-
-                            // Invalidate provider to trigger reload with fresh data
-                            ref.invalidate(
-                              monthlyPricesProvider(MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth)),
-                            );
-
-                            if (mounted) {
-                              dialogClosed = true;
-                              navigator.pop();
-                              // Clear selection AFTER dialog closes
-                              _selectedDays.clear();
-                              // Trigger parent widget rebuild
-                              this.setState(() {});
-                              messenger.showSnackBar(
-                                SnackBar(content: Text(l10nDialog.priceCalendarCheckOutBlockedForDays)),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(content: Text('${l10nDialog.error}: $e'), backgroundColor: AppColors.error),
-                              );
-                            }
-                          } finally {
-                            // Only reset if dialog still open
-                            if (mounted && !dialogClosed) {
-                              setState(() => isProcessing = false);
-                            }
-                          }
-                        },
-                  backgroundColor: context.gradients.cardBackground,
-                  selectedColor: theme.colorScheme.primary,
-                  side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), width: 1.5),
-                  labelStyle: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 14),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
-                child: Text(l10nDialog.close),
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            clipBehavior: Clip.antiAlias,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              decoration: BoxDecoration(
+                color: context.gradients.cardBackground,
+                borderRadius: BorderRadius.circular(16),
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header with gradient
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: context.gradients.brandPrimary,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.block, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            l10nDialog.priceCalendarAvailabilityForDays(_selectedDays.length),
+                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => Navigator.of(context).pop(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, size: 18, color: context.primaryColor),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10nDialog.priceCalendarSelectActionForDays(_selectedDays.length),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: context.textColorSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FilterChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isProcessing)
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              else
+                                const Icon(Icons.check_circle, size: 18, color: Colors.white),
+                              const SizedBox(width: 10),
+                              Expanded(child: Text(l10nDialog.priceCalendarMarkAsAvailable)),
+                            ],
+                          ),
+                          selected: true,
+                          onSelected: isProcessing
+                              ? null
+                              : (_) async {
+                                  final navigator = Navigator.of(context);
+                                  final messenger = ScaffoldMessenger.of(context);
+
+                                  setState(() => isProcessing = true);
+
+                                  try {
+                                    final repository = ref.read(dailyPriceRepositoryProvider);
+
+                                    // Use PARTIAL update to preserve existing data
+                                    // Only update 'available' field, keep custom prices
+                                    await repository.bulkPartialUpdate(
+                                      unitId: widget.unit.id,
+                                      dates: _selectedDays.toList(),
+                                      partialData: {'available': true},
+                                    );
+
+                                    // Save count before clearing for snackbar message
+                                    final count = _selectedDays.length;
+
+                                    // Invalidate provider to trigger reload with fresh data
+                                    ref.invalidate(
+                                      monthlyPricesProvider(
+                                        MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                      ),
+                                    );
+
+                                    if (mounted) {
+                                      dialogClosed = true;
+                                      navigator.pop();
+                                      // Clear selection AFTER dialog closes
+                                      _selectedDays.clear();
+                                      // Trigger parent widget rebuild
+                                      this.setState(() {});
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text(l10nDialog.priceCalendarDaysMarkedAvailable(count))),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text('${l10nDialog.error}: $e'),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    // Only reset if dialog still open
+                                    if (mounted && !dialogClosed) {
+                                      setState(() => isProcessing = false);
+                                    }
+                                  }
+                                },
+                          selectedColor: context.successColor,
+                          backgroundColor: context.successColor,
+                          side: BorderSide(color: context.successColor, width: 1.5),
+                          labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                          checkmarkColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          elevation: 2,
+                          shadowColor: context.successColor.withValues(alpha: 0.3),
+                        ),
+                        const SizedBox(height: 12),
+                        FilterChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isProcessing)
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              else
+                                const Icon(Icons.block, size: 18, color: Colors.white),
+                              const SizedBox(width: 10),
+                              Expanded(child: Text(l10nDialog.priceCalendarBlockDates)),
+                            ],
+                          ),
+                          selected: true,
+                          onSelected: isProcessing
+                              ? null
+                              : (_) async {
+                                  // Capture context-dependent values before async gap
+                                  final navigator = Navigator.of(context);
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  final errorColor = context.errorColor;
+
+                                  // Show confirmation dialog before blocking dates
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (dialogContext) => AlertDialog(
+                                      title: Text(l10nDialog.priceCalendarConfirmation),
+                                      content: Text(l10nDialog.priceCalendarConfirmBlockDays(_selectedDays.length)),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(dialogContext).pop(false),
+                                          child: Text(l10nDialog.cancel),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.of(dialogContext).pop(true),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: errorColor,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          child: Text(l10nDialog.priceCalendarBlock),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirmed != true) return;
+
+                                  setState(() => isProcessing = true);
+
+                                  try {
+                                    final repository = ref.read(dailyPriceRepositoryProvider);
+
+                                    // Use PARTIAL update to preserve existing data
+                                    // Only update 'available' field, keep custom prices
+                                    await repository.bulkPartialUpdate(
+                                      unitId: widget.unit.id,
+                                      dates: _selectedDays.toList(),
+                                      partialData: {
+                                        'available': false, // Block dates
+                                      },
+                                    );
+
+                                    // Save count before clearing for snackbar message
+                                    final count = _selectedDays.length;
+
+                                    // Invalidate provider to trigger reload with fresh data
+                                    ref.invalidate(
+                                      monthlyPricesProvider(
+                                        MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                      ),
+                                    );
+
+                                    if (mounted) {
+                                      dialogClosed = true;
+                                      navigator.pop();
+                                      // Clear selection AFTER dialog closes
+                                      _selectedDays.clear();
+                                      // Trigger parent widget rebuild
+                                      this.setState(() {});
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text(l10nDialog.priceCalendarDaysBlocked(count))),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text('${l10nDialog.error}: $e'),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    // Only reset if dialog still open
+                                    if (mounted && !dialogClosed) {
+                                      setState(() => isProcessing = true);
+                                    }
+                                  }
+                                },
+                          selectedColor: context.errorColor,
+                          backgroundColor: context.errorColor,
+                          side: BorderSide(color: context.errorColor, width: 1.5),
+                          labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                          checkmarkColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          elevation: 2,
+                          shadowColor: context.errorColor.withValues(alpha: 0.3),
+                        ),
+                        const SizedBox(height: 12),
+                        FilterChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              isProcessing
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.login, size: 18),
+                              const SizedBox(width: 10),
+                              Flexible(child: Text(l10nDialog.priceCalendarBlockCheckInButton)),
+                            ],
+                          ),
+                          onSelected: isProcessing
+                              ? null
+                              : (_) async {
+                                  final navigator = Navigator.of(context);
+                                  final messenger = ScaffoldMessenger.of(context);
+
+                                  setState(() => isProcessing = true);
+
+                                  try {
+                                    final repository = ref.read(dailyPriceRepositoryProvider);
+
+                                    // Use PARTIAL update to preserve existing data
+                                    // Only update 'block_checkin' field, keep prices
+                                    await repository.bulkPartialUpdate(
+                                      unitId: widget.unit.id,
+                                      dates: _selectedDays.toList(),
+                                      partialData: {
+                                        'block_checkin': true, // Block check-in
+                                      },
+                                    );
+
+                                    // Invalidate provider to trigger reload with fresh data
+                                    ref.invalidate(
+                                      monthlyPricesProvider(
+                                        MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                      ),
+                                    );
+
+                                    if (mounted) {
+                                      dialogClosed = true;
+                                      navigator.pop();
+                                      // Clear selection AFTER dialog closes
+                                      _selectedDays.clear();
+                                      // Trigger parent widget rebuild
+                                      this.setState(() {});
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text(l10nDialog.priceCalendarCheckInBlockedForDays)),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text('${l10nDialog.error}: $e'),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    // Only reset if dialog still open
+                                    if (mounted && !dialogClosed) {
+                                      setState(() => isProcessing = false);
+                                    }
+                                  }
+                                },
+                          backgroundColor: context.gradients.cardBackground,
+                          selectedColor: theme.colorScheme.primary,
+                          side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), width: 1.5),
+                          labelStyle: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        const SizedBox(height: 8),
+                        FilterChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              isProcessing
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.logout, size: 18),
+                              const SizedBox(width: 10),
+                              Flexible(child: Text(l10nDialog.priceCalendarBlockCheckOutButton)),
+                            ],
+                          ),
+                          onSelected: isProcessing
+                              ? null
+                              : (_) async {
+                                  final navigator = Navigator.of(context);
+                                  final messenger = ScaffoldMessenger.of(context);
+
+                                  setState(() => isProcessing = true);
+
+                                  try {
+                                    final repository = ref.read(dailyPriceRepositoryProvider);
+
+                                    // Use PARTIAL update to preserve existing data
+                                    // Only update 'block_checkout' field, keep prices
+                                    await repository.bulkPartialUpdate(
+                                      unitId: widget.unit.id,
+                                      dates: _selectedDays.toList(),
+                                      partialData: {
+                                        'block_checkout': true, // Block check-out
+                                      },
+                                    );
+
+                                    // Invalidate provider to trigger reload with fresh data
+                                    ref.invalidate(
+                                      monthlyPricesProvider(
+                                        MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                      ),
+                                    );
+
+                                    if (mounted) {
+                                      dialogClosed = true;
+                                      navigator.pop();
+                                      // Clear selection AFTER dialog closes
+                                      _selectedDays.clear();
+                                      // Trigger parent widget rebuild
+                                      this.setState(() {});
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text(l10nDialog.priceCalendarCheckOutBlockedForDays)),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text('${l10nDialog.error}: $e'),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    // Only reset if dialog still open
+                                    if (mounted && !dialogClosed) {
+                                      setState(() => isProcessing = false);
+                                    }
+                                  }
+                                },
+                          backgroundColor: context.gradients.cardBackground,
+                          selectedColor: theme.colorScheme.primary,
+                          side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), width: 1.5),
+                          labelStyle: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Footer with close button
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5F7),
+                      border: Border(top: BorderSide(color: theme.dividerColor)),
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(l10nDialog.close),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),

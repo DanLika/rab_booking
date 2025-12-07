@@ -192,6 +192,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                         Navigator.of(drawerContext).pop();
                       }
                     },
+                    isEndDrawer: true, // Add top padding for endDrawer
                   ),
                 ),
               ),
@@ -234,7 +235,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
   }
 
   /// Master panel - Properties and Units list (hierarchical view)
-  Widget _buildMasterPanel(ThemeData theme, bool isDark, {VoidCallback? onUnitSelected}) {
+  Widget _buildMasterPanel(ThemeData theme, bool isDark, {VoidCallback? onUnitSelected, bool isEndDrawer = false}) {
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final l10n = AppLocalizations.of(context);
 
@@ -242,7 +243,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
       children: [
         // Header
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: isEndDrawer
+              ? const EdgeInsets.fromLTRB(16, 24, 16, 16) // Extra top padding for endDrawer
+              : const EdgeInsets.all(16), // Normal padding for desktop sidebar
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2))),
           ),
@@ -444,7 +447,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16), // Consistent sidebar padding
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32), // Added bottom padding for last unit visibility
           itemCount: filteredProperties.length,
           itemBuilder: (context, index) {
             final property = filteredProperties[index];

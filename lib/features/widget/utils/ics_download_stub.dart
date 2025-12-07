@@ -55,6 +55,7 @@ Future<void> downloadIcsFile(String content, String filename) async {
     // XFile is a cross-platform file representation from cross_file package
     // Note: These strings are not localized as they appear in native OS share dialogs
     // which typically use the device's system language
+    // ignore: deprecated_member_use
     await Share.shareXFiles(
       [XFile(file.path)],
       text: 'Add this booking to your calendar',

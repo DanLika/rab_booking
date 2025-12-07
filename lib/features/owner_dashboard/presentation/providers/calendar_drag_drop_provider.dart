@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/repositories/booking_repository.dart';
@@ -16,17 +15,9 @@ class DragDropState {
   final bool isValidDrop;
   final String? errorMessage;
 
-  const DragDropState({
-    this.draggingBooking,
-    this.isValidDrop = false,
-    this.errorMessage,
-  });
+  const DragDropState({this.draggingBooking, this.isValidDrop = false, this.errorMessage});
 
-  DragDropState copyWith({
-    BookingModel? draggingBooking,
-    bool? isValidDrop,
-    String? errorMessage,
-  }) {
+  DragDropState copyWith({BookingModel? draggingBooking, bool? isValidDrop, String? errorMessage}) {
     return DragDropState(
       draggingBooking: draggingBooking ?? this.draggingBooking,
       isValidDrop: isValidDrop ?? this.isValidDrop,
@@ -36,8 +27,7 @@ class DragDropState {
 }
 
 /// Provider for drag-and-drop state and operations
-final dragDropProvider =
-    StateNotifierProvider<DragDropNotifier, DragDropState>((ref) {
+final dragDropProvider = StateNotifierProvider<DragDropNotifier, DragDropState>((ref) {
   final bookingRepository = ref.watch(bookingRepositoryProvider);
   return DragDropNotifier(bookingRepository, ref);
 });
@@ -47,8 +37,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
   final BookingRepository _bookingRepository;
   final Ref _ref;
 
-  DragDropNotifier(this._bookingRepository, this._ref)
-      : super(const DragDropState());
+  DragDropNotifier(this._bookingRepository, this._ref) : super(const DragDropState());
 
   /// Start dragging a booking
   void startDragging(BookingModel booking) {
@@ -119,18 +108,11 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     final newCheckOut = newCheckIn.add(duration);
 
     // Final validation
-    if (!validateDrop(
-      dropDate: dropDate,
-      targetUnitId: targetUnit.id,
-      allBookings: allBookings,
-    )) {
+    if (!validateDrop(dropDate: dropDate, targetUnitId: targetUnit.id, allBookings: allBookings)) {
       // Show error snackbar
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(state.errorMessage ?? 'Cannot move booking here'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(state.errorMessage ?? 'Cannot move booking here'), backgroundColor: Colors.red),
         );
       }
       return false;
@@ -143,14 +125,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
           const SnackBar(
             content: Row(
               children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                ),
+                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
                 SizedBox(width: 12),
                 Text('Moving booking...'),
               ],
@@ -204,12 +179,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
           e,
           userMessage: 'Greška pri premještanju rezervacije',
           onRetry: () {
-            executeDrop(
-              dropDate: dropDate,
-              targetUnit: targetUnit,
-              allBookings: allBookings,
-              context: context,
-            );
+            executeDrop(dropDate: dropDate, targetUnit: targetUnit, allBookings: allBookings, context: context);
           },
         );
       }
@@ -221,10 +191,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
   }
 
   /// Undo booking move (restore to original position)
-  Future<void> _undoBookingMove(
-    BookingModel originalBooking,
-    BuildContext context,
-  ) async {
+  Future<void> _undoBookingMove(BookingModel originalBooking, BuildContext context) async {
     try {
       await _bookingRepository.updateBooking(originalBooking);
       _ref.invalidate(calendarBookingsProvider);
@@ -239,12 +206,9 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to undo: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to undo: ${e.toString()}'), backgroundColor: Colors.red));
       }
     }
   }

@@ -1,3 +1,5 @@
+library;
+
 /// Platform-agnostic web utilities.
 /// Uses conditional imports to provide web-specific functionality
 /// while maintaining compatibility with mobile/desktop platforms.
@@ -13,5 +15,4 @@
 /// navigateToUrl('https://checkout.stripe.com/...');
 /// ```
 
-export 'web_utils_stub.dart'
-    if (dart.library.js_interop) 'web_utils_web.dart';
+export 'web_utils_stub.dart' if (dart.library.js_interop) 'web_utils_web.dart';

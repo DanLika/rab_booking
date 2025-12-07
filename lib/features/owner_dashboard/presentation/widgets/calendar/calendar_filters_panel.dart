@@ -57,7 +57,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
       clipBehavior: Clip.antiAlias,
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
-        width: isMobile ? double.infinity : 700,
+        width: isMobile ? screenWidth * 0.9 : 700,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,

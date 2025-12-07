@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Loading state provider for global navigation overlay
@@ -40,9 +39,7 @@ class LoadingStateNotifier extends StateNotifier<bool> {
 }
 
 /// Global loading state provider
-final loadingStateProvider = StateNotifierProvider<LoadingStateNotifier, bool>((
-  ref,
-) {
+final loadingStateProvider = StateNotifierProvider<LoadingStateNotifier, bool>((ref) {
   return LoadingStateNotifier();
 });
 
@@ -97,13 +94,7 @@ class _LoadingOverlay extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, spreadRadius: 2)],
           ),
           child: const Center(
             child: SizedBox(

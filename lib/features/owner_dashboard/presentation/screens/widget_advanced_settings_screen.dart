@@ -89,14 +89,6 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
           ? null
           : _customDisclaimerController.text.trim();
 
-      // Debug: Log what we're saving
-      print('[WidgetAdvancedSettings] Saving tax config:');
-      print('  - enabled: $_taxLegalEnabled');
-      print('  - useDefaultText: $_useDefaultText');
-      print(
-        '  - customText: ${customTextValue != null ? "${customTextValue.substring(0, customTextValue.length > 50 ? 50 : customTextValue.length)}..." : "null"}',
-      );
-
       final updatedSettings = currentSettings.copyWith(
         // Ensure owner_id is set for legacy document migration
         ownerId: currentSettings.ownerId ?? currentUserId,

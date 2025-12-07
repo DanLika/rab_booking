@@ -71,10 +71,7 @@ import '../l10n/widget_translations.dart';
 /// When [urlSlug] is provided, the screen resolves property from subdomain
 /// and unit from slug. Otherwise, it uses query parameters.
 class BookingWidgetScreen extends ConsumerStatefulWidget {
-  const BookingWidgetScreen({
-    super.key,
-    this.urlSlug,
-  });
+  const BookingWidgetScreen({super.key, this.urlSlug});
 
   /// Optional URL slug for clean URL resolution.
   /// When provided, property is resolved from subdomain and unit from this slug.
@@ -2093,6 +2090,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
+          if (!mounted) return;
           final tr = WidgetTranslations.of(context);
           throw tr.couldNotLaunchStripeCheckout;
         }

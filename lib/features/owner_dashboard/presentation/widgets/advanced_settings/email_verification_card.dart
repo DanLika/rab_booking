@@ -4,6 +4,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/design_tokens/gradient_tokens.dart';
 
 /// Email Verification Settings Card
 ///
@@ -106,9 +107,23 @@ class EmailVerificationCard extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            l10n.emailVerificationTitle,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.emailVerificationTitle,
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                height: 2,
+                width: 40,
+                decoration: BoxDecoration(
+                  gradient: GradientTokens.brandPrimary,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ],
           ),
         ),
       ],

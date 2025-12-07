@@ -114,7 +114,7 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
           width: width - 2,
           height: blockHeight,
           margin: const EdgeInsets.symmetric(horizontal: 1),
-          transform: _isHovered ? (Matrix4.identity()..scale(1.02)) : Matrix4.identity(),
+          transform: _isHovered ? Matrix4.diagonal3Values(1.02, 1.02, 1.0) : Matrix4.identity(),
           transformAlignment: Alignment.center,
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 150),

@@ -47,6 +47,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           SnackBar(
             content: Text(value ? l10n.notificationSettingsEnabled : l10n.notificationSettingsDisabled),
             backgroundColor: Theme.of(context).colorScheme.primary,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -105,6 +106,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           SnackBar(
             content: Text(l10n.notificationSettingsUpdated(category)),
             backgroundColor: Theme.of(context).colorScheme.primary,
+            behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -150,131 +152,114 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               children: [
                 const SizedBox(height: 16),
-                // Premium Master Switch
+                // Master Switch
                 Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    gradient: masterEnabled ? context.gradients.brandPrimary : null,
-                    color: masterEnabled ? null : context.gradients.cardBackground,
+                    color: context.gradients.cardBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: masterEnabled
-                          ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
-                          : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-                      width: 1.5,
-                    ),
+                    border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
                     boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
                   ),
-                  child: Theme(
-                    data: theme.copyWith(
-                      switchTheme: SwitchThemeData(
-                        thumbColor: WidgetStateProperty.resolveWith((states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return isDark ? Colors.black : Colors.white;
-                          }
-                          return isDark ? Colors.black : Colors.white;
-                        }),
-                        trackColor: WidgetStateProperty.resolveWith((states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return theme.colorScheme.primary;
-                          }
-                          return theme.colorScheme.outline;
-                        }),
-                      ),
-                    ),
-                    child: SwitchListTile(
-                      value: masterEnabled,
-                      onChanged: _isSaving ? null : _toggleMasterSwitch,
-                      title: Text(
-                        l10n.notificationSettingsEnableAll,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
-                      ),
-                      subtitle: Text(
-                        l10n.notificationSettingsMasterSwitch,
-                        style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                      ),
-                      secondary: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: masterEnabled
-                                ? [
-                                    theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
-                                    theme.colorScheme.secondary.withAlpha((0.08 * 255).toInt()),
-                                  ]
-                                : [
-                                    theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
-                                    theme.colorScheme.onSurface.withAlpha((0.05 * 255).toInt()),
-                                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        // Icon
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: masterEnabled
+                                ? theme.colorScheme.primary.withAlpha((0.12 * 255).toInt())
+                                : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          child: Icon(
+                            masterEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                            color: masterEnabled
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt()),
+                            size: 24,
+                          ),
                         ),
-                        child: Icon(
-                          masterEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
-                          color: masterEnabled
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt()),
-                          size: 26,
+                        const SizedBox(width: 16),
+                        // Text
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.notificationSettingsEnableAll,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.notificationSettingsMasterSwitch,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        // Switch
+                        Switch(
+                          value: masterEnabled,
+                          onChanged: _isSaving ? null : _toggleMasterSwitch,
+                          activeThumbColor: theme.colorScheme.primary,
+                        ),
+                      ],
                     ),
                   ),
                 ),
 
-                // Premium warning message when disabled
+                // Warning message when disabled
                 if (!masterEnabled)
                   Container(
                     margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                          theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
-                        ],
-                      ),
+                      color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt())),
+                      border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()), width: 1.5),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline_rounded, color: theme.colorScheme.error, size: 24),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.error.withAlpha((0.12 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.info_outline, color: theme.colorScheme.error, size: 18),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             l10n.notificationSettingsDisabledWarning,
-                            style: TextStyle(color: theme.colorScheme.error, fontSize: 13, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-                // Premium Categories Header
+                // Categories Header
                 Padding(
                   padding: const EdgeInsets.only(left: 4, bottom: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 4,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                          borderRadius: const BorderRadius.all(Radius.circular(2)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.notificationSettingsCategories,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-                      ),
-                    ],
+                  child: Text(
+                    l10n.notificationSettingsCategories,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                   ),
                 ),
 
@@ -402,25 +387,18 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+        border: Border.all(color: context.gradients.sectionBorder),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          tilePadding: const EdgeInsets.all(16),
           leading: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [iconColor.withAlpha((0.15 * 255).toInt()), iconColor.withAlpha((0.08 * 255).toInt())],
-              ),
+              color: iconColor.withAlpha((0.12 * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(color: iconColor.withAlpha((0.2 * 255).toInt()), blurRadius: 8, offset: const Offset(0, 2)),
-              ],
             ),
             child: Icon(icon, color: iconColor, size: 24),
           ),
@@ -438,18 +416,12 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
             ),
           ),
           children: [
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+            Divider(
               height: 1,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+              thickness: 1,
+              color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
+              indent: 16,
+              endIndent: 16,
             ),
             const SizedBox(height: 8),
             Builder(
@@ -481,22 +453,6 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                   icon: Icons.notifications_outlined,
                   iconColor: theme.colorScheme.error,
                   enabled: enabled,
-                );
-              },
-            ),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context);
-                return _buildChannelOption(
-                  context: context,
-                  theme: theme,
-                  value: enabled && channels.sms,
-                  onChanged: enabled && !_isSaving ? (value) => onChanged(channels.copyWith(sms: value)) : null,
-                  title: l10n.notificationSettingsSmsChannel,
-                  subtitle: l10n.notificationSettingsSmsChannelDesc,
-                  icon: Icons.sms_outlined,
-                  iconColor: theme.colorScheme.primary,
-                  enabled: enabled,
                   isLast: true,
                 );
               },
@@ -519,68 +475,70 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
     required bool enabled,
     bool isLast = false,
   }) {
-    final isDark = theme.brightness == Brightness.dark;
-
     return Column(
       children: [
-        Theme(
-          data: theme.copyWith(
-            switchTheme: SwitchThemeData(
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return isDark ? Colors.black : Colors.white;
-                }
-                return isDark ? Colors.black : Colors.white;
-              }),
-              trackColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return iconColor;
-                }
-                return theme.colorScheme.outline;
-              }),
-            ),
-          ),
-          child: SwitchListTile(
-            value: value,
-            onChanged: onChanged,
-            title: Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: enabled ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: enabled
+                      ? iconColor.withAlpha((0.12 * 255).toInt())
+                      : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: enabled ? iconColor : theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt()),
+                  size: 20,
+                ),
               ),
-            ),
-            subtitle: Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: enabled
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              const SizedBox(width: 14),
+              // Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: enabled
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: enabled
+                            ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            secondary: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: enabled ? iconColor.withAlpha((0.1 * 255).toInt()) : theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: enabled ? iconColor : theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt()),
-                size: 22,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              // Switch
+              Switch(value: value, onChanged: onChanged, activeThumbColor: iconColor),
+            ],
           ),
         ),
         if (!isLast)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 72),
+          Divider(
             height: 1,
-            color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
+            thickness: 1,
+            color: theme.colorScheme.outline.withAlpha((0.08 * 255).toInt()),
+            indent: 62,
+            endIndent: 16,
           ),
+        if (isLast) const SizedBox(height: 8),
       ],
     );
   }

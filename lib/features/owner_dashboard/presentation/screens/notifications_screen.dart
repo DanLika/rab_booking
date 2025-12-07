@@ -7,6 +7,7 @@ import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/notification_localizer.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../providers/notifications_provider.dart';
 import '../../domain/models/notification_model.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -840,6 +841,7 @@ class _PremiumAlertDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 0,
       backgroundColor: Colors.transparent,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.all(28),

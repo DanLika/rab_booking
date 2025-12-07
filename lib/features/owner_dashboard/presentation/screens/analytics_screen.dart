@@ -14,6 +14,7 @@ import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../shared/widgets/app_filter_chip.dart';
 import '../widgets/owner_app_drawer.dart';
 
 /// Helper function to create purple shade variations (1-6, darkest to lightest).
@@ -99,7 +100,7 @@ class _DateRangeSelector extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               child: Row(
                 children: [
-                  _FilterChip(
+                  AppFilterChip(
                     label: l10n.ownerAnalyticsLastWeek,
                     selected: dateRange.preset == 'week',
                     onSelected: () {
@@ -107,7 +108,7 @@ class _DateRangeSelector extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
+                  AppFilterChip(
                     label: l10n.ownerAnalyticsLastMonth,
                     selected: dateRange.preset == 'month',
                     onSelected: () {
@@ -115,7 +116,7 @@ class _DateRangeSelector extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
+                  AppFilterChip(
                     label: l10n.ownerAnalyticsLastQuarter,
                     selected: dateRange.preset == 'quarter',
                     onSelected: () {
@@ -123,7 +124,7 @@ class _DateRangeSelector extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
+                  AppFilterChip(
                     label: l10n.ownerAnalyticsLastYear,
                     selected: dateRange.preset == 'year',
                     onSelected: () {
@@ -151,67 +152,6 @@ class _DateRangeSelector extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatefulWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onSelected;
-
-  const _FilterChip({required this.label, required this.selected, required this.onSelected});
-
-  @override
-  State<_FilterChip> createState() => _FilterChipState();
-}
-
-class _FilterChipState extends State<_FilterChip> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // Colors based on state
-    final bgColor = widget.selected
-        ? theme.colorScheme.primary
-        : _isHovered
-        ? theme.colorScheme.primary.withValues(alpha: 0.08)
-        : context.gradients.cardBackground;
-
-    final borderColor = widget.selected
-        ? theme.colorScheme.primary
-        : _isHovered
-        ? theme.colorScheme.primary.withValues(alpha: 0.4)
-        : context.gradients.sectionBorder;
-
-    final textColor = widget.selected ? Colors.white : theme.colorScheme.onSurface;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        child: FilterChip(
-          label: Text(widget.label),
-          selected: widget.selected,
-          onSelected: (_) => widget.onSelected(),
-          selectedColor: bgColor,
-          backgroundColor: bgColor,
-          side: BorderSide(color: borderColor, width: 1.5),
-          labelStyle: TextStyle(
-            color: textColor,
-            fontWeight: widget.selected ? FontWeight.w600 : FontWeight.w500,
-            fontSize: 14,
-          ),
-          checkmarkColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          elevation: widget.selected ? 2 : 0,
-          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
-        ),
       ),
     );
   }

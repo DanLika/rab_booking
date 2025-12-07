@@ -45,7 +45,8 @@ class SmartBookingTooltip {
 
     // Get screen dimensions for smart positioning
     final screenSize = MediaQuery.of(context).size;
-    final tooltipWidth = 320.0;
+    // Responsive tooltip width: smaller on small screens
+    final tooltipWidth = screenSize.width < 600 ? 260.0 : 300.0;
     final padding = 12.0;
 
     entry = OverlayEntry(
@@ -62,7 +63,11 @@ class SmartBookingTooltip {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withAlpha((0.15 * 255).toInt())
+                    : Colors.black.withAlpha((0.1 * 255).toInt()),
+              ),
             ),
             child: _TooltipContent(booking: booking, isCompact: true),
           ),
@@ -124,11 +129,14 @@ class _TooltipContent extends StatelessWidget {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('d MMM yyyy', 'hr_HR');
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
-      width: isCompact ? 280 : double.infinity,
-      padding: EdgeInsets.all(isCompact ? 12 : 20),
-      constraints: isCompact ? const BoxConstraints(maxWidth: 320) : const BoxConstraints(maxWidth: 500),
+      width: isCompact ? (screenWidth < 600 ? 240.0 : 280.0) : double.infinity,
+      padding: EdgeInsets.all(isCompact ? 10 : 20),
+      constraints: isCompact
+          ? BoxConstraints(maxWidth: screenWidth < 600 ? 260 : 300)
+          : const BoxConstraints(maxWidth: 500),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +173,7 @@ class _TooltipContent extends StatelessWidget {
             isCompact: isCompact,
           ),
 
-          const Divider(height: 16),
+          Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
 
           // Stats
           Row(
@@ -186,7 +194,7 @@ class _TooltipContent extends StatelessWidget {
 
           // Price (if available)
           if (booking.totalPrice > 0) ...[
-            const Divider(height: 16),
+            Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
             _InfoRow(
               icon: Icons.payments,
               label: 'Cijena',
@@ -198,13 +206,13 @@ class _TooltipContent extends StatelessWidget {
 
           // Source
           if (booking.source != null && booking.source != 'manual') ...[
-            const Divider(height: 16),
+            Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
             _InfoRow(icon: Icons.source, label: 'Izvor', value: _formatSource(booking.source!), isCompact: isCompact),
           ],
 
           // Notes (if available and not compact)
           if (!isCompact && booking.notes != null && booking.notes!.isNotEmpty) ...[
-            const Divider(height: 16),
+            Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
             Text(
               'Napomena:',
               style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey[600], fontWeight: FontWeight.w600),
@@ -350,26 +358,11 @@ class _SmartPositionedTooltip extends StatefulWidget {
 
 class _SmartPositionedTooltipState extends State<_SmartPositionedTooltip> {
   final GlobalKey _key = GlobalKey();
-  double? _tooltipHeight;
-
-  @override
-  void initState() {
-    super.initState();
-    // Measure tooltip height after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final renderBox = _key.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox != null && mounted) {
-        setState(() {
-          _tooltipHeight = renderBox.size.height;
-        });
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-    // Use measured height if available, otherwise estimate
-    final tooltipHeight = _tooltipHeight ?? 200.0;
+    // Estimate tooltip height based on screen size (avoid setState treperenje)
+    final tooltipHeight = widget.screenSize.width < 600 ? 180.0 : 200.0;
 
     // Calculate smart positioning
     // Horizontal: Show left if too close to right edge, otherwise right

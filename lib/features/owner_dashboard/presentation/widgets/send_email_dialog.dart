@@ -159,6 +159,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
         constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
@@ -258,19 +259,30 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                         runSpacing: 8,
                         children: EmailTemplate.values.map((template) {
                           final isSelected = _selectedTemplate == template;
-                          return ChoiceChip(
+                          // Modern FilterChip style (matching analytics screen)
+                          final bgColor = isSelected ? theme.colorScheme.primary : context.gradients.cardBackground;
+                          final borderColor = isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder;
+                          final textColor = isSelected ? Colors.white : theme.colorScheme.onSurface;
+
+                          return FilterChip(
                             label: Text(template.getDisplayName(l10n)),
                             selected: isSelected,
                             onSelected: (selected) {
                               if (selected) _loadTemplate(template);
                             },
-                            selectedColor: theme.colorScheme.primaryContainer,
-                            backgroundColor: theme.colorScheme.surface,
+                            selectedColor: bgColor,
+                            backgroundColor: bgColor,
+                            side: BorderSide(color: borderColor, width: 1.5),
                             labelStyle: TextStyle(
-                              color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                              fontSize: 12,
+                              color: textColor,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              fontSize: 14,
                             ),
+                            checkmarkColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            elevation: isSelected ? 2 : 0,
+                            shadowColor: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
                           );
                         }).toList(),
                       ),
@@ -347,25 +359,37 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                    child: Text(l10n.sendEmailCancel),
+                  Flexible(
+                    child: TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        minimumSize: Size.zero,
+                      ),
+                      child: Text(l10n.sendEmailCancel, overflow: TextOverflow.ellipsis),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _sendEmail,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.send),
-                    label: Text(_isLoading ? l10n.sendEmailSending : l10n.sendEmailSend),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  Flexible(
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _sendEmail,
+                      icon: _isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.send, size: 18),
+                      label: Text(
+                        _isLoading ? l10n.sendEmailSending : l10n.sendEmailSend,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
                     ),
                   ),
                 ],

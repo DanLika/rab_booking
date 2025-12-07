@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 /// Responsive dialog sizing utilities
 class ResponsiveDialogUtils {
   /// Get responsive dialog width based on screen size
-  /// - Mobile (< 600px): 90% width (no padding needed)
+  /// - Very small mobile (< 400px): 90% width (with 0px inset padding = 90% total)
+  /// - Mobile (400-600px): 90% width (with 5px inset padding)
   /// - Tablet (600-1024px): 80% width
   /// - Desktop (>= 1024px): 60% width (clamped between min and max)
   static double getDialogWidth(
     BuildContext context, {
+    double verySmallMobilePercent = 0.9,
     double mobilePercent = 0.9,
     double tabletPercent = 0.8,
     double desktopPercent = 0.6,
@@ -16,7 +18,10 @@ class ResponsiveDialogUtils {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    if (screenWidth < 600) {
+    if (screenWidth < 400) {
+      // Very small mobile
+      return screenWidth * verySmallMobilePercent;
+    } else if (screenWidth < 600) {
       // Mobile
       return screenWidth * mobilePercent;
     } else if (screenWidth < 1024) {
@@ -29,9 +34,9 @@ class ResponsiveDialogUtils {
   }
 
   /// Get responsive content padding
-  /// - Mobile: no padding (0px) - dialog is 90% so no extra padding needed
+  /// - Mobile: minimal padding (12px) - always have some padding between content and dialog edge
   /// - Tablet/Desktop: normal padding (20px)
-  static double getContentPadding(BuildContext context, {double mobilePadding = 0.0, double desktopPadding = 20.0}) {
+  static double getContentPadding(BuildContext context, {double mobilePadding = 12.0, double desktopPadding = 20.0}) {
     final screenWidth = MediaQuery.of(context).size.width;
     return screenWidth < 600 ? mobilePadding : desktopPadding;
   }
@@ -58,5 +63,20 @@ class ResponsiveDialogUtils {
   /// Check if device is desktop
   static bool isDesktop(BuildContext context) {
     return MediaQuery.of(context).size.width >= 1024;
+  }
+
+  /// Get responsive dialog inset padding
+  /// - Very small mobile (< 400px): 0px horizontal - maximize dialog width (90% + 0px = 90% total)
+  /// - Mobile (400-600px): 10px horizontal - small padding (90% + 10px)
+  /// - Desktop: normal (40px horizontal) - default Flutter behavior
+  static EdgeInsets getDialogInsetPadding(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth < 400) {
+      return const EdgeInsets.symmetric(vertical: 24.0);
+    } else if (screenWidth < 600) {
+      return const EdgeInsets.symmetric(horizontal: 10.0, vertical: 24.0);
+    } else {
+      return const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0);
+    }
   }
 }

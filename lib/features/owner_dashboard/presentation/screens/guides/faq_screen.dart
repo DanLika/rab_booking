@@ -4,6 +4,7 @@ import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../../../../shared/widgets/app_filter_chip.dart';
 import '../../widgets/owner_app_drawer.dart';
 
 class FAQItem {
@@ -178,25 +179,15 @@ class _FAQScreenState extends State<FAQScreen> {
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: FilterChip(
-                        label: Text(_getCategoryLabel(categoryKey, l10n)),
+                      child: AppFilterChip(
+                        label: _getCategoryLabel(categoryKey, l10n),
                         selected: isSelected,
-                        onSelected: (selected) {
+                        icon: _getCategoryIcon(categoryKey),
+                        onSelected: () {
                           setState(() {
                             _selectedCategoryKey = categoryKey;
                           });
                         },
-                        backgroundColor: isDark ? theme.colorScheme.surfaceContainerHighest : Colors.grey.shade200,
-                        selectedColor: isDark
-                            ? theme.colorScheme.primary.withAlpha((0.4 * 255).toInt())
-                            : theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
-                        checkmarkColor: theme.colorScheme.primary,
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? (isDark ? Colors.white : theme.colorScheme.primary)
-                              : (isDark ? theme.colorScheme.onSurfaceVariant : Colors.grey.shade700),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
                       ),
                     );
                   },

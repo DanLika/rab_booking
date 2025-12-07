@@ -78,7 +78,7 @@ class EmailVerificationCard extends StatelessWidget {
                     Switch(
                       value: requireEmailVerification,
                       onChanged: onChanged,
-                      activeColor: theme.colorScheme.primary,
+                      activeThumbColor: theme.colorScheme.primary,
                     ),
                   ],
                 ),

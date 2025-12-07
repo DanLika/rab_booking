@@ -265,7 +265,7 @@ function syncWidgetLanguage(newLang) {
                           SelectableText(
                             _exampleCode,
                             style: TextStyle(
-                              color: isDark ? theme.colorScheme.success : Colors.greenAccent,
+                              color: theme.colorScheme.primary,
                               fontSize: 12,
                               fontFamily: 'monospace',
                               height: 1.5,
@@ -684,7 +684,10 @@ function syncWidgetLanguage(newLang) {
                       ),
                       Text(
                         'Kopirajte iframe kod za svaki apartman',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                        ),
                       ),
                     ],
                   ),
@@ -695,24 +698,28 @@ function syncWidgetLanguage(newLang) {
             const SizedBox(height: 16),
 
             // Language selector
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Jezik widgeta:', style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
-                const SizedBox(width: 12),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'hr', label: Text('HR')),
-                    ButtonSegment(value: 'en', label: Text('EN')),
-                    ButtonSegment(value: 'de', label: Text('DE')),
-                    ButtonSegment(value: 'it', label: Text('IT')),
-                  ],
-                  selected: {_selectedLanguage},
-                  onSelectionChanged: (value) {
-                    setState(() => _selectedLanguage = value.first);
-                  },
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'hr', label: Text('HR')),
+                      ButtonSegment(value: 'en', label: Text('EN')),
+                      ButtonSegment(value: 'de', label: Text('DE')),
+                      ButtonSegment(value: 'it', label: Text('IT')),
+                    ],
+                    selected: {_selectedLanguage},
+                    onSelectionChanged: (value) {
+                      setState(() => _selectedLanguage = value.first);
+                    },
+                    style: const ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                   ),
                 ),
               ],
@@ -783,10 +790,7 @@ function syncWidgetLanguage(newLang) {
                 Icon(Icons.apartment, size: 20, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    property.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
+                  child: Text(property.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 ),
                 if (property.subdomain != null && property.subdomain!.isNotEmpty)
                   Container(
@@ -829,10 +833,7 @@ function syncWidgetLanguage(newLang) {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  unit.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                ),
+                child: Text(unit.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               ),
               TextButton.icon(
                 onPressed: () {
@@ -856,17 +857,13 @@ function syncWidgetLanguage(newLang) {
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDark ? theme.colorScheme.surface : Colors.grey.shade200,
+              color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
               borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())),
             ),
             child: SelectableText(
               iframeCode,
-              style: TextStyle(
-                fontSize: 11,
-                fontFamily: 'monospace',
-                color: isDark ? Colors.greenAccent : Colors.green.shade800,
-                height: 1.4,
-              ),
+              style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: theme.colorScheme.primary, height: 1.4),
             ),
           ),
         ],
@@ -933,7 +930,10 @@ function syncWidgetLanguage(newLang) {
                       ),
                       Text(
                         'Automatski mijenja jezik widgeta kad korisnik promijeni jezik na vašem sajtu',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                        ),
                       ),
                     ],
                   ),
@@ -973,7 +973,10 @@ function syncWidgetLanguage(newLang) {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('JavaScript', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()))),
+                Text(
+                  'JavaScript',
+                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
+                ),
                 TextButton.icon(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: _languageSyncSnippet));
@@ -993,17 +996,13 @@ function syncWidgetLanguage(newLang) {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark ? theme.colorScheme.surface : Colors.grey.shade900,
+                color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())),
               ),
               child: SelectableText(
                 _languageSyncSnippet,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontFamily: 'monospace',
-                  color: isDark ? Colors.greenAccent : Colors.greenAccent,
-                  height: 1.4,
-                ),
+                style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: theme.colorScheme.primary, height: 1.4),
               ),
             ),
           ],

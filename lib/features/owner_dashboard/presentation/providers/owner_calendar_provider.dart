@@ -27,7 +27,8 @@ Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
   return repository.getOwnerProperties(userId);
 }
 
-/// All units provider - returns ALL units for ALL properties (no filtering)
+/// All units provider - returns ALL ACTIVE units for ALL properties
+/// Filters out soft-deleted units (deletedAt != null) and unavailable units
 @riverpod
 Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
   final properties = await ref.watch(ownerPropertiesCalendarProvider.future);
@@ -37,7 +38,11 @@ Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
 
   for (final property in properties) {
     final units = await repository.getPropertyUnits(property.id);
-    allUnits.addAll(units);
+
+    // FILTER: Only include active units (not soft-deleted)
+    final activeUnits = units.where((unit) => unit.deletedAt == null).toList();
+
+    allUnits.addAll(activeUnits);
   }
 
   return allUnits;

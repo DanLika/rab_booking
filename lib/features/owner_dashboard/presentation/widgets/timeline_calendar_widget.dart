@@ -961,14 +961,16 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       }
 
       // Calculate left position (including offset for windowing)
-      final left = offsetWidth + (startIndex * dayWidth);
+      // Subtract skewOffset to align booking start with check-in day cell edge
+      const skewOffset = 24.0; // Must match SkewedBookingPainter.skewOffset
+      final left = offsetWidth + (startIndex * dayWidth) - skewOffset;
 
       // Calculate width INCLUDING check-out day for full visual span
       // IMPORTANT: Booking should span from check-in to check-out (inclusive)
       // If check-in is Nov 10 and check-out is Nov 12 (2 nights), we show 3 cells (10, 11, 12)
       // The diagonal indicators on check-in and check-out days show turnover
-      // Width = (nights + 1) * dayWidth to include check-out day
-      final width = (nights + 1) * dayWidth;
+      // Width = (nights + 1) * dayWidth + (2 * skewOffset) to account for skewed edges
+      final width = (nights + 1) * dayWidth + (2 * skewOffset);
 
       // Get stack level for vertical positioning
       final stackLevel = stackLevels[booking.id] ?? 0;

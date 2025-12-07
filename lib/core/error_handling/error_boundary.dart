@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:go_router/go_router.dart';
 
 /// Error Boundary Widget - Catches errors in widget tree and shows fallback UI
 ///
@@ -15,12 +16,7 @@ class ErrorBoundary extends StatefulWidget {
   final Widget Function(FlutterErrorDetails)? errorBuilder;
   final void Function(FlutterErrorDetails)? onError;
 
-  const ErrorBoundary({
-    super.key,
-    required this.child,
-    this.errorBuilder,
-    this.onError,
-  });
+  const ErrorBoundary({super.key, required this.child, this.errorBuilder, this.onError});
 
   @override
   State<ErrorBoundary> createState() => _ErrorBoundaryState();
@@ -61,9 +57,14 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
       _originalOnError?.call(details);
 
       // Capture error in this boundary
+      // Use addPostFrameCallback to avoid setState during build
       if (mounted) {
-        setState(() {
-          _errorDetails = details;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _errorDetails = details;
+            });
+          }
         });
         widget.onError?.call(details);
       }
@@ -101,29 +102,17 @@ class _DefaultErrorWidget extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: errorColor,
-                semanticLabel: 'Error icon',
-              ),
+              Icon(Icons.error_outline, size: 64, color: errorColor, semanticLabel: 'Error icon'),
               const SizedBox(height: 16),
               Text(
                 'Something went wrong',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'We encountered an unexpected error. Please try again.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: textColor.withValues(alpha: 0.7),
-                ),
+                style: TextStyle(fontSize: 14, color: textColor.withValues(alpha: 0.7)),
                 textAlign: TextAlign.center,
               ),
               if (kDebugMode) ...[
@@ -137,28 +126,35 @@ class _DefaultErrorWidget extends StatelessWidget {
                   ),
                   child: Text(
                     errorDetails.exception.toString(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                      color: errorColor,
-                    ),
+                    style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: errorColor),
                   ),
                 ),
               ],
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Navigate back - hot reload is handled by IDE
-                  Navigator.of(context).pop();
+                  // Try to navigate back using go_router
+                  // If that fails, try to go to home
+                  try {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      // If we can't pop, go to home/dashboard
+                      context.go('/owner/dashboard');
+                    }
+                  } catch (e) {
+                    // Last resort: try to go home
+                    try {
+                      context.go('/owner/dashboard');
+                    } catch (e2) {
+                      // If all else fails, just log the error
+                      debugPrint('Error navigating back: $e2');
+                    }
+                  }
                 },
                 icon: const Icon(Icons.refresh),
                 label: const Text('Go Back'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                ),
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
               ),
             ],
           ),

@@ -131,11 +131,26 @@ firebase deploy --only hosting
 
 ---
 
-## 🔗 SUBDOMAIN SYSTEM
+## 🔗 SUBDOMAIN & URL SLUG SYSTEM
 
-- Production: `villa-marija.bookbed.io/view?ref=XXX&email=YYY`
-- Testing: `localhost:5000/view?subdomain=villa-marija&ref=XXX&email=YYY`
-- Query param ima prioritet nad hostname parsingom
+**URL formati** (widget):
+| Format | Primjer | Korištenje |
+|--------|---------|------------|
+| Query params | `jasko-rab.bookbed.io/?property=XXX&unit=YYY` | iframe embed |
+| Clean slug | `jasko-rab.bookbed.io/apartman-6` | standalone, dijeljenje |
+
+**Rezolucija slug URL-a**:
+1. Subdomain (`jasko-rab`) → `fetchPropertyBySubdomain()` → property
+2. Path slug (`apartman-6`) → `fetchUnitBySlug(propertyId, slug)` → unit
+
+**Ključni fajlovi**:
+- `subdomain_service.dart` → `resolveFullContext(urlSlug)`
+- `subdomain_provider.dart` → `fullSlugContextProvider(slug)`
+- `router_widget.dart` → `/:slug` route
+
+**Slug stabilnost**: Slug se NE regenerira automatski kad se promijeni naziv unita (`_isManualSlugEdit` flag u `unit_form_screen.dart`).
+
+**Booking view URL**: `villa-marija.bookbed.io/view?ref=XXX&email=YYY`
 
 ---
 
@@ -176,6 +191,6 @@ ne sekcije
 
 ---
 
-**Last Updated**: 2025-12-07 | **Version**: 4.5
+**Last Updated**: 2025-12-07 | **Version**: 4.6
 
-**Changelog 4.5**: Nova domena bookbed.io, Firebase hosting dokumentacija, build commands za owner/widget.
+**Changelog 4.6**: URL slug sistem za clean URLs (`/apartman-6` umjesto query params).

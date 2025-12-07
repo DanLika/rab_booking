@@ -31,7 +31,6 @@ import '../../features/owner_dashboard/presentation/screens/notification_setting
 import '../../features/owner_dashboard/presentation/screens/about_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/ical/ical_export_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
@@ -41,7 +40,6 @@ import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
-import '../../shared/models/unit_model.dart';
 import '../../shared/widgets/loading_overlay.dart';
 import '../providers/enhanced_auth_provider.dart';
 
@@ -100,14 +98,12 @@ class OwnerRoutes {
   static const String bankAccount = '/owner/integrations/payments/bank-account';
   // iCal routes (NEW structure - organized under /ical/)
   static const String icalImport = '/owner/integrations/ical/import'; // iCal Sync Settings (Import)
-  static const String icalExportList = '/owner/integrations/ical/export-list'; // iCal Export List (select unit)
-  static const String icalExport = '/owner/integrations/ical/export'; // iCal Export (Debug)
+  static const String icalExportList =
+      '/owner/integrations/ical/export-list'; // iCal Export List (for owners to export all bookings)
   static const String icalGuide = '/owner/guides/ical'; // iCal Guide
   // DEPRECATED routes - will be removed in future versions
   @Deprecated('Use icalImport instead')
   static const String icalIntegration = '/owner/integrations/ical';
-  @Deprecated('Use icalExport instead')
-  static const String icalDebug = '/owner/debug/ical';
   @Deprecated('Use icalGuide instead')
   static const String guideIcal = '/owner/guides/ical'; // Same path as icalGuide
   // Guides
@@ -430,34 +426,8 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: OwnerRoutes.bankAccount, builder: (context, state) => const BankAccountScreen()),
       // iCal Sync Settings (Import) - NEW
       GoRoute(path: OwnerRoutes.icalImport, builder: (context, state) => const IcalSyncSettingsScreen()),
-      // iCal Export List (select unit) - NEW
+      // iCal Export List (for owners to export all bookings)
       GoRoute(path: OwnerRoutes.icalExportList, builder: (context, state) => const IcalExportListScreen()),
-      // iCal Export (Debug) - NEW
-      // NOTE: This route requires 'extra' params (unit, propertyId)
-      // It should only be accessed via context.push() from Widget Settings
-      GoRoute(
-        path: OwnerRoutes.icalExport,
-        builder: (context, state) {
-          // Handle missing extra params (direct navigation)
-          if (state.extra == null) {
-            LoggingService.log('icalExport: Missing required params, redirecting to widget settings', tag: 'ROUTER');
-            // Redirect to widget settings list instead of crashing
-            return const NotFoundScreen();
-          }
-
-          final extra = state.extra as Map<String, dynamic>;
-          final unit = extra['unit'] as UnitModel?;
-          final propertyId = extra['propertyId'] as String?;
-
-          // Validate required params
-          if (unit == null || propertyId == null) {
-            LoggingService.log('icalExport: Invalid params, redirecting', tag: 'ROUTER');
-            return const NotFoundScreen();
-          }
-
-          return IcalExportScreen(unit: unit, propertyId: propertyId);
-        },
-      ),
 
       // Guide routes
       GoRoute(path: OwnerRoutes.guideEmbedWidget, builder: (context, state) => const EmbedWidgetGuideScreen()),

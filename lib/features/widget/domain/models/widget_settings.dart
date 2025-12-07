@@ -33,8 +33,7 @@ class WidgetSettings {
   final WidgetMode widgetMode;
 
   // Payment Methods Configuration
-  final int
-  globalDepositPercentage; // Global deposit % (applies to all payment methods)
+  final int globalDepositPercentage; // Global deposit % (applies to all payment methods)
   final StripePaymentConfig? stripeConfig;
   final BankTransferConfig? bankTransferConfig;
   final bool allowPayOnArrival;
@@ -54,12 +53,6 @@ class WidgetSettings {
 
   // External Calendar Integration
   final ExternalCalendarConfig? externalCalendarConfig;
-
-  // iCal Export Configuration
-  final bool icalExportEnabled; // Master toggle for iCal export feature
-  final String? icalExportUrl; // Generated iCal URL (if enabled)
-  final String? icalExportToken; // Security token for public feed
-  final DateTime? icalExportLastGenerated; // Last time iCal was generated
 
   // Tax/Legal Disclaimer
   final TaxLegalConfig taxLegalConfig;
@@ -88,10 +81,6 @@ class WidgetSettings {
     required this.contactOptions,
     required this.emailConfig,
     this.externalCalendarConfig,
-    this.icalExportEnabled = false,
-    this.icalExportUrl,
-    this.icalExportToken,
-    this.icalExportLastGenerated,
     required this.taxLegalConfig,
     this.themeOptions,
     required this.createdAt,
@@ -125,21 +114,13 @@ class WidgetSettings {
       id: doc.id,
       propertyId: safeCastString(data['property_id']) ?? '',
       ownerId: safeCastString(data['owner_id']),
-      widgetMode: WidgetMode.fromString(
-        safeCastString(data['widget_mode']) ?? 'booking_instant',
-      ),
+      widgetMode: WidgetMode.fromString(safeCastString(data['widget_mode']) ?? 'booking_instant'),
       // Migration: If global_deposit_percentage doesn't exist, use stripe deposit or 20
       globalDepositPercentage:
           safeCastInt(data['global_deposit_percentage']) ??
-          (stripeConfigData != null
-              ? (safeCastInt(stripeConfigData['deposit_percentage']) ?? 20)
-              : 20),
-      stripeConfig: stripeConfigData != null
-          ? StripePaymentConfig.fromMap(stripeConfigData)
-          : null,
-      bankTransferConfig: bankTransferConfigData != null
-          ? BankTransferConfig.fromMap(bankTransferConfigData)
-          : null,
+          (stripeConfigData != null ? (safeCastInt(stripeConfigData['deposit_percentage']) ?? 20) : 20),
+      stripeConfig: stripeConfigData != null ? StripePaymentConfig.fromMap(stripeConfigData) : null,
+      bankTransferConfig: bankTransferConfigData != null ? BankTransferConfig.fromMap(bankTransferConfigData) : null,
       allowPayOnArrival: safeCastBool(data['allow_pay_on_arrival']) ?? false,
       requireOwnerApproval: safeCastBool(data['require_owner_approval']) ?? false,
       allowGuestCancellation: safeCastBool(data['allow_guest_cancellation']) ?? true,
@@ -151,23 +132,10 @@ class WidgetSettings {
       externalCalendarConfig: externalCalendarConfigData != null
           ? ExternalCalendarConfig.fromMap(externalCalendarConfigData)
           : null,
-      icalExportEnabled: safeCastBool(data['ical_export_enabled']) ?? false,
-      icalExportUrl: safeCastString(data['ical_export_url']),
-      icalExportToken: safeCastString(data['ical_export_token']),
-      icalExportLastGenerated:
-          data['ical_export_last_generated'] is Timestamp
-              ? (data['ical_export_last_generated'] as Timestamp).toDate()
-              : null,
       taxLegalConfig: TaxLegalConfig.fromMap(taxLegalConfigData),
-      themeOptions: themeOptionsData != null
-          ? ThemeOptions.fromMap(themeOptionsData)
-          : null,
-      createdAt: data['created_at'] is Timestamp
-          ? (data['created_at'] as Timestamp).toDate()
-          : DateTime.now(),
-      updatedAt: data['updated_at'] is Timestamp
-          ? (data['updated_at'] as Timestamp).toDate()
-          : DateTime.now(),
+      themeOptions: themeOptionsData != null ? ThemeOptions.fromMap(themeOptionsData) : null,
+      createdAt: data['created_at'] is Timestamp ? (data['created_at'] as Timestamp).toDate() : DateTime.now(),
+      updatedAt: data['updated_at'] is Timestamp ? (data['updated_at'] as Timestamp).toDate() : DateTime.now(),
     );
   }
 
@@ -189,12 +157,6 @@ class WidgetSettings {
       'contact_options': contactOptions.toMap(),
       'email_config': emailConfig.toMap(),
       'external_calendar_config': externalCalendarConfig?.toMap(),
-      'ical_export_enabled': icalExportEnabled,
-      'ical_export_url': icalExportUrl,
-      'ical_export_token': icalExportToken,
-      'ical_export_last_generated': icalExportLastGenerated != null
-          ? Timestamp.fromDate(icalExportLastGenerated!)
-          : null,
       'tax_legal_config': taxLegalConfig.toMap(),
       'theme_options': themeOptions?.toMap(),
       'created_at': Timestamp.fromDate(createdAt),
@@ -204,9 +166,7 @@ class WidgetSettings {
 
   /// Check if any payment method is enabled
   bool get hasPaymentMethods {
-    return (stripeConfig?.enabled ?? false) ||
-        (bankTransferConfig?.enabled ?? false) ||
-        allowPayOnArrival;
+    return (stripeConfig?.enabled ?? false) || (bankTransferConfig?.enabled ?? false) || allowPayOnArrival;
   }
 
   /// Get enabled payment method count
@@ -238,14 +198,14 @@ class WidgetSettings {
   /// }
   /// ```
   BookingBehaviorConfig get bookingBehavior => BookingBehaviorConfig(
-        requireOwnerApproval: requireOwnerApproval,
-        allowGuestCancellation: allowGuestCancellation,
-        cancellationDeadlineHours: cancellationDeadlineHours,
-        minNights: minNights,
-        // maxNights not stored in WidgetSettings yet - use default
-        weekendDays: weekendDays,
-        // minDaysAdvance, maxDaysAdvance not stored - use defaults
-      );
+    requireOwnerApproval: requireOwnerApproval,
+    allowGuestCancellation: allowGuestCancellation,
+    cancellationDeadlineHours: cancellationDeadlineHours,
+    minNights: minNights,
+    // maxNights not stored in WidgetSettings yet - use default
+    weekendDays: weekendDays,
+    // minDaysAdvance, maxDaysAdvance not stored - use defaults
+  );
 
   /// Grouped access to iCal export settings.
   ///
@@ -257,17 +217,6 @@ class WidgetSettings {
   /// if (settings.icalExport.isConfigured) {
   ///   print('iCal URL: ${settings.icalExport.exportUrl}');
   /// }
-  /// if (settings.icalExport.needsRegeneration) {
-  ///   // Time to regenerate the feed
-  /// }
-  /// ```
-  ICalExportConfig get icalExport => ICalExportConfig.fromFlatFields(
-        enabled: icalExportEnabled,
-        exportUrl: icalExportUrl,
-        exportToken: icalExportToken,
-        lastGenerated: icalExportLastGenerated,
-      );
-
   WidgetSettings copyWith({
     String? id,
     String? propertyId,
@@ -285,10 +234,6 @@ class WidgetSettings {
     ContactOptions? contactOptions,
     EmailNotificationConfig? emailConfig,
     ExternalCalendarConfig? externalCalendarConfig,
-    bool? icalExportEnabled,
-    String? icalExportUrl,
-    String? icalExportToken,
-    DateTime? icalExportLastGenerated,
     TaxLegalConfig? taxLegalConfig,
     ThemeOptions? themeOptions,
     DateTime? createdAt,
@@ -299,27 +244,18 @@ class WidgetSettings {
       propertyId: propertyId ?? this.propertyId,
       ownerId: ownerId ?? this.ownerId,
       widgetMode: widgetMode ?? this.widgetMode,
-      globalDepositPercentage:
-          globalDepositPercentage ?? this.globalDepositPercentage,
+      globalDepositPercentage: globalDepositPercentage ?? this.globalDepositPercentage,
       stripeConfig: stripeConfig ?? this.stripeConfig,
       bankTransferConfig: bankTransferConfig ?? this.bankTransferConfig,
       allowPayOnArrival: allowPayOnArrival ?? this.allowPayOnArrival,
       requireOwnerApproval: requireOwnerApproval ?? this.requireOwnerApproval,
-      allowGuestCancellation:
-          allowGuestCancellation ?? this.allowGuestCancellation,
-      cancellationDeadlineHours:
-          cancellationDeadlineHours ?? this.cancellationDeadlineHours,
+      allowGuestCancellation: allowGuestCancellation ?? this.allowGuestCancellation,
+      cancellationDeadlineHours: cancellationDeadlineHours ?? this.cancellationDeadlineHours,
       minNights: minNights ?? this.minNights,
       weekendDays: weekendDays ?? this.weekendDays,
       contactOptions: contactOptions ?? this.contactOptions,
       emailConfig: emailConfig ?? this.emailConfig,
-      externalCalendarConfig:
-          externalCalendarConfig ?? this.externalCalendarConfig,
-      icalExportEnabled: icalExportEnabled ?? this.icalExportEnabled,
-      icalExportUrl: icalExportUrl ?? this.icalExportUrl,
-      icalExportToken: icalExportToken ?? this.icalExportToken,
-      icalExportLastGenerated:
-          icalExportLastGenerated ?? this.icalExportLastGenerated,
+      externalCalendarConfig: externalCalendarConfig ?? this.externalCalendarConfig,
       taxLegalConfig: taxLegalConfig ?? this.taxLegalConfig,
       themeOptions: themeOptions ?? this.themeOptions,
       createdAt: createdAt ?? this.createdAt,
@@ -440,9 +376,7 @@ class ExternalCalendarConfig {
       airbnbAccountId: map['airbnb_account_id'],
       airbnbAccessToken: map['airbnb_access_token'],
       syncIntervalMinutes: map['sync_interval_minutes'] ?? 60,
-      lastSyncedAt: map['last_synced_at'] != null
-          ? DateTimeParser.tryParse(map['last_synced_at'] as String?)
-          : null,
+      lastSyncedAt: map['last_synced_at'] != null ? DateTimeParser.tryParse(map['last_synced_at'] as String?) : null,
     );
   }
 
@@ -462,9 +396,7 @@ class ExternalCalendarConfig {
 
   /// Check if any external calendar is connected
   bool get hasConnectedCalendar {
-    return enabled &&
-        ((syncBookingCom && bookingComAccessToken != null) ||
-            (syncAirbnb && airbnbAccessToken != null));
+    return enabled && ((syncBookingCom && bookingComAccessToken != null) || (syncAirbnb && airbnbAccessToken != null));
   }
 
   /// Check if sync is due (based on interval)
@@ -489,8 +421,7 @@ class ExternalCalendarConfig {
       enabled: enabled ?? this.enabled,
       syncBookingCom: syncBookingCom ?? this.syncBookingCom,
       bookingComAccountId: bookingComAccountId ?? this.bookingComAccountId,
-      bookingComAccessToken:
-          bookingComAccessToken ?? this.bookingComAccessToken,
+      bookingComAccessToken: bookingComAccessToken ?? this.bookingComAccessToken,
       syncAirbnb: syncAirbnb ?? this.syncAirbnb,
       airbnbAccountId: airbnbAccountId ?? this.airbnbAccountId,
       airbnbAccessToken: airbnbAccessToken ?? this.airbnbAccessToken,
@@ -499,4 +430,3 @@ class ExternalCalendarConfig {
     );
   }
 }
-

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Dialog that generates and displays embed code for widget
@@ -71,12 +72,8 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   String get _slugUrl {
     if (!_hasSlugUrl) return '';
     final baseUrl = 'https://${widget.propertySubdomain}.$_subdomainBaseDomain';
-    final queryParams = <String, String>{
-      'language': _selectedLanguage,
-    };
-    return Uri.parse('$baseUrl/${widget.unitSlug}')
-        .replace(queryParameters: queryParams)
-        .toString();
+    final queryParams = <String, String>{'language': _selectedLanguage};
+    return Uri.parse('$baseUrl/${widget.unitSlug}').replace(queryParameters: queryParams).toString();
   }
 
   String get _embedCode {
@@ -122,6 +119,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 700, maxHeight: 800),
         child: Column(
@@ -356,10 +354,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   }
 
   /// Build highlighted card for shareable slug URL
-  Widget _buildShareableUrlCard({
-    required String content,
-    VoidCallback? onCopy,
-  }) {
+  Widget _buildShareableUrlCard({required String content, VoidCallback? onCopy}) {
     return Card(
       color: AppColors.authSecondary.withAlpha((0.08 * 255).toInt()),
       child: Padding(
@@ -369,9 +364,9 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
           children: [
             Row(
               children: [
-                Icon(Icons.share, size: 20, color: AppColors.authSecondary),
+                const Icon(Icons.share, size: 20, color: AppColors.authSecondary),
                 const SizedBox(width: 8),
-                Text(
+                const Text(
                   'Shareable URL (Clean Link)',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.authSecondary),
                 ),

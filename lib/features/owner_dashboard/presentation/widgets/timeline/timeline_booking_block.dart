@@ -165,26 +165,31 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 1),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.person, size: metadataFontSize + 2, color: iconColor),
-                                const SizedBox(width: 2),
-                                Text(
-                                  '${booking.guestCount}',
-                                  style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
+                            // Wrap in Flexible + ClipRect to prevent overflow when block is narrow
+                            Flexible(
+                              child: ClipRect(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.person, size: metadataFontSize + 2, color: iconColor),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      '${booking.guestCount}',
+                                      style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Icon(Icons.nights_stay, size: metadataFontSize + 2, color: iconColor),
+                                    const SizedBox(width: 2),
+                                    Flexible(
+                                      child: Text(
+                                        '$nights',
+                                        style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 6),
-                                Icon(Icons.nights_stay, size: metadataFontSize + 2, color: iconColor),
-                                const SizedBox(width: 2),
-                                Flexible(
-                                  child: Text(
-                                    '$nights',
-                                    style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         );

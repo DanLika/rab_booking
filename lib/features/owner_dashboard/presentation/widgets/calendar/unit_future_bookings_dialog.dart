@@ -7,6 +7,7 @@ import '../../../../../core/constants/app_dimensions.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/responsive_dialog_utils.dart';
 
 /// Dialog showing all future bookings for a specific unit
 class UnitFutureBookingsDialog extends StatelessWidget {
@@ -27,8 +28,9 @@ class UnitFutureBookingsDialog extends StatelessWidget {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
-        width: isMobile ? screenWidth * 0.95 : 600,
+        width: isMobile ? screenWidth * 0.90 : 600,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,

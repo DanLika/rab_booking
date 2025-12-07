@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -68,112 +69,130 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final horizontalPadding = isMobile
+        ? 16.0
+        : screenWidth < 900
+        ? 24.0
+        : 32.0;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: CommonAppBar(
         title: AppLocalizations.of(context).termsScreenTitle,
         leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        onLeadingIconTap: (context) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/profile');
+          }
+        },
       ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: Stack(
             children: [
-              SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    _buildHeader(),
-                    const SizedBox(height: 32),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: isMobile ? 16 : 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        _buildHeader(),
+                        SizedBox(height: isMobile ? 24 : 32),
 
-                    // Table of Contents
-                    _buildTableOfContents(),
-                    const SizedBox(height: 40),
+                        // Table of Contents
+                        _buildTableOfContents(),
+                        SizedBox(height: isMobile ? 24 : 40),
 
-                    // Sections
-                    Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context);
-                        return Column(
-                          children: [
-                            _buildSection(
-                              l10n.termsScreenSection1Title,
-                              l10n.termsScreenSection1Body,
-                              _sectionKeys['acceptance']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection2Title,
-                              l10n.termsScreenSection2Body,
-                              _sectionKeys['license']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection3Title,
-                              l10n.termsScreenSection3Body,
-                              _sectionKeys['booking']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection4Title,
-                              l10n.termsScreenSection4Body,
-                              _sectionKeys['payment']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection5Title,
-                              l10n.termsScreenSection5Body,
-                              _sectionKeys['cancellation']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection6Title,
-                              l10n.termsScreenSection6Body,
-                              _sectionKeys['responsibilities']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection7Title,
-                              l10n.termsScreenSection7Body,
-                              _sectionKeys['liability']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection8Title,
-                              l10n.termsScreenSection8Body,
-                              _sectionKeys['modifications']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection9Title,
-                              l10n.termsScreenSection9Body,
-                              _sectionKeys['governing']!,
-                            ),
-                            _buildSection(
-                              l10n.termsScreenSection10Title,
-                              l10n.termsScreenSection10Body,
-                              _sectionKeys['contact']!,
-                            ),
-                          ],
-                        );
-                      },
+                        // Sections
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return Column(
+                              children: [
+                                _buildSection(
+                                  l10n.termsScreenSection1Title,
+                                  l10n.termsScreenSection1Body,
+                                  _sectionKeys['acceptance']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection2Title,
+                                  l10n.termsScreenSection2Body,
+                                  _sectionKeys['license']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection3Title,
+                                  l10n.termsScreenSection3Body,
+                                  _sectionKeys['booking']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection4Title,
+                                  l10n.termsScreenSection4Body,
+                                  _sectionKeys['payment']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection5Title,
+                                  l10n.termsScreenSection5Body,
+                                  _sectionKeys['cancellation']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection6Title,
+                                  l10n.termsScreenSection6Body,
+                                  _sectionKeys['responsibilities']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection7Title,
+                                  l10n.termsScreenSection7Body,
+                                  _sectionKeys['liability']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection8Title,
+                                  l10n.termsScreenSection8Body,
+                                  _sectionKeys['modifications']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection9Title,
+                                  l10n.termsScreenSection9Body,
+                                  _sectionKeys['governing']!,
+                                ),
+                                _buildSection(
+                                  l10n.termsScreenSection10Title,
+                                  l10n.termsScreenSection10Body,
+                                  _sectionKeys['contact']!,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+
+                        SizedBox(height: isMobile ? 24 : 40),
+
+                        // Legal Notice
+                        _buildLegalNotice(),
+                        SizedBox(height: isMobile ? 16 : 24),
+                      ],
                     ),
-
-                    const SizedBox(height: 40),
-
-                    // Legal Notice
-                    _buildLegalNotice(),
-                    const SizedBox(height: 24),
-                  ],
+                  ),
                 ),
               ),
 
               // Scroll to top button
               if (_showScrollToTop)
                 Positioned(
-                  bottom: 24,
-                  right: 24,
+                  bottom: isMobile ? 16 : 24,
+                  right: isMobile ? 16 : 24,
                   child: FloatingActionButton(
                     onPressed: _scrollToTop,
-                    backgroundColor: theme.primaryColor,
-                    child: Icon(Icons.arrow_upward, color: theme.colorScheme.onPrimary),
+                    backgroundColor: theme.colorScheme.primary,
+                    child: const Icon(Icons.arrow_upward, color: Colors.white),
                   ),
                 ),
             ],
@@ -186,95 +205,117 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
   Widget _buildHeader() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-              ),
-              child: const Icon(Icons.description, color: Colors.white, size: 32),
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(isMobile ? 10 : 12),
+            decoration: BoxDecoration(
+              gradient: context.gradients.brandPrimary,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context).termsScreenHeaderTitle,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
+            child: Icon(Icons.description, color: Colors.white, size: isMobile ? 28 : 32),
+          ),
+          SizedBox(width: isMobile ? 12 : 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppLocalizations.of(context).termsScreenHeaderTitle,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                    fontSize: isMobile ? 20 : 24,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    AppLocalizations.of(context).termsScreenLastUpdated(DateTime.now().year.toString()),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  AppLocalizations.of(context).termsScreenLastUpdated(DateTime.now().year.toString()),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: isMobile ? 11 : 12,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildTableOfContents() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Container(
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isMobile ? 16 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.list_alt, color: theme.primaryColor, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  AppLocalizations.of(context).termsScreenToc,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: theme.primaryColor,
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.list_alt, color: theme.colorScheme.primary, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context).termsScreenToc,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: isMobile ? 12 : 16),
             Builder(
               builder: (context) {
                 final l10n = AppLocalizations.of(context);
                 return Column(
                   children: [
-                    _buildTocItem(l10n.termsScreenSection1Title, 'acceptance'),
-                    _buildTocItem(l10n.termsScreenSection2Title, 'license'),
-                    _buildTocItem(l10n.termsScreenSection3Title, 'booking'),
-                    _buildTocItem(l10n.termsScreenSection4Title, 'payment'),
-                    _buildTocItem(l10n.termsScreenSection5Title, 'cancellation'),
-                    _buildTocItem(l10n.termsScreenSection6Title, 'responsibilities'),
-                    _buildTocItem(l10n.termsScreenSection7Title, 'liability'),
-                    _buildTocItem(l10n.termsScreenSection8Title, 'modifications'),
-                    _buildTocItem(l10n.termsScreenSection9Title, 'governing'),
-                    _buildTocItem(l10n.termsScreenSection10Title, 'contact'),
+                    _buildTocItem('1. ${l10n.termsScreenSection1Title}', 'acceptance'),
+                    _buildTocItem('2. ${l10n.termsScreenSection2Title}', 'license'),
+                    _buildTocItem('3. ${l10n.termsScreenSection3Title}', 'booking'),
+                    _buildTocItem('4. ${l10n.termsScreenSection4Title}', 'payment'),
+                    _buildTocItem('5. ${l10n.termsScreenSection5Title}', 'cancellation'),
+                    _buildTocItem('6. ${l10n.termsScreenSection6Title}', 'responsibilities'),
+                    _buildTocItem('7. ${l10n.termsScreenSection7Title}', 'liability'),
+                    _buildTocItem('8. ${l10n.termsScreenSection8Title}', 'modifications'),
+                    _buildTocItem('9. ${l10n.termsScreenSection9Title}', 'governing'),
+                    _buildTocItem('10. ${l10n.termsScreenSection10Title}', 'contact'),
                   ],
                 );
               },
@@ -287,22 +328,27 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
   Widget _buildTocItem(String title, String key) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return InkWell(
       onTap: () => _scrollToSection(key),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: isMobile ? 8 : 10, horizontal: 8),
         child: Row(
           children: [
-            Icon(Icons.arrow_right, color: theme.primaryColor, size: 20),
+            Icon(Icons.arrow_right, color: theme.colorScheme.primary, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                  fontSize: isMobile ? 13 : 14,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.87),
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -314,19 +360,21 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
   Widget _buildSection(String title, String content, GlobalKey key) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Padding(
       key: key,
-      padding: const EdgeInsets.only(bottom: 32),
+      padding: EdgeInsets.only(bottom: isMobile ? 20 : 24),
       child: Container(
         decoration: BoxDecoration(
           color: context.gradients.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.gradients.sectionBorder),
           boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -335,15 +383,16 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.primary,
+                  fontSize: isMobile ? 18 : 20,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: isMobile ? 10 : 12),
               Text(
                 content,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   height: 1.7,
-                  fontSize: 15,
-                  color: theme.colorScheme.onSurface,
+                  fontSize: isMobile ? 14 : 15,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.87),
                 ),
               ),
             ],
@@ -355,40 +404,50 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
   Widget _buildLegalNotice() {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-        border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()), width: 2),
-        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+        border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()), width: 1.5),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.warning_amber_rounded, color: theme.colorScheme.tertiary, size: 28),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.info_outline, color: theme.colorScheme.primary, size: isMobile ? 20 : 24),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   AppLocalizations.of(context).termsScreenLegalNotice,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: 18,
+                    fontSize: isMobile ? 16 : 18,
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.tertiary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isMobile ? 10 : 12),
           Text(
             AppLocalizations.of(context).termsScreenLegalNoticeBody,
             style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.5,
+              fontSize: isMobile ? 13 : 14,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              height: 1.6,
             ),
           ),
         ],

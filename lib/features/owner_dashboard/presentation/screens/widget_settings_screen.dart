@@ -53,7 +53,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   bool _requireApproval = true;
   bool _allowCancellation = true;
   int _cancellationHours = 48;
-  int _minNights = 1;
 
   // Contact Options
   bool _showPhone = true;
@@ -137,7 +136,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _requireApproval = settings.requireOwnerApproval;
       _allowCancellation = settings.allowGuestCancellation;
       _cancellationHours = settings.cancellationDeadlineHours ?? 48;
-      _minNights = settings.minNights;
 
       // Contact Options
       _showPhone = settings.contactOptions.showPhone;
@@ -433,7 +431,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         requireOwnerApproval: _selectedMode == WidgetMode.bookingPending ? true : _requireApproval,
         allowGuestCancellation: _allowCancellation,
         cancellationDeadlineHours: _cancellationHours,
-        minNights: _minNights,
+        // Use minNights from unit settings (not widget settings)
+        // This is configured in "Edit Unit" form, not here
+        minNights: _existingSettings?.minNights ?? 1,
         contactOptions: ContactOptions(
           showPhone: _showPhone,
           phoneNumber: _phoneController.text.isEmpty ? null : _phoneController.text,
@@ -791,7 +791,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
                 ),
@@ -817,14 +817,24 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Slider(
-                      value: _globalDepositPercentage.toDouble(),
-                      max: 100,
-                      divisions: 20,
-                      label: '$_globalDepositPercentage%',
-                      onChanged: (value) {
-                        setState(() => _globalDepositPercentage = value.round());
-                      },
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: Theme.of(context).colorScheme.primary,
+                        inactiveTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                        thumbColor: Theme.of(context).colorScheme.primary,
+                        overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                        valueIndicatorColor: Theme.of(context).colorScheme.primary,
+                        valueIndicatorTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                      child: Slider(
+                        value: _globalDepositPercentage.toDouble(),
+                        max: 100,
+                        divisions: 20,
+                        label: '$_globalDepositPercentage%',
+                        onChanged: (value) {
+                          setState(() => _globalDepositPercentage = value.round());
+                        },
+                      ),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -887,12 +897,29 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           labelText: l10n.widgetSettingsPaymentDeadline,
                           context: ctx,
                         ),
+                        menuMaxHeight: 300,
+                        isExpanded: true,
                         items: [
-                          DropdownMenuItem(value: 1, child: Text('1 ${l10n.widgetSettingsDay}')),
-                          DropdownMenuItem(value: 3, child: Text('3 ${l10n.widgetSettingsDays}')),
-                          DropdownMenuItem(value: 5, child: Text('5 ${l10n.widgetSettingsDays}')),
-                          DropdownMenuItem(value: 7, child: Text('7 ${l10n.widgetSettingsDays}')),
-                          DropdownMenuItem(value: 14, child: Text('14 ${l10n.widgetSettingsDays}')),
+                          DropdownMenuItem(
+                            value: 1,
+                            child: Text('1 ${l10n.widgetSettingsDay}', overflow: TextOverflow.ellipsis),
+                          ),
+                          DropdownMenuItem(
+                            value: 3,
+                            child: Text('3 ${l10n.widgetSettingsDays}', overflow: TextOverflow.ellipsis),
+                          ),
+                          DropdownMenuItem(
+                            value: 5,
+                            child: Text('5 ${l10n.widgetSettingsDays}', overflow: TextOverflow.ellipsis),
+                          ),
+                          DropdownMenuItem(
+                            value: 7,
+                            child: Text('7 ${l10n.widgetSettingsDays}', overflow: TextOverflow.ellipsis),
+                          ),
+                          DropdownMenuItem(
+                            value: 14,
+                            child: Text('14 ${l10n.widgetSettingsDays}', overflow: TextOverflow.ellipsis),
+                          ),
                         ],
                         onChanged: (value) {
                           if (value != null) {
@@ -1051,11 +1078,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 activeThumbColor: Theme.of(context).colorScheme.primary,
                 activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                inactiveThumbColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
               ),
-              if (enabled) ...[
-                const SizedBox(width: 8),
-                Icon(Icons.expand_more, color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ],
             ],
           ),
           children: enabled ? [child] : [],
@@ -1138,6 +1163,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             activeThumbColor: Theme.of(context).colorScheme.primary,
             activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+            inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
           ),
         ],
       ),
@@ -1301,59 +1328,29 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Slider(
-                        value: _cancellationHours.toDouble(),
-                        max: 168, // 7 days
-                        divisions: 28,
-                        label: '$_cancellationHours h',
-                        onChanged: (value) {
-                          setState(() => _cancellationHours = value.round());
-                        },
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: Theme.of(context).colorScheme.primary,
+                          inactiveTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                          thumbColor: Theme.of(context).colorScheme.primary,
+                          overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                          valueIndicatorColor: Theme.of(context).colorScheme.primary,
+                          valueIndicatorTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        ),
+                        child: Slider(
+                          value: _cancellationHours.toDouble(),
+                          max: 168, // 7 days
+                          divisions: 28,
+                          label: '$_cancellationHours h',
+                          onChanged: (value) {
+                            setState(() => _cancellationHours = value.round());
+                          },
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
-
-              // Minimum nights slider (always shown)
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.hotel, size: 20, color: Theme.of(context).colorScheme.primary),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.widgetSettingsMinNights(
-                            _minNights,
-                            _minNights == 1 ? l10n.widgetSettingsNight : l10n.widgetSettingsNights,
-                          ),
-                          style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Slider(
-                      value: _minNights.toDouble(),
-                      min: 1,
-                      max: 14,
-                      divisions: 13,
-                      label: '$_minNights ${_minNights == 1 ? l10n.widgetSettingsNight : l10n.widgetSettingsNights}',
-                      onChanged: (value) {
-                        setState(() => _minNights = value.round());
-                      },
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
@@ -1426,6 +1423,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             activeThumbColor: Theme.of(context).colorScheme.primary,
             activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+            inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
           ),
         ],
       ),
@@ -1582,7 +1581,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
               ),
             ),
-            Switch(value: enabled, onChanged: onToggle, activeColor: theme.colorScheme.primary),
+            Switch(
+              value: enabled,
+              onChanged: onToggle,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              activeThumbColor: theme.colorScheme.primary,
+              activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+              inactiveThumbColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              inactiveTrackColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+            ),
           ],
         ),
         if (enabled) ...[

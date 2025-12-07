@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 
 /// Simple loading overlay with spinner - used for route transitions
 class LoadingOverlay extends StatelessWidget {
@@ -10,8 +9,11 @@ class LoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = backgroundColor ?? (isDark ? Colors.black.withOpacity(0.8) : Colors.white.withOpacity(0.8));
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Use system colors for overlay background
+    final bgColor = backgroundColor ?? theme.colorScheme.surface.withValues(alpha: 0.95);
 
     return Container(
       color: bgColor,
@@ -19,16 +21,12 @@ class LoadingOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(isDark ? AppColors.primaryLight : AppColors.primary),
-            ),
+            CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary)),
             if (message != null) ...[
               const SizedBox(height: 16),
               Text(
                 message!,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: isDark ? Colors.white70 : Colors.black87),
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.87)),
               ),
             ],
           ],

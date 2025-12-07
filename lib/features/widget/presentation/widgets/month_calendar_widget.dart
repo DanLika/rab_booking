@@ -61,7 +61,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           navigationWidget: _buildCompactMonthNavigation(colors),
           translations: WidgetTranslations.of(context),
         ),
-        const SizedBox(height: SpacingTokens.xs),
+        const SizedBox(height: SpacingTokens.m),
 
         // Calendar and tooltip in Stack for overlay positioning
         Expanded(
@@ -196,7 +196,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
-        final maxHeight = screenHeight * 0.85; // 85% of screen height - booking bar is now floating overlay
+        final maxHeight = screenHeight * 0.75; // 75% of screen height for better centering
 
         // Desktop: Show 1 month + booking sidebar (>= 1024px)
         final isDesktop = screenWidth >= 1024;
@@ -217,20 +217,26 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     WidgetColorScheme colors,
   ) {
     return Center(
-      child: SizedBox(
-        width: 650,
-        height: maxHeight,
-        child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.l, vertical: SpacingTokens.m),
+        child: SizedBox(
+          width: 650,
+          height: maxHeight,
+          child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
+        ),
       ),
     );
   }
 
   Widget _buildMobileLayout(Map<String, CalendarDateInfo> data, double maxHeight, WidgetColorScheme colors) {
     return Center(
-      child: SizedBox(
-        width: 600,
-        height: maxHeight,
-        child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+        child: SizedBox(
+          width: 600,
+          height: maxHeight,
+          child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
+        ),
       ),
     );
   }
@@ -245,10 +251,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       children: [
         // Month name header
         _buildMonthHeader(month, colors),
-        const SizedBox(height: SpacingTokens.xs),
+        const SizedBox(height: SpacingTokens.m),
         // Week day headers
         _buildWeekDayHeaders(colors),
-        const SizedBox(height: SpacingTokens.xs),
+        const SizedBox(height: SpacingTokens.s),
         // Calendar grid - takes remaining space
         Expanded(child: SingleChildScrollView(child: _buildMonthGridForMonth(month, data, colors))),
       ],

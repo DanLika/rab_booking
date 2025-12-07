@@ -11,6 +11,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
 import '../state/price_calendar_state.dart';
@@ -245,7 +246,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
               _selectedDays.clear();
             });
           },
-          icon: Icon(_bulkEditMode ? Icons.check_box : Icons.check_box_outline_blank),
+          icon: Icon(_bulkEditMode ? Icons.close : Icons.edit_calendar_rounded, size: 20),
           label: Text(_bulkEditMode ? l10n.cancel : l10n.priceCalendarBulkEdit),
           style: OutlinedButton.styleFrom(
             foregroundColor: _bulkEditMode ? context.primaryColor : null,
@@ -288,7 +289,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         Expanded(
           child: Builder(
             builder: (context) => DropdownButtonFormField<DateTime>(
-              value: _selectedMonth,
+              initialValue: _selectedMonth,
               decoration: InputDecorationHelper.buildDecoration(
                 labelText: l10n.priceCalendarSelectMonth,
                 prefixIcon: const Icon(Icons.calendar_month),
@@ -348,7 +349,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                 _selectedDays.clear();
               });
             },
-            icon: Icon(_bulkEditMode ? Icons.check_box : Icons.check_box_outline_blank),
+            icon: Icon(_bulkEditMode ? Icons.close : Icons.edit_calendar_rounded, size: 20),
             label: Text(_bulkEditMode ? l10n.cancel : l10n.priceCalendarBulkEdit),
             style: OutlinedButton.styleFrom(
               foregroundColor: _bulkEditMode ? context.primaryColor : null,
@@ -413,8 +414,16 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {
+          child: FilterChip(
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.select_all, size: 16),
+                const SizedBox(width: 8),
+                Flexible(child: Text(l10n.priceCalendarSelectAllDays)),
+              ],
+            ),
+            onSelected: (_) {
               setState(() {
                 // Select all days in current month
                 _selectedDays.clear();
@@ -423,32 +432,47 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                 }
               });
             },
-            icon: const Icon(Icons.select_all, size: 18),
-            label: Text(l10n.priceCalendarSelectAllDays),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.primaryColor,
-              side: BorderSide(color: context.primaryColor, width: 1.5),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+            backgroundColor: context.gradients.cardBackground,
+            side: BorderSide(color: context.primaryColor, width: 1.5),
+            labelStyle: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w600, fontSize: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _selectedDays.isEmpty
+          child: FilterChip(
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.deselect, size: 16),
+                const SizedBox(width: 8),
+                Flexible(child: Text(l10n.priceCalendarDeselectAll)),
+              ],
+            ),
+            onSelected: _selectedDays.isEmpty
                 ? null
-                : () {
+                : (_) {
                     setState(_selectedDays.clear);
                   },
-            icon: const Icon(Icons.deselect, size: 18),
-            label: Text(l10n.priceCalendarDeselectAll),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.textColorSecondary,
-              side: BorderSide(color: context.borderColor, width: 1.5),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: _selectedDays.isEmpty
+                ? Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt())
+                : context.gradients.cardBackground,
+            side: BorderSide(
+              color: _selectedDays.isEmpty
+                  ? Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt())
+                  : context.borderColor,
+              width: 1.5,
             ),
+            labelStyle: TextStyle(
+              color: _selectedDays.isEmpty
+                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38)
+                  : context.textColorSecondary,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         ),
       ],
@@ -695,8 +719,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             return Dialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               clipBehavior: Clip.antiAlias,
+              insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
               child: Container(
-                width: isMobile ? screenWidth * 0.95 : 500,
+                width: isMobile ? screenWidth * 0.90 : 500,
                 constraints: BoxConstraints(maxHeight: isMobile ? screenHeight * 0.85 : screenHeight * 0.8),
                 decoration: BoxDecoration(
                   color: context.gradients.cardBackground,
@@ -1350,9 +1375,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: context.primaryColor.withValues(alpha: 0.08),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: context.primaryColor.withValues(alpha: 0.2)),
+                        border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
                       ),
                       child: Row(
                         children: [
@@ -1537,21 +1562,72 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           final l10nDialog = AppLocalizations.of(context);
+          final theme = Theme.of(context);
           return AlertDialog(
-            title: Text(l10nDialog.priceCalendarAvailabilityForDays(_selectedDays.length)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: context.primaryColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.block, color: context.primaryColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10nDialog.priceCalendarAvailabilityForDays(_selectedDays.length),
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  l10nDialog.priceCalendarSelectActionForDays(_selectedDays.length),
-                  style: Theme.of(context).textTheme.bodyMedium,
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18, color: context.primaryColor),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l10nDialog.priceCalendarSelectActionForDays(_selectedDays.length),
+                          style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: isProcessing
+                FilterChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isProcessing)
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      else
+                        const Icon(Icons.check_circle, size: 18, color: Colors.white),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(l10nDialog.priceCalendarMarkAsAvailable)),
+                    ],
+                  ),
+                  selected: true,
+                  onSelected: isProcessing
                       ? null
-                      : () async {
+                      : (_) async {
                           final navigator = Navigator.of(context);
                           final messenger = ScaffoldMessenger.of(context);
 
@@ -1600,21 +1676,37 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             }
                           }
                         },
-                  icon: isProcessing
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.check_circle),
-                  label: Text(l10nDialog.priceCalendarMarkAsAvailable),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.successColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(16),
-                  ),
+                  selectedColor: context.successColor,
+                  backgroundColor: context.successColor,
+                  side: BorderSide(color: context.successColor, width: 1.5),
+                  labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                  checkmarkColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 2,
+                  shadowColor: context.successColor.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: isProcessing
+                FilterChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isProcessing)
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      else
+                        const Icon(Icons.block, size: 18, color: Colors.white),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(l10nDialog.priceCalendarBlockDates)),
+                    ],
+                  ),
+                  selected: true,
+                  onSelected: isProcessing
                       ? null
-                      : () async {
+                      : (_) async {
                           // Capture context-dependent values before async gap
                           final navigator = Navigator.of(context);
                           final messenger = ScaffoldMessenger.of(context);
@@ -1688,25 +1780,35 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           } finally {
                             // Only reset if dialog still open
                             if (mounted && !dialogClosed) {
-                              setState(() => isProcessing = false);
+                              setState(() => isProcessing = true);
                             }
                           }
                         },
-                  icon: isProcessing
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.block),
-                  label: Text(l10nDialog.priceCalendarBlockDates),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.errorColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(16),
-                  ),
+                  selectedColor: context.errorColor,
+                  backgroundColor: context.errorColor,
+                  side: BorderSide(color: context.errorColor, width: 1.5),
+                  labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                  checkmarkColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 2,
+                  shadowColor: context.errorColor.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: isProcessing
+                FilterChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      isProcessing
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.login, size: 18),
+                      const SizedBox(width: 10),
+                      Flexible(child: Text(l10nDialog.priceCalendarBlockCheckInButton)),
+                    ],
+                  ),
+                  onSelected: isProcessing
                       ? null
-                      : () async {
+                      : (_) async {
                           final navigator = Navigator.of(context);
                           final messenger = ScaffoldMessenger.of(context);
 
@@ -1754,15 +1856,28 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             }
                           }
                         },
-                  icon: const Icon(Icons.login),
-                  label: Text(l10nDialog.priceCalendarBlockCheckInButton),
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                  backgroundColor: context.gradients.cardBackground,
+                  selectedColor: theme.colorScheme.primary,
+                  side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), width: 1.5),
+                  labelStyle: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: isProcessing
+                FilterChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      isProcessing
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.logout, size: 18),
+                      const SizedBox(width: 10),
+                      Flexible(child: Text(l10nDialog.priceCalendarBlockCheckOutButton)),
+                    ],
+                  ),
+                  onSelected: isProcessing
                       ? null
-                      : () async {
+                      : (_) async {
                           final navigator = Navigator.of(context);
                           final messenger = ScaffoldMessenger.of(context);
 
@@ -1810,9 +1925,12 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             }
                           }
                         },
-                  icon: const Icon(Icons.logout),
-                  label: Text(l10nDialog.priceCalendarBlockCheckOutButton),
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                  backgroundColor: context.gradients.cardBackground,
+                  selectedColor: theme.colorScheme.primary,
+                  side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), width: 1.5),
+                  labelStyle: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ],
             ),

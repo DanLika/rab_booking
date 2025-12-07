@@ -198,7 +198,6 @@ class SubdomainService {
     if (urlSlug == null || urlSlug.isEmpty) {
       return FullSlugContext(
         subdomain: subdomain,
-        slug: null,
         propertyFound: true,
         unitFound: false,
         property: property,

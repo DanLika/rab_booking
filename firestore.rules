@@ -7,19 +7,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper function to check if user has owner or admin role
-    // NOTE: This only checks role, NOT resource ownership
-    function hasOwnerOrAdminRole() {
-      return isAuthenticated() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['owner', 'admin'];
-    }
 
-    // Helper function to check if user owns the document (for update/delete)
-    // CRITICAL SECURITY: Checks resource.data.owner_id matches authenticated user
-    function isResourceOwner() {
-      return isAuthenticated() && resource.data.owner_id == request.auth.uid;
-    }
 
     // Helper function for legacy documents that may not have owner_id yet
     // Allows update if: owner_id matches OR owner_id doesn't exist/is null (legacy)
@@ -56,13 +44,7 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // 🆕 NEW: Query-safe read function for owner documents
-    // Use this for collections where owners query their own data
-    // Handles both queries (resource == null) and individual document reads
-    function canReadAsOwner() {
-      return isAuthenticated() &&
-        (resource == null || resource.data.owner_id == request.auth.uid);
-    }
+
 
     // Users collection - users can only read their own data (MEDIUM SECURITY FIX)
     match /users/{userId} {
@@ -115,12 +97,7 @@ service cloud.firestore {
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
-    // Helper function to check if user owns the parent property
-    // Used for subcollections (units, widget_settings) that inherit ownership from property
-    function isPropertyOwner(propertyId) {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
-    }
+
 
     // Helper for legacy properties without owner_id
     function isPropertyOwnerOrLegacy(propertyId) {
@@ -229,18 +206,35 @@ service cloud.firestore {
     // ========================================================================
 
     // iCal feeds - Owner Dashboard manages external calendar imports
-    // ✅ CRITICAL FIX: Use query-safe read for listing feeds
+    // iCal feeds use property_id (not owner_id) - we verify ownership via parent property
     match /ical_feeds/{feedId} {
-      allow read: if canReadAsOwner();  // ✅ FIXED: Query-safe read
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwnerOrLegacy();  // ✅ FIXED: Legacy support
+      // READ: Allow if authenticated (query-safe) OR if user owns the parent property
+      allow read: if isAuthenticated() && (
+        resource == null ||
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
+      );
+      // CREATE: Verify user owns the parent property
+      allow create: if isAuthenticated() &&
+        ('property_id' in request.resource.data) &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      // UPDATE/DELETE: Verify user owns the parent property
+      allow update, delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
     // iCal events - Widget needs to read for availability calendar
+    // iCal events use property_id and unit_id (not owner_id) - we verify ownership via parent property
     match /ical_events/{eventId} {
       allow read: if true; // Widget needs to read events for availability
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwnerOrLegacy();  // ✅ FIXED: Legacy support
+      // CREATE: Verify user owns the parent property
+      allow create: if isAuthenticated() &&
+        ('property_id' in request.resource.data) &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      // UPDATE/DELETE: Verify user owns the parent property
+      allow update, delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
     // ========================================================================

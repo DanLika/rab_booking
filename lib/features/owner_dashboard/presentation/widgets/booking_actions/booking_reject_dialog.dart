@@ -36,6 +36,7 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
         decoration: BoxDecoration(

@@ -180,24 +180,6 @@ class OwnerAppDrawer extends ConsumerWidget {
               onTap: () => context.go(OwnerRoutes.profile),
             ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Divider(height: 1, color: context.gradients.sectionBorder),
-            ),
-
-            // Logout
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: _LogoutButton(
-                onLogout: () async {
-                  await ref.read(enhancedAuthProvider.notifier).signOut();
-                  if (context.mounted) {
-                    context.go(OwnerRoutes.login);
-                  }
-                },
-              ),
-            ),
-
             const SizedBox(height: 16),
           ],
         ),
@@ -624,53 +606,6 @@ class _PremiumExpansionTile extends StatelessWidget {
           tilePadding: const EdgeInsets.symmetric(horizontal: 16),
           childrenPadding: const EdgeInsets.only(bottom: 8),
           children: children,
-        ),
-      ),
-    );
-  }
-}
-
-/// Premium Logout Button
-class _LogoutButton extends StatefulWidget {
-  final VoidCallback onLogout;
-
-  const _LogoutButton({required this.onLogout});
-
-  @override
-  State<_LogoutButton> createState() => _LogoutButtonState();
-}
-
-class _LogoutButtonState extends State<_LogoutButton> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: _isHovered ? theme.colorScheme.danger.withAlpha((0.08 * 255).toInt()) : Colors.transparent,
-          border: Border.all(
-            color: _isHovered
-                ? theme.colorScheme.danger.withAlpha((0.3 * 255).toInt())
-                : theme.colorScheme.onSurface.withAlpha((0.2 * 255).toInt()),
-            width: 1.5,
-          ),
-        ),
-        child: ListTile(
-          leading: Icon(Icons.logout_rounded, color: theme.colorScheme.danger, size: 22),
-          title: Text(
-            l10n.ownerDrawerLogout,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.danger),
-          ),
-          onTap: widget.onLogout,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

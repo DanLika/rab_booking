@@ -6,6 +6,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/property_model.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
@@ -46,6 +47,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: isMobile ? double.infinity : 700,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),

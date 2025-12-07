@@ -735,8 +735,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
     // Sort units by sortOrder
     final sortedUnits = List<UnitModel>.from(units)..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-    // Calculate height: each unit tile is approximately 110px + 8px margin
-    final listHeight = sortedUnits.length * 118.0;
+    // Calculate height: each unit tile is approximately 85px + 6px margin
+    final listHeight = sortedUnits.length * 91.0;
 
     return SizedBox(
       height: listHeight,
@@ -823,9 +823,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
     required int dragIndex,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
-        color: isSelected ? theme.colorScheme.primaryContainer : context.gradients.cardBackground,
+        color: isSelected ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()) : context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
@@ -839,15 +839,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
           ReorderableDragStartListener(
             index: dragIndex,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Icon(
-                Icons.drag_indicator,
+                Icons.drag_indicator_rounded,
                 color: isSelected
-                    ? (isDark
-                          ? Colors.white.withValues(alpha: 0.7)
-                          : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                    : theme.colorScheme.onSurfaceVariant,
-                size: 20,
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant.withAlpha((0.6 * 255).toInt()),
+                size: 22,
               ),
             ),
           ),
@@ -866,7 +864,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
               },
               borderRadius: const BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
               child: Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 12, right: 12),
+                padding: const EdgeInsets.only(top: 8, bottom: 8, right: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -878,22 +876,21 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                             unit.name,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: isSelected
-                                  ? (isDark ? Colors.white : theme.colorScheme.onPrimaryContainer)
-                                  : theme.colorScheme.onSurface,
+                              fontSize: 15,
+                              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: unit.isAvailable
                                 ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
                                 : _kUnavailableColor.withAlpha((0.2 * 255).toInt()),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: Builder(
                             builder: (context) {
@@ -901,10 +898,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                               return Text(
                                 unit.isAvailable ? l10n.unitHubAvailable : l10n.unitHubUnavailable,
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (unit.isAvailable ? _kAvailableColor : _kUnavailableColor),
+                                  color: unit.isAvailable ? _kAvailableColor : _kUnavailableColor,
                                   fontWeight: FontWeight.w600,
+                                  fontSize: 11,
                                 ),
                               );
                             },
@@ -913,8 +909,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                         const SizedBox(width: 4),
                         // Duplicate button
                         SizedBox(
-                          width: 28,
-                          height: 28,
+                          width: 26,
+                          height: 26,
                           child: Builder(
                             builder: (context) {
                               final l10n = AppLocalizations.of(context);
@@ -926,8 +922,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                                 },
                                 icon: Icon(
                                   Icons.copy_outlined,
-                                  size: 16,
-                                  color: isSelected ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.primary,
+                                  size: 15,
+                                  color: isSelected
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.primary.withAlpha((0.7 * 255).toInt()),
                                 ),
                                 tooltip: l10n.unitHubEditUnit,
                                 padding: EdgeInsets.zero,
@@ -939,8 +937,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                         const SizedBox(width: 2),
                         // Delete button
                         SizedBox(
-                          width: 28,
-                          height: 28,
+                          width: 26,
+                          height: 26,
                           child: Builder(
                             builder: (context) {
                               final l10n = AppLocalizations.of(context);
@@ -948,8 +946,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                                 onPressed: () => _confirmDeleteUnit(context, unit),
                                 icon: Icon(
                                   Icons.delete_outline,
-                                  size: 16,
-                                  color: isSelected ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.error,
+                                  size: 15,
+                                  color: theme.colorScheme.error.withAlpha((0.8 * 255).toInt()),
                                 ),
                                 tooltip: l10n.unitHubDeleteUnit,
                                 padding: EdgeInsets.zero,
@@ -960,49 +958,43 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     // Property name
                     Text(
                       propertyName,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isSelected
-                            ? (isDark ? Colors.white.withValues(alpha: 0.7) : Colors.white)
+                            ? theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt())
                             : theme.colorScheme.onSurfaceVariant,
-                        fontWeight: isSelected ? FontWeight.w500 : null,
+                        fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     // Max guests + price
                     Row(
                       children: [
                         Icon(
-                          Icons.people_outline,
-                          size: 16,
+                          Icons.people_rounded,
+                          size: 18,
                           color: isSelected
-                              ? (isDark
-                                    ? Colors.white.withValues(alpha: 0.7)
-                                    : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                              ? theme.colorScheme.primary.withAlpha((0.8 * 255).toInt())
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${unit.maxGuests}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: isSelected
-                                ? (isDark
-                                      ? Colors.white.withValues(alpha: 0.7)
-                                      : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                                : theme.colorScheme.onSurfaceVariant,
+                            color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 14),
                         Icon(
-                          Icons.euro_outlined,
-                          size: 16,
+                          Icons.euro_rounded,
+                          size: 18,
                           color: isSelected
-                              ? (isDark
-                                    ? Colors.white.withValues(alpha: 0.7)
-                                    : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
+                              ? theme.colorScheme.primary.withAlpha((0.8 * 255).toInt())
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
@@ -1012,12 +1004,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                             return Text(
                               '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: isSelected
-                                    ? (isDark
-                                          ? Colors.white.withValues(alpha: 0.7)
-                                          : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
-                                    : theme.colorScheme.onSurfaceVariant,
+                                color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w600,
+                                fontSize: 13,
                               ),
                             );
                           },

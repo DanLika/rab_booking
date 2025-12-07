@@ -85,6 +85,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
         constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
@@ -154,13 +155,17 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                             initialValue: _selectedUnitId,
                             dropdownColor: InputDecorationHelper.getDropdownColor(context),
                             borderRadius: InputDecorationHelper.dropdownBorderRadius,
+                            isExpanded: true,
                             decoration: InputDecorationHelper.buildDecoration(
                               labelText: AppLocalizations.of(context).bookingCreateSelectUnit,
                               prefixIcon: const Icon(Icons.bed_outlined),
                               context: context,
                             ),
                             items: units.map((unit) {
-                              return DropdownMenuItem(value: unit.id, child: Text(unit.name));
+                              return DropdownMenuItem(
+                                value: unit.id,
+                                child: Text(unit.name, overflow: TextOverflow.ellipsis, maxLines: 1),
+                              );
                             }).toList(),
                             onChanged: (value) {
                               setState(() {
@@ -436,33 +441,42 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-                    child: Text(AppLocalizations.of(context).bookingCreateCancel),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: context.gradients.brandPrimary,
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                  Flexible(
+                    child: TextButton(
+                      onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        minimumSize: Size.zero,
+                      ),
+                      child: Text(AppLocalizations.of(context).bookingCreateCancel, overflow: TextOverflow.ellipsis),
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _isSaving ? null : _createBooking,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : Text(
-                                  AppLocalizations.of(context).bookingCreateSubmit,
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: context.gradients.brandPrimary,
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _isSaving ? null : _createBooking,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : Text(
+                                    AppLocalizations.of(context).bookingCreateSubmit,
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                          ),
                         ),
                       ),
                     ),

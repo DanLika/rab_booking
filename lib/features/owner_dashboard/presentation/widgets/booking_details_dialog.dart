@@ -40,6 +40,7 @@ class BookingDetailsDialog extends ConsumerWidget {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
         decoration: BoxDecoration(
@@ -200,35 +201,31 @@ class BookingDetailsDialog extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Primary actions row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  // Primary actions row - wrap to prevent overflow
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 4,
+                    runSpacing: 4,
                     children: [
                       if (booking.status != BookingStatus.cancelled)
-                        Expanded(
-                          child: _ActionButton(
-                            icon: Icons.edit_outlined,
-                            label: l10n.ownerDetailsEdit,
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              showEditBookingDialog(context, ref, booking);
-                            },
-                          ),
+                        _ActionButton(
+                          icon: Icons.edit_outlined,
+                          label: l10n.ownerDetailsEdit,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            showEditBookingDialog(context, ref, booking);
+                          },
                         ),
-                      Expanded(
-                        child: _ActionButton(
-                          icon: Icons.email_outlined,
-                          label: l10n.ownerDetailsEmail,
-                          onPressed: () => showSendEmailDialog(context, ref, booking),
-                        ),
+                      _ActionButton(
+                        icon: Icons.email_outlined,
+                        label: l10n.ownerDetailsEmail,
+                        onPressed: () => showSendEmailDialog(context, ref, booking),
                       ),
                       if (booking.status != BookingStatus.cancelled)
-                        Expanded(
-                          child: _ActionButton(
-                            icon: Icons.replay_outlined,
-                            label: l10n.ownerDetailsResend,
-                            onPressed: () => _resendConfirmationEmail(context, ref, l10n),
-                          ),
+                        _ActionButton(
+                          icon: Icons.replay_outlined,
+                          label: l10n.ownerDetailsResend,
+                          onPressed: () => _resendConfirmationEmail(context, ref, l10n),
                         ),
                     ],
                   ),
@@ -246,21 +243,29 @@ class BookingDetailsDialog extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed)
-                        _ActionButton(
-                          icon: Icons.cancel_outlined,
-                          label: l10n.ownerDetailsCancel,
-                          onPressed: () => _confirmCancellation(context, ref, l10n),
-                          isDestructive: true,
+                        Flexible(
+                          child: _ActionButton(
+                            icon: Icons.cancel_outlined,
+                            label: l10n.ownerDetailsCancel,
+                            onPressed: () => _confirmCancellation(context, ref, l10n),
+                            isDestructive: true,
+                          ),
                         )
                       else
                         const SizedBox.shrink(),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: AutoSizeText(
-                          l10n.ownerDetailsClose,
-                          style: const TextStyle(fontSize: 13),
-                          maxLines: 1,
-                          minFontSize: 10,
+                      Flexible(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            minimumSize: Size.zero,
+                          ),
+                          child: AutoSizeText(
+                            l10n.ownerDetailsClose,
+                            style: const TextStyle(fontSize: 13),
+                            maxLines: 1,
+                            minFontSize: 10,
+                          ),
                         ),
                       ),
                     ],

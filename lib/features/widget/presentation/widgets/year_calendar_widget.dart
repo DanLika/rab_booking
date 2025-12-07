@@ -60,7 +60,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               navigationWidget: _buildCompactYearNavigation(colors),
               translations: WidgetTranslations.of(context),
             ),
-            const SizedBox(height: SpacingTokens.m),
+            const SizedBox(height: SpacingTokens.l),
             Expanded(
               child: calendarData.when(
                 data: (data) => _buildYearGridWithIntegratedSelector(data, colors),
@@ -144,26 +144,28 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1024;
 
-    return Padding(
-      padding: EdgeInsets.all(isDesktop ? SpacingTokens.m : SpacingTokens.xs),
-      child: Stack(
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SingleChildScrollView(
-              child: SizedBox(
-                width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
-                child: Column(
-                  children: [
-                    _buildHeaderRowWithYearSelector(cellSize, colors),
-                    const SizedBox(height: SpacingTokens.xs),
-                    ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize, colors)),
-                  ],
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(isDesktop ? SpacingTokens.l : SpacingTokens.m),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SingleChildScrollView(
+                child: SizedBox(
+                  width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
+                  child: Column(
+                    children: [
+                      _buildHeaderRowWithYearSelector(cellSize, colors),
+                      const SizedBox(height: SpacingTokens.s),
+                      ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize, colors)),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

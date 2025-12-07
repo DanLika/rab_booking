@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/presentation/providers/widget_settings_provider.dart';
 import '../widgets/advanced_settings/email_verification_card.dart';
 import '../widgets/advanced_settings/tax_legal_disclaimer_card.dart';
-import '../widgets/advanced_settings/ical_export_card.dart';
 
 /// Widget Advanced Settings Screen
 /// Contains Email Config and Tax/Legal Disclaimer config
@@ -42,9 +41,6 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
   bool _useDefaultText = true;
   final _customDisclaimerController = TextEditingController();
 
-  // iCal Export Config
-  bool _icalExportEnabled = false;
-
   bool _isSaving = false;
   bool _isInitialized = false;
 
@@ -66,9 +62,6 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
       _taxLegalEnabled = taxConfig.enabled;
       _useDefaultText = taxConfig.useDefaultText;
       _customDisclaimerController.text = taxConfig.customText ?? '';
-
-      // iCal Export
-      _icalExportEnabled = settings.icalExportEnabled;
     });
   }
 
@@ -92,6 +85,18 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
       // Get current user ID for owner_id migration (legacy docs may not have it)
       final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
+      final customTextValue = _customDisclaimerController.text.trim().isEmpty
+          ? null
+          : _customDisclaimerController.text.trim();
+
+      // Debug: Log what we're saving
+      print('[WidgetAdvancedSettings] Saving tax config:');
+      print('  - enabled: $_taxLegalEnabled');
+      print('  - useDefaultText: $_useDefaultText');
+      print(
+        '  - customText: ${customTextValue != null ? "${customTextValue.substring(0, customTextValue.length > 50 ? 50 : customTextValue.length)}..." : "null"}',
+      );
+
       final updatedSettings = currentSettings.copyWith(
         // Ensure owner_id is set for legacy document migration
         ownerId: currentSettings.ownerId ?? currentUserId,
@@ -99,29 +104,11 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         taxLegalConfig: currentSettings.taxLegalConfig.copyWith(
           enabled: _taxLegalEnabled,
           useDefaultText: _useDefaultText,
-          customText: _customDisclaimerController.text.trim().isEmpty ? null : _customDisclaimerController.text.trim(),
+          customText: customTextValue,
         ),
-        icalExportEnabled: _icalExportEnabled,
       );
 
       await ref.read(widgetSettingsRepositoryProvider).updateWidgetSettings(updatedSettings);
-
-      // Generate or revoke iCal export URL if iCalExportEnabled changed
-      if (_icalExportEnabled != currentSettings.icalExportEnabled) {
-        if (_icalExportEnabled) {
-          // Generate new iCal export URL and token
-          await _generateIcalExportUrl(
-            currentSettings.propertyId,
-            currentSettings.id, // unitId is stored as 'id' field
-          );
-        } else {
-          // Revoke existing iCal export URL
-          await _revokeIcalExportUrl(
-            currentSettings.propertyId,
-            currentSettings.id, // unitId is stored as 'id' field
-          );
-        }
-      }
 
       if (mounted) {
         setState(() => _isSaving = false);
@@ -145,33 +132,90 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
   void _showDisclaimerPreview() {
     final l10n = AppLocalizations.of(context);
     final text = _useDefaultText ? const TaxLegalConfig().disclaimerText : _customDisclaimerController.text.trim();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 600;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.advancedSettingsDisclaimerPreview),
-        content: SingleChildScrollView(child: Text(text.isEmpty ? l10n.advancedSettingsNoDisclaimer : text)),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.close))],
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        clipBehavior: Clip.antiAlias,
+        insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
+        child: Container(
+          width: isMobile ? screenWidth * 0.90 : 600,
+          constraints: BoxConstraints(maxHeight: isMobile ? screenHeight * 0.85 : screenHeight * 0.8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with darker gradient
+              Container(
+                padding: EdgeInsets.all(isMobile ? 16 : 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [const Color(0xFF6B46C1), const Color(0xFF553C9A)]
+                        : [const Color(0xFF7C3AED), const Color(0xFF6D28D9)],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.preview, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.advancedSettingsDisclaimerPreview,
+                        style: TextStyle(
+                          fontSize: isMobile ? 16 : 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      tooltip: l10n.close,
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(isMobile ? 16 : 20),
+                  child: Text(
+                    text.isEmpty ? l10n.advancedSettingsNoDisclaimer : text,
+                    style: TextStyle(fontSize: 14, height: 1.6, color: isDark ? Colors.grey[300] : Colors.grey[800]),
+                  ),
+                ),
+              ),
+              // Footer
+              Padding(
+                padding: EdgeInsets.all(isMobile ? 12 : 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: Text(l10n.close))],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
-  }
-
-  Future<void> _generateIcalExportUrl(String propertyId, String unitId) async {
-    try {
-      final callable = FirebaseFunctions.instance.httpsCallable('generateIcalExportUrl');
-      await callable.call({'propertyId': propertyId, 'unitId': unitId});
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Future<void> _revokeIcalExportUrl(String propertyId, String unitId) async {
-    try {
-      final callable = FirebaseFunctions.instance.httpsCallable('revokeIcalExportUrl');
-      await callable.call({'propertyId': propertyId, 'unitId': unitId});
-    } catch (e) {
-      rethrow;
-    }
   }
 
   @override
@@ -238,19 +282,6 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                     }
                     return null;
                   },
-                  isMobile: isMobile,
-                ),
-              ),
-
-              // iCal Export Section (last section)
-              Padding(
-                padding: EdgeInsets.fromLTRB(padding, gap, padding, padding),
-                child: IcalExportCard(
-                  propertyId: widget.propertyId,
-                  unitId: widget.unitId,
-                  settings: settings,
-                  icalExportEnabled: _icalExportEnabled,
-                  onEnabledChanged: (val) => setState(() => _icalExportEnabled = val),
                   isMobile: isMobile,
                 ),
               ),

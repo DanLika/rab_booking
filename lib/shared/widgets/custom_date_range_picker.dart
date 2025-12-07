@@ -1,8 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/gradient_extensions.dart';
+import '../../core/utils/responsive_dialog_utils.dart';
 
 /// Custom Date Range Picker Widget
 /// Uses brand colors instead of Material default pink/red
@@ -54,18 +54,17 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 500;
 
-    final isDark = theme.brightness == Brightness.dark;
-
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: isMobile ? double.infinity : 450,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E28) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+          color: context.gradients.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.gradients.sectionBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -75,11 +74,18 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.date_range, color: Colors.white),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.date_range, color: Colors.white, size: 20),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: AutoSizeText(
@@ -100,8 +106,11 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
 
             // Selected range display
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(color: theme.colorScheme.surfaceContainerHighest),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()))),
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -114,7 +123,7 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Icon(Icons.arrow_forward, color: theme.colorScheme.onSurfaceVariant),
+                    child: Icon(Icons.arrow_forward, color: theme.colorScheme.onSurfaceVariant, size: 20),
                   ),
                   Expanded(
                     child: _buildDateDisplay(
@@ -137,15 +146,17 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
-                border: Border(
-                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
-                ),
+                color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                border: Border(top: BorderSide(color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()))),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Otkaži')),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('Otkaži', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
+                  ),
                   const SizedBox(width: 8),
                   Container(
                     decoration: BoxDecoration(
@@ -153,7 +164,7 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
                       color: (_startDate == null || _endDate == null)
                           ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
                           : null,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Material(
                       color: Colors.transparent,
@@ -163,7 +174,7 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
                                 Navigator.of(context).pop(DateTimeRange(start: _startDate!, end: _endDate!));
                               }
                             : null,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(10),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           child: Text(
@@ -199,15 +210,15 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? theme.colorScheme.primary.withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: isActive ? theme.colorScheme.primary.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.3),
-            width: isActive ? 2 : 1,
+            width: 1.5,
           ),
         ),
         child: Column(
@@ -217,12 +228,13 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
               label,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: isActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               date != null ? dateFormat.format(date) : 'Odaberi',
-              style: theme.textTheme.bodyLarge?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: date != null ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
               ),
@@ -343,7 +355,7 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
         height: 44,
         margin: const EdgeInsets.symmetric(vertical: 2),
         decoration: BoxDecoration(
-          color: isInRange ? theme.colorScheme.primary.withValues(alpha: 0.15) : null,
+          color: isInRange ? theme.colorScheme.primary.withValues(alpha: 0.12) : null,
           borderRadius: isStart
               ? const BorderRadius.horizontal(left: Radius.circular(22))
               : isEnd
@@ -365,9 +377,10 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
                     : (isStart || isEnd)
                     ? Colors.white
                     : isWeekend
-                    ? theme.colorScheme.error.withValues(alpha: 0.7)
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
                     : theme.colorScheme.onSurface,
                 fontWeight: (isStart || isEnd || isToday) ? FontWeight.bold : FontWeight.normal,
+                fontSize: 14,
               ),
             ),
           ),

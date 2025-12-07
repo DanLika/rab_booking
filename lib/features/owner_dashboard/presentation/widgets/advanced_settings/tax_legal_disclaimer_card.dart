@@ -102,13 +102,13 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                         Switch(
                           value: taxLegalEnabled,
                           onChanged: onEnabledChanged,
-                          activeColor: theme.colorScheme.primary,
+                          activeThumbColor: theme.colorScheme.primary,
                         ),
                       ],
                     ),
 
                     if (taxLegalEnabled) ...[
-                      const Divider(height: 24),
+                      Divider(height: 24, color: theme.colorScheme.outline.withAlpha((0.2 * 255).toInt())),
 
                       // Disclaimer text source selector
                       _buildTextSourceSection(theme, context, l10n),
@@ -162,10 +162,17 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
               // Default text option
               RadioListTile<bool>(
                 value: true,
-                title: Text(l10n.taxLegalDefaultTitle, style: theme.textTheme.bodyMedium),
+                title: Text(
+                  l10n.taxLegalDefaultTitle,
+                  style: theme.textTheme.bodyMedium,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
                 subtitle: Text(
                   l10n.taxLegalDefaultSubtitle,
                   style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -173,10 +180,17 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
               // Custom text option
               RadioListTile<bool>(
                 value: false,
-                title: Text(l10n.taxLegalCustomTitle, style: theme.textTheme.bodyMedium),
+                title: Text(
+                  l10n.taxLegalCustomTitle,
+                  style: theme.textTheme.bodyMedium,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
                 subtitle: Text(
                   l10n.taxLegalCustomSubtitle,
                   style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
                 contentPadding: EdgeInsets.zero,
               ),

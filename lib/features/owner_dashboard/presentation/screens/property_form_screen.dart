@@ -16,6 +16,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/gradient_button.dart';
+import '../../../../shared/widgets/app_filter_chip.dart';
 import '../providers/owner_properties_provider.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
@@ -318,9 +319,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                     }
                                   },
                                 ),
-                                const SizedBox(height: AppDimensions.spaceM),
-                                // Subdomain
-                                _buildSubdomainField(isMobile),
                               ],
                             );
                           }
@@ -837,36 +835,25 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   }
 
   Widget _buildAmenitiesGrid() {
-    final theme = Theme.of(context);
-
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: PropertyAmenity.values.map((amenity) {
         final isSelected = _selectedAmenities.contains(amenity);
-        return FilterChip(
-          label: Text(
-            amenity.displayName,
-            style: TextStyle(color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface),
-          ),
+        return AppFilterChip(
+          label: amenity.displayName,
           selected: isSelected,
-          onSelected: (selected) {
+          icon: _getAmenityIcon(amenity.iconName),
+          onSelected: () {
             setState(() {
               // Force create new Set to trigger rebuild
-              if (selected) {
-                _selectedAmenities = {..._selectedAmenities, amenity};
-              } else {
+              if (isSelected) {
                 _selectedAmenities = Set.from(_selectedAmenities)..remove(amenity);
+              } else {
+                _selectedAmenities = {..._selectedAmenities, amenity};
               }
             });
           },
-          avatar: Icon(
-            _getAmenityIcon(amenity.iconName),
-            size: 18,
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-          ),
         );
       }).toList(),
     );

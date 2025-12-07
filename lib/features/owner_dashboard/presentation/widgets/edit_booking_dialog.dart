@@ -70,6 +70,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
         constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
@@ -160,62 +161,81 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
                       ),
-                      child: Text(
-                        l10n.editBookingNights(nights),
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.authSecondary),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.nights_stay, size: 18, color: theme.colorScheme.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.editBookingNights(nights),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 12),
 
                     // Guest Count
-                    ListTile(
-                      leading: const Icon(Icons.people),
-                      title: Text(l10n.editBookingGuests),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _guestCount > 1 ? (isDark ? Colors.white : Colors.black) : Colors.grey[400],
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(
-                                Icons.remove,
-                                size: 16,
-                                color: _guestCount > 1 ? (isDark ? Colors.black : Colors.white) : Colors.grey[600],
-                              ),
-                              onPressed: _guestCount > 1 ? () => setState(() => _guestCount--) : null,
-                            ),
+                    Row(
+                      children: [
+                        Icon(Icons.people, color: theme.colorScheme.primary),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            l10n.editBookingGuests,
+                            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
                           ),
-                          const SizedBox(width: 12),
-                          Text(
+                        ),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: _guestCount > 1
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface.withAlpha((0.12 * 255).toInt()),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              Icons.remove,
+                              size: 16,
+                              color: _guestCount > 1
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt()),
+                            ),
+                            onPressed: _guestCount > 1 ? () => setState(() => _guestCount--) : null,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 32,
+                          child: Text(
                             _guestCount.toString(),
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
                           ),
-                          const SizedBox(width: 12),
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.white : Colors.black,
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.add, size: 16, color: isDark ? Colors.black : Colors.white),
-                              onPressed: () => setState(() => _guestCount++),
-                            ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(Icons.add, size: 16, color: theme.colorScheme.onPrimary),
+                            onPressed: () => setState(() => _guestCount++),
                           ),
-                        ],
-                      ),
-                      contentPadding: EdgeInsets.zero,
+                        ),
+                      ],
                     ),
 
                     // Notes
@@ -238,38 +258,49 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
-                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
+                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
+                border: Border(
+                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                ),
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                    child: Text(l10n.cancel),
+                  Flexible(
+                    child: TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        minimumSize: Size.zero,
+                      ),
+                      child: Text(l10n.cancel, overflow: TextOverflow.ellipsis),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: context.gradients.brandPrimary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveChanges,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  Flexible(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: context.gradients.brandPrimary,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : Text(l10n.editBookingSaveChanges),
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveChanges,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Text(l10n.editBookingSaveChanges, overflow: TextOverflow.ellipsis),
+                      ),
                     ),
                   ),
                 ],

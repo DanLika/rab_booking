@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../domain/models/date_range_selection.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../shared/widgets/smart_tooltip.dart';
 
 /// Calendar top toolbar widget
 /// Shows date range picker, search, refresh, today button, add room, summary toggle, and notifications
@@ -84,7 +85,6 @@ class CalendarTopToolbar extends StatelessWidget {
               onTap: onDatePickerTap,
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                constraints: isCompact ? const BoxConstraints(maxWidth: 120) : null,
                 padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 6 : 8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -108,7 +108,7 @@ class CalendarTopToolbar extends StatelessWidget {
                         color: theme.colorScheme.primary,
                       ),
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.clip,
                     ),
                     SizedBox(width: isCompact ? 2 : 4),
                     Icon(Icons.arrow_drop_down, size: isCompact ? 14 : 20, color: theme.colorScheme.primary),
@@ -129,7 +129,7 @@ class CalendarTopToolbar extends StatelessWidget {
           ),
 
           // Spacer - push action buttons to the right
-          const Spacer(flex: 2),
+          const Spacer(),
 
           // Action buttons - FIXED OVERFLOW
           if (isCompact)
@@ -221,58 +221,61 @@ class CalendarTopToolbar extends StatelessWidget {
             )
           else
             // DESKTOP MODE: Show all buttons with styled containers
-            Flexible(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Search button
-                  if (onSearchTap != null)
-                    _buildStyledIconButton(
-                      icon: Icons.search,
-                      color: AppColors.info,
-                      onPressed: onSearchTap!,
-                      tooltip: l10n.ownerCalendarSearchBookings,
-                      isDark: theme.brightness == Brightness.dark,
-                    ),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Search button
+                    if (onSearchTap != null)
+                      _buildStyledIconButton(
+                        icon: Icons.search,
+                        color: AppColors.info,
+                        onPressed: onSearchTap!,
+                        tooltip: l10n.ownerCalendarSearchBookings,
+                        isDark: theme.brightness == Brightness.dark,
+                      ),
 
-                  // Refresh button
-                  if (onRefresh != null)
-                    _buildStyledIconButton(
-                      icon: Icons.refresh,
-                      color: AppColors.success,
-                      onPressed: onRefresh!,
-                      tooltip: l10n.ownerCalendarRefresh,
-                      isDark: theme.brightness == Brightness.dark,
-                    ),
+                    // Refresh button
+                    if (onRefresh != null)
+                      _buildStyledIconButton(
+                        icon: Icons.refresh,
+                        color: AppColors.success,
+                        onPressed: onRefresh!,
+                        tooltip: l10n.ownerCalendarRefresh,
+                        isDark: theme.brightness == Brightness.dark,
+                      ),
 
-                  // Filter button
-                  if (onFilterTap != null)
-                    _buildStyledIconButton(
-                      icon: Icons.tune,
-                      color: AppColors.warning,
-                      onPressed: onFilterTap!,
-                      tooltip: l10n.ownerCalendarFilters,
-                      isDark: theme.brightness == Brightness.dark,
-                    ),
+                    // Filter button
+                    if (onFilterTap != null)
+                      _buildStyledIconButton(
+                        icon: Icons.tune,
+                        color: AppColors.warning,
+                        onPressed: onFilterTap!,
+                        tooltip: l10n.ownerCalendarFilters,
+                        isDark: theme.brightness == Brightness.dark,
+                      ),
 
-                  // Today button
-                  _buildStyledTodayButton(theme, l10n),
+                    // Today button
+                    _buildStyledTodayButton(theme, l10n),
 
-                  // Notifications button
-                  if (onNotificationsTap != null)
-                    _buildStyledNotificationsButton(theme, l10n, onNotificationsTap!, notificationCount),
+                    // Notifications button
+                    if (onNotificationsTap != null)
+                      _buildStyledNotificationsButton(theme, l10n, onNotificationsTap!, notificationCount),
 
-                  // Analytics toggle
-                  if (showSummaryToggle && onSummaryToggleChanged != null)
-                    _buildStyledIconButton(
-                      icon: isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
-                      color: isSummaryVisible ? AppColors.primary : AppColors.info,
-                      onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
-                      tooltip: isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats,
-                      isDark: theme.brightness == Brightness.dark,
-                      isActive: isSummaryVisible,
-                    ),
-                ],
+                    // Analytics toggle
+                    if (showSummaryToggle && onSummaryToggleChanged != null)
+                      _buildStyledIconButton(
+                        icon: isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
+                        color: isSummaryVisible ? AppColors.primary : AppColors.info,
+                        onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
+                        tooltip: isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats,
+                        isDark: theme.brightness == Brightness.dark,
+                        isActive: isSummaryVisible,
+                      ),
+                  ],
+                ),
               ),
             ),
         ],
@@ -291,7 +294,7 @@ class CalendarTopToolbar extends StatelessWidget {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Tooltip(
+      child: SmartTooltip(
         message: tooltip,
         child: Material(
           color: Colors.transparent,
@@ -324,7 +327,7 @@ class CalendarTopToolbar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Tooltip(
+      child: SmartTooltip(
         message: l10n.ownerCalendarGoToToday,
         child: Material(
           color: Colors.transparent,
@@ -369,7 +372,7 @@ class CalendarTopToolbar extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Tooltip(
+      child: SmartTooltip(
         message: l10n.ownerCalendarNotifications,
         child: Material(
           color: Colors.transparent,

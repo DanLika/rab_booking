@@ -23,11 +23,48 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
   List<Map<String, dynamic>> _allUnits = [];
   bool _isLoading = true;
   bool _showFaq = false;
+  String? _generatingUnitId; // Track which unit is currently generating
 
   @override
   void initState() {
     super.initState();
     _loadUnits();
+  }
+
+  Future<void> _generateAndDownloadIcal(dynamic unit, String propertyId) async {
+    setState(() => _generatingUnitId = unit.id);
+
+    try {
+      final l10n = AppLocalizations.of(context);
+
+      // Fetch bookings for this unit
+      final bookings = await ref.read(bookingRepositoryProvider).fetchUnitBookings(unit.id);
+
+      // Generate iCal content
+      final icsContent = await ref
+          .read(icalExportServiceProvider)
+          .generateAndUploadIcal(propertyId: propertyId, unitId: unit.id, unit: unit);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.icalExportSuccess),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _generatingUnitId = null);
+      }
+    }
   }
 
   Future<void> _loadUnits() async {
@@ -380,10 +417,10 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
           ),
           title: Text(unit.name ?? l10n.icalExportListUnknownUnit, style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle: Text(property.name ?? l10n.icalExportListUnknownProperty, style: theme.textTheme.bodySmall),
-          trailing: Icon(Icons.chevron_right, color: theme.colorScheme.outline),
-          onTap: () {
-            context.push(OwnerRoutes.icalExport, extra: {'unit': unit, 'propertyId': property.id});
-          },
+          trailing: _generatingUnitId == unit.id
+              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+              : Icon(Icons.download, color: theme.colorScheme.primary),
+          onTap: _generatingUnitId == null ? () => _generateAndDownloadIcal(unit, property.id) : null,
         ),
         const Divider(height: 1, indent: 20, endIndent: 20),
       ],

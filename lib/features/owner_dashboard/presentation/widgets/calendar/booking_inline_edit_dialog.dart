@@ -6,11 +6,11 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../providers/owner_calendar_provider.dart';
-import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/booking_overlap_detector.dart';
 
 /// Inline booking edit dialog
@@ -52,15 +52,20 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < CalendarGridCalculator.mobileBreakpoint;
     final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = ResponsiveDialogUtils.isMobile(context);
+
+    // Use ResponsiveDialogUtils for consistent sizing
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: 500);
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
-        width: isMobile ? double.infinity : 500,
+        width: dialogWidth,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
@@ -73,7 +78,7 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
           children: [
             // Header with gradient
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),

@@ -58,6 +58,16 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
     bool isDarkMode,
     MinimalistColorSchemeAdapter colors,
   ) {
+    // Debug: Log what we're displaying
+    final text = taxConfig.disclaimerText;
+    print('[TaxLegalDisclaimerWidget] Displaying disclaimer:');
+    print('  - enabled: ${taxConfig.enabled}');
+    print('  - useDefaultText: ${taxConfig.useDefaultText}');
+    print(
+      '  - customText: ${taxConfig.customText != null ? "${taxConfig.customText!.substring(0, taxConfig.customText!.length > 50 ? 50 : taxConfig.customText!.length)}..." : "null"}',
+    );
+    print('  - disclaimerText (first 100 chars): ${text.length > 100 ? "${text.substring(0, 100)}..." : text}');
+
     return Container(
       margin: const EdgeInsets.only(left: SpacingTokens.m, right: SpacingTokens.m, top: SpacingTokens.m),
       decoration: BoxDecoration(

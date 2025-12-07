@@ -202,8 +202,8 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
 
                           const SizedBox(height: SpacingTokens.l),
 
-                          // Calendar export button
-                          if (widget.booking != null && (widget.widgetSettings?.icalExportEnabled ?? false))
+                          // Calendar export button (always enabled)
+                          if (widget.booking != null)
                             CalendarExportButton(
                               booking: widget.booking!,
                               unitName: widget.unitName ?? widget.propertyName,

@@ -156,7 +156,7 @@ class _DateRangeSelector extends ConsumerWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
+class _FilterChip extends StatefulWidget {
   final String label;
   final bool selected;
   final VoidCallback onSelected;
@@ -164,23 +164,55 @@ class _FilterChip extends StatelessWidget {
   const _FilterChip({required this.label, required this.selected, required this.onSelected});
 
   @override
+  State<_FilterChip> createState() => _FilterChipState();
+}
+
+class _FilterChipState extends State<_FilterChip> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return FilterChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => onSelected(),
-      selectedColor: theme.colorScheme.primary,
-      backgroundColor: context.gradients.cardBackground,
-      side: BorderSide(
-        color: selected ? theme.colorScheme.primary : context.gradients.sectionBorder,
-        width: selected ? 2 : 1,
+
+    // Colors based on state
+    final bgColor = widget.selected
+        ? theme.colorScheme.primary
+        : _isHovered
+        ? theme.colorScheme.primary.withValues(alpha: 0.08)
+        : context.gradients.cardBackground;
+
+    final borderColor = widget.selected
+        ? theme.colorScheme.primary
+        : _isHovered
+        ? theme.colorScheme.primary.withValues(alpha: 0.4)
+        : context.gradients.sectionBorder;
+
+    final textColor = widget.selected ? Colors.white : theme.colorScheme.onSurface;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: FilterChip(
+          label: Text(widget.label),
+          selected: widget.selected,
+          onSelected: (_) => widget.onSelected(),
+          selectedColor: bgColor,
+          backgroundColor: bgColor,
+          side: BorderSide(color: borderColor, width: 1.5),
+          labelStyle: TextStyle(
+            color: textColor,
+            fontWeight: widget.selected ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 14,
+          ),
+          checkmarkColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          elevation: widget.selected ? 2 : 0,
+          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+        ),
       ),
-      labelStyle: TextStyle(
-        color: selected ? Colors.white : theme.colorScheme.onSurface,
-        fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-      ),
-      checkmarkColor: Colors.white,
     );
   }
 }
@@ -474,7 +506,7 @@ class _MetricCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
 
-            // Subtitle
+            // Subtitle - max 2 lines
             Text(
               subtitle,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -483,7 +515,7 @@ class _MetricCard extends StatelessWidget {
                 fontSize: isMobile ? 10 : 11,
               ),
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],
@@ -932,6 +964,8 @@ class _TopPropertiesList extends StatelessWidget {
                       subtitle: Text(
                         '${property.bookings} ${l10n.ownerAnalyticsBookings} • ${property.occupancyRate.toStringAsFixed(1)}% ${l10n.ownerAnalyticsOccupancy}',
                         style: AppTypography.bodySmall.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       trailing: SizedBox(
                         width: 100, // Compact width (was 120)
@@ -1079,9 +1113,11 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                             children: [
                               Text(
                                 '$widgetBookings',
-                                style: theme.textTheme.headlineSmall?.copyWith(
+                                style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 28,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
                               Text(
@@ -1125,9 +1161,11 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                             children: [
                               Text(
                                 '\$${widgetRevenue.toStringAsFixed(2)}',
-                                style: theme.textTheme.headlineSmall?.copyWith(
+                                style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 28,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
                               Text(

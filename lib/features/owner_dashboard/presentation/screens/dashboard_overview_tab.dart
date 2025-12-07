@@ -480,10 +480,15 @@ class DashboardOverviewTab extends ConsumerWidget {
               ),
               SizedBox(height: isMobile ? 4 : 6),
 
-              // Title
+              // Title - max 2 lines
               Text(
                 title,
-                style: theme.textTheme.bodySmall?.copyWith(color: titleColor, fontWeight: FontWeight.w500, height: 1.2),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: titleColor,
+                  fontWeight: FontWeight.w500,
+                  height: 1.2,
+                  fontSize: isMobile ? 11 : 12,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

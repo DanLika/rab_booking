@@ -421,6 +421,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                             context: context,
                             builder: (context) => EmbedCodeGeneratorDialog(
                               unitId: widget.unit!.id,
+                              propertyId: widget.propertyId,
                               unitName: widget.unit!.name,
                               propertySubdomain: property?.subdomain,
                             ),

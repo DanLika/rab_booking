@@ -30,13 +30,13 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
   static const String _defaultWidgetBaseUrl = 'https://rab-booking-widget.web.app';
   static const String _subdomainBaseDomain = 'bookbed.io';
 
-  /// Generate iframe code for a unit (uses stable unit ID, not slug)
+  /// Generate iframe code for a unit (uses stable IDs, not slug)
   String _generateIframeCode(UnitModel unit, String? propertySubdomain) {
     final baseUrl = propertySubdomain != null && propertySubdomain.isNotEmpty
         ? 'https://$propertySubdomain.$_subdomainBaseDomain'
         : _defaultWidgetBaseUrl;
 
-    final url = '$baseUrl?unit=${unit.id}&language=$_selectedLanguage';
+    final url = '$baseUrl?property=${unit.propertyId}&unit=${unit.id}&language=$_selectedLanguage';
 
     return '''<iframe
   class="booking-widget"

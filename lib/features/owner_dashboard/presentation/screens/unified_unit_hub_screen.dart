@@ -1228,17 +1228,17 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: informacijeCard),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(child: kapacitetCard),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           // Row 2: Cijena and Fotografije side by side
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: cijenaCard),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: _buildInfoCard(
                   theme,
@@ -1253,12 +1253,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         ] else ...[
           // Stacked layout for mobile/tablet
           informacijeCard,
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           kapacitetCard,
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           cijenaCard,
           // Images Section for mobile
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           _buildInfoCard(
             theme,
             title: l10n.unitHubPhotosSection,
@@ -1323,40 +1323,66 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
   }) {
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
-          ),
-          padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(8),
+    return MouseRegion(
+      cursor: SystemMouseCursors.basic,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.gradients.cardBackground,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            ),
+            padding: EdgeInsets.all(isMobile ? 14.0 : 18.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with accent border
+                Row(
+                  children: [
+                    // Larger, more prominent icon
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: theme.colorScheme.primary, size: 22),
                     ),
-                    child: Icon(icon, color: theme.colorScheme.primary, size: 18),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ...children,
-            ],
+                    const SizedBox(width: 14),
+                    // Title with accent border
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            height: 2,
+                            width: 40,
+                            decoration: BoxDecoration(
+                              gradient: GradientTokens.brandPrimary,
+                              borderRadius: BorderRadius.circular(1),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                ...children,
+              ],
+            ),
           ),
         ),
       ),
@@ -1365,13 +1391,20 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
 
   Widget _buildDetailRow(ThemeData theme, String label, String value, {Color? valueColor}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             flex: 2,
-            child: Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           Expanded(
             flex: 3,
@@ -1379,7 +1412,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
               value,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
+                fontSize: 15,
                 color: valueColor ?? theme.colorScheme.onSurface,
+                letterSpacing: -0.2,
               ),
             ),
           ),
@@ -1396,9 +1431,27 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
     final images = _selectedUnit!.images;
     if (images.isEmpty) {
       return [
-        Text(
-          l10n.unitHubNoPhotos,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.photo_library_outlined,
+                  size: 32,
+                  color: theme.colorScheme.onSurfaceVariant.withAlpha((0.4 * 255).toInt()),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.unitHubNoPhotos,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha((0.6 * 255).toInt()),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ];
     }

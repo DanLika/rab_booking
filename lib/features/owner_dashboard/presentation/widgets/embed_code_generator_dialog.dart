@@ -8,12 +8,14 @@ import '../../../../core/theme/app_colors.dart';
 class EmbedCodeGeneratorDialog extends StatefulWidget {
   const EmbedCodeGeneratorDialog({
     required this.unitId,
+    required this.propertyId,
     this.unitName,
     this.propertySubdomain,
     super.key,
   });
 
   final String unitId;
+  final String propertyId;
   final String? unitName;
   final String? propertySubdomain;
 
@@ -36,10 +38,11 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
     return _defaultWidgetBaseUrl;
   }
 
-  /// Generate widget URL with query params (stable, uses immutable unit ID)
+  /// Generate widget URL with query params (stable, uses immutable IDs)
   String get _widgetUrl {
     final baseUrl = _widgetBaseUrl;
     final queryParams = <String, String>{
+      'property': widget.propertyId,
       'unit': widget.unitId,
       'language': _selectedLanguage,
     };

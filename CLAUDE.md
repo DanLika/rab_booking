@@ -149,6 +149,6 @@ ne sekcije
 
 ---
 
-**Last Updated**: 2025-12-06 | **Version**: 4.3
+**Last Updated**: 2025-12-07 | **Version**: 4.4
 
-**Changelog 4.3**: UI/UX optimizacije - kompaktniji profil, notifikacije, dashboard, analytics. Manje šareno, profesionalnije.
+**Changelog 4.4**: Welcome screen za nove korisnike bez nekretnina. Onboarding wizard preskočen - direktno na dashboard.

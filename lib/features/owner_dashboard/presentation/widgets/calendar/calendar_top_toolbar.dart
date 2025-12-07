@@ -341,7 +341,7 @@ class CalendarTopToolbar extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Icon(Icons.calendar_today_outlined, size: 20, color: AppColors.primary),
+                  const Icon(Icons.calendar_today_outlined, size: 20, color: AppColors.primary),
                   Positioned(
                     bottom: 0,
                     child: Container(

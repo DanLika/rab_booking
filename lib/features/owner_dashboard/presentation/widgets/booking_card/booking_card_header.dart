@@ -22,7 +22,6 @@ class BookingCardHeader extends StatelessWidget {
         border: Border(
           bottom: BorderSide(
             color: isDark ? Colors.white.withAlpha((0.08 * 255).toInt()) : Colors.black.withAlpha((0.06 * 255).toInt()),
-            width: 1,
           ),
         ),
       ),

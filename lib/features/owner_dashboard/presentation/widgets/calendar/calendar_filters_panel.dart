@@ -269,7 +269,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionHeader(icon: Icons.home_outlined, title: 'Objekti'),
+            const _SectionHeader(icon: Icons.home_outlined, title: 'Objekti'),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -346,7 +346,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionHeader(icon: Icons.meeting_room_outlined, title: 'Jedinice'),
+            const _SectionHeader(icon: Icons.meeting_room_outlined, title: 'Jedinice'),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -412,7 +412,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(icon: Icons.info_outline, title: 'Statusi'),
+        const _SectionHeader(icon: Icons.info_outline, title: 'Statusi'),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -478,7 +478,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(icon: Icons.source_outlined, title: 'Izvori rezervacija'),
+        const _SectionHeader(icon: Icons.source_outlined, title: 'Izvori rezervacija'),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -533,7 +533,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(icon: Icons.date_range_outlined, title: 'Raspon datuma'),
+        const _SectionHeader(icon: Icons.date_range_outlined, title: 'Raspon datuma'),
         const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: _showDateRangePicker,
@@ -675,7 +675,6 @@ class _SectionHeader extends StatelessWidget {
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             maxLines: 1,
-            minFontSize: 12,
           ),
         ),
       ],

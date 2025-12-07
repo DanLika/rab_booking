@@ -589,7 +589,6 @@ class _SelectableNotificationCard extends StatelessWidget {
           color: isSelected
               ? theme.colorScheme.primary.withAlpha((0.4 * 255).toInt())
               : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-          width: 1,
         ),
         boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
       ),
@@ -719,7 +718,6 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
             color: _isHovered
                 ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
                 : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-            width: 1,
           ),
           boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
         ),

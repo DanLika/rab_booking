@@ -871,7 +871,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     // Payment deadline dropdown
                     Builder(
                       builder: (ctx) => DropdownButtonFormField<int>(
-                        value: _bankPaymentDeadlineDays,
+                        initialValue: _bankPaymentDeadlineDays,
                         decoration: InputDecorationHelper.buildDecoration(
                           labelText: l10n.widgetSettingsPaymentDeadline,
                           context: ctx,

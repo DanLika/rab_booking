@@ -251,7 +251,7 @@ class AppTheme {
         shadowColor: Colors.black26,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: AppColors.sectionDividerLight),
+          side: const BorderSide(color: AppColors.sectionDividerLight),
         ),
         textStyle: AppTypography.textTheme.bodyMedium,
       ),
@@ -266,7 +266,7 @@ class AppTheme {
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: AppColors.sectionDividerLight),
+              side: const BorderSide(color: AppColors.sectionDividerLight),
             ),
           ),
         ),
@@ -281,7 +281,7 @@ class AppTheme {
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: AppColors.sectionDividerLight),
+              side: const BorderSide(color: AppColors.sectionDividerLight),
             ),
           ),
         ),
@@ -310,7 +310,7 @@ class AppTheme {
         }),
         todayForegroundColor: WidgetStateProperty.all(AppColors.primary),
         todayBackgroundColor: WidgetStateProperty.all(AppColors.primary.withAlpha((0.1 * 255).toInt())),
-        todayBorder: BorderSide(color: AppColors.primary, width: 1),
+        todayBorder: const BorderSide(color: AppColors.primary),
         yearStyle: AppTypography.textTheme.bodyLarge,
         yearForegroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) return Colors.white;
@@ -566,7 +566,7 @@ class AppTheme {
         shadowColor: Colors.black54,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: AppColors.sectionDividerDark),
+          side: const BorderSide(color: AppColors.sectionDividerDark),
         ),
         textStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimaryDark),
       ),
@@ -581,7 +581,7 @@ class AppTheme {
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: AppColors.sectionDividerDark),
+              side: const BorderSide(color: AppColors.sectionDividerDark),
             ),
           ),
         ),
@@ -596,7 +596,7 @@ class AppTheme {
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: AppColors.sectionDividerDark),
+              side: const BorderSide(color: AppColors.sectionDividerDark),
             ),
           ),
         ),
@@ -625,7 +625,7 @@ class AppTheme {
         }),
         todayForegroundColor: WidgetStateProperty.all(AppColors.primaryLight),
         todayBackgroundColor: WidgetStateProperty.all(AppColors.primaryLight.withAlpha((0.15 * 255).toInt())),
-        todayBorder: BorderSide(color: AppColors.primaryLight, width: 1),
+        todayBorder: const BorderSide(color: AppColors.primaryLight),
         yearStyle: AppTypography.textTheme.bodyLarge,
         yearForegroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) return Colors.white;

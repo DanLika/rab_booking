@@ -36,7 +36,7 @@ class CalendarSummaryBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1A1A24) : const Color(0xFFFAFAFC),
           border: Border(
-            top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight, width: 1),
+            top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
           ),
         ),
         child: Row(

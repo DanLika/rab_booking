@@ -588,38 +588,40 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         final dialogL10n = AppLocalizations.of(dialogContext);
         return AlertDialog(
           title: Text(dialogL10n.ownerTableCancelBooking),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(dialogL10n.ownerTableCancelBookingMessage),
-              const SizedBox(height: 16),
-              Builder(
-                builder: (ctx) => TextField(
-                  controller: reasonController,
-                  decoration: InputDecorationHelper.buildDecoration(
-                    labelText: dialogL10n.ownerTableCancellationReason,
-                    hintText: dialogL10n.ownerTableCancellationReasonHint,
-                    context: ctx,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(dialogL10n.ownerTableCancelBookingMessage),
+                const SizedBox(height: 16),
+                Builder(
+                  builder: (ctx) => TextField(
+                    controller: reasonController,
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: dialogL10n.ownerTableCancellationReason,
+                      hintText: dialogL10n.ownerTableCancellationReasonHint,
+                      context: ctx,
+                    ),
+                    maxLines: 3,
                   ),
-                  maxLines: 3,
                 ),
-              ),
-              const SizedBox(height: 16),
-              ValueListenableBuilder<bool>(
-                valueListenable: sendEmailNotifier,
-                builder: (context, sendEmail, _) {
-                  return CheckboxListTile(
-                    title: Text(dialogL10n.ownerTableSendEmailToGuest),
-                    value: sendEmail,
-                    onChanged: (value) {
-                      sendEmailNotifier.value = value ?? true;
-                    },
-                    contentPadding: EdgeInsets.zero,
-                  );
-                },
-              ),
-            ],
+                const SizedBox(height: 16),
+                ValueListenableBuilder<bool>(
+                  valueListenable: sendEmailNotifier,
+                  builder: (context, sendEmail, _) {
+                    return CheckboxListTile(
+                      title: Text(dialogL10n.ownerTableSendEmailToGuest),
+                      value: sendEmail,
+                      onChanged: (value) {
+                        sendEmailNotifier.value = value ?? true;
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
@@ -779,24 +781,26 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         final dialogL10n = AppLocalizations.of(dialogContext);
         return AlertDialog(
           title: Text(dialogL10n.ownerTableRejectSelectedTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(dialogL10n.ownerTableRejectSelectedMessage(count, label)),
-              const SizedBox(height: 16),
-              Builder(
-                builder: (ctx) => TextField(
-                  controller: reasonController,
-                  decoration: InputDecorationHelper.buildDecoration(
-                    labelText: dialogL10n.ownerTableRejectionReasonOptional,
-                    hintText: dialogL10n.ownerTableCancellationReasonHint,
-                    context: ctx,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(dialogL10n.ownerTableRejectSelectedMessage(count, label)),
+                const SizedBox(height: 16),
+                Builder(
+                  builder: (ctx) => TextField(
+                    controller: reasonController,
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: dialogL10n.ownerTableRejectionReasonOptional,
+                      hintText: dialogL10n.ownerTableCancellationReasonHint,
+                      context: ctx,
+                    ),
+                    maxLines: 3,
                   ),
-                  maxLines: 3,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),

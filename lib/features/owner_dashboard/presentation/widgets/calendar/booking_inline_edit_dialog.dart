@@ -363,7 +363,7 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
   Widget _buildStatusField() {
     return Builder(
       builder: (ctx) => DropdownButtonFormField<BookingStatus>(
-        value: _status,
+        initialValue: _status,
         dropdownColor: InputDecorationHelper.getDropdownColor(ctx),
         borderRadius: InputDecorationHelper.dropdownBorderRadius,
         decoration: InputDecorationHelper.buildDecoration(

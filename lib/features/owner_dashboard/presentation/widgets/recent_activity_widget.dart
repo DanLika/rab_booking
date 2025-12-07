@@ -252,7 +252,6 @@ class _ActivityTile extends StatelessWidget {
             color: isDark
                 ? const Color(0xFF3D3D4A) // Dark: subtle border
                 : const Color(0xFFE0DCE8), // Light: subtle border
-            width: 1,
           ),
         ),
         child: Text(

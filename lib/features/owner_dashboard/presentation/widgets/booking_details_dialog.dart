@@ -278,24 +278,26 @@ class BookingDetailsDialog extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.ownerDetailsCancelConfirmTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.ownerDetailsCancelConfirmMessage, style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            Builder(
-              builder: (ctx) => TextField(
-                controller: reasonController,
-                decoration: InputDecorationHelper.buildDecoration(
-                  labelText: l10n.ownerDetailsCancellationReason,
-                  hintText: l10n.ownerDetailsCancellationHint,
-                  context: ctx,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.ownerDetailsCancelConfirmMessage, style: const TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              Builder(
+                builder: (ctx) => TextField(
+                  controller: reasonController,
+                  decoration: InputDecorationHelper.buildDecoration(
+                    labelText: l10n.ownerDetailsCancellationReason,
+                    hintText: l10n.ownerDetailsCancellationHint,
+                    context: ctx,
+                  ),
+                  maxLines: 3,
                 ),
-                maxLines: 3,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.ownerMultiSelectCancel)),

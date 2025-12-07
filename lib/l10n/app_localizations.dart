@@ -2702,6 +2702,24 @@ abstract class AppLocalizations {
   /// **'Occupancy rate'**
   String get ownerOccupancyRate;
 
+  /// No description provided for @ownerWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to RAB Booking!'**
+  String get ownerWelcomeTitle;
+
+  /// No description provided for @ownerWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started by adding your first property to start receiving bookings.'**
+  String get ownerWelcomeSubtitle;
+
+  /// No description provided for @ownerAddFirstProperty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Property'**
+  String get ownerAddFirstProperty;
+
   /// No description provided for @ownerNewBookingReceived.
   ///
   /// In en, this message translates to:

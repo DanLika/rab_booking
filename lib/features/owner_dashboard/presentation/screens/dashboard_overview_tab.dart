@@ -24,6 +24,7 @@ class DashboardOverviewTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final statsAsync = ref.watch(dashboardStatsProvider);
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -38,91 +39,169 @@ class DashboardOverviewTab extends ConsumerWidget {
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(ownerPropertiesProvider);
-            ref.invalidate(recentOwnerBookingsProvider);
-            ref.invalidate(dashboardStatsProvider);
-            // Wait for providers to reload
-            await Future.wait([
-              ref.read(ownerPropertiesProvider.future),
-              ref.read(recentOwnerBookingsProvider.future),
-              ref.read(dashboardStatsProvider.future),
-            ]);
+        child: propertiesAsync.when(
+          data: (properties) {
+            // If no properties, show welcome screen for new users
+            if (properties.isEmpty) {
+              return _buildWelcomeScreen(context, ref, l10n, theme, isMobile);
+            }
+            return _buildDashboardContent(context, ref, l10n, theme, isMobile, statsAsync);
           },
-          color: theme.colorScheme.primary,
-          child: ListView(
-            children: [
-              // Stats cards section
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  context.horizontalPadding,
-                  isMobile ? 16 : 20,
-                  context.horizontalPadding,
-                  isMobile ? 8 : 12,
-                ),
-                child: statsAsync.when(
-                  data: (stats) => _buildStatsCards(context: context, stats: stats),
-                  loading: () => const DashboardStatsSkeleton(),
-                  error: (e, s) => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                                  theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
-                                ],
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.error_outline_rounded, size: 40, color: theme.colorScheme.error),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, s) => _buildDashboardContent(context, ref, l10n, theme, isMobile, statsAsync),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWelcomeScreen(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    ThemeData theme,
+    bool isMobile,
+  ) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(isMobile ? 20 : 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Welcome icon
+            Container(
+              width: isMobile ? 80 : 100,
+              height: isMobile ? 80 : 100,
+              decoration: BoxDecoration(gradient: context.gradients.brandPrimary, shape: BoxShape.circle),
+              child: Icon(Icons.home_work_outlined, size: isMobile ? 40 : 50, color: Colors.white),
+            ),
+            SizedBox(height: isMobile ? 20 : 28),
+
+            // Welcome title
+            Text(
+              l10n.ownerWelcomeTitle,
+              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: isMobile ? 22 : 26),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+
+            // Welcome subtitle
+            Text(
+              l10n.ownerWelcomeSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                fontSize: isMobile ? 14 : 15,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: isMobile ? 28 : 36),
+
+            // Create property button
+            FilledButton.icon(
+              onPressed: () => context.push(OwnerRoutes.propertyNew),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.ownerAddFirstProperty),
+              style: FilledButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: isMobile ? 24 : 32, vertical: isMobile ? 14 : 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardContent(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    ThemeData theme,
+    bool isMobile,
+    AsyncValue<DashboardStats> statsAsync,
+  ) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(ownerPropertiesProvider);
+        ref.invalidate(recentOwnerBookingsProvider);
+        ref.invalidate(dashboardStatsProvider);
+        // Wait for providers to reload
+        await Future.wait([
+          ref.read(ownerPropertiesProvider.future),
+          ref.read(recentOwnerBookingsProvider.future),
+          ref.read(dashboardStatsProvider.future),
+        ]);
+      },
+      color: theme.colorScheme.primary,
+      child: ListView(
+        children: [
+          // Stats cards section
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              context.horizontalPadding,
+              isMobile ? 16 : 20,
+              context.horizontalPadding,
+              isMobile ? 8 : 12,
+            ),
+            child: statsAsync.when(
+              data: (stats) => _buildStatsCards(context: context, stats: stats),
+              loading: () => const DashboardStatsSkeleton(),
+              error: (e, s) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
+                              theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.ownerErrorLoadingData,
-                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            e.toString(),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.error_outline_rounded, size: 40, color: theme.colorScheme.error),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.ownerErrorLoadingData,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        e.toString(),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ),
-
-              // Recent activity section
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  context.horizontalPadding,
-                  isMobile ? 16 : 20,
-                  context.horizontalPadding,
-                  isMobile ? 16 : 20,
-                ),
-                child: _buildRecentActivity(context, ref),
-              ),
-
-              // Bottom spacing
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
-        ),
+
+          // Recent activity section
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              context.horizontalPadding,
+              isMobile ? 16 : 20,
+              context.horizontalPadding,
+              isMobile ? 16 : 20,
+            ),
+            child: _buildRecentActivity(context, ref),
+          ),
+
+          // Bottom spacing
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }

@@ -490,6 +490,10 @@
   "ownerActiveProperties": "Aktivne nekretnine",
   "ownerOccupancyRate": "Popunjenost",
 
+  "ownerWelcomeTitle": "Dobrodošli u RAB Booking!",
+  "ownerWelcomeSubtitle": "Započnite dodavanjem vaše prve nekretnine kako biste mogli primati rezervacije.",
+  "ownerAddFirstProperty": "Dodaj nekretninu",
+
   "ownerNewBookingReceived": "Nova rezervacija primljena",
   "ownerBookingConfirmedActivity": "Rezervacija potvrđena",
   "ownerBookingCancelledActivity": "Rezervacija otkazana",

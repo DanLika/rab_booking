@@ -1395,6 +1395,16 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerOccupancyRate => 'Popunjenost';
 
   @override
+  String get ownerWelcomeTitle => 'Dobrodošli u RAB Booking!';
+
+  @override
+  String get ownerWelcomeSubtitle =>
+      'Započnite dodavanjem vaše prve nekretnine kako biste mogli primati rezervacije.';
+
+  @override
+  String get ownerAddFirstProperty => 'Dodaj nekretninu';
+
+  @override
   String get ownerNewBookingReceived => 'Nova rezervacija primljena';
 
   @override

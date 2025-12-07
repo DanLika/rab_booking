@@ -1389,6 +1389,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerOccupancyRate => 'Occupancy rate';
 
   @override
+  String get ownerWelcomeTitle => 'Welcome to RAB Booking!';
+
+  @override
+  String get ownerWelcomeSubtitle =>
+      'Get started by adding your first property to start receiving bookings.';
+
+  @override
+  String get ownerAddFirstProperty => 'Add Property';
+
+  @override
   String get ownerNewBookingReceived => 'New booking received';
 
   @override

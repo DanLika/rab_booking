@@ -3,21 +3,21 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// Consistent skeleton colors for light and dark themes
-/// These colors provide good visibility and match the app's design system
+/// Aligned with AppColors design system for professional look
 class SkeletonColors {
-  // Dark theme colors - lighter grays with subtle purple tint
-  static const Color darkPrimary = Color(0xFF3D3D3D);
-  static const Color darkSecondary = Color(0xFF4A4A4A);
-  static const Color darkCardBackground = Color(0xFF252330);
-  static const Color darkBorder = Color(0xFF35323D);
-  static const Color darkHeader = Color(0xFF2D2D3A);
+  // Dark theme colors - match AppColors dark theme
+  static const Color darkPrimary = Color(0xFF2D2D3A); // Darker, more subtle
+  static const Color darkSecondary = Color(0xFF35323D); // Slightly lighter for shimmer
+  static const Color darkCardBackground = Color(0xFF1E1E28); // Match card backgrounds
+  static const Color darkBorder = Color(0xFF3D3D4A); // Match section dividers
+  static const Color darkHeader = Color(0xFF252330); // Subtle header background
 
-  // Light theme colors - subtle grays
-  static const Color lightPrimary = Color(0xFFE0E0E0);
-  static const Color lightSecondary = Color(0xFFEEEEEE);
-  static const Color lightCardBackground = Colors.white;
-  static const Color lightBorder = Color(0xFFE0DCE8);
-  static const Color lightHeader = Color(0xFFF5F5F5);
+  // Light theme colors - match AppColors light theme
+  static const Color lightPrimary = Color(0xFFE8E8F0); // Softer gray
+  static const Color lightSecondary = Color(0xFFF0F0F5); // Very light for shimmer
+  static const Color lightCardBackground = Colors.white; // Pure white cards
+  static const Color lightBorder = Color(0xFFE8E8F0); // Match section dividers
+  static const Color lightHeader = Color(0xFFF8F8FA); // Very subtle header
 }
 
 /// Skeleton loader with shimmer effect

@@ -50,8 +50,8 @@ class DashboardStatsSkeleton extends StatelessWidget {
 
     final cardHeight = isMobile ? 160.0 : 180.0;
 
-    // Use consistent skeleton colors
-    final bgColor = isDark ? const Color(0xFF3D3D3D) : const Color(0xFFE0E0E0);
+    // Use consistent skeleton colors (matching SkeletonColors design system)
+    final bgColor = isDark ? const Color(0xFF2D2D3A) : const Color(0xFFE8E8F0);
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 600 + animationDelay),

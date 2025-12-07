@@ -171,9 +171,9 @@ class _SkeletonBox extends StatelessWidget {
 
   const _SkeletonBox({required this.width, required this.height, this.borderRadius = 4});
 
-  // Consistent skeleton colors (matching BookingCardSkeleton)
-  static const Color _darkBackground = Color(0xFF3D3D3D);
-  static const Color _lightBackground = Color(0xFFE0E0E0);
+  // Consistent skeleton colors (matching SkeletonColors design system)
+  static const Color _darkBackground = Color(0xFF2D2D3A);
+  static const Color _lightBackground = Color(0xFFE8E8F0);
 
   @override
   Widget build(BuildContext context) {

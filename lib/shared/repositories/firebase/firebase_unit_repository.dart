@@ -228,4 +228,39 @@ class FirebaseUnitRepository implements UnitRepository {
 
     await batch.commit();
   }
+
+  @override
+  Future<UnitModel?> fetchUnitBySlug(String propertyId, String slug) async {
+    final snapshot = await _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .where('slug', isEqualTo: slug)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+
+    final doc = snapshot.docs.first;
+    return UnitModel.fromJson({...doc.data(), 'id': doc.id, 'property_id': propertyId});
+  }
+
+  @override
+  Future<bool> isSlugUniqueInProperty(String propertyId, String slug, {String? excludeUnitId}) async {
+    final snapshot = await _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .where('slug', isEqualTo: slug)
+        .get();
+
+    if (snapshot.docs.isEmpty) return true;
+
+    // If we're excluding a unit (during edit), check if the only match is that unit
+    if (excludeUnitId != null) {
+      return snapshot.docs.length == 1 && snapshot.docs.first.id == excludeUnitId;
+    }
+
+    return false;
+  }
 }

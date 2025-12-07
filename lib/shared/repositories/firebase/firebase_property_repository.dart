@@ -189,4 +189,18 @@ class FirebasePropertyRepository implements PropertyRepository {
   double _degreesToRadians(double degrees) {
     return degrees * math.pi / 180;
   }
+
+  @override
+  Future<PropertyModel?> fetchPropertyBySubdomain(String subdomain) async {
+    final snapshot = await _firestore
+        .collection('properties')
+        .where('subdomain', isEqualTo: subdomain)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+
+    final doc = snapshot.docs.first;
+    return PropertyModel.fromJson({...doc.data(), 'id': doc.id});
+  }
 }

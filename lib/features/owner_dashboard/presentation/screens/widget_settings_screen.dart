@@ -1439,23 +1439,23 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: theme.brightness == Brightness.dark
-                ? Colors.black.withAlpha((0.3 * 255).toInt())
-                : Colors.black.withAlpha((0.1 * 255).toInt()),
-            blurRadius: 8,
+                ? Colors.black.withAlpha((0.2 * 255).toInt())
+                : Colors.black.withAlpha((0.08 * 255).toInt()),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           padding: EdgeInsets.all(sectionPadding),
@@ -1477,7 +1477,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   Expanded(
                     child: Text(
                       l10n.widgetSettingsContactInfo,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                 ],
@@ -1486,88 +1486,65 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               Text(
                 l10n.widgetSettingsContactDesc,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Responsive Grid for Switches with input fields
+              // Compact inline layout
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isDesktop = constraints.maxWidth >= 600;
 
-                  final l10nInner = AppLocalizations.of(context);
-                  final phoneInput = Builder(
-                    builder: (ctx) => TextFormField(
-                      controller: _phoneController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        labelText: l10nInner.widgetSettingsPhoneNumber,
-                        prefixIcon: const Icon(Icons.phone),
-                        context: ctx,
-                      ),
-                      keyboardType: TextInputType.phone,
-                    ),
-                  );
-
-                  final emailInput = Builder(
-                    builder: (ctx) => TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        labelText: l10nInner.widgetSettingsEmailAddress,
-                        prefixIcon: const Icon(Icons.email),
-                        context: ctx,
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                  );
-
                   if (isDesktop) {
-                    // Desktop: 2 columns grid
-                    return Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
+                    // Desktop: 2 columns inline
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: (constraints.maxWidth - 12) / 2,
-                          child: _buildContactSwitchCard(
+                        Expanded(
+                          child: _buildCompactContactField(
                             icon: Icons.phone,
-                            label: l10nInner.widgetSettingsPhone,
-                            value: _showPhone,
-                            onChanged: (val) => setState(() => _showPhone = val),
-                            child: phoneInput,
+                            label: l10n.widgetSettingsPhone,
+                            controller: _phoneController,
+                            enabled: _showPhone,
+                            onToggle: (val) => setState(() => _showPhone = val),
+                            keyboardType: TextInputType.phone,
                           ),
                         ),
-                        SizedBox(
-                          width: (constraints.maxWidth - 12) / 2,
-                          child: _buildContactSwitchCard(
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildCompactContactField(
                             icon: Icons.email,
-                            label: l10nInner.widgetSettingsEmail,
-                            value: _showEmail,
-                            onChanged: (val) => setState(() => _showEmail = val),
-                            child: emailInput,
+                            label: l10n.widgetSettingsEmail,
+                            controller: _emailController,
+                            enabled: _showEmail,
+                            onToggle: (val) => setState(() => _showEmail = val),
+                            keyboardType: TextInputType.emailAddress,
                           ),
                         ),
                       ],
                     );
                   } else {
-                    // Mobile: Vertical column
+                    // Mobile: Stacked
                     return Column(
                       children: [
-                        _buildContactSwitchCard(
+                        _buildCompactContactField(
                           icon: Icons.phone,
-                          label: l10nInner.widgetSettingsPhone,
-                          value: _showPhone,
-                          onChanged: (val) => setState(() => _showPhone = val),
-                          child: phoneInput,
+                          label: l10n.widgetSettingsPhone,
+                          controller: _phoneController,
+                          enabled: _showPhone,
+                          onToggle: (val) => setState(() => _showPhone = val),
+                          keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 12),
-                        _buildContactSwitchCard(
+                        _buildCompactContactField(
                           icon: Icons.email,
-                          label: l10nInner.widgetSettingsEmail,
-                          value: _showEmail,
-                          onChanged: (val) => setState(() => _showEmail = val),
-                          child: emailInput,
+                          label: l10n.widgetSettingsEmail,
+                          controller: _emailController,
+                          enabled: _showEmail,
+                          onToggle: (val) => setState(() => _showEmail = val),
+                          keyboardType: TextInputType.emailAddress,
                         ),
                       ],
                     );
@@ -1581,62 +1558,44 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     );
   }
 
-  // Helper widget for contact switch cards
-  Widget _buildContactSwitchCard({
+  // Compact contact field with inline toggle
+  Widget _buildCompactContactField({
     required IconData icon,
     required String label,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-    Widget? child,
+    required TextEditingController controller,
+    required bool enabled,
+    required ValueChanged<bool> onToggle,
+    TextInputType? keyboardType,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: value
-            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: value
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-          width: value ? 2 : 1,
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Toggle row
+        Row(
+          children: [
+            Icon(icon, size: 18, color: theme.colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+            ),
+            Switch(value: enabled, onChanged: onToggle, activeColor: theme.colorScheme.primary),
+          ],
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                color: value ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: value ? FontWeight.w600 : FontWeight.normal,
-                    color: value
-                        ? Theme.of(context).colorScheme.onSurface
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              Switch(
-                value: value,
-                onChanged: onChanged,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                activeThumbColor: Theme.of(context).colorScheme.primary,
-                activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-              ),
-            ],
+        if (enabled) ...[
+          const SizedBox(height: 8),
+          Builder(
+            builder: (ctx) => TextFormField(
+              controller: controller,
+              decoration: InputDecorationHelper.buildDecoration(labelText: label, prefixIcon: Icon(icon), context: ctx),
+              keyboardType: keyboardType,
+            ),
           ),
-          if (value && child != null) ...[const SizedBox(height: 12), child],
         ],
-      ),
+      ],
     );
   }
 

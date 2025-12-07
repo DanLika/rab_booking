@@ -70,4 +70,7 @@ abstract class PropertyRepository {
 
   /// Update property rating
   Future<PropertyModel> updatePropertyRating(String id, double rating, int reviewCount);
+
+  /// Get property by subdomain (for widget URL slug resolution)
+  Future<PropertyModel?> fetchPropertyBySubdomain(String subdomain);
 }

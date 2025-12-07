@@ -47,4 +47,10 @@ abstract class UnitRepository {
 
   /// Update sort order for multiple units (for drag-and-drop reordering)
   Future<void> updateUnitsSortOrder(List<UnitModel> units);
+
+  /// Get unit by slug within a property (for widget URL slug resolution)
+  Future<UnitModel?> fetchUnitBySlug(String propertyId, String slug);
+
+  /// Check if slug is unique within property (for validation)
+  Future<bool> isSlugUniqueInProperty(String propertyId, String slug, {String? excludeUnitId});
 }

@@ -364,36 +364,42 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
   Widget _buildSelectionCounter() {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: context.primaryColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.primaryColor, width: 2),
+        color: context.primaryColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: context.primaryColor.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: context.primaryColor, borderRadius: BorderRadius.circular(8)),
-            child: const Icon(Icons.check_circle, color: Colors.white, size: 20),
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: context.primaryColor, borderRadius: BorderRadius.circular(6)),
+            child: const Icon(Icons.check_circle, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               l10n.priceCalendarDaysSelected(_selectedDays.length),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.primaryColor, fontWeight: FontWeight.bold, fontSize: 15),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: context.primaryColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
             ),
           ),
           TextButton.icon(
             onPressed: () {
               setState(_selectedDays.clear);
             },
-            icon: const Icon(Icons.close, size: 18),
+            icon: const Icon(Icons.close, size: 16),
             label: Text(l10n.priceCalendarClear),
-            style: TextButton.styleFrom(foregroundColor: context.primaryColor),
+            style: TextButton.styleFrom(
+              foregroundColor: context.primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
           ),
         ],
       ),
@@ -591,6 +597,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
   Widget _buildWeekdayHeaders() {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final weekdays = [
       l10n.priceCalendarWeekdayMon,
       l10n.priceCalendarWeekdayTue,
@@ -601,19 +608,29 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       l10n.priceCalendarWeekdaySun,
     ];
 
-    return Row(
-      children: weekdays.map((day) {
-        return Expanded(
-          child: Center(
-            child: Text(
-              day,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: context.textColorSecondary),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: context.primaryColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: weekdays.map((day) {
+          return Expanded(
+            child: Center(
+              child: Text(
+                day,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: context.primaryColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 

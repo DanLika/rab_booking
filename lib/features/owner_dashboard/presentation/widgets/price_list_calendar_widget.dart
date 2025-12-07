@@ -260,14 +260,35 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
   Widget _buildHeaderDesktop(AppLocalizations l10n) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Month selector
-        SizedBox(
-          width: 250,
+        // Previous month button
+        IconButton(
+          onPressed: () {
+            final prevMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+            setState(() {
+              _isLoadingMonthChange = true;
+              _selectedMonth = prevMonth;
+              _selectedDays.clear();
+            });
+            Future.microtask(() {
+              if (mounted) {
+                setState(() => _isLoadingMonthChange = false);
+              }
+            });
+          },
+          icon: const Icon(Icons.chevron_left),
+          tooltip: l10n.ownerCalendarPreviousMonth,
+          style: IconButton.styleFrom(
+            backgroundColor: context.gradients.cardBackground,
+            side: BorderSide(color: context.gradients.sectionBorder),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Month selector with dropdown
+        Expanded(
           child: Builder(
             builder: (context) => DropdownButtonFormField<DateTime>(
-              initialValue: _selectedMonth,
+              value: _selectedMonth,
               decoration: InputDecorationHelper.buildDecoration(
                 labelText: l10n.priceCalendarSelectMonth,
                 prefixIcon: const Icon(Icons.calendar_month),
@@ -293,7 +314,30 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
+        // Next month button
+        IconButton(
+          onPressed: () {
+            final nextMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+            setState(() {
+              _isLoadingMonthChange = true;
+              _selectedMonth = nextMonth;
+              _selectedDays.clear();
+            });
+            Future.microtask(() {
+              if (mounted) {
+                setState(() => _isLoadingMonthChange = false);
+              }
+            });
+          },
+          icon: const Icon(Icons.chevron_right),
+          tooltip: l10n.ownerCalendarNextMonth,
+          style: IconButton.styleFrom(
+            backgroundColor: context.gradients.cardBackground,
+            side: BorderSide(color: context.gradients.sectionBorder),
+          ),
+        ),
+        const SizedBox(width: 20),
         // Bulk edit mode toggle
         SizedBox(
           width: 180,

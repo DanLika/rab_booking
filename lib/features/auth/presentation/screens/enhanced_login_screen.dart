@@ -86,7 +86,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
           return;
         }
 
-        // Success - show welcome message
+        // Success - show welcome message and reset loading
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Welcome back, ${authState.userModel?.firstName ?? "User"}!'),
@@ -96,6 +97,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
             duration: const Duration(seconds: 2),
           ),
         );
+        // Router will handle navigation automatically
       }
     } catch (e) {
       if (mounted) {

@@ -38,10 +38,22 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
+  String? _emailErrorFromServer; // Store Firebase auth errors for inline display
 
   // Profile image
   Uint8List? _profileImageBytes;
   String? _profileImageName;
+
+  @override
+  void initState() {
+    super.initState();
+    // Clear server error when user starts typing
+    _emailController.addListener(() {
+      if (_emailErrorFromServer != null) {
+        setState(() => _emailErrorFromServer = null);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -72,9 +84,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     setState(() => _isLoading = true);
 
     try {
-      // Parse full name into first and last name
+      // Parse full name into first and last name (handles multiple spaces)
       final fullName = _fullNameController.text.trim();
-      final nameParts = fullName.split(' ');
+      final nameParts = fullName.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
       final firstName = nameParts.isNotEmpty ? nameParts.first : '';
       final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
@@ -122,16 +134,34 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
         final authState = ref.read(enhancedAuthProvider);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authState.error ?? e.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        final errorMessage = authState.error ?? e.toString();
+
+        // Check if it's an email-related error - show inline
+        if (errorMessage.contains('already exists') ||
+            errorMessage.contains('email-already-in-use') ||
+            errorMessage.contains('Invalid email')) {
+          setState(() {
+            _emailErrorFromServer =
+                errorMessage.contains('already exists') || errorMessage.contains('email-already-in-use')
+                ? 'An account already exists with this email'
+                : 'Invalid email address';
+            _isLoading = false;
+          });
+          // Trigger form validation to show inline error
+          _formKey.currentState!.validate();
+        } else {
+          // Other errors - show SnackBar
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
       }
     }
   }
@@ -210,7 +240,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                             if (value == null || value.trim().isEmpty) {
                               return l10n.authEnterFullName;
                             }
-                            if (value.trim().split(' ').length < 2) {
+                            // Split by whitespace and filter empty parts
+                            final parts = value.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+                            if (parts.length < 2) {
                               return l10n.authEnterFirstLastName;
                             }
                             return null;
@@ -224,7 +256,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                           labelText: l10n.email,
                           prefixIcon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
-                          validator: ProfileValidators.validateEmail,
+                          validator: (value) {
+                            if (_emailErrorFromServer != null) {
+                              return _emailErrorFromServer;
+                            }
+                            return ProfileValidators.validateEmail(value);
+                          },
                         ),
                         SizedBox(height: MediaQuery.of(context).size.width < 400 ? 12 : 14),
 

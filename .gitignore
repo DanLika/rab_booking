@@ -84,3 +84,4 @@ supabase/supabase/
 coverage/
 .firebase/hosting.*.cache
 *.backup
+android/build/

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/auth_logo_icon.dart';
@@ -94,73 +95,76 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Widget _buildFormView() {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isMobile = MediaQuery.of(context).size.width < 400;
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Animated Logo - adapts to dark mode
-          Center(child: AuthLogoIcon(size: 90, isWhite: Theme.of(context).brightness == Brightness.dark)),
-          const SizedBox(height: 24),
+          // Animated Logo
+          Center(
+            child: AuthLogoIcon(size: isMobile ? 70 : 80, isWhite: theme.brightness == Brightness.dark),
+          ),
+          SizedBox(height: isMobile ? 16 : 20),
 
           // Title
           Text(
-            'Reset Your Password',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            l10n.authResetPassword,
+            style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 28,
-              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: isMobile ? 22 : 26,
+              color: theme.colorScheme.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
 
           // Subtitle
           Text(
-            'Enter your email address and we\'ll send you instructions to reset your password.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 15),
+            l10n.authResetPasswordDesc,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: isMobile ? 13 : 14,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 40),
+          SizedBox(height: isMobile ? 24 : 32),
 
           // Email field
           PremiumInputField(
             controller: _emailController,
-            labelText: 'Email Address',
+            labelText: l10n.email,
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             validator: ProfileValidators.validateEmail,
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: isMobile ? 20 : 24),
 
           // Send Reset Link Button
           GradientAuthButton(
-            text: 'Send Reset Link',
+            text: l10n.authSendResetLink,
             onPressed: _handleResetPassword,
             isLoading: _isLoading,
             icon: Icons.email_outlined,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: isMobile ? 16 : 20),
 
           // Back to Login
           Center(
             child: TextButton(
               onPressed: () => context.go('/login'),
-              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16)),
+              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.arrow_back, size: 16, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(width: 8),
+                  Icon(Icons.arrow_back, size: 16, color: theme.colorScheme.primary),
+                  const SizedBox(width: 6),
                   Text(
-                    'Back to Login',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    l10n.authBackToLogin,
+                    style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -172,76 +176,85 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Widget _buildSuccessView() {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isMobile = MediaQuery.of(context).size.width < 400;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Success Icon with theme-based background
+        // Success Icon
         Center(
           child: Container(
-            width: 100,
-            height: 100,
+            width: isMobile ? 72 : 88,
+            height: isMobile ? 72 : 88,
             decoration: BoxDecoration(
               color: AppColors.success,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.success.withAlpha((0.3 * 255).toInt()),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  color: AppColors.success.withAlpha((0.25 * 255).toInt()),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
-            child: const Icon(Icons.check_circle_outline, size: 50, color: Colors.white),
+            child: Icon(Icons.check_circle_outline, size: isMobile ? 36 : 44, color: Colors.white),
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: isMobile ? 20 : 24),
 
         // Title
         Text(
-          'Email Sent!',
+          l10n.authEmailSent,
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            fontSize: 28,
+            fontSize: isMobile ? 22 : 26,
             color: theme.colorScheme.onSurface,
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
         // Subtitle
         Text(
-          'We\'ve sent password reset instructions to:',
-          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 15),
+          l10n.authResetEmailSentTo,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: isMobile ? 13 : 14,
+          ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
 
         // Email address
         Text(
           _emailController.text,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.primary,
-            fontSize: 16,
+            fontSize: isMobile ? 14 : 15,
             fontWeight: FontWeight.w600,
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 40),
+        SizedBox(height: isMobile ? 24 : 32),
 
         // Return to Login Button
-        GradientAuthButton(text: 'Return to Login', onPressed: () => context.go('/login'), icon: Icons.arrow_forward),
-        const SizedBox(height: 16),
+        GradientAuthButton(
+          text: l10n.authReturnToLogin,
+          onPressed: () => context.go('/login'),
+          icon: Icons.arrow_forward,
+        ),
+        SizedBox(height: isMobile ? 12 : 14),
 
         // Resend email option
         Center(
           child: TextButton(
             onPressed: () => setState(() => _emailSent = false),
-            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16)),
+            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
             child: Text(
-              'Didn\'t receive the email? Resend',
-              style: TextStyle(fontSize: 14, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+              l10n.authResendEmail,
+              style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
             ),
           ),
         ),

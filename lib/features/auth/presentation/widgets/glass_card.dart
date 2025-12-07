@@ -20,28 +20,27 @@ class GlassCard extends StatelessWidget {
     return Container(
       constraints: BoxConstraints(maxWidth: maxWidth),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withAlpha((0.08 * 255).toInt()),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
+            color: theme.colorScheme.shadow.withAlpha((0.06 * 255).toInt()),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
           BoxShadow(
-            color: theme.colorScheme.shadow.withAlpha((0.04 * 255).toInt()),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: theme.colorScheme.shadow.withAlpha((0.03 * 255).toInt()),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            // Use cardBackground from design system for consistent cool palette
             color: context.gradients.cardBackground.withAlpha((0.97 * 255).toInt()),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()), width: 1.5),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()), width: 1),
           ),
           padding: responsivePadding,
           child: child,

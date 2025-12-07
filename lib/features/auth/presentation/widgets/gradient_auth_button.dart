@@ -7,20 +7,13 @@ class GradientAuthButton extends StatefulWidget {
   final bool isLoading;
   final IconData? icon;
 
-  const GradientAuthButton({
-    super.key,
-    required this.text,
-    this.onPressed,
-    this.isLoading = false,
-    this.icon,
-  });
+  const GradientAuthButton({super.key, required this.text, this.onPressed, this.isLoading = false, this.icon});
 
   @override
   State<GradientAuthButton> createState() => _GradientAuthButtonState();
 }
 
-class _GradientAuthButtonState extends State<GradientAuthButton>
-    with SingleTickerProviderStateMixin {
+class _GradientAuthButtonState extends State<GradientAuthButton> with SingleTickerProviderStateMixin {
   bool _isHovered = false;
   late AnimationController _shimmerController;
   late Animation<double> _shimmerAnimation;
@@ -28,18 +21,12 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
   @override
   void initState() {
     super.initState();
-    _shimmerController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
+    _shimmerController = AnimationController(duration: const Duration(milliseconds: 1500), vsync: this)..repeat();
 
     _shimmerAnimation = Tween<double>(
       begin: -1,
       end: 2,
-    ).animate(CurvedAnimation(
-      parent: _shimmerController,
-      curve: Curves.linear,
-    ));
+    ).animate(CurvedAnimation(parent: _shimmerController, curve: Curves.linear));
   }
 
   @override
@@ -59,22 +46,19 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
         duration: const Duration(milliseconds: 200),
         transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
         child: Container(
-          height: 56,
+          height: 48,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.primary.withValues(alpha: 0.7),
-              ],
+              colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.75)],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
-                blurRadius: _isHovered ? 25 : 15,
-                offset: Offset(0, _isHovered ? 8 : 4),
+                color: theme.colorScheme.primary.withAlpha((0.25 * 255).toInt()),
+                blurRadius: _isHovered ? 16 : 10,
+                offset: Offset(0, _isHovered ? 6 : 3),
               ),
             ],
           ),
@@ -82,7 +66,7 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
             color: Colors.transparent,
             child: InkWell(
               onTap: widget.isLoading ? null : widget.onPressed,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               child: Stack(
                 children: [
                   // Shimmer effect when loading
@@ -92,7 +76,7 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
                       builder: (context, child) {
                         return Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -127,11 +111,7 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               if (widget.icon != null) ...[
-                                Icon(
-                                  widget.icon,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
+                                Icon(widget.icon, color: Colors.white, size: 20),
                                 const SizedBox(width: 8),
                               ],
                               Text(

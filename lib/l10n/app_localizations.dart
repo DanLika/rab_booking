@@ -368,6 +368,12 @@ abstract class AppLocalizations {
   /// **'Continue with Google'**
   String get continueWithGoogle;
 
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
   /// No description provided for @welcomeBack.
   ///
   /// In en, this message translates to:
@@ -379,6 +385,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in to your account'**
   String get loginToYourAccount;
+
+  /// No description provided for @authOwnerLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner Login'**
+  String get authOwnerLogin;
+
+  /// No description provided for @authManageProperties.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your properties and bookings'**
+  String get authManageProperties;
+
+  /// No description provided for @authRememberMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember me'**
+  String get authRememberMe;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authOrContinueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'or continue with'**
+  String get authOrContinueWith;
+
+  /// No description provided for @authPreviewDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Demo (Anonymous)'**
+  String get authPreviewDemo;
+
+  /// No description provided for @authCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get authCreateAccount;
+
+  /// No description provided for @authNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get authNoAccount;
+
+  /// No description provided for @authHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get authHaveAccount;
+
+  /// No description provided for @authResetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Your Password'**
+  String get authResetPassword;
+
+  /// No description provided for @authResetPasswordDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address and we\'ll send you instructions to reset your password.'**
+  String get authResetPasswordDesc;
+
+  /// No description provided for @authSendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Link'**
+  String get authSendResetLink;
+
+  /// No description provided for @authBackToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Login'**
+  String get authBackToLogin;
+
+  /// No description provided for @authEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Sent!'**
+  String get authEmailSent;
+
+  /// No description provided for @authResetEmailSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent password reset instructions to:'**
+  String get authResetEmailSentTo;
+
+  /// No description provided for @authReturnToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to Login'**
+  String get authReturnToLogin;
+
+  /// No description provided for @authResendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive the email? Resend'**
+  String get authResendEmail;
+
+  /// No description provided for @authStartManaging.
+  ///
+  /// In en, this message translates to:
+  /// **'Start managing your properties today'**
+  String get authStartManaging;
+
+  /// No description provided for @authFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get authFullName;
+
+  /// No description provided for @authPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone (optional)'**
+  String get authPhone;
+
+  /// No description provided for @authConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get authConfirmPassword;
+
+  /// No description provided for @authAcceptTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the '**
+  String get authAcceptTerms;
+
+  /// No description provided for @authTermsConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions'**
+  String get authTermsConditions;
+
+  /// No description provided for @authPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get authPrivacyPolicy;
+
+  /// No description provided for @authNewsletterOptIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Send me updates and promotional offers'**
+  String get authNewsletterOptIn;
+
+  /// No description provided for @authMustAcceptTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'You must accept the Terms & Conditions and Privacy Policy'**
+  String get authMustAcceptTerms;
+
+  /// No description provided for @authEnterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your full name'**
+  String get authEnterFullName;
+
+  /// No description provided for @authEnterFirstLastName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter both first and last name'**
+  String get authEnterFirstLastName;
+
+  /// No description provided for @authIncorrectPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password. Try again or reset your password.'**
+  String get authIncorrectPassword;
+
+  /// No description provided for @authWelcomeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back, {name}!'**
+  String authWelcomeUser(String name);
 
   /// No description provided for @loginSuccessful.
   ///

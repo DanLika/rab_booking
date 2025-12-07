@@ -6,6 +6,7 @@ import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/auth_logo_icon.dart';
@@ -199,16 +200,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 400;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: AuthBackground(
         child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                vertical: 24,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20, vertical: isMobile ? 16 : 20),
               child: Center(
                 child: GlassCard(
                   child: Form(
@@ -218,65 +221,67 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Animated Logo - adapts to dark mode
-                        Center(child: AuthLogoIcon(isWhite: Theme.of(context).brightness == Brightness.dark)),
-                        const SizedBox(height: 24),
+                        Center(
+                          child: AuthLogoIcon(size: isMobile ? 70 : 80, isWhite: theme.brightness == Brightness.dark),
+                        ),
+                        SizedBox(height: isMobile ? 16 : 20),
 
                         // Title
                         Text(
-                          'Owner Login',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 28),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Subtitle
-                        Text(
-                          'Manage your properties and bookings',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 15,
+                          l10n.authOwnerLogin,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 22 : 26,
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 6),
+
+                        // Subtitle
+                        Text(
+                          l10n.authManageProperties,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: isMobile ? 13 : 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: isMobile ? 24 : 32),
 
                         // Email field
                         PremiumInputField(
                           controller: _emailController,
-                          labelText: 'Email Address',
+                          labelText: l10n.email,
                           prefixIcon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: ProfileValidators.validateEmail,
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: isMobile ? 12 : 14),
 
                         // Password field
                         PremiumInputField(
                           controller: _passwordController,
-                          labelText: 'Password',
+                          labelText: l10n.password,
                           prefixIcon: Icons.lock_outline,
                           obscureText: _obscurePassword,
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: theme.colorScheme.onSurfaceVariant,
+                              size: 20,
                             ),
                             onPressed: () {
                               setState(() => _obscurePassword = !_obscurePassword);
                             },
                           ),
                           validator: (value) {
-                            // Check server error first (wrong password from Firebase)
                             if (_passwordErrorFromServer != null) {
                               return _passwordErrorFromServer;
                             }
-                            // Then check minimum length (8+ characters)
                             return PasswordValidator.validateMinimumLength(value);
                           },
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: isMobile ? 12 : 14),
 
                         // Remember me & Forgot password
                         Row(
@@ -287,21 +292,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                                 child: Row(
                                   children: [
                                     SizedBox(
-                                      height: 24,
-                                      width: 24,
+                                      height: 22,
+                                      width: 22,
                                       child: Checkbox(
                                         value: _rememberMe,
                                         onChanged: (value) => setState(() => _rememberMe = value!),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                                        activeColor: Theme.of(context).colorScheme.primary,
+                                        activeColor: theme.colorScheme.primary,
                                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'Remember me',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 14),
-                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(l10n.authRememberMe, style: theme.textTheme.bodySmall?.copyWith(fontSize: 13)),
                                   ],
                                 ),
                               ),
@@ -314,45 +316,45 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Text(
-                                'Forgot password?',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 14,
-                                  color: Theme.of(context).colorScheme.primary,
+                                l10n.authForgotPassword,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 13,
+                                  color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: isMobile ? 20 : 24),
 
                         // Login Button
                         GradientAuthButton(
-                          text: 'Log In',
+                          text: l10n.login,
                           onPressed: _handleLogin,
                           isLoading: _isLoading,
                           icon: Icons.login_rounded,
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: isMobile ? 16 : 20),
 
                         // Divider
                         Row(
                           children: [
-                            Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
+                            Expanded(child: Divider(color: theme.colorScheme.outline)),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
                               child: Text(
-                                'or continue with',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
+                                l10n.authOrContinueWith,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
-                            Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
+                            Expanded(child: Divider(color: theme.colorScheme.outline)),
                           ],
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: isMobile ? 16 : 20),
 
                         // Social Login Buttons
                         Row(
@@ -364,7 +366,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                                 onPressed: _handleGoogleSignIn,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: _SocialLoginButton(
                                 customIcon: const _AppleIcon(),
@@ -374,34 +376,31 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: isMobile ? 10 : 12),
 
                         // Anonymous Login Button (Demo)
                         _SocialLoginButton(
                           icon: Icons.preview,
-                          label: 'Preview Demo (Anonymous)',
+                          label: l10n.authPreviewDemo,
                           onPressed: _handleAnonymousSignIn,
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: isMobile ? 20 : 24),
 
                         // Register Link
                         Center(
                           child: TextButton(
                             onPressed: () => context.go(OwnerRoutes.register),
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                             ),
                             child: RichText(
                               text: TextSpan(
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
+                                style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
                                 children: [
-                                  const TextSpan(text: "Don't have an account? "),
+                                  TextSpan(text: '${l10n.authNoAccount} '),
                                   TextSpan(
-                                    text: 'Create Account',
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    text: l10n.authCreateAccount,
+                                    style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),

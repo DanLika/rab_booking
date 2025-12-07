@@ -7,6 +7,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/premium_input_field.dart';
@@ -20,12 +21,10 @@ class EnhancedRegisterScreen extends ConsumerStatefulWidget {
   const EnhancedRegisterScreen({super.key});
 
   @override
-  ConsumerState<EnhancedRegisterScreen> createState() =>
-      _EnhancedRegisterScreenState();
+  ConsumerState<EnhancedRegisterScreen> createState() => _EnhancedRegisterScreenState();
 }
 
-class _EnhancedRegisterScreenState
-    extends ConsumerState<EnhancedRegisterScreen> {
+class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -58,16 +57,13 @@ class _EnhancedRegisterScreenState
     if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptedTerms || !_acceptedPrivacy) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'You must accept the Terms & Conditions and Privacy Policy',
-          ),
+          content: Text(l10n.authMustAcceptTerms),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -80,9 +76,7 @@ class _EnhancedRegisterScreenState
       final fullName = _fullNameController.text.trim();
       final nameParts = fullName.split(' ');
       final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-      final lastName = nameParts.length > 1
-          ? nameParts.sublist(1).join(' ')
-          : '';
+      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
       await ref
           .read(enhancedAuthProvider.notifier)
@@ -91,9 +85,7 @@ class _EnhancedRegisterScreenState
             password: _passwordController.text,
             firstName: firstName,
             lastName: lastName,
-            phone: _phoneController.text.trim().isNotEmpty
-                ? _phoneController.text.trim()
-                : null,
+            phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
             acceptedTerms: _acceptedTerms,
             acceptedPrivacy: _acceptedPrivacy,
             newsletterOptIn: _newsletterOptIn,
@@ -113,9 +105,7 @@ class _EnhancedRegisterScreenState
               content: Text(authState.error!),
               backgroundColor: Theme.of(context).colorScheme.error,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           );
           return;
@@ -139,9 +129,7 @@ class _EnhancedRegisterScreenState
             content: Text(authState.error ?? e.toString()),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -151,6 +139,7 @@ class _EnhancedRegisterScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -159,8 +148,8 @@ class _EnhancedRegisterScreenState
           child: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                vertical: 24,
+                horizontal: MediaQuery.of(context).size.width < 400 ? 12 : 20,
+                vertical: MediaQuery.of(context).size.width < 400 ? 16 : 20,
               ),
               child: Center(
                 child: GlassCard(
@@ -172,12 +161,9 @@ class _EnhancedRegisterScreenState
                       children: [
                         // Profile Image Picker
                         ProfileImagePicker(
-                          size: 100,
+                          size: MediaQuery.of(context).size.width < 400 ? 80 : 90,
                           initials: _fullNameController.text.trim().isNotEmpty
-                              ? _fullNameController.text
-                                    .trim()
-                                    .substring(0, 1)
-                                    .toUpperCase()
+                              ? _fullNameController.text.trim().substring(0, 1).toUpperCase()
                               : null,
                           onImageSelected: (bytes, name) {
                             setState(() {
@@ -186,139 +172,125 @@ class _EnhancedRegisterScreenState
                             });
                           },
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 16 : 20),
 
                         // Title
                         Text(
-                          'Create Account',
+                          l10n.authCreateAccount,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontSize: 28,
+                            fontSize: MediaQuery.of(context).size.width < 400 ? 22 : 26,
                             color: theme.colorScheme.onSurface,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
 
                         // Subtitle
                         Text(
-                          'Start managing your properties today',
+                          l10n.authStartManaging,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 15,
+                            fontSize: MediaQuery.of(context).size.width < 400 ? 13 : 14,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 20 : 24),
 
                         // Full Name field
                         PremiumInputField(
                           controller: _fullNameController,
-                          labelText: 'Full Name',
+                          labelText: l10n.authFullName,
                           prefixIcon: Icons.person_outline,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Please enter your full name';
+                              return l10n.authEnterFullName;
                             }
                             if (value.trim().split(' ').length < 2) {
-                              return 'Please enter both first and last name';
+                              return l10n.authEnterFirstLastName;
                             }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 12 : 14),
 
                         // Email
                         PremiumInputField(
                           controller: _emailController,
-                          labelText: 'Email Address',
+                          labelText: l10n.email,
                           prefixIcon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: ProfileValidators.validateEmail,
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 12 : 14),
 
                         // Phone
                         PremiumInputField(
                           controller: _phoneController,
-                          labelText: 'Phone (optional)',
+                          labelText: l10n.authPhone,
                           prefixIcon: Icons.phone_outlined,
                           keyboardType: TextInputType.phone,
                           validator: ProfileValidators.validatePhone,
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 12 : 14),
 
                         // Password
                         PremiumInputField(
                           controller: _passwordController,
-                          labelText: 'Password',
+                          labelText: l10n.password,
                           prefixIcon: Icons.lock_outline,
                           obscureText: _obscurePassword,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
                               color: theme.colorScheme.onSurfaceVariant,
+                              size: 20,
                             ),
                             onPressed: () {
-                              setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              );
+                              setState(() => _obscurePassword = !_obscurePassword);
                             },
                           ),
                           validator: PasswordValidator.validateMinimumLength,
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 12 : 14),
 
                         // Confirm Password
                         PremiumInputField(
                           controller: _confirmPasswordController,
-                          labelText: 'Confirm Password',
+                          labelText: l10n.authConfirmPassword,
                           prefixIcon: Icons.lock_outline,
                           obscureText: _obscureConfirmPassword,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscureConfirmPassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                              _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
                               color: theme.colorScheme.onSurfaceVariant,
+                              size: 20,
                             ),
                             onPressed: () {
-                              setState(
-                                () => _obscureConfirmPassword =
-                                    !_obscureConfirmPassword,
-                              );
+                              setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
                             },
                           ),
                           validator: (value) {
-                            return PasswordValidator.validateConfirmPassword(
-                              _passwordController.text,
-                              value,
-                            );
+                            return PasswordValidator.validateConfirmPassword(_passwordController.text, value);
                           },
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 12 : 14),
 
                         // Terms & Conditions Checkbox
                         _buildCheckbox(
                           value: _acceptedTerms,
-                          onChanged: (value) =>
-                              setState(() => _acceptedTerms = value!),
+                          onChanged: (value) => setState(() => _acceptedTerms = value!),
                           child: RichText(
                             text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                               children: [
-                                const TextSpan(text: 'I accept the '),
+                                TextSpan(text: l10n.authAcceptTerms),
                                 TextSpan(
-                                  text: 'Terms & Conditions',
+                                  text: l10n.authTermsConditions,
                                   style: TextStyle(
                                     color: theme.colorScheme.primary,
                                     fontWeight: FontWeight.w600,
@@ -326,12 +298,9 @@ class _EnhancedRegisterScreenState
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const TermsConditionsScreen(),
-                                        ),
-                                      );
+                                      Navigator.of(
+                                        context,
+                                      ).push(MaterialPageRoute(builder: (context) => const TermsConditionsScreen()));
                                     },
                                 ),
                                 const TextSpan(text: ' *'),
@@ -341,23 +310,19 @@ class _EnhancedRegisterScreenState
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
 
                         // Privacy Policy Checkbox
                         _buildCheckbox(
                           value: _acceptedPrivacy,
-                          onChanged: (value) =>
-                              setState(() => _acceptedPrivacy = value!),
+                          onChanged: (value) => setState(() => _acceptedPrivacy = value!),
                           child: RichText(
                             text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                               children: [
-                                const TextSpan(text: 'I accept the '),
+                                TextSpan(text: l10n.authAcceptTerms),
                                 TextSpan(
-                                  text: 'Privacy Policy',
+                                  text: l10n.authPrivacyPolicy,
                                   style: TextStyle(
                                     color: theme.colorScheme.primary,
                                     fontWeight: FontWeight.w600,
@@ -365,12 +330,9 @@ class _EnhancedRegisterScreenState
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const PrivacyPolicyScreen(),
-                                        ),
-                                      );
+                                      Navigator.of(
+                                        context,
+                                      ).push(MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()));
                                     },
                                 ),
                                 const TextSpan(text: ' *'),
@@ -380,60 +342,48 @@ class _EnhancedRegisterScreenState
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
 
                         // Newsletter Checkbox
                         _buildCheckbox(
                           value: _newsletterOptIn,
-                          onChanged: (value) =>
-                              setState(() => _newsletterOptIn = value!),
+                          onChanged: (value) => setState(() => _newsletterOptIn = value!),
                           child: Text(
-                            'Send me updates and promotional offers',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+                            l10n.authNewsletterOptIn,
+                            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 20 : 24),
 
                         // Register Button
                         GradientAuthButton(
-                          text: 'Create Account',
+                          text: l10n.authCreateAccount,
                           onPressed: _handleRegister,
                           isLoading: _isLoading,
                           icon: Icons.person_add_rounded,
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: MediaQuery.of(context).size.width < 400 ? 16 : 20),
 
                         // Login Link
                         Center(
                           child: TextButton(
                             onPressed: () => context.go(OwnerRoutes.login),
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 16,
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                             ),
                             child: RichText(
                               text: TextSpan(
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                                 children: [
-                                  const TextSpan(
-                                    text: 'Already have an account? ',
-                                  ),
+                                  TextSpan(text: '${l10n.authHaveAccount} '),
                                   TextSpan(
-                                    text: 'Login',
-                                    style: TextStyle(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    text: l10n.login,
+                                    style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
@@ -452,25 +402,19 @@ class _EnhancedRegisterScreenState
     );
   }
 
-  Widget _buildCheckbox({
-    required bool value,
-    required ValueChanged<bool?> onChanged,
-    required Widget child,
-  }) {
+  Widget _buildCheckbox({required bool value, required ValueChanged<bool?> onChanged, required Widget child}) {
     final theme = Theme.of(context);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 24,
-          width: 24,
+          height: 22,
+          width: 22,
           child: Checkbox(
             value: value,
             onChanged: onChanged,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             activeColor: theme.colorScheme.primary,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),

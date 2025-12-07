@@ -144,10 +144,109 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueWithGoogle => 'Continue with Google';
 
   @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
   String get welcomeBack => 'Welcome Back';
 
   @override
   String get loginToYourAccount => 'Sign in to your account';
+
+  @override
+  String get authOwnerLogin => 'Owner Login';
+
+  @override
+  String get authManageProperties => 'Manage your properties and bookings';
+
+  @override
+  String get authRememberMe => 'Remember me';
+
+  @override
+  String get authForgotPassword => 'Forgot password?';
+
+  @override
+  String get authOrContinueWith => 'or continue with';
+
+  @override
+  String get authPreviewDemo => 'Preview Demo (Anonymous)';
+
+  @override
+  String get authCreateAccount => 'Create Account';
+
+  @override
+  String get authNoAccount => 'Don\'t have an account?';
+
+  @override
+  String get authHaveAccount => 'Already have an account?';
+
+  @override
+  String get authResetPassword => 'Reset Your Password';
+
+  @override
+  String get authResetPasswordDesc =>
+      'Enter your email address and we\'ll send you instructions to reset your password.';
+
+  @override
+  String get authSendResetLink => 'Send Reset Link';
+
+  @override
+  String get authBackToLogin => 'Back to Login';
+
+  @override
+  String get authEmailSent => 'Email Sent!';
+
+  @override
+  String get authResetEmailSentTo =>
+      'We\'ve sent password reset instructions to:';
+
+  @override
+  String get authReturnToLogin => 'Return to Login';
+
+  @override
+  String get authResendEmail => 'Didn\'t receive the email? Resend';
+
+  @override
+  String get authStartManaging => 'Start managing your properties today';
+
+  @override
+  String get authFullName => 'Full Name';
+
+  @override
+  String get authPhone => 'Phone (optional)';
+
+  @override
+  String get authConfirmPassword => 'Confirm Password';
+
+  @override
+  String get authAcceptTerms => 'I accept the ';
+
+  @override
+  String get authTermsConditions => 'Terms & Conditions';
+
+  @override
+  String get authPrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get authNewsletterOptIn => 'Send me updates and promotional offers';
+
+  @override
+  String get authMustAcceptTerms =>
+      'You must accept the Terms & Conditions and Privacy Policy';
+
+  @override
+  String get authEnterFullName => 'Please enter your full name';
+
+  @override
+  String get authEnterFirstLastName => 'Please enter both first and last name';
+
+  @override
+  String get authIncorrectPassword =>
+      'Incorrect password. Try again or reset your password.';
+
+  @override
+  String authWelcomeUser(String name) {
+    return 'Welcome back, $name!';
+  }
 
   @override
   String get loginSuccessful => 'Successfully logged in!';

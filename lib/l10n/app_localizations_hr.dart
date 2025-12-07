@@ -144,10 +144,109 @@ class AppLocalizationsHr extends AppLocalizations {
   String get continueWithGoogle => 'Nastavite s Google';
 
   @override
+  String get continueWithApple => 'Nastavite s Apple';
+
+  @override
   String get welcomeBack => 'Dobrodošli nazad';
 
   @override
   String get loginToYourAccount => 'Prijavite se na svoj račun';
+
+  @override
+  String get authOwnerLogin => 'Prijava vlasnika';
+
+  @override
+  String get authManageProperties => 'Upravljajte nekretninama i rezervacijama';
+
+  @override
+  String get authRememberMe => 'Zapamti me';
+
+  @override
+  String get authForgotPassword => 'Zaboravili lozinku?';
+
+  @override
+  String get authOrContinueWith => 'ili nastavite s';
+
+  @override
+  String get authPreviewDemo => 'Pregled demo (Anonimno)';
+
+  @override
+  String get authCreateAccount => 'Kreiraj račun';
+
+  @override
+  String get authNoAccount => 'Nemate račun?';
+
+  @override
+  String get authHaveAccount => 'Već imate račun?';
+
+  @override
+  String get authResetPassword => 'Resetiraj lozinku';
+
+  @override
+  String get authResetPasswordDesc =>
+      'Unesite email adresu i poslat ćemo vam upute za resetiranje lozinke.';
+
+  @override
+  String get authSendResetLink => 'Pošalji link za reset';
+
+  @override
+  String get authBackToLogin => 'Natrag na prijavu';
+
+  @override
+  String get authEmailSent => 'Email poslan!';
+
+  @override
+  String get authResetEmailSentTo =>
+      'Poslali smo upute za resetiranje lozinke na:';
+
+  @override
+  String get authReturnToLogin => 'Vrati se na prijavu';
+
+  @override
+  String get authResendEmail => 'Niste primili email? Pošalji ponovo';
+
+  @override
+  String get authStartManaging => 'Počnite upravljati nekretninama danas';
+
+  @override
+  String get authFullName => 'Puno ime';
+
+  @override
+  String get authPhone => 'Telefon (opcionalno)';
+
+  @override
+  String get authConfirmPassword => 'Potvrdi lozinku';
+
+  @override
+  String get authAcceptTerms => 'Prihvaćam ';
+
+  @override
+  String get authTermsConditions => 'Uvjete korištenja';
+
+  @override
+  String get authPrivacyPolicy => 'Politiku privatnosti';
+
+  @override
+  String get authNewsletterOptIn => 'Šaljite mi novosti i promotivne ponude';
+
+  @override
+  String get authMustAcceptTerms =>
+      'Morate prihvatiti Uvjete korištenja i Politiku privatnosti';
+
+  @override
+  String get authEnterFullName => 'Molimo unesite puno ime';
+
+  @override
+  String get authEnterFirstLastName => 'Molimo unesite ime i prezime';
+
+  @override
+  String get authIncorrectPassword =>
+      'Pogrešna lozinka. Pokušajte ponovo ili resetirajte lozinku.';
+
+  @override
+  String authWelcomeUser(String name) {
+    return 'Dobrodošli, $name!';
+  }
 
   @override
   String get loginSuccessful => 'Uspješno ste se prijavili!';

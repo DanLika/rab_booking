@@ -1309,11 +1309,30 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         builder: (context, setState) {
           final l10nDialog = AppLocalizations.of(context);
           return AlertDialog(
-            title: Text(l10nDialog.priceCalendarSetPriceForDays(_selectedDays.length)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: context.primaryColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.euro, color: context.primaryColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10nDialog.priceCalendarSetPriceForDays(_selectedDays.length),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
             content: Builder(
               builder: (ctx) => SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     TextField(
                       controller: priceController,
@@ -1325,11 +1344,30 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      autofocus: true,
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      l10nDialog.priceCalendarWillSetPriceForAllDates,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.primaryColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: context.primaryColor.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 18, color: context.primaryColor),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              l10nDialog.priceCalendarWillSetPriceForAllDates,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

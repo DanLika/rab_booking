@@ -29,9 +29,6 @@ import '../../features/owner_dashboard/presentation/screens/bank_account_screen.
 import '../../features/owner_dashboard/presentation/screens/change_password_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notification_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/about_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/onboarding_welcome_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/onboarding_wizard_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/onboarding_success_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_export_screen.dart';
@@ -66,11 +63,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
 
 /// Routes for Owner App + Public Widget Embed
 class OwnerRoutes {
-  // Onboarding routes
-  static const String onboardingWelcome = '/onboarding/welcome';
-  static const String onboardingWizard = '/onboarding/wizard';
-  static const String onboardingSuccess = '/onboarding/success';
-
   // Auth routes
   static const String login = '/login';
   static const String register = '/register';
@@ -136,7 +128,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       // Use the watched authState from above
       final isAuthenticated = authState.isAuthenticated;
-      final requiresOnboarding = authState.requiresOnboarding;
       final isLoading = authState.isLoading;
       final isLoggingIn =
           state.matchedLocation == OwnerRoutes.login ||
@@ -148,7 +139,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         LoggingService.log('redirect called:', tag: 'ROUTER');
         LoggingService.log('  - matchedLocation: ${state.matchedLocation}', tag: 'ROUTER');
         LoggingService.log('  - isAuthenticated: $isAuthenticated', tag: 'ROUTER');
-        LoggingService.log('  - requiresOnboarding: $requiresOnboarding', tag: 'ROUTER');
         LoggingService.log('  - isLoading: $isLoading', tag: 'ROUTER');
         LoggingService.log('  - firebaseUser: ${authState.firebaseUser?.uid}', tag: 'ROUTER');
         LoggingService.log('  - userModel: ${authState.userModel?.id}', tag: 'ROUTER');
@@ -196,29 +186,9 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return null; // Allow access
       }
 
-      // Allow access to onboarding welcome screen (public - shown before auth)
-      final isOnboardingWelcome = state.matchedLocation == OwnerRoutes.onboardingWelcome;
-      if (isOnboardingWelcome) {
-        if (kDebugMode) {
-          LoggingService.log('  → Allowing onboarding welcome (public)', tag: 'ROUTER');
-        }
-        return null; // Allow access
-      }
-
       // Redirect root to appropriate page
       if (state.matchedLocation == '/') {
-        // Case 1: Authenticated + needs onboarding → wizard
-        if (isAuthenticated && requiresOnboarding) {
-          if (kDebugMode) {
-            LoggingService.log(
-              '  → Redirecting / to onboarding wizard (authenticated, needs onboarding)',
-              tag: 'ROUTER',
-            );
-          }
-          return OwnerRoutes.onboardingWizard;
-        }
-
-        // Case 2: Authenticated + no onboarding → overview
+        // Authenticated → overview
         if (isAuthenticated) {
           if (kDebugMode) {
             LoggingService.log('  → Redirecting / to overview (authenticated)', tag: 'ROUTER');
@@ -233,27 +203,16 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.login;
       }
 
-      // If authenticated and requires onboarding, redirect to wizard (except if already on wizard/success)
-      final isOnboardingRoute =
-          state.matchedLocation == OwnerRoutes.onboardingWizard ||
-          state.matchedLocation == OwnerRoutes.onboardingSuccess;
-      if (isAuthenticated && requiresOnboarding && !isOnboardingRoute) {
-        if (kDebugMode) {
-          LoggingService.log('  → Redirecting to onboarding wizard (needs onboarding)', tag: 'ROUTER');
-        }
-        return OwnerRoutes.onboardingWizard;
-      }
-
       // Redirect to login if not authenticated and trying to access protected routes
-      if (!isAuthenticated && !isLoggingIn && !isOnboardingWelcome) {
+      if (!isAuthenticated && !isLoggingIn) {
         if (kDebugMode) {
           LoggingService.log('  → Redirecting to login (not authenticated)', tag: 'ROUTER');
         }
         return OwnerRoutes.login;
       }
 
-      // Redirect to overview if authenticated, doesn't need onboarding, and trying to access login
-      if (isAuthenticated && !requiresOnboarding && isLoggingIn) {
+      // Redirect to overview if authenticated and trying to access login
+      if (isAuthenticated && isLoggingIn) {
         if (kDebugMode) {
           LoggingService.log('  → Redirecting to overview (authenticated, was on login)', tag: 'ROUTER');
         }
@@ -338,11 +297,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-
-      // Onboarding routes (public - shown BEFORE auth)
-      GoRoute(path: OwnerRoutes.onboardingWelcome, builder: (context, state) => const OnboardingWelcomeScreen()),
-      GoRoute(path: OwnerRoutes.onboardingWizard, builder: (context, state) => const OnboardingWizardScreen()),
-      GoRoute(path: OwnerRoutes.onboardingSuccess, builder: (context, state) => const OnboardingSuccessScreen()),
 
       // Auth routes
       GoRoute(

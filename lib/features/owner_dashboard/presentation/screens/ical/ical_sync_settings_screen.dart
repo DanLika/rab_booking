@@ -951,7 +951,18 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   }
 
   void _saveFeed() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please fix the errors above'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
     setState(() => _isSaving = true);
 
     final l10n = AppLocalizations.of(context);

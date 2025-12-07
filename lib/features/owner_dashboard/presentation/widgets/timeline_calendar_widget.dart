@@ -963,12 +963,12 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       // Calculate left position (including offset for windowing)
       final left = offsetWidth + (startIndex * dayWidth);
 
-      // Calculate width (number of nights * day width + 10px extension)
-      // IMPORTANT: Do NOT include check-out day in visualization
-      // Check-out happens at 3pm, so that day is available for next booking
-      // If check-in is Nov 10 and check-out is Nov 12 (2 nights), we show only 2 cells (10, 11)
-      // Added +10px to extend booking block slightly for better visibility
-      final width = (nights * dayWidth) + 10;
+      // Calculate width INCLUDING check-out day for full visual span
+      // IMPORTANT: Booking should span from check-in to check-out (inclusive)
+      // If check-in is Nov 10 and check-out is Nov 12 (2 nights), we show 3 cells (10, 11, 12)
+      // The diagonal indicators on check-in and check-out days show turnover
+      // Width = (nights + 1) * dayWidth to include check-out day
+      final width = (nights + 1) * dayWidth;
 
       // Get stack level for vertical positioning
       final stackLevel = stackLevels[booking.id] ?? 0;

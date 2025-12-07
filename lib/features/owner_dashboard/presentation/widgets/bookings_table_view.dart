@@ -182,7 +182,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                   headingTextStyle: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
-                    color: theme.colorScheme.primary,
+                    color: isDark ? theme.colorScheme.primary : theme.colorScheme.onSurface.withOpacity(0.87),
                   ),
                   columns: [
                     DataColumn(label: Text(l10n.ownerTableColumnGuest)),

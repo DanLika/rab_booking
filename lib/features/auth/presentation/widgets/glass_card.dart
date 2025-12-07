@@ -40,7 +40,7 @@ class GlassCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground.withAlpha((0.97 * 255).toInt()),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()), width: 1),
+            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
           ),
           padding: responsivePadding,
           child: child,

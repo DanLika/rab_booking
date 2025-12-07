@@ -7,7 +7,6 @@
       "request": "launch",
       "program": "lib/main.dart",
       "args": [
-        "--web-renderer=canvaskit",
         "--web-port=8081",
         "--dart-define=FLUTTER_WEB_USE_SKIA=true"
       ],
@@ -25,7 +24,6 @@
       "request": "launch",
       "program": "lib/main.dart",
       "args": [
-        "--web-renderer=canvaskit",
         "--web-port=8082",
         "--dart-define=FLUTTER_WEB_USE_SKIA=true"
       ],
@@ -39,7 +37,6 @@
       "request": "launch",
       "program": "lib/main.dart",
       "args": [
-        "--web-renderer=canvaskit",
         "--web-port=8081",
         "--dart-define=FLUTTER_WEB_USE_SKIA=true"
       ],
@@ -53,7 +50,6 @@
       "request": "launch",
       "program": "lib/main.dart",
       "args": [
-        "--web-renderer=canvaskit",
         "--web-port=8081",
         "--dart-define=FLUTTER_WEB_USE_SKIA=true"
       ],
@@ -67,7 +63,6 @@
       "request": "launch",
       "program": "lib/main.dart",
       "args": [
-        "--web-renderer=html",
         "--web-port=8083"
       ],
       "deviceId": "chrome",
@@ -80,7 +75,6 @@
       "request": "launch",
       "program": "lib/main.dart",
       "args": [
-        "--web-renderer=canvaskit",
         "--web-port=8081",
         "--dart-define=FLUTTER_WEB_USE_SKIA=true"
       ],

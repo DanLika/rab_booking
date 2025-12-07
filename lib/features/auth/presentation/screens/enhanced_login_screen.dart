@@ -12,6 +12,7 @@ import '../widgets/glass_card.dart';
 import '../widgets/auth_logo_icon.dart';
 import '../widgets/premium_input_field.dart';
 import '../widgets/gradient_auth_button.dart';
+import '../../../../shared/widgets/loading_overlay.dart';
 
 /// Enhanced Login Screen with Premium Design
 class EnhancedLoginScreen extends ConsumerStatefulWidget {
@@ -238,214 +239,226 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      body: AuthBackground(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20, vertical: isMobile ? 16 : 20),
-              child: Center(
-                child: GlassCard(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Animated Logo - adapts to dark mode
-                        Center(
-                          child: AuthLogoIcon(size: isMobile ? 70 : 80, isWhite: theme.brightness == Brightness.dark),
-                        ),
-                        SizedBox(height: isMobile ? 16 : 20),
-
-                        // Title
-                        Text(
-                          l10n.authOwnerLogin,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: isMobile ? 22 : 26,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Subtitle
-                        Text(
-                          l10n.authManageProperties,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: isMobile ? 13 : 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: isMobile ? 24 : 32),
-
-                        // Email field
-                        PremiumInputField(
-                          controller: _emailController,
-                          labelText: l10n.email,
-                          prefixIcon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: ProfileValidators.validateEmail,
-                        ),
-                        SizedBox(height: isMobile ? 12 : 14),
-
-                        // Password field
-                        PremiumInputField(
-                          controller: _passwordController,
-                          labelText: l10n.password,
-                          prefixIcon: Icons.lock_outline,
-                          obscureText: _obscurePassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: theme.colorScheme.onSurfaceVariant,
-                              size: 20,
-                            ),
-                            onPressed: () {
-                              setState(() => _obscurePassword = !_obscurePassword);
-                            },
-                          ),
-                          validator: (value) {
-                            if (_passwordErrorFromServer != null) {
-                              return _passwordErrorFromServer;
-                            }
-                            return PasswordValidator.validateMinimumLength(value);
-                          },
-                        ),
-                        SizedBox(height: isMobile ? 12 : 14),
-
-                        // Remember me & Forgot password
-                        Row(
+      body: Stack(
+        children: [
+          AuthBackground(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20, vertical: isMobile ? 16 : 20),
+                  child: Center(
+                    child: GlassCard(
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => setState(() => _rememberMe = !_rememberMe),
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      height: 22,
-                                      width: 22,
-                                      child: Checkbox(
-                                        value: _rememberMe,
-                                        onChanged: (value) => setState(() => _rememberMe = value!),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                                        activeColor: theme.colorScheme.primary,
-                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(l10n.authRememberMe, style: theme.textTheme.bodySmall?.copyWith(fontSize: 13)),
-                                  ],
-                                ),
+                            // Animated Logo - adapts to dark mode
+                            Center(
+                              child: AuthLogoIcon(
+                                size: isMobile ? 70 : 80,
+                                isWhite: theme.brightness == Brightness.dark,
                               ),
                             ),
-                            TextButton(
-                              onPressed: () => context.push(OwnerRoutes.forgotPassword),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            SizedBox(height: isMobile ? 16 : 20),
+
+                            // Title
+                            Text(
+                              l10n.authOwnerLogin,
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: isMobile ? 22 : 26,
                               ),
-                              child: Text(
-                                l10n.authForgotPassword,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 13,
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ],
-                        ),
-                        SizedBox(height: isMobile ? 20 : 24),
+                            const SizedBox(height: 6),
 
-                        // Login Button
-                        GradientAuthButton(
-                          text: l10n.login,
-                          onPressed: _handleLogin,
-                          isLoading: _isLoading,
-                          icon: Icons.login_rounded,
-                        ),
-                        SizedBox(height: isMobile ? 16 : 20),
+                            // Subtitle
+                            Text(
+                              l10n.authManageProperties,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: isMobile ? 13 : 14,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: isMobile ? 24 : 32),
 
-                        // Divider
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: theme.colorScheme.outline)),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(
-                                l10n.authOrContinueWith,
-                                style: theme.textTheme.bodySmall?.copyWith(
+                            // Email field
+                            PremiumInputField(
+                              controller: _emailController,
+                              labelText: l10n.email,
+                              prefixIcon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: ProfileValidators.validateEmail,
+                            ),
+                            SizedBox(height: isMobile ? 12 : 14),
+
+                            // Password field
+                            PremiumInputField(
+                              controller: _passwordController,
+                              labelText: l10n.password,
+                              prefixIcon: Icons.lock_outline,
+                              obscureText: _obscurePassword,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
                                   color: theme.colorScheme.onSurfaceVariant,
-                                  fontSize: 12,
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  setState(() => _obscurePassword = !_obscurePassword);
+                                },
+                              ),
+                              validator: (value) {
+                                if (_passwordErrorFromServer != null) {
+                                  return _passwordErrorFromServer;
+                                }
+                                return PasswordValidator.validateMinimumLength(value);
+                              },
+                            ),
+                            SizedBox(height: isMobile ? 12 : 14),
+
+                            // Remember me & Forgot password
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () => setState(() => _rememberMe = !_rememberMe),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          height: 22,
+                                          width: 22,
+                                          child: Checkbox(
+                                            value: _rememberMe,
+                                            onChanged: (value) => setState(() => _rememberMe = value!),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                            activeColor: theme.colorScheme.primary,
+                                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          l10n.authRememberMe,
+                                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => context.push(OwnerRoutes.forgotPassword),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    l10n.authForgotPassword,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 13,
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: isMobile ? 20 : 24),
+
+                            // Login Button
+                            GradientAuthButton(
+                              text: l10n.login,
+                              onPressed: _handleLogin,
+                              isLoading: _isLoading,
+                              icon: Icons.login_rounded,
+                            ),
+                            SizedBox(height: isMobile ? 16 : 20),
+
+                            // Divider
+                            Row(
+                              children: [
+                                Expanded(child: Divider(color: theme.colorScheme.outline)),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Text(
+                                    l10n.authOrContinueWith,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(child: Divider(color: theme.colorScheme.outline)),
+                              ],
+                            ),
+                            SizedBox(height: isMobile ? 16 : 20),
+
+                            // Social Login Buttons
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _SocialLoginButton(
+                                    customIcon: const _GoogleIcon(),
+                                    label: 'Google',
+                                    onPressed: _handleGoogleSignIn,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _SocialLoginButton(
+                                    customIcon: const _AppleIcon(),
+                                    label: 'Apple',
+                                    onPressed: _handleAppleSignIn,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: isMobile ? 10 : 12),
+
+                            // Anonymous Login Button (Demo)
+                            _SocialLoginButton(
+                              icon: Icons.preview,
+                              label: l10n.authPreviewDemo,
+                              onPressed: _handleAnonymousSignIn,
+                            ),
+                            SizedBox(height: isMobile ? 20 : 24),
+
+                            // Register Link
+                            Center(
+                              child: TextButton(
+                                onPressed: () => context.go(OwnerRoutes.register),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                                ),
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
+                                    children: [
+                                      TextSpan(text: '${l10n.authNoAccount} '),
+                                      TextSpan(
+                                        text: l10n.authCreateAccount,
+                                        style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                            Expanded(child: Divider(color: theme.colorScheme.outline)),
                           ],
                         ),
-                        SizedBox(height: isMobile ? 16 : 20),
-
-                        // Social Login Buttons
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _SocialLoginButton(
-                                customIcon: const _GoogleIcon(),
-                                label: 'Google',
-                                onPressed: _handleGoogleSignIn,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _SocialLoginButton(
-                                customIcon: const _AppleIcon(),
-                                label: 'Apple',
-                                onPressed: _handleAppleSignIn,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: isMobile ? 10 : 12),
-
-                        // Anonymous Login Button (Demo)
-                        _SocialLoginButton(
-                          icon: Icons.preview,
-                          label: l10n.authPreviewDemo,
-                          onPressed: _handleAnonymousSignIn,
-                        ),
-                        SizedBox(height: isMobile ? 20 : 24),
-
-                        // Register Link
-                        Center(
-                          child: TextButton(
-                            onPressed: () => context.go(OwnerRoutes.register),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                            ),
-                            child: RichText(
-                              text: TextSpan(
-                                style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
-                                children: [
-                                  TextSpan(text: '${l10n.authNoAccount} '),
-                                  TextSpan(
-                                    text: l10n.authCreateAccount,
-                                    style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
+          // Loading overlay
+          if (_isLoading) const LoadingOverlay(message: 'Signing in...'),
+        ],
       ),
     );
   }

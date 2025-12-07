@@ -8,6 +8,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -27,8 +28,12 @@ class BookingDetailsDialog extends ConsumerWidget {
     final booking = ownerBooking.booking;
     final property = ownerBooking.property;
     final unit = ownerBooking.unit;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final dialogWidth = screenWidth > 600 ? 500.0 : screenWidth * 0.9;
+
+    // Responsive sizing using utility
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context);
+    final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -48,7 +53,7 @@ class BookingDetailsDialog extends ConsumerWidget {
           children: [
             // Gradient Header
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
@@ -75,7 +80,7 @@ class BookingDetailsDialog extends ConsumerWidget {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 20),
+                padding: EdgeInsets.all(contentPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -184,7 +189,7 @@ class BookingDetailsDialog extends ConsumerWidget {
 
             // Actions - responsive layout
             Container(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
                 border: Border(

@@ -6,6 +6,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../shared/providers/repository_providers.dart';
 
 /// Email templates for guest communication
@@ -149,16 +150,18 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: 500);
+    final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: Container(
-        width: screenWidth < 400 ? double.infinity : 500,
-        constraints: BoxConstraints(maxWidth: screenWidth * 0.9, maxHeight: screenHeight * 0.85),
+        width: dialogWidth,
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
@@ -170,7 +173,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
           children: [
             // Gradient Header
             Container(
-              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+              padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
@@ -203,7 +206,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+                padding: EdgeInsets.all(contentPadding),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -335,7 +338,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
 
             // Footer
             Container(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
                 border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),

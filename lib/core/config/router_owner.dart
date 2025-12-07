@@ -42,7 +42,7 @@ import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../../shared/models/unit_model.dart';
-import '../../shared/widgets/animations/skeleton_loader.dart';
+import '../../shared/widgets/loading_overlay.dart';
 import '../providers/enhanced_auth_provider.dart';
 
 /// Helper class to convert Stream to Listenable for GoRouter
@@ -245,13 +245,9 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
             return const BookingWidgetScreen();
           }
 
-          // Show skeleton loader while redirect determines where to go
+          // Show loading overlay while redirect determines where to go
           // (prevents 404 flash during Login → Dashboard transition)
-          return const Scaffold(
-            body: Center(
-              child: Padding(padding: EdgeInsets.all(24), child: StatsCardsSkeleton()),
-            ),
-          );
+          return const Scaffold(body: LoadingOverlay(message: 'Loading...'));
         },
       ),
 
@@ -494,9 +490,7 @@ class PropertyEditLoader extends ConsumerWidget {
         }
         return PropertyFormScreen(property: property);
       },
-      loading: () => const Scaffold(
-        body: Padding(padding: EdgeInsets.all(16), child: PropertyCardSkeleton()),
-      ),
+      loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading property...')),
       error: (error, stack) => Scaffold(body: Center(child: Text('Error loading property: $error'))),
     );
   }
@@ -519,9 +513,7 @@ class UnitEditLoader extends ConsumerWidget {
         }
         return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
       },
-      loading: () => const Scaffold(
-        body: Padding(padding: EdgeInsets.all(16), child: PropertyCardSkeleton()),
-      ),
+      loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading unit...')),
       error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );
   }
@@ -544,9 +536,7 @@ class UnitPricingLoader extends ConsumerWidget {
         }
         return UnitPricingScreen(unit: unit);
       },
-      loading: () => const Scaffold(
-        body: Padding(padding: EdgeInsets.all(16), child: CalendarSkeleton()),
-      ),
+      loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading pricing...')),
       error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );
   }
@@ -569,9 +559,7 @@ class WidgetSettingsLoader extends ConsumerWidget {
         }
         return WidgetSettingsScreen(propertyId: unit.propertyId, unitId: unitId);
       },
-      loading: () => const Scaffold(
-        body: Padding(padding: EdgeInsets.all(16), child: PropertyCardSkeleton()),
-      ),
+      loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading settings...')),
       error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );
   }

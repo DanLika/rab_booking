@@ -43,10 +43,17 @@ class SmartBookingTooltip {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Get screen dimensions for smart positioning
+    final screenSize = MediaQuery.of(context).size;
+    final tooltipWidth = 320.0;
+    final padding = 12.0;
+
     entry = OverlayEntry(
-      builder: (context) => Positioned(
-        left: position.dx + 12,
-        top: position.dy + 12,
+      builder: (context) => _SmartPositionedTooltip(
+        position: position,
+        screenSize: screenSize,
+        tooltipWidth: tooltipWidth,
+        padding: padding,
         child: Material(
           elevation: 12,
           shadowColor: Colors.black.withAlpha((0.3 * 255).toInt()),
@@ -317,5 +324,68 @@ class _StatusBadge extends StatelessWidget {
       case BookingStatus.cancelled:
         return 'Otkazano';
     }
+  }
+}
+
+/// Smart positioned tooltip that measures its own size and positions itself
+/// to avoid going off-screen
+class _SmartPositionedTooltip extends StatefulWidget {
+  final Offset position;
+  final Size screenSize;
+  final double tooltipWidth;
+  final double padding;
+  final Widget child;
+
+  const _SmartPositionedTooltip({
+    required this.position,
+    required this.screenSize,
+    required this.tooltipWidth,
+    required this.padding,
+    required this.child,
+  });
+
+  @override
+  State<_SmartPositionedTooltip> createState() => _SmartPositionedTooltipState();
+}
+
+class _SmartPositionedTooltipState extends State<_SmartPositionedTooltip> {
+  final GlobalKey _key = GlobalKey();
+  double? _tooltipHeight;
+
+  @override
+  void initState() {
+    super.initState();
+    // Measure tooltip height after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final renderBox = _key.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null && mounted) {
+        setState(() {
+          _tooltipHeight = renderBox.size.height;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Use measured height if available, otherwise estimate
+    final tooltipHeight = _tooltipHeight ?? 200.0;
+
+    // Calculate smart positioning
+    // Horizontal: Show left if too close to right edge, otherwise right
+    final showLeft = (widget.position.dx + widget.tooltipWidth + widget.padding) > widget.screenSize.width;
+    final left = showLeft
+        ? widget.position.dx - widget.tooltipWidth - widget.padding
+        : widget.position.dx + widget.padding;
+
+    // Vertical: Show above if too close to bottom edge, otherwise below
+    final showAbove = (widget.position.dy + tooltipHeight + widget.padding) > widget.screenSize.height;
+    final top = showAbove ? widget.position.dy - tooltipHeight - widget.padding : widget.position.dy + widget.padding;
+
+    return Positioned(
+      left: left.clamp(widget.padding, widget.screenSize.width - widget.tooltipWidth - widget.padding),
+      top: top.clamp(widget.padding, widget.screenSize.height - tooltipHeight - widget.padding),
+      child: Container(key: _key, child: widget.child),
+    );
   }
 }

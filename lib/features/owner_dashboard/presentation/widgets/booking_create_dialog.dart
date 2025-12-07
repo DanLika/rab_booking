@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/constants/breakpoints.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -14,6 +13,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
@@ -77,15 +77,16 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     final unitsAsync = ref.watch(ownerUnitsProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isMobile = Breakpoints.isMobile(context);
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: 500);
+    final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: Container(
-        width: isMobile ? screenWidth * 0.9 : 500,
+        width: dialogWidth,
         constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
@@ -98,7 +99,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           children: [
             // Header with gradient
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
@@ -132,7 +133,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+                padding: EdgeInsets.all(contentPadding),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -189,7 +190,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 12),
 
                       // Responsive date fields: Column on mobile, Row on desktop
-                      if (isMobile)
+                      if (ResponsiveDialogUtils.isMobile(context))
                         Column(
                           children: [
                             _buildDateField(
@@ -424,7 +425,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
             // Footer buttons
             Container(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
                 border: Border(

@@ -112,7 +112,7 @@
     {
       "label": "🏗️ Build Web (Release)",
       "type": "shell",
-      "command": "flutter build web --web-renderer canvaskit --release",
+      "command": "flutter build web --release",
       "problemMatcher": "$dart-analyze",
       "presentation": {
         "echo": true,
@@ -148,7 +148,7 @@
     {
       "label": "🚀 Quick Start Widget (Port 8081)",
       "type": "shell",
-      "command": "flutter run -d chrome --web-port=8081 --web-renderer=canvaskit --dart-define=FLUTTER_WEB_USE_SKIA=true",
+      "command": "flutter run -d chrome --web-port=8081 --dart-define=FLUTTER_WEB_USE_SKIA=true",
       "problemMatcher": "$dart-analyze",
       "presentation": {
         "echo": true,

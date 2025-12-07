@@ -40,7 +40,7 @@ case $choice in
 
         # Start Flutter app
         echo "2. Starting Flutter app on port 8081..."
-        flutter run -d chrome --web-port=8081 --web-renderer=canvaskit > /tmp/flutter-app.log 2>&1 &
+        flutter run -d chrome --web-port=8081 > /tmp/flutter-app.log 2>&1 &
         FLUTTER_PID=$!
         echo "   Flutter PID: $FLUTTER_PID"
         sleep 10

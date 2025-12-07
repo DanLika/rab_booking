@@ -383,7 +383,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         firebaseUser: credential.user,
         userModel: userModel,
         requiresEmailVerification: true,
-        requiresOnboarding: false, // Skip onboarding - user will use Unit Hub instead
       );
     } on FirebaseAuthException catch (e) {
       // Record failed attempt

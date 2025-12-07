@@ -3,6 +3,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/utils/responsive_dialog_utils.dart';
 
 /// Dialog for cancelling a booking with reason and email option
 ///
@@ -33,14 +34,15 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: 450);
+    final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: Container(
-        width: screenWidth < 400 ? double.infinity : 450,
-        constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
+        width: dialogWidth,
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
@@ -52,7 +54,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
           children: [
             // Gradient Header
             Container(
-              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+              padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
@@ -81,7 +83,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+                padding: EdgeInsets.all(contentPadding),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +118,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
 
             // Footer
             Container(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
                 border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),

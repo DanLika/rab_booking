@@ -2,16 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:web/web.dart' as web;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/web_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-// Cross-tab communication service (conditional import for web)
+// Cross-tab communication service (uses conditional import via web_utils)
 import '../../../../core/services/tab_communication_service.dart';
 import '../../services/form_persistence_service.dart';
 import '../../state/booking_form_state.dart';
-import '../../../../core/services/tab_communication_service_web.dart'
-    if (dart.library.io) '../../../../core/services/tab_communication_service.dart';
 import '../widgets/calendar_view_switcher.dart';
 import '../widgets/additional_services_widget.dart';
 import '../widgets/tax_legal_disclaimer_widget.dart';
@@ -299,9 +297,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _tabMessageSubscription?.cancel();
       _tabCommunicationService?.dispose();
 
-      // Create web-specific service instance directly
-      // (conditional import handles this at compile time)
-      _tabCommunicationService = TabCommunicationServiceWeb();
+      // Create platform-appropriate service instance
+      // (createTabCommunicationService uses conditional import)
+      _tabCommunicationService = createTabCommunicationService();
 
       // Listen for messages from other tabs
       _tabMessageSubscription = _tabCommunicationService!.messageStream.listen(_handleTabMessage);
@@ -469,7 +467,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
 
       final newUri = uri.replace(queryParameters: cleanParams);
-      web.window.history.replaceState(null, '', newUri.toString());
+      replaceUrlState(newUri.toString());
 
       LoggingService.log('[URL] Cleared booking params, new URL: ${newUri.toString()}', tag: 'URL_PARAMS');
     } catch (e) {
@@ -499,7 +497,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       final newUri = uri.replace(queryParameters: newParams);
       // Use pushState to add to browser history (back button works)
-      web.window.history.pushState(null, '', newUri.toString());
+      pushUrlState(newUri.toString());
 
       LoggingService.log('[URL] Added booking params, new URL: ${newUri.toString()}', tag: 'URL_PARAMS');
     } catch (e) {
@@ -2088,7 +2086,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // This keeps everything in one tab - no cross-tab communication needed
       if (kIsWeb) {
         // Web: Use window.location.href for same-tab redirect
-        web.window.location.href = checkoutResult.checkoutUrl;
+        navigateToUrl(checkoutResult.checkoutUrl);
       } else {
         // Mobile: Use url_launcher (will open in browser)
         final uri = Uri.parse(checkoutResult.checkoutUrl);

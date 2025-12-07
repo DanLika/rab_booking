@@ -39,36 +39,40 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
     final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Gradient Header
+            // Gradient Header with error color
             Container(
               padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                gradient: LinearGradient(
+                  colors: [theme.colorScheme.error, theme.colorScheme.error.withAlpha((0.8 * 255).toInt())],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
               ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.cancel_outlined, color: Colors.white, size: 20),
+                    child: const Icon(Icons.cancel_outlined, color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -89,8 +93,14 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.bookingCancelMessage, style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface)),
-                    const SizedBox(height: 12),
+                    // Warning message
+                    Text(
+                      l10n.bookingCancelMessage,
+                      style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Reason input
                     TextField(
                       controller: _reasonController,
                       decoration: InputDecorationHelper.buildDecoration(
@@ -100,17 +110,36 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                         context: context,
                       ),
                       maxLines: 3,
+                      autofocus: true,
                     ),
-                    const SizedBox(height: 12),
-                    CheckboxListTile(
-                      title: Text(l10n.bookingCancelSendEmail, style: TextStyle(color: theme.colorScheme.onSurface)),
-                      value: _sendEmail,
-                      onChanged: (value) {
-                        setState(() {
-                          _sendEmail = value ?? true;
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
+
+                    const SizedBox(height: 16),
+
+                    // Send email checkbox with better styling
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())),
+                      ),
+                      child: CheckboxListTile(
+                        title: Text(
+                          l10n.bookingCancelSendEmail,
+                          style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          l10n.bookingCancelSendEmailHint,
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                        value: _sendEmail,
+                        onChanged: (value) {
+                          setState(() {
+                            _sendEmail = value ?? true;
+                          });
+                        },
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        controlAffinity: ListTileControlAffinity.leading,
+                      ),
                     ),
                   ],
                 ),
@@ -119,17 +148,21 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
 
             // Footer
             Container(
-              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 16),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
                 border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.bookingCancelCancel)),
-                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+                    child: Text(l10n.bookingCancelCancel),
+                  ),
+                  const SizedBox(width: 12),
                   FilledButton(
                     onPressed: () {
                       Navigator.of(context).pop({
@@ -142,8 +175,9 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                     style: FilledButton.styleFrom(
                       backgroundColor: theme.colorScheme.error,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 2,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                     child: Text(l10n.bookingCancelConfirm),
                   ),

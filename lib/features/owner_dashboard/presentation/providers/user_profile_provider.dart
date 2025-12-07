@@ -18,7 +18,7 @@ UserProfileRepository userProfileRepository(Ref ref) {
 
 /// Watch user profile data
 @riverpod
-Stream<UserProfile?> userProfile(Ref ref) {
+Stream<UserProfile?> watchUserProfile(Ref ref) {
   final userId = FirebaseAuth.instance.currentUser?.uid;
   if (userId == null) {
     return Stream.value(null);

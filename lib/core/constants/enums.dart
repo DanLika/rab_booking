@@ -340,8 +340,9 @@ enum BookingStatus {
   }
 
   /// Check if booking can be cancelled
+  /// Note: Pending bookings should be rejected, not cancelled
   bool get canBeCancelled {
-    return this == BookingStatus.pending || this == BookingStatus.confirmed;
+    return this == BookingStatus.confirmed;
   }
 
   /// Check if booking is active (currently in use or confirmed)

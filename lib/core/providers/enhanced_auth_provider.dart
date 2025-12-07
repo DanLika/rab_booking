@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:state_notifier/state_notifier.dart';
 import '../../core/exceptions/app_exceptions.dart';
 import '../../core/services/rate_limit_service.dart';
 import '../../core/services/security_events_service.dart';
@@ -237,20 +238,32 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       LoggingService.log('Sign in completed, auth state listener will load profile', tag: 'ENHANCED_AUTH');
     } on FirebaseAuthException catch (e) {
       unawaited(LoggingService.logError('Firebase sign in FAILED: ${e.code} - ${e.message}', e));
-      // Record failed attempt
-      await _rateLimit.recordFailedAttempt(email);
 
-      // Get updated rate limit info
-      final updatedLimit = await _rateLimit.checkRateLimit(email);
-      final errorMessage = updatedLimit != null && updatedLimit.isLocked
-          ? _rateLimit.getRateLimitMessage(updatedLimit)
-          : _getAuthErrorMessage(e);
+      // Determine error message, with rate limit check wrapped in try-catch
+      // to ensure isLoading is ALWAYS reset even if rate limit operations fail
+      String errorMessage;
+      try {
+        // Record failed attempt
+        await _rateLimit.recordFailedAttempt(email);
 
+        // Get updated rate limit info
+        final updatedLimit = await _rateLimit.checkRateLimit(email);
+        errorMessage = updatedLimit != null && updatedLimit.isLocked
+            ? _rateLimit.getRateLimitMessage(updatedLimit)
+            : _getAuthErrorMessage(e);
+      } catch (rateLimitError) {
+        // If rate limit check fails, just use the original auth error message
+        LoggingService.log('Rate limit check failed: $rateLimitError', tag: 'ENHANCED_AUTH');
+        errorMessage = _getAuthErrorMessage(e);
+      }
+
+      // CRITICAL: Always reset isLoading to prevent infinite loading state
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
       unawaited(LoggingService.logError('Sign in ERROR', e));
       final errorMessage = e.toString();
+      // CRITICAL: Always reset isLoading to prevent infinite loading state
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message
     }
@@ -385,19 +398,30 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         requiresEmailVerification: true,
       );
     } on FirebaseAuthException catch (e) {
-      // Record failed attempt
-      await _rateLimit.recordFailedAttempt(email);
+      // Determine error message, with rate limit check wrapped in try-catch
+      // to ensure isLoading is ALWAYS reset even if rate limit operations fail
+      String errorMessage;
+      try {
+        // Record failed attempt
+        await _rateLimit.recordFailedAttempt(email);
 
-      // Get updated rate limit info
-      final updatedLimit = await _rateLimit.checkRateLimit(email);
-      final errorMessage = updatedLimit != null && updatedLimit.isLocked
-          ? _rateLimit.getRateLimitMessage(updatedLimit)
-          : _getAuthErrorMessage(e);
+        // Get updated rate limit info
+        final updatedLimit = await _rateLimit.checkRateLimit(email);
+        errorMessage = updatedLimit != null && updatedLimit.isLocked
+            ? _rateLimit.getRateLimitMessage(updatedLimit)
+            : _getAuthErrorMessage(e);
+      } catch (rateLimitError) {
+        // If rate limit check fails, just use the original auth error message
+        LoggingService.log('Rate limit check failed: $rateLimitError', tag: 'ENHANCED_AUTH');
+        errorMessage = _getAuthErrorMessage(e);
+      }
 
+      // CRITICAL: Always reset isLoading to prevent infinite loading state
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
       final errorMessage = e.toString();
+      // CRITICAL: Always reset isLoading to prevent infinite loading state
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message
     }

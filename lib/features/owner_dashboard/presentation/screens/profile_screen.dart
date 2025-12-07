@@ -25,7 +25,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final user = FirebaseAuth.instance.currentUser;
-    final userProfileAsync = ref.watch(userProfileProvider);
+    final userProfileAsync = ref.watch(watchUserProfileProvider);
     final authState = ref.watch(enhancedAuthProvider);
     final currentLocale = ref.watch(currentLocaleProvider);
     final currentThemeMode = ref.watch(currentThemeModeProvider);
@@ -425,7 +425,7 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                               const SizedBox(width: 12),
                               FilledButton.icon(
-                                onPressed: () => ref.invalidate(userProfileProvider),
+                                onPressed: () => ref.invalidate(watchUserProfileProvider),
                                 icon: const Icon(Icons.refresh),
                                 label: Text(l10n.ownerProfileTryAgain),
                               ),

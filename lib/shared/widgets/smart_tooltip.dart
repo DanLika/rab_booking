@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 /// Smart tooltip that automatically finds the best position to display
 /// on small screens (360px and below) by trying different positions

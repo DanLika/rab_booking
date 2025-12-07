@@ -131,6 +131,91 @@ firebase deploy --only hosting
 
 ---
 
+## 📱 MULTI-PLATFORM BUILD SYSTEM
+
+### Podržane platforme
+| Platforma | Build mod | Hot Reload | Napomena |
+|-----------|-----------|------------|----------|
+| **Web (Chrome)** | Debug | ✅ Da | Normalno radi |
+| **iOS Simulator** | Debug | ✅ Da | Normalno radi |
+| **Android fizički** | **Release** | ❌ Ne | Debug ima bug |
+| **Android Emulator** | **Release** | ❌ Ne | Debug ima bug |
+
+### Verzije dependency-a (KRITIČNO)
+```yaml
+# pubspec.yaml - NE UPGRADEATI bez testiranja!
+flutter_riverpod: ^2.5.1      # NE 3.x - breaking changes
+riverpod_annotation: ^2.3.5   # NE 3.x
+freezed: ^2.5.7               # NE 3.x - zahtijeva sealed class
+freezed_annotation: ^2.4.4    # NE 3.x
+```
+
+```gradle
+// android/settings.gradle.kts
+id("com.android.application") version "8.9.1"  // AGP
+id("org.jetbrains.kotlin.android") version "2.1.0"  // Kotlin
+
+// android/gradle/wrapper/gradle-wrapper.properties
+distributionUrl=gradle-8.11.1-all.zip  // Gradle
+```
+
+### Poznati bug: Android Debug Build
+**Problem**: `firebase_storage` plugin ne kompajlira Kotlin kod prije Java koda u debug modu.
+**Error**: `cannot find symbol: FlutterFirebaseStoragePlugin`
+**Workaround**: Koristi `--release` flag za Android uređaje.
+
+### Pokretanje na svim platformama
+```bash
+# 1. Web (debug, sa hot reload)
+flutter run -d chrome --web-port 8080
+
+# 2. iOS Simulator (debug, sa hot reload)
+flutter run -d <iOS_DEVICE_ID>
+
+# 3. Android fizički uređaj (MORA biti release)
+flutter run -d <ANDROID_DEVICE_ID> --release
+
+# 4. Android Emulator (MORA biti release)
+flutter run -d emulator-5554 --release
+```
+
+### Conditional imports za Web
+Web-specifični kod (npr. `package:web`) koristi conditional imports:
+```dart
+// lib/core/utils/web_utils.dart - barrel export
+export 'web_utils_stub.dart'
+    if (dart.library.js_interop) 'web_utils_web.dart';
+
+// Korištenje:
+import 'package:rab_booking/core/utils/web_utils.dart';
+replaceUrlState('/new-path');  // No-op na mobile, radi na web
+createTabCommunicationService();  // Vraća Stub ili Web implementaciju
+```
+
+### Prije build-a
+```bash
+# 1. Očisti stare artefakte
+flutter clean
+
+# 2. Regeneriraj dependencies
+flutter pub get
+
+# 3. Regeneriraj freezed/riverpod kod
+dart run build_runner build --delete-conflicting-outputs
+
+# 4. Test build
+flutter build apk --release  # Android
+flutter build ios --release --no-codesign  # iOS
+flutter build web --release  # Web
+```
+
+### ⚠️ NE RADITI
+- NE pokreći više Android buildova paralelno (Gradle cache conflict)
+- NE upgradeati Riverpod/Freezed na 3.x bez full refactora
+- NE miješati debug i release buildove bez `flutter clean`
+
+---
+
 ## 🔗 SUBDOMAIN & URL SLUG SYSTEM
 
 **URL formati** (widget):
@@ -191,6 +276,8 @@ ne sekcije
 
 ---
 
-**Last Updated**: 2025-12-07 | **Version**: 4.6
+**Last Updated**: 2025-12-07 | **Version**: 4.7
+
+**Changelog 4.7**: Multi-platform build dokumentacija - Android release mode, conditional imports, dependency verzije.
 
 **Changelog 4.6**: URL slug sistem za clean URLs (`/apartman-6` umjesto query params).

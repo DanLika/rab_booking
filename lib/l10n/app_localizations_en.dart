@@ -4041,6 +4041,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingCancelSendEmail => 'Send email to guest';
 
   @override
+  String get bookingCancelSendEmailHint =>
+      'Guest will receive cancellation notification';
+
+  @override
   String get bookingCancelCancel => 'Cancel';
 
   @override

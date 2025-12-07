@@ -7560,6 +7560,12 @@ abstract class AppLocalizations {
   /// **'Send email to guest'**
   String get bookingCancelSendEmail;
 
+  /// No description provided for @bookingCancelSendEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest will receive cancellation notification'**
+  String get bookingCancelSendEmailHint;
+
   /// No description provided for @bookingCancelCancel.
   ///
   /// In en, this message translates to:

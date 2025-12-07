@@ -4060,6 +4060,10 @@ class AppLocalizationsHr extends AppLocalizations {
   String get bookingCancelSendEmail => 'Pošalji email gostu';
 
   @override
+  String get bookingCancelSendEmailHint =>
+      'Gost će primiti obavijest o otkazivanju';
+
+  @override
   String get bookingCancelCancel => 'Odustani';
 
   @override
@@ -5341,7 +5345,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get editBookingNotesHint => 'Dodaj bilješke (nisu vidljive gostu)...';
 
   @override
-  String get editBookingSaveChanges => 'Sačuvaj Promjene';
+  String get editBookingSaveChanges => 'Sačuvaj';
 
   @override
   String get editBookingSuccess => 'Rezervacija uspješno ažurirana';

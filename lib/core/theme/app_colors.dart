@@ -75,7 +75,7 @@ class AppColors {
   static const Color dividerLight = Color(0xFFF7FAFC); // Very Light Gray
 
   /// Section divider color - Visible divider for dialog sections
-  static const Color sectionDividerLight = Color(0xFFE8E8F0); // Cool Gray
+  static const Color sectionDividerLight = Color(0xFFE0E0E8); // Cool Gray
 
   /// Dialog footer background color
   static const Color dialogFooterLight = Color(0xFFF8F8FA); // Very Light Gray
@@ -121,7 +121,7 @@ class AppColors {
   static const Color dividerDark = Color(0xFF1E1E1E); // Divider
 
   /// Section divider color - Visible divider for dialog sections
-  static const Color sectionDividerDark = Color(0xFF3D3D4A); // Cool Dark Gray
+  static const Color sectionDividerDark = Color(0xFF2D2D3A); // Cool Dark Gray
 
   /// Dialog footer background color
   static const Color dialogFooterDark = Color(0xFF1E1E2A); // Dark Purple-Gray

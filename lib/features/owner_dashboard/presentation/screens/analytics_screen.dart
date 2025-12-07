@@ -839,31 +839,32 @@ class _TopPropertiesList extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section header - compact
+                // Section header
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.home_work, color: theme.colorScheme.primary, size: 16),
+                      child: Icon(Icons.home_work, color: theme.colorScheme.primary, size: 20),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             l10n.ownerAnalyticsTopProperties,
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             l10n.ownerAnalyticsPropertiesSubtitle,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 11,
+                              fontSize: 12,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -873,7 +874,7 @@ class _TopPropertiesList extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 // Properties list
                 ListView.separated(
@@ -998,31 +999,32 @@ class _WidgetAnalyticsCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section header - compact
+                // Section header
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.widgets, color: theme.colorScheme.primary, size: 16),
+                      child: Icon(Icons.widgets, color: theme.colorScheme.primary, size: 20),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             l10n.ownerAnalyticsWidgetPerformance,
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             l10n.ownerAnalyticsWidgetSubtitle,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 11,
+                              fontSize: 12,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1032,7 +1034,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 // Widget Bookings Row
                 Row(
@@ -1238,31 +1240,32 @@ class _BookingsBySourceChart extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section header - compact
+                // Section header
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.source, color: theme.colorScheme.primary, size: 16),
+                      child: Icon(Icons.source, color: theme.colorScheme.primary, size: 20),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             l10n.ownerAnalyticsBookingsBySource,
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             l10n.ownerAnalyticsSourceSubtitle,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 11,
+                              fontSize: 12,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1272,7 +1275,7 @@ class _BookingsBySourceChart extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 ...displayEntries.map((sourceEntry) {
                   final source = sourceEntry.key;
                   final count = sourceEntry.value;
@@ -1280,7 +1283,7 @@ class _BookingsBySourceChart extends StatelessWidget {
                   final color = _getSourceColor(source);
 
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 12), // Compact spacing (was 16)
+                    padding: const EdgeInsets.only(bottom: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1291,15 +1294,18 @@ class _BookingsBySourceChart extends StatelessWidget {
                               child: Row(
                                 children: [
                                   Container(
-                                    width: 12,
-                                    height: 12,
+                                    width: 14,
+                                    height: 14,
                                     decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 10),
                                   Flexible(
                                     child: Text(
                                       _getSourceDisplayName(source),
-                                      style: AppTypography.bodyMedium,
+                                      style: theme.textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 15,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -1309,19 +1315,19 @@ class _BookingsBySourceChart extends StatelessWidget {
                             ),
                             Text(
                               '$count ($percentage%)',
-                              style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 15),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         LinearProgressIndicator(
                           value: totalCount > 0 ? count / totalCount : 0,
-                          backgroundColor: Theme.of(context).brightness == Brightness.dark
+                          backgroundColor: theme.brightness == Brightness.dark
                               ? AppColors.borderDark
                               : AppColors.borderLight,
                           valueColor: AlwaysStoppedAnimation<Color>(color),
-                          minHeight: 8,
-                          borderRadius: BorderRadius.circular(4),
+                          minHeight: 10,
+                          borderRadius: BorderRadius.circular(5),
                         ),
                       ],
                     ),

@@ -6,8 +6,9 @@ import '../../../../../l10n/app_localizations.dart';
 /// Action buttons section for booking card
 ///
 /// Displays context-appropriate action buttons based on booking status
-/// - Pending: 2x2 grid (Approve, Reject, Details, Cancel)
-/// - Others: Dynamic row/column layout (Details, Complete, Cancel)
+/// - Pending: 2x2 grid (Approve, Reject, Details)
+/// - Confirmed: Dynamic row/column layout (Details, Complete, Cancel)
+/// - Others: Dynamic row/column layout (Details)
 ///
 /// Callbacks are required for each action
 class BookingCardActions extends StatelessWidget {
@@ -171,8 +172,8 @@ class BookingCardActions extends StatelessWidget {
             actionButtons.add(completeBtn);
           }
 
-          // Cancel button (only if cancellable and not pending - pending handled above)
-          if (booking.canBeCancelled && booking.status != BookingStatus.pending && onCancel != null) {
+          // Cancel button (only for confirmed bookings)
+          if (booking.canBeCancelled && onCancel != null) {
             actionButtons.add(cancelBtn);
           }
 

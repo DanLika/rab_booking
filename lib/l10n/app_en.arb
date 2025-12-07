@@ -1642,6 +1642,7 @@
   "bookingCancelReason": "Cancellation reason",
   "bookingCancelReasonHint": "Enter reason...",
   "bookingCancelSendEmail": "Send email to guest",
+  "bookingCancelSendEmailHint": "Guest will receive cancellation notification",
   "bookingCancelCancel": "Cancel",
   "bookingCancelConfirm": "Cancel Booking",
   "bookingCancelDefaultReason": "Cancelled by owner",

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:web/web.dart' as web;
+import '../../../../../core/utils/web_utils.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../providers/theme_provider.dart';
 import '../../l10n/widget_translations.dart';
@@ -182,6 +182,6 @@ class _LanguageSwitcherButton extends StatelessWidget {
     final newUrl = currentUrl.replace(queryParameters: newParams);
 
     // Reload page with new language
-    web.window.location.href = newUrl.toString();
+    navigateToUrl(newUrl.toString());
   }
 }

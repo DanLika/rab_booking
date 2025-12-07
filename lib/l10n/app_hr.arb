@@ -1642,6 +1642,7 @@
   "bookingCancelReason": "Razlog otkazivanja",
   "bookingCancelReasonHint": "Unesite razlog...",
   "bookingCancelSendEmail": "Pošalji email gostu",
+  "bookingCancelSendEmailHint": "Gost će primiti obavijest o otkazivanju",
   "bookingCancelCancel": "Odustani",
   "bookingCancelConfirm": "Otkaži rezervaciju",
   "bookingCancelDefaultReason": "Otkazano od strane vlasnika",
@@ -2192,7 +2193,7 @@
   "editBookingGuests": "Gosti",
   "editBookingInternalNotes": "Interne Bilješke",
   "editBookingNotesHint": "Dodaj bilješke (nisu vidljive gostu)...",
-  "editBookingSaveChanges": "Sačuvaj Promjene",
+  "editBookingSaveChanges": "Sačuvaj",
   "editBookingSuccess": "Rezervacija uspješno ažurirana",
   "editBookingError": "Greška pri ažuriranju rezervacije",
 

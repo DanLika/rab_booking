@@ -230,7 +230,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     ],
                   ),
                   // Divider between action groups
-                  if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed)
+                  if (booking.status == BookingStatus.confirmed)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Divider(
@@ -242,7 +242,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed)
+                      if (booking.status == BookingStatus.confirmed)
                         Flexible(
                           child: _ActionButton(
                             icon: Icons.cancel_outlined,
@@ -383,44 +383,176 @@ class BookingDetailsDialog extends ConsumerWidget {
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.ownerDetailsResendTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.ownerDetailsResendMessage(ownerBooking.guestName)),
-            const SizedBox(height: 12),
-            Text(
-              '${l10n.ownerDetailsEmail}: ${ownerBooking.guestEmail}',
-              style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.w500),
+      builder: (dialogContext) {
+        final dialogTheme = Theme.of(dialogContext);
+        final dialogIsDark = dialogTheme.brightness == Brightness.dark;
+        final dialogL10n = AppLocalizations.of(dialogContext);
+
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            decoration: BoxDecoration(
+              gradient: dialogContext.gradients.sectionBackground,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: dialogContext.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+              boxShadow: dialogIsDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, size: 20, color: Theme.of(context).colorScheme.tertiary),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(l10n.ownerDetailsResendNote, style: const TextStyle(fontSize: 12))),
-                ],
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with gradient
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: dialogContext.gradients.brandPrimary,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.email, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          dialogL10n.ownerDetailsResendTitle,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        dialogL10n.ownerDetailsResendMessage(ownerBooking.guestName),
+                        style: dialogTheme.textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Email info card
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: dialogTheme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: dialogTheme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.email_outlined, size: 20, color: dialogTheme.colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    dialogL10n.ownerDetailsEmail,
+                                    style: TextStyle(fontSize: 12, color: dialogTheme.colorScheme.onSurfaceVariant),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    ownerBooking.guestEmail,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: dialogTheme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Info note
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: dialogTheme.colorScheme.tertiaryContainer.withAlpha((0.5 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: dialogTheme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.info_outline, size: 20, color: dialogTheme.colorScheme.tertiary),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                dialogL10n.ownerDetailsResendNote,
+                                style: TextStyle(fontSize: 13, color: dialogTheme.colorScheme.onSurface),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Footer with actions
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: dialogIsDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
+                    border: Border(
+                      top: BorderSide(
+                        color: dialogIsDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                      ),
+                    ),
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+                        child: Text(dialogL10n.ownerMultiSelectCancel),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: dialogContext.gradients.brandPrimary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.of(dialogContext).pop(true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.send, size: 18),
+                          label: Text(dialogL10n.ownerDetailsSend),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.ownerMultiSelectCancel)),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.of(context).pop(true),
-            icon: const Icon(Icons.send, size: 18),
-            label: Text(l10n.ownerDetailsSend),
           ),
-        ],
-      ),
+        );
+      },
     );
 
     if (confirmed != true || !context.mounted) return;

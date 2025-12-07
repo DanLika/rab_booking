@@ -66,7 +66,20 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   }
 
   Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
+    // Validate form first
+    if (!_formKey.currentState!.validate()) {
+      // Show feedback for validation errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please fix the errors above'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
 
     if (!_acceptedTerms || !_acceptedPrivacy) {
       final l10n = AppLocalizations.of(context);
@@ -125,12 +138,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
         // Check if email verification required (always true for new registrations)
         if (authState.requiresEmailVerification) {
+          setState(() => _isLoading = false);
           context.go(OwnerRoutes.emailVerification);
           return;
         }
 
-        // If somehow email is already verified, continue to onboarding/dashboard
-        // Router will handle navigation based on requiresOnboarding flag
+        // If somehow email is already verified, continue to dashboard
+        // Router will handle navigation
+        setState(() => _isLoading = false);
       }
     } catch (e) {
       if (mounted) {

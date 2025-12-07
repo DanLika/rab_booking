@@ -22,6 +22,7 @@ import '../providers/calendar_view_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/additional_services_provider.dart';
 import '../providers/submit_booking_provider.dart';
+import '../providers/subdomain_provider.dart';
 import '../../domain/use_cases/submit_booking_use_case.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
@@ -64,8 +65,22 @@ import '../l10n/widget_translations.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
+///
+/// Supports two URL formats:
+/// 1. Query params: `?property=PROPERTY_ID&unit=UNIT_ID` (iframe embeds)
+/// 2. Slug URL: `/apartman-6` with subdomain (standalone pages)
+///
+/// When [urlSlug] is provided, the screen resolves property from subdomain
+/// and unit from slug. Otherwise, it uses query parameters.
 class BookingWidgetScreen extends ConsumerStatefulWidget {
-  const BookingWidgetScreen({super.key});
+  const BookingWidgetScreen({
+    super.key,
+    this.urlSlug,
+  });
+
+  /// Optional URL slug for clean URL resolution.
+  /// When provided, property is resolved from subdomain and unit from this slug.
+  final String? urlSlug;
 
   @override
   ConsumerState<BookingWidgetScreen> createState() => _BookingWidgetScreenState();
@@ -167,9 +182,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   void initState() {
     super.initState();
     // Parse property and unit IDs from URL
+    // Priority: 1. URL slug (clean URLs), 2. Query parameters (iframe embeds)
     final uri = Uri.base;
-    _propertyId = _sanitizeId(uri.queryParameters['property']);
-    _unitId = _sanitizeId(uri.queryParameters['unit']) ?? '';
+
+    // Check if using slug-based URL (will be resolved in _validateUnitAndProperty)
+    if (widget.urlSlug != null && widget.urlSlug!.isNotEmpty) {
+      // Slug URL: property resolved from subdomain, unit from slug
+      // IDs will be set after async resolution in _validateUnitAndProperty
+      _propertyId = null;
+      _unitId = '';
+    } else {
+      // Query params URL: direct IDs from URL
+      _propertyId = _sanitizeId(uri.queryParameters['property']);
+      _unitId = _sanitizeId(uri.queryParameters['unit']) ?? '';
+    }
 
     // Bug #53: Add listeners to text controllers for auto-save (debounced)
     _firstNameController.addListener(_saveFormDataDebounced);
@@ -628,6 +654,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Validates that unit exists and fetches property/owner info
+  ///
+  /// Supports two URL resolution modes:
+  /// 1. Slug URL: subdomain -> property, slug -> unit (clean URLs)
+  /// 2. Query params: direct property and unit IDs (iframe embeds)
   Future<void> _validateUnitAndProperty() async {
     setState(() {
       _isValidating = true;
@@ -635,6 +665,46 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     });
 
     try {
+      // MODE 1: Slug-based URL resolution (clean URLs for standalone pages)
+      // URL format: https://jasko-rab.bookbed.io/apartman-6
+      if (widget.urlSlug != null && widget.urlSlug!.isNotEmpty) {
+        final slugContext = await ref.read(fullSlugContextProvider(widget.urlSlug).future);
+
+        // No subdomain found - fallback error
+        if (slugContext == null) {
+          setState(() {
+            _validationError = 'Unable to determine property.\n\nSubdomain not found in URL.';
+            _isValidating = false;
+          });
+          return;
+        }
+
+        // Property not found for subdomain
+        if (!slugContext.propertyFound) {
+          setState(() {
+            _validationError = 'Property not found.\n\nSubdomain: ${slugContext.subdomain}';
+            _isValidating = false;
+          });
+          return;
+        }
+
+        // Unit not found for slug
+        if (!slugContext.unitFound || slugContext.unitId == null) {
+          setState(() {
+            _validationError = 'Unit not found.\n\nSlug: ${widget.urlSlug}\nProperty: ${slugContext.displayName}';
+            _isValidating = false;
+          });
+          return;
+        }
+
+        // Successfully resolved both property and unit from slug URL
+        _propertyId = slugContext.propertyId;
+        _unitId = slugContext.unitId!;
+
+        // Continue with normal validation flow below...
+      }
+
+      // MODE 2: Query param validation (iframe embeds)
       // Check if both property and unit IDs are provided
       if (_propertyId == null || _propertyId!.isEmpty) {
         setState(() {

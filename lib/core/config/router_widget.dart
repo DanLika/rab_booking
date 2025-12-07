@@ -10,9 +10,13 @@ import '../../shared/presentation/screens/not_found_screen.dart';
 ///
 /// This router is specifically for the embeddable booking widget.
 /// It only includes public routes needed for:
-/// - Calendar/booking widget display
+/// - Calendar/booking widget display (with query params OR slug URLs)
 /// - Booking lookup from email links
 /// - Booking details display
+///
+/// URL formats supported:
+/// - Query params: `?property=PROPERTY_ID&unit=UNIT_ID` (iframe embeds)
+/// - Slug URL: `/apartman-6` with subdomain (standalone pages)
 ///
 /// NO auth redirects, NO owner dashboard, NO login screens.
 final widgetRouterProvider = Provider<GoRouter>((ref) {
@@ -22,6 +26,7 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       // ROOT ROUTE - Shows booking widget
       // URL: /?property=PROPERTY_ID&unit=UNIT_ID
+      // OR: subdomain.bookbed.io/ (property-level, no specific unit)
       GoRoute(
         path: '/',
         builder: (context, state) => const BookingWidgetScreen(),
@@ -32,6 +37,21 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/calendar',
         builder: (context, state) => const BookingWidgetScreen(),
+      ),
+
+      // SLUG ROUTE - Clean URL for standalone pages
+      // URL: /apartman-6 (subdomain parsed from hostname)
+      // Resolves: subdomain -> property, slug -> unit
+      GoRoute(
+        path: '/:slug',
+        builder: (context, state) {
+          final slug = state.pathParameters['slug'];
+          // Skip if slug looks like a system route
+          if (slug == 'view' || slug == 'calendar') {
+            return const BookingWidgetScreen();
+          }
+          return BookingWidgetScreen(urlSlug: slug);
+        },
       ),
 
       // Booking lookup from email link

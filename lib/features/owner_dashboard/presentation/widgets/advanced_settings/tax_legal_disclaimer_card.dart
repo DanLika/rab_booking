@@ -43,37 +43,69 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-            // topRight → bottomLeft za section
             color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
-          child: ExpansionTile(
-            initiallyExpanded: taxLegalEnabled,
-            leading: _buildLeadingIcon(theme),
-            title: Text(l10n.taxLegalTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-            subtitle: Text(
-              taxLegalEnabled ? l10n.taxLegalEnabled : l10n.taxLegalDisabled,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: taxLegalEnabled ? AppColors.success : context.textColorSecondary,
+          child: Theme(
+            data: theme.copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: taxLegalEnabled,
+              tilePadding: EdgeInsets.symmetric(horizontal: isMobile ? 14 : 18, vertical: 8),
+              childrenPadding: EdgeInsets.fromLTRB(isMobile ? 14 : 18, 0, isMobile ? 14 : 18, isMobile ? 14 : 18),
+              leading: _buildLeadingIcon(theme),
+              title: Text(
+                l10n.taxLegalTitle,
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-            ),
-            children: [
-              Padding(
-                padding: EdgeInsets.all(isMobile ? 16 : 20),
-                child: Column(
+              subtitle: Text(
+                taxLegalEnabled ? l10n.taxLegalEnabled : l10n.taxLegalDisabled,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: taxLegalEnabled ? AppColors.success : context.textColorSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              children: [
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Master toggle
-                    _buildMasterToggle(l10n),
+                    // Master toggle - compact
+                    Row(
+                      children: [
+                        Icon(Icons.toggle_on_outlined, size: 18, color: theme.colorScheme.primary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.taxLegalToggleTitle,
+                                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                              ),
+                              Text(
+                                l10n.taxLegalToggleSubtitle,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: context.textColorSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: taxLegalEnabled,
+                          onChanged: onEnabledChanged,
+                          activeColor: theme.colorScheme.primary,
+                        ),
+                      ],
+                    ),
 
                     if (taxLegalEnabled) ...[
                       const Divider(height: 24),
@@ -81,18 +113,22 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                       // Disclaimer text source selector
                       _buildTextSourceSection(theme, context, l10n),
 
-                      // Preview button
+                      // Compact preview button
                       const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: onPreview,
-                        icon: const Icon(Icons.preview),
-                        label: Text(l10n.taxLegalPreviewButton),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: onPreview,
+                          icon: const Icon(Icons.preview, size: 18),
+                          label: Text(l10n.taxLegalPreviewButton),
+                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                        ),
                       ),
                     ],
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -107,16 +143,6 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(Icons.gavel, color: theme.colorScheme.primary, size: 18),
-    );
-  }
-
-  Widget _buildMasterToggle(AppLocalizations l10n) {
-    return SwitchListTile(
-      value: taxLegalEnabled,
-      onChanged: onEnabledChanged,
-      title: Text(l10n.taxLegalToggleTitle),
-      subtitle: Text(l10n.taxLegalToggleSubtitle),
-      contentPadding: EdgeInsets.zero,
     );
   }
 

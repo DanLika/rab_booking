@@ -424,6 +424,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                               propertyId: widget.propertyId,
                               unitName: widget.unit!.name,
                               propertySubdomain: property?.subdomain,
+                              unitSlug: widget.unit!.slug,
                             ),
                           );
                         },

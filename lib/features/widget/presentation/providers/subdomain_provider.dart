@@ -43,3 +43,33 @@ final currentSubdomainProvider = Provider<String?>((ref) {
   final service = ref.watch(subdomainServiceProvider);
   return service.getCurrentSubdomain();
 });
+
+/// Provider that resolves full context from subdomain + slug URL.
+///
+/// URL format: `https://jasko-rab.bookbed.io/apartman-6`
+/// 1. Parse subdomain from hostname -> get property
+/// 2. Parse slug from path parameter -> get unit within property
+///
+/// Usage:
+/// ```dart
+/// final contextAsync = ref.watch(fullSlugContextProvider('apartman-6'));
+/// contextAsync.when(
+///   data: (context) {
+///     if (context == null) {
+///       // No subdomain in URL - fallback to query params
+///     } else if (!context.propertyFound) {
+///       // Property not found for subdomain
+///     } else if (!context.unitFound) {
+///       // Unit not found for slug
+///     } else {
+///       // Use context.propertyId and context.unitId
+///     }
+///   },
+///   loading: () => CircularProgressIndicator(),
+///   error: (e, _) => Text('Error: $e'),
+/// );
+/// ```
+final fullSlugContextProvider = FutureProvider.family<FullSlugContext?, String?>((ref, urlSlug) async {
+  final service = ref.watch(subdomainServiceProvider);
+  return service.resolveFullContext(urlSlug: urlSlug);
+});

@@ -129,6 +129,99 @@ class SubdomainService {
       branding: property.branding,
     );
   }
+
+  /// Fetch unit by slug within a property.
+  ///
+  /// Used for clean URL resolution: `/apartman-6` -> unit with slug "apartman-6"
+  /// Returns null if no unit is found with the given slug in the property.
+  Future<UnitSlugContext?> resolveUnitBySlug({
+    required String propertyId,
+    required String slug,
+  }) async {
+    try {
+      final snapshot = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('units')
+          .where('slug', isEqualTo: slug.toLowerCase())
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        return UnitSlugContext(
+          slug: slug,
+          propertyId: propertyId,
+          found: false,
+        );
+      }
+
+      final doc = snapshot.docs.first;
+      return UnitSlugContext(
+        slug: slug,
+        propertyId: propertyId,
+        found: true,
+        unitId: doc.id,
+      );
+    } catch (e) {
+      return UnitSlugContext(
+        slug: slug,
+        propertyId: propertyId,
+        found: false,
+      );
+    }
+  }
+
+  /// Resolve full context from subdomain + slug URL.
+  ///
+  /// URL format: `https://jasko-rab.bookbed.io/apartman-6`
+  /// 1. Parse subdomain from hostname -> get property
+  /// 2. Parse slug from path -> get unit within property
+  ///
+  /// Returns null if no subdomain present.
+  Future<FullSlugContext?> resolveFullContext({String? urlSlug}) async {
+    final subdomain = getCurrentSubdomain();
+    if (subdomain == null) {
+      return null;
+    }
+
+    final property = await getPropertyBySubdomain(subdomain);
+    if (property == null) {
+      return FullSlugContext(
+        subdomain: subdomain,
+        slug: urlSlug,
+        propertyFound: false,
+        unitFound: false,
+      );
+    }
+
+    // If no slug provided, return property-only context
+    if (urlSlug == null || urlSlug.isEmpty) {
+      return FullSlugContext(
+        subdomain: subdomain,
+        slug: null,
+        propertyFound: true,
+        unitFound: false,
+        property: property,
+        branding: property.branding,
+      );
+    }
+
+    // Resolve unit by slug
+    final unitContext = await resolveUnitBySlug(
+      propertyId: property.id,
+      slug: urlSlug,
+    );
+
+    return FullSlugContext(
+      subdomain: subdomain,
+      slug: urlSlug,
+      propertyFound: true,
+      unitFound: unitContext?.found ?? false,
+      property: property,
+      branding: property.branding,
+      unitId: unitContext?.unitId,
+    );
+  }
 }
 
 /// Context resolved from subdomain URL.
@@ -163,4 +256,75 @@ class SubdomainContext {
 
   /// Check if this context has custom branding
   bool get hasCustomBranding => branding != null && branding!.hasCustomBranding;
+}
+
+/// Context resolved from unit slug lookup.
+///
+/// Contains information about the unit found by slug within a property.
+class UnitSlugContext {
+  /// The slug parsed from the URL path
+  final String slug;
+
+  /// The property ID the slug was looked up within
+  final String propertyId;
+
+  /// Whether a unit was found for this slug
+  final bool found;
+
+  /// The unit ID (null if not found)
+  final String? unitId;
+
+  const UnitSlugContext({
+    required this.slug,
+    required this.propertyId,
+    required this.found,
+    this.unitId,
+  });
+}
+
+/// Full context resolved from subdomain + slug URL.
+///
+/// URL format: `https://jasko-rab.bookbed.io/apartman-6`
+/// Contains both property (from subdomain) and unit (from slug) information.
+class FullSlugContext {
+  /// The subdomain parsed from the URL hostname
+  final String subdomain;
+
+  /// The slug parsed from the URL path (null if root path)
+  final String? slug;
+
+  /// Whether a property was found for this subdomain
+  final bool propertyFound;
+
+  /// Whether a unit was found for this slug
+  final bool unitFound;
+
+  /// The property associated with this subdomain (null if not found)
+  final PropertyModel? property;
+
+  /// The branding configuration for this property
+  final PropertyBranding? branding;
+
+  /// The unit ID (null if not found or no slug provided)
+  final String? unitId;
+
+  const FullSlugContext({
+    required this.subdomain,
+    this.slug,
+    required this.propertyFound,
+    required this.unitFound,
+    this.property,
+    this.branding,
+    this.unitId,
+  });
+
+  /// Get the property ID (null if not found)
+  String? get propertyId => property?.id;
+
+  /// Get the display name (property's display name or subdomain as fallback)
+  String get displayName =>
+      branding?.displayName ?? property?.name ?? subdomain;
+
+  /// Check if both property and unit were resolved successfully
+  bool get isFullyResolved => propertyFound && unitFound && unitId != null;
 }

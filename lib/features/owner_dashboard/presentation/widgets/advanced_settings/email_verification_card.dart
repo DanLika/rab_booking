@@ -28,21 +28,19 @@ class EmailVerificationCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-            // topRight → bottomLeft za section
             color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           child: Padding(
-            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            padding: EdgeInsets.all(isMobile ? 14 : 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -51,23 +49,42 @@ class EmailVerificationCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   l10n.emailVerificationSubtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                  style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 13),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                // Verification toggle
-                SwitchListTile(
-                  value: requireEmailVerification,
-                  onChanged: onChanged,
-                  title: Text(l10n.emailVerificationToggleTitle),
-                  subtitle: Text(l10n.emailVerificationToggleSubtitle),
-                  contentPadding: EdgeInsets.zero,
+                // Compact toggle with inline layout
+                Row(
+                  children: [
+                    Icon(Icons.email_outlined, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.emailVerificationToggleTitle,
+                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                          Text(
+                            l10n.emailVerificationToggleSubtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: requireEmailVerification,
+                      onChanged: onChanged,
+                      activeColor: theme.colorScheme.primary,
+                    ),
+                  ],
                 ),
 
-                // Info message
-                _buildInfoMessage(theme, l10n),
+                // Compact info message
+                if (requireEmailVerification) ...[const SizedBox(height: 12), _buildInfoMessage(theme, l10n)],
               ],
             ),
           ),
@@ -100,11 +117,11 @@ class EmailVerificationCard extends StatelessWidget {
 
   Widget _buildInfoMessage(ThemeData theme, AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: AppColors.info.withAlpha((0.1 * 255).toInt()),
+        color: AppColors.info.withAlpha((0.08 * 255).toInt()),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.info.withAlpha((0.2 * 255).toInt())),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,7 +130,7 @@ class EmailVerificationCard extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              requireEmailVerification ? l10n.emailVerificationInfoEnabled : l10n.emailVerificationInfoDisabled,
+              l10n.emailVerificationInfoEnabled,
               style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt())),
             ),
           ),

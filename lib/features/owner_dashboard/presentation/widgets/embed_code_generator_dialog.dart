@@ -5,12 +5,17 @@ import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Dialog that generates and displays embed code for widget
+///
+/// Supports two URL formats:
+/// 1. Query params: `?property=PROPERTY_ID&unit=UNIT_ID` (iframe embeds)
+/// 2. Slug URL: `/apartman-6` with subdomain (standalone/shareable pages)
 class EmbedCodeGeneratorDialog extends StatefulWidget {
   const EmbedCodeGeneratorDialog({
     required this.unitId,
     required this.propertyId,
     this.unitName,
     this.propertySubdomain,
+    this.unitSlug,
     super.key,
   });
 
@@ -18,6 +23,10 @@ class EmbedCodeGeneratorDialog extends StatefulWidget {
   final String propertyId;
   final String? unitName;
   final String? propertySubdomain;
+
+  /// Optional unit slug for clean URL generation.
+  /// When provided, generates shareable slug-based URLs.
+  final String? unitSlug;
 
   @override
   State<EmbedCodeGeneratorDialog> createState() => _EmbedCodeGeneratorDialogState();
@@ -38,7 +47,8 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
     return _defaultWidgetBaseUrl;
   }
 
-  /// Generate widget URL with query params (stable, uses immutable IDs)
+  /// Generate widget URL with query params (for iframe embeds)
+  /// Uses immutable IDs - always works, even if slug changes
   String get _widgetUrl {
     final baseUrl = _widgetBaseUrl;
     final queryParams = <String, String>{
@@ -47,6 +57,26 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
       'language': _selectedLanguage,
     };
     return Uri.parse(baseUrl).replace(queryParameters: queryParams).toString();
+  }
+
+  /// Check if slug URL is available (requires subdomain + slug)
+  bool get _hasSlugUrl =>
+      widget.propertySubdomain != null &&
+      widget.propertySubdomain!.isNotEmpty &&
+      widget.unitSlug != null &&
+      widget.unitSlug!.isNotEmpty;
+
+  /// Generate clean slug URL (for standalone/shareable pages)
+  /// Format: https://subdomain.bookbed.io/slug?language=hr
+  String get _slugUrl {
+    if (!_hasSlugUrl) return '';
+    final baseUrl = 'https://${widget.propertySubdomain}.$_subdomainBaseDomain';
+    final queryParams = <String, String>{
+      'language': _selectedLanguage,
+    };
+    return Uri.parse('$baseUrl/${widget.unitSlug}')
+        .replace(queryParameters: queryParams)
+        .toString();
   }
 
   String get _embedCode {
@@ -151,13 +181,22 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
 
                       const SizedBox(height: 16),
 
-                      // Widget URL
+                      // Widget URL (query params - for iframes)
                       _buildInfoCard(
                         icon: Icons.link,
                         title: l10n.embedCodeWidgetUrl,
                         content: _widgetUrl,
                         onCopy: () => _copyToClipboard(_widgetUrl, 'URL'),
                       ),
+
+                      // Slug URL (clean URL - for standalone/shareable)
+                      if (_hasSlugUrl) ...[
+                        const SizedBox(height: 16),
+                        _buildShareableUrlCard(
+                          content: _slugUrl,
+                          onCopy: () => _copyToClipboard(_slugUrl, 'Shareable URL'),
+                        ),
+                      ],
 
                       const SizedBox(height: 24),
 
@@ -308,6 +347,61 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 ),
                 if (onCopy != null)
                   IconButton(icon: const Icon(Icons.copy, size: 20), onPressed: onCopy, tooltip: 'Kopiraj'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build highlighted card for shareable slug URL
+  Widget _buildShareableUrlCard({
+    required String content,
+    VoidCallback? onCopy,
+  }) {
+    return Card(
+      color: AppColors.authSecondary.withAlpha((0.08 * 255).toInt()),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.share, size: 20, color: AppColors.authSecondary),
+                const SizedBox(width: 8),
+                Text(
+                  'Shareable URL (Clean Link)',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.authSecondary),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.authSecondary.withAlpha((0.15 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'RECOMMENDED',
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.authSecondary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Perfect for sharing on social media, email, or as a direct link',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: SelectableText(content, style: const TextStyle(fontSize: 14, fontFamily: 'monospace')),
+                ),
+                if (onCopy != null)
+                  IconButton(icon: const Icon(Icons.copy, size: 20), onPressed: onCopy, tooltip: 'Copy'),
               ],
             ),
           ],

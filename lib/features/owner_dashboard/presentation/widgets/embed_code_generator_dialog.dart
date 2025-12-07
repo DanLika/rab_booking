@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Dialog that generates and displays embed code for widget
 class EmbedCodeGeneratorDialog extends StatefulWidget {
-  const EmbedCodeGeneratorDialog({required this.unitId, this.unitSlug, this.unitName, super.key});
+  const EmbedCodeGeneratorDialog({
+    required this.unitId,
+    this.unitName,
+    this.propertySubdomain,
+    super.key,
+  });
 
   final String unitId;
-  final String? unitSlug;
   final String? unitName;
+  final String? propertySubdomain;
 
   @override
   State<EmbedCodeGeneratorDialog> createState() => _EmbedCodeGeneratorDialogState();
@@ -21,20 +25,25 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   String _selectedLanguage = 'hr';
   String _widgetHeight = '900';
 
-  static const String _widgetBaseUrl = 'https://rab-booking-widget.web.app';
+  static const String _defaultWidgetBaseUrl = 'https://rab-booking-widget.web.app';
+  static const String _subdomainBaseDomain = 'bookbed.io';
 
-  /// Generate hybrid slug URL or fallback to legacy query param
-  String get _widgetUrl {
-    // Try to use hybrid slug URL (preferred)
-    if (widget.unitSlug != null && widget.unitSlug!.isNotEmpty) {
-      final hybridSlug = generateHybridSlug(widget.unitSlug!, widget.unitId);
-      return '$_widgetBaseUrl/booking/$hybridSlug?language=$_selectedLanguage';
+  /// Get the base URL - use subdomain if available, otherwise default
+  String get _widgetBaseUrl {
+    if (widget.propertySubdomain != null && widget.propertySubdomain!.isNotEmpty) {
+      return 'https://${widget.propertySubdomain}.$_subdomainBaseDomain';
     }
+    return _defaultWidgetBaseUrl;
+  }
 
-    // Fallback to legacy query param URL
-    final queryParams = <String, String>{'unit': widget.unitId, 'language': _selectedLanguage};
-
-    return Uri.parse(_widgetBaseUrl).replace(queryParameters: queryParams).toString();
+  /// Generate widget URL with query params (stable, uses immutable unit ID)
+  String get _widgetUrl {
+    final baseUrl = _widgetBaseUrl;
+    final queryParams = <String, String>{
+      'unit': widget.unitId,
+      'language': _selectedLanguage,
+    };
+    return Uri.parse(baseUrl).replace(queryParameters: queryParams).toString();
   }
 
   String get _embedCode {
@@ -126,17 +135,6 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                       // Unit name (if available)
                       if (widget.unitName != null) ...[
                         _buildInfoCard(icon: Icons.apartment, title: l10n.embedCodeUnit, content: widget.unitName!),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Hybrid Slug (if available)
-                      if (widget.unitSlug != null && widget.unitSlug!.isNotEmpty) ...[
-                        _buildInfoCard(
-                          icon: Icons.label,
-                          title: l10n.embedCodeUrlSlug,
-                          content: generateHybridSlug(widget.unitSlug!, widget.unitId),
-                          onCopy: () => _copyToClipboard(generateHybridSlug(widget.unitSlug!, widget.unitId), 'Slug'),
-                        ),
                         const SizedBox(height: 16),
                       ],
 

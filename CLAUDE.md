@@ -104,9 +104,36 @@ ava race condition gdje 2 korisnika plate za iste datume.
 
 ---
 
-## = SUBDOMAIN SYSTEM
+## 🌐 HOSTING & DOMENE
 
-- Production: `villa-marija.rabbooking.com/view?ref=XXX&email=YYY`
+**Domena**: `bookbed.io` (Porkbun) → DNS na Cloudflare
+
+**Firebase Hosting targets** (`.firebaserc`):
+| Target | Site ID | Build folder | Custom domain |
+|--------|---------|--------------|---------------|
+| `owner` | `rab-booking-248fc` | `build/web_owner` | app.bookbed.io |
+| `widget` | `rab-booking-widget` | `build/web_widget` | bookbed.io, *.bookbed.io |
+
+**Build commands**:
+```bash
+# Owner dashboard
+flutter build web --release --target lib/main.dart -o build/web_owner
+
+# Booking widget
+flutter build web --release --target lib/widget_main.dart -o build/web_widget
+
+# Deploy
+firebase deploy --only hosting
+```
+
+**Klijent subdomene** (dodaju se u Firebase Console → Hosting → Add custom domain):
+- `jasko-rab.bookbed.io` → widget za Jasmina
+
+---
+
+## 🔗 SUBDOMAIN SYSTEM
+
+- Production: `villa-marija.bookbed.io/view?ref=XXX&email=YYY`
 - Testing: `localhost:5000/view?subdomain=villa-marija&ref=XXX&email=YYY`
 - Query param ima prioritet nad hostname parsingom
 
@@ -149,6 +176,6 @@ ne sekcije
 
 ---
 
-**Last Updated**: 2025-12-07 | **Version**: 4.4
+**Last Updated**: 2025-12-07 | **Version**: 4.5
 
-**Changelog 4.4**: Welcome screen za nove korisnike bez nekretnina. Onboarding wizard preskočen - direktno na dashboard.
+**Changelog 4.5**: Nova domena bookbed.io, Firebase hosting dokumentacija, build commands za owner/widget.

@@ -1,25 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../../../../shared/models/property_model.dart';
+import '../../../../../shared/models/unit_model.dart';
 
+import '../../providers/owner_properties_provider.dart';
 import '../../widgets/owner_app_drawer.dart';
 
 /// Embed Widget Guide Screen
 /// Complete guide for embedding the booking widget on a website
-class EmbedWidgetGuideScreen extends StatefulWidget {
+/// Now includes automatic iframe code generation for all units
+class EmbedWidgetGuideScreen extends ConsumerStatefulWidget {
   const EmbedWidgetGuideScreen({super.key});
 
   @override
-  State<EmbedWidgetGuideScreen> createState() => _EmbedWidgetGuideScreenState();
+  ConsumerState<EmbedWidgetGuideScreen> createState() => _EmbedWidgetGuideScreenState();
 }
 
-class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
+class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen> {
   int? _expandedStep;
+  String _selectedLanguage = 'hr';
+
+  static const String _defaultWidgetBaseUrl = 'https://rab-booking-widget.web.app';
+  static const String _subdomainBaseDomain = 'bookbed.io';
+
+  /// Generate iframe code for a unit (uses stable unit ID, not slug)
+  String _generateIframeCode(UnitModel unit, String? propertySubdomain) {
+    final baseUrl = propertySubdomain != null && propertySubdomain.isNotEmpty
+        ? 'https://$propertySubdomain.$_subdomainBaseDomain'
+        : _defaultWidgetBaseUrl;
+
+    final url = '$baseUrl?unit=${unit.id}&language=$_selectedLanguage';
+
+    return '''<iframe
+  class="booking-widget"
+  data-unit-id="${unit.id}"
+  src="$url"
+  width="100%"
+  height="900px"
+  frameborder="0"
+  allow="payment"
+  style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+></iframe>''';
+  }
+
+  /// Language sync JavaScript snippet
+  String get _languageSyncSnippet => '''
+// Widget Language Sync - Add this to your site
+const WIDGET_LANGUAGES = {
+  'hr': 'hr', 'en': 'en', 'de': 'de', 'it': 'it'
+};
+
+function syncWidgetLanguage(newLang) {
+  const widgetLang = WIDGET_LANGUAGES[newLang] || 'en'; // Fallback to English
+  document.querySelectorAll('.booking-widget').forEach(iframe => {
+    const url = new URL(iframe.src);
+    url.searchParams.set('language', widgetLang);
+    iframe.src = url.toString();
+  });
+}
+
+// Hook into your site's language change event:
+// Example: yourSite.onLanguageChange(syncWidgetLanguage);
+''';
 
   final String _exampleCode = '''
 <iframe
@@ -109,6 +158,16 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 24),
+
+              // YOUR EMBED CODES - Auto-generated for all units
+              _buildYourEmbedCodesSection(),
+
+              const SizedBox(height: 24),
+
+              // Language Sync JavaScript Section
+              _buildLanguageSyncSection(),
 
               const SizedBox(height: 24),
 
@@ -579,6 +638,376 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Build the "Your Embed Codes" section with auto-generated codes for all units
+  Widget _buildYourEmbedCodesSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final propertiesAsync = ref.watch(ownerPropertiesProvider);
+    final unitsAsync = ref.watch(ownerUnitsProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.code, color: theme.colorScheme.primary, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Vaši Embed Kodovi',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                      ),
+                      Text(
+                        'Kopirajte iframe kod za svaki apartman',
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Language selector
+            Row(
+              children: [
+                Text('Jezik widgeta:', style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
+                const SizedBox(width: 12),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'hr', label: Text('HR')),
+                    ButtonSegment(value: 'en', label: Text('EN')),
+                    ButtonSegment(value: 'de', label: Text('DE')),
+                    ButtonSegment(value: 'it', label: Text('IT')),
+                  ],
+                  selected: {_selectedLanguage},
+                  onSelectionChanged: (value) {
+                    setState(() => _selectedLanguage = value.first);
+                  },
+                  style: const ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Content based on data state
+            propertiesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('Greška: $e'),
+              data: (properties) {
+                if (properties.isEmpty) {
+                  return _buildEmptyState('Nemate nekretnina. Kreirajte nekretninu da biste dobili embed kodove.');
+                }
+
+                return unitsAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Text('Greška: $e'),
+                  data: (units) {
+                    if (units.isEmpty) {
+                      return _buildEmptyState('Nemate apartmana. Kreirajte apartman da biste dobili embed kod.');
+                    }
+
+                    // Group units by property
+                    return Column(
+                      children: properties.map((property) {
+                        final propertyUnits = units.where((u) => u.propertyId == property.id).toList();
+                        if (propertyUnits.isEmpty) return const SizedBox.shrink();
+
+                        return _buildPropertyUnitsSection(property, propertyUnits);
+                      }).toList(),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build section for a single property with its units
+  Widget _buildPropertyUnitsSection(PropertyModel property, List<UnitModel> units) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surfaceContainerHighest : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? theme.colorScheme.outline : Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Property header
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? theme.colorScheme.surfaceContainerHigh : Colors.grey.shade100,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.apartment, size: 20, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    property.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                if (property.subdomain != null && property.subdomain!.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${property.subdomain}.$_subdomainBaseDomain',
+                      style: TextStyle(fontSize: 11, color: theme.colorScheme.primary, fontFamily: 'monospace'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Units list
+          ...units.map((unit) => _buildUnitEmbedCard(unit, property.subdomain)),
+        ],
+      ),
+    );
+  }
+
+  /// Build embed card for a single unit
+  Widget _buildUnitEmbedCard(UnitModel unit, String? propertySubdomain) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final iframeCode = _generateIframeCode(unit, propertySubdomain);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: isDark ? theme.colorScheme.outline : Colors.grey.shade300)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Unit name and copy button
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  unit.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: iframeCode));
+                  ErrorDisplayUtils.showSuccessSnackBar(context, 'Embed kod kopiran!');
+                },
+                icon: const Icon(Icons.copy, size: 16),
+                label: const Text('Kopiraj'),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // Code block
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isDark ? theme.colorScheme.surface : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: SelectableText(
+              iframeCode,
+              style: TextStyle(
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: isDark ? Colors.greenAccent : Colors.green.shade800,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build empty state widget
+  Widget _buildEmptyState(String message) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Icon(Icons.inbox_outlined, size: 48, color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt())),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: TextStyle(color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Language Sync JavaScript section
+  Widget _buildLanguageSyncSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.warning.withAlpha((0.1 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.translate, color: theme.colorScheme.warning, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sinkronizacija Jezika',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.warning),
+                      ),
+                      Text(
+                        'Automatski mijenja jezik widgeta kad korisnik promijeni jezik na vašem sajtu',
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Info box
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.warning.withAlpha((0.1 * 255).toInt()),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.colorScheme.warning.withAlpha((0.3 * 255).toInt())),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 18, color: theme.colorScheme.warning),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Widget podržava: Hrvatski (hr), English (en), Deutsch (de), Italiano (it). '
+                      'Ostali jezici automatski koriste engleski.',
+                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Code block with copy button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('JavaScript', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()))),
+                TextButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: _languageSyncSnippet));
+                    ErrorDisplayUtils.showSuccessSnackBar(context, 'JavaScript kod kopiran!');
+                  },
+                  icon: const Icon(Icons.copy, size: 16),
+                  label: const Text('Kopiraj'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? theme.colorScheme.surface : Colors.grey.shade900,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SelectableText(
+                _languageSyncSnippet,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  color: isDark ? Colors.greenAccent : Colors.greenAccent,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

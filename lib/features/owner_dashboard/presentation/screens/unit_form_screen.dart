@@ -19,6 +19,7 @@ import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../widgets/embed_code_generator_dialog.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../providers/owner_properties_provider.dart';
 
 /// Unit form screen for add/edit
 class UnitFormScreen extends ConsumerStatefulWidget {
@@ -412,13 +413,16 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                       ),
                       const SizedBox(height: AppDimensions.spaceS),
                       OutlinedButton.icon(
-                        onPressed: () {
-                          showDialog(
+                        onPressed: () async {
+                          // Fetch property to get subdomain
+                          final property = await ref.read(propertyByIdProvider(widget.propertyId).future);
+                          if (!context.mounted) return;
+                          await showDialog(
                             context: context,
                             builder: (context) => EmbedCodeGeneratorDialog(
                               unitId: widget.unit!.id,
-                              unitSlug: widget.unit!.slug,
                               unitName: widget.unit!.name,
+                              propertySubdomain: property?.subdomain,
                             ),
                           );
                         },

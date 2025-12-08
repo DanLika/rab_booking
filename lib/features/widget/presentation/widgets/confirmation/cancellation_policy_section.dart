@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Reusable cancellation policy section for booking confirmation
 /// Displays cancellation deadline and instructions for guests
-class CancellationPolicySection extends StatelessWidget {
+class CancellationPolicySection extends ConsumerWidget {
   final bool isDarkMode;
   final int deadlineHours;
   final String bookingReference;
@@ -19,9 +20,9 @@ class CancellationPolicySection extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     // Use backgroundTertiary in dark mode for better contrast
     final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;

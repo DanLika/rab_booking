@@ -1,32 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../theme/minimalist_colors.dart';
 
-/// A draggable floating pill bar container for booking flow.
+/// A floating pill bar container for booking flow.
 ///
-/// Provides the visual container with Material elevation, rounded corners,
-/// and gesture detection for drag-to-reposition functionality.
+/// Displays centered on screen with Material elevation and rounded corners.
+/// No drag functionality - users can close via the X button or clicking outside.
 ///
-/// Extracted from booking_widget_screen.dart _buildFloatingDraggablePillBar method.
+/// Extracted from booking_widget_screen.dart _buildFloatingPillBar method.
 ///
 /// Usage:
 /// ```dart
 /// BookingPillBar(
-///   position: Offset(100, 200),
 ///   width: 350,
 ///   maxHeight: 282,
 ///   isDarkMode: isDarkMode,
 ///   keyboardInset: MediaQuery.of(context).viewInsets.bottom,
-///   onDragStart: () => HapticFeedback.selectionClick(),
-///   onDragUpdate: (delta) => setState(() => _position += delta),
-///   onDragEnd: () => _checkBounds(),
 ///   child: PillBarContent(...),
 /// )
 /// ```
 class BookingPillBar extends StatelessWidget {
-  /// Current position of the pill bar
-  final Offset position;
-
   /// Width of the pill bar
   final double width;
 
@@ -39,28 +31,15 @@ class BookingPillBar extends StatelessWidget {
   /// Keyboard inset to add to bottom padding
   final double keyboardInset;
 
-  /// Callback when drag gesture starts
-  final VoidCallback onDragStart;
-
-  /// Callback during drag with delta offset
-  final void Function(Offset delta) onDragUpdate;
-
-  /// Callback when drag gesture ends
-  final VoidCallback onDragEnd;
-
   /// Child content widget (typically PillBarContent)
   final Widget child;
 
   const BookingPillBar({
     super.key,
-    required this.position,
     required this.width,
     required this.maxHeight,
     required this.isDarkMode,
     required this.keyboardInset,
-    required this.onDragStart,
-    required this.onDragUpdate,
-    required this.onDragEnd,
     required this.child,
   });
 
@@ -68,45 +47,29 @@ class BookingPillBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    return Positioned(
-      left: position.dx,
-      top: position.dy,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent, // Better hit test for dragging
-        onPanStart: (_) {
-          // Provide haptic feedback on drag start
-          HapticFeedback.selectionClick();
-          onDragStart();
-        },
-        onPanUpdate: (details) {
-          onDragUpdate(details.delta);
-        },
-        onPanEnd: (_) {
-          onDragEnd();
-        },
-        child: Material(
-          elevation: 2,
-          shadowColor: isDarkMode ? Colors.white24 : Colors.black26,
-          borderRadius: BorderRadius.circular(30),
-          child: Container(
-            constraints: BoxConstraints(maxWidth: width, maxHeight: maxHeight),
-            decoration: BoxDecoration(
-              color: colors.backgroundPrimary,
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: colors.borderLight),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  12,
-                  8,
-                  12,
-                  // Bug #46: Add keyboard height to bottom padding
-                  8 + keyboardInset,
-                ),
-                child: child,
+    return Center(
+      child: Material(
+        elevation: 2,
+        shadowColor: isDarkMode ? Colors.white24 : Colors.black26,
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          constraints: BoxConstraints(maxWidth: width, maxHeight: maxHeight),
+          decoration: BoxDecoration(
+            color: colors.backgroundPrimary,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: colors.borderLight),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                12,
+                8,
+                12,
+                // Bug #46: Add keyboard height to bottom padding
+                8 + keyboardInset,
               ),
+              child: child,
             ),
           ),
         ),

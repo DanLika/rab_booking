@@ -55,6 +55,22 @@ class FirebaseOwnerBookingsRepository {
     return value.toString();
   }
 
+  /// Helper to format source name for display
+  String _formatSourceName(String source) {
+    switch (source.toLowerCase()) {
+      case 'booking_com':
+        return 'Booking.com';
+      case 'airbnb':
+        return 'Airbnb';
+      case 'ical':
+        return 'iCal';
+      default:
+        // Capitalize first letter
+        if (source.isEmpty) return source;
+        return source[0].toUpperCase() + source.substring(1);
+    }
+  }
+
   /// Get all bookings for owner's properties
   Future<List<OwnerBooking>> getOwnerBookings({
     String? ownerId,
@@ -396,11 +412,10 @@ class FirebaseOwnerBookingsRepository {
             checkIn: eventStartDate,
             checkOut: eventEndDate,
             status: BookingStatus.confirmed, // Always show as confirmed
-            paymentMethod:
-                'on_place', // External bookings payment tracked elsewhere
-            guestName:
-                '$guestName ($source)', // e.g., "Booking.com Guest (booking_com)"
-            notes: 'Imported from $source via iCal sync',
+            paymentMethod: 'external', // External bookings - payment tracked on source platform
+            source: source, // CRITICAL: Set source for external booking detection (read-only)
+            guestName: guestName,
+            notes: 'Imported from ${_formatSourceName(source)} via iCal sync',
             createdAt: eventStartDate,
             updatedAt: eventStartDate,
           );

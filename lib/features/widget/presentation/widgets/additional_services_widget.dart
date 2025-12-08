@@ -59,7 +59,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
               Icon(Icons.add_circle, color: colors.buttonPrimary),
               const SizedBox(width: SpacingTokens.xs),
               Text(
-                WidgetTranslations.of(context).additionalServices,
+                WidgetTranslations.of(context, ref).additionalServices,
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeL,
                   fontWeight: FontWeight.bold,
@@ -207,7 +207,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                       if (service.maxQuantity != null && quantity >= service.maxQuantity!) {
                         SnackBarHelper.showWarning(
                           context: context,
-                          message: WidgetTranslations.of(context).maxQuantityReached(service.maxQuantity!),
+                          message: WidgetTranslations.of(context, ref).maxQuantityReached(service.maxQuantity!),
                           duration: const Duration(seconds: 2),
                         );
                         return;
@@ -245,7 +245,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          WidgetTranslations.of(context).servicesTotal,
+          WidgetTranslations.of(context, ref).servicesTotal,
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeM,
             fontWeight: FontWeight.bold,

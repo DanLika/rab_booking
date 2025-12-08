@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
@@ -21,7 +22,7 @@ import '../../l10n/widget_translations.dart';
 ///   isDarkMode: false,
 /// )
 /// ```
-class BookingDatesCard extends StatelessWidget {
+class BookingDatesCard extends ConsumerWidget {
   /// Check-in date string (ISO format)
   final String checkIn;
 
@@ -55,8 +56,8 @@ class BookingDatesCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     final checkInDate = DateTimeParser.parseOrThrow(checkIn, context: 'BookingDatesCard.checkIn');
     final checkOutDate = DateTimeParser.parseOrThrow(checkOut, context: 'BookingDatesCard.checkOut');
     // Match BookingSummaryCard date format

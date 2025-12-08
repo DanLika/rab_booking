@@ -205,9 +205,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
+          color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.colorScheme.error.withAlpha((0.5 * 255).toInt())),
+          border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.5)),
         ),
         child: Row(
           children: [
@@ -227,10 +227,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       const SizedBox(height: 4),
                       Text(
                         l10n.widgetSettingsBankEnterDetails,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-                        ),
+                        style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
                       ),
                     ],
                   );
@@ -266,9 +263,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt()),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,7 +337,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             width: 120,
             child: Text(
               '$label:',
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
+              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
           ),
           Expanded(
@@ -546,7 +543,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   const SizedBox(height: 24),
                 ],
 
-                _buildContactOptionsSection(),
+                // Contact Options - ONLY for calendarOnly mode
+                // In booking modes, guests use the booking form, so contact info is not needed
+                if (_selectedMode == WidgetMode.calendarOnly) ...[_buildContactOptionsSection()],
 
                 const SizedBox(height: 32),
 
@@ -614,8 +613,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         boxShadow: [
           BoxShadow(
             color: theme.brightness == Brightness.dark
-                ? Colors.black.withAlpha((0.3 * 255).toInt())
-                : Colors.black.withAlpha((0.1 * 255).toInt()),
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -640,7 +639,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(Icons.widgets_outlined, color: theme.colorScheme.primary, size: 18),
@@ -671,10 +670,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               const SizedBox(height: 12),
               Text(
                 l10n.widgetSettingsWidgetModeDesc,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                ),
+                style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
               ),
               const SizedBox(height: 12),
               ...WidgetMode.values.map(
@@ -696,7 +692,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                             border: Border.all(
                               color: _selectedMode == mode
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                               width: 2,
                             ),
                           ),
@@ -722,7 +718,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                 mode.description,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -751,8 +747,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         boxShadow: [
           BoxShadow(
             color: theme.brightness == Brightness.dark
-                ? Colors.black.withAlpha((0.3 * 255).toInt())
-                : Colors.black.withAlpha((0.1 * 255).toInt()),
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -776,7 +772,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(Icons.payment, color: theme.colorScheme.primary, size: 18),
@@ -808,10 +804,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Info text
               Text(
                 l10n.widgetSettingsPaymentMethodsDesc,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                ),
+                style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
               ),
               const SizedBox(height: 16),
 
@@ -819,9 +812,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
+                  border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -841,7 +834,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       l10n.widgetSettingsDepositDesc,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -871,14 +864,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           '0% (${l10n.widgetSettingsFullPayment})',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                         Text(
                           '100% (${l10n.widgetSettingsFullPayment})',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -1065,13 +1058,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: enabled
-            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt())
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.2)
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: enabled
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           width: enabled ? 2 : 1,
         ),
       ),
@@ -1084,7 +1077,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             icon,
             color: enabled ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          trailing: null, // Let ExpansionTile handle the expand icon
+
           controlAffinity: ListTileControlAffinity.trailing,
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1110,7 +1103,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       subtitle,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -1127,7 +1120,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ),
             ],
           ),
-          subtitle: null, // Moved to title row
+
           children: enabled ? [child] : [],
         ),
       ),
@@ -1147,17 +1140,17 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: value && !isWarning
-            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
             : isWarning
             ? const Color(0xFFF3E8F5) // Cool lavender warning background
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value && !isWarning
               ? Theme.of(context).colorScheme.primary
               : isWarning
               ? const Color(0xFF9C7BA8) // Cool purple warning border
-              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           width: value || isWarning ? 2 : 1,
         ),
       ),
@@ -1196,7 +1189,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     fontSize: 12,
                     color: isWarning
                         ? const Color(0xFF9C7BA8) // Cool purple warning subtitle
-                        : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+                        : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -1227,8 +1220,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         boxShadow: [
           BoxShadow(
             color: theme.brightness == Brightness.dark
-                ? Colors.black.withAlpha((0.3 * 255).toInt())
-                : Colors.black.withAlpha((0.1 * 255).toInt()),
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1252,7 +1245,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(Icons.settings, color: theme.colorScheme.primary, size: 18),
@@ -1316,11 +1309,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt()),
+                            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary.withAlpha((0.5 * 255).toInt()),
-                            ),
+                            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
                           ),
                           child: Row(
                             children: [
@@ -1364,9 +1355,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt())),
+                    border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1429,13 +1420,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: value
-            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           width: value ? 2 : 1,
         ),
       ),
@@ -1468,7 +1459,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -1501,8 +1492,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         boxShadow: [
           BoxShadow(
             color: theme.brightness == Brightness.dark
-                ? Colors.black.withAlpha((0.2 * 255).toInt())
-                : Colors.black.withAlpha((0.08 * 255).toInt()),
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.08),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -1526,7 +1517,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(Icons.contact_phone, color: theme.colorScheme.primary, size: 18),
@@ -1557,10 +1548,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               const SizedBox(height: 12),
               Text(
                 l10n.widgetSettingsContactDesc,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                ),
+                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
               ),
               const SizedBox(height: 16),
 
@@ -1644,13 +1632,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: enabled
-            ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
-            : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+            ? theme.colorScheme.primary.withValues(alpha: 0.05)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: enabled
-              ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
-              : theme.colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+              ? theme.colorScheme.primary.withValues(alpha: 0.2)
+              : theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -1663,8 +1651,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: enabled
-                      ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
-                      : theme.colorScheme.onSurface.withAlpha((0.08 * 255).toInt()),
+                      ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -1730,8 +1718,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         boxShadow: [
           BoxShadow(
             color: theme.brightness == Brightness.dark
-                ? Colors.black.withAlpha((0.3 * 255).toInt())
-                : Colors.black.withAlpha((0.1 * 255).toInt()),
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1743,12 +1731,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color.withAlpha((0.1 * 255).toInt()), color.withAlpha((0.05 * 255).toInt())],
+              colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: color.withAlpha((0.3 * 255).toInt())),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1768,7 +1756,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       message,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(context).colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

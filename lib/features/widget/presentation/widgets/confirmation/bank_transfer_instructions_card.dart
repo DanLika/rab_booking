@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../domain/models/settings/payment/bank_transfer_config.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
@@ -18,7 +19,7 @@ import '../../l10n/widget_translations.dart';
 ///   colors: ColorTokens.light,
 /// )
 /// ```
-class BankTransferInstructionsCard extends StatelessWidget {
+class BankTransferInstructionsCard extends ConsumerWidget {
   /// Bank transfer configuration with account details
   final BankTransferConfig bankConfig;
 
@@ -36,8 +37,8 @@ class BankTransferInstructionsCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
 

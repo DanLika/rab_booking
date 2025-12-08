@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../l10n/widget_translations.dart';
@@ -16,7 +17,7 @@ import '../../l10n/widget_translations.dart';
 ///   colors: ColorTokens.light,
 /// )
 /// ```
-class BookingReferenceCard extends StatelessWidget {
+class BookingReferenceCard extends ConsumerWidget {
   /// The booking reference number to display
   final String bookingReference;
 
@@ -37,8 +38,8 @@ class BookingReferenceCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode from background color
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
 

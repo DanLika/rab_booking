@@ -168,6 +168,49 @@ class BookingModel with _$BookingModel {
     return status.canBeCancelled && isUpcoming;
   }
 
+  /// Check if this is an external/imported booking (Booking.com, Airbnb, iCal)
+  /// External bookings are READ-ONLY and cannot be edited or deleted
+  bool get isExternalBooking {
+    // Check by ID prefix (most reliable)
+    if (id.startsWith('ical_')) return true;
+
+    // Check by source field
+    if (source != null) {
+      final src = source!.toLowerCase();
+      return src == 'booking_com' ||
+          src == 'airbnb' ||
+          src == 'ical' ||
+          src == 'external';
+    }
+
+    // Check by payment method
+    if (paymentMethod == 'external') return true;
+
+    return false;
+  }
+
+  /// Get formatted source name for display
+  String get sourceDisplayName {
+    if (source == null) return 'Direct';
+    switch (source!.toLowerCase()) {
+      case 'booking_com':
+        return 'Booking.com';
+      case 'airbnb':
+        return 'Airbnb';
+      case 'ical':
+        return 'iCal Import';
+      case 'widget':
+        return 'Website Widget';
+      case 'manual':
+      case 'direct':
+        return 'Direct';
+      case 'admin':
+        return 'Admin';
+      default:
+        return source!;
+    }
+  }
+
   /// Get days until check-in
   int get daysUntilCheckIn {
     if (!isUpcoming) return 0;

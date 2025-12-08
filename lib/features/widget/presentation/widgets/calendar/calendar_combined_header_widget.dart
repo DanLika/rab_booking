@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/web_utils.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../l10n/widget_translations.dart';
 import 'calendar_view_switcher_widget.dart';
 
@@ -60,7 +61,7 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
           children: [
             // View Switcher (year/month toggle)
             CalendarViewSwitcherWidget(colors: colors, isDarkMode: isDarkMode, translations: translations),
-            SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
+            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
 
             // Theme Toggle Button
             IconButton(
@@ -81,13 +82,10 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
             ),
 
             // Language Switcher Button
-            _LanguageSwitcherButton(
-              colors: colors,
-              isSmallScreen: isSmallScreen,
-              currentLanguage: translations.locale.languageCode,
-            ),
+            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
+            _LanguageSwitcherButton(colors: colors, isSmallScreen: isSmallScreen),
 
-            SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
+            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
 
             // Custom Navigation Widget (year or month navigation)
             navigationWidget,
@@ -99,15 +97,15 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
 }
 
 /// Language switcher button with popup menu
-class _LanguageSwitcherButton extends StatelessWidget {
+class _LanguageSwitcherButton extends ConsumerWidget {
   final WidgetColorScheme colors;
   final bool isSmallScreen;
-  final String currentLanguage;
 
-  const _LanguageSwitcherButton({required this.colors, required this.isSmallScreen, required this.currentLanguage});
+  const _LanguageSwitcherButton({required this.colors, required this.isSmallScreen});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentLanguage = ref.watch(languageProvider);
     return PopupMenuButton<String>(
       icon: Row(
         mainAxisSize: MainAxisSize.min,
@@ -116,7 +114,7 @@ class _LanguageSwitcherButton extends StatelessWidget {
           Icon(Icons.arrow_drop_down, size: isSmallScreen ? 14 : 16, color: colors.textPrimary),
         ],
       ),
-      tooltip: WidgetTranslations.of(context).tooltipChangeLanguage,
+      tooltip: WidgetTranslations.of(context, ref).tooltipChangeLanguage,
       padding: EdgeInsets.zero,
       constraints: BoxConstraints(
         minWidth: isSmallScreen ? 40 : 48,
@@ -125,17 +123,17 @@ class _LanguageSwitcherButton extends StatelessWidget {
       offset: const Offset(0, 40),
       shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
       color: colors.backgroundPrimary,
-      onSelected: _changeLanguage,
+      onSelected: (code) => _changeLanguage(code, ref),
       itemBuilder: (BuildContext context) => [
-        _buildLanguageItem('hr', 'Hrvatski', '🇭🇷'),
-        _buildLanguageItem('en', 'English', '🇬🇧'),
-        _buildLanguageItem('de', 'Deutsch', '🇩🇪'),
-        _buildLanguageItem('it', 'Italiano', '🇮🇹'),
+        _buildLanguageItem('hr', 'Hrvatski', '🇭🇷', currentLanguage),
+        _buildLanguageItem('en', 'English', '🇬🇧', currentLanguage),
+        _buildLanguageItem('de', 'Deutsch', '🇩🇪', currentLanguage),
+        _buildLanguageItem('it', 'Italiano', '🇮🇹', currentLanguage),
       ],
     );
   }
 
-  PopupMenuItem<String> _buildLanguageItem(String code, String name, String flag) {
+  PopupMenuItem<String> _buildLanguageItem(String code, String name, String flag, String currentLanguage) {
     final isSelected = currentLanguage == code;
     return PopupMenuItem<String>(
       value: code,
@@ -171,17 +169,19 @@ class _LanguageSwitcherButton extends StatelessWidget {
     }
   }
 
-  void _changeLanguage(String languageCode) {
+  void _changeLanguage(String languageCode, WidgetRef ref) {
     if (!kIsWeb) return;
 
-    // Get current URL and update lang parameter
+    // Update provider (triggers instant rebuild without page reload)
+    ref.read(languageProvider.notifier).state = languageCode;
+
+    // Update URL without reload (for persistence/sharing)
     final currentUrl = Uri.base;
     final newParams = Map<String, String>.from(currentUrl.queryParameters);
     newParams['lang'] = languageCode;
-
     final newUrl = currentUrl.replace(queryParameters: newParams);
 
-    // Reload page with new language
-    navigateToUrl(newUrl.toString());
+    // Use replaceState instead of navigateToUrl (no reload!)
+    replaceUrlState(newUrl.toString());
   }
 }

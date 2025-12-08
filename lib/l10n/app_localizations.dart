@@ -4458,6 +4458,18 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get ownerProfileThemeDark;
 
+  /// No description provided for @ownerProfileLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get ownerProfileLanguageEnglish;
+
+  /// No description provided for @ownerProfileLanguageCroatian.
+  ///
+  /// In en, this message translates to:
+  /// **'Croatian'**
+  String get ownerProfileLanguageCroatian;
+
   /// No description provided for @ownerProfileThemeSystem.
   ///
   /// In en, this message translates to:

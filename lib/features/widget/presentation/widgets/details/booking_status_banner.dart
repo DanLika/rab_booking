@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -14,7 +15,7 @@ import '../../l10n/widget_translations.dart';
 ///   colors: ColorTokens.light,
 /// )
 /// ```
-class BookingStatusBanner extends StatelessWidget {
+class BookingStatusBanner extends ConsumerWidget {
   /// Booking status string (confirmed, pending, cancelled, approved)
   final String status;
 
@@ -24,8 +25,8 @@ class BookingStatusBanner extends StatelessWidget {
   const BookingStatusBanner({super.key, required this.status, required this.colors});
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     final statusInfo = _getStatusInfo(tr);
 
     return Container(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
@@ -18,7 +19,7 @@ import '../../../../../../shared/utils/validators/form_validators.dart';
 ///   isDarkMode: isDarkMode,
 /// )
 /// ```
-class GuestNameFields extends StatelessWidget {
+class GuestNameFields extends ConsumerWidget {
   /// Controller for the first name text field
   final TextEditingController firstNameController;
 
@@ -36,7 +37,7 @@ class GuestNameFields extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Row(
@@ -49,7 +50,7 @@ class GuestNameFields extends StatelessWidget {
             maxLength: 50,
             style: TextStyle(color: colors.textPrimary),
             decoration: WidgetInputDecorationHelper.buildDecoration(
-              labelText: WidgetTranslations.of(context).labelFirstName,
+              labelText: WidgetTranslations.of(context, ref).labelFirstName,
               hintText: 'John',
               prefixIcon: Icon(Icons.person_outline, color: colors.textPrimary),
               isDarkMode: isDarkMode,
@@ -68,7 +69,7 @@ class GuestNameFields extends StatelessWidget {
             maxLength: 50,
             style: TextStyle(color: colors.textPrimary),
             decoration: WidgetInputDecorationHelper.buildDecoration(
-              labelText: WidgetTranslations.of(context).labelLastName,
+              labelText: WidgetTranslations.of(context, ref).labelLastName,
               hintText: 'Doe',
               isDarkMode: isDarkMode,
               isDense: true,

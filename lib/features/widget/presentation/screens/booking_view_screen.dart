@@ -90,7 +90,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
     if (widget.bookingRef == null || widget.email == null) {
       setState(() {
         _isLoading = false;
-        _errorMessage = WidgetTranslations.of(context).errorMissingBookingParams;
+        _errorMessage = WidgetTranslations.of(context, ref).errorMissingBookingParams;
       });
       return;
     }
@@ -135,7 +135,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
 
     // Show SubdomainNotFoundScreen if subdomain was present but not found
     if (_subdomainNotFound && _subdomainContext != null) {

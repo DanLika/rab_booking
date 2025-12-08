@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
@@ -9,16 +10,16 @@ import '../../l10n/widget_translations.dart';
 
 /// Reusable bank details section for bank transfers
 /// Displays IBAN, SWIFT, account holder, bank name with copy functionality
-class BankDetailsSection extends StatelessWidget {
+class BankDetailsSection extends ConsumerWidget {
   final bool isDarkMode;
   final BankTransferConfig bankConfig;
 
   const BankDetailsSection({super.key, required this.isDarkMode, required this.bankConfig});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../l10n/widget_translations.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
@@ -280,7 +281,7 @@ class SplitDayCalendarPainter extends CustomPainter {
 }
 
 /// Widget wrapper for split day calendar cell
-class SplitDayCalendarCell extends StatelessWidget {
+class SplitDayCalendarCell extends ConsumerWidget {
   final DateStatus status;
   final VoidCallback? onTap;
   final double size;
@@ -331,8 +332,8 @@ class SplitDayCalendarCell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final t = translations ?? WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = translations ?? WidgetTranslations.of(context, ref);
     return Semantics(
       label: _getSemanticLabel(t),
       button: onTap != null,

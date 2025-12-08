@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../l10n/widget_translations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../theme/minimalist_colors.dart';
+import 'bookbed_loader.dart';
 
 /// Loading screen displayed while booking widget is initializing.
 ///
-/// Shows a centered loading indicator with a message.
+/// Shows BookBed logo with progress bar and percentage.
 /// Used during initial validation of unit/property parameters.
 ///
 /// Usage:
@@ -13,31 +14,23 @@ import '../../theme/minimalist_colors.dart';
 ///   return WidgetLoadingScreen(isDarkMode: isDarkMode);
 /// }
 /// ```
-class WidgetLoadingScreen extends StatelessWidget {
+class WidgetLoadingScreen extends ConsumerWidget {
   /// Whether dark mode is active
   final bool isDarkMode;
 
-  /// Optional custom loading message (if null, uses localized default)
-  final String? message;
+  /// Optional loading progress (0.0 to 1.0)
+  final double? progress;
 
-  const WidgetLoadingScreen({super.key, required this.isDarkMode, this.message});
+  const WidgetLoadingScreen({super.key, required this.isDarkMode, this.progress});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
-    final displayMessage = message ?? WidgetTranslations.of(context).loadingBookingWidget;
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: colors.buttonPrimary),
-            const SizedBox(height: 24),
-            Text(displayMessage, style: TextStyle(fontSize: 16, color: colors.textSecondary)),
-          ],
-        ),
+        child: BookBedLoader(isDarkMode: isDarkMode, progress: progress),
       ),
     );
   }

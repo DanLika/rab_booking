@@ -128,7 +128,7 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
 
     // Use pure black background for dark theme in widget
     final backgroundColor = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
@@ -283,7 +283,7 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   }
 
   Widget _buildHeader(WidgetColorScheme colors) {
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
       child: Row(
@@ -311,7 +311,7 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   }
 
   Widget _buildCloseButton(WidgetColorScheme colors, {required bool isDark}) {
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     // Use white button with black text for dark theme
     final buttonBg = isDark ? ColorTokens.pureWhite : colors.buttonPrimary;
     final buttonText = isDark ? ColorTokens.pureBlack : colors.buttonPrimaryText;

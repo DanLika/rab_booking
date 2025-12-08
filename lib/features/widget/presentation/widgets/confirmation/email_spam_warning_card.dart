@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -10,15 +11,15 @@ import '../../l10n/widget_translations.dart';
 /// ```dart
 /// EmailSpamWarningCard(colors: ColorTokens.light)
 /// ```
-class EmailSpamWarningCard extends StatelessWidget {
+class EmailSpamWarningCard extends ConsumerWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
   const EmailSpamWarningCard({super.key, required this.colors});
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;

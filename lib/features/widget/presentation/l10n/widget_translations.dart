@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/language_provider.dart';
 
 /// Widget translations for embedded booking widget
 /// Supports: Croatian (HR), English (EN), German (DE), Italian (IT)
@@ -11,20 +12,11 @@ class WidgetTranslations {
 
   WidgetTranslations(this.locale);
 
-  /// Factory constructor to get translations based on language code
-  /// Reads from URL params (?lang=hr|en|de|it) for embed widget
-  /// Falls back to Croatian if not specified or invalid
-  static WidgetTranslations of(BuildContext context) {
-    // For embed widget: detect from URL params (?lang=hr|en|de|it)
-    if (kIsWeb) {
-      final uri = Uri.base;
-      final langParam = uri.queryParameters['lang']?.toLowerCase();
-      if (langParam != null && supportedLanguages.contains(langParam)) {
-        return WidgetTranslations(Locale(langParam));
-      }
-    }
-    // Default: Croatian
-    return WidgetTranslations(const Locale('hr'));
+  /// Factory constructor to get translations based on current language provider
+  /// Uses languageProvider for reactive language changes without page reload
+  static WidgetTranslations of(BuildContext context, WidgetRef ref) {
+    final languageCode = ref.watch(languageProvider);
+    return WidgetTranslations(Locale(languageCode));
   }
 
   /// Get translations for specific language code

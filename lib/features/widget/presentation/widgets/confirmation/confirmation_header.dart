@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
@@ -17,7 +18,7 @@ import '../../l10n/widget_translations.dart';
 ///   customLogoUrl: widgetSettings?.themeOptions?.customLogoUrl,
 /// )
 /// ```
-class ConfirmationHeader extends StatelessWidget {
+class ConfirmationHeader extends ConsumerWidget {
   /// Payment method: 'stripe', 'bank_transfer', 'pay_on_arrival', 'pending'
   final String paymentMethod;
 
@@ -69,8 +70,8 @@ class ConfirmationHeader extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     // Responsive icon and logo sizes
     final screenWidth = MediaQuery.of(context).size.width;
     final iconSize = screenWidth < 600 ? 56.0 : 80.0;

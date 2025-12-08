@@ -2331,6 +2331,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerProfileThemeDark => 'Dark';
 
   @override
+  String get ownerProfileLanguageEnglish => 'English';
+
+  @override
+  String get ownerProfileLanguageCroatian => 'Croatian';
+
+  @override
   String get ownerProfileThemeSystem => 'System default';
 
   @override

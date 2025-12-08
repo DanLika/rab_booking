@@ -2340,6 +2340,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerProfileThemeDark => 'Tamna';
 
   @override
+  String get ownerProfileLanguageEnglish => 'English';
+
+  @override
+  String get ownerProfileLanguageCroatian => 'Hrvatski';
+
+  @override
   String get ownerProfileThemeSystem => 'Sistemska postavka';
 
   @override

@@ -188,7 +188,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(statusIcon, size: 32, color: Colors.white),
@@ -201,7 +201,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: statusColor.withAlpha((0.9 * 255).toInt()),
+                        color: statusColor.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -210,10 +210,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      statusDescription,
-                      style: TextStyle(color: Colors.white.withAlpha((0.9 * 255).toInt()), fontSize: 14),
-                    ),
+                    Text(statusDescription, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14)),
                   ],
                 ),
               ),
@@ -287,7 +284,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: theme.colorScheme.primary, size: 20),
@@ -301,9 +298,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
                 ),
               ],
             ),
@@ -355,7 +350,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.05 * 255).toInt()),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -394,7 +389,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: statusColor.withAlpha((0.15 * 255).toInt()),
+              color: statusColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(_getStatusIcon(feed.status), color: statusColor, size: 20),
@@ -643,7 +638,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                             Text(
                               faq.$2,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                 height: 1.5,
                               ),
                             ),
@@ -882,7 +877,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(Icons.sync, color: theme.colorScheme.primary, size: 24),
@@ -922,7 +917,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             }
                             final validUnitId = units.any((u) => u.id == _selectedUnitId) ? _selectedUnitId : null;
                             return DropdownButtonFormField<String>(
-                              value: validUnitId,
+                              initialValue: validUnitId,
                               isExpanded: true,
                               dropdownColor: InputDecorationHelper.getDropdownColor(context),
                               decoration: InputDecorationHelper.buildDecoration(
@@ -947,7 +942,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          value: _selectedPlatform,
+                          initialValue: _selectedPlatform,
                           isExpanded: true,
                           dropdownColor: InputDecorationHelper.getDropdownColor(context),
                           decoration: InputDecorationHelper.buildDecoration(
@@ -972,8 +967,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                           maxLines: 2,
                           validator: (value) {
                             if (value == null || value.isEmpty) return l10n.icalUrlRequired;
-                            if (!value.startsWith('http://') && !value.startsWith('https://'))
+                            if (!value.startsWith('http://') && !value.startsWith('https://')) {
                               return l10n.icalUrlInvalid;
+                            }
                             return null;
                           },
                         ),

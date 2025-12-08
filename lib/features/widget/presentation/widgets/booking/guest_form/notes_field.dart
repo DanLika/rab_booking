@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
@@ -16,7 +17,7 @@ import '../../../../../../shared/utils/validators/form_validators.dart';
 ///   isDarkMode: isDarkMode,
 /// )
 /// ```
-class NotesField extends StatelessWidget {
+class NotesField extends ConsumerWidget {
   /// Controller for the notes text field
   final TextEditingController controller;
 
@@ -26,7 +27,7 @@ class NotesField extends StatelessWidget {
   const NotesField({super.key, required this.controller, required this.isDarkMode});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return TextFormField(
@@ -37,8 +38,8 @@ class NotesField extends StatelessWidget {
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: NotesValidator.validate,
       decoration: WidgetInputDecorationHelper.buildDecoration(
-        labelText: WidgetTranslations.of(context).labelSpecialRequests,
-        hintText: WidgetTranslations.of(context).hintSpecialRequests,
+        labelText: WidgetTranslations.of(context, ref).labelSpecialRequests,
+        hintText: WidgetTranslations.of(context, ref).hintSpecialRequests,
         prefixIcon: Icon(Icons.notes, color: colors.textSecondary),
         isDarkMode: isDarkMode,
         hideCounter: false,

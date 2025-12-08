@@ -42,7 +42,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
 
     // Year calendar needs minimum width to be usable - show rotate message on very narrow screens
     const minWidthForYearCalendar = 350.0;
@@ -60,27 +60,47 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
     return Stack(
       children: [
-        Column(
-          children: [
-            // Combined header matching month/week view layout
-            CalendarCombinedHeaderWidget(
-              colors: colors,
-              isDarkMode: isDarkMode,
-              navigationWidget: _buildCompactYearNavigation(colors),
-              translations: WidgetTranslations.of(context),
-            ),
-            const SizedBox(height: SpacingTokens.l),
-            Expanded(
-              child: calendarData.when(
-                data: (data) => _buildYearGridWithIntegratedSelector(data, colors),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
+        GestureDetector(
+          // Swipe gesture for year navigation
+          onHorizontalDragEnd: (details) {
+            // Swipe right (previous year) - positive velocity
+            if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
+              setState(() {
+                _currentYear--;
+              });
+            }
+            // Swipe left (next year) - negative velocity
+            else if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
+              setState(() {
+                _currentYear++;
+              });
+            }
+          },
+          child: Column(
+            children: [
+              // Combined header matching month/week view layout
+              CalendarCombinedHeaderWidget(
+                colors: colors,
+                isDarkMode: isDarkMode,
+                navigationWidget: _buildCompactYearNavigation(colors),
+                translations: WidgetTranslations.of(context, ref),
               ),
-            ),
-            // Compact legend/info banner below calendar
-            if (minNights > 1)
-              CalendarCompactLegend(minNights: minNights, colors: colors, translations: WidgetTranslations.of(context)),
-          ],
+              // Min nights info banner - between header and calendar
+              if (minNights > 1)
+                CalendarCompactLegend(
+                  minNights: minNights,
+                  colors: colors,
+                  translations: WidgetTranslations.of(context, ref),
+                ),
+              Expanded(
+                child: calendarData.when(
+                  data: (data) => _buildYearGridWithIntegratedSelector(data, colors),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
+                ),
+              ),
+            ],
+          ),
         ),
         // Hover tooltip overlay (desktop) - highest z-index
         if (_hoveredDate != null)
@@ -107,11 +127,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.screen_rotation_outlined,
-              size: 64,
-              color: colors.textSecondary,
-            ),
+            Icon(Icons.screen_rotation_outlined, size: 64, color: colors.textSecondary),
             const SizedBox(height: SpacingTokens.l),
             Text(
               tr.rotateYourDevice,
@@ -125,10 +141,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             const SizedBox(height: SpacingTokens.s),
             Text(
               tr.rotateForBestExperience,
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeS,
-                color: colors.textSecondary,
-              ),
+              style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -196,19 +209,15 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         padding: EdgeInsets.all(isDesktop ? SpacingTokens.l : SpacingTokens.m),
         child: Stack(
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                child: SizedBox(
-                  width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
-                  child: Column(
-                    children: [
-                      _buildHeaderRowWithYearSelector(cellSize, colors),
-                      const SizedBox(height: SpacingTokens.s),
-                      ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize, colors)),
-                    ],
-                  ),
-                ),
+            // Year calendar grid - part of page flow (no internal scroll)
+            SizedBox(
+              width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
+              child: Column(
+                children: [
+                  _buildHeaderRowWithYearSelector(cellSize, colors),
+                  const SizedBox(height: SpacingTokens.s),
+                  ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize, colors)),
+                ],
               ),
             ),
           ],
@@ -235,7 +244,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             borderRadius: const BorderRadius.only(topLeft: Radius.circular(BorderTokens.radiusSubtle)),
           ),
           child: Text(
-            WidgetTranslations.of(context).monthView,
+            WidgetTranslations.of(context, ref).monthView,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: headerFontSize, color: colors.textPrimary),
           ),
         ),
@@ -382,7 +391,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       final showTooltip = dateInfo.status != DateStatus.disabled;
 
       // Generate semantic label for screen readers (localized)
-      final translations = WidgetTranslations.of(context);
+      final translations = WidgetTranslations.of(context, ref);
       final String semanticLabel = _getSemanticLabelForDateYear(
         date,
         dateInfo.status,
@@ -573,7 +582,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    final validator = CalendarDateSelectionValidator(context: context);
+    final validator = CalendarDateSelectionValidator(context: context, ref: ref);
 
     // Pre-selection validation (past date, advance booking, restrictions)
     final preResult = validator.validatePreSelection(
@@ -626,7 +635,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         if (_wouldCreateOrphanGap(start, end, data, minNights)) {
           _rangeStart = null;
           _rangeEnd = null;
-          SnackBarHelper.showError(context: context, message: WidgetTranslations.of(context).errorOrphanGap(minNights));
+          SnackBarHelper.showError(
+            context: context,
+            message: WidgetTranslations.of(context, ref).errorOrphanGap(minNights),
+          );
           return;
         }
 
@@ -636,7 +648,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           _rangeEnd = null;
           SnackBarHelper.showError(
             context: context,
-            message: WidgetTranslations.of(context).errorCannotSelectBookedDates,
+            message: WidgetTranslations.of(context, ref).errorCannotSelectBookedDates,
             duration: const Duration(seconds: 3),
           );
           return;

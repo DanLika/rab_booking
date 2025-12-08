@@ -13,7 +13,7 @@ import '../../l10n/widget_translations.dart';
 ///   deadlineHours: 48,
 ///   checkIn: '2024-01-15',
 ///   colors: ColorTokens.light,
-///   translations: WidgetTranslations.of(context),
+///   translations: WidgetTranslations.of(context, ref),
 /// )
 /// ```
 class CancellationPolicyCard extends StatelessWidget {

@@ -175,7 +175,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
       });
 
       if (mounted) {
-        final tr = WidgetTranslations.of(context);
+        final tr = WidgetTranslations.of(context, ref);
         SnackBarHelper.showSuccess(
           context: context,
           message: result.data['message'] ?? tr.bookingCancelledSuccessfully,
@@ -191,7 +191,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
       }
     } catch (e) {
       if (mounted) {
-        final tr = WidgetTranslations.of(context);
+        final tr = WidgetTranslations.of(context, ref);
         setState(() => _isCancelling = false);
         SnackBarHelper.showError(
           context: context,
@@ -255,7 +255,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                           // Help text
                           Builder(
                             builder: (context) {
-                              final tr = WidgetTranslations.of(context);
+                              final tr = WidgetTranslations.of(context, ref);
                               return Text(
                                 tr.needHelpContactOwner,
                                 textAlign: TextAlign.center,
@@ -281,7 +281,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
   /// Custom header with centered title (no back button for email link access)
   Widget _buildHeader(WidgetColorScheme colors) {
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
       child: Center(
@@ -344,7 +344,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             deadlineHours: widget.widgetSettings!.cancellationDeadlineHours ?? 48,
             checkIn: widget.booking.checkIn,
             colors: colors,
-            translations: WidgetTranslations.of(context),
+            translations: WidgetTranslations.of(context, ref),
           ),
         ],
         // Notes
@@ -358,7 +358,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
   /// Action buttons (Cancel booking if allowed)
   Widget _buildActionButtons(WidgetColorScheme colors, bool isDarkMode) {
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     final canCancel = _canCancelBooking();
     final cancelReason = _getCancelDisabledReason(tr);
     // Use _currentStatus which updates after cancellation

@@ -146,8 +146,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   set _taxLegalAccepted(bool value) => _formState.taxLegalAccepted = value;
   BookingPriceCalculation? get _lockedPriceCalculation => _formState.lockedPriceCalculation;
   set _lockedPriceCalculation(BookingPriceCalculation? value) => _formState.lockedPriceCalculation = value;
-  Offset? get _pillBarPosition => _formState.pillBarPosition;
-  set _pillBarPosition(Offset? value) => _formState.pillBarPosition = value;
   bool get _pillBarDismissed => _formState.pillBarDismissed;
   set _pillBarDismissed(bool value) => _formState.pillBarDismissed = value;
   bool get _hasInteractedWithBookingFlow => _formState.hasInteractedWithBookingFlow;
@@ -366,7 +364,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final isDarkMode = ref.read(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final dialogBg = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
 
     await showDialog<void>(
       context: context,
@@ -637,7 +635,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context).errorLoadingBooking(e.toString()),
+          message: WidgetTranslations.of(context, ref).errorLoadingBooking(e.toString()),
           duration: const Duration(seconds: 5),
         );
 
@@ -962,7 +960,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   _checkIn = null;
                   _checkOut = null;
                   _showGuestForm = false;
-                  _pillBarPosition = null;
                 });
 
                 // Show user-friendly error message
@@ -1006,7 +1003,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 const SizedBox(height: 24),
                 Builder(
                   builder: (context) {
-                    final tr = WidgetTranslations.of(context);
+                    final tr = WidgetTranslations.of(context, ref);
                     return ElevatedButton.icon(
                       onPressed: _validateUnitAndProperty,
                       icon: const Icon(Icons.refresh),
@@ -1048,174 +1045,149 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             final basePadding = screenWidth < 600
                 ? 12.0 // Mobile
                 : screenWidth < 1024
-                    ? 16.0 // Tablet
-                    : isLargeScreen
-                        ? 48.0 // Large screen - more breathing room
-                        : 24.0; // Desktop
+                ? 16.0 // Tablet
+                : isLargeScreen
+                ? 48.0 // Large screen - more breathing room
+                : 24.0; // Desktop
 
             final horizontalPadding = basePadding;
             final verticalPadding = isLargeScreen ? basePadding : basePadding / 2; // Symmetric on large screens
 
-            final topPadding = 0.0; // Minimal padding for maximum content space
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Stack(
+                  children: [
+                    // No-scroll content (embedded widget - host site scrolls)
+                    // On large screens, center content with max-width constraint
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: isLargeScreen ? maxContentWidth : double.infinity),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: horizontalPadding,
+                            right: horizontalPadding,
+                            top: verticalPadding,
+                            // No bottom padding - calendar/contact card goes to edge
+                          ),
+                          child: Column(
+                            children: [
+                              // Custom title header (if configured)
+                              if (_widgetSettings?.themeOptions?.customTitle != null &&
+                                  _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: Text(
+                                    _widgetSettings!.themeOptions!.customTitle!,
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: minimalistColors.textPrimary,
+                                      fontFamily: 'Manrope',
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
 
-            // Calculate available height for calendar
-            // Subtract space for logo, title, and padding
-            final screenHeight = constraints.maxHeight;
-            double reservedHeight = topPadding + (verticalPadding * 2); // Include top + bottom padding
+                              // NOTE: iCal sync warning banner removed from guest widget
+                              // This is owner-only information - guests don't need to see sync status
+                              // Owners can monitor sync status in their dashboard
 
-            // Add title height if present
-            if (_widgetSettings?.themeOptions?.customTitle != null &&
-                _widgetSettings!.themeOptions!.customTitle!.isNotEmpty) {
-              reservedHeight += 60; // Approx title height (24px font + padding)
-            }
+                              // Calendar without fixed height - grows naturally with content
+                              CalendarViewSwitcher(
+                                propertyId: _propertyId ?? '',
+                                unitId: unitId,
+                                forceMonthView: forceMonthView,
+                                // Disable date selection in calendar_only mode
+                                onRangeSelected: widgetMode == WidgetMode.calendarOnly
+                                    ? null
+                                    : (start, end) {
+                                        // Validate minimum nights requirement
+                                        if (start != null && end != null) {
+                                          // Use unit's minStayNights (source of truth), NOT widget_settings
+                                          final minNights = _unit?.minStayNights ?? 1;
+                                          final selectedNights = end.difference(start).inDays;
 
-            // Add iCal warning if present (will be checked later)
-            reservedHeight += 16; // Buffer for potential warning banner
+                                          if (selectedNights < minNights) {
+                                            // Show error message
+                                            final tr = WidgetTranslations.of(context, ref);
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(tr.minimumNightsRequired(minNights, selectedNights)),
+                                                backgroundColor: minimalistColors.error,
+                                                duration: const Duration(seconds: 3),
+                                              ),
+                                            );
+                                            return;
+                                          }
+                                        }
 
-            // Add contact pill card height for calendar-only mode
-            if (widgetMode == WidgetMode.calendarOnly) {
-              reservedHeight += 70; // Contact pill card height (~50px content + 8px spacing + buffer)
-            }
+                                        setState(() {
+                                          _checkIn = start;
+                                          _checkOut = end;
+                                          // Bug Fix: Date selection IS interaction - show booking flow
+                                          _hasInteractedWithBookingFlow = true;
+                                          _pillBarDismissed = false; // Reset dismissed flag for new date selection
+                                        });
 
-            // Calendar gets remaining height (ensure minimum of 400px)
-            final calendarHeight = (screenHeight - reservedHeight).clamp(400.0, double.infinity);
+                                        // Bug #53: Save form data after date selection
+                                        _saveFormData();
+                                      },
+                              ),
 
-            return Stack(
-              children: [
-                // No-scroll content (embedded widget - host site scrolls)
-                // On large screens, center content with max-width constraint
-                Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: isLargeScreen ? maxContentWidth : double.infinity,
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: horizontalPadding,
-                        right: horizontalPadding,
-                        top: verticalPadding,
-                        // No bottom padding - calendar/contact card goes to edge
-                      ),
-                      child: Column(
-                    children: [
-                      // Custom title header (if configured)
-                      if (_widgetSettings?.themeOptions?.customTitle != null &&
-                          _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Text(
-                            _widgetSettings!.themeOptions!.customTitle!,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: minimalistColors.textPrimary,
-                              fontFamily: 'Manrope',
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
+                              // Contact pill card (calendar only mode - inline, below calendar)
+                              if (widgetMode == WidgetMode.calendarOnly) ...[
+                                const SizedBox(height: 8),
+                                ContactPillCardWidget(
+                                  contactOptions: _widgetSettings?.contactOptions,
+                                  isDarkMode: isDarkMode,
+                                  screenWidth: screenWidth,
+                                ),
+                              ],
+                            ],
                           ),
                         ),
+                      ),
+                    ),
 
-                      // NOTE: iCal sync warning banner removed from guest widget
-                      // This is owner-only information - guests don't need to see sync status
-                      // Owners can monitor sync status in their dashboard
-
-                      // Calendar with calculated height (respects minimum 400px constraint)
-                      SizedBox(
-                        height: calendarHeight,
-                        child: CalendarViewSwitcher(
-                          propertyId: _propertyId ?? '',
-                          unitId: unitId,
-                          forceMonthView: forceMonthView,
-                          // Disable date selection in calendar_only mode
-                          onRangeSelected: widgetMode == WidgetMode.calendarOnly
-                              ? null
-                              : (start, end) {
-                                  // Validate minimum nights requirement
-                                  if (start != null && end != null) {
-                                    // Use unit's minStayNights (source of truth), NOT widget_settings
-                                    final minNights = _unit?.minStayNights ?? 1;
-                                    final selectedNights = end.difference(start).inDays;
-
-                                    if (selectedNights < minNights) {
-                                      // Show error message
-                                      final tr = WidgetTranslations.of(context);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(tr.minimumNightsRequired(minNights, selectedNights)),
-                                          backgroundColor: minimalistColors.error,
-                                          duration: const Duration(seconds: 3),
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                  }
-
-                                  setState(() {
-                                    _checkIn = start;
-                                    _checkOut = end;
-                                    _pillBarPosition = null; // Reset position when new dates selected
-                                    // Bug Fix: Date selection IS interaction - show booking flow
-                                    _hasInteractedWithBookingFlow = true;
-                                    _pillBarDismissed = false; // Reset dismissed flag for new date selection
-                                  });
-
-                                  // Bug #53: Save form data after date selection
-                                  _saveFormData();
-                                },
+                    // Full-screen backdrop overlay when guest form is shown
+                    if (_showGuestForm)
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _showGuestForm = false;
+                            });
+                          },
+                          child: Container(color: Colors.black.withValues(alpha: 0.5)),
                         ),
                       ),
 
-                      // Contact pill card (calendar only mode - inline, below calendar)
-                      if (widgetMode == WidgetMode.calendarOnly) ...[
-                        const SizedBox(height: 8),
-                        ContactPillCardWidget(
-                          contactOptions: _widgetSettings?.contactOptions,
-                          isDarkMode: isDarkMode,
-                          screenWidth: screenWidth,
-                        ),
-                      ],
-                      ],
-                    ),
-                  ),
-                  ),
+                    // Floating draggable booking summary bar (booking modes - shown when dates selected)
+                    // Bug Fix: Only show pill bar if user interacted with booking flow (clicked Reserve)
+                    // AND pill bar wasn't dismissed (user clicked X button)
+                    if (widgetMode != WidgetMode.calendarOnly &&
+                        _checkIn != null &&
+                        _checkOut != null &&
+                        _hasInteractedWithBookingFlow &&
+                        !_pillBarDismissed)
+                      _buildFloatingDraggablePillBar(unitId, constraints, isDarkMode),
+
+                    // Rotate device overlay - HIGHEST z-index, only for year view in portrait
+                    if (_shouldShowRotateOverlay(context))
+                      RotateDeviceOverlay(
+                        isDarkMode: isDarkMode,
+                        colors: colors,
+                        onSwitchToMonthView: () {
+                          ref.read(calendarViewProvider.notifier).state = CalendarViewType.month;
+                        },
+                        translations: WidgetTranslations.of(context, ref),
+                      ),
+                  ],
                 ),
-
-                // Full-screen backdrop overlay when guest form is shown
-                if (_showGuestForm)
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _showGuestForm = false;
-                        });
-                      },
-                      child: Container(color: Colors.black.withValues(alpha: 0.5)),
-                    ),
-                  ),
-
-                // Floating draggable booking summary bar (booking modes - shown when dates selected)
-                // Bug Fix: Only show pill bar if user interacted with booking flow (clicked Reserve)
-                // AND pill bar wasn't dismissed (user clicked X button)
-                if (widgetMode != WidgetMode.calendarOnly &&
-                    _checkIn != null &&
-                    _checkOut != null &&
-                    _hasInteractedWithBookingFlow &&
-                    !_pillBarDismissed)
-                  _buildFloatingDraggablePillBar(unitId, constraints, isDarkMode),
-
-                // Rotate device overlay - HIGHEST z-index, only for year view in portrait
-                if (_shouldShowRotateOverlay(context))
-                  RotateDeviceOverlay(
-                    isDarkMode: isDarkMode,
-                    colors: colors,
-                    onSwitchToMonthView: () {
-                      ref.read(calendarViewProvider.notifier).state = CalendarViewType.month;
-                    },
-                    translations: WidgetTranslations.of(context),
-                  ),
-              ],
+              ),
             );
           },
         ),
@@ -1223,7 +1195,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-  /// Build floating draggable pill bar that overlays the calendar
+  /// Build floating pill bar that overlays the calendar
   Widget _buildFloatingDraggablePillBar(String unitId, BoxConstraints constraints, bool isDarkMode) {
     // Watch price calculation with global deposit percentage (applies to all payment methods)
     final depositPercentage = _widgetSettings?.globalDepositPercentage ?? 20;
@@ -1296,64 +1268,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           maxHeight = 282.0; // Fixed height for compact view (increased by 12px)
         }
 
-        // Center booking flow on screen (not calendar)
-        final defaultPosition = Offset(
-          (constraints.maxWidth / 2) - (pillBarWidth / 2), // Center horizontally
-          (constraints.maxHeight / 2) - (maxHeight / 2), // Center vertically based on screen
-        );
-
-        final position = _pillBarPosition ?? defaultPosition;
-
-        // Check if more than 50% of pill bar is off-screen (drag-to-dismiss)
-        final isMoreThanHalfOffScreen =
-            position.dx < -pillBarWidth / 2 || // >50% dragged left
-            position.dy < -maxHeight / 2 || // >50% dragged up
-            position.dx > constraints.maxWidth - pillBarWidth / 2 || // >50% dragged right
-            position.dy > constraints.maxHeight - maxHeight / 2; // >50% dragged down
-
-        // Check if pill bar is completely off-screen (dragged beyond bounds)
-        final isCompletelyOffScreen =
-            position.dx + pillBarWidth < 0 || // Dragged left off-screen
-            position.dy + maxHeight < 0 || // Dragged up off-screen
-            position.dx > constraints.maxWidth || // Dragged right off-screen
-            position.dy > constraints.maxHeight; // Dragged down off-screen
-
-        // If completely off-screen, hide the pill bar
-        if (isCompletelyOffScreen) {
-          return const SizedBox.shrink();
-        }
-
         return BookingPillBar(
-          position: position,
           width: pillBarWidth,
           maxHeight: maxHeight,
           isDarkMode: isDarkMode,
           keyboardInset: MediaQuery.of(context).viewInsets.bottom,
-          onDragStart: () {
-            // Haptic feedback handled in widget
-          },
-          onDragUpdate: (delta) {
-            setState(() {
-              // Allow dragging beyond screen bounds - pill bar will hide if off-screen
-              _pillBarPosition = Offset(position.dx + delta.dx, position.dy + delta.dy);
-            });
-          },
-          onDragEnd: () {
-            // Drag-to-dismiss: If >50% of pill bar is off-screen, close it
-            if (isMoreThanHalfOffScreen) {
-              setState(() {
-                _checkIn = null;
-                _checkOut = null;
-                _showGuestForm = false;
-                _pillBarPosition = null;
-              });
-            } else if (isCompletelyOffScreen) {
-              // If completely off-screen (but <50%), reset to default position
-              setState(() {
-                _pillBarPosition = null; // Reset to center
-              });
-            }
-          },
           child: PillBarContent(
             checkIn: _checkIn!,
             checkOut: _checkOut!,
@@ -1374,7 +1293,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               setState(() {
                 _pillBarDismissed = true;
                 _showGuestForm = false;
-                _pillBarPosition = null;
               });
               _saveFormData();
             },
@@ -1419,7 +1337,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 setState(() => _taxLegalAccepted = accepted);
               },
             ),
-            translations: WidgetTranslations.of(context),
+            translations: WidgetTranslations.of(context, ref),
           ),
         );
       },
@@ -1444,12 +1362,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          NoPaymentInfo(isDarkMode: isDarkMode, message: WidgetTranslations.of(context).noPaymentMethodsAvailable),
+          NoPaymentInfo(isDarkMode: isDarkMode, message: WidgetTranslations.of(context, ref).noPaymentMethodsAvailable),
           const SizedBox(height: SpacingTokens.m),
           // Disabled confirm button
           Builder(
             builder: (context) {
-              final tr = WidgetTranslations.of(context);
+              final tr = WidgetTranslations.of(context, ref);
               return SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -1487,7 +1405,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               String? singleMethodTitle;
               String? singleMethodSubtitle;
 
-              final tr = WidgetTranslations.of(context);
+              final tr = WidgetTranslations.of(context, ref);
 
               if (isStripeEnabled) {
                 enabledCount++;
@@ -1580,7 +1498,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               }
 
               // Multiple payment methods - show all options
-              final tr = WidgetTranslations.of(context);
+              final tr = WidgetTranslations.of(context, ref);
               return Column(
                 children: [
                   // Stripe option - credit card + secure payment icons
@@ -1600,7 +1518,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   if (isBankTransferEnabled)
                     Builder(
                       builder: (context) {
-                        final tr = WidgetTranslations.of(context);
+                        final tr = WidgetTranslations.of(context, ref);
                         return Padding(
                           padding: EdgeInsets.only(top: isStripeEnabled ? SpacingTokens.s : 0),
                           child: PaymentOptionWidget(
@@ -1621,7 +1539,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   if (isPayOnArrivalEnabled)
                     Builder(
                       builder: (context) {
-                        final tr = WidgetTranslations.of(context);
+                        final tr = WidgetTranslations.of(context, ref);
                         return Padding(
                           padding: EdgeInsets.only(
                             top: (isStripeEnabled || isBankTransferEnabled) ? SpacingTokens.s : 0,
@@ -1650,7 +1568,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (_widgetSettings?.widgetMode == WidgetMode.bookingPending) ...[
           Builder(
             builder: (context) {
-              final tr = WidgetTranslations.of(context);
+              final tr = WidgetTranslations.of(context, ref);
               return InfoCardWidget(message: tr.bookingPendingUntilConfirmed, isDarkMode: isDarkMode);
             },
           ),
@@ -1700,7 +1618,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Widget _buildGuestInfoForm(BookingPriceCalculation calculation, {bool showButton = true}) {
     final isDarkMode = ref.watch(themeProvider);
     final minimalistColors = MinimalistColorSchemeAdapter(dark: isDarkMode);
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
 
     return Form(
       key: _formKey,
@@ -1835,7 +1753,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     // Calculate nights if dates are selected
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     String nightsText = '';
     if (_checkIn != null && _checkOut != null) {
       final nights = _checkOut!.difference(_checkIn!).inDays;
@@ -1994,7 +1912,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context).errorCreatingBooking(e.toString()),
+          message: WidgetTranslations.of(context, ref).errorCreatingBooking(e.toString()),
         );
       }
     } finally {
@@ -2108,7 +2026,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
           if (!mounted) return;
-          final tr = WidgetTranslations.of(context);
+          final tr = WidgetTranslations.of(context, ref);
           throw tr.couldNotLaunchStripeCheckout;
         }
       }
@@ -2116,7 +2034,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context).errorLaunchingStripe(e.toString()),
+          message: WidgetTranslations.of(context, ref).errorLaunchingStripe(e.toString()),
         );
       }
     }
@@ -2145,7 +2063,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           SnackBarHelper.showWarning(
             context: context,
-            message: WidgetTranslations.of(context).bookingNotFoundCheckEmail,
+            message: WidgetTranslations.of(context, ref).bookingNotFoundCheckEmail,
             duration: const Duration(seconds: 5),
           );
         }
@@ -2252,7 +2170,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context).errorLoadingBooking(e.toString()),
+          message: WidgetTranslations.of(context, ref).errorLoadingBooking(e.toString()),
           duration: const Duration(seconds: 5),
         );
       }
@@ -2296,7 +2214,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Skip check if email is not verified in UI state
     if (!_emailVerified) {
       // This shouldn't happen (button should be disabled), but safety check
-      final tr = WidgetTranslations.of(context);
+      final tr = WidgetTranslations.of(context, ref);
       SnackBarHelper.showError(context: context, message: tr.pleaseVerifyEmailBeforeBooking);
       return false;
     }
@@ -2324,7 +2242,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
           SnackBarHelper.showError(
             context: context,
-            message: WidgetTranslations.of(context).errorEmailVerificationExpired,
+            message: WidgetTranslations.of(context, ref).errorEmailVerificationExpired,
           );
         }
 
@@ -2341,7 +2259,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context).errorEmailVerificationRequired,
+          message: WidgetTranslations.of(context, ref).errorEmailVerificationRequired,
         );
       }
 
@@ -2352,7 +2270,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // ⚠️ DECISION: Block booking on check failure (safer)
       if (mounted) {
-        SnackBarHelper.showError(context: context, message: WidgetTranslations.of(context).errorUnableToVerifyEmail);
+        SnackBarHelper.showError(
+          context: context,
+          message: WidgetTranslations.of(context, ref).errorUnableToVerifyEmail,
+        );
       }
       return false;
 
@@ -2390,7 +2311,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
           SnackBarHelper.showSuccess(
             context: context,
-            message: WidgetTranslations.of(context).emailAlreadyVerified(status.remainingMinutes),
+            message: WidgetTranslations.of(context, ref).emailAlreadyVerified(status.remainingMinutes),
           );
         }
 

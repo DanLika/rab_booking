@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../l10n/widget_translations.dart';
@@ -13,16 +14,16 @@ import '../l10n/widget_translations.dart';
 /// - Clear error message
 /// - Explanation of what went wrong
 /// - Contact information for support
-class SubdomainNotFoundScreen extends StatelessWidget {
+class SubdomainNotFoundScreen extends ConsumerWidget {
   /// The invalid subdomain that was attempted
   final String subdomain;
 
   const SubdomainNotFoundScreen({super.key, required this.subdomain});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).brightness == Brightness.dark ? ColorTokens.dark : ColorTokens.light;
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,

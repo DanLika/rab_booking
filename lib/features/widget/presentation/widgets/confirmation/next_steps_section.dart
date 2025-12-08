@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Reusable next steps section for booking confirmation
 /// Displays different steps based on payment method
-class NextStepsSection extends StatelessWidget {
+class NextStepsSection extends ConsumerWidget {
   final bool isDarkMode;
   final String paymentMethod;
 
   const NextStepsSection({super.key, required this.isDarkMode, required this.paymentMethod});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     final steps = _getStepsForPaymentMethod(tr);
     // Use backgroundTertiary in dark mode for better contrast
     final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;

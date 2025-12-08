@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/services/email_notification_service.dart';
 import '../../../../../shared/models/booking_model.dart';
@@ -23,7 +24,7 @@ import '../../l10n/widget_translations.dart';
 ///   bookingReference: 'ABC123',
 /// )
 /// ```
-class EmailConfirmationCard extends StatefulWidget {
+class EmailConfirmationCard extends ConsumerStatefulWidget {
   /// Guest email address
   final String guestEmail;
 
@@ -57,10 +58,10 @@ class EmailConfirmationCard extends StatefulWidget {
   });
 
   @override
-  State<EmailConfirmationCard> createState() => _EmailConfirmationCardState();
+  ConsumerState<EmailConfirmationCard> createState() => _EmailConfirmationCardState();
 }
 
-class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
+class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
   bool _isResendingEmail = false;
   bool _emailResent = false;
   int _resendCount = 0;
@@ -134,7 +135,7 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
   Widget build(BuildContext context) {
     final colors = widget.colors;
     final canResend = widget.emailConfig != null && widget.booking != null;
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;

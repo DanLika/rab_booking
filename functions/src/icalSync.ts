@@ -1,4 +1,5 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as https from 'https';
 import * as http from 'http';
 import {admin} from "./firebase";
@@ -87,11 +88,104 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
   }
 }
 
-// NOTE: Scheduled sync (syncAllIcalFeeds) has been removed due to deployment timeout issues
-// with node-ical package. To enable automatic syncing:
-// 1. Set up Cloud Scheduler in GCP Console
-// 2. Point it to the syncIcalFeedNow endpoint
-// 3. Schedule it to run hourly
+/**
+ * Scheduled function to automatically sync all active iCal feeds
+ * Runs every 30 minutes to keep external calendar data up to date
+ *
+ * This syncs reservations from:
+ * - Booking.com (via iCal URL)
+ * - Airbnb (via iCal URL)
+ * - Other platforms that provide iCal feeds
+ */
+export const scheduledIcalSync = onSchedule(
+  {
+    schedule: "every 30 minutes",
+    timeoutSeconds: 540, // 9 minutes (max for scheduled functions)
+    memory: "512MiB",
+    region: "europe-west1",
+  },
+  async () => {
+    const db = admin.firestore();
+
+    logInfo("[Scheduled iCal Sync] Starting automatic sync of all feeds");
+
+    try {
+      // Get all active feeds
+      const feedsSnapshot = await db
+        .collection('ical_feeds')
+        .where('status', 'in', ['active', 'error']) // Include error feeds to retry
+        .get();
+
+      if (feedsSnapshot.empty) {
+        logInfo("[Scheduled iCal Sync] No active feeds to sync");
+        return;
+      }
+
+      logInfo("[Scheduled iCal Sync] Found feeds to sync", {
+        count: feedsSnapshot.size
+      });
+
+      let successCount = 0;
+      let errorCount = 0;
+      let totalEventsImported = 0;
+
+      // Process feeds sequentially to avoid overwhelming external APIs
+      for (const feedDoc of feedsSnapshot.docs) {
+        const feedId = feedDoc.id;
+        const feedData = feedDoc.data();
+
+        // Skip if sync interval hasn't elapsed (check last_synced)
+        const lastSynced = feedData.last_synced?.toDate();
+        const syncIntervalMinutes = feedData.sync_interval_minutes || 30;
+
+        if (lastSynced) {
+          const nextSyncTime = new Date(lastSynced.getTime() + syncIntervalMinutes * 60 * 1000);
+          if (new Date() < nextSyncTime) {
+            logInfo("[Scheduled iCal Sync] Skipping feed - sync interval not elapsed", {
+              feedId,
+              lastSynced: lastSynced.toISOString(),
+              nextSync: nextSyncTime.toISOString()
+            });
+            continue;
+          }
+        }
+
+        try {
+          const eventsImported = await syncSingleFeed(db, feedId, feedData);
+          successCount++;
+          totalEventsImported += eventsImported;
+
+          logInfo("[Scheduled iCal Sync] Feed synced successfully", {
+            feedId,
+            platform: feedData.platform,
+            eventsImported
+          });
+        } catch (error) {
+          errorCount++;
+          logError("[Scheduled iCal Sync] Failed to sync feed", error, {
+            feedId,
+            platform: feedData.platform
+          });
+          // Continue with next feed even if one fails
+        }
+
+        // Small delay between feeds to be nice to external APIs
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      logSuccess("[Scheduled iCal Sync] Automatic sync completed", {
+        totalFeeds: feedsSnapshot.size,
+        successCount,
+        errorCount,
+        totalEventsImported
+      });
+
+    } catch (error) {
+      logError("[Scheduled iCal Sync] Critical error in scheduled sync", error);
+      throw error; // Rethrow to mark function as failed
+    }
+  }
+);
 
 /**
  * Callable function to sync a specific iCal feed immediately

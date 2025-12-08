@@ -59,64 +59,86 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           colors: colors,
           isDarkMode: isDarkMode,
           navigationWidget: _buildCompactMonthNavigation(colors),
-          translations: WidgetTranslations.of(context),
+          translations: WidgetTranslations.of(context, ref),
         ),
-        const SizedBox(height: SpacingTokens.m),
+        // Min nights info banner - between header and calendar
+        if (minNights > 1)
+          CalendarCompactLegend(
+            minNights: minNights,
+            colors: colors,
+            translations: WidgetTranslations.of(context, ref),
+          ),
 
         // Calendar and tooltip in Stack for overlay positioning
         Expanded(
           child: MouseRegion(
             onHover: (event) => setState(() => _mousePosition = event.localPosition),
-            child: Stack(
-              children: [
-                // Calendar with GestureDetector for deselection
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    // Deselect dates when clicking outside the calendar
-                    if (_rangeStart != null || _rangeEnd != null) {
-                      setState(() {
-                        _rangeStart = null;
-                        _rangeEnd = null;
-                      });
+            child: GestureDetector(
+              // Swipe gesture for month navigation
+              onHorizontalDragEnd: (details) {
+                // Swipe right (previous month) - positive velocity
+                if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
+                  setState(() {
+                    _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+                    // Only clear range if BOTH dates are selected (complete selection)
+                    if (_rangeStart != null && _rangeEnd != null) {
+                      _rangeStart = null;
+                      _rangeEnd = null;
                       widget.onRangeSelected?.call(null, null);
                     }
-                  },
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: calendarData.when(
-                          data: (data) => _buildMonthView(data, colors),
-                          loading: () => const Center(child: CircularProgressIndicator()),
-                          error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
-                        ),
-                      ),
-                      // Compact legend/info banner below calendar
-                      if (minNights > 1)
-                        CalendarCompactLegend(
-                          minNights: minNights,
-                          colors: colors,
-                          translations: WidgetTranslations.of(context),
-                        ),
-                    ],
-                  ),
-                ),
-                // Hover tooltip overlay (desktop) - highest z-index
-                if (_hoveredDate != null)
-                  calendarData.when(
-                    data: (data) => CalendarTooltipBuilder.build(
-                      context: context,
-                      hoveredDate: _hoveredDate,
-                      mousePosition: _mousePosition,
-                      data: data,
-                      colors: colors,
-                      tooltipHeight: 120.0,
-                      ignorePointer: true,
+                  });
+                }
+                // Swipe left (next month) - negative velocity
+                else if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
+                  setState(() {
+                    _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+                    // Only clear range if BOTH dates are selected (complete selection)
+                    if (_rangeStart != null && _rangeEnd != null) {
+                      _rangeStart = null;
+                      _rangeEnd = null;
+                      widget.onRangeSelected?.call(null, null);
+                    }
+                  });
+                }
+              },
+              child: Stack(
+                children: [
+                  // Calendar with GestureDetector for deselection
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      // Deselect dates when clicking outside the calendar
+                      if (_rangeStart != null || _rangeEnd != null) {
+                        setState(() {
+                          _rangeStart = null;
+                          _rangeEnd = null;
+                        });
+                        widget.onRangeSelected?.call(null, null);
+                      }
+                    },
+                    child: calendarData.when(
+                      data: (data) => _buildMonthView(data, colors),
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
                     ),
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, stackTrace) => const SizedBox.shrink(),
                   ),
-              ],
+                  // Hover tooltip overlay (desktop) - highest z-index
+                  if (_hoveredDate != null)
+                    calendarData.when(
+                      data: (data) => CalendarTooltipBuilder.build(
+                        context: context,
+                        hoveredDate: _hoveredDate,
+                        mousePosition: _mousePosition,
+                        data: data,
+                        colors: colors,
+                        tooltipHeight: 120.0,
+                        ignorePointer: true,
+                      ),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, stackTrace) => const SizedBox.shrink(),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -249,41 +271,17 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   ) {
     return Column(
       children: [
-        // Month name header
-        _buildMonthHeader(month, colors),
-        const SizedBox(height: SpacingTokens.m),
         // Week day headers
         _buildWeekDayHeaders(colors),
         const SizedBox(height: SpacingTokens.s),
-        // Calendar grid - takes remaining space
-        Expanded(child: SingleChildScrollView(child: _buildMonthGridForMonth(month, data, colors))),
+        // Calendar grid - part of page flow (no internal scroll)
+        _buildMonthGridForMonth(month, data, colors),
       ],
     );
   }
 
-  Widget _buildMonthHeader(DateTime month, WidgetColorScheme colors) {
-    final monthName = DateFormat.yMMMM().format(month);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xs, horizontal: SpacingTokens.s),
-      decoration: BoxDecoration(
-        color: colors.backgroundTertiary,
-        borderRadius: BorderTokens.circularMedium,
-        boxShadow: ShadowTokens.subtle,
-      ),
-      child: Text(
-        monthName,
-        style: TextStyle(
-          fontSize: TypographyTokens.fontSizeL,
-          fontWeight: TypographyTokens.bold,
-          color: colors.textPrimary,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
   Widget _buildWeekDayHeaders(WidgetColorScheme colors) {
-    final weekDays = WidgetTranslations.of(context).weekdaysShort;
+    final weekDays = WidgetTranslations.of(context, ref).weekdaysShort;
 
     return Row(
       children: weekDays.map((day) {
@@ -416,7 +414,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final isHovered = _hoveredDate != null && CalendarDateUtils.isSameDay(date, _hoveredDate!);
 
     // Generate semantic label for screen readers (localized)
-    final translations = WidgetTranslations.of(context);
+    final translations = WidgetTranslations.of(context, ref);
     final String semanticLabel = _getSemanticLabelForDate(
       date,
       dateInfo.status,
@@ -540,7 +538,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    final validator = CalendarDateSelectionValidator(context: context);
+    final validator = CalendarDateSelectionValidator(context: context, ref: ref);
 
     // Pre-selection validation (past date, advance booking, restrictions)
     final preResult = validator.validatePreSelection(
@@ -625,7 +623,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context).errorCannotSelectBookedDates,
+          message: WidgetTranslations.of(context, ref).errorCannotSelectBookedDates,
           duration: const Duration(seconds: 3),
         );
         return;

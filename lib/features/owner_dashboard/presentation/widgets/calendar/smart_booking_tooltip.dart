@@ -157,6 +157,34 @@ class _TooltipContent extends StatelessWidget {
             ],
           ),
 
+          // External booking badge (Booking.com, Airbnb, etc.)
+          if (booking.isExternalBooking) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.orange.withAlpha((0.15 * 255).toInt()),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withAlpha((0.4 * 255).toInt())),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.link, size: 12, color: Colors.orange),
+                  const SizedBox(width: 4),
+                  Text(
+                    booking.sourceDisplayName,
+                    style: TextStyle(
+                      fontSize: isCompact ? 10 : 11,
+                      color: Colors.orange[800],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           const SizedBox(height: 12),
 
           // Dates
@@ -204,10 +232,10 @@ class _TooltipContent extends StatelessWidget {
             ),
           ],
 
-          // Source
-          if (booking.source != null && booking.source != 'manual') ...[
+          // Source - only for non-external bookings (external bookings show badge at top)
+          if (!booking.isExternalBooking && booking.source != null && booking.source != 'manual') ...[
             Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
-            _InfoRow(icon: Icons.source, label: 'Izvor', value: _formatSource(booking.source!), isCompact: isCompact),
+            _InfoRow(icon: Icons.source, label: 'Izvor', value: booking.sourceDisplayName, isCompact: isCompact),
           ],
 
           // Notes (if available and not compact)
@@ -223,28 +251,6 @@ class _TooltipContent extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatSource(String source) {
-    switch (source.toLowerCase()) {
-      case 'airbnb':
-        return 'Airbnb';
-      case 'booking_com':
-      case 'booking.com':
-        return 'Booking.com';
-      case 'ical':
-        return 'iCal Sync';
-      case 'widget':
-        return 'Widget';
-      case 'direct':
-        return 'Direktno';
-      case 'api':
-        return 'API';
-      case 'admin':
-        return 'Admin';
-      default:
-        return source;
-    }
   }
 }
 

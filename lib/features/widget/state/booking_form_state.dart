@@ -115,13 +115,6 @@ class BookingFormState {
   bool hasInteractedWithBookingFlow = false;
 
   // ============================================
-  // PILL BAR POSITION
-  // ============================================
-
-  /// Custom position for draggable pill bar (null = default center)
-  Offset? pillBarPosition;
-
-  // ============================================
   // PRICE LOCKING (Bug #64)
   // ============================================
 
@@ -178,7 +171,6 @@ class BookingFormState {
     taxLegalAccepted = false;
 
     // Reset UI state
-    pillBarPosition = null;
     lockedPriceCalculation = null;
     isProcessing = false;
   }

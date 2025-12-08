@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
@@ -19,7 +20,7 @@ import '../../../theme/minimalist_colors.dart';
 ///   onChildrenChanged: (value) => setState(() => _children = value),
 /// )
 /// ```
-class GuestCountPicker extends StatelessWidget {
+class GuestCountPicker extends ConsumerWidget {
   /// Number of adult guests
   final int adults;
 
@@ -49,7 +50,7 @@ class GuestCountPicker extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final totalGuests = adults + children;
     final isAtCapacity = totalGuests >= maxGuests;
@@ -87,7 +88,7 @@ class GuestCountPicker extends StatelessWidget {
           // Adults row
           _buildGuestRow(
             icon: Icons.person,
-            label: WidgetTranslations.of(context).adults,
+            label: WidgetTranslations.of(context, ref).adults,
             count: adults,
             canDecrement: adults > 1,
             canIncrement: !isAtCapacity && adults < maxGuests,
@@ -102,7 +103,7 @@ class GuestCountPicker extends StatelessWidget {
           // Children row
           _buildGuestRow(
             icon: Icons.child_care,
-            label: WidgetTranslations.of(context).children,
+            label: WidgetTranslations.of(context, ref).children,
             count: children,
             canDecrement: children > 0,
             canIncrement: !isAtCapacity && children < maxGuests,

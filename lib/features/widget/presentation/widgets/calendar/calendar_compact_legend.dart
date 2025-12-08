@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
-/// Compact legend/info banner displayed below the calendar.
+/// Compact info banner showing minimum stay requirement.
 ///
-/// Shows minimum stay requirement and color legend for date statuses.
+/// Displayed between the header and calendar.
 /// Used by both MonthCalendarWidget and YearCalendarWidget.
 class CalendarCompactLegend extends StatelessWidget {
   final int minNights;
@@ -16,7 +16,6 @@ class CalendarCompactLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isNarrowScreen = screenWidth < 600;
     final isDesktop = screenWidth >= 1024;
 
     // Match calendar width: 650px desktop, 600px mobile/tablet
@@ -25,151 +24,26 @@ class CalendarCompactLegend extends StatelessWidget {
     return Center(
       child: Container(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        margin: const EdgeInsets.only(
-          top: SpacingTokens.s,
-          bottom: SpacingTokens.xs,
-          left: SpacingTokens.xs,
-          right: SpacingTokens.xs,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xs),
+        margin: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
         decoration: BoxDecoration(
           color: colors.backgroundTertiary,
           borderRadius: BorderTokens.circularMedium,
           border: Border.all(color: colors.borderLight),
         ),
-        child: isNarrowScreen
-            ? Column(
-                children: [
-                  // Min stay info
-                  _buildMinStayInfo(),
-                  const SizedBox(height: SpacingTokens.xxs),
-                  // Color legend
-                  _buildColorLegend(),
-                ],
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Min stay info
-                  _buildMinStayInfo(),
-                  const SizedBox(width: SpacingTokens.m),
-                  // Color legend
-                  _buildColorLegend(),
-                ],
-              ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.info_outline, size: 16, color: colors.textSecondary),
+            const SizedBox(width: SpacingTokens.xs),
+            Text(
+              translations.minStayNights(minNights),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: colors.textPrimary),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  Widget _buildMinStayInfo() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.bed_outlined, size: 14, color: colors.textSecondary),
-        const SizedBox(width: SpacingTokens.xxs),
-        Text(
-          translations.minStayNights(minNights),
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: colors.textPrimary),
-        ),
-      ],
-    );
-  }
-
-  /// Build compact color legend with dots
-  Widget _buildColorLegend() {
-    return Wrap(
-      spacing: SpacingTokens.xs,
-      runSpacing: 4,
-      children: [
-        _buildLegendItem(translations.available, colors.statusAvailableBackground),
-        _buildLegendItem(translations.booked, colors.statusBookedBackground),
-        _buildPendingLegendItem(translations.pending),
-        _buildLegendItem(translations.unavailable, colors.backgroundTertiary),
-      ],
-    );
-  }
-
-  /// Build a single legend item with colored dot
-  Widget _buildLegendItem(String label, Color dotColor) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: dotColor,
-            shape: BoxShape.circle,
-            border: Border.all(color: colors.borderDefault, width: 0.5),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 10, color: colors.textSecondary)),
-      ],
-    );
-  }
-
-  /// Build legend item for pending status with diagonal pattern
-  /// Shows red dot with white diagonal lines to match calendar appearance
-  Widget _buildPendingLegendItem(String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: colors.borderDefault, width: 0.5),
-          ),
-          child: ClipOval(
-            child: CustomPaint(
-              size: const Size(8, 8),
-              painter: _PendingPatternPainter(
-                backgroundColor: colors.statusPendingBackground,
-                lineColor: colors.backgroundPrimary.withValues(alpha: 0.4),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 10, color: colors.textSecondary)),
-      ],
-    );
-  }
-}
-
-/// Custom painter for pending pattern in legend
-class _PendingPatternPainter extends CustomPainter {
-  final Color backgroundColor;
-  final Color lineColor;
-
-  _PendingPatternPainter({required this.backgroundColor, required this.lineColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Fill background
-    final bgPaint = Paint()
-      ..color = backgroundColor
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    // Draw diagonal lines
-    final linePaint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    const spacing = 2.5;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(Offset(i, 0), Offset(i + size.height, size.height), linePaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _PendingPatternPainter oldDelegate) {
-    return oldDelegate.backgroundColor != backgroundColor || oldDelegate.lineColor != lineColor;
   }
 }

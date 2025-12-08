@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../../core/localization/error_messages.dart';
 import '../../../l10n/widget_translations.dart';
@@ -35,7 +36,7 @@ import '../../../../../../shared/utils/validators/form_validators.dart';
 ///   onVerifyPressed: _openVerificationDialog,
 /// )
 /// ```
-class EmailFieldWithVerification extends StatelessWidget {
+class EmailFieldWithVerification extends ConsumerWidget {
   /// Controller for the email text field
   final TextEditingController controller;
 
@@ -65,10 +66,10 @@ class EmailFieldWithVerification extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
 
     if (!requireVerification) {
       // Standard email field without verification

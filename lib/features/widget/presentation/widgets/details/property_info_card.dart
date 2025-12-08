@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../common/detail_row_widget.dart';
 import '../../l10n/widget_translations.dart';
@@ -16,7 +17,7 @@ import '../../l10n/widget_translations.dart';
 ///   isDarkMode: false,
 /// )
 /// ```
-class PropertyInfoCard extends StatelessWidget {
+class PropertyInfoCard extends ConsumerWidget {
   /// Property name
   final String propertyName;
 
@@ -38,8 +39,8 @@ class PropertyInfoCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     // Use backgroundTertiary in dark mode for better contrast
     final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;

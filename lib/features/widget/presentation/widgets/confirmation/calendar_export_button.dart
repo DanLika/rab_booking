@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/services/ical_generator.dart';
 import '../../../../../shared/models/booking_model.dart';
@@ -20,7 +21,7 @@ import '../../l10n/widget_translations.dart';
 ///   colors: ColorTokens.light,
 /// )
 /// ```
-class CalendarExportButton extends StatefulWidget {
+class CalendarExportButton extends ConsumerStatefulWidget {
   /// Booking model to generate calendar event from
   final BookingModel booking;
 
@@ -42,10 +43,10 @@ class CalendarExportButton extends StatefulWidget {
   });
 
   @override
-  State<CalendarExportButton> createState() => _CalendarExportButtonState();
+  ConsumerState<CalendarExportButton> createState() => _CalendarExportButtonState();
 }
 
-class _CalendarExportButtonState extends State<CalendarExportButton> {
+class _CalendarExportButtonState extends ConsumerState<CalendarExportButton> {
   bool _isGeneratingIcs = false;
 
   Future<void> _handleAddToCalendar(WidgetTranslations tr) async {
@@ -82,7 +83,7 @@ class _CalendarExportButtonState extends State<CalendarExportButton> {
   @override
   Widget build(BuildContext context) {
     final colors = widget.colors;
-    final tr = WidgetTranslations.of(context);
+    final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     final buttonBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;

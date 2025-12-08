@@ -182,17 +182,19 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
               width: _kMasterPanelWidth,
               child: Container(
                 decoration: BoxDecoration(gradient: context.gradients.sectionBackground),
-                child: Builder(
-                  builder: (drawerContext) => _buildMasterPanel(
-                    theme,
-                    isDark,
-                    onUnitSelected: () {
-                      // Check if drawer context is still valid before popping
-                      if (drawerContext.mounted) {
-                        Navigator.of(drawerContext).pop();
-                      }
-                    },
-                    isEndDrawer: true, // Add top padding for endDrawer
+                child: SafeArea(
+                  child: Builder(
+                    builder: (drawerContext) => _buildMasterPanel(
+                      theme,
+                      isDark,
+                      onUnitSelected: () {
+                        // Check if drawer context is still valid before popping
+                        if (drawerContext.mounted) {
+                          Navigator.of(drawerContext).pop();
+                        }
+                      },
+                      isEndDrawer: true, // Mark as endDrawer for styling
+                    ),
                   ),
                 ),
               ),
@@ -244,8 +246,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         // Header
         Container(
           padding: isEndDrawer
-              ? const EdgeInsets.fromLTRB(16, 44, 16, 16) // Extra top padding for endDrawer (increased from 24 to 44)
-              : const EdgeInsets.fromLTRB(16, 36, 16, 16), // Increased top padding for desktop sidebar (from 16 to 36)
+              ? const EdgeInsets.fromLTRB(16, 16, 16, 16) // SafeArea handles top padding for endDrawer
+              : const EdgeInsets.fromLTRB(16, 36, 16, 16), // Increased top padding for desktop sidebar
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2))),
           ),

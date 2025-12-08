@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
@@ -25,7 +26,7 @@ import '../../../../../../shared/utils/validators/form_validators.dart';
 ///   ],
 /// )
 /// ```
-class PhoneField extends StatelessWidget {
+class PhoneField extends ConsumerWidget {
   /// Controller for the phone text field
   final TextEditingController controller;
 
@@ -38,7 +39,7 @@ class PhoneField extends StatelessWidget {
   const PhoneField({super.key, required this.controller, required this.isDarkMode, required this.dialCode});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return TextFormField(
@@ -48,7 +49,7 @@ class PhoneField extends StatelessWidget {
       inputFormatters: [PhoneNumberFormatter(dialCode)],
       style: TextStyle(color: colors.textPrimary),
       decoration: WidgetInputDecorationHelper.buildDecoration(
-        labelText: WidgetTranslations.of(context).labelPhone,
+        labelText: WidgetTranslations.of(context, ref).labelPhone,
         hintText: '99 123 4567',
         prefixIcon: Icon(Icons.phone_outlined, color: colors.textSecondary),
         isDarkMode: isDarkMode,

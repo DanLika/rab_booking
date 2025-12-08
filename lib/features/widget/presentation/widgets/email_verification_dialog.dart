@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
@@ -13,17 +14,17 @@ import '../l10n/widget_translations.dart';
 ///
 /// Displays a 6-digit code input for email verification
 /// Integrates with Firebase Cloud Functions for OTP verification
-class EmailVerificationDialog extends StatefulWidget {
+class EmailVerificationDialog extends ConsumerStatefulWidget {
   final String email;
   final WidgetColorScheme colors;
 
   const EmailVerificationDialog({super.key, required this.email, required this.colors});
 
   @override
-  State<EmailVerificationDialog> createState() => _EmailVerificationDialogState();
+  ConsumerState<EmailVerificationDialog> createState() => _EmailVerificationDialogState();
 }
 
-class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
+class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialog> {
   final _codeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -64,7 +65,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       LoggingService.logSuccess('[EmailVerification] Code sent successfully');
 
       if (mounted) {
-        SnackBarHelper.showSuccess(context: context, message: WidgetTranslations.of(context).verificationCodeSent);
+        SnackBarHelper.showSuccess(context: context, message: WidgetTranslations.of(context, ref).verificationCodeSent);
 
         // Start 60-second cooldown
         setState(() {
@@ -194,7 +195,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        WidgetTranslations.of(context).verifyEmail,
+                        WidgetTranslations.of(context, ref).verifyEmail,
                         style: GoogleFonts.inter(
                           fontSize: titleFontSize,
                           fontWeight: FontWeight.bold,
@@ -362,7 +363,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                             ),
                           )
                         : Text(
-                            WidgetTranslations.of(context).verifyEmail,
+                            WidgetTranslations.of(context, ref).verifyEmail,
                             style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                   ),

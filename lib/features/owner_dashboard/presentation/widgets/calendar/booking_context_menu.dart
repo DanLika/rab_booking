@@ -52,127 +52,181 @@ class BookingContextMenu extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header with guest name
+                  // Header with guest name and external indicator
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
+                      color: booking.isExternalBooking
+                          ? Colors.orange.withAlpha((0.15 * 255).toInt())
+                          : AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
                       borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                booking.guestName ?? 'N/A',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            booking.guestName ?? 'N/A',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
+                        // External booking badge
+                        if (booking.isExternalBooking) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withAlpha((0.2 * 255).toInt()),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.orange.withAlpha((0.5 * 255).toInt())),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.link, size: 12, color: Colors.orange),
+                                const SizedBox(width: 4),
+                                Text(
+                                  booking.sourceDisplayName,
+                                  style: const TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
 
-                  // Edit
-                  Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context);
-                      return _buildMenuItem(
-                        icon: Icons.edit,
-                        label: l10n.editBookingTitle,
+                  // External booking info (read-only notice)
+                  if (booking.isExternalBooking) ...[
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Imported booking - manage on ${booking.sourceDisplayName}',
+                              style: TextStyle(fontSize: 11, color: Colors.grey[600], fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                  ],
+
+                  // Edit - disabled for external bookings
+                  if (!booking.isExternalBooking)
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return _buildMenuItem(
+                          icon: Icons.edit,
+                          label: l10n.editBookingTitle,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onEdit();
+                          },
+                        );
+                      },
+                    ),
+
+                  // Divider only if edit is shown
+                  if (!booking.isExternalBooking) const Divider(height: 1),
+
+                  // Change status submenu - disabled for external bookings
+                  if (!booking.isExternalBooking) ...[
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return _buildSubmenuHeader(l10n.ownerCalendarChangeStatus);
+                      },
+                    ),
+
+                    if (booking.status != BookingStatus.confirmed)
+                      _buildStatusMenuItem(
+                        status: BookingStatus.confirmed,
                         onTap: () {
                           Navigator.of(context).pop();
-                          onEdit();
+                          onChangeStatus(BookingStatus.confirmed);
                         },
-                      );
-                    },
-                  ),
+                      ),
 
-                  const Divider(height: 1),
-
-                  // Change status submenu
-                  Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context);
-                      return _buildSubmenuHeader(l10n.ownerCalendarChangeStatus);
-                    },
-                  ),
-
-                  if (booking.status != BookingStatus.confirmed)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.confirmed,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.confirmed);
-                      },
-                    ),
-
-                  if (booking.status != BookingStatus.pending)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.pending,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.pending);
-                      },
-                    ),
-
-                  if (booking.status != BookingStatus.completed)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.completed,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.completed);
-                      },
-                    ),
-
-                  if (booking.status != BookingStatus.cancelled)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.cancelled,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.cancelled);
-                      },
-                    ),
-
-                  const Divider(height: 1),
-
-                  // Send email
-                  Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context);
-                      return _buildMenuItem(
-                        icon: Icons.email_outlined,
-                        label: l10n.ownerTableActionSendEmail,
+                    if (booking.status != BookingStatus.pending)
+                      _buildStatusMenuItem(
+                        status: BookingStatus.pending,
                         onTap: () {
                           Navigator.of(context).pop();
-                          onSendEmail();
+                          onChangeStatus(BookingStatus.pending);
                         },
-                      );
-                    },
-                  ),
+                      ),
 
-                  const Divider(height: 1),
-
-                  // Delete
-                  Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context);
-                      return _buildMenuItem(
-                        icon: Icons.delete_outline,
-                        label: l10n.ownerTableDeleteBooking,
-                        color: AppColors.error,
+                    if (booking.status != BookingStatus.completed)
+                      _buildStatusMenuItem(
+                        status: BookingStatus.completed,
                         onTap: () {
                           Navigator.of(context).pop();
-                          onDelete();
+                          onChangeStatus(BookingStatus.completed);
                         },
-                      );
-                    },
-                  ),
+                      ),
+
+                    if (booking.status != BookingStatus.cancelled)
+                      _buildStatusMenuItem(
+                        status: BookingStatus.cancelled,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onChangeStatus(BookingStatus.cancelled);
+                        },
+                      ),
+
+                    const Divider(height: 1),
+
+                    // Send email - only for non-external bookings (they don't have email)
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return _buildMenuItem(
+                          icon: Icons.email_outlined,
+                          label: l10n.ownerTableActionSendEmail,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onSendEmail();
+                          },
+                        );
+                      },
+                    ),
+
+                    const Divider(height: 1),
+
+                    // Delete - only for non-external bookings
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return _buildMenuItem(
+                          icon: Icons.delete_outline,
+                          label: l10n.ownerTableDeleteBooking,
+                          color: AppColors.error,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onDelete();
+                          },
+                        );
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
 import '../../l10n/widget_translations.dart';
@@ -21,7 +22,7 @@ import '../../l10n/widget_translations.dart';
 ///   colors: ColorTokens.light,
 /// )
 /// ```
-class PaymentInfoCard extends StatelessWidget {
+class PaymentInfoCard extends ConsumerWidget {
   /// Total booking price
   final double totalPrice;
 
@@ -59,8 +60,8 @@ class PaymentInfoCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;

@@ -96,67 +96,72 @@ class _DefaultErrorWidget extends StatelessWidget {
 
     return Material(
       color: backgroundColor,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: errorColor, semanticLabel: 'Error icon'),
-              const SizedBox(height: 16),
-              Text(
-                'Something went wrong',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'We encountered an unexpected error. Please try again.',
-                style: TextStyle(fontSize: 14, color: textColor.withValues(alpha: 0.7)),
-                textAlign: TextAlign.center,
-              ),
-              if (kDebugMode) ...[
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: errorColor, semanticLabel: 'Error icon'),
                 const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: (errorColor ?? Colors.red).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: errorColor ?? Colors.red),
+                Text(
+                  'Something went wrong',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'We encountered an unexpected error. Please try again.',
+                  style: TextStyle(fontSize: 14, color: textColor.withValues(alpha: 0.7)),
+                  textAlign: TextAlign.center,
+                ),
+                if (kDebugMode) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (errorColor ?? Colors.red).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: errorColor ?? Colors.red),
+                    ),
+                    child: Text(
+                      errorDetails.exception.toString(),
+                      style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: errorColor),
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  child: Text(
-                    errorDetails.exception.toString(),
-                    style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: errorColor),
-                  ),
+                ],
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Try to navigate back using go_router
+                    // If that fails, try to go to home
+                    try {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        // If we can't pop, go to home/dashboard
+                        context.go('/owner/dashboard');
+                      }
+                    } catch (e) {
+                      // Last resort: try to go home
+                      try {
+                        context.go('/owner/dashboard');
+                      } catch (e2) {
+                        // If all else fails, just log the error
+                        debugPrint('Error navigating back: $e2');
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Go Back'),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
                 ),
               ],
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Try to navigate back using go_router
-                  // If that fails, try to go to home
-                  try {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      // If we can't pop, go to home/dashboard
-                      context.go('/owner/dashboard');
-                    }
-                  } catch (e) {
-                    // Last resort: try to go home
-                    try {
-                      context.go('/owner/dashboard');
-                    } catch (e2) {
-                      // If all else fails, just log the error
-                      debugPrint('Error navigating back: $e2');
-                    }
-                  }
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Go Back'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
-              ),
-            ],
+            ),
           ),
         ),
       ),

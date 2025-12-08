@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -22,7 +23,7 @@ import '../../l10n/widget_translations.dart';
 ///   // Proceed with cancellation
 /// }
 /// ```
-class CancelConfirmationDialog extends StatelessWidget {
+class CancelConfirmationDialog extends ConsumerWidget {
   final String bookingReference;
   final WidgetColorScheme colors;
   final bool isDarkMode;
@@ -35,8 +36,8 @@ class CancelConfirmationDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final tr = WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
     // Use pure black background for dark theme
     final dialogBg = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
 

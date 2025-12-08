@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../l10n/widget_translations.dart';
@@ -6,7 +7,7 @@ import '../../../../core/design_tokens/design_tokens.dart';
 
 /// Reusable hover/tap tooltip for calendar cells
 /// Shows date, price, and availability status with close button
-class CalendarHoverTooltip extends StatelessWidget {
+class CalendarHoverTooltip extends ConsumerWidget {
   final DateTime date;
   final double? price;
   final DateStatus status;
@@ -27,8 +28,8 @@ class CalendarHoverTooltip extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final t = translations ?? WidgetTranslations.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = translations ?? WidgetTranslations.of(context, ref);
 
     // Format date: "Monday, Oct 27, 2025"
     final dateFormatter = DateFormat('EEEE, MMM d, y');

@@ -144,6 +144,12 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                       showSummary: _showSummary,
                       onCellLongPress: (date, unit) => _showCreateBookingDialog(initialCheckIn: date, unitId: unit.id),
                       onUnitNameTap: _showUnitFutureBookings,
+                      onVisibleDateRangeChanged: (startDate) {
+                        // Update toolbar date range when user scrolls
+                        setState(() {
+                          _currentRange = DateRangeSelection.days(startDate, _visibleDays);
+                        });
+                      },
                     ),
                   ),
 

@@ -74,6 +74,8 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final Function(DateTime date, UnitModel unit)? onCellLongPress;
   final DateTime? initialScrollToDate; // Date to scroll to on init (null = today)
   final Function(UnitModel unit)? onUnitNameTap; // Callback when unit name is tapped (to show future bookings dialog)
+  final Function(DateTime startDate)?
+  onVisibleDateRangeChanged; // Callback when visible date range changes due to scroll
 
   const TimelineCalendarWidget({
     super.key,
@@ -81,6 +83,7 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
     this.onCellLongPress,
     this.initialScrollToDate,
     this.onUnitNameTap,
+    this.onVisibleDateRangeChanged,
   });
 
   @override
@@ -314,6 +317,12 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
           _dynamicEndDate = _dynamicEndDate.add(const Duration(days: _kDaysToExtend));
         });
       }
+    }
+
+    // Notify parent of visible date range change
+    if (widget.onVisibleDateRangeChanged != null && !_isInitialScrolling) {
+      final visibleStartDate = _dynamicStartDate.add(Duration(days: firstVisibleDay));
+      widget.onVisibleDateRangeChanged!(visibleStartDate);
     }
   }
 

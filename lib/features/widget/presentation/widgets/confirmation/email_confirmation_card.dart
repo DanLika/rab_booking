@@ -63,6 +63,10 @@ class EmailConfirmationCard extends StatefulWidget {
 class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
   bool _isResendingEmail = false;
   bool _emailResent = false;
+  int _resendCount = 0;
+
+  /// Maximum number of times a user can resend confirmation email
+  static const int _maxResendAttempts = 5;
 
   Future<void> _resendConfirmationEmail(WidgetTranslations tr) async {
     if (widget.booking == null || widget.emailConfig == null) {
@@ -70,8 +74,16 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
       return;
     }
 
-    // Check if email service is enabled and configured
-    if (widget.emailConfig!.enabled != true || widget.emailConfig!.isConfigured != true) {
+    // Check rate limit - prevent spam
+    if (_resendCount >= _maxResendAttempts) {
+      SnackBarHelper.showWarning(context: context, message: tr.maxResendAttemptsReached);
+      return;
+    }
+
+    // Only check if API key and from email are configured (not the 'enabled' flag)
+    // The 'enabled' flag controls email verification on the booking form, not confirmation emails
+    final config = widget.emailConfig!;
+    if (config.resendApiKey == null || config.fromEmail == null) {
       SnackBarHelper.showWarning(context: context, message: tr.emailServiceNotConfigured);
       return;
     }
@@ -97,6 +109,7 @@ class _EmailConfirmationCardState extends State<EmailConfirmationCard> {
       setState(() {
         _isResendingEmail = false;
         _emailResent = true;
+        _resendCount++;
       });
 
       if (mounted) {

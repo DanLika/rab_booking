@@ -2206,6 +2206,20 @@ class WidgetTranslations {
     }
   }
 
+  String get maxResendAttemptsReached {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Dosegnuto je maksimalno ograničenje ponovnog slanja. Molimo pokušajte kasnije.';
+      case 'de':
+        return 'Maximale Anzahl an erneuten Sendeversuchen erreicht. Bitte versuchen Sie es später erneut.';
+      case 'it':
+        return 'Raggiunto il limite massimo di reinvii. Per favore riprova più tardi.';
+      case 'en':
+      default:
+        return 'Maximum resend limit reached. Please try again later.';
+    }
+  }
+
   String get confirmationEmailSentSuccessfully {
     switch (locale.languageCode) {
       case 'hr':

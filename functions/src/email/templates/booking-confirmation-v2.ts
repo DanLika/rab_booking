@@ -1,14 +1,15 @@
 /**
  * Booking Confirmation Email Template V2
- * OPCIJA A: Refined Premium Design
+ * Mobile-Responsive Premium Design
  *
  * Design Specs:
- * - Card padding: 28px
+ * - Card padding: 20-24px (mobile-friendly)
  * - Border radius: 12px (cards), 8px (buttons)
- * - Typography: 22px/600 (heading), 15px/400 (body), 16px/600 (price)
+ * - Typography: 20px/600 (heading), 14px/400 (body), 15px/600 (price)
  * - Shadows: 0 1px 2px rgba(0,0,0,0.06) (cards), 0 2px 4px rgba(0,0,0,0.08) (button)
  * - Layout: Separated cards with gaps
  * - Colors: Neutral gray palette (white-label)
+ * - Success emoji instead of SVG (Gmail compatibility)
  */
 
 import {Resend} from "resend";
@@ -68,86 +69,83 @@ export function generateBookingConfirmationEmailV2(
   <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
 
     <!-- Success Header Card -->
-    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px; text-align: center;">
-      <!-- Success Icon -->
-      <div style="margin-bottom: 16px;">
-        <svg width="64" height="64" viewBox="0 0 64 64" style="display: inline-block;">
-          <circle cx="32" cy="32" r="30" fill="#D1FAE5" stroke="#059669" stroke-width="2"/>
-          <path d="M20 32L28 40L44 24" stroke="#059669" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
+    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 24px 20px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px; text-align: center;">
+      <!-- Success Icon (Emoji - works in all email clients) -->
+      <div style="margin-bottom: 12px; font-size: 48px; line-height: 1;">
+        ✅
       </div>
 
       <!-- Title -->
-      <h1 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 600; line-height: 1.3; color: #1F2937;">
+      <h1 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; line-height: 1.3; color: #1F2937;">
         Rezervacija potvrđena!
       </h1>
 
       <!-- Subtitle -->
-      <p style="margin: 0 0 12px 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #6B7280;">
+      <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 400; line-height: 1.5; color: #6B7280;">
         Hvala vam na rezervaciji
       </p>
 
       <!-- Booking Reference -->
-      <div style="display: inline-block; background-color: #F9FAFB; padding: 8px 16px; border-radius: 6px; border: 1px solid #E5E7EB;">
-        <span style="font-size: 14px; font-weight: 400; color: #6B7280;">Referenca:</span>
-        <strong style="font-size: 14px; font-weight: 600; color: #1F2937; margin-left: 4px;">${escapeHtml(bookingReference)}</strong>
+      <div style="display: inline-block; background-color: #F9FAFB; padding: 8px 12px; border-radius: 6px; border: 1px solid #E5E7EB;">
+        <span style="font-size: 13px; font-weight: 400; color: #6B7280;">Referenca:</span>
+        <strong style="font-size: 13px; font-weight: 600; color: #1F2937; margin-left: 4px;">${escapeHtml(bookingReference)}</strong>
       </div>
     </div>
 
     <!-- Greeting -->
-    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
-      <p style="margin: 0 0 16px 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #1F2937;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
+      <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 400; line-height: 1.5; color: #1F2937;">
         Poštovani/a <strong>${escapeHtml(guestName)}</strong>,
       </p>
-      <p style="margin: 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #1F2937;">
+      <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.5; color: #1F2937;">
         Vaša rezervacija je uspješno zaprimljena i čeka potvrdu uplate.
       </p>
     </div>
 
     <!-- Booking Details Card -->
-    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
-      <h2 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; line-height: 1.3; color: #1F2937; border-bottom: 1px solid #E5E7EB; padding-bottom: 12px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
+      <h2 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; line-height: 1.3; color: #1F2937; border-bottom: 1px solid #E5E7EB; padding-bottom: 10px;">
         Detalji rezervacije
       </h2>
 
       <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td style="padding: 10px 0; font-size: 14px; font-weight: 400; color: #6B7280; vertical-align: top; width: 45%;">
+          <td style="padding: 8px 0; font-size: 13px; font-weight: 400; color: #6B7280; vertical-align: top; width: 45%;">
             Nekretnina
           </td>
-          <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 400; color: #1F2937; text-align: right;">
             ${escapeHtml(propertyName)}
           </td>
         </tr>
         <tr>
-          <td style="padding: 10px 0; font-size: 14px; font-weight: 400; color: #6B7280; vertical-align: top;">
+          <td style="padding: 8px 0; font-size: 13px; font-weight: 400; color: #6B7280; vertical-align: top;">
             Jedinica
           </td>
-          <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 400; color: #1F2937; text-align: right;">
             ${escapeHtml(unitName)}
           </td>
         </tr>
         <tr>
-          <td style="padding: 10px 0; font-size: 14px; font-weight: 400; color: #6B7280; vertical-align: top;">
+          <td style="padding: 8px 0; font-size: 13px; font-weight: 400; color: #6B7280; vertical-align: top;">
             Prijava
           </td>
-          <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 400; color: #1F2937; text-align: right;">
             ${formatDate(checkIn)}
           </td>
         </tr>
         <tr>
-          <td style="padding: 10px 0; font-size: 14px; font-weight: 400; color: #6B7280; vertical-align: top;">
+          <td style="padding: 8px 0; font-size: 13px; font-weight: 400; color: #6B7280; vertical-align: top;">
             Odjava
           </td>
-          <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 400; color: #1F2937; text-align: right;">
             ${formatDate(checkOut)}
           </td>
         </tr>
         <tr>
-          <td style="padding: 10px 0; font-size: 14px; font-weight: 400; color: #6B7280; vertical-align: top;">
+          <td style="padding: 8px 0; font-size: 13px; font-weight: 400; color: #6B7280; vertical-align: top;">
             Broj noćenja
           </td>
-          <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 400; color: #1F2937; text-align: right;">
             ${nights} ${nights === 1 ? "noć" : nights < 5 ? "noći" : "noći"}
           </td>
         </tr>
@@ -155,18 +153,18 @@ export function generateBookingConfirmationEmailV2(
     </div>
 
     <!-- Payment Details Card -->
-    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
-      <h2 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; line-height: 1.3; color: #1F2937; border-bottom: 1px solid #E5E7EB; padding-bottom: 12px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
+      <h2 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; line-height: 1.3; color: #1F2937; border-bottom: 1px solid #E5E7EB; padding-bottom: 10px;">
         Detalji plaćanja
       </h2>
 
       <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
         ${depositAmount > 0 ? `
         <tr>
-          <td style="padding: 10px 0; font-size: 14px; font-weight: 400; color: #6B7280; vertical-align: top; width: 50%;">
+          <td style="padding: 8px 0; font-size: 13px; font-weight: 400; color: #6B7280; vertical-align: top; width: 50%;">
             Kapara
           </td>
-          <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 400; color: #1F2937; text-align: right;">
             ${formatCurrency(depositAmount)}
           </td>
         </tr>
@@ -174,20 +172,20 @@ export function generateBookingConfirmationEmailV2(
 
         ${remainingAmount > 0 ? `
         <tr>
-          <td style="padding: 10px 0; font-size: 14px; font-weight: 400; color: #6B7280; vertical-align: top;">
+          <td style="padding: 8px 0; font-size: 13px; font-weight: 400; color: #6B7280; vertical-align: top;">
             Preostalo (pri dolasku)
           </td>
-          <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 400; color: #1F2937; text-align: right;">
             ${formatCurrency(remainingAmount)}
           </td>
         </tr>
         ` : ''}
 
         <tr style="border-top: 2px solid #E5E7EB;">
-          <td style="padding: 16px 0 0 0; font-size: 15px; font-weight: 600; color: #1F2937;">
+          <td style="padding: 12px 0 0 0; font-size: 14px; font-weight: 600; color: #1F2937;">
             Ukupna cijena
           </td>
-          <td style="padding: 16px 0 0 0; font-size: 16px; font-weight: 600; color: #1F2937; text-align: right;">
+          <td style="padding: 12px 0 0 0; font-size: 15px; font-weight: 600; color: #1F2937; text-align: right;">
             ${formatCurrency(totalAmount)}
           </td>
         </tr>
@@ -196,19 +194,19 @@ export function generateBookingConfirmationEmailV2(
 
     ${depositAmount > 0 ? `
     <!-- Payment Instructions Alert -->
-    <div style="background-color: #FEF3C7; border-left: 4px solid #D97706; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
-      <p style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #92400E;">
+    <div style="background-color: #FEF3C7; border-left: 4px solid #D97706; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+      <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: 600; color: #92400E;">
         ⚠️ Upute za plaćanje
       </p>
-      <p style="margin: 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #78350F;">
+      <p style="margin: 0; font-size: 13px; font-weight: 400; line-height: 1.5; color: #78350F;">
         Molimo uplatite kaparu od <strong>${formatCurrency(depositAmount)}</strong> u roku od 3 dana.
         <strong>VAŽNO:</strong> Obavezno navedite referencu rezervacije <strong>${escapeHtml(bookingReference)}</strong> u opisu uplate!
       </p>
     </div>
 
     <!-- Payment Confirmation Notice -->
-    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
-      <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.6; color: #1F2937; text-align: center;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
+      <p style="margin: 0; font-size: 13px; font-weight: 400; line-height: 1.5; color: #1F2937; text-align: center;">
         Kada primimo vašu uplatu, poslat ćemo vam email s potvrdom.
       </p>
     </div>
@@ -216,41 +214,41 @@ export function generateBookingConfirmationEmailV2(
 
     <!-- View Booking Button -->
     <div style="text-align: center; margin-bottom: 16px;">
-      <a href="${viewBookingUrl}" style="display: inline-block; background-color: #374151; color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); font-size: 15px; font-weight: 600;">
+      <a href="${viewBookingUrl}" style="display: inline-block; background-color: #374151; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); font-size: 14px; font-weight: 600;">
         Pregledaj moju rezervaciju
       </a>
     </div>
 
     <!-- Info Alert -->
-    <div style="background-color: #EFF6FF; border-left: 4px solid #2563EB; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
-      <p style="margin: 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #1E40AF;">
+    <div style="background-color: #EFF6FF; border-left: 4px solid #2563EB; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+      <p style="margin: 0; font-size: 13px; font-weight: 400; line-height: 1.5; color: #1E40AF;">
         ℹ️ Sačuvajte ovaj email kako biste u bilo kojem trenutku mogli pristupiti detaljima rezervacije.
       </p>
     </div>
 
     <!-- Footer -->
-    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 24px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); text-align: center;">
-      <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 400; color: #6B7280;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); text-align: center;">
+      <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: 400; color: #6B7280;">
         Imate pitanja? Kontaktirajte nas:
       </p>
       ${contactEmail ? `
-      <p style="margin: 0 0 6px 0;">
-        <a href="mailto:${escapeHtml(contactEmail)}" style="color: #2563EB; text-decoration: none; font-size: 14px;">
+      <p style="margin: 0 0 4px 0;">
+        <a href="mailto:${escapeHtml(contactEmail)}" style="color: #2563EB; text-decoration: none; font-size: 13px;">
           ${escapeHtml(contactEmail)}
         </a>
       </p>
       ` : ''}
       ${contactPhone ? `
       <p style="margin: 0;">
-        <a href="tel:${escapeHtml(contactPhone)}" style="color: #2563EB; text-decoration: none; font-size: 14px;">
+        <a href="tel:${escapeHtml(contactPhone)}" style="color: #2563EB; text-decoration: none; font-size: 13px;">
           ${escapeHtml(contactPhone)}
         </a>
       </p>
       ` : ''}
 
-      <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #E5E7EB;">
-        <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
-          © ${new Date().getFullYear()} Sva prava pridržana.
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #E5E7EB;">
+        <p style="margin: 0; font-size: 11px; color: #9CA3AF;">
+          © ${new Date().getFullYear()} BookBed. Sva prava pridržana.
         </p>
       </div>
     </div>

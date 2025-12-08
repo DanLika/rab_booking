@@ -39,23 +39,9 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const BookingWidgetScreen(),
       ),
 
-      // SLUG ROUTE - Clean URL for standalone pages
-      // URL: /apartman-6 (subdomain parsed from hostname)
-      // Resolves: subdomain -> property, slug -> unit
-      GoRoute(
-        path: '/:slug',
-        builder: (context, state) {
-          final slug = state.pathParameters['slug'];
-          // Skip if slug looks like a system route
-          if (slug == 'view' || slug == 'calendar') {
-            return const BookingWidgetScreen();
-          }
-          return BookingWidgetScreen(urlSlug: slug);
-        },
-      ),
-
       // Booking lookup from email link
       // URL: /view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
+      // IMPORTANT: Must be defined BEFORE /:slug catch-all route!
       GoRoute(
         path: '/view',
         builder: (context, state) {
@@ -94,6 +80,17 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
             },
           ),
         ],
+      ),
+
+      // SLUG ROUTE - Clean URL for standalone pages (MUST BE LAST - catch-all)
+      // URL: /apartman-6 (subdomain parsed from hostname)
+      // Resolves: subdomain -> property, slug -> unit
+      GoRoute(
+        path: '/:slug',
+        builder: (context, state) {
+          final slug = state.pathParameters['slug'];
+          return BookingWidgetScreen(urlSlug: slug);
+        },
       ),
     ],
 

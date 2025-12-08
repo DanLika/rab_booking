@@ -6,7 +6,7 @@ library;
 ///
 /// Usage:
 /// ```dart
-/// import 'package:rab_booking/core/utils/web_utils.dart';
+/// import 'package:bookbed/core/utils/web_utils.dart';
 ///
 /// // Replace URL without navigation (web only, no-op on mobile)
 /// replaceUrlState('/new-path?param=value');

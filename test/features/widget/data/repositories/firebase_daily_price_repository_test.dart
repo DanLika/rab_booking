@@ -3,8 +3,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/data/repositories/firebase_daily_price_repository.dart';
-import 'package:rab_booking/shared/models/daily_price_model.dart';
+import 'package:bookbed/features/widget/data/repositories/firebase_daily_price_repository.dart';
+import 'package:bookbed/shared/models/daily_price_model.dart';
 
 void main() {
   group('FirebaseDailyPriceRepository', () {

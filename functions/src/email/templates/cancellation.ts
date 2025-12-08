@@ -31,6 +31,8 @@ export interface GuestCancellationParams {
   checkIn: Date;
   checkOut: Date;
   refundAmount?: number;
+  cancellationReason?: string;
+  cancelledByOwner?: boolean;
   contactEmail?: string;
   contactPhone?: string;
 }

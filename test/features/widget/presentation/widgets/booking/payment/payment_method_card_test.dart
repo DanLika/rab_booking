@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/booking/payment/payment_method_card.dart';
+import 'package:bookbed/features/widget/presentation/widgets/booking/payment/payment_method_card.dart';
 
 void main() {
   group('PaymentMethodCard', () {

@@ -25,7 +25,7 @@
 ///
 /// ## Usage
 /// ```dart
-/// import 'package:rab_booking/features/widget/domain/models/settings/settings.dart';
+/// import 'package:bookbed/features/widget/domain/models/settings/settings.dart';
 ///
 /// final stripe = StripePaymentConfig(enabled: true, depositPercentage: 20);
 /// final bank = BankTransferConfig(enabled: true, ownerId: 'user_123');

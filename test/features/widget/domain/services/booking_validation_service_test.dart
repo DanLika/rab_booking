@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/domain/models/widget_mode.dart';
-import 'package:rab_booking/features/widget/domain/models/widget_settings.dart';
-import 'package:rab_booking/features/widget/domain/services/booking_validation_service.dart';
+import 'package:bookbed/features/widget/domain/models/widget_mode.dart';
+import 'package:bookbed/features/widget/domain/models/widget_settings.dart';
+import 'package:bookbed/features/widget/domain/services/booking_validation_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

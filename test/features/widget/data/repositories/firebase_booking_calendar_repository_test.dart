@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/data/helpers/availability_checker.dart';
-import 'package:rab_booking/features/widget/data/repositories/firebase_booking_calendar_repository.dart';
-import 'package:rab_booking/features/widget/domain/models/calendar_date_status.dart';
+import 'package:bookbed/features/widget/data/helpers/availability_checker.dart';
+import 'package:bookbed/features/widget/data/repositories/firebase_booking_calendar_repository.dart';
+import 'package:bookbed/features/widget/domain/models/calendar_date_status.dart';
 
 // Using 2026 dates (future) to avoid pastReservation status
 const testYear = 2026;

@@ -1,5 +1,5 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {sendCustomEmailToGuest} from "./emailService";
+import {sendCustomEmailToGuest as sendCustomGuestEmailService} from "./emailService";
 import {logError} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
 import {enforceRateLimit} from "./utils/rateLimit";
@@ -15,7 +15,7 @@ import {db} from "./firebase";
  * - Rate limiting: 10 emails per minute per user
  * - Input validation and length limits
  */
-export const sendCustomEmailToGuestFunction = onCall(async (request) => {
+export const sendCustomEmailToGuest = onCall(async (request) => {
   // Verify authentication
   if (!request.auth) {
     throw new HttpsError(
@@ -119,7 +119,7 @@ export const sendCustomEmailToGuestFunction = onCall(async (request) => {
     }
 
     // Send email with property context
-    await sendCustomEmailToGuest(
+    await sendCustomGuestEmailService(
       guestEmail,
       guestName,
       subject,
@@ -134,7 +134,7 @@ export const sendCustomEmailToGuestFunction = onCall(async (request) => {
       bookingId,
     };
   } catch (error) {
-    logError("Error in sendCustomEmailToGuestFunction", error);
+    logError("Error in sendCustomEmailToGuest", error);
     throw new HttpsError(
       "internal",
       "Failed to send email. Please try again."

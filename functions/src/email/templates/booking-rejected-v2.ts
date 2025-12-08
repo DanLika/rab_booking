@@ -1,13 +1,14 @@
 /**
  * Booking Rejected Email Template V2
- * Refined Premium Design (Error Style)
+ * Mobile-Responsive Premium Design (Error Style)
  *
  * Design Specs:
- * - Card padding: 28px
+ * - Card padding: 20-28px (mobile-friendly)
  * - Border radius: 12px (cards), 8px (alerts)
  * - Typography: 22px/600 (heading), 15px/400 (body), 16px/600 (labels)
  * - Shadows: 0 1px 2px rgba(0,0,0,0.06)
  * - Colors: Error theme (red #DC2626)
+ * - Error emoji instead of SVG (Gmail compatibility)
  * - Optional reason field
  */
 
@@ -46,12 +47,9 @@ export function generateBookingRejectedEmailV2(
 
     <!-- Error Header Card -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); border: 1px solid #FEE2E2; margin-bottom: 16px; text-align: center;">
-      <!-- X Circle Icon -->
-      <div style="margin-bottom: 16px;">
-        <svg width="64" height="64" viewBox="0 0 64 64" style="display: inline-block;">
-          <circle cx="32" cy="32" r="30" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
-          <path d="M22 22 L42 42 M42 22 L22 42" stroke="#991B1B" stroke-width="4" stroke-linecap="round"/>
-        </svg>
+      <!-- X Icon (Emoji - works in all email clients) -->
+      <div style="margin-bottom: 12px; font-size: 48px; line-height: 1;">
+        ❌
       </div>
 
       <!-- Title -->

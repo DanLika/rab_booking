@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/data/repositories/firebase_widget_settings_repository.dart';
-import 'package:rab_booking/features/widget/domain/models/widget_mode.dart';
-import 'package:rab_booking/features/widget/domain/models/widget_settings.dart';
+import 'package:bookbed/features/widget/data/repositories/firebase_widget_settings_repository.dart';
+import 'package:bookbed/features/widget/domain/models/widget_mode.dart';
+import 'package:bookbed/features/widget/domain/models/widget_settings.dart';
 
 void main() {
   group('FirebaseWidgetSettingsRepository', () {

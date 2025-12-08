@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/shared/models/property_branding_model.dart';
+import 'package:bookbed/shared/models/property_branding_model.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

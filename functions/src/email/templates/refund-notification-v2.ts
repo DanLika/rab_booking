@@ -56,16 +56,9 @@ export function generateRefundNotificationEmailV2(
 
     <!-- Success Header Card -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px; text-align: center; border: 1px solid #D1FAE5;">
-      <!-- Refund Icon (Money with checkmark) -->
-      <div style="margin-bottom: 16px;">
-        <svg width="64" height="64" viewBox="0 0 64 64" style="display: inline-block;">
-          <circle cx="32" cy="32" r="30" fill="#D1FAE5" stroke="#059669" stroke-width="2"/>
-          <!-- Money symbol -->
-          <text x="32" y="42" font-size="28" font-weight="700" fill="#059669" text-anchor="middle" font-family="Arial, sans-serif">€</text>
-          <!-- Small checkmark in corner -->
-          <circle cx="46" cy="18" r="8" fill="#059669"/>
-          <path d="M42 18L45 21L50 16" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
+      <!-- Refund Icon (Emoji - works in all email clients) -->
+      <div style="margin-bottom: 12px; font-size: 48px; line-height: 1;">
+        💸
       </div>
 
       <!-- Title -->

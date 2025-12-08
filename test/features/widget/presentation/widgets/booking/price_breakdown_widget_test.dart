@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/l10n/widget_translations.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/booking/price_breakdown_widget.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/booking/price_row_widget.dart';
+import 'package:bookbed/features/widget/presentation/l10n/widget_translations.dart';
+import 'package:bookbed/features/widget/presentation/widgets/booking/price_breakdown_widget.dart';
+import 'package:bookbed/features/widget/presentation/widgets/booking/price_row_widget.dart';
 
 WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');
 

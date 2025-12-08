@@ -29,7 +29,7 @@ const sampleConfirmationData = {
   remainingAmount: 900,
   unitName: "Apartman 1",
   propertyName: "Villa Marija",
-  viewBookingUrl: "https://villa-marija.rabbooking.com/view?ref=RB-2025-001&email=gost@example.com&token=abc123",
+  viewBookingUrl: "https://villa-marija.bookbed.io/view?ref=RB-2025-001&email=gost@example.com&token=abc123",
   contactEmail: "villa.marija@example.com",
 };
 

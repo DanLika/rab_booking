@@ -48,13 +48,9 @@ export function generateSuspiciousActivityEmailV2(
 
     <!-- Alert Header Card -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); border: 1px solid #FEE2E2; margin-bottom: 16px; text-align: center;">
-      <!-- Alert Icon -->
-      <div style="margin-bottom: 16px;">
-        <svg width="64" height="64" viewBox="0 0 64 64" style="display: inline-block;">
-          <path d="M32 8 L58 52 L6 52 Z" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
-          <circle cx="32" cy="44" r="2" fill="#991B1B"/>
-          <path d="M32 26 L32 38" stroke="#991B1B" stroke-width="4" stroke-linecap="round"/>
-        </svg>
+      <!-- Alert Icon (Emoji - works in all email clients) -->
+      <div style="margin-bottom: 12px; font-size: 48px; line-height: 1;">
+        🚨
       </div>
 
       <!-- Title -->

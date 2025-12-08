@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/core/utils/slug_utils.dart';
+import 'package:bookbed/core/utils/slug_utils.dart';
 
 void main() {
   group('generateSlug', () {

@@ -109,6 +109,21 @@ export const resendBookingEmail = onCall(async (request) => {
       booking.advance_amount ||
       0;
 
+    // Log email parameters for debugging
+    logInfo("[ResendBookingEmail] Preparing to send email", {
+      guestEmail: booking.guest_email,
+      guestName: booking.guest_name,
+      bookingReference: booking.booking_reference,
+      checkIn: booking.check_in?.toDate?.() ? booking.check_in.toDate().toISOString() : String(booking.check_in),
+      checkOut: booking.check_out?.toDate?.() ? booking.check_out.toDate().toISOString() : String(booking.check_out),
+      totalPrice: booking.total_price,
+      depositAmount,
+      unitName: unitData.name || "Unit",
+      propertyName: propertyData?.name || "Property",
+      ownerEmail: propertyData?.contact_email,
+      propertyId: booking.property_id,
+    });
+
     await sendBookingConfirmationEmail(
       booking.guest_email,
       booking.guest_name,
@@ -120,7 +135,8 @@ export const resendBookingEmail = onCall(async (request) => {
       unitData.name || "Unit",
       propertyData?.name || "Property",
       accessToken,
-      propertyData?.contact_email
+      propertyData?.contact_email,
+      booking.property_id // Pass propertyId for subdomain lookup
     );
 
     logSuccess("[ResendBookingEmail] Confirmation email resent", {
@@ -145,13 +161,11 @@ export const resendBookingEmail = onCall(async (request) => {
       throw error;
     }
 
-    // Log unexpected errors
-    if (error instanceof Error) {
-      logError("[ResendBookingEmail] Unexpected error", {
-        error: error.message,
-        stack: error.stack,
-      });
-    }
+    // Log unexpected errors - pass error as second param for proper serialization
+    logError("[ResendBookingEmail] Unexpected error", error, {
+      bookingId,
+      requesterId: request.auth.uid,
+    });
 
     throw new HttpsError(
       "internal",

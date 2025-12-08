@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/domain/models/widget_settings.dart';
-import 'package:rab_booking/features/widget/presentation/l10n/widget_translations.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/bank_transfer/bank_details_section.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/bank_transfer/payment_warning_section.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/bank_transfer/important_notes_section.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/bank_transfer/qr_code_payment_section.dart';
+import 'package:bookbed/features/widget/domain/models/widget_settings.dart';
+import 'package:bookbed/features/widget/presentation/l10n/widget_translations.dart';
+import 'package:bookbed/features/widget/presentation/widgets/bank_transfer/bank_details_section.dart';
+import 'package:bookbed/features/widget/presentation/widgets/bank_transfer/payment_warning_section.dart';
+import 'package:bookbed/features/widget/presentation/widgets/bank_transfer/important_notes_section.dart';
+import 'package:bookbed/features/widget/presentation/widgets/bank_transfer/qr_code_payment_section.dart';
 
 // Helper to get default translations for tests
 WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');

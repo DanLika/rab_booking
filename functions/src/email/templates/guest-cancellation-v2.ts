@@ -23,6 +23,8 @@ export interface GuestCancellationParams {
   checkIn: Date;
   checkOut: Date;
   refundAmount?: number;
+  cancellationReason?: string;
+  cancelledByOwner?: boolean;
   contactEmail?: string;
   contactPhone?: string;
 }
@@ -41,6 +43,8 @@ export function generateGuestCancellationEmailV2(
     checkIn,
     checkOut,
     refundAmount,
+    cancellationReason,
+    cancelledByOwner,
     contactEmail,
     contactPhone,
   } = params;
@@ -62,12 +66,9 @@ export function generateGuestCancellationEmailV2(
 
     <!-- Error Header Card -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px; text-align: center; border: 1px solid #FEE2E2;">
-      <!-- Error Icon -->
-      <div style="margin-bottom: 16px;">
-        <svg width="64" height="64" viewBox="0 0 64 64" style="display: inline-block;">
-          <circle cx="32" cy="32" r="30" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
-          <path d="M20 20L44 44M44 20L20 44" stroke="#DC2626" stroke-width="4" stroke-linecap="round"/>
-        </svg>
+      <!-- Error Icon (Emoji - works in all email clients) -->
+      <div style="margin-bottom: 12px; font-size: 48px; line-height: 1;">
+        ❌
       </div>
 
       <!-- Title -->
@@ -77,7 +78,7 @@ export function generateGuestCancellationEmailV2(
 
       <!-- Subtitle -->
       <p style="margin: 0 0 12px 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #6B7280;">
-        Vaša rezervacija je uspješno otkazana
+        ${cancelledByOwner ? "Rezervacija je otkazana od strane vlasnika" : "Vaša rezervacija je uspješno otkazana"}
       </p>
 
       <!-- Booking Reference -->
@@ -106,6 +107,18 @@ export function generateGuestCancellationEmailV2(
         Sačuvajte ovaj email kao potvrdu otkazivanja.
       </p>
     </div>
+
+    ${cancellationReason ? `
+    <!-- Cancellation Reason Card -->
+    <div style="background-color: #FEE2E2; border-left: 4px solid #DC2626; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+      <p style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #991B1B;">
+        📋 Razlog otkazivanja
+      </p>
+      <p style="margin: 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #7F1D1D;">
+        ${cancellationReason}
+      </p>
+    </div>
+    ` : ''}
 
     <!-- Booking Details Card -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">

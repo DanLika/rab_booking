@@ -16,16 +16,13 @@ class IcalGenerator {
   /// Generate complete iCal calendar for all bookings of a unit
   ///
   /// Used for owner export - includes all bookings for a specific unit
-  static String generateUnitCalendar({
-    required UnitModel unit,
-    required List<BookingModel> bookings,
-  }) {
+  static String generateUnitCalendar({required UnitModel unit, required List<BookingModel> bookings}) {
     final buffer = StringBuffer();
 
     // Calendar header
     buffer.writeln('BEGIN:VCALENDAR');
     buffer.writeln('VERSION:2.0');
-    buffer.writeln('PRODID:-//Rab Booking//NONSGML Event Calendar//EN');
+    buffer.writeln('PRODID:-//BooBed//NONSGML Event Calendar//EN');
     buffer.writeln('CALSCALE:GREGORIAN');
     buffer.writeln('METHOD:PUBLISH');
     buffer.writeln('X-WR-CALNAME:${_escape(unit.name)} - Bookings');
@@ -46,10 +43,7 @@ class IcalGenerator {
   /// Generate single booking event as iCal
   ///
   /// Used for guest download - generates a single event for a specific booking
-  static String generateBookingEvent({
-    required BookingModel booking,
-    required String unitName,
-  }) {
+  static String generateBookingEvent({required BookingModel booking, required String unitName}) {
     final buffer = StringBuffer();
 
     // Calendar header
@@ -203,11 +197,7 @@ class IcalGenerator {
   /// - Backslash (\) -> \\
   /// - Newline (\n) -> \\n
   static String _escape(String text) {
-    return text
-        .replaceAll('\\', '\\\\')
-        .replaceAll(',', '\\,')
-        .replaceAll(';', '\\;')
-        .replaceAll('\n', '\\n');
+    return text.replaceAll('\\', '\\\\').replaceAll(',', '\\,').replaceAll(';', '\\;').replaceAll('\n', '\\n');
   }
 
   /// Generate filename for iCal export

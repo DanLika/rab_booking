@@ -11,7 +11,7 @@
 ///
 /// ## Usage
 /// ```dart
-/// import 'package:rab_booking/features/widget/data/helpers/helpers.dart';
+/// import 'package:bookbed/features/widget/data/helpers/helpers.dart';
 ///
 /// final checker = AvailabilityChecker(firestore);
 /// final calculator = BookingPriceCalculator(firestore: firestore);

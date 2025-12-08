@@ -2,7 +2,7 @@
 // Note: Explicit default values kept in tests for documentation clarity
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/utils/date_normalizer.dart';
+import 'package:bookbed/features/widget/utils/date_normalizer.dart';
 
 void main() {
   group('DateNormalizer', () {

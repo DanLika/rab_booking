@@ -5,7 +5,7 @@
 ///
 /// ## Usage
 /// ```dart
-/// import 'package:rab_booking/features/widget/domain/constants/widget_constants.dart';
+/// import 'package:bookbed/features/widget/domain/constants/widget_constants.dart';
 ///
 /// final isWeekend = WidgetConstants.defaultWeekendDays.contains(date.weekday);
 /// final checkInTime = WidgetConstants.defaultCheckInHour;

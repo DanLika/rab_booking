@@ -1,25 +1,25 @@
-import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
+import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import Stripe from "stripe";
-import {defineSecret} from "firebase-functions/params";
+import { defineSecret } from "firebase-functions/params";
 import {
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
 } from "./emailService";
-import {sendEmailIfAllowed} from "./emailNotificationHelper";
-import {admin, db} from "./firebase";
-import {getStripeClient, stripeSecretKey} from "./stripe";
-import {createPaymentNotification} from "./notificationService";
+import { sendEmailIfAllowed } from "./emailNotificationHelper";
+import { admin, db } from "./firebase";
+import { getStripeClient, stripeSecretKey } from "./stripe";
+import { createPaymentNotification } from "./notificationService";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
 } from "./bookingAccessToken";
-import {generateBookingReference} from "./utils/bookingReferenceGenerator";
+import { generateBookingReference } from "./utils/bookingReferenceGenerator";
 import {
   validateAndConvertBookingDates,
   calculateBookingNights,
 } from "./utils/dateValidation";
-import {sanitizeText, sanitizeEmail, sanitizePhone} from "./utils/inputSanitization";
-import {logInfo, logError, logWarn} from "./logger";
+import { sanitizeText, sanitizeEmail, sanitizePhone } from "./utils/inputSanitization";
+import { logInfo, logError, logWarn } from "./logger";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
@@ -29,7 +29,7 @@ const ALLOWED_RETURN_DOMAINS = [
   "https://bookbed.io",
   "https://app.bookbed.io",
   "https://rab-booking-248fc.web.app",  // Legacy fallback
-  "https://rab-booking-widget.web.app", // Legacy fallback
+  "https://bookbed.io", // Legacy fallback
   "http://localhost",
   "http://127.0.0.1",
 ];
@@ -45,7 +45,7 @@ const ALLOWED_RETURN_DOMAINS = [
  *
  * Security: Validates return URL against whitelist
  */
-export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, async (request) => {
+export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }, async (request) => {
   const {
     // Booking data (from atomicBooking validation result)
     bookingData,
@@ -82,7 +82,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
 
   // Validate required fields
   if (!unitId || !propertyId || !ownerId || !checkIn || !checkOut ||
-      !guestName || !guestEmail || !totalPrice) {
+    !guestName || !guestEmail || !totalPrice) {
     throw new HttpsError("invalid-argument", "Missing required booking fields");
   }
 
@@ -150,7 +150,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
     }
 
     // Validate and convert dates
-    const {checkInDate, checkOutDate} = validateAndConvertBookingDates(
+    const { checkInDate, checkOutDate } = validateAndConvertBookingDates(
       checkIn,
       checkOut
     );
@@ -194,7 +194,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
       const bookingRef = generateBookingReference(placeholderBookingId);
 
       // Generate access token for future "View my reservation" link
-      const {token: accessToken, hashedToken} =
+      const { token: accessToken, hashedToken } =
         generateBookingAccessToken();
       const tokenExpiration = calculateTokenExpiration(checkOutDate);
 
@@ -373,7 +373,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
  * - Uses atomic transaction to prevent race conditions
  * - No more "ghost bookings" - only paid bookings exist
  */
-export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeWebhookSecret]}, async (req, res) => {
+export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookSecret] }, async (req, res) => {
   const sig = req.headers["stripe-signature"];
 
   if (!sig) {
@@ -605,6 +605,6 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
   } else {
     // Unexpected event type
     logInfo(`Unhandled event type: ${event.type}`);
-    res.json({received: true});
+    res.json({ received: true });
   }
 });

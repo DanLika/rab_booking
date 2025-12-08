@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/l10n/widget_translations.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/common/rotate_device_overlay.dart';
-import 'package:rab_booking/features/widget/presentation/theme/minimalist_colors.dart';
+import 'package:bookbed/features/widget/presentation/l10n/widget_translations.dart';
+import 'package:bookbed/features/widget/presentation/widgets/common/rotate_device_overlay.dart';
+import 'package:bookbed/features/widget/presentation/theme/minimalist_colors.dart';
 
 WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');
 

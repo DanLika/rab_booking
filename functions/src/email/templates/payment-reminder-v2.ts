@@ -62,16 +62,9 @@ export function generatePaymentReminderEmailV2(
 
     <!-- Warning Header Card -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); border: 1px solid #FEF3C7; margin-bottom: 16px; text-align: center;">
-      <!-- Bell Icon -->
-      <div style="margin-bottom: 16px;">
-        <svg width="64" height="64" viewBox="0 0 64 64" style="display: inline-block;">
-          <circle cx="32" cy="32" r="30" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
-          <!-- Bell shape -->
-          <path d="M32 20 C28 20, 25 23, 25 27 L25 35 C25 35, 23 37, 23 39 L41 39 C41 37, 39 35, 39 35 L39 27 C39 23, 36 20, 32 20 Z" fill="#92400E"/>
-          <path d="M29 41 C29 43, 30 44, 32 44 C34 44, 35 43, 35 41" stroke="#92400E" stroke-width="2" fill="none" stroke-linecap="round"/>
-          <!-- Notification dot -->
-          <circle cx="40" cy="24" r="4" fill="#DC2626"/>
-        </svg>
+      <!-- Bell Icon (Emoji - works in all email clients) -->
+      <div style="margin-bottom: 12px; font-size: 48px; line-height: 1;">
+        🔔
       </div>
 
       <!-- Title -->

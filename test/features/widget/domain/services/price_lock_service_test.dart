@@ -2,9 +2,9 @@
 // Note: Explicit default values kept in tests for documentation clarity
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/domain/constants/widget_constants.dart';
-import 'package:rab_booking/features/widget/domain/services/price_lock_service.dart';
-import 'package:rab_booking/features/widget/presentation/providers/booking_price_provider.dart';
+import 'package:bookbed/features/widget/domain/constants/widget_constants.dart';
+import 'package:bookbed/features/widget/domain/services/price_lock_service.dart';
+import 'package:bookbed/features/widget/presentation/providers/booking_price_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

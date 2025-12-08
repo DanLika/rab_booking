@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/booking/guest_form/email_field_with_verification.dart';
+import 'package:bookbed/features/widget/presentation/widgets/booking/guest_form/email_field_with_verification.dart';
 
 void main() {
   group('EmailFieldWithVerification', () {

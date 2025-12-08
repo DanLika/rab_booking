@@ -10,7 +10,7 @@
 ///
 /// ## Usage
 /// ```dart
-/// import 'package:rab_booking/features/widget/utils/utils.dart';
+/// import 'package:bookbed/features/widget/utils/utils.dart';
 ///
 /// final normalized = DateNormalizer.normalize(DateTime.now());
 /// final key = DateKeyGenerator.fromDate(normalized);

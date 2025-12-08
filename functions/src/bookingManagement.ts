@@ -421,6 +421,10 @@ export const onBookingStatusChange = onDocumentUpdated(
             );
 
             // Send cancellation email with retry
+            // If cancellation_reason exists, it was cancelled by owner
+            const cancellationReason = booking.cancellation_reason as string | undefined;
+            const cancelledByOwner = !!cancellationReason;
+
             await sendEmailWithRetry(
               async () => {
                 await sendBookingCancellationEmail(
@@ -432,7 +436,9 @@ export const onBookingStatusChange = onDocumentUpdated(
                   booking.check_in.toDate(),
                   booking.check_out.toDate(),
                   undefined, // refundAmount
-                  booking.property_id
+                  booking.property_id,
+                  cancellationReason,
+                  cancelledByOwner
                 );
               },
               "Booking Cancellation",

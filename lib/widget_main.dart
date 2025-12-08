@@ -55,8 +55,7 @@ class BookingWidgetApp extends ConsumerWidget {
     final widgetConfig = ref.watch(widgetConfigProvider);
 
     // Try to load widget settings from Firestore (if unitId is available)
-    final widgetSettingsAsync =
-        widgetConfig.unitId != null && widgetConfig.propertyId != null
+    final widgetSettingsAsync = widgetConfig.unitId != null && widgetConfig.propertyId != null
         ? ref.watch(_widgetSettingsProvider(widgetConfig))
         : null;
 
@@ -85,7 +84,7 @@ class BookingWidgetApp extends ConsumerWidget {
     );
 
     return MaterialApp.router(
-      title: 'Rab Booking Widget',
+      title: 'BooBed Widget',
       debugShowCheckedModeBanner: false,
 
       // Use Minimalist theme with dark mode support
@@ -119,20 +118,16 @@ class BookingWidgetApp extends ConsumerWidget {
 /// This provider uses StreamProvider to listen for real-time updates.
 /// When owner changes settings in Dashboard, the widget will automatically
 /// update without requiring a page refresh.
-final _widgetSettingsProvider =
-    StreamProvider.family<WidgetSettings?, WidgetConfig>((ref, config) {
-      if (config.propertyId == null || config.unitId == null) {
-        return Stream.value(null);
-      }
+final _widgetSettingsProvider = StreamProvider.family<WidgetSettings?, WidgetConfig>((ref, config) {
+  if (config.propertyId == null || config.unitId == null) {
+    return Stream.value(null);
+  }
 
-      try {
-        final repository = ref.read(widgetSettingsRepositoryProvider);
-        return repository.watchWidgetSettings(
-          propertyId: config.propertyId!,
-          unitId: config.unitId!,
-        );
-      } catch (e) {
-        // If settings don't exist or error loading, return null stream (use defaults)
-        return Stream.value(null);
-      }
-    });
+  try {
+    final repository = ref.read(widgetSettingsRepositoryProvider);
+    return repository.watchWidgetSettings(propertyId: config.propertyId!, unitId: config.unitId!);
+  } catch (e) {
+    // If settings don't exist or error loading, return null stream (use defaults)
+    return Stream.value(null);
+  }
+});

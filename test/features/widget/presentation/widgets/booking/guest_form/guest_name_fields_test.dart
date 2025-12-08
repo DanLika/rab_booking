@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/booking/guest_form/guest_name_fields.dart';
+import 'package:bookbed/features/widget/presentation/widgets/booking/guest_form/guest_name_fields.dart';
 
 void main() {
   group('GuestNameFields', () {

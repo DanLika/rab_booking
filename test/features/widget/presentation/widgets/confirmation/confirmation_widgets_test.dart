@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/confirmation/cancellation_policy_section.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/confirmation/next_steps_section.dart';
+import 'package:bookbed/features/widget/presentation/widgets/confirmation/cancellation_policy_section.dart';
+import 'package:bookbed/features/widget/presentation/widgets/confirmation/next_steps_section.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

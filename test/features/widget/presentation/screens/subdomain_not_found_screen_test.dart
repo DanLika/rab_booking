@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/screens/subdomain_not_found_screen.dart';
+import 'package:bookbed/features/widget/presentation/screens/subdomain_not_found_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

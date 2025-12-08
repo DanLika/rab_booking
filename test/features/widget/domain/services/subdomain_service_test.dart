@@ -1,9 +1,9 @@
 // ignore_for_file: avoid_redundant_argument_values, prefer_const_constructors
 // Note: Explicit values kept in tests for documentation clarity
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/domain/services/subdomain_service.dart';
-import 'package:rab_booking/shared/models/property_branding_model.dart';
-import 'package:rab_booking/shared/models/property_model.dart';
+import 'package:bookbed/features/widget/domain/services/subdomain_service.dart';
+import 'package:bookbed/shared/models/property_branding_model.dart';
+import 'package:bookbed/shared/models/property_model.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

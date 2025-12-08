@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/common/copyable_text_field.dart';
+import 'package:bookbed/features/widget/presentation/widgets/common/copyable_text_field.dart';
 
 void main() {
   group('CopyableTextField', () {

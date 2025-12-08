@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/features/widget/presentation/widgets/booking/payment/payment_option_widget.dart';
+import 'package:bookbed/features/widget/presentation/widgets/booking/payment/payment_option_widget.dart';
 
 void main() {
   group('PaymentOptionWidget', () {

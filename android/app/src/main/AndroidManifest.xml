@@ -25,12 +25,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- Deep linking: Custom scheme (rabbooking://) -->
+            <!-- Deep linking: Custom schemes (rabbooking:// + bookbed://) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="rabbooking" />
+                <data android:scheme="rabbooking" /> <!-- Legacy support -->
+                <data android:scheme="bookbed" />   <!-- New scheme -->
             </intent-filter>
 
             <!-- Deep linking: HTTPS links (https://bookbed.io) -->

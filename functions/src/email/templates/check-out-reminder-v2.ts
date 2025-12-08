@@ -60,18 +60,9 @@ export function generateCheckOutReminderEmailV2(
 
     <!-- Info Header Card -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); border: 1px solid #DBEAFE; margin-bottom: 16px; text-align: center;">
-      <!-- Clock Icon -->
-      <div style="margin-bottom: 16px;">
-        <svg width="64" height="64" viewBox="0 0 64 64" style="display: inline-block;">
-          <circle cx="32" cy="32" r="30" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
-          <!-- Clock face -->
-          <circle cx="32" cy="32" r="18" fill="none" stroke="#1E40AF" stroke-width="3"/>
-          <!-- Clock hands pointing to 11 -->
-          <path d="M32 32 L28 18" stroke="#1E40AF" stroke-width="3" stroke-linecap="round"/>
-          <path d="M32 32 L42 28" stroke="#1E40AF" stroke-width="3" stroke-linecap="round"/>
-          <!-- Center dot -->
-          <circle cx="32" cy="32" r="2" fill="#1E40AF"/>
-        </svg>
+      <!-- Clock Icon (Emoji - works in all email clients) -->
+      <div style="margin-bottom: 12px; font-size: 48px; line-height: 1;">
+        ⏰
       </div>
 
       <!-- Title -->

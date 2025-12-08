@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/shared/utils/validators/input_sanitizer.dart';
+import 'package:bookbed/shared/utils/validators/input_sanitizer.dart';
 
 /// Input Sanitizer Test Suite
 ///

@@ -8,7 +8,7 @@
 ///
 /// Usage:
 /// ```dart
-/// import 'package:rab_booking/features/widget/utils/ics_download.dart';
+/// import 'package:bookbed/features/widget/utils/ics_download.dart';
 ///
 /// await downloadIcsFile(icsContent, 'booking.ics');
 /// ```

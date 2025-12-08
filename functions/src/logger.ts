@@ -76,6 +76,13 @@ export class Logger {
           stack: error.stack,
           name: error.name,
         };
+      } else if (error && typeof error === 'object') {
+        // Handle non-Error objects (e.g., API responses, plain objects)
+        try {
+          logData.error = JSON.stringify(error, null, 2);
+        } catch {
+          logData.error = String(error);
+        }
       } else {
         logData.error = String(error);
       }

@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:rab_booking/core/constants/enums.dart';
-import 'package:rab_booking/core/services/booking_service.dart';
-import 'package:rab_booking/features/widget/domain/models/widget_mode.dart';
-import 'package:rab_booking/features/widget/domain/models/widget_settings.dart';
-import 'package:rab_booking/features/widget/domain/use_cases/submit_booking_use_case.dart';
-import 'package:rab_booking/shared/models/booking_model.dart';
-import 'package:rab_booking/shared/models/unit_model.dart';
+import 'package:bookbed/core/constants/enums.dart';
+import 'package:bookbed/core/services/booking_service.dart';
+import 'package:bookbed/features/widget/domain/models/widget_mode.dart';
+import 'package:bookbed/features/widget/domain/models/widget_settings.dart';
+import 'package:bookbed/features/widget/domain/use_cases/submit_booking_use_case.dart';
+import 'package:bookbed/shared/models/booking_model.dart';
+import 'package:bookbed/shared/models/unit_model.dart';
 
 // Mock classes
 class MockBookingService extends Mock implements BookingService {}

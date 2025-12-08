@@ -1,8 +1,8 @@
-# RabBooking
+# BooBed
 
-**Booking management platforma za property owner-e na otoku Rabu.**
+**Modern booking management platform for vacation rental property owners.**
 
-RabBooking omogućava vlasnićima smještaja da kreiraju i upravljaju svojim bookingima kroz centralizirani dashboard, dok gostima pruža jednostavan embeddable booking widget sa Stripe checkout integracijom.
+BooBed enables accommodation owners to create and manage their bookings through a centralized dashboard, while providing guests with a simple embeddable booking widget with Stripe checkout integration.
 
 ---
 
@@ -20,8 +20,8 @@ RabBooking omogućava vlasnićima smještaja da kreiraju i upravljaju svojim boo
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/rab_booking.git
-cd rab_booking
+git clone https://github.com/yourusername/bookbed.git
+cd bookbed
 
 # 2. Install Flutter dependencies
 flutter pub get
@@ -110,7 +110,7 @@ rab_booking/
 - **Booking calendar** - Month/year view with turnover detection
 - **Price management** - Base prices + seasonal adjustments
 - **Automated emails** - Confirmation, reminders, cancellations
-- **Custom domains** - `villa-marija.rabbooking.com`
+- **Custom domains** - `villa-marija.bookbed.io`
 - **Payment tracking** - Deposits, remaining amounts, refunds
 
 ### For Guests

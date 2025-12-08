@@ -7,12 +7,10 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
-import '../providers/owner_bookings_provider.dart';
 import 'edit_booking_dialog.dart';
 import 'send_email_dialog.dart';
 
@@ -259,108 +257,6 @@ class BookingDetailsDialog extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  /// Show cancellation confirmation dialog
-  // ignore: unused_element
-  Future<void> _confirmCancellation(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
-    final TextEditingController reasonController = TextEditingController();
-    final theme = Theme.of(context);
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.ownerDetailsCancelConfirmTitle),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.ownerDetailsCancelConfirmMessage, style: const TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 16),
-              Builder(
-                builder: (ctx) => TextField(
-                  controller: reasonController,
-                  decoration: InputDecorationHelper.buildDecoration(
-                    labelText: l10n.ownerDetailsCancellationReason,
-                    hintText: l10n.ownerDetailsCancellationHint,
-                    context: ctx,
-                  ),
-                  maxLines: 3,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.ownerMultiSelectCancel)),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
-            child: Text(l10n.ownerDetailsCancelBooking),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      await _cancelBooking(context, ref, reasonController.text.trim(), l10n);
-    }
-  }
-
-  /// Cancel the booking
-  // ignore: unused_element
-  Future<void> _cancelBooking(BuildContext context, WidgetRef ref, String? reason, AppLocalizations l10n) async {
-    try {
-      // FIXED: Show loading snackbar instead of dialog
-      if (context.mounted) {
-        ErrorDisplayUtils.showLoadingSnackBar(context, l10n.ownerDetailsCancelling);
-      }
-
-      // Cancel booking via repository
-      final repository = ref.read(ownerBookingsRepositoryProvider);
-      await repository.cancelBooking(
-        ownerBooking.booking.id,
-        reason ?? '', // reason is required positional parameter
-      );
-
-      // Close details dialog and show success
-      if (context.mounted) {
-        Navigator.of(context).pop(); // Close details dialog
-
-        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerDetailsCancelSuccess);
-
-        // Invalidate providers to refresh the list
-        ref.invalidate(allOwnerBookingsProvider);
-        ref.invalidate(ownerBookingsProvider);
-
-        // Auto-regenerate iCal if enabled
-        _triggerIcalRegeneration(ref);
-      }
-    } catch (e) {
-      // FIXED: Use ErrorDisplayUtils for user-friendly error messages
-      if (context.mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerDetailsCancelError);
-      }
-    }
-  }
-
-  /// Trigger iCal regeneration for the unit after booking status changes
-  // ignore: unused_element
-  void _triggerIcalRegeneration(WidgetRef ref) async {
-    try {
-      // Get iCal export service
-      final icalService = ref.read(icalExportServiceProvider);
-
-      // Auto-regenerate if enabled (service will check if enabled)
-      await icalService.autoRegenerateIfEnabled(
-        propertyId: ownerBooking.property.id,
-        unitId: ownerBooking.unit.id,
-        unit: ownerBooking.unit,
-      );
-    } catch (e) {
-      // Silently fail - iCal regeneration is non-critical
-    }
   }
 
   /// Resend the original booking confirmation email with View My Booking link

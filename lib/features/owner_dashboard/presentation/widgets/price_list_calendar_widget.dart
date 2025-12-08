@@ -450,43 +450,33 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Theme(
-            data: theme.copyWith(
-              splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-              highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-            ),
-            child: FilterChip(
-              label: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.deselect, size: 16),
-                  const SizedBox(width: 8),
-                  Flexible(child: Text(l10n.priceCalendarDeselectAll)),
-                ],
+          child: Opacity(
+            opacity: _selectedDays.isEmpty ? 0.5 : 1.0,
+            child: Theme(
+              data: theme.copyWith(
+                splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
-              onSelected: _selectedDays.isEmpty
-                  ? null
-                  : (_) {
-                      setState(_selectedDays.clear);
-                    },
-              backgroundColor: _selectedDays.isEmpty
-                  ? theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt())
-                  : context.gradients.cardBackground,
-              side: BorderSide(
-                color: _selectedDays.isEmpty
-                    ? theme.colorScheme.outline.withAlpha((0.2 * 255).toInt())
-                    : context.primaryColor,
-                width: 1.5,
+              child: FilterChip(
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.deselect, size: 16, color: context.primaryColor),
+                    const SizedBox(width: 8),
+                    Flexible(child: Text(l10n.priceCalendarDeselectAll)),
+                  ],
+                ),
+                onSelected: _selectedDays.isEmpty
+                    ? null
+                    : (_) {
+                        setState(_selectedDays.clear);
+                      },
+                backgroundColor: context.gradients.cardBackground,
+                side: BorderSide(color: context.primaryColor, width: 1.5),
+                labelStyle: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w600, fontSize: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              labelStyle: TextStyle(
-                color: _selectedDays.isEmpty
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
-                    : context.primaryColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ),

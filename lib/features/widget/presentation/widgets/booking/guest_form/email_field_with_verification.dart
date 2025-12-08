@@ -118,8 +118,8 @@ class EmailFieldWithVerification extends StatelessWidget {
         // Verification status/button
         if (emailVerified)
           Container(
-            width: 49,
-            height: 49,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               color: colors.success.withValues(alpha: 0.1),
               borderRadius: BorderTokens.circularMedium,

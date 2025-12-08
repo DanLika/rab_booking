@@ -1068,7 +1068,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 28,
+                                  fontSize: 24,
                                   letterSpacing: -0.5,
                                 ),
                               ),
@@ -1116,7 +1116,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 28,
+                                  fontSize: 24,
                                   letterSpacing: -0.5,
                                 ),
                               ),

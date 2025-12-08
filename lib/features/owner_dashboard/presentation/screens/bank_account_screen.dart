@@ -354,33 +354,46 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
 
               _loadData(effectiveUserData);
 
-              return SingleChildScrollView(
-                padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 24),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    child: Form(
-                      key: _formKey,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Info Card
-                          _buildInfoCard(l10n),
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 24),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight - (MediaQuery.of(context).size.width < 400 ? 32 : 48),
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 600),
+                          child: Form(
+                            key: _formKey,
+                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Top content
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    // Info Card
+                                    _buildInfoCard(l10n),
 
-                          // Bank Details Card
-                          _buildBankCard(l10n),
+                                    // Bank Details Card
+                                    _buildBankCard(l10n),
+                                  ],
+                                ),
 
-                          const SizedBox(height: 8),
-
-                          // Action Buttons
-                          _buildActionButtons(l10n),
-                        ],
+                                // Action Buttons (pushed to bottom)
+                                _buildActionButtons(l10n),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),

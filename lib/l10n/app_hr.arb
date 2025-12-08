@@ -930,6 +930,8 @@
   "ownerProfileTitle": "Profil",
   "ownerProfileThemeLight": "Svijetla",
   "ownerProfileThemeDark": "Tamna",
+  "ownerProfileLanguageEnglish": "English",
+  "ownerProfileLanguageCroatian": "Hrvatski",
   "ownerProfileThemeSystem": "Sistemska postavka",
   "ownerProfileNotAuthenticated": "Niste prijavljeni",
   "ownerProfileGuestUser": "Gost",

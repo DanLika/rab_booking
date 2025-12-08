@@ -930,6 +930,8 @@
   "ownerProfileTitle": "Profile",
   "ownerProfileThemeLight": "Light",
   "ownerProfileThemeDark": "Dark",
+  "ownerProfileLanguageEnglish": "English",
+  "ownerProfileLanguageCroatian": "Croatian",
   "ownerProfileThemeSystem": "System default",
   "ownerProfileNotAuthenticated": "Not authenticated",
   "ownerProfileGuestUser": "Guest User",

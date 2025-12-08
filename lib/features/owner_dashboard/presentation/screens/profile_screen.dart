@@ -16,6 +16,8 @@ import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/premium_list_tile.dart';
+import '../../../../shared/widgets/logout_tile.dart';
 
 /// Profile screen for owner dashboard
 class ProfileScreen extends ConsumerWidget {
@@ -32,8 +34,10 @@ class ProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Get language display name
-    final languageName = currentLocale.languageCode == 'hr' ? 'Hrvatski' : 'English';
+    // Get language display name from localization
+    final languageName = currentLocale.languageCode == 'hr'
+        ? l10n.ownerProfileLanguageCroatian
+        : l10n.ownerProfileLanguageEnglish;
 
     // Get theme display name
     final themeName = currentThemeMode == ThemeMode.light
@@ -104,12 +108,29 @@ class ProfileScreen extends ConsumerWidget {
                                             width: isMobile ? 72 : 88,
                                             height: isMobile ? 72 : 88,
                                             fit: BoxFit.cover,
+                                            loadingBuilder: (context, child, loadingProgress) {
+                                              if (loadingProgress == null) return child;
+                                              return CircleAvatar(
+                                                radius: isMobile ? 36 : 44,
+                                                backgroundColor: isDark ? AppColors.primary : Colors.white,
+                                                child: CircularProgressIndicator(
+                                                  value: loadingProgress.expectedTotalBytes != null
+                                                      ? loadingProgress.cumulativeBytesLoaded /
+                                                            loadingProgress.expectedTotalBytes!
+                                                      : null,
+                                                  strokeWidth: 2,
+                                                  color: isDark ? Colors.white : AppColors.primary,
+                                                ),
+                                              );
+                                            },
                                             errorBuilder: (context, error, stackTrace) {
                                               return CircleAvatar(
                                                 radius: isMobile ? 36 : 44,
                                                 backgroundColor: isDark ? AppColors.primary : Colors.white,
                                                 child: Text(
-                                                  displayName.substring(0, 1).toUpperCase(),
+                                                  displayName.isNotEmpty
+                                                      ? displayName.substring(0, 1).toUpperCase()
+                                                      : '?',
                                                   style: TextStyle(
                                                     fontSize: isMobile ? 28 : 34,
                                                     fontWeight: FontWeight.bold,
@@ -124,7 +145,7 @@ class ProfileScreen extends ConsumerWidget {
                                           radius: isMobile ? 36 : 44,
                                           backgroundColor: isDark ? AppColors.primary : Colors.white,
                                           child: Text(
-                                            displayName.substring(0, 1).toUpperCase(),
+                                            displayName.isNotEmpty ? displayName.substring(0, 1).toUpperCase() : '?',
                                             style: TextStyle(
                                               fontSize: isMobile ? 28 : 34,
                                               fontWeight: FontWeight.bold,
@@ -183,7 +204,7 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           child: Column(
                             children: [
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.person_outline,
                                 title: l10n.ownerProfileEditProfile,
                                 subtitle: isAnonymous
@@ -193,7 +214,7 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                               if (!isAnonymous) ...[
                                 Divider(height: 1, indent: 72, color: theme.dividerColor),
-                                _PremiumListTile(
+                                PremiumListTile(
                                   icon: Icons.lock_outline,
                                   title: l10n.ownerProfileChangePassword,
                                   subtitle: l10n.ownerProfileChangePasswordSubtitle,
@@ -201,7 +222,7 @@ class ProfileScreen extends ConsumerWidget {
                                 ),
                               ],
                               Divider(height: 1, indent: 72, color: theme.dividerColor),
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.notifications_outlined,
                                 title: l10n.ownerProfileNotificationSettings,
                                 subtitle: l10n.ownerProfileNotificationSettingsSubtitle,
@@ -223,14 +244,14 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           child: Column(
                             children: [
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.language,
                                 title: l10n.ownerProfileLanguage,
                                 subtitle: languageName,
                                 onTap: () => showLanguageSelectionBottomSheet(context, ref),
                               ),
                               Divider(height: 1, indent: 56, color: theme.dividerColor),
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.brightness_6_outlined,
                                 title: l10n.ownerProfileTheme,
                                 subtitle: themeName,
@@ -252,7 +273,7 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           child: Column(
                             children: [
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.help_outline,
                                 title: l10n.ownerProfileHelpSupport,
                                 subtitle: l10n.ownerProfileHelpSupportSubtitle,
@@ -261,7 +282,7 @@ class ProfileScreen extends ConsumerWidget {
                                 },
                               ),
                               Divider(height: 1, indent: 56, color: theme.dividerColor),
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.info_outline,
                                 title: l10n.ownerProfileAbout,
                                 subtitle: l10n.ownerProfileAboutSubtitle,
@@ -281,7 +302,9 @@ class ProfileScreen extends ConsumerWidget {
                             border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
                             boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
                           ),
-                          child: _LogoutTile(
+                          child: LogoutTile(
+                            title: l10n.ownerProfileLogout,
+                            subtitle: l10n.ownerProfileLogoutSubtitle,
                             onLogout: () async {
                               await ref.read(enhancedAuthProvider.notifier).signOut();
                               if (context.mounted) {
@@ -302,21 +325,21 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           child: Column(
                             children: [
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.description_outlined,
                                 title: l10n.ownerProfileTermsConditions,
                                 subtitle: l10n.ownerProfileTermsConditionsSubtitle,
                                 onTap: () => context.push(OwnerRoutes.termsConditions),
                               ),
                               Divider(height: 1, indent: 56, color: theme.dividerColor),
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.privacy_tip_outlined,
                                 title: l10n.ownerProfilePrivacyPolicy,
                                 subtitle: l10n.ownerProfilePrivacyPolicySubtitle,
                                 onTap: () => context.push(OwnerRoutes.privacyPolicy),
                               ),
                               Divider(height: 1, indent: 56, color: theme.dividerColor),
-                              _PremiumListTile(
+                              PremiumListTile(
                                 icon: Icons.cookie_outlined,
                                 title: l10n.ownerProfileCookiesPolicy,
                                 subtitle: l10n.ownerProfileCookiesPolicySubtitle,
@@ -413,147 +436,6 @@ class ProfileScreen extends ConsumerWidget {
                   );
                 },
               ),
-      ),
-    );
-  }
-}
-
-/// Compact List Tile widget
-class _PremiumListTile extends StatefulWidget {
-  final IconData icon;
-  final String title;
-  final dynamic subtitle;
-  final VoidCallback? onTap;
-  final bool isLast;
-
-  const _PremiumListTile({required this.icon, required this.title, this.onTap, this.subtitle, this.isLast = false});
-
-  @override
-  State<_PremiumListTile> createState() => _PremiumListTileState();
-}
-
-class _PremiumListTileState extends State<_PremiumListTile> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDisabled = widget.onTap == null;
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    return MouseRegion(
-      onEnter: (_) => !isDisabled ? setState(() => _isHovered = true) : null,
-      onExit: (_) => !isDisabled ? setState(() => _isHovered = false) : null,
-      cursor: isDisabled ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        decoration: BoxDecoration(
-          color: _isHovered && !isDisabled ? AppColors.primary.withValues(alpha: 0.04) : Colors.transparent,
-          borderRadius: widget.isLast
-              ? const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12))
-              : BorderRadius.zero,
-        ),
-        child: Opacity(
-          opacity: isDisabled ? 0.4 : 1.0,
-          child: ListTile(
-            dense: true,
-            visualDensity: const VisualDensity(vertical: -1),
-            contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 4 : 6),
-            leading: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(widget.icon, color: AppColors.primary, size: isMobile ? 18 : 20),
-            ),
-            title: Text(
-              widget.title,
-              style: TextStyle(
-                fontSize: isMobile ? 14 : 15,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            subtitle: widget.subtitle is String
-                ? Text(
-                    widget.subtitle as String,
-                    style: TextStyle(
-                      fontSize: isMobile ? 12 : 13,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                    ),
-                  )
-                : widget.subtitle as Widget?,
-            trailing: Icon(
-              Icons.chevron_right_rounded,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              size: isMobile ? 18 : 20,
-            ),
-            onTap: widget.onTap,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Compact Logout Tile
-class _LogoutTile extends StatefulWidget {
-  final VoidCallback onLogout;
-
-  const _LogoutTile({required this.onLogout});
-
-  @override
-  State<_LogoutTile> createState() => _LogoutTileState();
-}
-
-class _LogoutTileState extends State<_LogoutTile> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        decoration: BoxDecoration(
-          color: _isHovered ? AppColors.error.withValues(alpha: 0.05) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: ListTile(
-          dense: true,
-          visualDensity: const VisualDensity(vertical: -1),
-          contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 4 : 6),
-          leading: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.logout_rounded, color: AppColors.error, size: isMobile ? 18 : 20),
-          ),
-          title: Text(
-            l10n.ownerProfileLogout,
-            style: TextStyle(fontSize: isMobile ? 14 : 15, fontWeight: FontWeight.w600, color: AppColors.error),
-          ),
-          subtitle: Text(
-            l10n.ownerProfileLogoutSubtitle,
-            style: TextStyle(fontSize: isMobile ? 12 : 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.55)),
-          ),
-          trailing: Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.error.withValues(alpha: 0.7),
-            size: isMobile ? 18 : 20,
-          ),
-          onTap: widget.onLogout,
-        ),
       ),
     );
   }

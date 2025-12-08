@@ -378,6 +378,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               duration: const Duration(milliseconds: 150),
               width: cellSize,
               height: cellSize,
+              clipBehavior: Clip.antiAlias, // Clip pattern painters to cell bounds
               decoration: BoxDecoration(
                 color: _getCellColor(dateInfo, isInRange, isHovered, isInteractive, colors),
                 border: Border.all(

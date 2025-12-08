@@ -110,7 +110,12 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
 
         final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.advancedSettingsSaveSuccess)));
-        Navigator.pop(context);
+
+        // Only pop if opened as standalone screen (with app bar)
+        // When embedded in tab (showAppBar = false), don't navigate
+        if (widget.showAppBar) {
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -108,6 +108,78 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
   bool get _isConnected => _stripeAccountId != null && _stripeAccountStatus == 'complete';
   bool get _isIncomplete => _stripeAccountId != null && _stripeAccountStatus != 'complete';
 
+  Future<void> _confirmDisconnect(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.stripeDisconnectTitle),
+        content: Text(l10n.stripeDisconnectMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+            ),
+            child: Text(l10n.stripeDisconnectConfirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _disconnectStripeAccount();
+    }
+  }
+
+  Future<void> _disconnectStripeAccount() async {
+    final l10n = AppLocalizations.of(context);
+    setState(() => _isConnecting = true);
+
+    try {
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('disconnectStripeAccount');
+      final result = await callable.call();
+      final data = result.data as Map<String, dynamic>;
+      final success = data['success'] == true;
+
+      if (mounted) {
+        if (success) {
+          setState(() {
+            _stripeAccountId = null;
+            _stripeAccountStatus = null;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.stripeDisconnectSuccess),
+              backgroundColor: const Color(0xFF4CAF50),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        } else {
+          ErrorDisplayUtils.showErrorSnackBar(context, l10n.stripeDisconnectError);
+        }
+      }
+    } catch (e) {
+      LoggingService.log('Error disconnecting Stripe account: $e', tag: 'StripeConnect');
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.stripeDisconnectError);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isConnecting = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -298,7 +370,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
               ),
             ],
 
-            // Action button
+            // Action buttons
             if (actionLabel != null) ...[
               const SizedBox(height: 20),
               SizedBox(
@@ -316,6 +388,25 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: theme.colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+
+            // Disconnect button (when connected)
+            if (_isConnected) ...[
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isConnecting ? null : () => _confirmDisconnect(context),
+                  icon: const Icon(Icons.link_off, size: 20),
+                  label: Text(l10n.stripeDisconnect, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withAlpha((0.5 * 255).toInt()), width: 2),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),

@@ -5802,6 +5802,42 @@ abstract class AppLocalizations {
   /// **'Error connecting Stripe account'**
   String get stripeConnectError;
 
+  /// No description provided for @stripeDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Account'**
+  String get stripeDisconnect;
+
+  /// No description provided for @stripeDisconnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Stripe Account'**
+  String get stripeDisconnectTitle;
+
+  /// No description provided for @stripeDisconnectMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to disconnect your Stripe account? You will no longer be able to receive payments until you reconnect.'**
+  String get stripeDisconnectMessage;
+
+  /// No description provided for @stripeDisconnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get stripeDisconnectConfirm;
+
+  /// No description provided for @stripeDisconnectSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe account disconnected successfully'**
+  String get stripeDisconnectSuccess;
+
+  /// No description provided for @stripeDisconnectError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error disconnecting Stripe account'**
+  String get stripeDisconnectError;
+
   /// No description provided for @advancedSettingsTitle.
   ///
   /// In en, this message translates to:

@@ -1264,6 +1264,12 @@
   "stripeCannotOpenPageDesc": "Cannot open Stripe page. Please try again.",
   "stripeCreateAccountError": "Error creating Stripe account",
   "stripeConnectError": "Error connecting Stripe account",
+  "stripeDisconnect": "Disconnect Account",
+  "stripeDisconnectTitle": "Disconnect Stripe Account",
+  "stripeDisconnectMessage": "Are you sure you want to disconnect your Stripe account? You will no longer be able to receive payments until you reconnect.",
+  "stripeDisconnectConfirm": "Disconnect",
+  "stripeDisconnectSuccess": "Stripe account disconnected successfully",
+  "stripeDisconnectError": "Error disconnecting Stripe account",
 
   "advancedSettingsTitle": "Advanced Settings",
   "advancedSettingsSaveSuccess": "Advanced settings saved successfully",

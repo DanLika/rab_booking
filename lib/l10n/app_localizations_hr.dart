@@ -3105,6 +3105,26 @@ class AppLocalizationsHr extends AppLocalizations {
   String get stripeConnectError => 'Greška prilikom povezivanja Stripe računa';
 
   @override
+  String get stripeDisconnect => 'Odspoji račun';
+
+  @override
+  String get stripeDisconnectTitle => 'Odspoji Stripe račun';
+
+  @override
+  String get stripeDisconnectMessage =>
+      'Jeste li sigurni da želite odspojiti Stripe račun? Više nećete moći primati plaćanja dok se ponovo ne povežete.';
+
+  @override
+  String get stripeDisconnectConfirm => 'Odspoji';
+
+  @override
+  String get stripeDisconnectSuccess => 'Stripe račun uspješno odspojen';
+
+  @override
+  String get stripeDisconnectError =>
+      'Greška prilikom odspajanja Stripe računa';
+
+  @override
   String get advancedSettingsTitle => 'Napredne Postavke';
 
   @override

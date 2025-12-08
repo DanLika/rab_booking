@@ -1264,6 +1264,12 @@
   "stripeCannotOpenPageDesc": "Ne mogu otvoriti Stripe stranicu. Pokušajte ponovo.",
   "stripeCreateAccountError": "Greška prilikom kreiranja Stripe računa",
   "stripeConnectError": "Greška prilikom povezivanja Stripe računa",
+  "stripeDisconnect": "Odspoji račun",
+  "stripeDisconnectTitle": "Odspoji Stripe račun",
+  "stripeDisconnectMessage": "Jeste li sigurni da želite odspojiti Stripe račun? Više nećete moći primati plaćanja dok se ponovo ne povežete.",
+  "stripeDisconnectConfirm": "Odspoji",
+  "stripeDisconnectSuccess": "Stripe račun uspješno odspojen",
+  "stripeDisconnectError": "Greška prilikom odspajanja Stripe računa",
 
   "advancedSettingsTitle": "Napredne Postavke",
   "advancedSettingsSaveSuccess": "Napredne postavke uspješno spremljene",

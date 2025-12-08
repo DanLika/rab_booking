@@ -3093,6 +3093,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stripeConnectError => 'Error connecting Stripe account';
 
   @override
+  String get stripeDisconnect => 'Disconnect Account';
+
+  @override
+  String get stripeDisconnectTitle => 'Disconnect Stripe Account';
+
+  @override
+  String get stripeDisconnectMessage =>
+      'Are you sure you want to disconnect your Stripe account? You will no longer be able to receive payments until you reconnect.';
+
+  @override
+  String get stripeDisconnectConfirm => 'Disconnect';
+
+  @override
+  String get stripeDisconnectSuccess =>
+      'Stripe account disconnected successfully';
+
+  @override
+  String get stripeDisconnectError => 'Error disconnecting Stripe account';
+
+  @override
   String get advancedSettingsTitle => 'Advanced Settings';
 
   @override

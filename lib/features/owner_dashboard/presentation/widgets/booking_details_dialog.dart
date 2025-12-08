@@ -188,9 +188,9 @@ class BookingDetailsDialog extends ConsumerWidget {
               ),
             ),
 
-            // Actions - responsive layout
+            // Actions - modern layout
             Container(
-              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 16),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
                 border: Border(
@@ -201,72 +201,54 @@ class BookingDetailsDialog extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Primary actions row - wrap to prevent overflow
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 4,
-                    runSpacing: 4,
+                  // Primary actions row
+                  Row(
                     children: [
-                      if (booking.status != BookingStatus.cancelled)
-                        _ActionButton(
-                          icon: Icons.edit_outlined,
-                          label: l10n.ownerDetailsEdit,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            showEditBookingDialog(context, ref, booking);
-                          },
+                      if (booking.status != BookingStatus.cancelled) ...[
+                        Expanded(
+                          child: _ModernActionButton(
+                            icon: Icons.edit_outlined,
+                            label: l10n.ownerDetailsEdit,
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              showEditBookingDialog(context, ref, booking);
+                            },
+                            gradient: context.gradients.brandPrimary,
+                          ),
                         ),
-                      _ActionButton(
-                        icon: Icons.email_outlined,
-                        label: l10n.ownerDetailsEmail,
-                        onPressed: () => showSendEmailDialog(context, ref, booking),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: _ModernActionButton(
+                          icon: Icons.email_outlined,
+                          label: l10n.ownerDetailsEmail,
+                          onPressed: () => showSendEmailDialog(context, ref, booking),
+                          gradient: context.gradients.brandPrimary,
+                        ),
                       ),
-                      if (booking.status != BookingStatus.cancelled)
-                        _ActionButton(
-                          icon: Icons.replay_outlined,
-                          label: l10n.ownerDetailsResend,
-                          onPressed: () => _resendConfirmationEmail(context, ref, l10n),
+                      if (booking.status != BookingStatus.cancelled) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _ModernActionButton(
+                            icon: Icons.replay_outlined,
+                            label: l10n.ownerDetailsResend,
+                            onPressed: () => _resendConfirmationEmail(context, ref, l10n),
+                            gradient: context.gradients.brandPrimary,
+                          ),
                         ),
+                      ],
                     ],
                   ),
-                  // Divider between action groups
-                  if (booking.status == BookingStatus.confirmed)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Divider(
-                        height: 1,
-                        color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
-                      ),
-                    ),
-                  // Secondary actions row (Cancel + Close)
+                  const SizedBox(height: 12),
+                  // Bottom row with Close button (centered)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (booking.status == BookingStatus.confirmed)
-                        Flexible(
-                          child: _ActionButton(
-                            icon: Icons.cancel_outlined,
-                            label: l10n.ownerDetailsCancel,
-                            onPressed: () => _confirmCancellation(context, ref, l10n),
-                            isDestructive: true,
-                          ),
-                        )
-                      else
-                        const SizedBox.shrink(),
-                      Flexible(
-                        child: TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                            minimumSize: Size.zero,
-                          ),
-                          child: AutoSizeText(
-                            l10n.ownerDetailsClose,
-                            style: const TextStyle(fontSize: 13),
-                            maxLines: 1,
-                            minFontSize: 10,
-                          ),
-                        ),
+                      TextButton.icon(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
+                        icon: const Icon(Icons.close, size: 18),
+                        label: Text(l10n.ownerDetailsClose),
                       ),
                     ],
                   ),
@@ -280,6 +262,7 @@ class BookingDetailsDialog extends ConsumerWidget {
   }
 
   /// Show cancellation confirmation dialog
+  // ignore: unused_element
   Future<void> _confirmCancellation(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
     final TextEditingController reasonController = TextEditingController();
     final theme = Theme.of(context);
@@ -326,6 +309,7 @@ class BookingDetailsDialog extends ConsumerWidget {
   }
 
   /// Cancel the booking
+  // ignore: unused_element
   Future<void> _cancelBooking(BuildContext context, WidgetRef ref, String? reason, AppLocalizations l10n) async {
     try {
       // FIXED: Show loading snackbar instead of dialog
@@ -362,6 +346,7 @@ class BookingDetailsDialog extends ConsumerWidget {
   }
 
   /// Trigger iCal regeneration for the unit after booking status changes
+  // ignore: unused_element
   void _triggerIcalRegeneration(WidgetRef ref) async {
     try {
       // Get iCal export service
@@ -668,44 +653,55 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-/// Action button with AutoSizeText to prevent text breaking
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({required this.icon, required this.label, required this.onPressed, this.isDestructive = false});
+/// Modern action button with gradient background
+class _ModernActionButton extends StatelessWidget {
+  const _ModernActionButton({required this.icon, required this.label, required this.onPressed, required this.gradient});
 
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
-  final bool isDestructive;
+  final Gradient gradient;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = isDestructive ? theme.colorScheme.error.withAlpha((0.8 * 255).toInt()) : null;
-
-    return TextButton(
-      onPressed: onPressed,
-      style: TextButton.styleFrom(
-        foregroundColor: color,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 4),
-          Flexible(
-            child: AutoSizeText(
-              label,
-              style: const TextStyle(fontSize: 13),
-              maxLines: 1,
-              minFontSize: 9,
-              overflow: TextOverflow.ellipsis,
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18),
+            const SizedBox(width: 6),
+            Flexible(
+              child: AutoSizeText(
+                label,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                minFontSize: 10,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

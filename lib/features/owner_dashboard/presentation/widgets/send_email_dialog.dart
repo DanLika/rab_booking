@@ -214,17 +214,32 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Guest Info
+                      // Guest Info - Modern card design
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(8),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              theme.colorScheme.errorContainer,
+                              theme.colorScheme.errorContainer.withAlpha((0.7 * 255).toInt()),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt())),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.person, color: theme.colorScheme.secondary),
-                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.error.withAlpha((0.15 * 255).toInt()),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.person, color: theme.colorScheme.error, size: 24),
+                            ),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,14 +248,16 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                     widget.booking.guestName ?? 'Gost',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.onSecondaryContainer,
+                                      fontSize: 16,
+                                      color: theme.colorScheme.onErrorContainer,
                                     ),
                                   ),
+                                  const SizedBox(height: 2),
                                   Text(
                                     widget.booking.guestEmail ?? '',
                                     style: TextStyle(
-                                      fontSize: 12,
-                                      color: theme.colorScheme.onSecondaryContainer.withAlpha((0.7 * 255).toInt()),
+                                      fontSize: 13,
+                                      color: theme.colorScheme.onErrorContainer.withAlpha((0.8 * 255).toInt()),
                                     ),
                                   ),
                                 ],
@@ -251,40 +268,61 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Template selector
-                      Text(l10n.sendEmailTemplate, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: EmailTemplate.values.map((template) {
-                          final isSelected = _selectedTemplate == template;
-                          // Modern FilterChip style (matching analytics screen)
-                          final bgColor = isSelected ? theme.colorScheme.primary : context.gradients.cardBackground;
-                          final borderColor = isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder;
-                          final textColor = isSelected ? Colors.white : theme.colorScheme.onSurface;
-
-                          return FilterChip(
-                            label: Text(template.getDisplayName(l10n)),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) _loadTemplate(template);
-                            },
-                            selectedColor: bgColor,
-                            backgroundColor: bgColor,
-                            side: BorderSide(color: borderColor, width: 1.5),
-                            labelStyle: TextStyle(
-                              color: textColor,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                            checkmarkColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: isSelected ? 2 : 0,
-                            shadowColor: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
-                          );
-                        }).toList(),
+                      // Template selector - Modern design
+                      Text(l10n.sendEmailTemplate, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: context.gradients.cardBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: context.gradients.sectionBorder),
+                        ),
+                        child: Column(
+                          children: EmailTemplate.values.map((template) {
+                            final isSelected = _selectedTemplate == template;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _loadTemplate(template),
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      gradient: isSelected ? context.gradients.brandPrimary : null,
+                                      color: isSelected ? null : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          isSelected ? Icons.check_circle : Icons.circle_outlined,
+                                          size: 20,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            template.getDisplayName(l10n),
+                                            style: TextStyle(
+                                              color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       ),
                       const SizedBox(height: 16),
 
@@ -348,47 +386,66 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
               ),
             ),
 
-            // Footer
+            // Footer - Modern design
             Container(
-              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 16),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
                 border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Flexible(
-                    child: TextButton(
+                  Expanded(
+                    child: OutlinedButton(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        minimumSize: Size.zero,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        side: BorderSide(color: context.gradients.sectionBorder, width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: Text(l10n.sendEmailCancel, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        l10n.sendEmailCancel,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _sendEmail,
-                      icon: _isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.send, size: 18),
-                      label: Text(
-                        _isLoading ? l10n.sendEmailSending : l10n.sendEmailSend,
-                        overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: context.gradients.brandPrimary,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _sendEmail,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.send, size: 20),
+                        label: Text(
+                          _isLoading ? l10n.sendEmailSending : l10n.sendEmailSend,
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ),

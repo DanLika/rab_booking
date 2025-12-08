@@ -166,7 +166,8 @@ class IcalGenerator {
     // Booking ID
     parts.add('Booking ID: ${booking.id}');
 
-    return parts.join('\\n');
+    // Join with actual newlines - _escape() will convert to \n for iCal format
+    return parts.join('\n');
   }
 
   /// Map BookingStatus to iCal STATUS

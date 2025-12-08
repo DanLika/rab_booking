@@ -486,7 +486,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }
 }

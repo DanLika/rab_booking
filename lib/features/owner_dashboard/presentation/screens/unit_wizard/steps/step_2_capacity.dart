@@ -322,7 +322,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }
 }

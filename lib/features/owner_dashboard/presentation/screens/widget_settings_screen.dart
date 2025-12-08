@@ -352,10 +352,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   Future<void> _saveSettings() async {
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please fix the errors above'),
+          content: Text(l10n.widgetPleaseCheckFormErrors),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -364,8 +365,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       );
       return;
     }
-
-    final l10n = AppLocalizations.of(context);
 
     // Validation: At least one payment method must be enabled in bookingInstant mode
     // (No validation needed for bookingPending - payment methods are hidden)

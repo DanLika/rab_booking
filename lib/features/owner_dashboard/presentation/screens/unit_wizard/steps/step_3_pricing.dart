@@ -573,7 +573,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }
 }

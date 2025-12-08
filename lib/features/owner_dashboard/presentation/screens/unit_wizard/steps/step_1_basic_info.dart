@@ -410,7 +410,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }
 }

@@ -66,10 +66,11 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
   }
 
   Future<void> _saveSettings(WidgetSettings currentSettings) async {
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please fix the errors above'),
+          content: Text(l10n.widgetPleaseCheckFormErrors),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -108,7 +109,6 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         // Invalidate provider so Widget Settings screen re-fetches fresh data
         ref.invalidate(widgetSettingsProvider);
 
-        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.advancedSettingsSaveSuccess)));
 
         // Only pop if opened as standalone screen (with app bar)

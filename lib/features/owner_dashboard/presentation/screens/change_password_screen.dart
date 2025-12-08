@@ -56,10 +56,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 
   Future<void> _changePassword() async {
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please fix the errors above'),
+          content: Text(l10n.widgetPleaseCheckFormErrors),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -71,8 +72,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-
-    final l10n = AppLocalizations.of(context);
 
     setState(() => _isLoading = true);
 

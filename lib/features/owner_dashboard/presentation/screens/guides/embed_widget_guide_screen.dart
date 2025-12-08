@@ -645,6 +645,7 @@ function syncWidgetLanguage(newLang) {
   /// Build the "Your Embed Codes" section with auto-generated codes for all units
   Widget _buildYourEmbedCodesSection() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
@@ -679,11 +680,11 @@ function syncWidgetLanguage(newLang) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Vaši Embed Kodovi',
+                        l10n.embedGuideYourEmbedCodes,
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
                       ),
                       Text(
-                        'Kopirajte iframe kod za svaki apartman',
+                        l10n.embedGuideCopyIframe,
                         style: TextStyle(
                           fontSize: 12,
                           color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
@@ -701,7 +702,7 @@ function syncWidgetLanguage(newLang) {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Jezik widgeta:', style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
+                Text(l10n.embedGuideWidgetLanguage, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
@@ -730,18 +731,18 @@ function syncWidgetLanguage(newLang) {
             // Content based on data state
             propertiesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Greška: $e'),
+              error: (e, _) => Text('${l10n.error}: $e'),
               data: (properties) {
                 if (properties.isEmpty) {
-                  return _buildEmptyState('Nemate nekretnina. Kreirajte nekretninu da biste dobili embed kodove.');
+                  return _buildEmptyState(l10n.embedGuideNoProperties);
                 }
 
                 return unitsAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Text('Greška: $e'),
+                  error: (e, _) => Text('${l10n.error}: $e'),
                   data: (units) {
                     if (units.isEmpty) {
-                      return _buildEmptyState('Nemate apartmana. Kreirajte apartman da biste dobili embed kod.');
+                      return _buildEmptyState(l10n.embedGuideNoUnits);
                     }
 
                     // Group units by property
@@ -818,6 +819,7 @@ function syncWidgetLanguage(newLang) {
   /// Build embed card for a single unit
   Widget _buildUnitEmbedCard(UnitModel unit, String? propertySubdomain) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final iframeCode = _generateIframeCode(unit, propertySubdomain);
 
@@ -838,10 +840,10 @@ function syncWidgetLanguage(newLang) {
               TextButton.icon(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: iframeCode));
-                  ErrorDisplayUtils.showSuccessSnackBar(context, 'Embed kod kopiran!');
+                  ErrorDisplayUtils.showSuccessSnackBar(context, l10n.embedGuideCodeCopied);
                 },
                 icon: const Icon(Icons.copy, size: 16),
-                label: const Text('Kopiraj'),
+                label: Text(l10n.embedCodeCopy),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   visualDensity: VisualDensity.compact,
@@ -894,6 +896,7 @@ function syncWidgetLanguage(newLang) {
   /// Build Language Sync JavaScript section
   Widget _buildLanguageSyncSection() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
@@ -929,7 +932,7 @@ function syncWidgetLanguage(newLang) {
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.warning),
                       ),
                       Text(
-                        'Automatski mijenja jezik widgeta kad korisnik promijeni jezik na vašem sajtu',
+                        'Automatski mijenja jezik widgeta kad korisnik promijeni jezik na vašoj web stranici',
                         style: TextStyle(
                           fontSize: 12,
                           color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
@@ -980,10 +983,10 @@ function syncWidgetLanguage(newLang) {
                 TextButton.icon(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: _languageSyncSnippet));
-                    ErrorDisplayUtils.showSuccessSnackBar(context, 'JavaScript kod kopiran!');
+                    ErrorDisplayUtils.showSuccessSnackBar(context, l10n.embedGuideCodeCopied);
                   },
                   icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('Kopiraj'),
+                  label: Text(l10n.embedCodeCopy),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     visualDensity: VisualDensity.compact,

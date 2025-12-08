@@ -1004,10 +1004,11 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   }
 
   void _saveFeed() async {
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please fix the errors above'),
+          content: Text(l10n.widgetPleaseCheckFormErrors),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1018,7 +1019,6 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     }
     setState(() => _isSaving = true);
 
-    final l10n = AppLocalizations.of(context);
     try {
       final repository = ref.read(icalRepositoryProvider);
 

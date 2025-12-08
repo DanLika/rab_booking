@@ -178,7 +178,7 @@ class Step5Review extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }
 

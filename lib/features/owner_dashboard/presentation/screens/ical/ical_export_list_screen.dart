@@ -34,9 +34,8 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
   Future<void> _generateAndDownloadIcal(dynamic unit, String propertyId) async {
     setState(() => _generatingUnitId = unit.id);
 
+    final l10n = AppLocalizations.of(context);
     try {
-      final l10n = AppLocalizations.of(context);
-
       // Generate iCal content
       await ref
           .read(icalExportServiceProvider)
@@ -54,7 +53,11 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+          SnackBar(
+            content: Text('${l10n.error}: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } finally {

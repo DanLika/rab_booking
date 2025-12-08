@@ -57,7 +57,7 @@ class CalendarTopToolbar extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-    final responsiveHeight = (60 * textScale).clamp(60.0, 80.0);
+    final responsiveHeight = (52 * textScale).clamp(52.0, 64.0);
 
     return Container(
       height: responsiveHeight,

@@ -146,7 +146,7 @@ const FROM_EMAIL = (): string => getFromEmail();
 const FROM_NAME = (): string => getFromName();
 
 // Widget URL for booking lookup
-const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app";
+const WIDGET_URL = process.env.WIDGET_URL || "https://bookbed.io";
 const BOOKING_DOMAIN = process.env.BOOKING_DOMAIN || null;
 
 // ==========================================

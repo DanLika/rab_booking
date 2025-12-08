@@ -1,6 +1,6 @@
 # Claude Code - Project Documentation
 
-**RabBooking** - Booking management platforma za property owner-e na otoku Rabu.
+**BookBed** - Booking management platforma za property owner-e.
 
 **Dodatni dokumenti:**
 - [CLAUDE_BUGS_ARCHIVE.md](./CLAUDE_BUGS_ARCHIVE.md) - Detaljni bug fix-evi sa code examples

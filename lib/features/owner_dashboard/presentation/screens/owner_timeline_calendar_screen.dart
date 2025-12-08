@@ -107,8 +107,8 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                           error: (error, stackTrace) => 0,
                         ),
                         onNotificationsTap: showNotificationsPanel,
-                        // Use higher breakpoint for toolbar to prevent overflow
-                        isCompact: MediaQuery.of(context).size.width < 1100,
+                        // Show all icons on screens >= 600px
+                        isCompact: MediaQuery.of(context).size.width < 600,
                         // ENHANCED: Analytics toggle integrated in single row
                         showSummaryToggle: true,
                         isSummaryVisible: _showSummary,

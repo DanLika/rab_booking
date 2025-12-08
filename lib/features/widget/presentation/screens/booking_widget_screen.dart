@@ -1038,14 +1038,23 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             final screenWidth = constraints.maxWidth;
             final forceMonthView = screenWidth < 1024; // Year view only on desktop
 
+            // Watch calendar view to determine max content width for centering
+            final currentCalendarView = ref.watch(calendarViewProvider);
+            final maxContentWidth = currentCalendarView == CalendarViewType.year ? 1400.0 : 1000.0;
+            final isLargeScreen = screenWidth > maxContentWidth;
+
             // Responsive padding for iframe embedding
-            final horizontalPadding = screenWidth < 600
+            // On large screens, use symmetric padding (same horizontal and vertical)
+            final basePadding = screenWidth < 600
                 ? 12.0 // Mobile
                 : screenWidth < 1024
-                ? 16.0 // Tablet
-                : 24.0; // Desktop
+                    ? 16.0 // Tablet
+                    : isLargeScreen
+                        ? 48.0 // Large screen - more breathing room
+                        : 24.0; // Desktop
 
-            final verticalPadding = horizontalPadding / 2; // Half of horizontal padding
+            final horizontalPadding = basePadding;
+            final verticalPadding = isLargeScreen ? basePadding : basePadding / 2; // Symmetric on large screens
 
             final topPadding = 0.0; // Minimal padding for maximum content space
 
@@ -1074,14 +1083,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             return Stack(
               children: [
                 // No-scroll content (embedded widget - host site scrolls)
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: horizontalPadding,
-                    right: horizontalPadding,
-                    top: verticalPadding,
-                    // No bottom padding - calendar/contact card goes to edge
-                  ),
-                  child: Column(
+                // On large screens, center content with max-width constraint
+                Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: isLargeScreen ? maxContentWidth : double.infinity,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: horizontalPadding,
+                        right: horizontalPadding,
+                        top: verticalPadding,
+                        // No bottom padding - calendar/contact card goes to edge
+                      ),
+                      child: Column(
                     children: [
                       // Custom title header (if configured)
                       if (_widgetSettings?.themeOptions?.customTitle != null &&
@@ -1161,7 +1176,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           screenWidth: screenWidth,
                         ),
                       ],
-                    ],
+                      ],
+                    ),
+                  ),
                   ),
                 ),
 

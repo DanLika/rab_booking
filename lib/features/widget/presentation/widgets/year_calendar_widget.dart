@@ -39,6 +39,17 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+    final tr = WidgetTranslations.of(context);
+
+    // Year calendar needs minimum width to be usable - show rotate message on very narrow screens
+    const minWidthForYearCalendar = 350.0;
+    if (screenWidth < minWidthForYearCalendar) {
+      return _buildRotateDeviceOverlay(colors, tr);
+    }
+
     // Get unit data for minNights (gap blocking) - used in legend
     final unitAsync = ref.watch(unitByIdProvider(widget.propertyId, widget.unitId));
     final unit = unitAsync.valueOrNull;
@@ -46,8 +57,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
     // Use realtime stream provider for automatic updates when bookings change
     final calendarData = ref.watch(realtimeYearCalendarProvider(widget.propertyId, widget.unitId, _currentYear));
-    final isDarkMode = ref.watch(themeProvider);
-    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Stack(
       children: [
@@ -87,6 +96,44 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             error: (error, stack) => const SizedBox.shrink(),
           ),
       ],
+    );
+  }
+
+  /// Shows a friendly message asking user to rotate device to landscape
+  Widget _buildRotateDeviceOverlay(WidgetColorScheme colors, WidgetTranslations tr) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(SpacingTokens.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.screen_rotation_outlined,
+              size: 64,
+              color: colors.textSecondary,
+            ),
+            const SizedBox(height: SpacingTokens.l),
+            Text(
+              tr.rotateYourDevice,
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeL,
+                fontWeight: TypographyTokens.semiBold,
+                color: colors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: SpacingTokens.s),
+            Text(
+              tr.rotateForBestExperience,
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeS,
+                color: colors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 

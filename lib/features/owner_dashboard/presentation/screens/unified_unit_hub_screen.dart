@@ -244,8 +244,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         // Header
         Container(
           padding: isEndDrawer
-              ? const EdgeInsets.fromLTRB(16, 24, 16, 16) // Extra top padding for endDrawer
-              : const EdgeInsets.all(16), // Normal padding for desktop sidebar
+              ? const EdgeInsets.fromLTRB(16, 44, 16, 16) // Extra top padding for endDrawer (increased from 24 to 44)
+              : const EdgeInsets.fromLTRB(16, 36, 16, 16), // Increased top padding for desktop sidebar (from 16 to 36)
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2))),
           ),
@@ -447,7 +447,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32), // Added bottom padding for last unit visibility
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // Increased bottom padding for last unit visibility
           itemCount: filteredProperties.length,
           itemBuilder: (context, index) {
             final property = filteredProperties[index];

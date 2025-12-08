@@ -128,7 +128,7 @@ export function generatePendingOwnerNotificationEmailV2(
     <!-- Footer -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 24px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); border: 1px solid #F3F4F6; text-align: center;">
       <p style="margin: 0; font-size: 14px; font-weight: 400; color: #6B7280;">
-        RabBooking Owner Dashboard
+        BookBed Owner Dashboard
       </p>
 
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #E5E7EB;">

@@ -26,9 +26,10 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 // Allowed domains for return URL (security whitelist)
 const ALLOWED_RETURN_DOMAINS = [
-  "https://rab-booking-248fc.web.app",
-  "https://rab-booking-owner.web.app",
-  "https://rab-booking-widget.web.app",
+  "https://bookbed.io",
+  "https://app.bookbed.io",
+  "https://rab-booking-248fc.web.app",  // Legacy fallback
+  "https://rab-booking-widget.web.app", // Legacy fallback
   "http://localhost",
   "http://127.0.0.1",
 ];

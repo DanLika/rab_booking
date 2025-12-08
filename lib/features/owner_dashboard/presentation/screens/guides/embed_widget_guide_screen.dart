@@ -27,7 +27,7 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
   int? _expandedStep;
   String _selectedLanguage = 'hr';
 
-  static const String _defaultWidgetBaseUrl = 'https://rab-booking-widget.web.app';
+  static const String _defaultWidgetBaseUrl = 'https://bookbed.io';
   static const String _subdomainBaseDomain = 'bookbed.io';
 
   /// Generate iframe code for a unit (uses stable IDs, not slug)
@@ -72,7 +72,7 @@ function syncWidgetLanguage(newLang) {
 
   final String _exampleCode = '''
 <iframe
-  src="https://rab-booking-widget.web.app/?unit=YOUR_UNIT_ID"
+  src="https://bookbed.io/?unit=YOUR_UNIT_ID"
   width="100%"
   height="900px"
   frameborder="0"

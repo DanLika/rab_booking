@@ -57,32 +57,38 @@ class _AppFilterChipState extends State<AppFilterChip> {
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        child: FilterChip(
-          label: widget.icon != null
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(widget.icon, size: 16, color: textColor),
-                    const SizedBox(width: 6),
-                    Flexible(child: Text(widget.label, overflow: TextOverflow.ellipsis, maxLines: 1)),
-                  ],
-                )
-              : Text(widget.label, overflow: TextOverflow.ellipsis, maxLines: 1),
-          selected: widget.selected,
-          onSelected: (_) => widget.onSelected(),
-          selectedColor: bgColor,
-          backgroundColor: bgColor,
-          side: BorderSide(color: borderColor, width: 1.5),
-          labelStyle: TextStyle(
-            color: textColor,
-            fontWeight: widget.selected ? FontWeight.w600 : FontWeight.w500,
-            fontSize: 14,
+        child: Theme(
+          data: theme.copyWith(
+            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
           ),
-          checkmarkColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          elevation: widget.selected ? 2 : 0,
-          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+          child: FilterChip(
+            label: widget.icon != null
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(widget.icon, size: 16, color: textColor),
+                      const SizedBox(width: 6),
+                      Flexible(child: Text(widget.label, overflow: TextOverflow.ellipsis, maxLines: 1)),
+                    ],
+                  )
+                : Text(widget.label, overflow: TextOverflow.ellipsis, maxLines: 1),
+            selected: widget.selected,
+            onSelected: (_) => widget.onSelected(),
+            selectedColor: bgColor,
+            backgroundColor: bgColor,
+            side: BorderSide(color: borderColor, width: 1.5),
+            labelStyle: TextStyle(
+              color: textColor,
+              fontWeight: widget.selected ? FontWeight.w600 : FontWeight.w500,
+              fontSize: 14,
+            ),
+            checkmarkColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            elevation: widget.selected ? 2 : 0,
+            shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+          ),
         ),
       ),
     );

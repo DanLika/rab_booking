@@ -37,7 +37,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   String _selectedLanguage = 'hr';
   String _widgetHeight = '900';
 
-  static const String _defaultWidgetBaseUrl = 'https://rab-booking-widget.web.app';
+  static const String _defaultWidgetBaseUrl = 'https://bookbed.io';
   static const String _subdomainBaseDomain = 'bookbed.io';
 
   /// Get the base URL - use subdomain if available, otherwise default

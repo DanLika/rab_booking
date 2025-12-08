@@ -548,27 +548,33 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
       runSpacing: 8,
       children: commonAmenities.map((amenity) {
         final isSelected = _selectedAmenities.contains(amenity);
-        return FilterChip(
-          label: Text(
-            amenity.displayName,
-            style: TextStyle(color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface),
+        return Theme(
+          data: theme.copyWith(
+            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
           ),
-          selected: isSelected,
-          onSelected: (selected) {
-            setState(() {
-              if (selected) {
-                _selectedAmenities.add(amenity);
-              } else {
-                _selectedAmenities.remove(amenity);
-              }
-            });
-          },
-          avatar: Icon(
-            _getAmenityIcon(amenity.iconName),
-            size: 18,
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+          child: FilterChip(
+            label: Text(
+              amenity.displayName,
+              style: TextStyle(color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface),
+            ),
+            selected: isSelected,
+            onSelected: (selected) {
+              setState(() {
+                if (selected) {
+                  _selectedAmenities.add(amenity);
+                } else {
+                  _selectedAmenities.remove(amenity);
+                }
+              });
+            },
+            avatar: Icon(
+              _getAmenityIcon(amenity.iconName),
+              size: 18,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+            ),
           ),
         );
       }).toList(),

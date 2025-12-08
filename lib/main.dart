@@ -46,14 +46,14 @@ void main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       ],
-      child: const RabBookingApp(),
+      child: const BookBedApp(),
     ),
   );
 }
 
 /// Main application widget
-class RabBookingApp extends ConsumerWidget {
-  const RabBookingApp({super.key});
+class BookBedApp extends ConsumerWidget {
+  const BookBedApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,7 +64,7 @@ class RabBookingApp extends ConsumerWidget {
     final themeMode = ref.watch(currentThemeModeProvider);
 
     return MaterialApp.router(
-      title: 'Rab Booking',
+      title: 'BookBed',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

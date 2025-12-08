@@ -256,7 +256,7 @@ function generateIcalCalendar(unitName: string, bookings: any[]): string {
   // Calendar header
   lines.push("BEGIN:VCALENDAR");
   lines.push("VERSION:2.0");
-  lines.push("PRODID:-//Rab Booking//NONSGML Event Calendar//EN");
+  lines.push("PRODID:-//BookBed//NONSGML Event Calendar//EN");
   lines.push("CALSCALE:GREGORIAN");
   lines.push("METHOD:PUBLISH");
   lines.push(`X-WR-CALNAME:${escapeIcal(unitName)} - Bookings`);

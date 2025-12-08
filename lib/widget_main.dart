@@ -26,7 +26,7 @@ import 'firebase_options.dart';
 /// firebase deploy --only hosting:widget
 ///
 /// Embed code:
-/// <iframe src="https://rab-booking-widget.web.app/?unit=UNIT_ID"
+/// <iframe src="https://bookbed.io/?unit=UNIT_ID"
 ///         width="100%" height="900px" frameborder="0"></iframe>
 void main() async {
   // Use path-based URL strategy (clean URLs without #)

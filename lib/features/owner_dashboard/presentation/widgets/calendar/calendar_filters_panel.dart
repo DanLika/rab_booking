@@ -379,43 +379,51 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             final isSelected = _filters.statuses.contains(statusString);
             final theme = Theme.of(context);
 
-            return FilterChip(
-              selected: isSelected,
-              label: Text(status.displayName),
-              selectedColor: theme.colorScheme.primary,
-              backgroundColor: isSelected ? theme.colorScheme.primary : context.gradients.cardBackground,
-              side: BorderSide(
-                color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
-                width: 1.5,
+            return Theme(
+              data: theme.copyWith(
+                splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 14,
-              ),
-              checkmarkColor: Colors.white,
-              avatar: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: status.color,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: isSelected ? Colors.white : Colors.transparent, width: 2),
+              child: FilterChip(
+                selected: isSelected,
+                label: Text(status.displayName),
+                selectedColor: theme.colorScheme.primary,
+                backgroundColor: isSelected ? theme.colorScheme.primary : context.gradients.cardBackground,
+                side: BorderSide(
+                  color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
+                  width: 1.5,
                 ),
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 14,
+                ),
+                checkmarkColor: Colors.white,
+                avatar: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: status.color,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: isSelected ? Colors.white : Colors.transparent, width: 2),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: isSelected ? 2 : 0,
+                shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _filters = _filters.copyWith(statuses: [..._filters.statuses, statusString]);
+                    } else {
+                      _filters = _filters.copyWith(
+                        statuses: _filters.statuses.where((s) => s != statusString).toList(),
+                      );
+                    }
+                  });
+                },
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              elevation: isSelected ? 2 : 0,
-              shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    _filters = _filters.copyWith(statuses: [..._filters.statuses, statusString]);
-                  } else {
-                    _filters = _filters.copyWith(statuses: _filters.statuses.where((s) => s != statusString).toList());
-                  }
-                });
-              },
             );
           }).toList(),
         ),
@@ -446,35 +454,41 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             final (value, label, icon, color) = source;
             final isSelected = _filters.sources.contains(value);
 
-            return FilterChip(
-              selected: isSelected,
-              label: Text(label),
-              selectedColor: theme.colorScheme.primary,
-              backgroundColor: isSelected ? theme.colorScheme.primary : context.gradients.cardBackground,
-              side: BorderSide(
-                color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
-                width: 1.5,
+            return Theme(
+              data: theme.copyWith(
+                splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 14,
+              child: FilterChip(
+                selected: isSelected,
+                label: Text(label),
+                selectedColor: theme.colorScheme.primary,
+                backgroundColor: isSelected ? theme.colorScheme.primary : context.gradients.cardBackground,
+                side: BorderSide(
+                  color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
+                  width: 1.5,
+                ),
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 14,
+                ),
+                checkmarkColor: Colors.white,
+                avatar: Icon(icon, size: 18, color: isSelected ? Colors.white : color),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: isSelected ? 2 : 0,
+                shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _filters = _filters.copyWith(sources: [..._filters.sources, value]);
+                    } else {
+                      _filters = _filters.copyWith(sources: _filters.sources.where((s) => s != value).toList());
+                    }
+                  });
+                },
               ),
-              checkmarkColor: Colors.white,
-              avatar: Icon(icon, size: 18, color: isSelected ? Colors.white : color),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              elevation: isSelected ? 2 : 0,
-              shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    _filters = _filters.copyWith(sources: [..._filters.sources, value]);
-                  } else {
-                    _filters = _filters.copyWith(sources: _filters.sources.where((s) => s != value).toList());
-                  }
-                });
-              },
             );
           }).toList(),
         ),

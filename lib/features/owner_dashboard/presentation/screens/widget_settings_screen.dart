@@ -1084,23 +1084,38 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             icon,
             color: enabled ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          title: Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: enabled ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          subtitle: Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+          trailing: null, // Let ExpansionTile handle the expand icon
+          controlAffinity: ListTileControlAffinity.trailing,
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          // Add switch as part of title row instead
+          title: Row(
             children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: enabled
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Switch(
                 value: enabled,
                 onChanged: onToggle,
@@ -1112,6 +1127,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ),
             ],
           ),
+          subtitle: null, // Moved to title row
           children: enabled ? [child] : [],
         ),
       ),

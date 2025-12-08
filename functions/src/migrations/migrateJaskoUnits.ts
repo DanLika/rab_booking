@@ -15,7 +15,8 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 const PROPERTY_ID = "EfsY2ARaVwJEJfieJB5D";
-const OWNER_ID = "AoTTooiEHja2jVCB88ugwkWQql93";
+// @ts-ignore - kept for reference
+const _OWNER_ID = "AoTTooiEHja2jVCB88ugwkWQql93";
 
 // Unit IDs to migrate (from top-level units collection)
 const UNIT_IDS = [

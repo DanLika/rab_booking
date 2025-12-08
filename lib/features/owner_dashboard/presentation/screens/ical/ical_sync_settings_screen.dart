@@ -853,102 +853,145 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   Widget build(BuildContext context) {
     final unitsAsync = ref.watch(ownerUnitsProvider);
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final dialogWidth = screenWidth > _kDialogMaxWidth ? _kDialogMaxWidth : screenWidth * _kDialogWidthFactor;
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    return AlertDialog(
+    return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.sync, color: theme.colorScheme.primary, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              widget.existingFeed == null ? l10n.icalAddFeedTitle : l10n.icalEditFeedTitle,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: dialogWidth,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                unitsAsync.when(
-                  data: (units) {
-                    if (units.isEmpty) {
-                      return Text(l10n.icalNoUnitsCreated, style: const TextStyle(color: AppColors.error));
-                    }
-                    final validUnitId = units.any((u) => u.id == _selectedUnitId) ? _selectedUnitId : null;
-                    return DropdownButtonFormField<String>(
-                      initialValue: validUnitId,
-                      dropdownColor: InputDecorationHelper.getDropdownColor(context),
-                      decoration: InputDecorationHelper.buildDecoration(
-                        labelText: l10n.icalSelectUnit,
-                        context: context,
-                      ),
-                      items: units.map((unit) => DropdownMenuItem(value: unit.id, child: Text(unit.name))).toList(),
-                      onChanged: (value) => setState(() => _selectedUnitId = value),
-                      validator: (value) => (value == null || value.isEmpty) ? l10n.icalSelectUnitRequired : null,
-                    );
-                  },
-                  loading: () => const CircularProgressIndicator(),
-                  error: (_, _) => Text(l10n.icalErrorLoadingUnits),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedPlatform,
-                  dropdownColor: InputDecorationHelper.getDropdownColor(context),
-                  decoration: InputDecorationHelper.buildDecoration(labelText: l10n.icalPlatform, context: context),
-                  items: [
-                    DropdownMenuItem(value: 'booking_com', child: Text(l10n.icalPlatformBookingCom)),
-                    DropdownMenuItem(value: 'airbnb', child: Text(l10n.icalPlatformAirbnb)),
-                    DropdownMenuItem(value: 'other', child: Text(l10n.icalPlatformOther)),
-                  ],
-                  onChanged: (value) => setState(() => _selectedPlatform = value!),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _icalUrlController,
-                  decoration: InputDecorationHelper.buildDecoration(
-                    labelText: l10n.icalUrlLabel,
-                    hintText: l10n.icalUrlHint,
-                    context: context,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: dialogWidth, maxHeight: screenHeight * 0.85),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.sync, color: theme.colorScheme.primary, size: 24),
                   ),
-                  maxLines: 2,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return l10n.icalUrlRequired;
-                    if (!value.startsWith('http://') && !value.startsWith('https://')) return l10n.icalUrlInvalid;
-                    return null;
-                  },
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.existingFeed == null ? l10n.icalAddFeedTitle : l10n.icalEditFeedTitle,
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
             ),
-          ),
+            Divider(height: 1, color: theme.dividerColor),
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      unitsAsync.when(
+                        data: (units) {
+                          if (units.isEmpty) {
+                            return Text(l10n.icalNoUnitsCreated, style: const TextStyle(color: AppColors.error));
+                          }
+                          final validUnitId = units.any((u) => u.id == _selectedUnitId) ? _selectedUnitId : null;
+                          return DropdownButtonFormField<String>(
+                            value: validUnitId,
+                            isExpanded: true,
+                            dropdownColor: InputDecorationHelper.getDropdownColor(context),
+                            decoration: InputDecorationHelper.buildDecoration(
+                              labelText: l10n.icalSelectUnit,
+                              context: context,
+                            ),
+                            items: units
+                                .map(
+                                  (unit) => DropdownMenuItem(
+                                    value: unit.id,
+                                    child: Text(unit.name, overflow: TextOverflow.ellipsis),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) => setState(() => _selectedUnitId = value),
+                            validator: (value) => (value == null || value.isEmpty) ? l10n.icalSelectUnitRequired : null,
+                          );
+                        },
+                        loading: () => const CircularProgressIndicator(),
+                        error: (_, _) => Text(l10n.icalErrorLoadingUnits),
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedPlatform,
+                        isExpanded: true,
+                        dropdownColor: InputDecorationHelper.getDropdownColor(context),
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: l10n.icalPlatform,
+                          context: context,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: 'booking_com', child: Text(l10n.icalPlatformBookingCom)),
+                          DropdownMenuItem(value: 'airbnb', child: Text(l10n.icalPlatformAirbnb)),
+                          DropdownMenuItem(value: 'other', child: Text(l10n.icalPlatformOther)),
+                        ],
+                        onChanged: (value) => setState(() => _selectedPlatform = value!),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _icalUrlController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: l10n.icalUrlLabel,
+                          hintText: l10n.icalUrlHint,
+                          context: context,
+                        ),
+                        maxLines: 2,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return l10n.icalUrlRequired;
+                          if (!value.startsWith('http://') && !value.startsWith('https://')) return l10n.icalUrlInvalid;
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Footer
+            Divider(height: 1, color: theme.dividerColor),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+                  const SizedBox(width: 12),
+                  FilledButton(
+                    onPressed: _isSaving ? null : _saveFeed,
+                    child: _isSaving
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(widget.existingFeed == null ? l10n.icalAddFeedButton : l10n.save),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        FilledButton(
-          onPressed: _isSaving ? null : _saveFeed,
-          child: _isSaving
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(widget.existingFeed == null ? l10n.icalAddFeedButton : l10n.save),
-        ),
-      ],
     );
   }
 

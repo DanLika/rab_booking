@@ -33,6 +33,7 @@ jobs:
         run: |
           flutter build web \
             --release \
+            --web-renderer html \
             --no-source-maps \
             --base-href /
 

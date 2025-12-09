@@ -61,7 +61,7 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: isMobile ? screenWidth * 0.9 : 450,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
         decoration: BoxDecoration(
           color: context.gradients.cardBackground,
           borderRadius: BorderRadius.circular(16),

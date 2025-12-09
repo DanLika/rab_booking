@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../shared/models/booking_model.dart';
-import '../../../../../core/constants/enums.dart';
-import '../../../../../l10n/app_localizations.dart';
+import '../../../../../../../../shared/models/booking_model.dart';
+import '../../../../../../../../core/constants/enums.dart';
+import '../../../../../../../../l10n/app_localizations.dart';
 
 /// Action buttons section for booking card
 ///

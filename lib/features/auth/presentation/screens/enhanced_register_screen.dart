@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -69,28 +70,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     // Validate form first
     if (!_formKey.currentState!.validate()) {
       // Show feedback for validation errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please fix the errors above'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      ErrorDisplayUtils.showErrorSnackBar(context, 'Please fix the errors above');
       return;
     }
 
     if (!_acceptedTerms || !_acceptedPrivacy) {
       final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.authMustAcceptTerms),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      ErrorDisplayUtils.showErrorSnackBar(context, l10n.authMustAcceptTerms);
       return;
     }
 
@@ -125,14 +111,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         // Check for errors from provider
         if (authState.error != null) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authState.error!),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, authState.error!);
           return;
         }
 
@@ -168,14 +147,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         } else {
           // Other errors - show SnackBar
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
         }
       }
     }

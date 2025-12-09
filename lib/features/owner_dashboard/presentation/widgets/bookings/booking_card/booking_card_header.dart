@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/enums.dart';
-import '../../../../../shared/models/booking_model.dart';
+import '../../../../../../../../core/constants/enums.dart';
+import '../../../../../../../../shared/models/booking_model.dart';
 
 /// Header section for booking card showing status badge and booking ID
 class BookingCardHeader extends StatelessWidget {

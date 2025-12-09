@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/constants/enums.dart';
+import '../../../../../../core/utils/error_display_utils.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../shared/models/booking_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
@@ -65,9 +66,7 @@ class CalendarBookingActions {
 
         if (context.mounted) {
           final l10nSuccess = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10nSuccess.calendarActionsDeleted), backgroundColor: Colors.green));
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10nSuccess.calendarActionsDeleted);
         }
       } catch (e) {
         // Close loading dialog
@@ -76,10 +75,7 @@ class CalendarBookingActions {
         }
 
         if (context.mounted) {
-          final l10nError = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10nError.calendarActionsError(e.toString())), backgroundColor: Colors.red),
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, e);
         }
       }
     }
@@ -128,12 +124,7 @@ class CalendarBookingActions {
 
       if (context.mounted) {
         final l10nSuccess = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10nSuccess.calendarActionsStatusChanged(newStatus.displayName)),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10nSuccess.calendarActionsStatusChanged(newStatus.displayName));
       }
     } catch (e) {
       // Close loading dialog
@@ -142,10 +133,7 @@ class CalendarBookingActions {
       }
 
       if (context.mounted) {
-        final l10nError = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10nError.calendarActionsError(e.toString())), backgroundColor: Colors.red),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e);
       }
     }
   }

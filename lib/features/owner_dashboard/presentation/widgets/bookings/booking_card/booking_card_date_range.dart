@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../shared/models/booking_model.dart';
-import '../../../../../l10n/app_localizations.dart';
+import '../../../../../../../../shared/models/booking_model.dart';
+import '../../../../../../../../l10n/app_localizations.dart';
 
 /// Date range information section for booking card
 ///

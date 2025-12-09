@@ -5,9 +5,11 @@ import 'package:intl/intl.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../providers/owner_calendar_provider.dart';
@@ -125,9 +127,11 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
       clipBehavior: Clip.antiAlias,
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
-        width: screenWidth * 0.8,
-        height: MediaQuery.of(context).size.height * 0.8,
-        constraints: BoxConstraints(maxWidth: 800, maxHeight: MediaQuery.of(context).size.height * 0.6),
+        width: screenWidth < 400 ? screenWidth * 0.95 : screenWidth * 0.8,
+        constraints: BoxConstraints(
+          maxWidth: 800,
+          maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
@@ -422,7 +426,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   void _showError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: AppColors.error));
+      ErrorDisplayUtils.showErrorSnackBar(context, message);
     }
   }
 }

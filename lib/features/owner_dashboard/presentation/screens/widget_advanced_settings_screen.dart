@@ -6,6 +6,7 @@ import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/presentation/providers/widget_settings_provider.dart';
@@ -68,15 +69,7 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
   Future<void> _saveSettings(WidgetSettings currentSettings) async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.widgetPleaseCheckFormErrors),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      ErrorDisplayUtils.showWarningSnackBar(context, l10n.widgetPleaseCheckFormErrors);
       return;
     }
 
@@ -109,7 +102,7 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         // Invalidate provider so Widget Settings screen re-fetches fresh data
         ref.invalidate(widgetSettingsProvider);
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.advancedSettingsSaveSuccess)));
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.advancedSettingsSaveSuccess);
 
         // Only pop if opened as standalone screen (with app bar)
         // When embedded in tab (showAppBar = false), don't navigate
@@ -143,7 +136,7 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
         child: Container(
           width: isMobile ? screenWidth * 0.90 : 600,
-          constraints: BoxConstraints(maxHeight: isMobile ? screenHeight * 0.85 : screenHeight * 0.8),
+          constraints: BoxConstraints(maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(dialogContext)),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(16),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/providers/repository_providers.dart';
@@ -42,23 +43,11 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
           .generateAndUploadIcal(propertyId: propertyId, unitId: unit.id, unit: unit);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.icalExportSuccess),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalExportSuccess);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.error}: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
       }
     } finally {
       if (mounted) {

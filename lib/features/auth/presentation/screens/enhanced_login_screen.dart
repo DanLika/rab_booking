@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../core/utils/password_validator.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
@@ -53,15 +53,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
     // Validate form first
     if (!_formKey.currentState!.validate()) {
       // Show feedback for validation errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please fix the errors above'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      ErrorDisplayUtils.showErrorSnackBar(context, 'Please fix the errors above');
       return;
     }
 
@@ -83,14 +75,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         // Check for errors from provider
         if (authState.error != null) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authState.error!),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, authState.error!);
           return;
         }
 
@@ -103,14 +88,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
 
         // Success - show welcome message and reset loading
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Welcome back, ${authState.userModel?.firstName ?? "User"}!'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 2),
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Welcome back, ${authState.userModel?.firstName ?? "User"}!',
         );
         // Router will handle navigation automatically
       }
@@ -133,21 +113,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         } else {
           // Other errors - show SnackBar
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
         }
       }
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
 
     try {
@@ -162,20 +134,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         final authState = ref.read(enhancedAuthProvider);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(authState.error ?? e.toString()),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, authState.error ?? e.toString());
       }
     }
   }
 
   Future<void> _handleAppleSignIn() async {
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
 
     try {
@@ -190,42 +154,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         final authState = ref.read(enhancedAuthProvider);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(authState.error ?? e.toString()),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _handleAnonymousSignIn() async {
-    final messenger = ScaffoldMessenger.of(context);
-    setState(() => _isLoading = true);
-
-    try {
-      await ref.read(enhancedAuthProvider.notifier).signInAnonymously();
-
-      // Reset loading state on success
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-      // Navigation handled by router based on auth state
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        final authState = ref.read(enhancedAuthProvider);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(authState.error ?? e.toString()),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, authState.error ?? e.toString());
       }
     }
   }
@@ -419,14 +348,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                                         ),
                                       ),
                                     ],
-                                  ),
-                                  SizedBox(height: isMobile ? 10 : 12),
-
-                                  // Anonymous Login Button (Demo)
-                                  _SocialLoginButton(
-                                    icon: Icons.preview,
-                                    label: l10n.authPreviewDemo,
-                                    onPressed: _handleAnonymousSignIn,
                                   ),
                                   SizedBox(height: isMobile ? 20 : 24),
 

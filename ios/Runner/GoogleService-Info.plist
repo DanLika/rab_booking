@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>592597958982-a38onq6ft57de2dprnsi3lg0rog27bvg.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.592597958982-a38onq6ft57de2dprnsi3lg0rog27bvg</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>592597958982-d1s4sho1bmnekkfr1vr80gnffc74bbp9.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyAOFQ2jykLZlTtE6whuGDb-09r8HyAHs90</string>
 	<key>GCM_SENDER_ID</key>
@@ -9,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.novaAplikacija</string>
+	<string>io.bookbed.app</string>
 	<key>PROJECT_ID</key>
 	<string>rab-booking-248fc</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:592597958982:ios:4ef349721f048d97d3e547</string>
+	<string>1:592597958982:ios:157b8d20e9e17aa7d3e547</string>
 </dict>
 </plist>

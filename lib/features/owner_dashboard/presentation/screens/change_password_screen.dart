@@ -58,14 +58,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   Future<void> _changePassword() async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.widgetPleaseCheckFormErrors),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        Exception(l10n.widgetPleaseCheckFormErrors),
+        userMessage: l10n.widgetPleaseCheckFormErrors,
       );
       return;
     }

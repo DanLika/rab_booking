@@ -145,6 +145,9 @@ class AppColors {
   static const Color warningLight = Color(0xFFFB923C); // Orange 400
   static const Color warningDark = Color(0xFFEA580C); // Orange 600
 
+  /// Text color for warning backgrounds (dark for contrast on orange)
+  static const Color textOnWarning = Color(0xFF1C1917); // Stone 900
+
   /// Info color - Blue
   static const Color info = Color(0xFF3B82F6); // Blue 500
   static const Color infoLight = Color(0xFF60A5FA); // Blue 400

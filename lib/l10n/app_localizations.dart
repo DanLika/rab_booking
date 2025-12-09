@@ -8310,6 +8310,36 @@ abstract class AppLocalizations {
   /// **'Code copied!'**
   String get embedGuideCodeCopied;
 
+  /// No description provided for @embedGuideYourEmbedCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Embed Codes'**
+  String get embedGuideYourEmbedCodes;
+
+  /// No description provided for @embedGuideCopyIframe.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the iframe code for each apartment'**
+  String get embedGuideCopyIframe;
+
+  /// No description provided for @embedGuideWidgetLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget language:'**
+  String get embedGuideWidgetLanguage;
+
+  /// No description provided for @embedGuideNoProperties.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no properties. Create a property to get embed codes.'**
+  String get embedGuideNoProperties;
+
+  /// No description provided for @embedGuideNoUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no units. Create a unit to get embed codes.'**
+  String get embedGuideNoUnits;
+
   /// No description provided for @embedGuideStep1Intro.
   ///
   /// In en, this message translates to:

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../shared/models/property_model.dart';
-import '../../../../../shared/models/unit_model.dart';
+import '../../../../../../../../shared/models/property_model.dart';
+import '../../../../../../../../shared/models/unit_model.dart';
 
 /// Property and unit information section for booking card
 ///

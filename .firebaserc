@@ -6,10 +6,10 @@
     "rab-booking-248fc": {
       "hosting": {
         "widget": [
-          "rab-booking-widget"
+          "bookbed-widget"
         ],
         "owner": [
-          "rab-booking-owner"
+          "bookbed-owner"
         ]
       }
     }

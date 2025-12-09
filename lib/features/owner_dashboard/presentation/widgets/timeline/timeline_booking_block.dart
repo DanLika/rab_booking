@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/utils/platform_utils.dart';
-import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/booking_overlap_detector.dart';
 import '../calendar/skewed_booking_painter.dart';
 import '../calendar/smart_booking_tooltip.dart';
-import '../../../../../l10n/app_localizations.dart';
 
 /// Timeline booking block widget
 ///
 /// Displays a booking as a skewed parallelogram block in the timeline calendar.
 /// Includes check-in/out diagonal indicators, guest info, and hover tooltips.
+///
+/// TURNOVER DAY SUPPORT:
+/// The parallelogram shape uses dayWidth to calculate skewOffset, ensuring that
+/// on turnover days (checkout + checkin same day), the diagonals meet at the
+/// center of the shared cell with a small gap between them.
 ///
 /// Extracted from timeline_calendar_widget.dart for better maintainability.
 class TimelineBookingBlock extends StatefulWidget {
@@ -22,6 +25,9 @@ class TimelineBookingBlock extends StatefulWidget {
 
   /// Height of the unit row (used to calculate block height)
   final double unitRowHeight;
+
+  /// Width of a single day cell (used for turnover day diagonal alignment)
+  final double dayWidth;
 
   /// All bookings by unit ID (used for conflict detection)
   final Map<String, List<BookingModel>> allBookingsByUnit;
@@ -37,6 +43,7 @@ class TimelineBookingBlock extends StatefulWidget {
     required this.booking,
     required this.width,
     required this.unitRowHeight,
+    required this.dayWidth,
     required this.allBookingsByUnit,
     required this.onTap,
     required this.onLongPress,
@@ -55,15 +62,20 @@ class TimelineBookingBlock extends StatefulWidget {
   ///
   /// Uses BookingOverlapDetector to find overlapping bookings.
   static bool hasBookingConflict(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
-    final conflicts = BookingOverlapDetector.getConflictingBookings(
+    return getConflictingBookings(booking, allBookingsByUnit).isNotEmpty;
+  }
+
+  /// Get list of bookings that conflict with this booking
+  ///
+  /// Uses BookingOverlapDetector to find overlapping bookings.
+  static List<BookingModel> getConflictingBookings(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
+    return BookingOverlapDetector.getConflictingBookings(
       unitId: booking.unitId,
       newCheckIn: booking.checkIn,
       newCheckOut: booking.checkOut,
       bookingIdToExclude: booking.id,
       allBookings: allBookingsByUnit,
     );
-
-    return conflicts.isNotEmpty;
   }
 
   @override
@@ -78,25 +90,26 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
     final booking = widget.booking;
     final width = widget.width;
     final unitRowHeight = widget.unitRowHeight;
+    final dayWidth = widget.dayWidth;
     final allBookingsByUnit = widget.allBookingsByUnit;
-    final blockHeight = unitRowHeight - 16;
-    final nights = TimelineBookingBlock.calculateNights(booking.checkIn, booking.checkOut);
-    final screenWidth = MediaQuery.of(context).size.width;
+    final blockHeight = unitRowHeight - 8; // Reduced padding for smaller blocks
 
-    // Get responsive dimensions from CalendarGridCalculator
-    final guestNameFontSize = CalendarGridCalculator.getBookingGuestNameFontSize(screenWidth);
-    final metadataFontSize = CalendarGridCalculator.getBookingMetadataFontSize(screenWidth);
-    final bookingPadding = CalendarGridCalculator.getBookingPadding(screenWidth);
-
-    // ENHANCED: Detect conflicts with other bookings in the same unit
-    final hasConflict = TimelineBookingBlock.hasBookingConflict(booking, allBookingsByUnit);
+    // Detect conflicts with other bookings in the same unit
+    final conflictingBookings = TimelineBookingBlock.getConflictingBookings(booking, allBookingsByUnit);
+    final hasConflict = conflictingBookings.isNotEmpty;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: PlatformUtils.supportsHover
           ? (event) {
               setState(() => _isHovered = true);
-              SmartBookingTooltip.show(context: context, booking: booking, position: event.position);
+              SmartBookingTooltip.show(
+                context: context,
+                booking: booking,
+                position: event.position,
+                hasConflict: hasConflict,
+                conflictingBookings: conflictingBookings,
+              );
             }
           : null,
       onExit: PlatformUtils.supportsHover
@@ -111,9 +124,9 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOut,
-          width: width - 2,
+          width: width - 4, // 2px left + 2px right gap
           height: blockHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 1),
+          margin: const EdgeInsets.symmetric(horizontal: 2), // 2px gap on each side
           transform: _isHovered ? Matrix4.diagonal3Values(1.02, 1.02, 1.0) : Matrix4.identity(),
           transformAlignment: Alignment.center,
           child: AnimatedOpacity(
@@ -122,101 +135,47 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
             child: Stack(
               children: [
                 // Background layer with skewed parallelogram
+                // dayWidth is used to calculate skewOffset for turnover day alignment
                 CustomPaint(
                   painter: SkewedBookingPainter(
                     backgroundColor: booking.status.color,
                     borderColor: booking.status.color,
+                    dayWidth: dayWidth,
                     hasConflict: hasConflict,
                   ),
                   size: Size(width - 2, blockHeight),
                 ),
 
-                // Content layer - clipped to skewed shape
-                ClipPath(
-                  clipper: SkewedBookingClipper(),
-                  child: Padding(
-                    padding: bookingPadding.copyWith(
-                      left: bookingPadding.left + 12,
-                    ), // Increased from 8 to 12 for better spacing
-                    child: Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context);
-                        // Determine text color based on background luminance
-                        final textColor = _getContrastTextColor(booking.status.color);
-                        final secondaryTextColor = textColor.withValues(alpha: 0.85);
-                        final iconColor = textColor.withValues(alpha: 0.7);
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              booking.guestName ?? l10n.ownerCalendarDefaultGuest,
-                              style: TextStyle(
-                                color: textColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: guestNameFontSize,
-                                shadows: _shouldAddTextShadow(booking.status.color)
-                                    ? [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 2)]
-                                    : null,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 1),
-                            // Wrap in Flexible + ClipRect to prevent overflow when block is narrow
-                            Flexible(
-                              child: ClipRect(
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.person, size: metadataFontSize + 2, color: iconColor),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      '${booking.guestCount}',
-                                      style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Icon(Icons.nights_stay, size: metadataFontSize + 2, color: iconColor),
-                                    const SizedBox(width: 2),
-                                    Flexible(
-                                      child: Text(
-                                        '$nights',
-                                        style: TextStyle(color: secondaryTextColor, fontSize: metadataFontSize),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                // Centered conflict indicator (warning icon)
+                if (hasConflict)
+                  Positioned.fill(
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade700,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(60),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
                           ],
-                        );
-                      },
+                        ),
+                        child: const Icon(
+                          Icons.warning_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
         ),
       ),
     );
-  }
-
-  /// Get contrasting text color based on background luminance
-  static Color _getContrastTextColor(Color backgroundColor) {
-    // Calculate relative luminance
-    final luminance = backgroundColor.computeLuminance();
-    // Use white text for dark backgrounds, dark text for light backgrounds
-    return luminance > 0.5 ? const Color(0xFF1A1A1A) : Colors.white;
-  }
-
-  /// Determine if text shadow should be added for better readability
-  static bool _shouldAddTextShadow(Color backgroundColor) {
-    final luminance = backgroundColor.computeLuminance();
-    // Add shadow for medium luminance colors where contrast might be borderline
-    return luminance > 0.3 && luminance < 0.7;
   }
 }

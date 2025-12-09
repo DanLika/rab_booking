@@ -14,7 +14,8 @@ import '../../../../core/constants/enums.dart';
 part 'owner_calendar_provider.g.dart';
 
 /// Owner properties provider - returns ALL properties for owner
-@riverpod
+/// keepAlive: Prevents re-fetching when filters dialog opens
+@Riverpod(keepAlive: true)
 Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
   final repository = ref.watch(ownerPropertiesRepositoryProvider);
   final auth = FirebaseAuth.instance;
@@ -29,7 +30,8 @@ Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
 
 /// All units provider - returns ALL ACTIVE units for ALL properties
 /// Filters out soft-deleted units (deletedAt != null) and unavailable units
-@riverpod
+/// keepAlive: Prevents re-fetching when filters dialog opens/closes
+@Riverpod(keepAlive: true)
 Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
   final properties = await ref.watch(ownerPropertiesCalendarProvider.future);
   final repository = ref.watch(ownerPropertiesRepositoryProvider);
@@ -48,8 +50,11 @@ Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
   return allUnits;
 }
 
-/// Calendar bookings provider - returns ACTIVE bookings only (excludes cancelled)
-/// Cancelled bookings are not shown on timeline calendar (consistent with booking widget)
+/// Calendar bookings provider - returns all bookings except cancelled
+/// Cancelled bookings are hidden as they don't occupy dates
+///
+/// OPTIMIZED: Uses pre-cached unitIds from allOwnerUnitsProvider
+/// Saves 1 + N queries (properties + units) per invocation
 @riverpod
 Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
@@ -60,34 +65,39 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
     throw AuthException('User not authenticated', code: 'auth/not-authenticated');
   }
 
-  // OPTIMIZED: Narrower date range: 3 months ago to 1 year in future
-  // Old properties with past bookings can be viewed via archive feature
-  final now = DateTime.now();
-  final startDate = DateTime(now.year, now.month - 3, now.day);
-  final endDate = DateTime(now.year + 1, now.month, now.day);
+  // OPTIMIZED: Get unitIds from cached provider instead of re-fetching
+  final units = await ref.watch(allOwnerUnitsProvider.future);
+  final unitIds = units.map((u) => u.id).toList();
 
-  // No property/unit filtering - timeline widget shows ALL units
-  final allBookings = await repository.getCalendarBookings(
-    ownerId: userId,
+  if (unitIds.isEmpty) return {};
+
+  // Date range aligned with widget's max scroll limits (_kMaxDaysLimit = 365)
+  // 1 year back for historical visibility, 1 year forward for future planning
+  final now = DateTime.now();
+  final startDate = DateTime(now.year, now.month - 12, now.day); // 1 year back
+  final endDate = DateTime(now.year + 1, now.month, now.day); // 1 year forward
+
+  // OPTIMIZED: Use method that accepts unitIds directly (skips properties/units fetch)
+  final allBookings = await repository.getCalendarBookingsWithUnitIds(
+    unitIds: unitIds,
     startDate: startDate,
     endDate: endDate,
   );
 
-  // FILTER: Only show active bookings on timeline (pending + confirmed)
-  // Completed and cancelled bookings are visible on Reservations page
-  final activeBookingsMap = <String, List<BookingModel>>{};
+  // FILTER: Show active bookings + completed on timeline (exclude only cancelled)
+  // Completed bookings are included for historical visibility
+  // Cancelled bookings are hidden as they don't occupy dates
+  final visibleBookingsMap = <String, List<BookingModel>>{};
   for (final entry in allBookings.entries) {
-    final activeBookings = entry.value
-        .where((booking) =>
-            booking.status == BookingStatus.pending ||
-            booking.status == BookingStatus.confirmed)
+    final visibleBookings = entry.value
+        .where((booking) => booking.status != BookingStatus.cancelled)
         .toList();
-    if (activeBookings.isNotEmpty) {
-      activeBookingsMap[entry.key] = activeBookings;
+    if (visibleBookings.isNotEmpty) {
+      visibleBookingsMap[entry.key] = visibleBookings;
     }
   }
 
-  return activeBookingsMap;
+  return visibleBookingsMap;
 }
 
 /// Realtime subscription manager for owner calendar
@@ -117,6 +127,9 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
 
   /// Setup real-time subscription for ALL owner's bookings with batched listeners
   /// Handles >10 units by creating multiple listeners (Firestore whereIn limit is 10)
+  ///
+  /// OPTIMIZED: Uses cached unitIds from allOwnerUnitsProvider
+  /// Saves 1 + N queries (properties + units) per setup
   void _setupRealtimeSubscription({required String userId}) async {
     // FIXED: Cancel ALL previous subscriptions
     for (final subscription in _allSubscriptions) {
@@ -126,26 +139,16 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
 
     final firestore = FirebaseFirestore.instance;
 
+    // PERFORMANCE FIX: Calculate date range for realtime listener
+    // Only listen for bookings that could affect the visible calendar
+    // Must match the date range used by calendarBookingsProvider
+    final now = DateTime.now();
+    final endDate = DateTime(now.year + 1, now.month, now.day); // 1 year forward
+
     try {
-      // Get all unit IDs for owner's properties
-      final propertiesSnapshot = await firestore
-          .collection('properties')
-          .where('owner_id', isEqualTo: userId)
-          .get();
-
-      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
-
-      // Get all units for these properties from subcollections
-      final List<String> unitIdsToWatch = [];
-      for (final propertyId in propertyIds) {
-        final unitsSnapshot = await firestore
-            .collection('properties')
-            .doc(propertyId)
-            .collection('units')
-            .get();
-
-        unitIdsToWatch.addAll(unitsSnapshot.docs.map((doc) => doc.id));
-      }
+      // OPTIMIZED: Get unitIds from cached provider instead of re-fetching
+      final units = await ref.read(allOwnerUnitsProvider.future);
+      final unitIdsToWatch = units.map((u) => u.id).toList();
 
       if (unitIdsToWatch.isEmpty) return;
 
@@ -159,7 +162,7 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
       }
 
       LoggingService.log(
-        'Setting up ${batches.length} batched listeners for ${unitIdsToWatch.length} units',
+        'Setting up ${batches.length} batched listeners for ${unitIdsToWatch.length} units (until: ${endDate.toIso8601String()})',
         tag: 'CALENDAR_REALTIME',
       );
 
@@ -169,9 +172,13 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
         final batch = batches[i];
 
         // Listener 1: Regular bookings
+        // PERFORMANCE FIX: Add date filter to prevent unbounded data download
+        // Filter by check_in <= endDate (server-side) - Firestore only allows one inequality
+        // Bookings with check_out before startDate will be ignored via provider filtering
         final bookingsSubscription = firestore
             .collection('bookings')
             .where('unit_id', whereIn: batch)
+            .where('check_in', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
             .snapshots()
             .listen(
               (snapshot) {

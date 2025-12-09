@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../../core/utils/responsive_spacing_helper.dart';
 
 /// Wizard Navigation Buttons - Back, Skip, Next/Continue
 /// Provides consistent navigation controls across all wizard steps
@@ -31,21 +32,25 @@ class WizardNavigationButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final isVerySmall = screenWidth < 400; // Extra small screens (360px etc.)
+    final screenType = ResponsiveSpacingHelper.getScreenType(context);
+    final isVerySmall = ResponsiveSpacingHelper.isVerySmallScreen(context);
+    final isLandscape = screenType == ScreenType.landscapeMobile;
+    final isMobile = screenType == ScreenType.portraitMobile || isLandscape;
+
+    // Use responsive bottom bar padding
+    final bottomBarPadding = ResponsiveSpacingHelper.getBottomBarPadding(context);
 
     return Container(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: bottomBarPadding,
       decoration: BoxDecoration(
         gradient: context.gradients.pageBackground,
         // Border removed for seamless gradient flow with content above
       ),
       child: Row(
         children: [
-          // Back button - icon only on very small screens
+          // Back button - icon only on very small screens or landscape
           if (showBack)
-            isVerySmall
+            isVerySmall || isLandscape
                 ? IconButton(
                     onPressed: onBack,
                     icon: const Icon(Icons.arrow_back, size: 20),
@@ -80,7 +85,7 @@ class WizardNavigationButtons extends StatelessWidget {
             SizedBox(width: isVerySmall ? 4 : (isMobile ? 8 : 12)),
           ],
 
-          // Next/Continue button - shorter label on very small screens
+          // Next/Continue button - shorter label on very small screens or landscape
           isVerySmall && nextLabel == l10n.unitWizardContinueToReview
               ? FilledButton.icon(
                   onPressed: nextEnabled && !isLoading ? onNext : null,
@@ -100,7 +105,7 @@ class WizardNavigationButtons extends StatelessWidget {
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: theme.colorScheme.surfaceContainerHighest,
                     disabledForegroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.38),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: isLandscape ? 8 : 12),
                   ),
                 )
               : FilledButton.icon(
@@ -123,7 +128,7 @@ class WizardNavigationButtons extends StatelessWidget {
                     disabledForegroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                     padding: EdgeInsets.symmetric(
                       horizontal: isVerySmall ? 16 : (isMobile ? 20 : 32),
-                      vertical: isMobile ? 12 : 14,
+                      vertical: isLandscape ? 8 : (isMobile ? 12 : 14),
                     ),
                   ),
                 ),

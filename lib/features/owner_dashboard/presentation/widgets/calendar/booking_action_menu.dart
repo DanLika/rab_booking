@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
@@ -467,22 +468,7 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
     try {
       // Show loading
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
-              ),
-              const SizedBox(width: 12),
-              Text(l10n.bookingActionMoving),
-            ],
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      ErrorDisplayUtils.showLoadingSnackBar(context, l10n.bookingActionMoving);
 
       // Update booking with new unit
       final updatedBooking = widget.booking.copyWith(unitId: targetUnit.id);
@@ -494,16 +480,10 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
 
       // Show success
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.bookingActionMovedTo(targetUnit.name)), backgroundColor: AppColors.success),
-      );
+      ErrorDisplayUtils.showSuccessSnackBar(context, l10n.bookingActionMovedTo(targetUnit.name));
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.bookingActionError(e.toString())), backgroundColor: AppColors.error));
+      ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.bookingActionError(e.toString()));
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);

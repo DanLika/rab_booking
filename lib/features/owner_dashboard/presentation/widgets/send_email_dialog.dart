@@ -7,6 +7,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 
 /// Email templates for guest communication
@@ -162,7 +163,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
+        constraints: BoxConstraints(maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),

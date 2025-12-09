@@ -43,12 +43,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         });
 
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(value ? l10n.notificationSettingsEnabled : l10n.notificationSettingsDisabled),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          value ? l10n.notificationSettingsEnabled : l10n.notificationSettingsDisabled,
         );
       }
     } catch (e) {
@@ -102,13 +99,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         });
 
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.notificationSettingsUpdated(category)),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.notificationSettingsUpdated(category),
         );
       }
     } catch (e) {

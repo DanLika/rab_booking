@@ -111,8 +111,8 @@ ava race condition gdje 2 korisnika plate za iste datume.
 **Firebase Hosting targets** (`.firebaserc`):
 | Target | Site ID | Build folder | Custom domain |
 |--------|---------|--------------|---------------|
-| `owner` | `rab-booking-248fc` | `build/web_owner` | app.bookbed.io |
-| `widget` | `rab-booking-widget` | `build/web_widget` | bookbed.io, *.bookbed.io |
+| `owner` | `bookbed-owner` | `build/web_owner` | app.bookbed.io |
+| `widget` | `bookbed-widget` | `build/web_widget` | bookbed.io, *.bookbed.io |
 
 **Build commands**:
 ```bash

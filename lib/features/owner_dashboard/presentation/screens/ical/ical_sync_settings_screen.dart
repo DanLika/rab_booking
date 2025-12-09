@@ -9,6 +9,7 @@ import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../../domain/models/ical_feed.dart';
 import '../../providers/ical_feeds_provider.dart';
@@ -772,7 +773,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           ElevatedButton(
             onPressed: () async {
               final navigator = Navigator.of(dialogContext);
-              final messenger = ScaffoldMessenger.of(context);
               navigator.pop();
               try {
                 final repository = ref.read(icalRepositoryProvider);
@@ -780,15 +780,11 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 ref.invalidate(icalFeedsStreamProvider);
                 ref.invalidate(icalStatisticsProvider);
                 if (mounted) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text(l10n.icalFeedDeleted), backgroundColor: theme.colorScheme.success),
-                  );
+                  ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedDeleted);
                 }
               } catch (e) {
                 if (mounted) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text(l10n.icalFeedDeleteError), backgroundColor: theme.colorScheme.danger),
-                  );
+                  ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.icalFeedDeleteError);
                 }
               }
             },
@@ -865,7 +861,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: dialogWidth, maxHeight: screenHeight * 0.85),
+          constraints: BoxConstraints(maxWidth: dialogWidth, maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1006,15 +1002,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   void _saveFeed() async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.widgetPleaseCheckFormErrors),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      ErrorDisplayUtils.showWarningSnackBar(context, l10n.widgetPleaseCheckFormErrors);
       return;
     }
     setState(() => _isSaving = true);

@@ -42,23 +42,23 @@ mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget>
       ]);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
         ErrorDisplayUtils.showSuccessSnackBar(context, 'Podaci osvježeni');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
         ErrorDisplayUtils.showErrorSnackBar(context, e);
       }
     }
   }
 
   /// Show filters panel
-  Future<void> showFiltersPanel() async {
-    await showDialog(
+  /// Returns true if filters were applied, false/null otherwise
+  Future<bool?> showFiltersPanel() async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => const CalendarFiltersPanel(),
     );
+    return result;
   }
 
   /// Show notifications page

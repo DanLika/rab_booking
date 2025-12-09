@@ -1,6 +1,13 @@
 import '../../../shared/models/booking_model.dart';
 import '../../../core/constants/enums.dart';
 
+/// Check if a booking is active (blocks dates)
+/// Returns true for pending/confirmed bookings
+/// Returns false for cancelled/completed bookings (don't block dates)
+bool isActiveBooking(BookingModel booking) =>
+    booking.status != BookingStatus.cancelled &&
+    booking.status != BookingStatus.completed;
+
 /// Booking overlap detector for drag-and-drop validation
 /// Checks if a booking can be moved to a new date/unit without conflicts
 ///
@@ -41,7 +48,8 @@ class BookingOverlapDetector {
     required String unitId,
     required DateTime newCheckIn,
     required DateTime newCheckOut,
-    required String? bookingIdToExclude, // Exclude when editing existing booking
+    required String?
+    bookingIdToExclude, // Exclude when editing existing booking
     required Map<String, List<BookingModel>> allBookings,
   }) {
     // Get all bookings for this unit
@@ -54,11 +62,8 @@ class BookingOverlapDetector {
         continue;
       }
 
-      // FILTER: Ignore cancelled and completed bookings - they don't block dates
-      if (booking.status == BookingStatus.cancelled ||
-          booking.status == BookingStatus.completed) {
-        continue;
-      }
+      // Skip inactive bookings (cancelled/completed don't block dates)
+      if (!isActiveBooking(booking)) continue;
 
       // Check for overlap
       if (doBookingsOverlap(
@@ -92,11 +97,8 @@ class BookingOverlapDetector {
         continue;
       }
 
-      // FILTER: Ignore cancelled and completed bookings - they don't block dates
-      if (booking.status == BookingStatus.cancelled ||
-          booking.status == BookingStatus.completed) {
-        continue;
-      }
+      // Skip inactive bookings (cancelled/completed don't block dates)
+      if (!isActiveBooking(booking)) continue;
 
       // Check for overlap
       if (doBookingsOverlap(
@@ -123,7 +125,8 @@ class BookingOverlapDetector {
     required Map<String, List<BookingModel>> allBookings,
   }) {
     // Check if target unit exists in bookings map (unit is valid)
-    if (!allBookings.containsKey(targetUnitId) && targetUnitId != currentUnitId) {
+    if (!allBookings.containsKey(targetUnitId) &&
+        targetUnitId != currentUnitId) {
       return BookingMoveValidation(
         isValid: false,
         reason: 'Target unit does not exist',
@@ -158,7 +161,11 @@ class BookingOverlapDetector {
     // FIXED: Check if dates are in the past (compare dates only, not time)
     final now = DateTime.now();
     final todayNormalized = DateTime(now.year, now.month, now.day);
-    final checkInNormalized = DateTime(newCheckIn.year, newCheckIn.month, newCheckIn.day);
+    final checkInNormalized = DateTime(
+      newCheckIn.year,
+      newCheckIn.month,
+      newCheckIn.day,
+    );
 
     if (checkInNormalized.isBefore(todayNormalized)) {
       return BookingMoveValidation(
@@ -176,10 +183,7 @@ class BookingOverlapDetector {
     }
 
     // All validations passed
-    return BookingMoveValidation(
-      isValid: true,
-      reason: 'Booking can be moved',
-    );
+    return BookingMoveValidation(isValid: true, reason: 'Booking can be moved');
   }
 
   /// Find available date slots in a unit
@@ -195,12 +199,8 @@ class BookingOverlapDetector {
     final unitBookings = allBookings[unitId] ?? [];
     final availableSlots = <DateRange>[];
 
-    // FILTER: Only consider active bookings (exclude cancelled and completed)
-    final activeBookings = unitBookings
-        .where((booking) =>
-            booking.status != BookingStatus.cancelled &&
-            booking.status != BookingStatus.completed)
-        .toList();
+    // Filter to only active bookings (exclude cancelled and completed)
+    final activeBookings = unitBookings.where(isActiveBooking).toList();
 
     // Sort bookings by check-in date
     final sortedBookings = [...activeBookings]
@@ -214,10 +214,9 @@ class BookingOverlapDetector {
       if (booking.checkIn.isAfter(currentStart)) {
         final nights = booking.checkIn.difference(currentStart).inDays;
         if (nights >= minNights) {
-          availableSlots.add(DateRange(
-            start: currentStart,
-            end: booking.checkIn,
-          ));
+          availableSlots.add(
+            DateRange(start: currentStart, end: booking.checkIn),
+          );
         }
       }
 
@@ -231,10 +230,7 @@ class BookingOverlapDetector {
     if (currentStart.isBefore(rangeEnd)) {
       final nights = rangeEnd.difference(currentStart).inDays;
       if (nights >= minNights) {
-        availableSlots.add(DateRange(
-          start: currentStart,
-          end: rangeEnd,
-        ));
+        availableSlots.add(DateRange(start: currentStart, end: rangeEnd));
       }
     }
 
@@ -260,10 +256,7 @@ class DateRange {
   final DateTime start;
   final DateTime end;
 
-  DateRange({
-    required this.start,
-    required this.end,
-  });
+  DateRange({required this.start, required this.end});
 
   int get nights => end.difference(start).inDays;
 

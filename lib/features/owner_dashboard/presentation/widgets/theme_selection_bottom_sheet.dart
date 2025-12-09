@@ -3,12 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/responsive_spacing_helper.dart';
 
 /// Show theme selection bottom sheet
 void showThemeSelectionBottomSheet(BuildContext context, WidgetRef ref) {
+  final screenHeight = MediaQuery.of(context).size.height;
+  final maxHeightPercent = ResponsiveSpacingHelper.getBottomSheetMaxHeightPercent(context);
+  final maxSheetHeight = screenHeight * maxHeightPercent;
+
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    constraints: BoxConstraints(maxHeight: maxSheetHeight),
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
     builder: (context) => const ThemeSelectionBottomSheet(),
   );
@@ -22,9 +29,9 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentThemeMode = ref.watch(currentThemeModeProvider);
     final l10n = AppLocalizations.of(context);
+    final headerPadding = ResponsiveSpacingHelper.getHeaderPadding(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -32,67 +39,84 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
+          // Header (fixed)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: headerPadding,
             child: Row(
               children: [
                 Icon(Icons.brightness_6_outlined, color: Theme.of(context).colorScheme.onSurface),
                 const SizedBox(width: 12),
-                Text(
-                  l10n.themeSelectionTitle,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    l10n.themeSelectionTitle,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
           const Divider(height: 1),
 
-          // Theme options
-          _ThemeOption(
-            themeMode: ThemeMode.light,
-            icon: Icons.light_mode,
-            title: l10n.themeSelectionLight,
-            subtitle: l10n.themeSelectionLightDesc,
-            isSelected: currentThemeMode == ThemeMode.light,
-            onTap: () {
-              Navigator.of(context).pop();
-              // Delay theme change to after modal closes to prevent rebuild during animation
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
-              });
-            },
-          ),
-          const Divider(height: 1, indent: 24, endIndent: 24),
-          _ThemeOption(
-            themeMode: ThemeMode.dark,
-            icon: Icons.dark_mode,
-            title: l10n.themeSelectionDark,
-            subtitle: l10n.themeSelectionDarkDesc,
-            isSelected: currentThemeMode == ThemeMode.dark,
-            onTap: () {
-              Navigator.of(context).pop();
-              // Delay theme change to after modal closes to prevent rebuild during animation
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
-              });
-            },
-          ),
-          const Divider(height: 1, indent: 24, endIndent: 24),
-          _ThemeOption(
-            themeMode: ThemeMode.system,
-            icon: Icons.brightness_auto,
-            title: l10n.themeSelectionSystem,
-            subtitle: l10n.themeSelectionSystemDesc,
-            isSelected: currentThemeMode == ThemeMode.system,
-            onTap: () {
-              Navigator.of(context).pop();
-              // Delay theme change to after modal closes to prevent rebuild during animation
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
-              });
-            },
+          // Theme options (scrollable)
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ThemeOption(
+                    themeMode: ThemeMode.light,
+                    icon: Icons.light_mode,
+                    title: l10n.themeSelectionLight,
+                    subtitle: l10n.themeSelectionLightDesc,
+                    isSelected: currentThemeMode == ThemeMode.light,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      // Delay theme change to after modal closes to prevent rebuild during animation
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
+                      });
+                    },
+                  ),
+                  const Divider(height: 1, indent: 24, endIndent: 24),
+                  _ThemeOption(
+                    themeMode: ThemeMode.dark,
+                    icon: Icons.dark_mode,
+                    title: l10n.themeSelectionDark,
+                    subtitle: l10n.themeSelectionDarkDesc,
+                    isSelected: currentThemeMode == ThemeMode.dark,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      // Delay theme change to after modal closes to prevent rebuild during animation
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+                      });
+                    },
+                  ),
+                  const Divider(height: 1, indent: 24, endIndent: 24),
+                  _ThemeOption(
+                    themeMode: ThemeMode.system,
+                    icon: Icons.brightness_auto,
+                    title: l10n.themeSelectionSystem,
+                    subtitle: l10n.themeSelectionSystemDesc,
+                    isSelected: currentThemeMode == ThemeMode.system,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      // Delay theme change to after modal closes to prevent rebuild during animation
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
           ),
         ],
       ),

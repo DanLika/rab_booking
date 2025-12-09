@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../../core/exceptions/app_exceptions.dart';
+import '../../../../../../core/utils/error_display_utils.dart';
 import '../../../../../../shared/models/unit_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
 import '../../providers/owner_properties_provider.dart';
@@ -206,13 +207,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         message = l10n.unitWizardValidationDefault;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ErrorDisplayUtils.showWarningSnackBar(context, message);
   }
 
   /// Publish unit (final step)
@@ -298,12 +293,9 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       // Show success message
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.unitId == null ? l10n.unitWizardCreateSuccess : l10n.unitWizardUpdateSuccess),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          widget.unitId == null ? l10n.unitWizardCreateSuccess : l10n.unitWizardUpdateSuccess,
         );
       }
 
@@ -313,14 +305,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.unitWizardPublishError(e.toString())),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e);
       }
     }
   }

@@ -7,12 +7,28 @@ import '../theme/app_colors.dart';
 /// Hides technical details (stack traces) from users in production
 ///
 /// Snackbar color palette (Mediterranean theme):
-/// - Success: Emerald (#10B981) - White text
-/// - Error: Red (#EF4444) - White text
-/// - Warning: Amber (#F59E0B) - Dark text for contrast
-/// - Info: Primary Purple (#6B4CE6) - White text
+/// - Success: Emerald (#10B981) - White text + check_circle icon
+/// - Error: Red (#EF4444) - White text + error_outline icon
+/// - Warning: Orange (#F97316) - Dark text + warning_amber icon
+/// - Info: Blue (#3B82F6) - White text + info_outline icon
+///
+/// All snackbars use:
+/// - SnackBarBehavior.floating for proper z-index above FAB
+/// - Bottom margin of 80px to ensure visibility above FAB
+/// - Auto-dismiss previous snackbar before showing new one
+/// - Consistent 12px border radius
 class ErrorDisplayUtils {
   ErrorDisplayUtils._(); // Private constructor
+
+  // Standard snackbar margin to ensure visibility above FAB
+  static const EdgeInsets _snackBarMargin = EdgeInsets.only(
+    bottom: 80, // FAB height (~56px) + padding
+    left: 16,
+    right: 16,
+  );
+
+  // Standard snackbar elevation for floating effect
+  static const double _snackBarElevation = 6;
 
   /// Show error snackbar with user-friendly message
   /// Hides stack traces and technical details in release mode
@@ -33,10 +49,18 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       SnackBar(
-        content: Text(displayMessage),
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(displayMessage, style: const TextStyle(color: Colors.white))),
+          ],
+        ),
         backgroundColor: AppColors.error, // Red (#EF4444)
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: _snackBarMargin,
+        elevation: _snackBarElevation,
         duration: duration,
         action: onRetry != null
             ? SnackBarAction(
@@ -50,10 +74,13 @@ class ErrorDisplayUtils {
   }
 
   /// Show success snackbar
+  /// Optional [actionLabel] and [onAction] for undo-style actions
   static void showSuccessSnackBar(
     BuildContext context,
     String message, {
     Duration duration = const Duration(seconds: 2),
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
     if (!context.mounted) return;
 
@@ -62,11 +89,26 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+          ],
+        ),
         backgroundColor: AppColors.success, // Emerald (#10B981)
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: _snackBarMargin,
+        elevation: _snackBarElevation,
         duration: duration,
+        action: actionLabel != null && onAction != null
+            ? SnackBarAction(
+                label: actionLabel,
+                textColor: Colors.white,
+                onPressed: onAction,
+              )
+            : null,
       ),
     );
   }
@@ -84,13 +126,18 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(color: Color(0xFF1C1917)), // Dark text for contrast
+        content: Row(
+          children: [
+            const Icon(Icons.warning_amber_outlined, color: AppColors.textOnWarning, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message, style: const TextStyle(color: AppColors.textOnWarning))),
+          ],
         ),
-        backgroundColor: const Color(0xFFF59E0B), // Amber
+        backgroundColor: AppColors.warning, // Orange (#F97316)
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: _snackBarMargin,
+        elevation: _snackBarElevation,
         duration: duration,
       ),
     );
@@ -109,10 +156,18 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.primary, // Primary Purple (#6B4CE6)
+        content: Row(
+          children: [
+            const Icon(Icons.info_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+          ],
+        ),
+        backgroundColor: AppColors.info, // Blue (#3B82F6)
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: _snackBarMargin,
+        elevation: _snackBarElevation,
         duration: duration,
       ),
     );
@@ -125,7 +180,10 @@ class ErrorDisplayUtils {
   ) {
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.clearSnackBars();
+
+    messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: [
@@ -138,13 +196,15 @@ class ErrorDisplayUtils {
               ),
             ),
             const SizedBox(width: 12),
-            Text(message),
+            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
           ],
         ),
         duration: const Duration(seconds: 30), // Long duration, manually dismissed
-        backgroundColor: AppColors.primary, // Primary Purple (#6B4CE6)
+        backgroundColor: AppColors.info, // Blue (#3B82F6)
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: _snackBarMargin,
+        elevation: _snackBarElevation,
       ),
     );
   }

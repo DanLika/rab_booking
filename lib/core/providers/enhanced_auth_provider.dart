@@ -194,11 +194,13 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         throw _rateLimit.getRateLimitMessage(rateLimit);
       }
 
-      // Set persistence BEFORE sign in based on rememberMe
-      if (rememberMe) {
-        await _auth.setPersistence(Persistence.LOCAL);
-      } else {
-        await _auth.setPersistence(Persistence.SESSION);
+      // Set persistence BEFORE sign in based on rememberMe (web only)
+      if (kIsWeb) {
+        if (rememberMe) {
+          await _auth.setPersistence(Persistence.LOCAL);
+        } else {
+          await _auth.setPersistence(Persistence.SESSION);
+        }
       }
 
       // Attempt sign in
@@ -466,8 +468,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Set persistence to LOCAL for anonymous sign in
-      await _auth.setPersistence(Persistence.LOCAL);
+      // Set persistence to LOCAL for anonymous sign in (web only)
+      if (kIsWeb) {
+        await _auth.setPersistence(Persistence.LOCAL);
+      }
 
       final UserCredential userCredential = await _auth.signInAnonymously();
 
@@ -551,8 +555,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Set persistence to LOCAL for Google sign in
-      await _auth.setPersistence(Persistence.LOCAL);
+      // Set persistence to LOCAL for Google sign in (web only)
+      if (kIsWeb) {
+        await _auth.setPersistence(Persistence.LOCAL);
+      }
 
       // Create Google Auth Provider
       final GoogleAuthProvider googleProvider = GoogleAuthProvider();
@@ -615,8 +621,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Set persistence to LOCAL for Apple sign in
-      await _auth.setPersistence(Persistence.LOCAL);
+      // Set persistence to LOCAL for Apple sign in (web only)
+      if (kIsWeb) {
+        await _auth.setPersistence(Persistence.LOCAL);
+      }
 
       // Create Apple Auth Provider
       final OAuthProvider appleProvider = OAuthProvider('apple.com');

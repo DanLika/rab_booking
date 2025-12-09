@@ -28,7 +28,9 @@ class DashboardStats {
 /// Dashboard statistics provider
 @riverpod
 Future<DashboardStats> dashboardStats(Ref ref) async {
-  final bookings = await ref.watch(ownerBookingsProvider.future);
+  // Use recentOwnerBookings for dashboard stats (limited to recent activity)
+  // For full stats, consider using dedicated analytics queries
+  final bookings = await ref.watch(recentOwnerBookingsProvider.future);
   final properties = await ref.watch(ownerPropertiesProvider.future);
 
   final now = DateTime.now();

@@ -35,6 +35,10 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
   int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
   int _calendarRebuildCounter = 0; // Force rebuild counter for Today button
 
+  // FIXED: Flag to prevent onVisibleDateRangeChanged from overwriting _currentRange
+  // during programmatic navigation (Today, Previous, Next, DatePicker)
+  bool _isProgrammaticNavigation = false;
+
   @override
   void initState() {
     super.initState();
@@ -100,7 +104,7 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                         onDatePickerTap: _showDatePicker,
                         onSearchTap: showSearchDialog,
                         onRefresh: refreshCalendarData,
-                        onFilterTap: showFiltersPanel,
+                        onFilterTap: _showFiltersAndNavigateToToday,
                         notificationCount: unreadCountAsync.when(
                           data: (count) => count,
                           loading: () => 0,
@@ -137,15 +141,21 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                   // Timeline calendar widget (it fetches its own data via providers)
                   Expanded(
                     child: TimelineCalendarWidget(
-                      key: ValueKey(
-                        '${_currentRange.startDate}_$_calendarRebuildCounter',
-                      ), // Rebuild on date change + counter
+                      // FIXED: Only use counter in key, NOT startDate
+                      // Including startDate caused infinite rebuild loop:
+                      // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
+                      key: ValueKey(_calendarRebuildCounter),
                       initialScrollToDate: _currentRange.startDate, // Scroll to selected date
                       showSummary: _showSummary,
                       onCellLongPress: (date, unit) => _showCreateBookingDialog(initialCheckIn: date, unitId: unit.id),
                       onUnitNameTap: _showUnitFutureBookings,
                       onVisibleDateRangeChanged: (startDate) {
-                        // Update toolbar date range when user scrolls
+                        // FIXED: Only update toolbar when user scrolls MANUALLY
+                        // Skip update during programmatic navigation (Today, arrows, date picker)
+                        // to prevent overwriting the intended navigation target
+                        if (_isProgrammaticNavigation) return;
+
+                        // Update toolbar date range when user scrolls manually
                         setState(() {
                           _currentRange = DateRangeSelection.days(startDate, _visibleDays);
                         });
@@ -182,24 +192,17 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
 
   /// Go to previous period (moves back by visible days count)
   void _goToPreviousPeriod() {
-    setState(() {
-      _currentRange = _currentRange.previous(isWeek: false);
-    });
+    _navigateTo(_currentRange.previous(isWeek: false));
   }
 
   /// Go to next period (moves forward by visible days count)
   void _goToNextPeriod() {
-    setState(() {
-      _currentRange = _currentRange.next(isWeek: false);
-    });
+    _navigateTo(_currentRange.next(isWeek: false));
   }
 
   /// Go to today - creates new range starting from today
   void _goToToday() {
-    setState(() {
-      _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
-      _calendarRebuildCounter++; // Force widget rebuild to trigger scroll
-    });
+    _navigateTo(DateRangeSelection.days(DateTime.now(), _visibleDays));
   }
 
   /// Show date picker dialog
@@ -212,11 +215,37 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     );
 
     if (picked != null) {
-      setState(() {
-        // Create new range starting from picked date with current visible days
-        _currentRange = DateRangeSelection.days(picked, _visibleDays);
-      });
+      _navigateTo(DateRangeSelection.days(picked, _visibleDays));
     }
+  }
+
+  /// Show filters panel and navigate to today if filters were applied
+  Future<void> _showFiltersAndNavigateToToday() async {
+    final filtersApplied = await showFiltersPanel();
+    if (filtersApplied == true && mounted) {
+      // Navigate to today after applying filters
+      _goToToday();
+    }
+  }
+
+  /// Helper: Navigate to a new date range programmatically
+  /// Sets flag to prevent onVisibleDateRangeChanged from overwriting the target
+  void _navigateTo(DateRangeSelection newRange) {
+    setState(() {
+      _isProgrammaticNavigation = true;
+      _currentRange = newRange;
+      _calendarRebuildCounter++;
+    });
+
+    // Reset flag after scroll animation completes (~500ms for smooth animation)
+    // This allows manual scrolling to update toolbar after programmatic navigation
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        setState(() {
+          _isProgrammaticNavigation = false;
+        });
+      }
+    });
   }
 
   /// Show unit future bookings dialog
@@ -304,7 +333,7 @@ class _AnimatedGradientFAB extends StatefulWidget {
   State<_AnimatedGradientFAB> createState() => _AnimatedGradientFABState();
 }
 
-class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> with SingleTickerProviderStateMixin {
+class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
   bool _isHovered = false;
   bool _isPressed = false;
 

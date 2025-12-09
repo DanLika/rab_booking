@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/gradient_extensions.dart';
 import '../../core/utils/responsive_dialog_utils.dart';
+import '../../core/utils/responsive_spacing_helper.dart';
 
 /// Custom Date Range Picker Widget
 /// Uses brand colors instead of Material default pink/red

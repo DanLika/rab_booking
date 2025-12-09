@@ -4448,6 +4448,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get embedGuideCodeCopied => 'Code copied!';
 
   @override
+  String get embedGuideYourEmbedCodes => 'Your Embed Codes';
+
+  @override
+  String get embedGuideCopyIframe => 'Copy the iframe code for each apartment';
+
+  @override
+  String get embedGuideWidgetLanguage => 'Widget language:';
+
+  @override
+  String get embedGuideNoProperties =>
+      'You have no properties. Create a property to get embed codes.';
+
+  @override
+  String get embedGuideNoUnits =>
+      'You have no units. Create a unit to get embed codes.';
+
+  @override
   String get embedGuideStep1Intro =>
       'First you need to configure how the widget will work:';
 

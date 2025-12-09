@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../shared/models/booking_model.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../l10n/app_localizations.dart';
+import '../../../../../../../../shared/models/booking_model.dart';
+import '../../../../../../../../core/theme/app_colors.dart';
+import '../../../../../../../../l10n/app_localizations.dart';
 
 /// Payment information section for booking card
 ///

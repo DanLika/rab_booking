@@ -375,6 +375,21 @@ enum BookingStatus {
     return this == BookingStatus.pending;
   }
 
+  /// Sort priority for displaying bookings (higher = more urgent/important)
+  /// Used in owner bookings list to show pending first, then confirmed, etc.
+  int get sortPriority {
+    switch (this) {
+      case BookingStatus.pending:
+        return 4; // Highest - needs action
+      case BookingStatus.confirmed:
+        return 3; // Active bookings
+      case BookingStatus.completed:
+        return 2; // Historical
+      case BookingStatus.cancelled:
+        return 1; // Lowest - cancelled
+    }
+  }
+
   static BookingStatus fromString(String value) {
     return BookingStatus.values.firstWhere((status) => status.value == value, orElse: () => BookingStatus.pending);
   }

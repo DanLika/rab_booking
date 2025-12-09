@@ -156,14 +156,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             _stripeAccountId = null;
             _stripeAccountStatus = null;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.stripeDisconnectSuccess),
-              backgroundColor: const Color(0xFF4CAF50),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.stripeDisconnectSuccess);
         } else {
           ErrorDisplayUtils.showErrorSnackBar(context, l10n.stripeDisconnectError);
         }

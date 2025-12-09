@@ -6,6 +6,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/notification_localizer.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../providers/notifications_provider.dart';
@@ -81,16 +82,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             _isSelectionMode = false;
             _isDeleting = false;
           });
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.notificationsDeleted), backgroundColor: Colors.green));
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.notificationsDeleted);
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isDeleting = false);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: Colors.red));
+          ErrorDisplayUtils.showErrorSnackBar(context, e);
         }
       }
     }
@@ -124,16 +121,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             _isSelectionMode = false;
             _isDeleting = false;
           });
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.notificationsAllDeleted), backgroundColor: Colors.green));
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.notificationsAllDeleted);
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isDeleting = false);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: Colors.red));
+          ErrorDisplayUtils.showErrorSnackBar(context, e);
         }
       }
     }

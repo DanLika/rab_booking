@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 
@@ -60,14 +60,10 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
       await ref.read(enhancedAuthProvider.notifier).sendEmailVerification();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Verification email sent! Check your inbox.'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 3),
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Verification email sent! Check your inbox.',
+          duration: const Duration(seconds: 3),
         );
 
         // Start 60 second cooldown
@@ -86,14 +82,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send email: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, 'Failed to send email: $e');
       }
     } finally {
       if (mounted) {
@@ -198,8 +187,6 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
               if (!formKey.currentState!.validate()) return;
 
               final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-
               navigator.pop();
 
               try {
@@ -209,25 +196,14 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                     .updateEmail(newEmail: emailController.text.trim(), currentPassword: passwordController.text);
 
                 if (mounted) {
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: const Text('Email updated! Check your new inbox for verification.'),
-                      backgroundColor: AppColors.success,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                  ErrorDisplayUtils.showSuccessSnackBar(
+                    context,
+                    'Email updated! Check your new inbox for verification.',
                   );
                 }
               } catch (e) {
                 if (mounted) {
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to update email: $e'),
-                      backgroundColor: AppColors.error,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  );
+                  ErrorDisplayUtils.showErrorSnackBar(context, e);
                 }
               }
             },

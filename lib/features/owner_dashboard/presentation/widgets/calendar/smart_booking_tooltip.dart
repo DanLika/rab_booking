@@ -13,17 +13,22 @@ class SmartBookingTooltip {
   static OverlayEntry? _activeTooltip;
 
   /// Show booking details in platform-appropriate way
+  ///
+  /// [hasConflict] - Whether this booking overlaps with another booking
+  /// [conflictingBookings] - List of bookings that conflict with this one
   static void show({
     required BuildContext context,
     required BookingModel booking,
     Offset? position, // For desktop hover positioning
+    bool hasConflict = false,
+    List<BookingModel>? conflictingBookings,
   }) {
     if (PlatformUtils.supportsHover && position != null) {
       // Desktop/Web: Show hover tooltip overlay
-      _showHoverTooltip(context, booking, position);
+      _showHoverTooltip(context, booking, position, hasConflict, conflictingBookings);
     } else {
       // Mobile: Show bottom sheet
-      _showBottomSheet(context, booking);
+      _showBottomSheet(context, booking, hasConflict, conflictingBookings);
     }
   }
 
@@ -34,7 +39,13 @@ class SmartBookingTooltip {
   }
 
   /// Desktop/Web: Hover overlay tooltip
-  static void _showHoverTooltip(BuildContext context, BookingModel booking, Offset position) {
+  static void _showHoverTooltip(
+    BuildContext context,
+    BookingModel booking,
+    Offset position,
+    bool hasConflict,
+    List<BookingModel>? conflictingBookings,
+  ) {
     // Remove previous tooltip before showing new one
     hide();
 
@@ -69,7 +80,12 @@ class SmartBookingTooltip {
                     : Colors.black.withAlpha((0.1 * 255).toInt()),
               ),
             ),
-            child: _TooltipContent(booking: booking, isCompact: true),
+            child: _TooltipContent(
+              booking: booking,
+              isCompact: true,
+              hasConflict: hasConflict,
+              conflictingBookings: conflictingBookings,
+            ),
           ),
         ),
       ),
@@ -87,7 +103,12 @@ class SmartBookingTooltip {
   }
 
   /// Mobile: Bottom sheet
-  static void _showBottomSheet(BuildContext context, BookingModel booking) {
+  static void _showBottomSheet(
+    BuildContext context,
+    BookingModel booking,
+    bool hasConflict,
+    List<BookingModel>? conflictingBookings,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -108,7 +129,12 @@ class SmartBookingTooltip {
               height: 4,
               decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
             ),
-            _TooltipContent(booking: booking, isCompact: false),
+            _TooltipContent(
+              booking: booking,
+              isCompact: false,
+              hasConflict: hasConflict,
+              conflictingBookings: conflictingBookings,
+            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -121,8 +147,15 @@ class SmartBookingTooltip {
 class _TooltipContent extends StatelessWidget {
   final BookingModel booking;
   final bool isCompact;
+  final bool hasConflict;
+  final List<BookingModel>? conflictingBookings;
 
-  const _TooltipContent({required this.booking, required this.isCompact});
+  const _TooltipContent({
+    required this.booking,
+    required this.isCompact,
+    this.hasConflict = false,
+    this.conflictingBookings,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +174,15 @@ class _TooltipContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // CONFLICT WARNING BANNER - shown at top if there's an overbooking
+          if (hasConflict) ...[
+            _ConflictWarningBanner(
+              conflictingBookings: conflictingBookings,
+              isCompact: isCompact,
+            ),
+            const SizedBox(height: 10),
+          ],
+
           // Header: Guest name + Status badge
           Row(
             children: [
@@ -247,6 +289,110 @@ class _TooltipContent extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(booking.notes!, style: theme.textTheme.bodySmall, maxLines: 3, overflow: TextOverflow.ellipsis),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Conflict warning banner showing overbooking alert
+class _ConflictWarningBanner extends StatelessWidget {
+  final List<BookingModel>? conflictingBookings;
+  final bool isCompact;
+
+  const _ConflictWarningBanner({
+    this.conflictingBookings,
+    required this.isCompact,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFormat = DateFormat('d.MM', 'hr_HR');
+
+    return Container(
+      padding: EdgeInsets.all(isCompact ? 8 : 12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red.shade300, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_rounded, color: Colors.red.shade700, size: isCompact ? 16 : 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'OVERBOOKING!',
+                  style: TextStyle(
+                    color: Colors.red.shade800,
+                    fontWeight: FontWeight.bold,
+                    fontSize: isCompact ? 12 : 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (conflictingBookings != null && conflictingBookings!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Konflikt sa:',
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontSize: isCompact ? 10 : 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            ...conflictingBookings!.take(3).map((conflict) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Row(
+                children: [
+                  Icon(Icons.person, size: isCompact ? 10 : 12, color: Colors.red.shade600),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      '${conflict.guestName ?? "Gost"} (${dateFormat.format(conflict.checkIn)} - ${dateFormat.format(conflict.checkOut)})',
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: isCompact ? 9 : 10,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (conflict.sourceDisplayName.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        conflict.sourceDisplayName,
+                        style: TextStyle(
+                          fontSize: isCompact ? 8 : 9,
+                          color: Colors.red.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            )),
+            if (conflictingBookings!.length > 3)
+              Text(
+                '+${conflictingBookings!.length - 3} više...',
+                style: TextStyle(
+                  color: Colors.red.shade600,
+                  fontSize: isCompact ? 9 : 10,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
           ],
         ],
       ),

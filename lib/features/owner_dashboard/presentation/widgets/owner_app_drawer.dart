@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/constants/enums.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_color_extensions.dart';
@@ -383,10 +382,10 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Get pending bookings count
-    final allBookingsAsync = ref.watch(allOwnerBookingsProvider);
-    final pendingCount = allBookingsAsync.maybeWhen(
-      data: (bookings) => bookings.where((b) => b.booking.status == BookingStatus.pending).length,
+    // Get pending bookings count using optimized provider (dedicated query)
+    final pendingCountAsync = ref.watch(pendingBookingsCountProvider);
+    final pendingCount = pendingCountAsync.maybeWhen(
+      data: (count) => count,
       orElse: () => 0,
     );
 

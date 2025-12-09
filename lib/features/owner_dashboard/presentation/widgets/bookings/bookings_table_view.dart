@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/enums.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_shadows.dart';
-import '../../../../core/theme/gradient_extensions.dart';
-import '../../../../core/theme/theme_extensions.dart';
-import '../../../../core/utils/input_decoration_helper.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/models/booking_model.dart';
-import '../../data/firebase/firebase_owner_bookings_repository.dart';
-import '../providers/owner_bookings_provider.dart';
-import '../../../../shared/providers/repository_providers.dart';
-import 'booking_details_dialog.dart';
-import 'edit_booking_dialog.dart';
-import 'send_email_dialog.dart';
+import '../../../../../core/constants/enums.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/utils/error_display_utils.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/theme/theme_extensions.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../../shared/models/booking_model.dart';
+import '../../../data/firebase/firebase_owner_bookings_repository.dart';
+import '../../providers/owner_bookings_provider.dart';
+import '../../../../../shared/providers/repository_providers.dart';
+import '../booking_details_dialog.dart';
+import '../edit_booking_dialog.dart';
+import '../send_email_dialog.dart';
 
 /// BedBooking-style Table View for bookings
 /// Desktop: Full data table with all columns
@@ -101,22 +102,17 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
                     const SizedBox(width: 8),
 
-                    // Clear selection button - icon only on narrow screens
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Use icon-only button to save space
-                        return TextButton.icon(
-                          onPressed: () {
-                            setState(_selectedBookingIds.clear);
-                          },
-                          icon: const Icon(Icons.close, size: 18),
-                          label: Text(l10n.ownerTableClearSelection, overflow: TextOverflow.ellipsis),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                        );
+                    // Clear selection button
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(_selectedBookingIds.clear);
                       },
+                      icon: const Icon(Icons.close, size: 18),
+                      label: Text(l10n.ownerTableClearSelection, overflow: TextOverflow.ellipsis),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
                     ),
 
                     const SizedBox(width: 4),
@@ -513,20 +509,18 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.confirmBooking(bookingId);
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.ownerTableBookingConfirmed), backgroundColor: AppColors.success));
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingConfirmed);
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+            bookingId,
+            BookingStatus.confirmed,
+          );
 
           // Auto-regenerate iCal if enabled
           _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
         }
       }
     }
@@ -558,20 +552,18 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.completeBooking(bookingId);
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.ownerTableBookingCompleted), backgroundColor: AppColors.success));
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingCompleted);
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+            bookingId,
+            BookingStatus.completed,
+          );
 
           // Auto-regenerate iCal if enabled
           _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
         }
       }
     }
@@ -645,20 +637,18 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.ownerTableBookingCancelled), backgroundColor: AppColors.warning));
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
+          ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerTableBookingCancelled);
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+            bookingId,
+            BookingStatus.cancelled,
+          );
 
           // Auto-regenerate iCal if enabled
           _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
         }
       }
     }
@@ -700,17 +690,12 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.deleteBooking(bookingId);
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.ownerTableBookingDeleted), backgroundColor: AppColors.error));
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingDeleted);
+          ref.read(windowedBookingsNotifierProvider.notifier).removeBooking(bookingId);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
         }
       }
     }
@@ -750,20 +735,21 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.ownerTableBookingsConfirmed(count, label)), backgroundColor: AppColors.success),
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingsConfirmed(count, label));
+
+          // Update each booking status in local state
+          for (final bookingId in _selectedBookingIds) {
+            ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+              bookingId,
+              BookingStatus.confirmed,
+            );
+          }
 
           setState(_selectedBookingIds.clear);
-
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
         }
       }
     }
@@ -825,20 +811,21 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.ownerTableBookingsRejected(count, label)), backgroundColor: AppColors.warning),
-          );
+          ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerTableBookingsRejected(count, label));
+
+          // Update each booking status in local state (rejected = cancelled)
+          for (final bookingId in _selectedBookingIds) {
+            ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+              bookingId,
+              BookingStatus.cancelled,
+            );
+          }
 
           setState(_selectedBookingIds.clear);
-
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
         }
       } finally {
         reasonController.dispose();
@@ -882,20 +869,18 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.ownerTableBookingsDeleted(count, label)), backgroundColor: AppColors.error),
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingsDeleted(count, label));
+
+          // Remove each deleted booking from local state
+          for (final bookingId in _selectedBookingIds) {
+            ref.read(windowedBookingsNotifierProvider.notifier).removeBooking(bookingId);
+          }
 
           setState(_selectedBookingIds.clear);
-
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e'), backgroundColor: AppColors.error));
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
         }
       }
     }

@@ -16,16 +16,16 @@ class CalendarGridCalculator {
   static const double tabletRowHeaderPercent = 0.20; // 20% on tablet
   static const double desktopRowHeaderPercent = 0.15; // 15% on desktop
 
-  /// Row height (each room row)
-  static const double mobileRowHeight = 56;
-  static const double tabletRowHeight = 62;
-  static const double desktopRowHeight = 68;
+  /// Row height (each room row) - reduced by 25% for compact view
+  static const double mobileRowHeight = 42;
+  static const double tabletRowHeight = 46;
+  static const double desktopRowHeight = 51;
 
-  /// Day cell width bounds (each day column)
-  static const double mobileDayCellMinWidth = 65;
-  static const double mobileDayCellMaxWidth = 90;
-  static const double desktopDayCellMinWidth = 70;
-  static const double desktopDayCellMaxWidth = 100;
+  /// Day cell width bounds (each day column) - reduced by 25% for compact view
+  static const double mobileDayCellMinWidth = 49;
+  static const double mobileDayCellMaxWidth = 68;
+  static const double desktopDayCellMinWidth = 52;
+  static const double desktopDayCellMaxWidth = 75;
 
   /// Header height (date headers row)
   static const double mobileHeaderHeight = 48;

@@ -48,16 +48,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyB2J8MaHvIU1sw4ItO3tzsn5LC9pDvgD5s',
-    appId: '1:592597958982:web:7703de3f5a2ab47d',
+    appId: '1:592597958982:web:7703de3f5a2ab47dd3e547',
     messagingSenderId: '592597958982',
     projectId: 'rab-booking-248fc',
     authDomain: 'rab-booking-248fc.firebaseapp.com',
     storageBucket: 'rab-booking-248fc.firebasestorage.app',
+    measurementId: 'G-4XK4F6ZVMZ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyB7edb0FWFzr23pm6xmjmrlehdL1Ysxvwc',
-    appId: '1:592597958982:android:28730515db1ea267d3e547',
+    appId: '1:592597958982:android:2d92ef51ce178fe1d3e547',
     messagingSenderId: '592597958982',
     projectId: 'rab-booking-248fc',
     storageBucket: 'rab-booking-248fc.firebasestorage.app',
@@ -65,10 +66,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAOFQ2jykLZlTtE6whuGDb-09r8HyAHs90',
-    appId: '1:592597958982:ios:7703de3f5a2ab47d',
+    appId: '1:592597958982:ios:157b8d20e9e17aa7d3e547',
     messagingSenderId: '592597958982',
     projectId: 'rab-booking-248fc',
     storageBucket: 'rab-booking-248fc.firebasestorage.app',
-    iosBundleId: 'com.example.novaAplikacija',
+    iosBundleId: 'io.bookbed.app',
   );
+
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data/firebase/firebase_owner_bookings_repository.dart';
+import '../../../../data/firebase/firebase_owner_bookings_repository.dart';
 
 /// Guest information section for booking card
 ///

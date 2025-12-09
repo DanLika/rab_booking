@@ -7,6 +7,7 @@ import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/property_model.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
@@ -50,7 +51,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: isMobile ? screenWidth * 0.9 : 700,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),

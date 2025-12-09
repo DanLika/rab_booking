@@ -5,8 +5,10 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
@@ -66,7 +68,7 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
@@ -471,16 +473,12 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
           final conflictCheckIn = '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
           final conflictCheckOut = '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                conflicts.length == 1
-                    ? 'Overlap detected with booking for $conflictGuestName ($conflictCheckIn - $conflictCheckOut)'
-                    : 'Overlap detected with ${conflicts.length} existing bookings',
-              ),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 5),
-            ),
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            conflicts.length == 1
+                ? 'Overlap detected with booking for $conflictGuestName ($conflictCheckIn - $conflictCheckOut)'
+                : 'Overlap detected with ${conflicts.length} existing bookings',
+            duration: const Duration(seconds: 5),
           );
         }
         return;
@@ -506,18 +504,13 @@ class _BookingInlineEditDialogState extends ConsumerState<BookingInlineEditDialo
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Booking updated successfully'), backgroundColor: Colors.green));
+        ErrorDisplayUtils.showSuccessSnackBar(context, 'Booking updated successfully');
       }
     } catch (e) {
       setState(() => _isSaving = false);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update booking: ${e.toString()}'), backgroundColor: Colors.red),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: 'Failed to update booking');
       }
     }
   }

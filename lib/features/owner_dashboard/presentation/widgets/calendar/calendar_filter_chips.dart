@@ -19,30 +19,30 @@ class CalendarFilterChips extends ConsumerWidget {
     }
 
     return Container(
-      constraints: const BoxConstraints(maxHeight: 56),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      constraints: const BoxConstraints(maxHeight: 36),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt()),
         border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(
         children: [
-          // Active filter count badge
+          // Active filter count badge (compact)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.filter_list, size: 14, color: Theme.of(context).colorScheme.onPrimary),
+                Icon(Icons.filter_list, size: 12, color: Theme.of(context).colorScheme.onPrimary),
                 const SizedBox(width: 4),
                 Text(
                   '${filters.activeFilterCount}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
@@ -61,22 +61,22 @@ class CalendarFilterChips extends ConsumerWidget {
             },
           ),
           const Spacer(),
-          // Clear all button (elevated for visibility)
+          // Clear all - simple red text link
           Builder(
             builder: (context) {
               final l10n = AppLocalizations.of(context);
-              return ElevatedButton.icon(
-                icon: const Icon(Icons.clear_all, size: 18),
-                label: Text(l10n.ownerFilterClearAll),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  foregroundColor: Theme.of(context).colorScheme.onError,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  minimumSize: const Size(0, 36),
-                ),
-                onPressed: () {
+              return GestureDetector(
+                onTap: () {
                   ref.read(calendarFiltersProvider.notifier).clearFilters();
                 },
+                child: Text(
+                  l10n.ownerFilterClearAll,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
               );
             },
           ),

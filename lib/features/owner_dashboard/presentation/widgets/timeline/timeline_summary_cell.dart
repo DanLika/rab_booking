@@ -17,7 +17,12 @@ class TimelineSummaryCell extends StatelessWidget {
   /// Width of the day cell
   final double dayWidth;
 
-  const TimelineSummaryCell({super.key, required this.date, required this.bookingsByUnit, required this.dayWidth});
+  const TimelineSummaryCell({
+    super.key,
+    required this.date,
+    required this.bookingsByUnit,
+    required this.dayWidth,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,20 +43,20 @@ class TimelineSummaryCell extends StatelessWidget {
         }
 
         // Count check-ins (checkIn == date)
-        if (_isSameDay(booking.checkIn, date)) {
+        if (DateUtils.isSameDay(booking.checkIn, date)) {
           checkIns++;
         }
 
         // Count check-outs (checkOut == date)
-        if (_isSameDay(booking.checkOut, date)) {
+        if (DateUtils.isSameDay(booking.checkOut, date)) {
           checkOuts++;
         }
       }
     }
 
-    final now = DateTime.now();
-    final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
-    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isToday = DateUtils.isSameDay(date, DateTime.now());
+    final isWeekend =
+        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
     // Responsive sizing
     final isNarrow = dayWidth < 60;
@@ -65,9 +70,18 @@ class TimelineSummaryCell extends StatelessWidget {
             : isWeekend
             ? (isDark ? const Color(0xFF2A2535) : const Color(0xFFF8F5FC))
             : (isDark ? const Color(0xFF1E1E28) : Colors.white),
-        border: Border(left: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight)),
+        border: Border(
+          left: BorderSide(
+            color: isDark
+                ? AppColors.sectionDividerDark
+                : AppColors.sectionDividerLight,
+          ),
+        ),
       ),
-      padding: EdgeInsets.symmetric(vertical: isVeryNarrow ? 3 : 6, horizontal: isVeryNarrow ? 2 : 4),
+      padding: EdgeInsets.symmetric(
+        vertical: isVeryNarrow ? 3 : 6,
+        horizontal: isVeryNarrow ? 2 : 4,
+      ),
       child: Builder(
         builder: (context) {
           final l10n = AppLocalizations.of(context);
@@ -88,18 +102,19 @@ class TimelineSummaryCell extends StatelessWidget {
                 ),
                 SizedBox(height: isVeryNarrow ? 4 : 6),
                 // Check-ins/Check-outs combined badge
-                _buildCheckInOutBadge(context, checkIns, checkOuts, l10n, isNarrow),
+                _buildCheckInOutBadge(
+                  context,
+                  checkIns,
+                  checkOuts,
+                  l10n,
+                  isNarrow,
+                ),
               ],
             ),
           );
         },
       ),
     );
-  }
-
-  /// Helper to check if two dates are the same day
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   /// Build a stat badge with background
@@ -114,8 +129,14 @@ class TimelineSummaryCell extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 6, vertical: isNarrow ? 2 : 3),
-        decoration: BoxDecoration(color: color.withAlpha((0.15 * 255).toInt()), borderRadius: BorderRadius.circular(6)),
+        padding: EdgeInsets.symmetric(
+          horizontal: isNarrow ? 4 : 6,
+          vertical: isNarrow ? 2 : 3,
+        ),
+        decoration: BoxDecoration(
+          color: color.withAlpha((0.15 * 255).toInt()),
+          borderRadius: BorderRadius.circular(6),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -124,7 +145,11 @@ class TimelineSummaryCell extends StatelessWidget {
             SizedBox(width: isNarrow ? 2 : 4),
             Text(
               value,
-              style: TextStyle(fontSize: isNarrow ? 10 : 12, fontWeight: FontWeight.w700, color: color),
+              style: TextStyle(
+                fontSize: isNarrow ? 10 : 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
           ],
         ),
@@ -146,7 +171,10 @@ class TimelineSummaryCell extends StatelessWidget {
     return Tooltip(
       message: l10n.ownerCalendarSummaryArrivals(checkIns, checkOuts),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 6, vertical: isNarrow ? 2 : 3),
+        padding: EdgeInsets.symmetric(
+          horizontal: isNarrow ? 4 : 6,
+          vertical: isNarrow ? 2 : 3,
+        ),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF0F0F5),
           borderRadius: BorderRadius.circular(6),
@@ -155,11 +183,19 @@ class TimelineSummaryCell extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.login, size: isNarrow ? 10 : 12, color: AppColors.success),
+            Icon(
+              Icons.login,
+              size: isNarrow ? 10 : 12,
+              color: AppColors.success,
+            ),
             SizedBox(width: isNarrow ? 1 : 2),
             Text(
               '$checkIns',
-              style: TextStyle(fontSize: isNarrow ? 9 : 11, fontWeight: FontWeight.w600, color: AppColors.success),
+              style: TextStyle(
+                fontSize: isNarrow ? 9 : 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.success,
+              ),
             ),
             Text(
               '/',
@@ -171,10 +207,18 @@ class TimelineSummaryCell extends StatelessWidget {
             ),
             Text(
               '$checkOuts',
-              style: TextStyle(fontSize: isNarrow ? 9 : 11, fontWeight: FontWeight.w600, color: AppColors.error),
+              style: TextStyle(
+                fontSize: isNarrow ? 9 : 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.error,
+              ),
             ),
             SizedBox(width: isNarrow ? 1 : 2),
-            Icon(Icons.logout, size: isNarrow ? 10 : 12, color: AppColors.error),
+            Icon(
+              Icons.logout,
+              size: isNarrow ? 10 : 12,
+              color: AppColors.error,
+            ),
           ],
         ),
       ),

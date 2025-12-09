@@ -8,6 +8,7 @@ import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../../../../shared/widgets/app_filter_chip.dart';
 import '../../../domain/models/calendar_filter_options.dart';
@@ -58,7 +59,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: isMobile ? screenWidth * 0.9 : 700,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
@@ -434,12 +435,18 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   Widget _buildSourceFilter() {
     final theme = Theme.of(context);
 
+    // Sources must match actual booking.source values in Firestore:
+    // - 'widget' = website widget bookings
+    // - 'admin' = manually created bookings
+    // - 'booking_com' = Booking.com iCal imports
+    // - 'airbnb' = Airbnb iCal imports
+    // - 'other' = generic iCal imports (non-recognized platforms)
     final sources = [
       ('widget', 'Widget', Icons.web, Colors.green),
       ('admin', 'Manualno', Icons.person, Colors.grey),
-      ('ical', 'iCal', Icons.sync, theme.colorScheme.secondary),
       ('booking_com', 'Booking.com', Icons.public, Colors.orange),
       ('airbnb', 'Airbnb', Icons.home, Colors.red),
+      ('other', 'Druga platforma', Icons.sync, theme.colorScheme.secondary),
     ];
 
     return Column(

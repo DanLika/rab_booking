@@ -1834,6 +1834,11 @@
   "embedGuideAdvancedOptions": "Advanced Options",
   "embedGuideTroubleshooting": "Troubleshooting",
   "embedGuideCodeCopied": "Code copied!",
+  "embedGuideYourEmbedCodes": "Your Embed Codes",
+  "embedGuideCopyIframe": "Copy the iframe code for each apartment",
+  "embedGuideWidgetLanguage": "Widget language:",
+  "embedGuideNoProperties": "You have no properties. Create a property to get embed codes.",
+  "embedGuideNoUnits": "You have no units. Create a unit to get embed codes.",
 
   "embedGuideStep1Intro": "First you need to configure how the widget will work:",
   "embedGuideStep1Nav1": "Go to: Configuration → Accommodation Units",

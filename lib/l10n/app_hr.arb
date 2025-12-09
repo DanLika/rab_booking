@@ -1834,6 +1834,11 @@
   "embedGuideAdvancedOptions": "Napredne Opcije",
   "embedGuideTroubleshooting": "Rješavanje Problema",
   "embedGuideCodeCopied": "Kod kopiran!",
+  "embedGuideYourEmbedCodes": "Vaši Embed Kodovi",
+  "embedGuideCopyIframe": "Kopirajte iframe kod za svaki apartman",
+  "embedGuideWidgetLanguage": "Jezik widgeta:",
+  "embedGuideNoProperties": "Nemate nekretnina. Kreirajte nekretninu da biste dobili embed kodove.",
+  "embedGuideNoUnits": "Nemate apartmana. Kreirajte apartman da biste dobili embed kod.",
 
   "embedGuideStep1Intro": "Prvo morate konfigurirati kako će widget funkcionirati:",
   "embedGuideStep1Nav1": "Idite na: Konfiguracija → Smještajne jedinice",

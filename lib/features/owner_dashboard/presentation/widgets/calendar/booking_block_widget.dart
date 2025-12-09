@@ -12,10 +12,19 @@ import 'check_in_out_diagonal_indicator.dart';
 
 /// Draggable booking block widget for calendar grid
 /// Shows booking information as a colored block spanning multiple days
+///
+/// TURNOVER DAY SUPPORT:
+/// Uses dayWidth (or derives it from width/nights) to calculate skewOffset
+/// for proper diagonal alignment on turnover days.
 class BookingBlockWidget extends StatelessWidget {
   final BookingModel booking;
   final double width;
   final double height;
+
+  /// Optional: Width of a single day cell for turnover diagonal alignment.
+  /// If not provided, calculated as width / (numberOfNights + 1).
+  final double? dayWidth;
+
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final void Function(TapDownDetails)? onSecondaryTapDown;
@@ -44,6 +53,7 @@ class BookingBlockWidget extends StatelessWidget {
     required this.booking,
     required this.width,
     required this.height,
+    this.dayWidth,
     this.onTap,
     this.onLongPress,
     this.onSecondaryTapDown,
@@ -115,10 +125,12 @@ class BookingBlockWidget extends StatelessWidget {
         child: Stack(
           children: [
             // Background layer with skewed parallelogram shape
+            // Calculate dayWidth for turnover day alignment
             CustomPaint(
               painter: SkewedBookingPainter(
                 backgroundColor: statusColor.withAlpha((0.9 * 255).toInt()),
                 borderColor: hasConflict ? Colors.red : statusColor,
+                dayWidth: dayWidth ?? (width / (booking.numberOfNights + 1)),
                 borderWidth: hasConflict ? 2.5 : 1.5,
                 hasConflict: hasConflict,
               ),
@@ -127,7 +139,7 @@ class BookingBlockWidget extends StatelessWidget {
 
             // Content layer - clipped to skewed shape
             ClipPath(
-              clipper: SkewedBookingClipper(),
+              clipper: SkewedBookingClipper(dayWidth: dayWidth ?? (width / (booking.numberOfNights + 1))),
               child: Stack(
                 children: [
               // Check-in diagonal indicator (left edge)

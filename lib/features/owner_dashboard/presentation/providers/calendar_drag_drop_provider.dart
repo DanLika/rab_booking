@@ -5,7 +5,6 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/repositories/booking_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../utils/booking_overlap_detector.dart';
 import 'owner_calendar_provider.dart';
 
@@ -111,9 +110,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     if (!validateDrop(dropDate: dropDate, targetUnitId: targetUnit.id, allBookings: allBookings)) {
       // Show error snackbar
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.errorMessage ?? 'Cannot move booking here'), backgroundColor: Colors.red),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, state.errorMessage ?? 'Cannot move booking here');
       }
       return false;
     }
@@ -121,18 +118,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     try {
       // Show loading indicator
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-                SizedBox(width: 12),
-                Text('Moving booking...'),
-              ],
-            ),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        ErrorDisplayUtils.showLoadingSnackBar(context, 'Moving booking...');
       }
 
       // Update booking in Firestore
@@ -148,23 +134,13 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       // Invalidate calendar to refresh
       _ref.invalidate(calendarBookingsProvider);
 
-      // Show success message
+      // Show success message with undo action
       if (context.mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Booking moved to ${targetUnit.name} (${newCheckIn.day}/${newCheckIn.month} - ${newCheckOut.day}/${newCheckOut.month})',
-            ),
-            backgroundColor: Colors.green,
-            action: SnackBarAction(
-              label: 'Undo',
-              textColor: Colors.white,
-              onPressed: () {
-                _undoBookingMove(booking, context);
-              },
-            ),
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Booking moved to ${targetUnit.name} (${newCheckIn.day}/${newCheckIn.month} - ${newCheckOut.day}/${newCheckOut.month})',
+          actionLabel: 'Undo',
+          onAction: () => _undoBookingMove(booking, context),
         );
       }
 
@@ -197,18 +173,11 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       _ref.invalidate(calendarBookingsProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking restored to original position'),
-            backgroundColor: AppColors.authSecondary,
-          ),
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, 'Booking restored to original position');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to undo: ${e.toString()}'), backgroundColor: Colors.red));
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: 'Failed to undo booking move');
       }
     }
   }

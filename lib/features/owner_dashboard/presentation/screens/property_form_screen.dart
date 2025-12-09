@@ -1106,18 +1106,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     if (!_isEditing && totalImages < 3) {
       // Soft warning - allow save without blocking
       final l10nSnack = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.info_outline, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text(l10nSnack.propertyFormPhotoRecommendation)),
-            ],
-          ),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 3),
-        ),
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        l10nSnack.propertyFormPhotoRecommendation,
       );
       // Continue with save (no return)
     }
@@ -1165,17 +1156,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           }
         } catch (e) {
           if (mounted) {
-            // Direct SnackBar for guaranteed visibility
             final l10nErr = AppLocalizations.of(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10nErr.propertyFormUploadError(e.toString())),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 5),
-              ),
-            );
-
-            // Also try original method
             ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10nErr.propertyFormUploadErrorGeneric);
           }
           setState(() => _isLoading = false);

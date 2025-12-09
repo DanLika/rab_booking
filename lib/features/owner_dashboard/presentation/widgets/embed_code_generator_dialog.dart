@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Dialog that generates and displays embed code for widget
@@ -107,13 +108,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   void _copyToClipboard(String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.embedCodeCopied(label)),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    ErrorDisplayUtils.showSuccessSnackBar(context, l10n.embedCodeCopied(label));
   }
 
   @override

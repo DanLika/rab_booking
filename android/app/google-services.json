@@ -12,7 +12,20 @@
           "package_name": "com.example.rab_booking"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "592597958982-d1s4sho1bmnekkfr1vr80gnffc74bbp9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.rab_booking",
+            "certificate_hash": "203790f1a575432b989f02b7bfd8b354e926853e"
+          }
+        },
+        {
+          "client_id": "592597958982-1ck3rnd4uteblmmobhpbctg53pancecf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB7edb0FWFzr23pm6xmjmrlehdL1Ysxvwc"
@@ -20,7 +33,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "592597958982-1ck3rnd4uteblmmobhpbctg53pancecf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "592597958982-3u2k3gfahtsmjqb6f7r4p9b4qs359pt9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.novaAplikacija"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:592597958982:android:2d92ef51ce178fe1d3e547",
+        "android_client_info": {
+          "package_name": "io.bookbed.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "592597958982-1ck3rnd4uteblmmobhpbctg53pancecf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7edb0FWFzr23pm6xmjmrlehdL1Ysxvwc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "592597958982-1ck3rnd4uteblmmobhpbctg53pancecf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "592597958982-3u2k3gfahtsmjqb6f7r4p9b4qs359pt9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.novaAplikacija"
+              }
+            }
+          ]
         }
       }
     }

@@ -8,24 +8,25 @@ import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_bookings_view_preference_provider.dart';
 import '../../domain/models/bookings_view_mode.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
+import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../shared/providers/repository_providers.dart';
-import '../widgets/bookings_table_view.dart';
+import '../widgets/bookings/bookings_table_view.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/bookings/bookings_filters_dialog.dart';
 // Booking card components
-import '../widgets/booking_card/booking_card_header.dart';
-import '../widgets/booking_card/booking_card_guest_info.dart';
-import '../widgets/booking_card/booking_card_property_info.dart';
-import '../widgets/booking_card/booking_card_date_range.dart';
-import '../widgets/booking_card/booking_card_payment_info.dart';
-import '../widgets/booking_card/booking_card_notes.dart';
-import '../widgets/booking_card/booking_card_actions.dart';
+import '../widgets/bookings/booking_card/booking_card_header.dart';
+import '../widgets/bookings/booking_card/booking_card_guest_info.dart';
+import '../widgets/bookings/booking_card/booking_card_property_info.dart';
+import '../widgets/bookings/booking_card/booking_card_date_range.dart';
+import '../widgets/bookings/booking_card/booking_card_payment_info.dart';
+import '../widgets/bookings/booking_card/booking_card_notes.dart';
+import '../widgets/bookings/booking_card/booking_card_actions.dart';
 // Booking action dialogs
 import '../widgets/booking_actions/booking_approve_dialog.dart';
 import '../widgets/booking_actions/booking_reject_dialog.dart';
@@ -43,6 +44,7 @@ class OwnerBookingsScreen extends ConsumerStatefulWidget {
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final ScrollDirectionTracker _scrollTracker = ScrollDirectionTracker();
   bool _hasHandledInitialBooking = false;
 
   @override
@@ -59,36 +61,48 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
-      // User scrolled to 80% of the list, load more
-      final hasMore = ref.read(hasMoreBookingsProvider).valueOrNull ?? false;
-      final pagination = ref.read(bookingsPaginationNotifierProvider);
+    // Update scroll direction tracker
+    _scrollTracker.update(_scrollController);
 
-      if (hasMore && !pagination.isLoadingMore) {
-        ref.read(bookingsPaginationNotifierProvider.notifier).setLoadingMore(true);
-        ref.read(bookingsPaginationNotifierProvider.notifier).loadMore();
+    final state = ref.read(windowedBookingsNotifierProvider);
 
-        // Listen for provider update to reset loading flag properly
-        // This avoids race condition with arbitrary delay
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ref.read(bookingsPaginationNotifierProvider.notifier).setLoadingMore(false);
-          }
-        });
+    // Load more at bottom - use 90% threshold to trigger earlier
+    if (_scrollTracker.shouldLoadMore(_scrollController, ScrollDirection.down, bottomThreshold: 0.9)) {
+      if (state.canLoadBottom) {
+        ref.read(windowedBookingsNotifierProvider.notifier).loadMoreBottom();
+      }
+    }
+
+    // Also trigger at very end (within 100px of bottom) as fallback
+    if (_scrollController.hasClients) {
+      final position = _scrollController.position;
+      final isAtBottom = position.pixels >= position.maxScrollExtent - 100;
+      if (isAtBottom && state.canLoadBottom && !state.isLoadingBottom) {
+        ref.read(windowedBookingsNotifierProvider.notifier).loadMoreBottom();
+      }
+    }
+
+    // Load more at top (scrolling up)
+    if (_scrollTracker.shouldLoadMore(_scrollController, ScrollDirection.up)) {
+      if (state.canLoadTop) {
+        ref.read(windowedBookingsNotifierProvider.notifier).loadMoreTop();
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final bookingsAsync = ref.watch(ownerBookingsProvider);
+    final windowedState = ref.watch(windowedBookingsNotifierProvider);
+    final bookings = windowedState.visibleBookings;
 
-    // Listen for data to handle initial booking
-    ref.listen(ownerBookingsProvider, (previous, next) {
-      if (!_hasHandledInitialBooking && widget.initialBookingId != null && next.hasValue && !next.isLoading) {
-        final bookings = next.value!;
+    // Listen for data to handle initial booking (deep-link support)
+    ref.listen(windowedBookingsNotifierProvider, (previous, next) {
+      if (!_hasHandledInitialBooking &&
+          widget.initialBookingId != null &&
+          next.visibleBookings.isNotEmpty &&
+          !next.isLoading) {
         try {
-          final booking = bookings.firstWhere((b) => b.booking.id == widget.initialBookingId);
+          final booking = next.visibleBookings.firstWhere((b) => b.booking.id == widget.initialBookingId);
           _hasHandledInitialBooking = true;
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -100,7 +114,23 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             }
           });
         } catch (_) {
-          // Booking not found in current list
+          // Booking not found in current window - this is expected with windowing
+          // Option A: fetch booking directly (implemented in notifier)
+          _hasHandledInitialBooking = true;
+          ref.read(windowedBookingsNotifierProvider.notifier)
+              .fetchAndShowBooking(widget.initialBookingId!)
+              .then((ownerBooking) {
+            if (ownerBooking != null && mounted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  showDialog(
+                    context: this.context,
+                    builder: (ctx) => BookingDetailsDialog(ownerBooking: ownerBooking),
+                  );
+                }
+              });
+            }
+          });
         }
       }
     });
@@ -127,16 +157,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: RefreshIndicator(
-          onRefresh: () async {
-            // Refresh bookings data
-            ref.invalidate(ownerBookingsProvider);
-            ref.invalidate(allOwnerBookingsProvider);
-            ref.read(bookingsPaginationNotifierProvider.notifier).reset();
-          },
-          color: theme.colorScheme.primary,
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
+              onRefresh: () async {
+                // Refresh bookings data using windowed notifier
+                await ref.read(windowedBookingsNotifierProvider.notifier).refresh();
+              },
+              color: theme.colorScheme.primary,
+              child: CustomScrollView(
+                controller: _scrollController,
+                slivers: [
               // Filters section
               SliverToBoxAdapter(
                 child: Padding(
@@ -150,105 +178,80 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 ),
               ),
 
-              // Bookings content
-              // Use maybeWhen to preserve existing data during pagination loading
-              // This prevents table view from disappearing when loading more bookings
-              bookingsAsync.maybeWhen(
-                data: (bookings) {
-                  if (bookings.isEmpty) {
-                    return SliverToBoxAdapter(child: _buildEmptyState());
-                  }
-
-                  if (viewMode == BookingsViewMode.card) {
-                    return _buildBookingsSliverList(bookings, isMobile);
-                  } else {
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-                        child: BookingsTableView(bookings: bookings),
-                      ),
-                    );
-                  }
-                },
-                error: (error, stack) {
-                  // Check if error is about no results or actual error
-                  final errorMsg = error.toString().toLowerCase();
-                  final isEmptyResult = errorMsg.contains('no') || errorMsg.contains('empty') || errorMsg.contains('0');
-
-                  if (isEmptyResult) {
-                    return SliverToBoxAdapter(child: _buildEmptyState());
-                  }
-
-                  return SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(context.horizontalPadding),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.error_outline, size: AppDimensions.iconSizeXL, color: theme.colorScheme.error),
-                            const SizedBox(height: AppDimensions.spaceS),
-                            Text(l10n.ownerBookingsErrorLoading, style: Theme.of(context).textTheme.titleLarge),
-                            const SizedBox(height: AppDimensions.spaceXS),
-                            Text(
-                              error.toString(),
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.copyWith(color: context.textColorSecondary),
-                              textAlign: TextAlign.center,
-                              maxLines: 5,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+              // Bookings content - using state-based approach
+              // Show loading skeleton during initial load
+              if (windowedState.isInitialLoad && bookings.isEmpty)
+                viewMode == BookingsViewMode.table
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+                          child: SkeletonLoader.bookingsTable(),
                         ),
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => Padding(
+                            padding: EdgeInsets.fromLTRB(context.horizontalPadding, 0, context.horizontalPadding, 16),
+                            child: const BookingCardSkeleton(),
+                          ),
+                          childCount: 5,
+                        ),
+                      )
+              // Show error state
+              else if (windowedState.error != null && bookings.isEmpty)
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(context.horizontalPadding),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: AppDimensions.iconSizeXL, color: theme.colorScheme.error),
+                          const SizedBox(height: AppDimensions.spaceS),
+                          Text(l10n.ownerBookingsErrorLoading, style: Theme.of(context).textTheme.titleLarge),
+                          const SizedBox(height: AppDimensions.spaceXS),
+                          Text(
+                            windowedState.error!,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.textColorSecondary),
+                            textAlign: TextAlign.center,
+                            maxLines: 5,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                },
-                // orElse handles loading state when there's no cached data (initial load only)
-                // During pagination, data callback is used with cached values
-                orElse: () {
-                  // Initial loading
-                  if (viewMode == BookingsViewMode.table) {
-                    // Table view: Show responsive table skeleton
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-                        child: SkeletonLoader.bookingsTable(),
-                      ),
-                    );
-                  } else {
-                    // Card view: Show card skeletons
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => Padding(
-                          padding: EdgeInsets.fromLTRB(context.horizontalPadding, 0, context.horizontalPadding, 16),
-                          child: const BookingCardSkeleton(),
-                        ),
-                        childCount: 5, // Show 5 card skeletons
-                      ),
-                    );
-                  }
-                },
-              ),
+                  ),
+                )
+              // Show empty state
+              else if (windowedState.isEmpty)
+                SliverToBoxAdapter(child: _buildEmptyState())
+              // Show bookings list
+              else if (viewMode == BookingsViewMode.card)
+                _buildBookingsSliverList(bookings, isMobile)
+              else
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+                    child: BookingsTableView(bookings: bookings),
+                  ),
+                ),
 
-              // Load more indicator
+              // Load more indicators (top and bottom)
               SliverToBoxAdapter(
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final hasMore = ref.watch(hasMoreBookingsProvider).valueOrNull ?? false;
-                    final pagination = ref.watch(bookingsPaginationNotifierProvider);
+                child: Builder(
+                  builder: (context) {
                     final localTheme = Theme.of(context);
                     final localL10n = AppLocalizations.of(context);
 
-                    if (!hasMore) {
+                    // No more items to load
+                    if (!windowedState.hasMoreBottom || bookings.isEmpty) {
                       return const SizedBox(height: 24);
                     }
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Center(
-                        child: pagination.isLoadingMore
+                        child: windowedState.isLoadingBottom
                             ? Column(
                                 children: [
                                   CircularProgressIndicator(color: localTheme.colorScheme.primary),
@@ -336,13 +339,19 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       _ViewModeButton(
                         icon: Icons.view_agenda_outlined,
                         isSelected: viewMode == BookingsViewMode.card,
-                        onTap: () => ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.card),
+                        onTap: () {
+                          ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.card);
+                          ref.read(windowedBookingsNotifierProvider.notifier).setViewMode(isTableView: false);
+                        },
                         tooltip: l10n.ownerBookingsCardView,
                       ),
                       _ViewModeButton(
                         icon: Icons.table_rows_outlined,
                         isSelected: viewMode == BookingsViewMode.table,
-                        onTap: () => ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.table),
+                        onTap: () {
+                          ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.table);
+                          ref.read(windowedBookingsNotifierProvider.notifier).setViewMode(isTableView: true);
+                        },
                         tooltip: l10n.ownerBookingsTableView,
                       ),
                     ],
@@ -680,8 +689,11 @@ class _BookingCard extends ConsumerWidget {
 
         if (context.mounted) {
           ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerBookingsApproved);
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
+          // Update local state immediately (optimistic update)
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+            bookingId,
+            BookingStatus.confirmed,
+          );
         }
       } catch (e) {
         if (context.mounted) {
@@ -703,8 +715,11 @@ class _BookingCard extends ConsumerWidget {
 
         if (context.mounted) {
           ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerBookingsRejected);
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
+          // Update local state - rejection changes status to cancelled
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+            bookingId,
+            BookingStatus.cancelled,
+          );
         }
       } catch (e) {
         if (context.mounted) {
@@ -725,8 +740,11 @@ class _BookingCard extends ConsumerWidget {
 
         if (context.mounted) {
           ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerBookingsCompleted);
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
+          // Update local state
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+            bookingId,
+            BookingStatus.completed,
+          );
         }
       } catch (e) {
         if (context.mounted) {
@@ -750,8 +768,11 @@ class _BookingCard extends ConsumerWidget {
 
         if (context.mounted) {
           ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerBookingsCancelled);
-          ref.invalidate(allOwnerBookingsProvider);
-          ref.invalidate(ownerBookingsProvider);
+          // Update local state
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
+            bookingId,
+            BookingStatus.cancelled,
+          );
         }
       } catch (e) {
         if (context.mounted) {

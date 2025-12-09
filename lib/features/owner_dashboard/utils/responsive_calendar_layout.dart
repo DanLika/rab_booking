@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/responsive_spacing_helper.dart';
 
 /// Responsive calendar layout helper
 /// Determines which layout to use based on screen size and orientation
@@ -144,7 +145,7 @@ class ResponsiveCalendarLayout {
   /// Get maximum dialog height
   static double getMaxDialogHeight(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    return screenHeight * 0.85; // 85% of screen height
+    return screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
   }
 
   /// Check if booking details should use full-screen dialog

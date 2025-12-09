@@ -7,7 +7,7 @@ import '../providers/booking_lookup_provider.dart';
 import '../providers/subdomain_provider.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../shared/providers/repository_providers.dart';
-import '../../domain/services/subdomain_service.dart';
+import '../../domain/services/subdomain_service.dart' show SubdomainContext;
 import '../l10n/widget_translations.dart';
 import 'subdomain_not_found_screen.dart';
 
@@ -58,16 +58,17 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
   }
 
   Future<void> _resolveSubdomainAndLookupBooking() async {
-    // Step 1: Check for subdomain in URL
-    final subdomainService = ref.read(subdomainServiceProvider);
-    final context = await subdomainService.resolveCurrentContext();
+    // OPTIMIZED: Use cached subdomainContextProvider (eliminates duplicate queries)
+    // Before: Direct service call = 1 Firestore query per page load
+    // After: Cached provider = 0 queries if already cached this session
+    final subdomainCtx = await ref.read(subdomainContextProvider.future);
 
-    if (context != null && !context.found) {
+    if (subdomainCtx != null && !subdomainCtx.found) {
       // Subdomain was present but property not found
       if (mounted) {
         setState(() {
           _subdomainNotFound = true;
-          _subdomainContext = context;
+          _subdomainContext = subdomainCtx;
           _isLoading = false;
         });
       }
@@ -77,7 +78,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
     // Store context for branding (may be null if no subdomain)
     if (mounted) {
       setState(() {
-        _subdomainContext = context;
+        _subdomainContext = subdomainCtx;
       });
     }
 

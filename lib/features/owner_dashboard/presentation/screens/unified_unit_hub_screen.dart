@@ -114,11 +114,16 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
   }
 
   /// Handle units data changes - auto-select first unit or sync selected unit
-  Future<void> _handleUnitsChanged(List<UnitModel> units) async {
+  /// OPTIMIZED: Accepts properties list to avoid N+1 query pattern
+  void _handleUnitsChanged(List<UnitModel> units, List<PropertyModel> properties) {
     if (units.isNotEmpty && _selectedUnit == null) {
       // Auto-select first unit when none is selected
       final firstUnit = units.first;
-      final property = await ref.read(propertyByIdProvider(firstUnit.propertyId).future);
+      // OPTIMIZED: Find property from cached list instead of fetching
+      final property = properties.firstWhere(
+        (p) => p.id == firstUnit.propertyId,
+        orElse: () => properties.first,
+      );
       if (mounted) {
         setState(() {
           _selectedUnit = firstUnit;
@@ -144,9 +149,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= _kDesktopBreakpoint;
 
+    // OPTIMIZED: Watch properties for use in units change handler
+    final propertiesAsync = ref.watch(ownerPropertiesProvider);
+    final properties = propertiesAsync.valueOrNull ?? [];
+
     // Listen for units changes and handle side effects (auto-selection, sync)
     ref.listen<AsyncValue<List<UnitModel>>>(ownerUnitsProvider, (previous, next) {
-      next.whenData(_handleUnitsChanged);
+      next.whenData((units) => _handleUnitsChanged(units, properties));
     });
 
     final l10n = AppLocalizations.of(context);
@@ -778,7 +787,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
             theme,
             isDark,
             unit: unit,
-            propertyName: property.name,
+            property: property, // OPTIMIZED: Pass full property to avoid N+1 query
             isSelected: _selectedUnit?.id == unit.id,
             onUnitSelected: onUnitSelected,
           ),
@@ -792,7 +801,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
     ThemeData theme,
     bool isDark, {
     required UnitModel unit,
-    required String propertyName,
+    required PropertyModel property, // OPTIMIZED: Accept full property instead of just name
     required bool isSelected,
     VoidCallback? onUnitSelected,
   }) {
@@ -808,15 +817,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         boxShadow: AppShadows.getElevation(1, isDark: isDark),
       ),
       child: InkWell(
-        onTap: () async {
-          final property = await ref.read(propertyByIdProvider(unit.propertyId).future);
-          if (mounted) {
-            setState(() {
-              _selectedUnit = unit;
-              _selectedProperty = property;
-            });
-            onUnitSelected?.call();
-          }
+        onTap: () {
+          // OPTIMIZED: Use passed property directly - eliminates N+1 query pattern
+          setState(() {
+            _selectedUnit = unit;
+            _selectedProperty = property;
+          });
+          onUnitSelected?.call();
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -917,7 +924,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
               const SizedBox(height: 3),
               // Property name
               Text(
-                propertyName,
+                property.name,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: isSelected
                       ? theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt())

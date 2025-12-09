@@ -5,8 +5,7 @@ import '../../domain/models/calendar_date_status.dart';
 import '../l10n/widget_translations.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/theme_provider.dart';
-import '../providers/widget_settings_provider.dart';
-import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
+import '../providers/widget_context_provider.dart';
 import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
@@ -50,10 +49,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       return _buildRotateDeviceOverlay(colors, tr);
     }
 
-    // Get unit data for minNights (gap blocking) - used in legend
-    final unitAsync = ref.watch(unitByIdProvider(widget.propertyId, widget.unitId));
-    final unit = unitAsync.valueOrNull;
-    final minNights = unit?.minStayNights ?? 1;
+    // OPTIMIZED: Get minNights from cached widgetContext (eliminates duplicate unit fetch)
+    final widgetCtxAsync = ref.watch(widgetContextProvider((
+      propertyId: widget.propertyId,
+      unitId: widget.unitId,
+    )));
+    final minNights = widgetCtxAsync.valueOrNull?.unit.minStayNights ?? 1;
 
     // Use realtime stream provider for automatic updates when bookings change
     final calendarData = ref.watch(realtimeYearCalendarProvider(widget.propertyId, widget.unitId, _currentYear));
@@ -611,8 +612,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
-        // Get minNights from widget settings
-        final minNights = ref.read(widgetSettingsProvider((widget.propertyId, widget.unitId))).value?.minNights ?? 1;
+        // OPTIMIZED: Get minNights from cached widgetContext (reuses cached data)
+        final validationMinNights = ref.read(widgetContextProvider((
+          propertyId: widget.propertyId,
+          unitId: widget.unitId,
+        ))).valueOrNull?.unit.minStayNights ?? 1;
 
         // Get check-in date info for validation
         final checkInDateInfo = data[CalendarDateUtils.getDateKey(start)];
@@ -621,7 +625,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         final rangeResult = validator.validateRange(
           start: start,
           end: end,
-          minNights: minNights,
+          minNights: validationMinNights,
           checkInDateInfo: checkInDateInfo,
         );
         if (!rangeResult.isValid) {
@@ -632,12 +636,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         }
 
         // Year calendar specific: Check orphan gap
-        if (_wouldCreateOrphanGap(start, end, data, minNights)) {
+        if (_wouldCreateOrphanGap(start, end, data, validationMinNights)) {
           _rangeStart = null;
           _rangeEnd = null;
           SnackBarHelper.showError(
             context: context,
-            message: WidgetTranslations.of(context, ref).errorOrphanGap(minNights),
+            message: WidgetTranslations.of(context, ref).errorOrphanGap(validationMinNights),
           );
           return;
         }

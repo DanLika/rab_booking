@@ -30,3 +30,9 @@ bool get isWebPlatform => false;
 TabCommunicationService createTabCommunicationService() {
   return TabCommunicationServiceStub();
 }
+
+/// Send iframe height to parent window via postMessage (no-op on mobile)
+/// Used for dynamic iframe resizing when embedded in external websites
+void sendIframeHeight(double height) {
+  // No-op on non-web platforms
+}

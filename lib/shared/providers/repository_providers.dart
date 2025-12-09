@@ -140,11 +140,9 @@ final stripeServiceProvider = Provider<StripeService>((ref) {
 /// iCal Export Service provider
 final icalExportServiceProvider = Provider<IcalExportService>((ref) {
   final bookingRepository = ref.watch(bookingRepositoryProvider);
-  final settingsRepository = ref.watch(widgetSettingsRepositoryProvider);
   final storage = ref.watch(firebaseStorageProvider);
   return IcalExportService(
     bookingRepository: bookingRepository,
-    settingsRepository: settingsRepository,
     storage: storage,
   );
 });

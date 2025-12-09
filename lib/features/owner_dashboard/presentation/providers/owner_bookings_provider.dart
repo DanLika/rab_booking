@@ -132,7 +132,8 @@ class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
 
 /// Owner unit IDs provider - cached list of unit IDs for pagination
 /// This is small data (just IDs) so OK to cache
-@riverpod
+/// keepAlive: Prevents re-fetching on every navigation (used by 5+ providers)
+@Riverpod(keepAlive: true)
 Future<List<String>> ownerUnitIds(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final auth = FirebaseAuth.instance;
@@ -625,8 +626,9 @@ bool isLoadingMoreBookings(Ref ref) {
 }
 
 /// Pending bookings count - for drawer badge
-/// Uses small optimized query (just count, not full data)
-@riverpod
+/// OPTIMIZED: Uses Firestore count() aggregation (0 document reads!)
+/// keepAlive: Caches result to avoid re-fetching on every drawer open
+@Riverpod(keepAlive: true)
 Future<int> pendingBookingsCount(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final auth = FirebaseAuth.instance;
@@ -635,15 +637,14 @@ Future<int> pendingBookingsCount(Ref ref) async {
   if (userId == null) return 0;
 
   try {
-    // Use existing method but only count pending
+    // Get cached unit IDs
     final unitIds = await ref.watch(ownerUnitIdsProvider.future);
-    final result = await repository.getOwnerBookingsPaginated(
-      ownerId: userId,
+
+    // OPTIMIZED: Use count() aggregation instead of fetching documents
+    return await repository.getBookingsCountByStatus(
       unitIds: unitIds,
       status: BookingStatus.pending,
-      limit: 100, // Cap at 100 for count
     );
-    return result.bookings.length;
   } catch (_) {
     return 0;
   }
@@ -651,7 +652,8 @@ Future<int> pendingBookingsCount(Ref ref) async {
 
 /// Recent owner bookings provider (for dashboard activity)
 /// Small dataset (10 items), OK to use simple query
-@riverpod
+/// keepAlive: Dashboard is frequently visited, avoid re-fetching
+@Riverpod(keepAlive: true)
 Future<List<OwnerBooking>> recentOwnerBookings(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final auth = FirebaseAuth.instance;

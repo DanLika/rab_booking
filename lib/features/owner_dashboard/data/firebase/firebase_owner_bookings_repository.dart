@@ -747,6 +747,34 @@ class FirebaseOwnerBookingsRepository {
     }
   }
 
+  /// Get count of bookings by status using Firestore aggregation
+  /// OPTIMIZED: Uses count() which doesn't charge for document reads
+  /// Only counts - no document data is downloaded
+  Future<int> getBookingsCountByStatus({
+    required List<String> unitIds,
+    required BookingStatus status,
+  }) async {
+    if (unitIds.isEmpty) return 0;
+
+    int totalCount = 0;
+
+    // Batch unit IDs (Firestore whereIn limit is 30 for count queries)
+    for (int i = 0; i < unitIds.length; i += 30) {
+      final batch = unitIds.skip(i).take(30).toList();
+
+      final countQuery = await _firestore
+          .collection('bookings')
+          .where('unit_id', whereIn: batch)
+          .where('status', isEqualTo: status.name)
+          .count()
+          .get();
+
+      totalCount += countQuery.count ?? 0;
+    }
+
+    return totalCount;
+  }
+
   /// Get paginated bookings for owner with Firestore cursor
   /// Uses server-side pagination - only fetches [limit] bookings per page
   ///
@@ -786,13 +814,18 @@ class FirebaseOwnerBookingsRepository {
       // NOTE: Firestore whereIn has 30 item limit, so we batch
       final List<QueryDocumentSnapshot> allDocs = [];
 
+      // Per-batch limit: 3x requested limit (safety margin for merge-sort), capped at 100
+      // This prevents fetching ALL bookings when we only need a few
+      final batchLimit = (limit * 3).clamp(10, 100);
+
       for (int i = 0; i < filteredUnitIds.length; i += 10) {
         final batch = filteredUnitIds.skip(i).take(10).toList();
 
         Query query = _firestore
             .collection('bookings')
             .where('unit_id', whereIn: batch)
-            .orderBy('created_at', descending: true);
+            .orderBy('created_at', descending: true)
+            .limit(batchLimit); // OPTIMIZATION: Limit per batch to reduce reads
 
         // Apply filters
         if (status != null) {
@@ -1185,4 +1218,139 @@ class FirebaseOwnerBookingsRepository {
 
     return ownerBookings;
   }
+
+  /// Get dashboard statistics data efficiently
+  /// Returns raw booking data needed for calculating dashboard stats
+  /// Uses optimized queries with proper limits and date filters
+  Future<DashboardStatsData> getDashboardStatsData({
+    required List<String> unitIds,
+  }) async {
+    if (unitIds.isEmpty) {
+      return const DashboardStatsData(
+        confirmedBookings: [],
+        upcomingCheckIns: [],
+      );
+    }
+
+    final now = DateTime.now();
+    final currentYearStart = DateTime(now.year);
+    final next7Days = now.add(const Duration(days: 7));
+
+    // Parallel queries for efficiency
+    final confirmedBookingsFuture = _queryBookingsForStats(
+      unitIds: unitIds,
+      statuses: [BookingStatus.confirmed, BookingStatus.completed],
+      createdAfter: currentYearStart, // Only this year's bookings
+      limit: 500, // Reasonable cap for yearly data
+    );
+
+    final upcomingCheckInsFuture = _queryUpcomingCheckIns(
+      unitIds: unitIds,
+      checkInAfter: now,
+      checkInBefore: next7Days,
+      limit: 100, // Upcoming check-ins are limited
+    );
+
+    final results = await Future.wait([
+      confirmedBookingsFuture,
+      upcomingCheckInsFuture,
+    ]);
+
+    return DashboardStatsData(
+      confirmedBookings: results[0],
+      upcomingCheckIns: results[1],
+    );
+  }
+
+  /// Query confirmed/completed bookings for revenue calculations
+  Future<List<BookingModel>> _queryBookingsForStats({
+    required List<String> unitIds,
+    required List<BookingStatus> statuses,
+    required DateTime createdAfter,
+    required int limit,
+  }) async {
+    final List<BookingModel> allBookings = [];
+    final batchLimit = (limit ~/ ((unitIds.length / 10).ceil())).clamp(10, 100);
+
+    for (int i = 0; i < unitIds.length; i += 10) {
+      final batch = unitIds.skip(i).take(10).toList();
+
+      for (final status in statuses) {
+        final query = _firestore
+            .collection('bookings')
+            .where('unit_id', whereIn: batch)
+            .where('status', isEqualTo: status.value)
+            .where('created_at', isGreaterThanOrEqualTo: Timestamp.fromDate(createdAfter))
+            .orderBy('created_at', descending: true)
+            .limit(batchLimit);
+
+        final snapshot = await query.get();
+        for (final doc in snapshot.docs) {
+          try {
+            final booking = BookingModel.fromJson({
+              ...(doc.data()),
+              'id': doc.id,
+            });
+            allBookings.add(booking);
+          } catch (_) {
+            // Skip invalid bookings
+          }
+        }
+      }
+    }
+
+    return allBookings;
+  }
+
+  /// Query upcoming check-ins for next 7 days
+  Future<List<BookingModel>> _queryUpcomingCheckIns({
+    required List<String> unitIds,
+    required DateTime checkInAfter,
+    required DateTime checkInBefore,
+    required int limit,
+  }) async {
+    final List<BookingModel> allBookings = [];
+    final batchLimit = (limit ~/ ((unitIds.length / 10).ceil())).clamp(5, 50);
+
+    for (int i = 0; i < unitIds.length; i += 10) {
+      final batch = unitIds.skip(i).take(10).toList();
+
+      // Query confirmed and pending bookings with upcoming check-ins
+      for (final status in [BookingStatus.confirmed, BookingStatus.pending]) {
+        final query = _firestore
+            .collection('bookings')
+            .where('unit_id', whereIn: batch)
+            .where('status', isEqualTo: status.value)
+            .where('check_in', isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter))
+            .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
+            .limit(batchLimit);
+
+        final snapshot = await query.get();
+        for (final doc in snapshot.docs) {
+          try {
+            final booking = BookingModel.fromJson({
+              ...(doc.data()),
+              'id': doc.id,
+            });
+            allBookings.add(booking);
+          } catch (_) {
+            // Skip invalid bookings
+          }
+        }
+      }
+    }
+
+    return allBookings;
+  }
+}
+
+/// Dashboard stats raw data - used by provider to calculate final stats
+class DashboardStatsData {
+  final List<BookingModel> confirmedBookings;
+  final List<BookingModel> upcomingCheckIns;
+
+  const DashboardStatsData({
+    required this.confirmedBookings,
+    required this.upcomingCheckIns,
+  });
 }

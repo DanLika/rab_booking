@@ -9,7 +9,164 @@ class FirebaseRevenueAnalyticsRepository {
 
   FirebaseRevenueAnalyticsRepository(this._firestore);
 
+  // ============================================================
+  // OPTIMIZED METHODS - Use these with pre-cached unitIds
+  // ============================================================
+
+  /// OPTIMIZED: Get all revenue stats in a single query batch
+  /// Fetches bookings ONCE and calculates all metrics from same dataset
+  /// Reduces queries from ~27 to ~2-3 (depending on unit count)
+  Future<RevenueStats> getRevenueStatsOptimized({
+    required List<String> unitIds,
+    required Map<String, String> unitIdToPropertyName,
+  }) async {
+    if (unitIds.isEmpty) {
+      return RevenueStats(
+        totalRevenue: 0.0,
+        thisMonthRevenue: 0.0,
+        trend: 0.0,
+        revenueByProperty: {},
+      );
+    }
+
+    try {
+      final now = DateTime.now();
+      final thisMonthStart = DateTime(now.year, now.month);
+      final lastMonthStart = DateTime(now.year, now.month - 1);
+      final lastMonthEnd = DateTime(now.year, now.month, 0, 23, 59, 59);
+
+      // SINGLE QUERY: Fetch ALL confirmed/completed bookings for all units
+      final allBookings = <BookingModel>[];
+
+      for (int i = 0; i < unitIds.length; i += 10) {
+        final batch = unitIds.skip(i).take(10).toList();
+        final bookingsSnapshot = await _firestore
+            .collection('bookings')
+            .where('unit_id', whereIn: batch)
+            .where('status', whereIn: ['confirmed', 'completed'])
+            .get();
+
+        for (final doc in bookingsSnapshot.docs) {
+          final data = doc.data();
+          allBookings.add(BookingModel.fromJson({...data, 'id': doc.id}));
+        }
+      }
+
+      // Calculate ALL metrics from same dataset (no additional queries!)
+      double totalRevenue = 0.0;
+      double thisMonthRevenue = 0.0;
+      double lastMonthRevenue = 0.0;
+      final Map<String, double> revenueByProperty = {};
+
+      for (final booking in allBookings) {
+        final price = booking.totalPrice;
+        totalRevenue += price;
+
+        // This month revenue
+        if (booking.createdAt.isAfter(thisMonthStart) ||
+            booking.createdAt.isAtSameMomentAs(thisMonthStart)) {
+          thisMonthRevenue += price;
+        }
+
+        // Last month revenue (for trend calculation)
+        if (booking.createdAt.isAfter(lastMonthStart) &&
+            booking.createdAt.isBefore(lastMonthEnd)) {
+          lastMonthRevenue += price;
+        }
+
+        // Revenue by property
+        final propertyName = unitIdToPropertyName[booking.unitId] ?? 'Unknown';
+        revenueByProperty[propertyName] =
+            (revenueByProperty[propertyName] ?? 0.0) + price;
+      }
+
+      // Calculate trend
+      final trend = lastMonthRevenue > 0
+          ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+          : 0.0;
+
+      return RevenueStats(
+        totalRevenue: totalRevenue,
+        thisMonthRevenue: thisMonthRevenue,
+        trend: trend,
+        revenueByProperty: revenueByProperty,
+      );
+    } catch (e) {
+      throw AnalyticsException(
+        'Failed to get revenue stats',
+        code: 'analytics/revenue-stats-failed',
+        originalError: e,
+      );
+    }
+  }
+
+  /// OPTIMIZED: Get revenue data for last N days using pre-cached unitIds
+  /// Reduces queries from ~5 to ~1-2 (depending on unit count)
+  Future<List<RevenueDataPoint>> getRevenueByDaysOptimized({
+    required List<String> unitIds,
+    required int days,
+  }) async {
+    final endDate = DateTime.now();
+    final startDate = endDate.subtract(Duration(days: days - 1));
+
+    if (unitIds.isEmpty) {
+      return _generateEmptyDataPoints(startDate, days);
+    }
+
+    try {
+      final Map<String, double> revenueByDate = {};
+
+      // Query bookings with pre-cached unitIds (skip properties/units fetch)
+      for (int i = 0; i < unitIds.length; i += 10) {
+        final batch = unitIds.skip(i).take(10).toList();
+        final bookingsSnapshot = await _firestore
+            .collection('bookings')
+            .where('unit_id', whereIn: batch)
+            .where('status', whereIn: ['confirmed', 'completed'])
+            .where('created_at', isGreaterThanOrEqualTo: startDate)
+            .where('created_at', isLessThanOrEqualTo: endDate)
+            .get();
+
+        for (final doc in bookingsSnapshot.docs) {
+          final data = doc.data();
+          final booking = BookingModel.fromJson({...data, 'id': doc.id});
+          final date = booking.createdAt.toIso8601String().split('T')[0];
+          revenueByDate[date] = (revenueByDate[date] ?? 0) + booking.totalPrice;
+        }
+      }
+
+      // Create data points for all days
+      final List<RevenueDataPoint> dataPoints = [];
+      for (int i = 0; i < days; i++) {
+        final date = startDate.add(Duration(days: i));
+        final dateStr = date.toIso8601String().split('T')[0];
+        final label = _formatDateLabel(date, i, days);
+        dataPoints.add(
+          RevenueDataPoint(
+            label: label,
+            value: revenueByDate[dateStr] ?? 0.0,
+            date: date,
+          ),
+        );
+      }
+
+      return dataPoints;
+    } catch (e) {
+      throw AnalyticsException(
+        'Failed to get revenue by days',
+        code: 'analytics/revenue-by-days-failed',
+        originalError: e,
+      );
+    }
+  }
+
+  // ============================================================
+  // LEGACY METHODS - Kept for backward compatibility
+  // These fetch properties/units on every call (inefficient)
+  // ============================================================
+
   /// Helper method to get all unit IDs for given properties from subcollections
+  @Deprecated('Use ownerUnitIdsProvider instead for cached unit IDs')
   Future<List<String>> _getUnitIdsForProperties(
     List<String> propertyIds,
   ) async {

@@ -56,22 +56,31 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     }
   }
 
+  /// Load units with their properties
+  /// OPTIMIZED: Uses ownerUnitsProvider (single query) instead of N+1 queries
+  /// Previously: O(P) queries where P = number of properties
+  /// Now: 2 queries total (properties + units via collection group query)
   Future<void> _loadUnits() async {
     try {
+      // Both providers use efficient queries (properties stream + collection group for units)
       final properties = await ref.read(ownerPropertiesProvider.future);
-      final List<Map<String, dynamic>> units = [];
+      final units = await ref.read(ownerUnitsProvider.future);
 
-      for (final property in properties) {
-        final propertyUnits = await ref.read(unitRepositoryProvider).fetchUnitsByProperty(property.id);
+      // Create property lookup map for O(1) access
+      final propertyMap = {for (final p in properties) p.id: p};
 
-        for (final unit in propertyUnits) {
-          units.add({'unit': unit, 'property': property});
+      // Join units with properties
+      final List<Map<String, dynamic>> unitsList = [];
+      for (final unit in units) {
+        final property = propertyMap[unit.propertyId];
+        if (property != null) {
+          unitsList.add({'unit': unit, 'property': property});
         }
       }
 
       if (mounted) {
         setState(() {
-          _allUnits = units;
+          _allUnits = unitsList;
           _isLoading = false;
         });
       }

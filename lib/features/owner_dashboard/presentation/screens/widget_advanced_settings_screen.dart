@@ -10,6 +10,7 @@ import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/presentation/providers/widget_settings_provider.dart';
+import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/advanced_settings/email_verification_card.dart';
 import '../widgets/advanced_settings/tax_legal_disclaimer_card.dart';
 

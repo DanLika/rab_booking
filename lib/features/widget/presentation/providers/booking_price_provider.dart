@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import 'realtime_booking_calendar_provider.dart';
+import 'widget_context_provider.dart';
 
 part 'booking_price_provider.g.dart';
 
@@ -90,12 +91,16 @@ class BookingPriceCalculation {
 }
 
 /// Provider for calculating booking price
+///
+/// OPTIMIZED: Now accepts optional [propertyId] to reuse cached unit data
+/// from [widgetContextProvider], eliminating duplicate Firestore queries.
 @riverpod
 Future<BookingPriceCalculation?> bookingPrice(
   Ref ref, {
   required String unitId,
   required DateTime? checkIn,
   required DateTime? checkOut,
+  String? propertyId, // Optional: enables cache reuse from widgetContextProvider
   int depositPercentage = 20, // Configurable deposit percentage (0-100)
 }) async {
   // Return null if dates not selected
@@ -104,13 +109,39 @@ Future<BookingPriceCalculation?> bookingPrice(
   }
 
   final repository = ref.watch(bookingCalendarRepositoryProvider);
-  final unitRepo = ref.watch(unitRepositoryProvider);
 
-  // Get unit for base price and weekend pricing
-  final unit = await unitRepo.fetchUnitById(unitId);
-  final basePrice = unit?.pricePerNight ?? 100.0;
-  final weekendBasePrice = unit?.weekendBasePrice;
-  final weekendDays = unit?.weekendDays;
+  // OPTIMIZED: Try to get unit from cached widgetContext first
+  // Falls back to direct fetch if propertyId not provided or cache miss
+  double basePrice = 100.0;
+  double? weekendBasePrice;
+  List<int>? weekendDays;
+
+  if (propertyId != null) {
+    // Try to get unit from cached context (no additional query)
+    try {
+      final context = await ref.read(widgetContextProvider((
+        propertyId: propertyId,
+        unitId: unitId,
+      )).future);
+      basePrice = context.unit.pricePerNight;
+      weekendBasePrice = context.unit.weekendBasePrice;
+      weekendDays = context.unit.weekendDays;
+    } catch (_) {
+      // Fall back to direct fetch if context not available
+      final unitRepo = ref.watch(unitRepositoryProvider);
+      final unit = await unitRepo.fetchUnitById(unitId);
+      basePrice = unit?.pricePerNight ?? 100.0;
+      weekendBasePrice = unit?.weekendBasePrice;
+      weekendDays = unit?.weekendDays;
+    }
+  } else {
+    // No propertyId provided - must fetch directly
+    final unitRepo = ref.watch(unitRepositoryProvider);
+    final unit = await unitRepo.fetchUnitById(unitId);
+    basePrice = unit?.pricePerNight ?? 100.0;
+    weekendBasePrice = unit?.weekendBasePrice;
+    weekendDays = unit?.weekendDays;
+  }
 
   // Calculate room price from daily prices with weekend pricing support
   final roomPrice = await repository.calculateBookingPrice(

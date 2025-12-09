@@ -821,6 +821,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _icalUrlController;
   String? _selectedUnitId;
+  String? _selectedPropertyId; // OPTIMIZED: Store property ID to avoid re-reading provider
   String _selectedPlatform = 'booking_com';
   bool _isSaving = false;
 
@@ -830,6 +831,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     _icalUrlController = TextEditingController(text: widget.existingFeed?.icalUrl ?? '');
     if (widget.existingFeed != null) {
       _selectedUnitId = widget.existingFeed!.unitId;
+      _selectedPropertyId = widget.existingFeed!.propertyId;
       _selectedPlatform = widget.existingFeed!.platform;
     }
   }
@@ -928,7 +930,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                                     ),
                                   )
                                   .toList(),
-                              onChanged: (value) => setState(() => _selectedUnitId = value),
+                              onChanged: (value) {
+                                final unit = units.firstWhere((u) => u.id == value);
+                                setState(() {
+                                  _selectedUnitId = value;
+                                  _selectedPropertyId = unit.propertyId;
+                                });
+                              },
                               validator: (value) =>
                                   (value == null || value.isEmpty) ? l10n.icalSelectUnitRequired : null,
                             );
@@ -1010,16 +1018,16 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     try {
       final repository = ref.read(icalRepositoryProvider);
 
-      // Get propertyId from selected unit
-      final units = ref.read(ownerUnitsProvider).valueOrNull ?? [];
-      final selectedUnit = units.firstWhere((u) => u.id == _selectedUnitId);
-      final propertyId = selectedUnit.propertyId;
+      // OPTIMIZED: Use stored _selectedPropertyId instead of re-reading provider
+      if (_selectedPropertyId == null) {
+        throw StateError('Property ID not set - unit must be selected first');
+      }
 
       if (widget.existingFeed == null) {
         final newFeed = IcalFeed(
           id: '',
           unitId: _selectedUnitId!,
-          propertyId: propertyId,
+          propertyId: _selectedPropertyId!,
           icalUrl: _icalUrlController.text.trim(),
           platform: _selectedPlatform,
           createdAt: DateTime.now(),

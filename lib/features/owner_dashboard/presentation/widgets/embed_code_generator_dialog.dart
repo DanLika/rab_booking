@@ -35,8 +35,8 @@ class EmbedCodeGeneratorDialog extends StatefulWidget {
 }
 
 class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
-  String _selectedLanguage = 'hr';
-  String _widgetHeight = '900';
+  // Note: Language selector removed - widget has its own language picker in header
+  String _widgetHeight = '700'; // Lower default since widget auto-resizes
 
   static const String _defaultWidgetBaseUrl = 'https://bookbed.io';
   static const String _subdomainBaseDomain = 'bookbed.io';
@@ -51,12 +51,12 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
 
   /// Generate widget URL with query params (for iframe embeds)
   /// Uses immutable IDs - always works, even if slug changes
+  /// Note: Language not included - widget has its own language selector
   String get _widgetUrl {
     final baseUrl = _widgetBaseUrl;
     final queryParams = <String, String>{
       'property': widget.propertyId,
       'unit': widget.unitId,
-      'language': _selectedLanguage,
     };
     return Uri.parse(baseUrl).replace(queryParameters: queryParams).toString();
   }
@@ -69,12 +69,11 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
       widget.unitSlug!.isNotEmpty;
 
   /// Generate clean slug URL (for standalone/shareable pages)
-  /// Format: https://subdomain.bookbed.io/slug?language=hr
+  /// Format: https://subdomain.bookbed.io/slug
+  /// Note: Language not included - widget has its own language selector
   String get _slugUrl {
     if (!_hasSlugUrl) return '';
-    final baseUrl = 'https://${widget.propertySubdomain}.$_subdomainBaseDomain';
-    final queryParams = <String, String>{'language': _selectedLanguage};
-    return Uri.parse('$baseUrl/${widget.unitSlug}').replace(queryParameters: queryParams).toString();
+    return 'https://${widget.propertySubdomain}.$_subdomainBaseDomain/${widget.unitSlug}';
   }
 
   String get _embedCode {
@@ -206,26 +205,25 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                               ),
                               const SizedBox(height: 12),
 
-                              // Language
-                              Builder(
-                                builder: (ctx) => DropdownButtonFormField<String>(
-                                  initialValue: _selectedLanguage,
-                                  dropdownColor: InputDecorationHelper.getDropdownColor(ctx),
-                                  decoration: InputDecorationHelper.buildDecoration(
-                                    labelText: l10n.embedCodeLanguage,
-                                    context: ctx,
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(value: 'hr', child: Text('Hrvatski')),
-                                    DropdownMenuItem(value: 'en', child: Text('English')),
-                                    DropdownMenuItem(value: 'de', child: Text('Deutsch')),
-                                    DropdownMenuItem(value: 'it', child: Text('Italiano')),
+                              // Info: Language is handled by widget itself
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withAlpha(20),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.blue.withAlpha(50)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.info_outline, size: 18, color: Colors.blue.shade700),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Language selection is built into the widget header',
+                                        style: TextStyle(fontSize: 13, color: Colors.blue.shade700),
+                                      ),
+                                    ),
                                   ],
-                                  onChanged: (value) {
-                                    if (value != null) {
-                                      setState(() => _selectedLanguage = value);
-                                    }
-                                  },
                                 ),
                               ),
 

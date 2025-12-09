@@ -1,14 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/firebase_widget_settings_repository.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
-/// Provider for FirebaseWidgetSettingsRepository
-final widgetSettingsRepositoryProvider =
-    Provider<FirebaseWidgetSettingsRepository>((ref) {
-      return FirebaseWidgetSettingsRepository(FirebaseFirestore.instance);
-    });
+// NOTE: widgetSettingsRepositoryProvider is defined in repository_providers.dart
+// Do NOT redefine it here to avoid duplicate providers and ensure consistent
+// dependency injection (using firestoreProvider instead of direct instance).
 
 /// Provider for widget settings by property and unit ID
 ///

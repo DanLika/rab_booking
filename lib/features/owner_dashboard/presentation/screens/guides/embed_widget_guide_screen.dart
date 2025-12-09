@@ -25,56 +25,34 @@ class EmbedWidgetGuideScreen extends ConsumerStatefulWidget {
 
 class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen> {
   int? _expandedStep;
-  String _selectedLanguage = 'hr';
 
   static const String _defaultWidgetBaseUrl = 'https://bookbed.io';
   static const String _subdomainBaseDomain = 'bookbed.io';
 
   /// Generate iframe code for a unit (uses stable IDs, not slug)
+  /// Note: Language parameter removed - widget has its own language selector in header
   String _generateIframeCode(UnitModel unit, String? propertySubdomain) {
     final baseUrl = propertySubdomain != null && propertySubdomain.isNotEmpty
         ? 'https://$propertySubdomain.$_subdomainBaseDomain'
         : _defaultWidgetBaseUrl;
 
-    final url = '$baseUrl?property=${unit.propertyId}&unit=${unit.id}&language=$_selectedLanguage';
+    final url = '$baseUrl?property=${unit.propertyId}&unit=${unit.id}';
 
     return '''<iframe
-  class="booking-widget"
-  data-unit-id="${unit.id}"
   src="$url"
   width="100%"
-  height="900px"
+  height="700px"
   frameborder="0"
   allow="payment"
   style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
 ></iframe>''';
   }
 
-  /// Language sync JavaScript snippet
-  String get _languageSyncSnippet => '''
-// Widget Language Sync - Add this to your site
-const WIDGET_LANGUAGES = {
-  'hr': 'hr', 'en': 'en', 'de': 'de', 'it': 'it'
-};
-
-function syncWidgetLanguage(newLang) {
-  const widgetLang = WIDGET_LANGUAGES[newLang] || 'en'; // Fallback to English
-  document.querySelectorAll('.booking-widget').forEach(iframe => {
-    const url = new URL(iframe.src);
-    url.searchParams.set('language', widgetLang);
-    iframe.src = url.toString();
-  });
-}
-
-// Hook into your site's language change event:
-// Example: yourSite.onLanguageChange(syncWidgetLanguage);
-''';
-
   final String _exampleCode = '''
 <iframe
   src="https://bookbed.io/?unit=YOUR_UNIT_ID"
   width="100%"
-  height="900px"
+  height="700px"
   frameborder="0"
   allow="payment"
   style="border: none; border-radius: 8px;"
@@ -163,11 +141,6 @@ function syncWidgetLanguage(newLang) {
 
               // YOUR EMBED CODES - Auto-generated for all units
               _buildYourEmbedCodesSection(),
-
-              const SizedBox(height: 24),
-
-              // Language Sync JavaScript Section
-              _buildLanguageSyncSection(),
 
               const SizedBox(height: 24),
 
@@ -698,32 +671,26 @@ function syncWidgetLanguage(newLang) {
 
             const SizedBox(height: 16),
 
-            // Language selector
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.embedGuideWidgetLanguage, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'hr', label: Text('HR')),
-                      ButtonSegment(value: 'en', label: Text('EN')),
-                      ButtonSegment(value: 'de', label: Text('DE')),
-                      ButtonSegment(value: 'it', label: Text('IT')),
-                    ],
-                    selected: {_selectedLanguage},
-                    onSelectionChanged: (value) {
-                      setState(() => _selectedLanguage = value.first);
-                    },
-                    style: const ButtonStyle(
-                      visualDensity: VisualDensity.compact,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            // Language info note
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withAlpha(20),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.colorScheme.primary.withAlpha(50)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.translate, size: 20, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Widget has a built-in language selector in the header. Users can switch between HR, EN, DE, IT.',
+                      style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
 
             const SizedBox(height: 20),
@@ -889,127 +856,6 @@ function syncWidgetLanguage(newLang) {
             textAlign: TextAlign.center,
           ),
         ],
-      ),
-    );
-  }
-
-  /// Build Language Sync JavaScript section
-  Widget _buildLanguageSyncSection() {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.warning.withAlpha((0.1 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.translate, color: theme.colorScheme.warning, size: 24),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Sinkronizacija Jezika',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.warning),
-                      ),
-                      Text(
-                        'Automatski mijenja jezik widgeta kad korisnik promijeni jezik na vašoj web stranici',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Info box
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.warning.withAlpha((0.1 * 255).toInt()),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.colorScheme.warning.withAlpha((0.3 * 255).toInt())),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline, size: 18, color: theme.colorScheme.warning),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Widget podržava: Hrvatski (hr), English (en), Deutsch (de), Italiano (it). '
-                      'Ostali jezici automatski koriste engleski.',
-                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Code block with copy button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'JavaScript',
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt())),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: _languageSyncSnippet));
-                    ErrorDisplayUtils.showSuccessSnackBar(context, l10n.embedGuideCodeCopied);
-                  },
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: Text(l10n.embedCodeCopy),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())),
-              ),
-              child: SelectableText(
-                _languageSyncSnippet,
-                style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: theme.colorScheme.primary, height: 1.4),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

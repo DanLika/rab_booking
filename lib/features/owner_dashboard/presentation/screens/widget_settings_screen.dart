@@ -93,12 +93,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         _applySettingsToForm(settings);
       }
 
-      // Load company details for bank transfer validation
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId != null) {
-        final profileRepository = ref.read(userProfileRepositoryProvider);
-        _companyDetails = await profileRepository.getCompanyDetails(userId);
-      }
+      // OPTIMIZED: Company details loaded via companyDetailsProvider stream in build()
+      // No manual fetch needed here - reduces 1 Firestore query
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
@@ -175,17 +171,16 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         );
 
         if (goToProfile == true && mounted) {
-          // Navigate to edit profile and reload on return
+          // Navigate to edit profile
           await context.push(OwnerRoutes.bankAccount);
-          // Reload company details after returning from profile
-          final userId = FirebaseAuth.instance.currentUser?.uid;
-          if (userId != null) {
-            final profileRepository = ref.read(userProfileRepositoryProvider);
-            _companyDetails = await profileRepository.getCompanyDetails(userId);
-            // If now has bank details, enable bank transfer
-            if (_companyDetails?.hasBankDetails == true) {
-              setState(() => _bankTransferEnabled = true);
-            }
+          // OPTIMIZED: Invalidate provider to trigger stream refresh
+          // The build() watch will auto-update _companyDetails
+          ref.invalidate(companyDetailsProvider);
+          // Wait a frame for provider to update state
+          await Future.delayed(const Duration(milliseconds: 100));
+          // If now has bank details, enable bank transfer
+          if (_companyDetails?.hasBankDetails == true) {
+            setState(() => _bankTransferEnabled = true);
           }
         }
         return; // Don't enable if no bank details
@@ -240,15 +235,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 return TextButton(
                   onPressed: () async {
                     await context.push(OwnerRoutes.bankAccount);
-                    // Reload on return
-                    final userId = FirebaseAuth.instance.currentUser?.uid;
-                    if (userId != null) {
-                      final profileRepository = ref.read(userProfileRepositoryProvider);
-                      final updatedCompany = await profileRepository.getCompanyDetails(userId);
-                      if (mounted) {
-                        setState(() => _companyDetails = updatedCompany);
-                      }
-                    }
+                    // OPTIMIZED: Invalidate provider to trigger stream refresh
+                    // The build() watch will auto-update _companyDetails
+                    ref.invalidate(companyDetailsProvider);
                   },
                   child: Text(l10n.edit),
                 );
@@ -290,15 +279,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   return TextButton.icon(
                     onPressed: () async {
                       await context.push(OwnerRoutes.bankAccount);
-                      // Reload on return
-                      final userId = FirebaseAuth.instance.currentUser?.uid;
-                      if (userId != null) {
-                        final profileRepository = ref.read(userProfileRepositoryProvider);
-                        final updatedCompany = await profileRepository.getCompanyDetails(userId);
-                        if (mounted) {
-                          setState(() => _companyDetails = updatedCompany);
-                        }
-                      }
+                      // OPTIMIZED: Invalidate provider to trigger stream refresh
+                      // The build() watch will auto-update _companyDetails
+                      ref.invalidate(companyDetailsProvider);
                     },
                     icon: const Icon(Icons.edit, size: 16),
                     label: Text(l10n.edit),
@@ -497,6 +480,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // OPTIMIZED: Sync company details from stream provider (reduces manual Firestore queries)
+    // This replaces manual getCompanyDetails() calls and auto-updates on profile changes
+    final companyDetailsAsync = ref.watch(companyDetailsProvider);
+    companyDetailsAsync.whenData((data) {
+      if (data != _companyDetails) {
+        // Schedule state update for next frame to avoid setState during build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() => _companyDetails = data);
+          }
+        });
+      }
+    });
+
     final contentPadding = context.horizontalPadding;
     final l10n = AppLocalizations.of(context);
 

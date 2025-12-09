@@ -15,14 +15,30 @@ final icalFeedsStreamProvider = StreamProvider<List<IcalFeed>>((ref) {
 });
 
 /// Provider for iCal statistics
+/// OPTIMIZED: Computes stats from already-loaded feeds instead of separate query
+/// This eliminates a duplicate Firestore read (feeds are already in icalFeedsStreamProvider)
 final icalStatisticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final userId = ref.watch(enhancedAuthProvider).firebaseUser?.uid;
-  if (userId == null) {
-    return {};
+  final feeds = await ref.watch(icalFeedsStreamProvider.future);
+
+  if (feeds.isEmpty) {
+    return {
+      'total_feeds': 0,
+      'active_feeds': 0,
+      'error_feeds': 0,
+      'paused_feeds': 0,
+      'total_events': 0,
+      'total_syncs': 0,
+    };
   }
 
-  final repository = ref.watch(icalRepositoryProvider);
-  return repository.getIcalStatistics(userId);
+  return {
+    'total_feeds': feeds.length,
+    'active_feeds': feeds.where((f) => f.isActive).length,
+    'error_feeds': feeds.where((f) => f.hasError).length,
+    'paused_feeds': feeds.where((f) => f.status == 'paused').length,
+    'total_events': feeds.fold(0, (acc, f) => acc + f.eventCount),
+    'total_syncs': feeds.fold(0, (acc, f) => acc + f.syncCount),
+  };
 });
 
 /// Provider for iCal events for a specific unit (real-time)

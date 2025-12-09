@@ -42,11 +42,12 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
     super.dispose();
   }
 
-  void _loadData(UserData userData) {
+  /// Load bank account data from company details
+  /// OPTIMIZED: Accepts CompanyDetails directly instead of full UserData
+  void _loadData(CompanyDetails company) {
     if (_originalCompany != null) return;
 
-    _originalCompany = userData.company;
-    final company = userData.company;
+    _originalCompany = company;
 
     // Load bank fields
     _ibanController.text = company.bankAccountIban;
@@ -100,7 +101,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
       await ref.read(userProfileNotifierProvider.notifier).updateCompany(userId, updatedCompany);
 
       // Invalidate provider to refresh UI with new data
-      ref.invalidate(userDataProvider);
+      ref.invalidate(companyDetailsProvider);
 
       if (mounted) {
         setState(() {
@@ -309,7 +310,9 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userDataAsync = ref.watch(userDataProvider);
+    // OPTIMIZED: Use companyDetailsProvider instead of userDataProvider
+    // This reduces Firestore reads from 2 (profile + company) to 1 (company only)
+    final companyDetailsAsync = ref.watch(companyDetailsProvider);
     final l10n = AppLocalizations.of(context);
 
     return PopScope(
@@ -347,12 +350,12 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
         ),
         body: Container(
           decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-          child: userDataAsync.when(
-            data: (userData) {
-              // Create default userData if null
-              final effectiveUserData = userData ?? const UserData(profile: UserProfile(userId: ''));
+          child: companyDetailsAsync.when(
+            data: (companyDetails) {
+              // Create default company if null
+              final effectiveCompany = companyDetails ?? const CompanyDetails();
 
-              _loadData(effectiveUserData);
+              _loadData(effectiveCompany);
 
               return LayoutBuilder(
                 builder: (context, constraints) {

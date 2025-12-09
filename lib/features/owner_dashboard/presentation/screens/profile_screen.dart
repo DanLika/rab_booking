@@ -11,7 +11,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../providers/user_profile_provider.dart';
 import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -27,7 +26,8 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final user = FirebaseAuth.instance.currentUser;
-    final userProfileAsync = ref.watch(watchUserProfileProvider);
+    // OPTIMIZED: Removed watchUserProfileProvider - displayName already available in authState.userModel
+    // This eliminates 1 Firestore read (profiles/{userId}) per page load
     final authState = ref.watch(enhancedAuthProvider);
     final currentLocale = ref.watch(currentLocaleProvider);
     final currentThemeMode = ref.watch(currentThemeModeProvider);
@@ -57,19 +57,20 @@ class ProfileScreen extends ConsumerWidget {
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: user == null
             ? Center(child: Text(l10n.ownerProfileNotAuthenticated))
-            : userProfileAsync.when(
-                data: (profile) {
-                  final isAnonymous = authState.isAnonymous;
-                  final displayName =
-                      profile?.displayName ??
-                      user.displayName ??
-                      (isAnonymous ? l10n.ownerProfileGuestUser : l10n.ownerProfileOwner);
-                  final email =
-                      user.email ?? (isAnonymous ? l10n.ownerProfileAnonymousAccount : l10n.ownerProfileNoEmail);
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  final isMobile = screenWidth < 600;
+            : Builder(builder: (context) {
+                // OPTIMIZED: Use authState.userModel directly instead of separate Firestore query
+                final isAnonymous = authState.isAnonymous;
+                final displayName =
+                    authState.userModel?.displayName ??
+                    authState.userModel?.fullName ??
+                    user.displayName ??
+                    (isAnonymous ? l10n.ownerProfileGuestUser : l10n.ownerProfileOwner);
+                final email =
+                    user.email ?? (isAnonymous ? l10n.ownerProfileAnonymousAccount : l10n.ownerProfileNoEmail);
+                final screenWidth = MediaQuery.of(context).size.width;
+                final isMobile = screenWidth < 600;
 
-                  return SingleChildScrollView(
+                return SingleChildScrollView(
                     padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
                     child: Column(
                       children: [
@@ -353,89 +354,7 @@ class ProfileScreen extends ConsumerWidget {
                       ],
                     ),
                   );
-                },
-                loading: () {
-                  final theme = Theme.of(context);
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.ownerProfileLoading,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                error: (error, stack) {
-                  final theme = Theme.of(context);
-                  final isDark = theme.brightness == Brightness.dark;
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: context.gradients.cardBackground,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
-                                width: 2,
-                              ),
-                              boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-                            ),
-                            child: Icon(Icons.error_outline, size: 50, color: theme.colorScheme.error),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            l10n.ownerProfileLoadError,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.error,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            '$error',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 32),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: () => Navigator.pop(context),
-                                icon: const Icon(Icons.arrow_back),
-                                label: Text(l10n.ownerProfileBack),
-                              ),
-                              const SizedBox(width: 12),
-                              FilledButton.icon(
-                                onPressed: () => ref.invalidate(watchUserProfileProvider),
-                                icon: const Icon(Icons.refresh),
-                                label: Text(l10n.ownerProfileTryAgain),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                }),
       ),
     );
   }

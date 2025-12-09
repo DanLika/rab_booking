@@ -3,7 +3,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../../shared/models/booking_model.dart';
 import '../../shared/models/unit_model.dart';
 import '../../shared/repositories/booking_repository.dart';
-import '../../features/widget/data/repositories/firebase_widget_settings_repository.dart';
 import '../constants/enums.dart';
 import 'ical_generator.dart';
 import 'logging_service.dart';
@@ -17,15 +16,12 @@ import 'logging_service.dart';
 /// - Public URL management
 class IcalExportService {
   final BookingRepository _bookingRepository;
-  final FirebaseWidgetSettingsRepository _settingsRepository;
   final FirebaseStorage _storage;
 
   IcalExportService({
     required BookingRepository bookingRepository,
-    required FirebaseWidgetSettingsRepository settingsRepository,
     FirebaseStorage? storage,
   }) : _bookingRepository = bookingRepository,
-       _settingsRepository = settingsRepository,
        _storage = storage ?? FirebaseStorage.instance;
 
   /// Generate and upload iCal file for a unit
@@ -55,10 +51,7 @@ class IcalExportService {
         unitName: unit.name,
       );
 
-      // 4. Update widget settings with URL and timestamp
-      await _updateWidgetSettings(propertyId: propertyId, unitId: unitId, downloadUrl: downloadUrl);
-
-      LoggingService.log('iCal export completed successfully for unit: $unitId', tag: 'IcalExportService');
+      LoggingService.log('iCal export completed successfully for unit: $unitId, URL: $downloadUrl', tag: 'IcalExportService');
 
       return downloadUrl;
     } catch (e, stackTrace) {
@@ -187,32 +180,6 @@ class IcalExportService {
       return downloadUrl;
     } catch (e) {
       LoggingService.log('Error uploading to storage: $e', tag: 'IcalExportService');
-      rethrow;
-    }
-  }
-
-  /// Update widget settings with iCal URL and timestamp
-  Future<void> _updateWidgetSettings({
-    required String propertyId,
-    required String unitId,
-    required String downloadUrl,
-  }) async {
-    try {
-      final settings = await _settingsRepository.getWidgetSettings(propertyId: propertyId, unitId: unitId);
-
-      if (settings == null) {
-        LoggingService.log(
-          'Widget settings not found for unit: $unitId, cannot update iCal URL',
-          tag: 'IcalExportService',
-        );
-        return;
-      }
-
-      // iCal URL is no longer stored in widget settings
-      // The file is available at the storage path for guest downloads
-      LoggingService.log('iCal file available at: $downloadUrl', tag: 'IcalExportService');
-    } catch (e) {
-      LoggingService.log('Error updating widget settings: $e', tag: 'IcalExportService');
       rethrow;
     }
   }

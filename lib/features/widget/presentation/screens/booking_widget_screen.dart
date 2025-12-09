@@ -14,13 +14,13 @@ import '../widgets/calendar_view_switcher.dart';
 import '../widgets/additional_services_widget.dart';
 import '../widgets/tax_legal_disclaimer_widget.dart';
 import '../providers/booking_price_provider.dart';
-import '../providers/widget_settings_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/additional_services_provider.dart';
 import '../providers/submit_booking_provider.dart';
 import '../providers/subdomain_provider.dart';
+import '../providers/widget_context_provider.dart';
 import '../../domain/use_cases/submit_booking_use_case.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
@@ -30,7 +30,6 @@ import '../../domain/services/price_lock_service.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/booking_model.dart';
-import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 // EmailNotificationService now used via EmailNotificationHelper
@@ -171,6 +170,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   TabCommunicationService? _tabCommunicationService;
   StreamSubscription<TabMessage>? _tabMessageSubscription;
 
+  // ============================================
+  // IFRAME HEIGHT AUTO-RESIZE
+  // ============================================
+  // Key to measure content height for iframe embedding
+  final _contentKey = GlobalKey();
+  // Track last sent height to avoid redundant postMessages
+  double _lastSentHeight = 0;
+
   @override
   void initState() {
     super.initState();
@@ -303,6 +310,31 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     } catch (e) {
       LoggingService.log('[CrossTab] Failed to initialize: $e', tag: 'TAB_COMM_ERROR');
     }
+  }
+
+  /// Send iframe height to parent window for auto-resize
+  /// Only sends if height changed significantly (>10px) to avoid spam
+  void _sendIframeHeight() {
+    if (!kIsWeb) return;
+
+    // Schedule measurement after frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final renderBox = _contentKey.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) return;
+
+      final height = renderBox.size.height;
+
+      // Add padding for visual breathing room
+      final totalHeight = height + 32;
+
+      // Only send if height changed significantly (avoid spam)
+      if ((totalHeight - _lastSentHeight).abs() > 10) {
+        _lastSentHeight = totalHeight;
+        sendIframeHeight(totalHeight);
+      }
+    });
   }
 
   /// Handle messages received from other browser tabs
@@ -651,6 +683,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Supports two URL resolution modes:
   /// 1. Slug URL: subdomain -> property, slug -> unit (clean URLs)
   /// 2. Query params: direct property and unit IDs (iframe embeds)
+  ///
+  /// OPTIMIZED: Uses [widgetContextProvider] to batch fetch property, unit,
+  /// and settings in parallel, reducing Firestore queries from 3 to 1 coordinated call.
   Future<void> _validateUnitAndProperty() async {
     setState(() {
       _isValidating = true;
@@ -715,57 +750,42 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         return;
       }
 
-      // Fetch property data first
-      final property = await ref.read(propertyByIdProvider(_propertyId!).future);
+      // OPTIMIZED: Batch fetch property, unit, and settings in parallel
+      // This replaces 3 separate Firestore queries with 1 coordinated call
+      final widgetCtx = await ref.read(widgetContextProvider((
+        propertyId: _propertyId!,
+        unitId: _unitId,
+      )).future);
 
       // HIGH: Check mounted after async operation before setState
       if (!mounted) return;
 
-      if (property == null) {
-        setState(() {
-          _validationError = 'Property not found.\n\nProperty ID: $_propertyId';
-          _isValidating = false;
-        });
-        return;
-      }
-
-      // Fetch unit data from the specific property
-      final unit = await ref.read(unitByIdProvider(_propertyId!, _unitId).future);
-
-      // HIGH: Check mounted after async operation before setState
-      if (!mounted) return;
-
-      if (unit == null) {
-        setState(() {
-          _validationError = 'Unit not found.\n\nUnit ID: $_unitId\nProperty ID: $_propertyId';
-          _isValidating = false;
-        });
-        return;
-      }
-
-      // Store owner and unit data for later use
+      // Store data from batched context
       setState(() {
-        _ownerId = property.ownerId;
-        _unit = unit; // Store unit for guest capacity validation
+        _ownerId = widgetCtx.ownerId;
+        _unit = widgetCtx.unit;
+        _widgetSettings = widgetCtx.settings;
 
         // Adjust default guest count to respect property capacity
         final totalGuests = _adults + _children;
-        if (totalGuests > unit.maxGuests) {
+        if (totalGuests > widgetCtx.unit.maxGuests) {
           // If default exceeds capacity, set to max allowed
-          _adults = unit.maxGuests.clamp(1, unit.maxGuests); // At least 1 adult
-          _children = 0; // Reset children to 0
+          _adults = widgetCtx.unit.maxGuests.clamp(1, widgetCtx.unit.maxGuests);
+          _children = 0;
         }
-      });
 
-      // Load widget settings
-      await _loadWidgetSettings(unit.propertyId, unit.id);
+        // Set default payment method based on what's enabled
+        _setDefaultPaymentMethod();
 
-      // HIGH: Check mounted after async operation before setState
-      if (!mounted) return;
-
-      setState(() {
         _isValidating = false;
         _validationError = null;
+      });
+    } on WidgetContextException catch (e) {
+      // Handle specific context loading errors
+      if (!mounted) return;
+      setState(() {
+        _validationError = e.message;
+        _isValidating = false;
       });
     } catch (e) {
       // HIGH: Check mounted in catch block before setState
@@ -773,28 +793,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       setState(() {
         _validationError = 'Error loading unit data:\n\n$e';
         _isValidating = false;
-      });
-    }
-  }
-
-  /// Load widget settings from Firestore
-  Future<void> _loadWidgetSettings(String propertyId, String unitId) async {
-    try {
-      // Try to load custom settings
-      final settings = await ref.read(widgetSettingsOrDefaultProvider((propertyId, unitId)).future);
-
-      setState(() {
-        _widgetSettings = settings;
-        // Set default payment method based on what's enabled
-        _setDefaultPaymentMethod();
-      });
-    } catch (e) {
-      // If loading fails, use default settings
-      final defaultSettings = ref.read(defaultWidgetSettingsProvider);
-      setState(() {
-        _widgetSettings = defaultSettings.copyWith(id: unitId, propertyId: propertyId);
-        // Set default payment method based on what's enabled
-        _setDefaultPaymentMethod();
       });
     }
   }
@@ -948,6 +946,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           unitId: _unitId,
           checkIn: _checkIn,
           checkOut: _checkOut,
+          propertyId: _propertyId, // OPTIMIZED: enables cache reuse
           depositPercentage: _widgetSettings?.globalDepositPercentage ?? 20,
         ),
         (previous, next) {
@@ -1025,6 +1024,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final unitId = _unitId;
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
+    // Send iframe height to parent for auto-resize (web only, in iframe only)
+    _sendIframeHeight();
+
     return Scaffold(
       resizeToAvoidBottomInset: true, // Bug #46: Resize when keyboard appears
       backgroundColor: minimalistColors.backgroundPrimary,
@@ -1071,6 +1073,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             // No bottom padding - calendar/contact card goes to edge
                           ),
                           child: Column(
+                            key: _contentKey, // For iframe height measurement
                             children: [
                               // Custom title header (if configured)
                               if (_widgetSettings?.themeOptions?.customTitle != null &&
@@ -1204,6 +1207,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         unitId: unitId,
         checkIn: _checkIn,
         checkOut: _checkOut,
+        propertyId: _propertyId, // OPTIMIZED: enables cache reuse
         depositPercentage: depositPercentage,
       ),
     );

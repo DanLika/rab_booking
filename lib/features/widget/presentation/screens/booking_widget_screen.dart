@@ -207,6 +207,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Initialize cross-tab communication for web platform
     _initTabCommunication();
 
+    // Setup iframe scroll capture to prevent parent page scrolling
+    setupIframeScrollCapture();
+
     // Check for booking confirmation parameters (all payment types)
     final confirmationRef = uri.queryParameters['confirmation'];
     final confirmationEmail = uri.queryParameters['email'];
@@ -1055,51 +1058,70 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             final horizontalPadding = basePadding;
             final verticalPadding = isLargeScreen ? basePadding : basePadding / 2; // Symmetric on large screens
 
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Stack(
-                  children: [
-                    // No-scroll content (embedded widget - host site scrolls)
-                    // On large screens, center content with max-width constraint
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: isLargeScreen ? maxContentWidth : double.infinity),
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            left: horizontalPadding,
-                            right: horizontalPadding,
-                            top: verticalPadding,
-                            // No bottom padding - calendar/contact card goes to edge
-                          ),
-                          child: Column(
-                            key: _contentKey, // For iframe height measurement
-                            children: [
-                              // Custom title header (if configured)
-                              if (_widgetSettings?.themeOptions?.customTitle != null &&
-                                  _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 16),
-                                  child: Text(
-                                    _widgetSettings!.themeOptions!.customTitle!,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: minimalistColors.textPrimary,
-                                      fontFamily: 'Manrope',
+            // In iframe mode: let content determine height (for auto-resize)
+            // In standalone mode: ensure content fills viewport (for centering)
+            final inIframe = isInIframe;
+            final useMinHeight = !inIframe;
+
+            // Debug log for iframe detection
+            if (kIsWeb) {
+              LoggingService.log(
+                '[IFRAME] isInIframe=$inIframe, useMinHeight=$useMinHeight, maxHeight=${constraints.maxHeight}',
+                tag: 'IFRAME_DEBUG',
+              );
+            }
+
+            // Outer Stack: pill bar OUTSIDE scroll area for proper viewport centering
+            return Stack(
+              children: [
+                // Scrollable calendar content
+                SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: useMinHeight ? constraints.maxHeight : 0,
+                    ),
+                    child: Stack(
+                      children: [
+                        // No-scroll content (embedded widget - host site scrolls)
+                        // On large screens, center content with max-width constraint
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: isLargeScreen ? maxContentWidth : double.infinity),
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                left: horizontalPadding,
+                                right: horizontalPadding,
+                                top: verticalPadding,
+                                // No bottom padding - calendar/contact card goes to edge
+                              ),
+                              child: Column(
+                                key: _contentKey, // For iframe height measurement
+                                children: [
+                                  // Custom title header (if configured)
+                                  if (_widgetSettings?.themeOptions?.customTitle != null &&
+                                      _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Text(
+                                        _widgetSettings!.themeOptions!.customTitle!,
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: minimalistColors.textPrimary,
+                                          fontFamily: 'Manrope',
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
 
-                              // NOTE: iCal sync warning banner removed from guest widget
-                              // This is owner-only information - guests don't need to see sync status
-                              // Owners can monitor sync status in their dashboard
+                                  // NOTE: iCal sync warning banner removed from guest widget
+                                  // This is owner-only information - guests don't need to see sync status
+                                  // Owners can monitor sync status in their dashboard
 
-                              // Calendar without fixed height - grows naturally with content
-                              CalendarViewSwitcher(
+                                  // Calendar without fixed height - grows naturally with content
+                                  CalendarViewSwitcher(
                                 propertyId: _propertyId ?? '',
                                 unitId: unitId,
                                 forceMonthView: forceMonthView,
@@ -1155,42 +1177,46 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       ),
                     ),
 
-                    // Full-screen backdrop overlay when guest form is shown
-                    if (_showGuestForm)
-                      Positioned.fill(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _showGuestForm = false;
-                            });
-                          },
-                          child: Container(color: Colors.black.withValues(alpha: 0.5)),
-                        ),
-                      ),
-
-                    // Floating draggable booking summary bar (booking modes - shown when dates selected)
-                    // Bug Fix: Only show pill bar if user interacted with booking flow (clicked Reserve)
-                    // AND pill bar wasn't dismissed (user clicked X button)
-                    if (widgetMode != WidgetMode.calendarOnly &&
-                        _checkIn != null &&
-                        _checkOut != null &&
-                        _hasInteractedWithBookingFlow &&
-                        !_pillBarDismissed)
-                      _buildFloatingDraggablePillBar(unitId, constraints, isDarkMode),
-
-                    // Rotate device overlay - HIGHEST z-index, only for year view in portrait
+                    // Rotate device overlay - inside inner stack (part of scrollable content)
                     if (_shouldShowRotateOverlay(context))
                       RotateDeviceOverlay(
                         isDarkMode: isDarkMode,
                         colors: colors,
                         onSwitchToMonthView: () {
+                          LoggingService.log('[ROTATE_OVERLAY] Button pressed - switching to month view', tag: 'DEBUG');
                           ref.read(calendarViewProvider.notifier).state = CalendarViewType.month;
+                          LoggingService.log('[ROTATE_OVERLAY] CalendarView state set to month', tag: 'DEBUG');
                         },
                         translations: WidgetTranslations.of(context, ref),
                       ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+
+                // OVERLAYS - Outside scroll area for proper viewport positioning
+
+                // Full-screen backdrop overlay when guest form is shown
+                if (_showGuestForm)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _showGuestForm = false;
+                        });
+                      },
+                      child: Container(color: Colors.black.withValues(alpha: 0.5)),
+                    ),
+                  ),
+
+                // Floating booking summary bar - OUTSIDE scroll for proper centering
+                if (widgetMode != WidgetMode.calendarOnly &&
+                    _checkIn != null &&
+                    _checkOut != null &&
+                    _hasInteractedWithBookingFlow &&
+                    !_pillBarDismissed)
+                  _buildFloatingDraggablePillBar(unitId, constraints, isDarkMode),
+              ],
             );
           },
         ),
@@ -2188,6 +2214,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final orientation = MediaQuery.of(context).orientation;
+
+    if (kIsWeb) {
+      LoggingService.log('[ROTATE_OVERLAY] Check: currentView=$currentView, width=$screenWidth, height=$screenHeight, orientation=$orientation', tag: 'DEBUG');
+    }
 
     // Show only in year view
     if (currentView != CalendarViewType.year) return false;

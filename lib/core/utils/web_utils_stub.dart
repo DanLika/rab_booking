@@ -25,6 +25,10 @@ void navigateToUrl(String url) {
 /// Check if running on web platform
 bool get isWebPlatform => false;
 
+/// Check if widget is running inside an iframe
+/// Always returns false on non-web platforms
+bool get isInIframe => false;
+
 /// Create platform-appropriate TabCommunicationService
 /// Returns stub implementation on non-web platforms
 TabCommunicationService createTabCommunicationService() {
@@ -34,5 +38,10 @@ TabCommunicationService createTabCommunicationService() {
 /// Send iframe height to parent window via postMessage (no-op on mobile)
 /// Used for dynamic iframe resizing when embedded in external websites
 void sendIframeHeight(double height) {
+  // No-op on non-web platforms
+}
+
+/// Capture scroll events in iframe to prevent parent page scrolling (no-op on mobile)
+void setupIframeScrollCapture() {
   // No-op on non-web platforms
 }

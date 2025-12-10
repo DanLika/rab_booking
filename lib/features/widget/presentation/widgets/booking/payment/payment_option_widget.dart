@@ -8,40 +8,13 @@ import '../../../theme/minimalist_colors.dart';
 /// Displays payment method information including icon(s), title, subtitle,
 /// and optional deposit amount. Shows selected state with highlighted border
 /// and filled radio indicator.
-///
-/// Usage:
-/// ```dart
-/// PaymentOptionWidget(
-///   icon: Icons.payment_rounded,
-///   secondaryIcon: Icons.credit_card_rounded,
-///   title: 'Credit Card',
-///   subtitle: 'Pay securely online',
-///   isSelected: _selectedMethod == 'stripe',
-///   onTap: () => setState(() => _selectedMethod = 'stripe'),
-///   isDarkMode: isDarkMode,
-///   depositAmount: '€50.00',
-/// )
-/// ```
 class PaymentOptionWidget extends StatelessWidget {
-  /// Primary icon representing the payment method
   final IconData icon;
-
-  /// Optional secondary icon for visual distinction
   final IconData? secondaryIcon;
-
-  /// Payment method title
   final String title;
-
-  /// Payment method description
   final String subtitle;
-
-  /// Whether this option is currently selected
   final bool isSelected;
-
-  /// Callback when option is tapped
   final VoidCallback onTap;
-
-  /// Whether dark mode is active
   final bool isDarkMode;
 
   /// Optional deposit amount to display (null for "Pay on Arrival")
@@ -59,6 +32,20 @@ class PaymentOptionWidget extends StatelessWidget {
     this.depositAmount,
   });
 
+  // Size constants
+  static const _primaryIconSize = 24.0;
+  static const _secondaryIconSize = 20.0;
+  static const _radioSize = 24.0;
+  static const _radioInnerSize = 12.0;
+  static const _radioBorderWidth = 2.0;
+
+  // Typography constants
+  static const _titleFontSize = 15.0;
+  static const _titleMinFontSize = 11.0;
+  static const _subtitleFontSize = 12.0;
+  static const _subtitleMinFontSize = 10.0;
+  static const _depositFontSize = 12.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
@@ -71,89 +58,117 @@ class PaymentOptionWidget extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border.all(
             color: isSelected ? colors.borderFocus : colors.borderDefault,
-            width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
+            width: isSelected
+                ? BorderTokens.widthMedium
+                : BorderTokens.widthThin,
           ),
           borderRadius: BorderTokens.circularMedium,
           color: isSelected ? colors.backgroundSecondary : null,
         ),
         child: Row(
           children: [
-            // Radio button
-            _buildRadioIndicator(colors),
+            _RadioIndicator(isSelected: isSelected, colors: colors),
             const SizedBox(width: SpacingTokens.s),
-
-            // Icons (primary + optional secondary)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: isSelected ? colors.textPrimary : colors.textSecondary, size: 24),
-                if (secondaryIcon case final icon?) ...[
-                  const SizedBox(width: 4),
-                  Icon(icon, color: isSelected ? colors.textPrimary : colors.textSecondary, size: 20),
-                ],
-              ],
-            ),
+            _buildIcons(colors),
             const SizedBox(width: SpacingTokens.s),
-
-            // Text content + deposit amount (flex layout for responsiveness)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title row with optional deposit amount
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AutoSizeText(
-                          title,
-                          maxLines: 1,
-                          minFontSize: 11,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textPrimary),
-                        ),
-                      ),
-                      // Deposit amount inline with title
-                      if (depositAmount case final amount?) ...[
-                        const SizedBox(width: 6),
-                        Text(
-                          amount,
-                          style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold, color: colors.textPrimary),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  AutoSizeText(
-                    subtitle,
-                    maxLines: 2,
-                    minFontSize: 10,
-                    maxFontSize: 12,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
+            Expanded(child: _buildContent(colors)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRadioIndicator(MinimalistColorSchemeAdapter colors) {
+  Widget _buildIcons(MinimalistColorSchemeAdapter colors) {
+    final iconColor = isSelected ? colors.textPrimary : colors.textSecondary;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: iconColor, size: _primaryIconSize),
+        if (secondaryIcon case final secIcon?) ...[
+          const SizedBox(width: SpacingTokens.xxs),
+          Icon(secIcon, color: iconColor, size: _secondaryIconSize),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildContent(MinimalistColorSchemeAdapter colors) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: AutoSizeText(
+                title,
+                maxLines: 1,
+                minFontSize: _titleMinFontSize,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: _titleFontSize,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
+            if (depositAmount case final amount?) ...[
+              const SizedBox(width: SpacingTokens.xs),
+              Text(
+                amount,
+                style: TextStyle(
+                  fontSize: _depositFontSize,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: SpacingTokens.xxs),
+        AutoSizeText(
+          subtitle,
+          maxLines: 2,
+          minFontSize: _subtitleMinFontSize,
+          maxFontSize: _subtitleFontSize,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: _subtitleFontSize,
+            color: colors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RadioIndicator extends StatelessWidget {
+  final bool isSelected;
+  final MinimalistColorSchemeAdapter colors;
+
+  const _RadioIndicator({required this.isSelected, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: 24,
-      height: 24,
+      width: PaymentOptionWidget._radioSize,
+      height: PaymentOptionWidget._radioSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: isSelected ? colors.borderFocus : colors.textSecondary, width: 2),
+        border: Border.all(
+          color: isSelected ? colors.borderFocus : colors.textSecondary,
+          width: PaymentOptionWidget._radioBorderWidth,
+        ),
       ),
       child: isSelected
           ? Center(
               child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: colors.buttonPrimary),
+                width: PaymentOptionWidget._radioInnerSize,
+                height: PaymentOptionWidget._radioInnerSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.buttonPrimary,
+                ),
               ),
             )
           : null,

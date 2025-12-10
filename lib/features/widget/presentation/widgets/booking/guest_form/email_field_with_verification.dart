@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
-import '../../../../../../core/localization/error_messages.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
@@ -9,50 +8,13 @@ import '../../../../../../shared/utils/validators/form_validators.dart';
 
 /// Email field with optional verification button.
 ///
-/// Extracted from booking_widget_screen.dart _buildEmailFieldWithVerification method.
 /// Supports both simple email input and email with verification flow.
-///
-/// Usage:
-/// ```dart
-/// // Simple email field (no verification)
-/// EmailFieldWithVerification(
-///   controller: _emailController,
-///   isDarkMode: isDarkMode,
-///   requireVerification: false,
-///   emailVerified: false,
-///   onEmailChanged: (value) {},
-///   onVerifyPressed: () {},
-/// )
-///
-/// // With verification
-/// EmailFieldWithVerification(
-///   controller: _emailController,
-///   isDarkMode: isDarkMode,
-///   requireVerification: true,
-///   emailVerified: _emailVerified,
-///   onEmailChanged: (value) {
-///     if (_emailVerified) setState(() => _emailVerified = false);
-///   },
-///   onVerifyPressed: _openVerificationDialog,
-/// )
-/// ```
 class EmailFieldWithVerification extends ConsumerWidget {
-  /// Controller for the email text field
   final TextEditingController controller;
-
-  /// Whether dark mode is active
   final bool isDarkMode;
-
-  /// Whether email verification is required
   final bool requireVerification;
-
-  /// Whether the email has been verified
   final bool emailVerified;
-
-  /// Callback when email text changes
   final ValueChanged<String> onEmailChanged;
-
-  /// Callback when verify button is pressed
   final VoidCallback onVerifyPressed;
 
   const EmailFieldWithVerification({
@@ -65,85 +27,88 @@ class EmailFieldWithVerification extends ConsumerWidget {
     required this.onVerifyPressed,
   });
 
+  static const _verifyButtonWidth = 100.0;
+  static const _verifyButtonHeight = 44.0;
+  static const _maxEmailLength = 100;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
-
     final tr = WidgetTranslations.of(context, ref);
 
+    final emailField = _buildEmailField(colors, tr);
+
     if (!requireVerification) {
-      // Standard email field without verification
-      return TextFormField(
-        controller: controller,
-        maxLength: 100,
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(color: colors.textPrimary),
-        decoration: WidgetInputDecorationHelper.buildDecoration(
-          labelText: tr.labelEmail,
-          hintText: 'john@example.com',
-          prefixIcon: Icon(Icons.email_outlined, color: colors.textPrimary),
-          isDarkMode: isDarkMode,
-          isDense: true,
-          errorMaxLines: 1,
-        ),
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        validator: EmailValidator.validate,
-        onChanged: onEmailChanged,
-      );
+      return emailField;
     }
 
-    // Email field with verification button
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: TextFormField(
-            controller: controller,
-            maxLength: 100,
-            keyboardType: TextInputType.emailAddress,
-            style: TextStyle(color: colors.textPrimary),
-            decoration: WidgetInputDecorationHelper.buildDecoration(
-              labelText: tr.labelEmail,
-              hintText: 'john@example.com',
-              prefixIcon: Icon(Icons.email_outlined, color: colors.textPrimary),
-              isDarkMode: isDarkMode,
-              isDense: true,
-              errorMaxLines: 1,
-            ),
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            validator: EmailValidator.validate,
-            onChanged: onEmailChanged,
+        Expanded(child: emailField),
+        const SizedBox(width: SpacingTokens.m),
+        _buildVerificationStatus(colors, tr),
+      ],
+    );
+  }
+
+  Widget _buildEmailField(
+    MinimalistColorSchemeAdapter colors,
+    WidgetTranslations tr,
+  ) {
+    return TextFormField(
+      controller: controller,
+      maxLength: _maxEmailLength,
+      keyboardType: TextInputType.emailAddress,
+      style: TextStyle(color: colors.textPrimary),
+      decoration: WidgetInputDecorationHelper.buildDecoration(
+        labelText: tr.labelEmail,
+        hintText: 'john@example.com',
+        prefixIcon: Icon(Icons.email_outlined, color: colors.textPrimary),
+        isDarkMode: isDarkMode,
+        isDense: true,
+        errorMaxLines: 1,
+      ),
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: EmailValidator.validate,
+      onChanged: onEmailChanged,
+    );
+  }
+
+  Widget _buildVerificationStatus(
+    MinimalistColorSchemeAdapter colors,
+    WidgetTranslations tr,
+  ) {
+    if (emailVerified) {
+      return Container(
+        width: _verifyButtonHeight,
+        height: _verifyButtonHeight,
+        decoration: BoxDecoration(
+          color: colors.success.withValues(alpha: 0.1),
+          borderRadius: BorderTokens.circularMedium,
+          border: Border.all(color: colors.success, width: 1.5),
+        ),
+        child: Center(
+          child: Icon(Icons.verified, color: colors.success, size: 24),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: _verifyButtonWidth,
+      height: _verifyButtonHeight,
+      child: ElevatedButton(
+        onPressed: onVerifyPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colors.textPrimary,
+          foregroundColor: colors.backgroundPrimary,
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderTokens.circularMedium,
           ),
         ),
-        const SizedBox(width: SpacingTokens.m),
-        // Verification status/button (height matches verify button at 44px)
-        if (emailVerified)
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: colors.success.withValues(alpha: 0.1),
-              borderRadius: BorderTokens.circularMedium,
-              border: Border.all(color: colors.success, width: 1.5),
-            ),
-            child: Center(child: Icon(Icons.verified, color: colors.success, size: 24)),
-          )
-        else
-          SizedBox(
-            width: 100,
-            height: 44,
-            child: ElevatedButton(
-              onPressed: onVerifyPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.textPrimary,
-                foregroundColor: colors.backgroundPrimary,
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
-              ),
-              child: const Text(ErrorMessages.verifyButton),
-            ),
-          ),
-      ],
+        child: Text(tr.verifyEmail),
+      ),
     );
   }
 }

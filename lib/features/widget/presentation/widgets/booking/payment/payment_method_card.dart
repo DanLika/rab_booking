@@ -5,29 +5,11 @@ import '../../../theme/minimalist_colors.dart';
 
 /// A card displaying a single payment method with icon, title, and optional subtitle.
 ///
-/// Extracted from booking_widget_screen.dart simplified payment info section.
 /// Used when only one payment method is enabled (no selector needed).
-///
-/// Usage:
-/// ```dart
-/// PaymentMethodCard(
-///   icon: Icons.credit_card,
-///   title: 'Credit Card',
-///   subtitle: '€50.00 deposit',
-///   isDarkMode: isDarkMode,
-/// )
-/// ```
 class PaymentMethodCard extends StatelessWidget {
-  /// Icon to display on the left
   final IconData icon;
-
-  /// Title text (payment method name)
   final String title;
-
-  /// Optional subtitle text (e.g., deposit amount)
   final String? subtitle;
-
-  /// Whether dark mode is active
   final bool isDarkMode;
 
   const PaymentMethodCard({
@@ -37,6 +19,12 @@ class PaymentMethodCard extends StatelessWidget {
     this.subtitle,
     required this.isDarkMode,
   });
+
+  static const _iconSize = 24.0;
+  static const _titleFontSize = 14.0;
+  static const _titleMinFontSize = 11.0;
+  static const _subtitleFontSize = 12.0;
+  static const _subtitleMinFontSize = 10.0;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +39,7 @@ class PaymentMethodCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: colors.textPrimary, size: 24),
+          Icon(icon, color: colors.textPrimary, size: _iconSize),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Column(
@@ -60,17 +48,24 @@ class PaymentMethodCard extends StatelessWidget {
                 AutoSizeText(
                   title,
                   maxLines: 1,
-                  minFontSize: 11,
+                  minFontSize: _titleMinFontSize,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                  style: TextStyle(
+                    fontSize: _titleFontSize,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
                 ),
                 if (subtitle != null)
                   AutoSizeText(
                     subtitle!,
                     maxLines: 2,
-                    minFontSize: 10,
+                    minFontSize: _subtitleMinFontSize,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                    style: TextStyle(
+                      fontSize: _subtitleFontSize,
+                      color: colors.textSecondary,
+                    ),
                   ),
               ],
             ),

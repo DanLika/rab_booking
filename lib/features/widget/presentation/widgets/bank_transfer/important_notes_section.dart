@@ -54,7 +54,11 @@ class ImportantNotesSection extends StatelessWidget {
           if (useCustom && customNotes != null && customNotes.isNotEmpty)
             Text(
               customNotes,
-              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textPrimary, height: 1.5),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                color: colors.textPrimary,
+                height: 1.5,
+              ),
             )
           else
             ...notes.map((note) => _buildNoteItem(note, colors)),
@@ -66,7 +70,11 @@ class ImportantNotesSection extends StatelessWidget {
   Widget _buildHeader(MinimalistColorSchemeAdapter colors) {
     return Row(
       children: [
-        Icon(Icons.info_outline, color: colors.buttonPrimary, size: IconSizeTokens.medium),
+        Icon(
+          Icons.info_outline,
+          color: colors.buttonPrimary,
+          size: IconSizeTokens.medium,
+        ),
         const SizedBox(width: SpacingTokens.xs),
         Text(
           translations.importantInformation,
@@ -90,12 +98,19 @@ class ImportantNotesSection extends StatelessWidget {
             width: 6,
             height: 6,
             margin: const EdgeInsets.only(top: 8, right: SpacingTokens.s),
-            decoration: BoxDecoration(color: colors.buttonPrimary, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: colors.buttonPrimary,
+              shape: BoxShape.circle,
+            ),
           ),
           Expanded(
             child: Text(
               note,
-              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textPrimary, height: 1.5),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                color: colors.textPrimary,
+                height: 1.5,
+              ),
             ),
           ),
         ],

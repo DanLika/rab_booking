@@ -115,11 +115,12 @@ class FirebaseOwnerBookingsRepository {
   }) async {
     try {
       final userId = ownerId ?? _auth.currentUser?.uid;
-      if (userId == null)
+      if (userId == null) {
         throw AuthException(
           'User not authenticated',
           code: 'auth/not-authenticated',
         );
+      }
 
       // Step 1: Get all properties for owner (if not filtering by specific property)
       List<String> propertyIds = [];

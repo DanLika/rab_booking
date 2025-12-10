@@ -91,7 +91,10 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
     if (widget.bookingRef == null || widget.email == null) {
       setState(() {
         _isLoading = false;
-        _errorMessage = WidgetTranslations.of(context, ref).errorMissingBookingParams;
+        _errorMessage = WidgetTranslations.of(
+          context,
+          ref,
+        ).errorMissingBookingParams;
       });
       return;
     }
@@ -109,19 +112,28 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
         try {
           final widgetSettings = await ref
               .read(widgetSettingsRepositoryProvider)
-              .getWidgetSettings(propertyId: booking.propertyId ?? '', unitId: booking.unitId ?? '');
+              .getWidgetSettings(
+                propertyId: booking.propertyId ?? '',
+                unitId: booking.unitId ?? '',
+              );
 
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
           // Navigate to booking details screen with both booking and settings
-          context.go('/view/details', extra: {'booking': booking, 'widgetSettings': widgetSettings});
+          context.go(
+            '/view/details',
+            extra: {'booking': booking, 'widgetSettings': widgetSettings},
+          );
         } catch (e) {
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
           // If widget settings fail to load, still show booking details
-          context.go('/view/details', extra: {'booking': booking, 'widgetSettings': null});
+          context.go(
+            '/view/details',
+            extra: {'booking': booking, 'widgetSettings': null},
+          );
         }
       }
     } catch (e) {
@@ -148,7 +160,10 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
       appBar: AppBar(
         title: Text(
           tr.viewBooking,
-          style: GoogleFonts.inter(color: colors.textPrimary, fontWeight: FontWeight.w600),
+          style: GoogleFonts.inter(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         backgroundColor: colors.backgroundPrimary,
         elevation: 0,
@@ -159,9 +174,17 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(colors.primary)),
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+                  ),
                   const SizedBox(height: 16),
-                  Text(tr.loadingYourBooking, style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14)),
+                  Text(
+                    tr.loadingYourBooking,
+                    style: GoogleFonts.inter(
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               )
             : _errorMessage != null
@@ -174,20 +197,30 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
                     const SizedBox(height: 16),
                     Text(
                       tr.unableToLoadBooking,
-                      style: GoogleFonts.inter(color: colors.textPrimary, fontSize: 20, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.inter(
+                        color: colors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _errorMessage!,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14),
+                      style: GoogleFonts.inter(
+                        color: colors.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () => context.go('/'),
                       icon: const Icon(Icons.home),
                       label: Text(tr.goToHome),
-                      style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.primary,
+                        foregroundColor: Colors.white,
+                      ),
                     ),
                   ],
                 ),

@@ -8,35 +8,12 @@ import '../../../theme/minimalist_colors.dart';
 ///
 /// Provides increment/decrement buttons for both adults and children,
 /// with capacity validation to prevent exceeding max guests.
-///
-/// Usage:
-/// ```dart
-/// GuestCountPicker(
-///   adults: 2,
-///   children: 1,
-///   maxGuests: 6,
-///   isDarkMode: isDarkMode,
-///   onAdultsChanged: (value) => setState(() => _adults = value),
-///   onChildrenChanged: (value) => setState(() => _children = value),
-/// )
-/// ```
 class GuestCountPicker extends ConsumerWidget {
-  /// Number of adult guests
   final int adults;
-
-  /// Number of children guests
   final int children;
-
-  /// Maximum total guests allowed
   final int maxGuests;
-
-  /// Whether dark mode is active
   final bool isDarkMode;
-
-  /// Callback when adults count changes
   final ValueChanged<int> onAdultsChanged;
-
-  /// Callback when children count changes
   final ValueChanged<int> onChildrenChanged;
 
   const GuestCountPicker({
@@ -49,16 +26,18 @@ class GuestCountPicker extends ConsumerWidget {
     required this.onChildrenChanged,
   });
 
+  static const _countDisplayWidth = 40.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+    final tr = WidgetTranslations.of(context, ref);
     final totalGuests = adults + children;
     final isAtCapacity = totalGuests >= maxGuests;
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        // Pure white (light) / pure black (dark) for form containers
         color: colors.backgroundPrimary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(color: colors.borderDefault),
@@ -66,30 +45,11 @@ class GuestCountPicker extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Number of Guests',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
-              ),
-              Text(
-                'Max: $maxGuests',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: isAtCapacity ? colors.error : colors.textSecondary,
-                ),
-              ),
-            ],
-          ),
+          _buildHeader(colors, tr, isAtCapacity),
           const SizedBox(height: SpacingTokens.s),
-
-          // Adults row
-          _buildGuestRow(
+          _GuestRow(
             icon: Icons.person,
-            label: WidgetTranslations.of(context, ref).adults,
+            label: tr.adults,
             count: adults,
             canDecrement: adults > 1,
             canIncrement: !isAtCapacity && adults < maxGuests,
@@ -98,13 +58,10 @@ class GuestCountPicker extends ConsumerWidget {
             colors: colors,
             isAtCapacity: isAtCapacity,
           ),
-
-          const SizedBox(height: 8),
-
-          // Children row
-          _buildGuestRow(
+          const SizedBox(height: SpacingTokens.s),
+          _GuestRow(
             icon: Icons.child_care,
-            label: WidgetTranslations.of(context, ref).children,
+            label: tr.children,
             count: children,
             canDecrement: children > 0,
             canIncrement: !isAtCapacity && children < maxGuests,
@@ -113,54 +70,110 @@ class GuestCountPicker extends ConsumerWidget {
             colors: colors,
             isAtCapacity: isAtCapacity,
           ),
-
-          // Capacity warning
-          if (isAtCapacity) ...[const SizedBox(height: 12), _buildCapacityWarning(colors)],
+          if (isAtCapacity) ...[
+            const SizedBox(height: SpacingTokens.m),
+            _CapacityWarning(maxGuests: maxGuests, colors: colors, tr: tr),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildGuestRow({
-    required IconData icon,
-    required String label,
-    required int count,
-    required bool canDecrement,
-    required bool canIncrement,
-    required VoidCallback onDecrement,
-    required VoidCallback onIncrement,
-    required MinimalistColorSchemeAdapter colors,
-    required bool isAtCapacity,
-  }) {
+  Widget _buildHeader(
+    MinimalistColorSchemeAdapter colors,
+    WidgetTranslations tr,
+    bool isAtCapacity,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          tr.numberOfGuests,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: colors.textPrimary,
+          ),
+        ),
+        Text(
+          tr.maxLabel(maxGuests),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isAtCapacity ? colors.error : colors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GuestRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int count;
+  final bool canDecrement;
+  final bool canIncrement;
+  final VoidCallback onDecrement;
+  final VoidCallback onIncrement;
+  final MinimalistColorSchemeAdapter colors;
+  final bool isAtCapacity;
+
+  const _GuestRow({
+    required this.icon,
+    required this.label,
+    required this.count,
+    required this.canDecrement,
+    required this.canIncrement,
+    required this.onDecrement,
+    required this.onIncrement,
+    required this.colors,
+    required this.isAtCapacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
             Icon(icon, color: colors.textPrimary, size: 20),
-            const SizedBox(width: 8),
-            Text(label, style: TextStyle(fontSize: 14, color: colors.textPrimary)),
+            const SizedBox(width: SpacingTokens.s),
+            Text(
+              label,
+              style: TextStyle(fontSize: 14, color: colors.textPrimary),
+            ),
           ],
         ),
         Row(
           children: [
             IconButton(
               onPressed: canDecrement ? onDecrement : null,
-              icon: Icon(Icons.remove_circle_outline, color: colors.textPrimary),
+              icon: Icon(
+                Icons.remove_circle_outline,
+                color: colors.textPrimary,
+              ),
             ),
-            Container(
-              width: 40,
-              alignment: Alignment.center,
+            SizedBox(
+              width: GuestCountPicker._countDisplayWidth,
               child: Text(
                 '$count',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                ),
               ),
             ),
             IconButton(
               onPressed: canIncrement ? onIncrement : null,
               icon: Icon(
                 Icons.add_circle_outline,
-                color: isAtCapacity ? colors.textSecondary.withValues(alpha: 0.5) : colors.textPrimary,
+                color: isAtCapacity
+                    ? colors.textSecondary.withValues(alpha: 0.5)
+                    : colors.textPrimary,
               ),
             ),
           ],
@@ -168,23 +181,40 @@ class GuestCountPicker extends ConsumerWidget {
       ],
     );
   }
+}
 
-  Widget _buildCapacityWarning(MinimalistColorSchemeAdapter colors) {
+class _CapacityWarning extends StatelessWidget {
+  final int maxGuests;
+  final MinimalistColorSchemeAdapter colors;
+  final WidgetTranslations tr;
+
+  const _CapacityWarning({
+    required this.maxGuests,
+    required this.colors,
+    required this.tr,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(SpacingTokens.s),
       decoration: BoxDecoration(
         color: colors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderTokens.circularSmall,
         border: Border.all(color: colors.error),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.warning, color: colors.error, size: 14),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingTokens.xs),
           Text(
-            'Max capacity: $maxGuests guests',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.error),
+            tr.maxCapacityWarning(maxGuests),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colors.error,
+            ),
           ),
         ],
       ),

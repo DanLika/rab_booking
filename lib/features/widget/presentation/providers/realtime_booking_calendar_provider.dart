@@ -18,9 +18,7 @@ String _dateToKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 /// Repository provider (V2 with price support)
 /// Returns interface type for better testability and flexibility
 @riverpod
-IBookingCalendarRepository bookingCalendarRepository(
-  Ref ref,
-) {
+IBookingCalendarRepository bookingCalendarRepository(Ref ref) {
   final firestore = ref.watch(firestoreProvider);
   return FirebaseBookingCalendarRepository(firestore);
 }
@@ -39,16 +37,11 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
 ) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository
-      .watchYearCalendarData(
-        propertyId: propertyId,
-        unitId: unitId,
-        year: year,
-      )
+      .watchYearCalendarData(propertyId: propertyId, unitId: unitId, year: year)
       .debounceTime(const Duration(milliseconds: _calendarDebounceMs))
       .map(
-        (dateTimeMap) => dateTimeMap.map(
-          (date, info) => MapEntry(_dateToKey(date), info),
-        ),
+        (dateTimeMap) =>
+            dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)),
       );
 }
 
@@ -75,9 +68,8 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
       )
       .debounceTime(const Duration(milliseconds: _calendarDebounceMs))
       .map(
-        (dateTimeMap) => dateTimeMap.map(
-          (date, info) => MapEntry(_dateToKey(date), info),
-        ),
+        (dateTimeMap) =>
+            dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)),
       );
 }
 

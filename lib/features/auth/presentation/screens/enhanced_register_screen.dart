@@ -111,7 +111,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         // Check for errors from provider
         if (authState.error != null) {
           setState(() => _isLoading = false);
-          ErrorDisplayUtils.showErrorSnackBar(context, authState.error!);
+          ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
           return;
         }
 

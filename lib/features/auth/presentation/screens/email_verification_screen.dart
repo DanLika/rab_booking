@@ -197,13 +197,13 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
 
                 if (mounted) {
                   ErrorDisplayUtils.showSuccessSnackBar(
-                    context,
+                    this.context,
                     'Email updated! Check your new inbox for verification.',
                   );
                 }
               } catch (e) {
                 if (mounted) {
-                  ErrorDisplayUtils.showErrorSnackBar(context, e);
+                  ErrorDisplayUtils.showErrorSnackBar(this.context, e);
                 }
               }
             },

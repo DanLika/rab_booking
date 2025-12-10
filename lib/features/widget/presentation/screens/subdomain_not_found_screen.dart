@@ -22,7 +22,9 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).brightness == Brightness.dark ? ColorTokens.dark : ColorTokens.light;
+    final colors = Theme.of(context).brightness == Brightness.dark
+        ? ColorTokens.dark
+        : ColorTokens.light;
     final tr = WidgetTranslations.of(context, ref);
 
     return Scaffold(
@@ -40,8 +42,15 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
                   Container(
                     width: 100,
                     height: 100,
-                    decoration: BoxDecoration(color: colors.error.withValues(alpha: 0.1), shape: BoxShape.circle),
-                    child: Icon(Icons.error_outline_rounded, size: 50, color: colors.error),
+                    decoration: BoxDecoration(
+                      color: colors.error.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.error_outline_rounded,
+                      size: 50,
+                      color: colors.error,
+                    ),
                   ),
                   const SizedBox(height: SpacingTokens.xl),
 
@@ -59,7 +68,10 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
 
                   // Subdomain display
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SpacingTokens.m,
+                      vertical: SpacingTokens.s,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.backgroundTertiary,
                       borderRadius: BorderTokens.circularMedium,
@@ -98,7 +110,11 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
                     ),
                     child: Column(
                       children: [
-                        Icon(Icons.help_outline_rounded, size: 32, color: colors.primary),
+                        Icon(
+                          Icons.help_outline_rounded,
+                          size: 32,
+                          color: colors.primary,
+                        ),
                         const SizedBox(height: SpacingTokens.s),
                         Text(
                           tr.needHelp,
@@ -111,7 +127,10 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
                         const SizedBox(height: SpacingTokens.xs),
                         Text(
                           tr.contactPropertyOwnerForHelp,
-                          style: GoogleFonts.inter(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                          style: GoogleFonts.inter(
+                            fontSize: TypographyTokens.fontSizeS,
+                            color: colors.textSecondary,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],

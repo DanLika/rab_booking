@@ -28,11 +28,18 @@ class PaymentWarningSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(color: colors.warning, width: BorderTokens.widthMedium),
+        border: Border.all(
+          color: colors.warning,
+          width: BorderTokens.widthMedium,
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.access_time, color: colors.warning, size: IconSizeTokens.large),
+          Icon(
+            Icons.access_time,
+            color: colors.warning,
+            size: IconSizeTokens.large,
+          ),
           const SizedBox(width: SpacingTokens.m),
           Expanded(
             child: Column(
@@ -49,7 +56,10 @@ class PaymentWarningSection extends StatelessWidget {
                 const SizedBox(height: SpacingTokens.xxs),
                 Text(
                   translations.deadlineLabel(deadline),
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeM,
+                    color: colors.textSecondary,
+                  ),
                 ),
               ],
             ),

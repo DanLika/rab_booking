@@ -7,68 +7,21 @@ import 'price_breakdown_widget.dart';
 
 /// Compact summary displayed in the pill bar showing dates, price, and reserve button.
 ///
-/// Extracted from booking_widget_screen.dart _buildCompactPillSummary method.
 /// Shows date range, nights badge, price breakdown, and optional reserve button.
-///
-/// Usage:
-/// ```dart
-/// CompactPillSummary(
-///   checkIn: _checkIn,
-///   checkOut: _checkOut,
-///   nights: 3,
-///   formattedRoomPrice: '€300.00',
-///   additionalServicesTotal: 50.0,
-///   formattedAdditionalServices: '€50.00',
-///   formattedTotal: '€350.00',
-///   formattedDeposit: '€70.00',
-///   depositPercentage: 20,
-///   isDarkMode: isDarkMode,
-///   showReserveButton: !_showGuestForm,
-///   onClose: () => setState(() => _pillBarDismissed = true),
-///   onReserve: () => setState(() => _showGuestForm = true),
-/// )
-/// ```
 class CompactPillSummary extends StatelessWidget {
-  /// Check-in date
   final DateTime checkIn;
-
-  /// Check-out date
   final DateTime checkOut;
-
-  /// Number of nights
   final int nights;
-
-  /// Formatted room price string
   final String formattedRoomPrice;
-
-  /// Additional services total amount
   final double additionalServicesTotal;
-
-  /// Formatted additional services string
   final String formattedAdditionalServices;
-
-  /// Formatted total price string
   final String formattedTotal;
-
-  /// Formatted deposit amount string
   final String formattedDeposit;
-
-  /// Deposit percentage
   final int depositPercentage;
-
-  /// Whether dark mode is active
   final bool isDarkMode;
-
-  /// Whether to show the Reserve button
   final bool showReserveButton;
-
-  /// Callback when close button is tapped
   final VoidCallback onClose;
-
-  /// Callback when Reserve button is tapped
   final VoidCallback onReserve;
-
-  /// Translations for localization
   final WidgetTranslations translations;
 
   const CompactPillSummary({
@@ -89,107 +42,39 @@ class CompactPillSummary extends StatelessWidget {
     required this.translations,
   });
 
+  // Layout breakpoint
+  static const _columnLayoutBreakpoint = 280.0;
+
+  // Close button
+  static const _closeButtonPadding = 5.0;
+  static const _closeButtonRadius = 16.0;
+  static const _closeIconSize = 16.0;
+
+  // Badge styling
+  static const _badgeFontSize = 11.0;
+  static const _badgeRadius = 12.0;
+
+  // Reserve button
+  static const _reserveButtonRadius = 20.0;
+  static const _reserveFontSize = 14.0;
+
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM dd, yyyy');
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Column(
       children: [
-        // Close button at top
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            InkWell(
-              onTap: onClose,
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? ColorTokens.pureWhite : colors.backgroundSecondary,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colors.borderLight),
-                ),
-                child: Icon(Icons.close, size: 16, color: isDarkMode ? ColorTokens.pureBlack : colors.textSecondary),
-              ),
-            ),
-          ],
+        _CloseButton(onTap: onClose, isDarkMode: isDarkMode, colors: colors),
+        const SizedBox(height: SpacingTokens.s),
+        _DateRangeSection(
+          checkIn: checkIn,
+          checkOut: checkOut,
+          nights: nights,
+          translations: translations,
+          isDarkMode: isDarkMode,
+          colors: colors,
         ),
-        const SizedBox(height: 8),
-
-        // Range info with nights badge (responsive layout)
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Use column layout on very narrow screens (< 280px content width)
-            final useColumnLayout = constraints.maxWidth < 280;
-
-            final nightsBadge = Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: colors.statusAvailableBackground,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                translations.nightCount(nights),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black87,
-                ),
-              ),
-            );
-
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: colors.buttonPrimary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.buttonPrimary.withValues(alpha: 0.3)),
-              ),
-              child: useColumnLayout
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.calendar_month, size: 16, color: colors.buttonPrimary),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textPrimary),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        nightsBadge,
-                      ],
-                    )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.calendar_month, size: 16, color: colors.buttonPrimary),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textPrimary),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        nightsBadge,
-                      ],
-                    ),
-            );
-          },
-        ),
-        const SizedBox(height: 12),
-
-        // Price breakdown section
+        const SizedBox(height: SpacingTokens.m),
         PriceBreakdownWidget(
           isDarkMode: isDarkMode,
           nights: nights,
@@ -201,24 +86,237 @@ class CompactPillSummary extends StatelessWidget {
           depositPercentage: depositPercentage,
           translations: translations,
         ),
-
-        const SizedBox(height: 12),
-
-        // Reserve button (only show when guest form is NOT visible)
+        const SizedBox(height: SpacingTokens.m),
         if (showReserveButton)
-          InkWell(
+          _ReserveButton(
             onTap: onReserve,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              decoration: BoxDecoration(color: colors.buttonPrimary, borderRadius: BorderRadius.circular(20)),
-              child: Text(
-                translations.reserve,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.buttonPrimaryText),
-              ),
-            ),
+            label: translations.reserve,
+            colors: colors,
           ),
       ],
+    );
+  }
+}
+
+class _CloseButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool isDarkMode;
+  final MinimalistColorSchemeAdapter colors;
+
+  const _CloseButton({
+    required this.onTap,
+    required this.isDarkMode,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(
+            CompactPillSummary._closeButtonRadius,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(
+              CompactPillSummary._closeButtonPadding,
+            ),
+            decoration: BoxDecoration(
+              color: isDarkMode
+                  ? ColorTokens.pureWhite
+                  : colors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(
+                CompactPillSummary._closeButtonRadius,
+              ),
+              border: Border.all(color: colors.borderLight),
+            ),
+            child: Icon(
+              Icons.close,
+              size: CompactPillSummary._closeIconSize,
+              color: isDarkMode ? ColorTokens.pureBlack : colors.textSecondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DateRangeSection extends StatelessWidget {
+  final DateTime checkIn;
+  final DateTime checkOut;
+  final int nights;
+  final WidgetTranslations translations;
+  final bool isDarkMode;
+  final MinimalistColorSchemeAdapter colors;
+
+  const _DateRangeSection({
+    required this.checkIn,
+    required this.checkOut,
+    required this.nights,
+    required this.translations,
+    required this.isDarkMode,
+    required this.colors,
+  });
+
+  static final _dateFormat = DateFormat('MMM dd, yyyy');
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useColumnLayout =
+            constraints.maxWidth < CompactPillSummary._columnLayoutBreakpoint;
+        final dateText =
+            '${_dateFormat.format(checkIn)} - ${_dateFormat.format(checkOut)}';
+
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingTokens.m,
+            vertical: SpacingTokens.s,
+          ),
+          decoration: BoxDecoration(
+            color: colors.buttonPrimary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(SpacingTokens.m),
+            border: Border.all(
+              color: colors.buttonPrimary.withValues(alpha: 0.3),
+            ),
+          ),
+          child: useColumnLayout
+              ? _buildColumnLayout(dateText)
+              : _buildRowLayout(dateText),
+        );
+      },
+    );
+  }
+
+  Widget _buildColumnLayout(String dateText) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildDateRow(dateText),
+        const SizedBox(height: SpacingTokens.xs),
+        _NightsBadge(
+          nights: nights,
+          translations: translations,
+          isDarkMode: isDarkMode,
+          colors: colors,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRowLayout(String dateText) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildDateRow(dateText),
+        const SizedBox(width: SpacingTokens.s),
+        _NightsBadge(
+          nights: nights,
+          translations: translations,
+          isDarkMode: isDarkMode,
+          colors: colors,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateRow(String dateText) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.calendar_month, size: 16, color: colors.buttonPrimary),
+        const SizedBox(width: SpacingTokens.xs),
+        Flexible(
+          child: Text(
+            dateText,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colors.textPrimary,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NightsBadge extends StatelessWidget {
+  final int nights;
+  final WidgetTranslations translations;
+  final bool isDarkMode;
+  final MinimalistColorSchemeAdapter colors;
+
+  const _NightsBadge({
+    required this.nights,
+    required this.translations,
+    required this.isDarkMode,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.s,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: colors.statusAvailableBackground,
+        borderRadius: BorderRadius.circular(CompactPillSummary._badgeRadius),
+      ),
+      child: Text(
+        translations.nightCount(nights),
+        style: TextStyle(
+          fontSize: CompactPillSummary._badgeFontSize,
+          fontWeight: FontWeight.bold,
+          color: isDarkMode ? Colors.white : Colors.black87,
+        ),
+      ),
+    );
+  }
+}
+
+class _ReserveButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String label;
+  final MinimalistColorSchemeAdapter colors;
+
+  const _ReserveButton({
+    required this.onTap,
+    required this.label,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(
+        CompactPillSummary._reserveButtonRadius,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        decoration: BoxDecoration(
+          color: colors.buttonPrimary,
+          borderRadius: BorderRadius.circular(
+            CompactPillSummary._reserveButtonRadius,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: CompactPillSummary._reserveFontSize,
+            fontWeight: FontWeight.bold,
+            color: colors.buttonPrimaryText,
+          ),
+        ),
+      ),
     );
   }
 }

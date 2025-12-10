@@ -38,10 +38,16 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
     required this.translations,
   });
 
+  // Layout constants
+  static const _smallScreenBreakpoint = 400.0;
+  static const _smallIconSize = 16.0;
+  static const _smallContainerSize = 28.0;
+  static const _shadowAlpha = 0.04;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
+    final isSmallScreen = screenWidth < _smallScreenBreakpoint;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs),
@@ -53,7 +59,15 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
         decoration: BoxDecoration(
           color: colors.backgroundTertiary,
           borderRadius: BorderTokens.circularRounded,
-          boxShadow: ShadowTokens.light,
+          border: Border.all(color: colors.borderDefault),
+          // Subtle elevation - matches banner and contact pill bar style
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: _shadowAlpha),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

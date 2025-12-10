@@ -14,7 +14,11 @@ class BankDetailsSection extends ConsumerWidget {
   final bool isDarkMode;
   final BankTransferConfig bankConfig;
 
-  const BankDetailsSection({super.key, required this.isDarkMode, required this.bankConfig});
+  const BankDetailsSection({
+    super.key,
+    required this.isDarkMode,
+    required this.bankConfig,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,7 +43,11 @@ class BankDetailsSection extends ConsumerWidget {
               value: bankConfig.accountHolder!,
               icon: Icons.person_outline,
               isDarkMode: isDarkMode,
-              onCopy: () => _copyToClipboard(context, bankConfig.accountHolder!, tr.accountHolderCopied),
+              onCopy: () => _copyToClipboard(
+                context,
+                bankConfig.accountHolder!,
+                tr.accountHolderCopied,
+              ),
             ),
           if (bankConfig.bankName != null) ...[
             const SizedBox(height: SpacingTokens.s),
@@ -48,7 +56,11 @@ class BankDetailsSection extends ConsumerWidget {
               value: bankConfig.bankName!,
               icon: Icons.account_balance_outlined,
               isDarkMode: isDarkMode,
-              onCopy: () => _copyToClipboard(context, bankConfig.bankName!, tr.bankNameCopied),
+              onCopy: () => _copyToClipboard(
+                context,
+                bankConfig.bankName!,
+                tr.bankNameCopied,
+              ),
             ),
           ],
           if (bankConfig.iban != null) ...[
@@ -58,7 +70,8 @@ class BankDetailsSection extends ConsumerWidget {
               value: bankConfig.iban!,
               icon: Icons.credit_card,
               isDarkMode: isDarkMode,
-              onCopy: () => _copyToClipboard(context, bankConfig.iban!, tr.ibanCopied),
+              onCopy: () =>
+                  _copyToClipboard(context, bankConfig.iban!, tr.ibanCopied),
             ),
           ],
           if (bankConfig.swift != null) ...[
@@ -68,7 +81,11 @@ class BankDetailsSection extends ConsumerWidget {
               value: bankConfig.swift!,
               icon: Icons.language,
               isDarkMode: isDarkMode,
-              onCopy: () => _copyToClipboard(context, bankConfig.swift!, tr.swiftBicCopied),
+              onCopy: () => _copyToClipboard(
+                context,
+                bankConfig.swift!,
+                tr.swiftBicCopied,
+              ),
             ),
           ],
           if (bankConfig.accountNumber != null) ...[
@@ -78,7 +95,11 @@ class BankDetailsSection extends ConsumerWidget {
               value: bankConfig.accountNumber!,
               icon: Icons.numbers,
               isDarkMode: isDarkMode,
-              onCopy: () => _copyToClipboard(context, bankConfig.accountNumber!, tr.accountNumberCopied),
+              onCopy: () => _copyToClipboard(
+                context,
+                bankConfig.accountNumber!,
+                tr.accountNumberCopied,
+              ),
             ),
           ],
         ],
@@ -86,10 +107,17 @@ class BankDetailsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(MinimalistColorSchemeAdapter colors, WidgetTranslations tr) {
+  Widget _buildHeader(
+    MinimalistColorSchemeAdapter colors,
+    WidgetTranslations tr,
+  ) {
     return Row(
       children: [
-        Icon(Icons.account_balance, color: colors.buttonPrimary, size: IconSizeTokens.medium),
+        Icon(
+          Icons.account_balance,
+          color: colors.buttonPrimary,
+          size: IconSizeTokens.medium,
+        ),
         const SizedBox(width: SpacingTokens.xs),
         Text(
           tr.paymentDetails,
@@ -105,6 +133,10 @@ class BankDetailsSection extends ConsumerWidget {
 
   void _copyToClipboard(BuildContext context, String text, String message) {
     Clipboard.setData(ClipboardData(text: text));
-    SnackBarHelper.showSuccess(context: context, message: message, duration: const Duration(seconds: 2));
+    SnackBarHelper.showSuccess(
+      context: context,
+      message: message,
+      duration: const Duration(seconds: 2),
+    );
   }
 }

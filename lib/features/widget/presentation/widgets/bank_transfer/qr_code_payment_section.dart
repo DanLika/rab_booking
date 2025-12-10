@@ -56,7 +56,11 @@ class QrCodePaymentSection extends StatelessWidget {
             color: colors.buttonPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
           ),
-          child: Icon(Icons.qr_code_2, color: colors.buttonPrimary, size: IconSizeTokens.medium),
+          child: Icon(
+            Icons.qr_code_2,
+            color: colors.buttonPrimary,
+            size: IconSizeTokens.medium,
+          ),
         ),
         const SizedBox(width: SpacingTokens.m),
         Expanded(
@@ -74,7 +78,10 @@ class QrCodePaymentSection extends StatelessWidget {
               const SizedBox(height: SpacingTokens.xxs),
               Text(
                 translations.scanWithMobileBank,
-                style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeS,
+                  color: colors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -89,7 +96,10 @@ class QrCodePaymentSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: ColorTokens.pureWhite,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(color: colors.borderDefault, width: BorderTokens.widthMedium),
+        border: Border.all(
+          color: colors.borderDefault,
+          width: BorderTokens.widthMedium,
+        ),
       ),
       child: QrImageView(
         data: epcData,
@@ -110,12 +120,20 @@ class QrCodePaymentSection extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: IconSizeTokens.small, color: colors.buttonPrimary),
+          Icon(
+            Icons.info_outline,
+            size: IconSizeTokens.small,
+            color: colors.buttonPrimary,
+          ),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Text(
               translations.qrCodeContainsPaymentData,
-              style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary, height: 1.4),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeS,
+                color: colors.textSecondary,
+                height: 1.4,
+              ),
             ),
           ),
         ],

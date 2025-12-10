@@ -19,7 +19,7 @@ class BookingLookupService {
   final FirebaseFunctions _functions;
 
   BookingLookupService({required FirebaseFunctions functions})
-      : _functions = functions;
+    : _functions = functions;
 
   /// Verify booking access and retrieve booking details
   ///
@@ -56,15 +56,19 @@ class BookingLookupService {
       switch (e.code) {
         case 'not-found':
           throw BookingException(
-              'Booking not found. Please check your booking reference.',
-              code: 'booking/not-found');
+            'Booking not found. Please check your booking reference.',
+            code: 'booking/not-found',
+          );
         case 'permission-denied':
           throw BookingException(
-              'Email does not match booking records or link has expired.',
-              code: 'booking/permission-denied');
+            'Email does not match booking records or link has expired.',
+            code: 'booking/permission-denied',
+          );
         case 'invalid-argument':
-          throw BookingException('Booking reference and email are required.',
-              code: 'booking/invalid-argument');
+          throw BookingException(
+            'Booking reference and email are required.',
+            code: 'booking/invalid-argument',
+          );
         default:
           throw BookingException.lookupFailed(e.message);
       }
@@ -81,15 +85,18 @@ final lookupEmailProvider = StateProvider<String>((ref) => '');
 /// Async provider for booking lookup result
 /// This provider is used when user performs manual lookup
 final bookingLookupProvider =
-    FutureProvider.family<BookingDetailsModel, LookupParams>((ref, params) async {
-  final service = ref.watch(bookingLookupServiceProvider);
+    FutureProvider.family<BookingDetailsModel, LookupParams>((
+      ref,
+      params,
+    ) async {
+      final service = ref.watch(bookingLookupServiceProvider);
 
-  return await service.verifyBookingAccess(
-    bookingReference: params.bookingReference,
-    email: params.email,
-    accessToken: params.accessToken,
-  );
-});
+      return await service.verifyBookingAccess(
+        bookingReference: params.bookingReference,
+        email: params.email,
+        accessToken: params.accessToken,
+      );
+    });
 
 /// Parameters for booking lookup
 class LookupParams {

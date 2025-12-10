@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
 
 /// Contact pill card widget for calendar-only mode.
 ///
 /// Displays contact options (email, phone) in a compact pill-shaped card.
-///
-/// Responsive layout:
-/// - Mobile (< 600px): Column layout with email on top, phone below (~80px height)
-/// - Tablet/Desktop (≥ 600px): Row layout with email and phone side by side (~48px height)
-///
-/// Extracted from BookingWidgetScreen to reduce build() method complexity.
+/// Responsive layout adapts to screen width.
 class ContactPillCardWidget extends StatelessWidget {
   final ContactOptions? contactOptions;
   final bool isDarkMode;
@@ -25,44 +21,54 @@ class ContactPillCardWidget extends StatelessWidget {
     required this.screenWidth,
   });
 
-  /// Returns true if using column layout (mobile)
-  bool get _useColumnLayout => screenWidth < 600;
+  // Breakpoints
+  static const _mobileBreakpoint = 600.0;
+  static const _desktopBreakpoint = 1024.0;
+
+  // Widths
+  static const _desktopMaxWidth = 650.0;
+  static const _mobileMaxWidth = 600.0;
+
+  // Styling
+  static const _shadowAlpha = 0.04;
+  static const _dividerHeight = 24.0;
+  static const _iconSize = 18.0;
+  static const _fontSize = 14.0;
+
+  bool get _useColumnLayout => screenWidth < _mobileBreakpoint;
+  bool get _isDesktop => screenWidth >= _desktopBreakpoint;
 
   @override
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    // Check if there's anything to display
-    final hasEmail =
-        contactOptions?.showEmail == true &&
-        contactOptions?.emailAddress != null &&
-        contactOptions!.emailAddress!.isNotEmpty;
-    final hasPhone =
-        contactOptions?.showPhone == true &&
-        contactOptions?.phoneNumber != null &&
-        contactOptions!.phoneNumber!.isNotEmpty;
+    final hasEmail = _hasValidEmail;
+    final hasPhone = _hasValidPhone;
 
-    // If no contact options to display, return empty widget
     if (!hasEmail && !hasPhone) {
       return const SizedBox.shrink();
     }
 
-    final isDesktop = screenWidth >= 1024;
-
-    // Match calendar width: 650px desktop, 600px mobile/tablet (same as CalendarCompactLegend)
-    final maxWidth = isDesktop ? 650.0 : 600.0;
-
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
+        constraints: BoxConstraints(
+          maxWidth: _isDesktop ? _desktopMaxWidth : _mobileMaxWidth,
+        ),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingTokens.m,
+            vertical: SpacingTokens.s,
+          ),
           decoration: BoxDecoration(
             color: colors.backgroundTertiary,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderTokens.circularMedium,
             border: Border.all(color: colors.borderDefault),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _shadowAlpha),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
             ],
           ),
           child: _useColumnLayout
@@ -73,8 +79,16 @@ class ContactPillCardWidget extends StatelessWidget {
     );
   }
 
-  /// Column layout for mobile (< 600px)
-  /// Email on top, phone below with horizontal divider between
+  bool get _hasValidEmail =>
+      contactOptions?.showEmail == true &&
+      contactOptions?.emailAddress != null &&
+      contactOptions!.emailAddress!.isNotEmpty;
+
+  bool get _hasValidPhone =>
+      contactOptions?.showPhone == true &&
+      contactOptions?.phoneNumber != null &&
+      contactOptions!.phoneNumber!.isNotEmpty;
+
   Widget _buildColumnLayout(
     bool hasEmail,
     bool hasPhone,
@@ -83,7 +97,6 @@ class ContactPillCardWidget extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Email row
         if (hasEmail)
           _ContactRow(
             icon: Icons.email,
@@ -91,16 +104,12 @@ class ContactPillCardWidget extends StatelessWidget {
             onTap: () => _launchUrl('mailto:${contactOptions!.emailAddress}'),
             colors: colors,
           ),
-
-        // Horizontal divider (only if both email and phone are shown)
         if (hasEmail && hasPhone)
           Container(
             height: 1,
-            margin: const EdgeInsets.symmetric(vertical: 8),
+            margin: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
             color: colors.borderDefault,
           ),
-
-        // Phone row
         if (hasPhone)
           _ContactRow(
             icon: Icons.phone,
@@ -112,8 +121,6 @@ class ContactPillCardWidget extends StatelessWidget {
     );
   }
 
-  /// Row layout for tablet/desktop (≥ 600px)
-  /// Email and phone side by side with vertical divider between
   Widget _buildRowLayout(
     bool hasEmail,
     bool hasPhone,
@@ -123,7 +130,6 @@ class ContactPillCardWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Email
         if (hasEmail)
           Flexible(
             child: _ContactRow(
@@ -134,17 +140,13 @@ class ContactPillCardWidget extends StatelessWidget {
               centerContent: true,
             ),
           ),
-
-        // Vertical divider (only if both email and phone are shown)
         if (hasEmail && hasPhone)
           Container(
-            height: 24,
+            height: _dividerHeight,
             width: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 12),
+            margin: const EdgeInsets.symmetric(horizontal: SpacingTokens.m),
             color: colors.borderDefault,
           ),
-
-        // Phone
         if (hasPhone)
           Flexible(
             child: _ContactRow(
@@ -159,7 +161,6 @@ class ContactPillCardWidget extends StatelessWidget {
     );
   }
 
-  /// Helper to launch URLs (phone, email)
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -168,7 +169,6 @@ class ContactPillCardWidget extends StatelessWidget {
   }
 }
 
-/// Internal widget for a single contact row (email or phone)
 class _ContactRow extends StatelessWidget {
   final IconData icon;
   final String value;
@@ -188,24 +188,29 @@ class _ContactRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderTokens.circularSmall,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingTokens.xxs,
+          vertical: SpacingTokens.xxs,
+        ),
         child: Row(
           mainAxisSize: centerContent ? MainAxisSize.min : MainAxisSize.max,
-          mainAxisAlignment: centerContent ? MainAxisAlignment.center : MainAxisAlignment.start,
+          mainAxisAlignment: centerContent
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
           children: [
             Icon(
               icon,
-              size: 18,
+              size: ContactPillCardWidget._iconSize,
               color: colors.buttonPrimary,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpacingTokens.s),
             Flexible(
               child: Text(
                 value,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: ContactPillCardWidget._fontSize,
                   color: colors.textPrimary,
                   decoration: TextDecoration.underline,
                 ),

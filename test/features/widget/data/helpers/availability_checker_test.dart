@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/data/helpers/availability_checker.dart';
+import 'package:bookbed/features/widget/domain/constants/widget_constants.dart';
 
 void main() {
   group('AvailabilityCheckResult', () {
@@ -13,7 +14,7 @@ void main() {
 
         expect(result.isAvailable, isTrue);
         expect(result.conflictType, isNull);
-        expect(result.conflictMessage, isNull);
+        expect(result.errorCode, isNull);
         expect(result.conflictingDocId, isNull);
       });
     });
@@ -24,7 +25,7 @@ void main() {
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.booking);
-        expect(result.conflictMessage, 'Conflict with existing booking');
+        expect(result.errorCode, AvailabilityErrorCode.bookingConflict);
         expect(result.conflictingDocId, 'booking123');
       });
     });
@@ -36,7 +37,8 @@ void main() {
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.icalEvent);
-        expect(result.conflictMessage, 'Conflict with Booking.com event');
+        expect(result.errorCode, AvailabilityErrorCode.icalConflict);
+        expect(result.icalSource, 'Booking.com');
         expect(result.conflictingDocId, 'event456');
       });
 
@@ -44,7 +46,7 @@ void main() {
         final result =
             AvailabilityCheckResult.icalConflict('event789', 'Airbnb');
 
-        expect(result.conflictMessage, 'Conflict with Airbnb event');
+        expect(result.icalSource, 'Airbnb');
       });
     });
 
@@ -56,24 +58,30 @@ void main() {
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.blockedDate);
-        expect(result.conflictMessage, contains('2024-01-15'));
+        expect(result.errorCode, AvailabilityErrorCode.blockedDate);
+        expect(result.conflictDate, blockedDate);
         expect(result.conflictingDocId, 'price123');
       });
     });
 
     group('constructor', () {
       test('creates result with all fields', () {
-        const result = AvailabilityCheckResult(
+        final conflictDate = DateTime(2024, 1, 15);
+        final result = AvailabilityCheckResult(
           isAvailable: false,
           conflictType: ConflictType.booking,
-          conflictMessage: 'Custom message',
+          errorCode: AvailabilityErrorCode.bookingConflict,
           conflictingDocId: 'doc123',
+          conflictDate: conflictDate,
+          icalSource: 'Booking.com',
         );
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.booking);
-        expect(result.conflictMessage, 'Custom message');
+        expect(result.errorCode, AvailabilityErrorCode.bookingConflict);
         expect(result.conflictingDocId, 'doc123');
+        expect(result.conflictDate, conflictDate);
+        expect(result.icalSource, 'Booking.com');
       });
     });
   });
@@ -91,8 +99,16 @@ void main() {
       expect(ConflictType.blockedDate, isNotNull);
     });
 
-    test('has exactly 3 types', () {
-      expect(ConflictType.values.length, 3);
+    test('has blockedCheckIn type', () {
+      expect(ConflictType.blockedCheckIn, isNotNull);
+    });
+
+    test('has blockedCheckOut type', () {
+      expect(ConflictType.blockedCheckOut, isNotNull);
+    });
+
+    test('has exactly 5 types', () {
+      expect(ConflictType.values.length, 5);
     });
   });
 
@@ -444,7 +460,7 @@ void main() {
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.icalEvent);
-        expect(result.conflictMessage, contains('Booking.com'));
+        expect(result.icalSource, 'Booking.com');
       });
 
       test('allows same-day turnover for iCal events', () async {
@@ -496,7 +512,7 @@ void main() {
         );
 
         expect(result.isAvailable, isFalse);
-        expect(result.conflictMessage, contains('iCal'));
+        expect(result.icalSource, 'iCal');
       });
     });
 
@@ -516,7 +532,7 @@ void main() {
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.blockedDate);
-        expect(result.conflictMessage, contains('2024-01-17'));
+        expect(result.conflictDate, DateTime(2024, 1, 17));
       });
 
       test('detects conflict when blocked date is checkIn date', () async {

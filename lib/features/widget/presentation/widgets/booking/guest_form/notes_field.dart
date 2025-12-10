@@ -7,43 +7,43 @@ import '../../../../../../shared/utils/validators/form_validators.dart';
 
 /// Multi-line text field for special requests/notes.
 ///
-/// Extracted from booking_widget_screen.dart special requests field section.
 /// Optional field with 3 lines and 500 character max length.
-///
-/// Usage:
-/// ```dart
-/// NotesField(
-///   controller: _notesController,
-///   isDarkMode: isDarkMode,
-/// )
-/// ```
 class NotesField extends ConsumerWidget {
-  /// Controller for the notes text field
   final TextEditingController controller;
-
-  /// Whether dark mode is active
   final bool isDarkMode;
 
-  const NotesField({super.key, required this.controller, required this.isDarkMode});
+  const NotesField({
+    super.key,
+    required this.controller,
+    required this.isDarkMode,
+  });
+
+  static const _maxLines = 3;
+  static const _maxLength = 500;
+  static const _contentPadding = EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 7,
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+    final tr = WidgetTranslations.of(context, ref);
 
     return TextFormField(
       controller: controller,
-      maxLines: 3,
-      maxLength: 500,
+      maxLines: _maxLines,
+      maxLength: _maxLength,
       style: TextStyle(color: colors.textPrimary),
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: NotesValidator.validate,
       decoration: WidgetInputDecorationHelper.buildDecoration(
-        labelText: WidgetTranslations.of(context, ref).labelSpecialRequests,
-        hintText: WidgetTranslations.of(context, ref).hintSpecialRequests,
+        labelText: tr.labelSpecialRequests,
+        hintText: tr.hintSpecialRequests,
         prefixIcon: Icon(Icons.notes, color: colors.textSecondary),
         isDarkMode: isDarkMode,
         hideCounter: false,
-      ).copyWith(contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7)),
+      ).copyWith(contentPadding: _contentPadding),
     );
   }
 }

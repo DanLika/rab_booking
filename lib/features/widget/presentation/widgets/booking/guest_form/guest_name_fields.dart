@@ -8,25 +8,10 @@ import '../../../../../../shared/utils/validators/form_validators.dart';
 
 /// Row containing first name and last name text fields.
 ///
-/// Extracted from booking_widget_screen.dart name fields section.
 /// Displays two equally sized text fields side by side.
-///
-/// Usage:
-/// ```dart
-/// GuestNameFields(
-///   firstNameController: _firstNameController,
-///   lastNameController: _lastNameController,
-///   isDarkMode: isDarkMode,
-/// )
-/// ```
 class GuestNameFields extends ConsumerWidget {
-  /// Controller for the first name text field
   final TextEditingController firstNameController;
-
-  /// Controller for the last name text field
   final TextEditingController lastNameController;
-
-  /// Whether dark mode is active
   final bool isDarkMode;
 
   const GuestNameFields({
@@ -36,50 +21,65 @@ class GuestNameFields extends ConsumerWidget {
     required this.isDarkMode,
   });
 
+  static const _maxNameLength = 50;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+    final tr = WidgetTranslations.of(context, ref);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // First Name field
         Expanded(
-          child: TextFormField(
+          child: _buildNameField(
             controller: firstNameController,
-            maxLength: 50,
-            style: TextStyle(color: colors.textPrimary),
-            decoration: WidgetInputDecorationHelper.buildDecoration(
-              labelText: WidgetTranslations.of(context, ref).labelFirstName,
-              hintText: 'John',
-              prefixIcon: Icon(Icons.person_outline, color: colors.textPrimary),
-              isDarkMode: isDarkMode,
-              isDense: true,
-              errorMaxLines: 1,
-            ),
-            autovalidateMode: AutovalidateMode.onUserInteraction,
+            labelText: tr.labelFirstName,
+            hintText: 'John',
+            showIcon: true,
+            colors: colors,
             validator: FirstNameValidator.validate,
           ),
         ),
         const SizedBox(width: SpacingTokens.m),
-        // Last Name field
         Expanded(
-          child: TextFormField(
+          child: _buildNameField(
             controller: lastNameController,
-            maxLength: 50,
-            style: TextStyle(color: colors.textPrimary),
-            decoration: WidgetInputDecorationHelper.buildDecoration(
-              labelText: WidgetTranslations.of(context, ref).labelLastName,
-              hintText: 'Doe',
-              isDarkMode: isDarkMode,
-              isDense: true,
-              errorMaxLines: 1,
-            ),
-            autovalidateMode: AutovalidateMode.onUserInteraction,
+            labelText: tr.labelLastName,
+            hintText: 'Doe',
+            showIcon: false,
+            colors: colors,
             validator: LastNameValidator.validate,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNameField({
+    required TextEditingController controller,
+    required String labelText,
+    required String hintText,
+    required bool showIcon,
+    required MinimalistColorSchemeAdapter colors,
+    required String? Function(String?) validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLength: _maxNameLength,
+      style: TextStyle(color: colors.textPrimary),
+      decoration: WidgetInputDecorationHelper.buildDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        prefixIcon: showIcon
+            ? Icon(Icons.person_outline, color: colors.textPrimary)
+            : null,
+        isDarkMode: isDarkMode,
+        isDense: true,
+        errorMaxLines: 1,
+      ),
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: validator,
     );
   }
 }

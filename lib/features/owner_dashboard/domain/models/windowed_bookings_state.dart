@@ -119,7 +119,7 @@ class WindowedBookingsState {
   }
 
   /// Initial state for card view (window: 20, page: 20)
-  static const cardViewInitial = WindowedBookingsState(windowSize: 20);
+  static const cardViewInitial = WindowedBookingsState();
 
   /// Initial state for table view (window: 50, page: 50)
   static const tableViewInitial = WindowedBookingsState(

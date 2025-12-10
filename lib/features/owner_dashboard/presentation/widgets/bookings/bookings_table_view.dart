@@ -872,9 +872,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingsDeleted(count, label));
 
           // Remove each deleted booking from local state
-          for (final bookingId in _selectedBookingIds) {
-            ref.read(windowedBookingsNotifierProvider.notifier).removeBooking(bookingId);
-          }
+          _selectedBookingIds.forEach(
+            ref.read(windowedBookingsNotifierProvider.notifier).removeBooking,
+          );
 
           setState(_selectedBookingIds.clear);
         }

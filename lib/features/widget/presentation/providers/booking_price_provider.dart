@@ -100,7 +100,8 @@ Future<BookingPriceCalculation?> bookingPrice(
   required String unitId,
   required DateTime? checkIn,
   required DateTime? checkOut,
-  String? propertyId, // Optional: enables cache reuse from widgetContextProvider
+  String?
+  propertyId, // Optional: enables cache reuse from widgetContextProvider
   int depositPercentage = 20, // Configurable deposit percentage (0-100)
 }) async {
   // Return null if dates not selected
@@ -119,10 +120,9 @@ Future<BookingPriceCalculation?> bookingPrice(
   if (propertyId != null) {
     // Try to get unit from cached context (no additional query)
     try {
-      final context = await ref.read(widgetContextProvider((
-        propertyId: propertyId,
-        unitId: unitId,
-      )).future);
+      final context = await ref.read(
+        widgetContextProvider((propertyId: propertyId, unitId: unitId)).future,
+      );
       basePrice = context.unit.pricePerNight;
       weekendBasePrice = context.unit.weekendBasePrice;
       weekendDays = context.unit.weekendDays;

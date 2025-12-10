@@ -75,7 +75,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         // Check for errors from provider
         if (authState.error != null) {
           setState(() => _isLoading = false);
-          ErrorDisplayUtils.showErrorSnackBar(context, authState.error!);
+          ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
           return;
         }
 

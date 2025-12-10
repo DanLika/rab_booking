@@ -4,7 +4,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
@@ -761,7 +760,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   void _confirmDeleteFeed(BuildContext context, IcalFeed feed) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
@@ -780,11 +778,11 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 ref.invalidate(icalFeedsStreamProvider);
                 ref.invalidate(icalStatisticsProvider);
                 if (mounted) {
-                  ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedDeleted);
+                  ErrorDisplayUtils.showSuccessSnackBar(this.context, l10n.icalFeedDeleted);
                 }
               } catch (e) {
                 if (mounted) {
-                  ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.icalFeedDeleteError);
+                  ErrorDisplayUtils.showErrorSnackBar(this.context, e, userMessage: l10n.icalFeedDeleteError);
                 }
               }
             },

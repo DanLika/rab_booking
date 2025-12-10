@@ -52,10 +52,7 @@ typedef WidgetContextParams = ({String propertyId, String unitId});
 /// - Unit data is cached and reused by booking_price_provider
 /// - Result is cached for 5 minutes
 @Riverpod(keepAlive: true)
-Future<WidgetContext> widgetContext(
-  Ref ref,
-  WidgetContextParams params,
-) async {
+Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
   final propertyId = params.propertyId;
   final unitId = params.unitId;
 
@@ -77,11 +74,14 @@ Future<WidgetContext> widgetContext(
 
   // Validate unit
   if (unit == null) {
-    throw WidgetContextException('Unit not found: $unitId in property $propertyId');
+    throw WidgetContextException(
+      'Unit not found: $unitId in property $propertyId',
+    );
   }
 
   // Get settings or use defaults
-  final effectiveSettings = settings ??
+  final effectiveSettings =
+      settings ??
       WidgetSettings(
         id: unitId,
         propertyId: propertyId,
@@ -113,10 +113,7 @@ Future<WidgetContext> widgetContext(
 /// Note: This requires an extra query to get the unit first, so prefer
 /// [widgetContextProvider] when propertyId is available.
 @riverpod
-Future<WidgetContext> widgetContextByUnitOnly(
-  Ref ref,
-  String unitId,
-) async {
+Future<WidgetContext> widgetContextByUnitOnly(Ref ref, String unitId) async {
   // First, fetch unit to get its propertyId
   final unitRepo = ref.read(unitRepositoryProvider);
   final unit = await unitRepo.fetchUnitById(unitId);
@@ -126,10 +123,9 @@ Future<WidgetContext> widgetContextByUnitOnly(
   }
 
   // Now use the main provider with both IDs
-  return ref.read(widgetContextProvider((
-    propertyId: unit.propertyId,
-    unitId: unitId,
-  )).future);
+  return ref.read(
+    widgetContextProvider((propertyId: unit.propertyId, unitId: unitId)).future,
+  );
 }
 
 /// Quick access to cached unit from widget context.

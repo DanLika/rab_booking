@@ -17,6 +17,7 @@ import 'calendar/calendar_date_selection_validator.dart';
 import 'calendar/calendar_tooltip_builder.dart';
 import 'calendar/year_calendar_painters.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
+import 'calendar/year_calendar_skeleton.dart';
 
 class YearCalendarWidget extends ConsumerStatefulWidget {
   final String propertyId;
@@ -98,7 +99,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               // No Expanded - calendar takes natural height for proper inline layout
               calendarData.when(
                 data: (data) => _buildYearGridWithIntegratedSelector(data, colors),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const YearCalendarSkeleton(),
                 error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
               ),
               ],

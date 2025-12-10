@@ -78,7 +78,9 @@ class MinimalistColors {
   static const Color statusBookedText = Color(0xFFef4444); // #ef4444
 
   /// Past booked date - light pink background
-  static const Color statusPastReservationBackground = Color(0xFFebdae2); // #ebdae2
+  static const Color statusPastReservationBackground = Color(
+    0xFFebdae2,
+  ); // #ebdae2
 
   /// Past booked date - border
   static const Color statusPastReservationBorder = Color(0xFFebdae2); // #ebdae2
@@ -246,7 +248,9 @@ class MinimalistColorsDark {
   static const Color statusBookedText = Color(0xFFef4444); // #ef4444
 
   /// Past booked date - dark purple background
-  static const Color statusPastReservationBackground = Color(0xFF180710); // #180710
+  static const Color statusPastReservationBackground = Color(
+    0xFF180710,
+  ); // #180710
 
   /// Past booked date - border
   static const Color statusPastReservationBorder = Color(0xFF180710); // #180710
@@ -381,29 +385,61 @@ class MinimalistColorsDark {
 extension MinimalistShadows on MinimalistColors {
   /// Minimal shadow for subtle elevation (1-level)
   static List<BoxShadow> get minimal => [
-    const BoxShadow(color: MinimalistColors.shadow01, offset: Offset(0, 1), blurRadius: 2),
+    const BoxShadow(
+      color: MinimalistColors.shadow01,
+      offset: Offset(0, 1),
+      blurRadius: 2,
+    ),
   ];
 
   /// Light shadow for cards (2-level)
   static List<BoxShadow> get light => [
-    const BoxShadow(color: MinimalistColors.shadow02, offset: Offset(0, 2), blurRadius: 4),
+    const BoxShadow(
+      color: MinimalistColors.shadow02,
+      offset: Offset(0, 2),
+      blurRadius: 4,
+    ),
   ];
 
   /// Medium shadow for elevated components (3-level)
   static List<BoxShadow> get medium => [
-    const BoxShadow(color: MinimalistColors.shadow02, offset: Offset(0, 2), blurRadius: 4, spreadRadius: -1),
-    const BoxShadow(color: MinimalistColors.shadow03, offset: Offset(0, 4), blurRadius: 8, spreadRadius: -2),
+    const BoxShadow(
+      color: MinimalistColors.shadow02,
+      offset: Offset(0, 2),
+      blurRadius: 4,
+      spreadRadius: -1,
+    ),
+    const BoxShadow(
+      color: MinimalistColors.shadow03,
+      offset: Offset(0, 4),
+      blurRadius: 8,
+      spreadRadius: -2,
+    ),
   ];
 
   /// Strong shadow for emphasis (4-level)
   static List<BoxShadow> get strong => [
-    const BoxShadow(color: MinimalistColors.shadow02, offset: Offset(0, 4), blurRadius: 6, spreadRadius: -2),
-    const BoxShadow(color: MinimalistColors.shadow04, offset: Offset(0, 8), blurRadius: 16, spreadRadius: -4),
+    const BoxShadow(
+      color: MinimalistColors.shadow02,
+      offset: Offset(0, 4),
+      blurRadius: 6,
+      spreadRadius: -2,
+    ),
+    const BoxShadow(
+      color: MinimalistColors.shadow04,
+      offset: Offset(0, 8),
+      blurRadius: 16,
+      spreadRadius: -4,
+    ),
   ];
 
   /// Hover shadow for interactive elements
   static List<BoxShadow> get hover => [
-    const BoxShadow(color: MinimalistColors.shadow03, offset: Offset(0, 4), blurRadius: 12),
+    const BoxShadow(
+      color: MinimalistColors.shadow03,
+      offset: Offset(0, 4),
+      blurRadius: 12,
+    ),
   ];
 }
 
@@ -416,237 +452,321 @@ class MinimalistColorSchemeAdapter implements WidgetColorScheme {
 
   // Backgrounds
   @override
-  Color get backgroundPrimary => dark ? MinimalistColorsDark.backgroundPrimary : MinimalistColors.backgroundPrimary;
+  Color get backgroundPrimary => dark
+      ? MinimalistColorsDark.backgroundPrimary
+      : MinimalistColors.backgroundPrimary;
 
   @override
-  Color get backgroundSecondary =>
-      dark ? MinimalistColorsDark.backgroundSecondary : MinimalistColors.backgroundSecondary;
+  Color get backgroundSecondary => dark
+      ? MinimalistColorsDark.backgroundSecondary
+      : MinimalistColors.backgroundSecondary;
 
   @override
-  Color get backgroundTertiary => dark ? MinimalistColorsDark.backgroundTertiary : MinimalistColors.backgroundTertiary;
+  Color get backgroundTertiary => dark
+      ? MinimalistColorsDark.backgroundTertiary
+      : MinimalistColors.backgroundTertiary;
 
   @override
-  Color get backgroundCard => dark ? MinimalistColorsDark.backgroundCard : MinimalistColors.backgroundCard;
+  Color get backgroundCard => dark
+      ? MinimalistColorsDark.backgroundCard
+      : MinimalistColors.backgroundCard;
 
   @override
-  Color get backgroundElevated => dark ? MinimalistColorsDark.backgroundTertiary : MinimalistColors.backgroundTertiary;
+  Color get backgroundElevated => dark
+      ? MinimalistColorsDark.backgroundTertiary
+      : MinimalistColors.backgroundTertiary;
 
   // Text
   @override
-  Color get textPrimary => dark ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary;
+  Color get textPrimary =>
+      dark ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary;
 
   @override
-  Color get textSecondary => dark ? MinimalistColorsDark.textSecondary : MinimalistColors.textSecondary;
+  Color get textSecondary => dark
+      ? MinimalistColorsDark.textSecondary
+      : MinimalistColors.textSecondary;
 
   @override
-  Color get textTertiary => dark ? MinimalistColorsDark.textTertiary : MinimalistColors.textTertiary;
+  Color get textTertiary =>
+      dark ? MinimalistColorsDark.textTertiary : MinimalistColors.textTertiary;
 
   @override
-  Color get textDisabled => dark ? MinimalistColorsDark.textDisabled : MinimalistColors.textDisabled;
+  Color get textDisabled =>
+      dark ? MinimalistColorsDark.textDisabled : MinimalistColors.textDisabled;
 
   @override
-  Color get textOnPrimary => dark ? MinimalistColorsDark.textOnDark : MinimalistColors.textOnDark;
+  Color get textOnPrimary =>
+      dark ? MinimalistColorsDark.textOnDark : MinimalistColors.textOnDark;
 
   @override
-  Color get textOnAccent => dark ? MinimalistColorsDark.textOnDark : MinimalistColors.textOnDark;
+  Color get textOnAccent =>
+      dark ? MinimalistColorsDark.textOnDark : MinimalistColors.textOnDark;
 
   // Borders
   @override
-  Color get borderLight => dark ? MinimalistColorsDark.borderLight : MinimalistColors.borderLight;
+  Color get borderLight =>
+      dark ? MinimalistColorsDark.borderLight : MinimalistColors.borderLight;
 
   @override
-  Color get borderDefault => dark ? MinimalistColorsDark.borderDefault : MinimalistColors.borderDefault;
+  Color get borderDefault => dark
+      ? MinimalistColorsDark.borderDefault
+      : MinimalistColors.borderDefault;
 
   @override
-  Color get borderMedium => dark ? MinimalistColorsDark.borderMedium : MinimalistColors.borderMedium;
+  Color get borderMedium =>
+      dark ? MinimalistColorsDark.borderMedium : MinimalistColors.borderMedium;
 
   @override
-  Color get borderStrong => dark ? MinimalistColorsDark.borderStrong : MinimalistColors.borderStrong;
+  Color get borderStrong =>
+      dark ? MinimalistColorsDark.borderStrong : MinimalistColors.borderStrong;
 
   @override
-  Color get borderFocus => dark ? MinimalistColorsDark.borderBlack : MinimalistColors.borderBlack;
+  Color get borderFocus =>
+      dark ? MinimalistColorsDark.borderBlack : MinimalistColors.borderBlack;
 
   @override
-  Color get divider => dark ? MinimalistColorsDark.borderLight : MinimalistColors.borderLight;
+  Color get divider =>
+      dark ? MinimalistColorsDark.borderLight : MinimalistColors.borderLight;
 
   // Brand colors - Use black/white (no purple!)
   @override
-  Color get primary => dark ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary; // White in dark, Black in light
+  Color get primary =>
+      dark ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary; // White in dark, Black in light
 
   @override
-  Color get primaryHover => dark ? MinimalistColorsDark.textSecondary : MinimalistColors.textSecondary;
+  Color get primaryHover => dark
+      ? MinimalistColorsDark.textSecondary
+      : MinimalistColors.textSecondary;
 
   @override
-  Color get primaryPressed => dark ? MinimalistColorsDark.textTertiary : MinimalistColors.textTertiary;
+  Color get primaryPressed =>
+      dark ? MinimalistColorsDark.textTertiary : MinimalistColors.textTertiary;
 
   @override
-  Color get primaryLight => dark ? MinimalistColorsDark.backgroundTertiary : MinimalistColors.backgroundTertiary;
+  Color get primaryLight => dark
+      ? MinimalistColorsDark.backgroundTertiary
+      : MinimalistColors.backgroundTertiary;
 
   @override
-  Color get primarySurface => dark ? MinimalistColorsDark.backgroundSecondary : MinimalistColors.backgroundSecondary;
+  Color get primarySurface => dark
+      ? MinimalistColorsDark.backgroundSecondary
+      : MinimalistColors.backgroundSecondary;
 
   @override
-  Color get accent => dark ? MinimalistColorsDark.statusAvailableBorder : MinimalistColors.statusAvailableBorder;
+  Color get accent => dark
+      ? MinimalistColorsDark.statusAvailableBorder
+      : MinimalistColors.statusAvailableBorder;
 
   @override
-  Color get accentHover => dark ? MinimalistColorsDark.statusAvailableText : MinimalistColors.statusAvailableText;
+  Color get accentHover => dark
+      ? MinimalistColorsDark.statusAvailableText
+      : MinimalistColors.statusAvailableText;
 
   // Semantic colors
   @override
-  Color get success => dark ? MinimalistColorsDark.success : MinimalistColors.success;
+  Color get success =>
+      dark ? MinimalistColorsDark.success : MinimalistColors.success;
 
   @override
-  Color get successBackground =>
-      dark ? MinimalistColorsDark.statusAvailableBackground : MinimalistColors.statusAvailableBackground;
+  Color get successBackground => dark
+      ? MinimalistColorsDark.statusAvailableBackground
+      : MinimalistColors.statusAvailableBackground;
 
   @override
   Color get error => dark ? MinimalistColorsDark.error : MinimalistColors.error;
 
   @override
-  Color get errorBackground =>
-      dark ? MinimalistColorsDark.statusBookedBackground : MinimalistColors.statusBookedBackground;
+  Color get errorBackground => dark
+      ? MinimalistColorsDark.statusBookedBackground
+      : MinimalistColors.statusBookedBackground;
 
   @override
-  Color get warning => dark ? MinimalistColorsDark.warning : MinimalistColors.warning;
+  Color get warning =>
+      dark ? MinimalistColorsDark.warning : MinimalistColors.warning;
 
   @override
-  Color get warningBackground =>
-      dark ? MinimalistColorsDark.statusPendingBackground : MinimalistColors.statusPendingBackground;
+  Color get warningBackground => dark
+      ? MinimalistColorsDark.statusPendingBackground
+      : MinimalistColors.statusPendingBackground;
 
   @override
   Color get info => dark ? MinimalistColorsDark.info : MinimalistColors.info;
 
   // Calendar status colors
   @override
-  Color get statusAvailableBackground =>
-      dark ? MinimalistColorsDark.statusAvailableBackground : MinimalistColors.statusAvailableBackground;
+  Color get statusAvailableBackground => dark
+      ? MinimalistColorsDark.statusAvailableBackground
+      : MinimalistColors.statusAvailableBackground;
 
   @override
-  Color get statusAvailableBorder =>
-      dark ? MinimalistColorsDark.statusAvailableBorder : MinimalistColors.statusAvailableBorder;
+  Color get statusAvailableBorder => dark
+      ? MinimalistColorsDark.statusAvailableBorder
+      : MinimalistColors.statusAvailableBorder;
 
   @override
-  Color get statusAvailableText =>
-      dark ? MinimalistColorsDark.statusAvailableText : MinimalistColors.statusAvailableText;
+  Color get statusAvailableText => dark
+      ? MinimalistColorsDark.statusAvailableText
+      : MinimalistColors.statusAvailableText;
 
   @override
-  Color get statusBookedBackground =>
-      dark ? MinimalistColorsDark.statusBookedBackground : MinimalistColors.statusBookedBackground;
+  Color get statusBookedBackground => dark
+      ? MinimalistColorsDark.statusBookedBackground
+      : MinimalistColors.statusBookedBackground;
 
   @override
-  Color get statusBookedBorder => dark ? MinimalistColorsDark.statusBookedBorder : MinimalistColors.statusBookedBorder;
+  Color get statusBookedBorder => dark
+      ? MinimalistColorsDark.statusBookedBorder
+      : MinimalistColors.statusBookedBorder;
 
   @override
-  Color get statusBookedText => dark ? MinimalistColorsDark.statusBookedText : MinimalistColors.statusBookedText;
+  Color get statusBookedText => dark
+      ? MinimalistColorsDark.statusBookedText
+      : MinimalistColors.statusBookedText;
 
   @override
-  Color get statusPendingBackground =>
-      dark ? MinimalistColorsDark.statusPendingBackground : MinimalistColors.statusPendingBackground;
+  Color get statusPendingBackground => dark
+      ? MinimalistColorsDark.statusPendingBackground
+      : MinimalistColors.statusPendingBackground;
 
   @override
-  Color get statusPendingBorder =>
-      dark ? MinimalistColorsDark.statusPendingBorder : MinimalistColors.statusPendingBorder;
+  Color get statusPendingBorder => dark
+      ? MinimalistColorsDark.statusPendingBorder
+      : MinimalistColors.statusPendingBorder;
 
   @override
-  Color get statusPendingText => dark ? MinimalistColorsDark.statusPendingText : MinimalistColors.statusPendingText;
+  Color get statusPendingText => dark
+      ? MinimalistColorsDark.statusPendingText
+      : MinimalistColors.statusPendingText;
 
   @override
-  Color get statusBlockedBackground =>
-      dark ? MinimalistColorsDark.statusBlockedBackground : MinimalistColors.statusBlockedBackground;
+  Color get statusBlockedBackground => dark
+      ? MinimalistColorsDark.statusBlockedBackground
+      : MinimalistColors.statusBlockedBackground;
 
   @override
-  Color get statusBlockedBorder =>
-      dark ? MinimalistColorsDark.statusBlockedBorder : MinimalistColors.statusBlockedBorder;
+  Color get statusBlockedBorder => dark
+      ? MinimalistColorsDark.statusBlockedBorder
+      : MinimalistColors.statusBlockedBorder;
 
   @override
-  Color get statusSelectedBackground =>
-      dark ? MinimalistColorsDark.backgroundTertiary : MinimalistColors.backgroundTertiary;
+  Color get statusSelectedBackground => dark
+      ? MinimalistColorsDark.backgroundTertiary
+      : MinimalistColors.backgroundTertiary;
 
   @override
-  Color get statusSelectedBorder => dark ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary;
+  Color get statusSelectedBorder =>
+      dark ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary;
 
   @override
-  Color get statusHoverBackground =>
-      dark ? MinimalistColorsDark.backgroundSecondary : MinimalistColors.backgroundSecondary;
+  Color get statusHoverBackground => dark
+      ? MinimalistColorsDark.backgroundSecondary
+      : MinimalistColors.backgroundSecondary;
 
   @override
-  Color get statusHoverBorder => dark ? MinimalistColorsDark.borderMedium : MinimalistColors.borderMedium;
+  Color get statusHoverBorder =>
+      dark ? MinimalistColorsDark.borderMedium : MinimalistColors.borderMedium;
 
   @override
-  Color get statusTodayBorder =>
-      dark ? MinimalistColorsDark.statusAvailableBorder : MinimalistColors.statusAvailableBorder;
+  Color get statusTodayBorder => dark
+      ? MinimalistColorsDark.statusAvailableBorder
+      : MinimalistColors.statusAvailableBorder;
 
   @override
-  Color get statusDisabledBackground =>
-      dark ? MinimalistColorsDark.statusDisabledBackground : MinimalistColors.backgroundTertiary;
+  Color get statusDisabledBackground => dark
+      ? MinimalistColorsDark.statusDisabledBackground
+      : MinimalistColors.backgroundTertiary;
 
   @override
-  Color get statusDisabledText => dark ? MinimalistColorsDark.textDisabled : MinimalistColors.textDisabled;
+  Color get statusDisabledText =>
+      dark ? MinimalistColorsDark.textDisabled : MinimalistColors.textDisabled;
 
   @override
-  Color get statusPastReservationBackground =>
-      dark ? MinimalistColorsDark.statusPastReservationBackground : MinimalistColors.statusPastReservationBackground;
+  Color get statusPastReservationBackground => dark
+      ? MinimalistColorsDark.statusPastReservationBackground
+      : MinimalistColors.statusPastReservationBackground;
 
   @override
-  Color get statusPastReservationBorder =>
-      dark ? MinimalistColorsDark.statusPastReservationBorder : MinimalistColors.statusPastReservationBorder;
+  Color get statusPastReservationBorder => dark
+      ? MinimalistColorsDark.statusPastReservationBorder
+      : MinimalistColors.statusPastReservationBorder;
 
   @override
-  Color get statusCancelledBackground => dark ? ColorTokens.cancelDark : ColorTokens.cancelLight;
+  Color get statusCancelledBackground =>
+      dark ? ColorTokens.cancelDark : ColorTokens.cancelLight;
 
   @override
-  Color get statusCancelledBorder => dark ? ColorTokens.pink700 : ColorTokens.pink400;
+  Color get statusCancelledBorder =>
+      dark ? ColorTokens.pink700 : ColorTokens.pink400;
 
   // Buttons
   @override
-  Color get buttonPrimary => dark ? MinimalistColorsDark.buttonPrimary : MinimalistColors.buttonPrimary;
+  Color get buttonPrimary => dark
+      ? MinimalistColorsDark.buttonPrimary
+      : MinimalistColors.buttonPrimary;
 
   @override
-  Color get buttonPrimaryHover => dark ? MinimalistColorsDark.buttonPrimaryHover : MinimalistColors.buttonPrimaryHover;
+  Color get buttonPrimaryHover => dark
+      ? MinimalistColorsDark.buttonPrimaryHover
+      : MinimalistColors.buttonPrimaryHover;
 
   @override
-  Color get buttonPrimaryPressed =>
-      dark ? MinimalistColorsDark.buttonPrimaryPressed : MinimalistColors.buttonPrimaryPressed;
+  Color get buttonPrimaryPressed => dark
+      ? MinimalistColorsDark.buttonPrimaryPressed
+      : MinimalistColors.buttonPrimaryPressed;
 
   @override
-  Color get buttonPrimaryText => dark ? MinimalistColorsDark.buttonPrimaryText : MinimalistColors.buttonPrimaryText;
+  Color get buttonPrimaryText => dark
+      ? MinimalistColorsDark.buttonPrimaryText
+      : MinimalistColors.buttonPrimaryText;
 
   @override
-  Color get buttonSecondary => dark ? MinimalistColorsDark.buttonSecondary : MinimalistColors.buttonSecondary;
+  Color get buttonSecondary => dark
+      ? MinimalistColorsDark.buttonSecondary
+      : MinimalistColors.buttonSecondary;
 
   @override
-  Color get buttonSecondaryBorder =>
-      dark ? MinimalistColorsDark.buttonSecondaryBorder : MinimalistColors.buttonSecondaryBorder;
+  Color get buttonSecondaryBorder => dark
+      ? MinimalistColorsDark.buttonSecondaryBorder
+      : MinimalistColors.buttonSecondaryBorder;
 
   @override
-  Color get buttonSecondaryText =>
-      dark ? MinimalistColorsDark.buttonSecondaryText : MinimalistColors.buttonSecondaryText;
+  Color get buttonSecondaryText => dark
+      ? MinimalistColorsDark.buttonSecondaryText
+      : MinimalistColors.buttonSecondaryText;
 
   @override
-  Color get buttonDisabled => dark ? MinimalistColorsDark.textDisabled : MinimalistColors.textDisabled;
+  Color get buttonDisabled =>
+      dark ? MinimalistColorsDark.textDisabled : MinimalistColors.textDisabled;
 
   @override
-  Color get buttonDisabledText => dark ? MinimalistColorsDark.textTertiary : MinimalistColors.textTertiary;
+  Color get buttonDisabledText =>
+      dark ? MinimalistColorsDark.textTertiary : MinimalistColors.textTertiary;
 
   // Shadows
   @override
-  Color get shadow01 => dark ? MinimalistColorsDark.shadow01 : MinimalistColors.shadow01;
+  Color get shadow01 =>
+      dark ? MinimalistColorsDark.shadow01 : MinimalistColors.shadow01;
 
   @override
-  Color get shadow02 => dark ? MinimalistColorsDark.shadow02 : MinimalistColors.shadow02;
+  Color get shadow02 =>
+      dark ? MinimalistColorsDark.shadow02 : MinimalistColors.shadow02;
 
   @override
-  Color get shadow03 => dark ? MinimalistColorsDark.shadow03 : MinimalistColors.shadow03;
+  Color get shadow03 =>
+      dark ? MinimalistColorsDark.shadow03 : MinimalistColors.shadow03;
 
   @override
-  Color get shadow04 => dark ? MinimalistColorsDark.shadow04 : MinimalistColors.shadow04;
+  Color get shadow04 =>
+      dark ? MinimalistColorsDark.shadow04 : MinimalistColors.shadow04;
 
   // Overlays
   @override
-  Color get overlay => dark ? MinimalistColorsDark.black(0.5) : MinimalistColors.black(0.5);
+  Color get overlay =>
+      dark ? MinimalistColorsDark.black(0.5) : MinimalistColors.black(0.5);
 
   @override
-  Color get glassOverlay => dark ? MinimalistColorsDark.white(0.1) : MinimalistColors.white(0.1);
+  Color get glassOverlay =>
+      dark ? MinimalistColorsDark.white(0.1) : MinimalistColors.white(0.1);
 
   // Helper methods
   @override

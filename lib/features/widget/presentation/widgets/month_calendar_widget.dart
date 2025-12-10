@@ -17,6 +17,7 @@ import '../../../../core/localization/error_messages.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
+import 'calendar/month_calendar_skeleton.dart';
 
 class MonthCalendarWidget extends ConsumerStatefulWidget {
   final String propertyId;
@@ -120,7 +121,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                   },
                   child: calendarData.when(
                     data: (data) => _buildMonthView(data, colors),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => const MonthCalendarSkeleton(),
                     error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
                   ),
                 ),

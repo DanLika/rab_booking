@@ -1040,11 +1040,11 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         if (mounted) {
                                           dialogClosed = true;
                                           navigator.pop();
-                                          ErrorDisplayUtils.showSuccessSnackBar(context, l10nDialog.priceCalendarRevertedToBasePrice);
+                                          ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarRevertedToBasePrice);
                                         }
                                       } catch (e) {
                                         if (mounted) {
-                                          ErrorDisplayUtils.showErrorSnackBar(context, e);
+                                          ErrorDisplayUtils.showErrorSnackBar(this.context, e);
                                         }
                                       } finally {
                                         // Only reset processing if dialog is still open
@@ -1219,12 +1219,12 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         }
 
                                         if (mounted) {
-                                          ErrorDisplayUtils.showErrorSnackBar(context, e, onRetry: _localState.undo);
+                                          ErrorDisplayUtils.showErrorSnackBar(this.context, e, onRetry: _localState.undo);
                                         }
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
                                       }
                                     } finally {
                                       if (mounted && !dialogClosed) {
@@ -1273,7 +1273,6 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
   }
 
   void _showBulkPriceDialog() {
-    final l10n = AppLocalizations.of(context);
     final priceController = TextEditingController();
     bool isProcessing = false;
     DateTime? lastClickTime;
@@ -1514,7 +1513,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           navigator.pop();
                                           _selectedDays.clear();
                                           this.setState(() => isProcessing = false);
-                                          ErrorDisplayUtils.showSuccessSnackBar(context, l10nDialog.priceCalendarUpdatedPrices(count));
+                                          ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarUpdatedPrices(count));
                                         }
 
                                         // Save to server in background
@@ -1538,7 +1537,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           _localState.rollbackUpdate(_selectedMonth, currentPrices);
 
                                           if (mounted) {
-                                            ErrorDisplayUtils.showErrorSnackBar(context, e, onRetry: _localState.undo);
+                                            ErrorDisplayUtils.showErrorSnackBar(this.context, e, onRetry: _localState.undo);
                                           }
                                         }
                                       },
@@ -1733,11 +1732,11 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         _selectedDays.clear();
                                         // Trigger parent widget rebuild
                                         this.setState(() {});
-                                        ErrorDisplayUtils.showSuccessSnackBar(context, l10nDialog.priceCalendarDaysMarkedAvailable(count));
+                                        ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarDaysMarkedAvailable(count));
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
                                       }
                                     } finally {
                                       // Only reset if dialog still open
@@ -1844,11 +1843,11 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         _selectedDays.clear();
                                         // Trigger parent widget rebuild
                                         this.setState(() {});
-                                        ErrorDisplayUtils.showSuccessSnackBar(context, l10nDialog.priceCalendarDaysBlocked(count));
+                                        ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarDaysBlocked(count));
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
                                       }
                                     } finally {
                                       // Only reset if dialog still open
@@ -1923,11 +1922,11 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         _selectedDays.clear();
                                         // Trigger parent widget rebuild
                                         this.setState(() {});
-                                        ErrorDisplayUtils.showSuccessSnackBar(context, l10nDialog.priceCalendarCheckInBlockedForDays);
+                                        ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarCheckInBlockedForDays);
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
                                       }
                                     } finally {
                                       // Only reset if dialog still open
@@ -2003,11 +2002,11 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         _selectedDays.clear();
                                         // Trigger parent widget rebuild
                                         this.setState(() {});
-                                        ErrorDisplayUtils.showSuccessSnackBar(context, l10nDialog.priceCalendarCheckOutBlockedForDays);
+                                        ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarCheckOutBlockedForDays);
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
                                       }
                                     } finally {
                                       // Only reset if dialog still open

@@ -68,10 +68,12 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<BookingConfirmationScreen> createState() => _BookingConfirmationScreenState();
+  ConsumerState<BookingConfirmationScreen> createState() =>
+      _BookingConfirmationScreenState();
 }
 
-class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationScreen>
+class _BookingConfirmationScreenState
+    extends ConsumerState<BookingConfirmationScreen>
     with SingleTickerProviderStateMixin, ThemeDetectionMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -80,17 +82,18 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.elasticOut));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
 
     _animationController.forward();
   }
@@ -131,7 +134,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     final tr = WidgetTranslations.of(context, ref);
 
     // Use pure black background for dark theme in widget
-    final backgroundColor = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final backgroundColor = isDarkMode
+        ? ColorTokens.pureBlack
+        : colors.backgroundPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -159,7 +164,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                             paymentMethod: widget.paymentMethod,
                             colors: colors,
                             scaleAnimation: _scaleAnimation,
-                            customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
+                            customLogoUrl: widget
+                                .widgetSettings
+                                ?.themeOptions
+                                ?.customLogoUrl,
                           ),
 
                           const SizedBox(height: SpacingTokens.m),
@@ -167,7 +175,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                           // Payment verification warning (Stripe pending)
                           if (_shouldShowPaymentVerificationWarning)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: SpacingTokens.m),
+                              padding: const EdgeInsets.only(
+                                bottom: SpacingTokens.m,
+                              ),
                               child: InfoCardWidget(
                                 title: tr.paymentVerificationInProgress,
                                 message: tr.paymentVerificationMessage,
@@ -176,7 +186,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                             ),
 
                           // Booking reference card
-                          BookingReferenceCard(bookingReference: widget.bookingReference, colors: colors),
+                          BookingReferenceCard(
+                            bookingReference: widget.bookingReference,
+                            colors: colors,
+                          ),
 
                           const SizedBox(height: SpacingTokens.m),
 
@@ -213,9 +226,14 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
 
                           // Bank transfer instructions
                           if (widget.paymentMethod == 'bank_transfer' &&
-                              widget.widgetSettings?.bankTransferConfig?.hasCompleteDetails == true)
+                              widget
+                                      .widgetSettings
+                                      ?.bankTransferConfig
+                                      ?.hasCompleteDetails ==
+                                  true)
                             BankTransferInstructionsCard(
-                              bankConfig: widget.widgetSettings!.bankTransferConfig!,
+                              bankConfig:
+                                  widget.widgetSettings!.bankTransferConfig!,
                               bookingReference: widget.bookingReference,
                               colors: colors,
                             ),
@@ -232,17 +250,26 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                           ),
 
                           // Cancellation policy
-                          if (widget.widgetSettings?.allowGuestCancellation == true &&
-                              widget.widgetSettings?.cancellationDeadlineHours != null)
+                          if (widget.widgetSettings?.allowGuestCancellation ==
+                                  true &&
+                              widget
+                                      .widgetSettings
+                                      ?.cancellationDeadlineHours !=
+                                  null)
                             CancellationPolicySection(
                               isDarkMode: isDarkMode,
-                              deadlineHours: widget.widgetSettings!.cancellationDeadlineHours!,
+                              deadlineHours: widget
+                                  .widgetSettings!
+                                  .cancellationDeadlineHours!,
                               bookingReference: widget.bookingReference,
                               fromEmail: widget.emailConfig?.fromEmail,
                             ),
 
                           // Next steps section
-                          NextStepsSection(isDarkMode: isDarkMode, paymentMethod: widget.paymentMethod),
+                          NextStepsSection(
+                            isDarkMode: isDarkMode,
+                            paymentMethod: widget.paymentMethod,
+                          ),
 
                           const SizedBox(height: SpacingTokens.xl),
 
@@ -257,7 +284,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                           Text(
                             tr.saveBookingReference,
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                            style: TextStyle(
+                              fontSize: TypographyTokens.fontSizeS,
+                              color: colors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -285,7 +315,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   Widget _buildHeader(WidgetColorScheme colors) {
     final tr = WidgetTranslations.of(context, ref);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.m,
+        vertical: SpacingTokens.s,
+      ),
       child: Row(
         children: [
           IconButton(
@@ -314,7 +347,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     final tr = WidgetTranslations.of(context, ref);
     // Use white button with black text for dark theme
     final buttonBg = isDark ? ColorTokens.pureWhite : colors.buttonPrimary;
-    final buttonText = isDark ? ColorTokens.pureBlack : colors.buttonPrimaryText;
+    final buttonText = isDark
+        ? ColorTokens.pureBlack
+        : colors.buttonPrimaryText;
 
     return SizedBox(
       width: double.infinity,
@@ -324,11 +359,16 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
           backgroundColor: buttonBg,
           foregroundColor: buttonText,
           padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-          shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularRounded),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderTokens.circularRounded,
+          ),
         ),
         child: Text(
           tr.close,
-          style: const TextStyle(fontSize: TypographyTokens.fontSizeL, fontWeight: TypographyTokens.bold),
+          style: const TextStyle(
+            fontSize: TypographyTokens.fontSizeL,
+            fontWeight: TypographyTokens.bold,
+          ),
         ),
       ),
     );

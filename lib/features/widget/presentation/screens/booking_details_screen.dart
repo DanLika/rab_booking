@@ -28,10 +28,15 @@ class BookingDetailsScreen extends ConsumerStatefulWidget {
   final BookingDetailsModel booking;
   final WidgetSettings? widgetSettings;
 
-  const BookingDetailsScreen({super.key, required this.booking, this.widgetSettings});
+  const BookingDetailsScreen({
+    super.key,
+    required this.booking,
+    this.widgetSettings,
+  });
 
   @override
-  ConsumerState<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
+  ConsumerState<BookingDetailsScreen> createState() =>
+      _BookingDetailsScreenState();
 }
 
 class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
@@ -50,12 +55,14 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     // Initialize local status from widget (allows UI update after cancellation)
     _currentStatus = widget.booking.status;
 
-    _animationController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
 
     _animationController.forward();
   }
@@ -105,7 +112,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     }
 
     // Check cancellation deadline with safe date parsing
-    final deadlineHours = widget.widgetSettings!.cancellationDeadlineHours ?? 48;
+    final deadlineHours =
+        widget.widgetSettings!.cancellationDeadlineHours ?? 48;
 
     final hoursUntilCheckIn = _getHoursUntilCheckIn();
     // If date parsing fails (null), allow cancellation (owner can decide)
@@ -125,11 +133,13 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
       return tr.bookingCannotBeCancelled;
     }
 
-    if (widget.widgetSettings != null && !widget.widgetSettings!.allowGuestCancellation) {
+    if (widget.widgetSettings != null &&
+        !widget.widgetSettings!.allowGuestCancellation) {
       return tr.guestCancellationNotEnabled;
     }
 
-    final deadlineHours = widget.widgetSettings?.cancellationDeadlineHours ?? 48;
+    final deadlineHours =
+        widget.widgetSettings?.cancellationDeadlineHours ?? 48;
 
     // Safe date parsing with helper method
     final hoursUntilCheckIn = _getHoursUntilCheckIn();
@@ -208,7 +218,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     // Use pure black background for dark theme in widget
-    final backgroundColor = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final backgroundColor = isDarkMode
+        ? ColorTokens.pureBlack
+        : colors.backgroundPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -233,12 +245,18 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                         children: [
                           // Status banner - full width
                           // Uses _currentStatus which updates after cancellation
-                          BookingStatusBanner(status: _currentStatus, colors: colors),
+                          BookingStatusBanner(
+                            status: _currentStatus,
+                            colors: colors,
+                          ),
 
                           const SizedBox(height: SpacingTokens.l),
 
                           // Booking reference - full width, prominent
-                          DetailsReferenceCard(bookingReference: widget.booking.bookingReference, colors: colors),
+                          DetailsReferenceCard(
+                            bookingReference: widget.booking.bookingReference,
+                            colors: colors,
+                          ),
 
                           const SizedBox(height: SpacingTokens.l),
 
@@ -259,7 +277,10 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                               return Text(
                                 tr.needHelpContactOwner,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textTertiary),
+                                style: TextStyle(
+                                  fontSize: TypographyTokens.fontSizeS,
+                                  color: colors.textTertiary,
+                                ),
                               );
                             },
                           ),
@@ -283,7 +304,10 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
   Widget _buildHeader(WidgetColorScheme colors) {
     final tr = WidgetTranslations.of(context, ref);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.m,
+        vertical: SpacingTokens.s,
+      ),
       child: Center(
         child: Text(
           tr.myBooking,
@@ -329,7 +353,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           colors: colors,
         ),
         // Contact info
-        if (widget.booking.ownerEmail != null || widget.booking.ownerPhone != null) ...[
+        if (widget.booking.ownerEmail != null ||
+            widget.booking.ownerPhone != null) ...[
           const SizedBox(height: SpacingTokens.l),
           ContactOwnerCard(
             ownerEmail: widget.booking.ownerEmail,
@@ -338,17 +363,20 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           ),
         ],
         // Cancellation policy
-        if (widget.widgetSettings != null && widget.widgetSettings!.allowGuestCancellation) ...[
+        if (widget.widgetSettings != null &&
+            widget.widgetSettings!.allowGuestCancellation) ...[
           const SizedBox(height: SpacingTokens.l),
           CancellationPolicyCard(
-            deadlineHours: widget.widgetSettings!.cancellationDeadlineHours ?? 48,
+            deadlineHours:
+                widget.widgetSettings!.cancellationDeadlineHours ?? 48,
             checkIn: widget.booking.checkIn,
             colors: colors,
             translations: WidgetTranslations.of(context, ref),
           ),
         ],
         // Notes
-        if (widget.booking.notes != null && widget.booking.notes!.isNotEmpty) ...[
+        if (widget.booking.notes != null &&
+            widget.booking.notes!.isNotEmpty) ...[
           const SizedBox(height: SpacingTokens.l),
           BookingNotesCard(notes: widget.booking.notes!, colors: colors),
         ],
@@ -367,7 +395,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
     // Cancel button colors based on theme (from ColorTokens)
     final cancelBg = colors.statusCancelledBackground;
-    final cancelText = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
+    final cancelText = isDarkMode
+        ? ColorTokens.pureWhite
+        : ColorTokens.pureBlack;
 
     // If booking is cancelled, don't show cancel button
     if (isCancelled) {
@@ -381,11 +411,24 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         child: ElevatedButton.icon(
           onPressed: canCancel && !_isCancelling ? _handleCancelBooking : null,
           icon: _isCancelling
-              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: cancelText))
-              : Icon(Icons.cancel_outlined, color: canCancel ? cancelText : colors.textTertiary),
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: cancelText,
+                  ),
+                )
+              : Icon(
+                  Icons.cancel_outlined,
+                  color: canCancel ? cancelText : colors.textTertiary,
+                ),
           label: Text(
             _isCancelling ? tr.cancelling : tr.cancelBooking,
-            style: const TextStyle(fontSize: TypographyTokens.fontSizeL, fontWeight: TypographyTokens.bold),
+            style: const TextStyle(
+              fontSize: TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.bold,
+            ),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: canCancel ? cancelBg : colors.buttonDisabled,
@@ -393,7 +436,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             disabledBackgroundColor: colors.buttonDisabled,
             disabledForegroundColor: colors.textTertiary,
             padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-            shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularRounded),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderTokens.circularRounded,
+            ),
           ),
         ),
       ),

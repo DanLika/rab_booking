@@ -1144,6 +1144,34 @@ class WidgetTranslations {
     }
   }
 
+  String maxLabel(int max) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Maks: $max';
+      case 'de':
+        return 'Max: $max';
+      case 'it':
+        return 'Max: $max';
+      case 'en':
+      default:
+        return 'Max: $max';
+    }
+  }
+
+  String maxCapacityWarning(int max) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Maksimalni kapacitet: $max gostiju';
+      case 'de':
+        return 'Maximale Kapazität: $max Gäste';
+      case 'it':
+        return 'Capacità massima: $max ospiti';
+      case 'en':
+      default:
+        return 'Max capacity: $max guests';
+    }
+  }
+
   // ============================================================================
   // RESERVE BUTTON TRANSLATIONS
   // ============================================================================

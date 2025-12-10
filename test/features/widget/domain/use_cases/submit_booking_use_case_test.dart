@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:bookbed/core/constants/enums.dart';
 import 'package:bookbed/core/services/booking_service.dart';
+import 'package:bookbed/features/widget/domain/models/booking_submission_result.dart';
 import 'package:bookbed/features/widget/domain/models/widget_mode.dart';
 import 'package:bookbed/features/widget/domain/models/widget_settings.dart';
 import 'package:bookbed/features/widget/domain/use_cases/submit_booking_use_case.dart';
@@ -118,8 +119,9 @@ void main() {
 
         // Assert
         expect(result.isStripeFlow, false);
-        expect(result.booking, isNotNull);
-        expect(result.booking!.id, 'test-booking-123');
+        expect(result, isA<BookingSubmissionCreated>());
+        final createdResult = result as BookingSubmissionCreated;
+        expect(createdResult.booking.id, 'test-booking-123');
 
         // Verify booking service called with correct params
         verify(() => mockBookingService.createBooking(
@@ -294,10 +296,10 @@ void main() {
 
         // Assert
         expect(result.isStripeFlow, true);
-        expect(result.stripeBookingData, isNotNull);
-        expect(result.stripeBookingData!['unitId'], 'unit-1');
-        expect(result.stripeBookingData!['depositAmount'], 100.0);
-        expect(result.booking, isNull); // No booking created yet
+        expect(result, isA<BookingSubmissionStripe>());
+        final stripeResult = result as BookingSubmissionStripe;
+        expect(stripeResult.bookingData['unitId'], 'unit-1');
+        expect(stripeResult.bookingData['depositAmount'], 100.0);
 
         // Verify booking service called with Stripe payment method
         verify(() => mockBookingService.createBooking(
@@ -438,10 +440,11 @@ void main() {
 
         // Assert
         expect(result.isStripeFlow, false);
-        expect(result.booking, isNotNull);
-        expect(result.booking!.paymentMethod, 'bank_transfer');
-        expect(result.booking!.guestCount, 3);
-        expect(result.booking!.totalPrice, 600.0);
+        expect(result, isA<BookingSubmissionCreated>());
+        final createdResult = result as BookingSubmissionCreated;
+        expect(createdResult.booking.paymentMethod, 'bank_transfer');
+        expect(createdResult.booking.guestCount, 3);
+        expect(createdResult.booking.totalPrice, 600.0);
 
         // Verify booking created with correct payment method
         verify(() => mockBookingService.createBooking(
@@ -529,9 +532,10 @@ void main() {
 
         // Assert
         expect(result.isStripeFlow, false);
-        expect(result.booking, isNotNull);
-        expect(result.booking!.paymentMethod, 'pay_on_arrival');
-        expect(result.booking!.guestName, 'Jane Smith');
+        expect(result, isA<BookingSubmissionCreated>());
+        final createdResult = result as BookingSubmissionCreated;
+        expect(createdResult.booking.paymentMethod, 'pay_on_arrival');
+        expect(createdResult.booking.guestName, 'Jane Smith');
 
         // Verify booking created with requireOwnerApproval
         verify(() => mockBookingService.createBooking(

@@ -25,6 +25,7 @@ import '../../domain/use_cases/submit_booking_use_case.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
+import '../../domain/models/booking_submission_result.dart';
 import '../../domain/services/booking_validation_service.dart';
 import '../../domain/services/price_lock_service.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -1060,17 +1061,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
             // In iframe mode: let content determine height (for auto-resize)
             // In standalone mode: ensure content fills viewport (for centering)
-            final inIframe = isInIframe;
-            final useMinHeight = !inIframe;
-
-            // Debug log for iframe detection
-            if (kIsWeb) {
-              LoggingService.log(
-                '[IFRAME] isInIframe=$inIframe, useMinHeight=$useMinHeight, maxHeight=${constraints.maxHeight}',
-                tag: 'IFRAME_DEBUG',
-              );
-            }
-
             // Outer Stack: pill bar OUTSIDE scroll area for proper viewport centering
             return Stack(
               children: [
@@ -1078,9 +1068,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 SingleChildScrollView(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      minHeight: useMinHeight ? constraints.maxHeight : 0,
+                      // Always use full viewport height to enable vertical centering
+                      minHeight: constraints.maxHeight,
                     ),
-                    child: Stack(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center, // Vertically center content
                       children: [
                         // No-scroll content (embedded widget - host site scrolls)
                         // On large screens, center content with max-width constraint
@@ -1096,6 +1088,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                               ),
                               child: Column(
                                 key: _contentKey, // For iframe height measurement
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   // Custom title header (if configured)
                                   if (_widgetSettings?.themeOptions?.customTitle != null &&
@@ -1183,9 +1176,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         isDarkMode: isDarkMode,
                         colors: colors,
                         onSwitchToMonthView: () {
-                          LoggingService.log('[ROTATE_OVERLAY] Button pressed - switching to month view', tag: 'DEBUG');
                           ref.read(calendarViewProvider.notifier).state = CalendarViewType.month;
-                          LoggingService.log('[ROTATE_OVERLAY] CalendarView state set to month', tag: 'DEBUG');
                         },
                         translations: WidgetTranslations.of(context, ref),
                       ),
@@ -1910,22 +1901,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       final result = await submitBookingUseCase.execute(params);
 
-      // Handle Stripe flow: Redirect to checkout
-      if (result.isStripeFlow) {
-        await _handleStripePayment(bookingData: result.stripeBookingData!, guestEmail: _emailController.text.trim());
-        // User redirected to Stripe - no further action here
-        return;
+      // Pattern match on sealed class to handle different flows
+      switch (result) {
+        case BookingSubmissionStripe(:final bookingData):
+          // Stripe flow: Redirect to checkout (booking not created yet)
+          await _handleStripePayment(bookingData: bookingData, guestEmail: _emailController.text.trim());
+          return;
+
+        case BookingSubmissionCreated(:final booking):
+          // Non-Stripe flow: Booking already created, navigate to confirmation
+          final paymentMethod = widgetMode == WidgetMode.bookingPending ? 'pending' : _selectedPaymentMethod;
+          await _navigateToConfirmationAndCleanup(booking: booking, paymentMethod: paymentMethod);
       }
-
-      // Handle non-Stripe flow: Navigate to confirmation
-      final booking = result.booking;
-      final paymentMethod = widgetMode == WidgetMode.bookingPending ? 'pending' : _selectedPaymentMethod;
-
-      if (booking == null) {
-        throw Exception('Booking creation failed - no booking returned');
-      }
-
-      await _navigateToConfirmationAndCleanup(booking: booking, paymentMethod: paymentMethod);
     } on BookingConflictException catch (e) {
       // Race condition - dates were booked by another user
       if (mounted) {
@@ -2214,10 +2201,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final orientation = MediaQuery.of(context).orientation;
-
-    if (kIsWeb) {
-      LoggingService.log('[ROTATE_OVERLAY] Check: currentView=$currentView, width=$screenWidth, height=$screenHeight, orientation=$orientation', tag: 'DEBUG');
-    }
 
     // Show only in year view
     if (currentView != CalendarViewType.year) return false;

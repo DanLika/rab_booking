@@ -1,4 +1,5 @@
 import '../../data/helpers/booking_price_calculator.dart';
+import '../repositories/i_booking_calendar_repository.dart' show WeekendDays;
 
 /// Abstract price calculator interface.
 /// Separates pricing logic from Firebase implementation.
@@ -25,7 +26,7 @@ abstract class IPriceCalculator {
     required DateTime checkOut,
     required double basePrice,
     double? weekendBasePrice,
-    List<int>? weekendDays,
+    WeekendDays? weekendDays,
     bool checkAvailability = true,
   });
 
@@ -38,7 +39,7 @@ abstract class IPriceCalculator {
     required DateTime checkOut,
     required double basePrice,
     double? weekendBasePrice,
-    List<int>? weekendDays,
+    WeekendDays? weekendDays,
   });
 
   /// Get effective price for a single date.
@@ -50,6 +51,6 @@ abstract class IPriceCalculator {
     required DateTime date,
     required double basePrice,
     double? weekendBasePrice,
-    List<int>? weekendDays,
+    WeekendDays? weekendDays,
   });
 }

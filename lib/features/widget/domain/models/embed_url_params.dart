@@ -131,8 +131,7 @@ class EmbedUrlParams {
     }
 
     // Parse payment methods
-    final bool enableStripe =
-        params['enableStripe']?.toLowerCase() == 'true';
+    final bool enableStripe = params['enableStripe']?.toLowerCase() == 'true';
     final bool enableBank =
         params['enableBankTransfer']?.toLowerCase() != 'false'; // default: true
     final bool enablePayOnPlace =
@@ -169,12 +168,12 @@ class EmbedUrlParams {
     final bool isTransparent =
         params['transparentMode']?.toLowerCase() == 'true';
 
-    // Parse preset
-    final String? themePreset = params['preset'];
-    if (themePreset != null &&
-        !['neutral', 'flat', 'material'].contains(themePreset.toLowerCase())) {
-      // Invalid preset, ignore
-    }
+    // Parse preset (only accept valid values)
+    final rawPreset = params['preset']?.toLowerCase();
+    final String? themePreset =
+        rawPreset != null && ['neutral', 'flat', 'material'].contains(rawPreset)
+        ? rawPreset
+        : null;
 
     // Sanitize IDs - remove any path segments (e.g., /calendar suffix)
     String? sanitizeId(String? id) {
@@ -204,7 +203,7 @@ class EmbedUrlParams {
       borderRadius: radius,
       shadowLevel: shadowLvl,
       transparentMode: isTransparent,
-      preset: themePreset?.toLowerCase(),
+      preset: themePreset,
     );
   }
 
@@ -245,6 +244,9 @@ class EmbedUrlParams {
     String? locale,
     int? numberOfMonths,
     double? borderRadius,
+    int? shadowLevel,
+    bool? transparentMode,
+    String? preset,
   }) {
     return EmbedUrlParams(
       propertyId: propertyId ?? this.propertyId,
@@ -261,6 +263,9 @@ class EmbedUrlParams {
       locale: locale ?? this.locale,
       numberOfMonths: numberOfMonths ?? this.numberOfMonths,
       borderRadius: borderRadius ?? this.borderRadius,
+      shadowLevel: shadowLevel ?? this.shadowLevel,
+      transparentMode: transparentMode ?? this.transparentMode,
+      preset: preset ?? this.preset,
     );
   }
 

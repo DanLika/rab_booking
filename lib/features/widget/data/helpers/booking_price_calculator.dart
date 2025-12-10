@@ -1,8 +1,9 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../../../core/services/logging_service.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/daily_price_model.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/services/i_price_calculator.dart';
@@ -24,7 +25,7 @@ class PriceCalculationResult {
   /// Whether base price fallback was used for any night.
   final bool usedFallback;
 
-  /// Number of nights that used weekend pricing.
+  /// Number of nights that used weekend pricing (from any source).
   final int weekendNights;
 
   const PriceCalculationResult({
@@ -40,11 +41,11 @@ class PriceCalculationResult {
 
   /// Factory for zero price (when calculation fails).
   const PriceCalculationResult.zero()
-      : totalPrice = 0.0,
-        nights = 0,
-        priceBreakdown = const {},
-        usedFallback = false,
-        weekendNights = 0;
+    : totalPrice = 0.0,
+      nights = 0,
+      priceBreakdown = const {},
+      usedFallback = false,
+      weekendNights = 0;
 }
 
 /// Calculates booking prices using price hierarchy.
@@ -76,11 +77,13 @@ class BookingPriceCalculator implements IPriceCalculator {
   final FirebaseFirestore _firestore;
   final AvailabilityChecker? _availabilityChecker;
 
+  static const _dailyPricesCollection = 'daily_prices';
+
   BookingPriceCalculator({
     required FirebaseFirestore firestore,
     AvailabilityChecker? availabilityChecker,
-  })  : _firestore = firestore,
-        _availabilityChecker = availabilityChecker;
+  }) : _firestore = firestore,
+       _availabilityChecker = availabilityChecker;
 
   /// Calculate total price for a booking with availability check.
   ///
@@ -98,6 +101,8 @@ class BookingPriceCalculator implements IPriceCalculator {
     try {
       final normalizedCheckIn = DateNormalizer.normalize(checkIn);
       final normalizedCheckOut = DateNormalizer.normalize(checkOut);
+      final effectiveWeekendDays =
+          weekendDays ?? WidgetConstants.defaultWeekendDays;
 
       // Validate date range
       final nights = DateNormalizer.nightsBetween(
@@ -143,7 +148,7 @@ class BookingPriceCalculator implements IPriceCalculator {
         priceMap: priceMap,
         basePrice: basePrice,
         weekendBasePrice: weekendBasePrice,
-        weekendDays: weekendDays ?? WidgetConstants.defaultWeekendDays,
+        weekendDays: effectiveWeekendDays,
       );
     } catch (e) {
       if (e is DatesNotAvailableException) rethrow;
@@ -164,17 +169,15 @@ class BookingPriceCalculator implements IPriceCalculator {
     required double basePrice,
     double? weekendBasePrice,
     List<int>? weekendDays,
-  }) {
-    return calculate(
-      unitId: unitId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-      basePrice: basePrice,
-      weekendBasePrice: weekendBasePrice,
-      weekendDays: weekendDays,
-      checkAvailability: false,
-    );
-  }
+  }) => calculate(
+    unitId: unitId,
+    checkIn: checkIn,
+    checkOut: checkOut,
+    basePrice: basePrice,
+    weekendBasePrice: weekendBasePrice,
+    weekendDays: weekendDays,
+    checkAvailability: false,
+  );
 
   /// Fetch daily prices from Firestore.
   Future<Map<String, DailyPriceModel>> _fetchDailyPrices({
@@ -183,13 +186,13 @@ class BookingPriceCalculator implements IPriceCalculator {
     required DateTime checkOut,
   }) async {
     final snapshot = await _firestore
-        .collection('daily_prices')
+        .collection(_dailyPricesCollection)
         .where('unit_id', isEqualTo: unitId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(checkIn))
         .where('date', isLessThan: Timestamp.fromDate(checkOut))
         .get();
 
-    final Map<String, DailyPriceModel> priceMap = {};
+    final priceMap = <String, DailyPriceModel>{};
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
@@ -226,7 +229,9 @@ class BookingPriceCalculator implements IPriceCalculator {
     while (current.isBefore(checkOut)) {
       final key = DateKeyGenerator.fromDate(current);
       final dailyPrice = priceMap[key];
-      double priceForNight;
+      final isWeekend = _isWeekendDay(current, weekendDays);
+
+      final double priceForNight;
 
       if (dailyPrice != null) {
         // Use daily_price with its getEffectivePrice logic
@@ -234,26 +239,22 @@ class BookingPriceCalculator implements IPriceCalculator {
       } else {
         // No daily_price → use fallback from unit
         usedFallback = true;
-        final isWeekend = weekendDays.contains(current.weekday);
-
-        if (isWeekend && weekendBasePrice != null) {
-          priceForNight = weekendBasePrice;
-          weekendNights++;
-        } else {
-          priceForNight = basePrice;
-        }
+        priceForNight = isWeekend && weekendBasePrice != null
+            ? weekendBasePrice
+            : basePrice;
       }
+
+      // Count weekend nights regardless of price source
+      if (isWeekend) weekendNights++;
 
       total += priceForNight;
       priceBreakdown[key] = priceForNight;
       current = current.add(const Duration(days: 1));
     }
 
-    final nights = priceBreakdown.length;
-
     return PriceCalculationResult(
       totalPrice: total,
-      nights: nights,
+      nights: priceBreakdown.length,
       priceBreakdown: priceBreakdown,
       usedFallback: usedFallback,
       weekendNights: weekendNights,
@@ -263,6 +264,13 @@ class BookingPriceCalculator implements IPriceCalculator {
   /// Get effective price for a single date.
   ///
   /// Useful for displaying price in calendar UI.
+  ///
+  /// **WARNING: DO NOT use this method in loops** (e.g., iterating through
+  /// calendar days). Each call performs a Firestore query, which would result
+  /// in N queries for N days. Instead, use [calculate] or [_fetchDailyPrices]
+  /// to batch-fetch prices for a date range.
+  // TODO(performance): Consider deprecating this method or adding a bulk
+  // alternative if calendar UI needs single-date prices for many dates.
   @override
   Future<double> getEffectivePriceForDate({
     required String unitId,
@@ -278,7 +286,7 @@ class BookingPriceCalculator implements IPriceCalculator {
 
       // Try to fetch daily price
       final snapshot = await _firestore
-          .collection('daily_prices')
+          .collection(_dailyPricesCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('date', isEqualTo: Timestamp.fromDate(normalizedDate))
           .limit(1)
@@ -294,8 +302,8 @@ class BookingPriceCalculator implements IPriceCalculator {
       }
 
       // Fallback to base/weekend price
-      final isWeekend = effectiveWeekendDays.contains(normalizedDate.weekday);
-      if (isWeekend && weekendBasePrice != null) {
+      if (_isWeekendDay(normalizedDate, effectiveWeekendDays) &&
+          weekendBasePrice != null) {
         return weekendBasePrice;
       }
 
@@ -305,4 +313,8 @@ class BookingPriceCalculator implements IPriceCalculator {
       return basePrice;
     }
   }
+
+  /// Check if a date falls on a weekend day.
+  bool _isWeekendDay(DateTime date, List<int> weekendDays) =>
+      weekendDays.contains(date.weekday);
 }

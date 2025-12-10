@@ -107,13 +107,13 @@ class PriceChangeDialogBuilder {
         content: Text(
           priceIncreased
               ? 'The price has increased by $symbol$changeFormatted since you started booking.\n\n'
-                  'Original: $symbol$originalFormatted\n'
-                  'Current: $symbol$currentFormatted\n\n'
-                  'Do you want to proceed with the new price?'
+                    'Original: $symbol$originalFormatted\n'
+                    'Current: $symbol$currentFormatted\n\n'
+                    'Do you want to proceed with the new price?'
               : 'Good news! The price decreased by $symbol$changeFormatted.\n\n'
-                  'Original: $symbol$originalFormatted\n'
-                  'Current: $symbol$currentFormatted\n\n'
-                  'Proceed with the new price?',
+                    'Original: $symbol$originalFormatted\n'
+                    'Current: $symbol$currentFormatted\n\n'
+                    'Proceed with the new price?',
         ),
         actions: [
           TextButton(
@@ -123,8 +123,9 @@ class PriceChangeDialogBuilder {
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  priceIncreased ? config.increaseColor : config.decreaseColor,
+              backgroundColor: priceIncreased
+                  ? config.increaseColor
+                  : config.decreaseColor,
             ),
             child: Text(config.proceedButtonText),
           ),
@@ -160,24 +161,22 @@ class PriceChangeDialogBuilder {
       content: Text(
         priceIncreased
             ? 'The price has increased by $symbol$changeFormatted since you started booking.\n\n'
-                'Original: $symbol$originalFormatted\n'
-                'Current: $symbol$currentFormatted\n\n'
-                'Do you want to proceed with the new price?'
+                  'Original: $symbol$originalFormatted\n'
+                  'Current: $symbol$currentFormatted\n\n'
+                  'Do you want to proceed with the new price?'
             : 'Good news! The price decreased by $symbol$changeFormatted.\n\n'
-                'Original: $symbol$originalFormatted\n'
-                'Current: $symbol$currentFormatted\n\n'
-                'Proceed with the new price?',
+                  'Original: $symbol$originalFormatted\n'
+                  'Current: $symbol$currentFormatted\n\n'
+                  'Proceed with the new price?',
       ),
       actions: [
-        TextButton(
-          onPressed: onCancel,
-          child: Text(config.cancelButtonText),
-        ),
+        TextButton(onPressed: onCancel, child: Text(config.cancelButtonText)),
         ElevatedButton(
           onPressed: onProceed,
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                priceIncreased ? config.increaseColor : config.decreaseColor,
+            backgroundColor: priceIncreased
+                ? config.increaseColor
+                : config.decreaseColor,
           ),
           child: Text(config.proceedButtonText),
         ),
@@ -233,7 +232,8 @@ class PriceLockService {
     required BookingPriceCalculation? lockedCalculation,
     required VoidCallback onLockUpdated,
     double tolerance = defaultTolerance,
-    PriceChangeDialogConfig dialogConfig = PriceChangeDialogConfig.defaultConfig,
+    PriceChangeDialogConfig dialogConfig =
+        PriceChangeDialogConfig.defaultConfig,
   }) async {
     // No locked price - no change detection needed
     if (lockedCalculation == null) {

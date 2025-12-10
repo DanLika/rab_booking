@@ -34,6 +34,7 @@ class CalendarTooltipBuilder {
   /// - [colors]: Widget color scheme
   /// - [tooltipHeight]: Height of tooltip (150 for year, 120 for month)
   /// - [ignorePointer]: Whether to wrap in IgnorePointer (true for month)
+  /// - [fallbackPrice]: Unit's base price to use when daily price is not set
   static Widget build({
     required BuildContext context,
     required DateTime? hoveredDate,
@@ -42,6 +43,7 @@ class CalendarTooltipBuilder {
     required WidgetColorScheme colors,
     double tooltipHeight = 150.0,
     bool ignorePointer = false,
+    double? fallbackPrice,
   }) {
     if (hoveredDate == null) return const SizedBox.shrink();
 
@@ -75,11 +77,13 @@ class CalendarTooltipBuilder {
     final effectiveStatus =
         dateInfo.isPendingBooking ? DateStatus.pending : dateInfo.status;
 
+    // Use fallback price (unit's base pricePerNight) when no daily_price exists
+    final effectivePrice = dateInfo.price ?? fallbackPrice;
+
     final tooltip = CalendarHoverTooltip(
       date: hoveredDate,
-      price: dateInfo.price,
+      price: effectivePrice,
       status: effectiveStatus,
-      position: Offset(xPosition, yPosition),
       colors: colors,
     );
 

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'payment_config_base.dart';
 
 /// Stripe payment configuration
@@ -16,6 +18,7 @@ import 'payment_config_base.dart';
 /// final deposit = stripeConfig.calculateDeposit(500.0); // 100.0
 /// final remaining = stripeConfig.calculateRemaining(500.0); // 400.0
 /// ```
+@immutable
 class StripePaymentConfig with PaymentConfigBase {
   final bool enabled;
 

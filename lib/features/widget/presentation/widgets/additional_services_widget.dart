@@ -13,7 +13,16 @@ class AdditionalServicesWidget extends ConsumerWidget {
   final int nights;
   final int guests;
 
-  const AdditionalServicesWidget({super.key, required this.unitId, this.nights = 1, this.guests = 1});
+  /// Callback when service selection changes (for iframe height updates)
+  final VoidCallback? onSelectionChanged;
+
+  const AdditionalServicesWidget({
+    super.key,
+    required this.unitId,
+    this.nights = 1,
+    this.guests = 1,
+    this.onSelectionChanged,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +37,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        return _buildServicesWidget(context, ref, services, isDarkMode, colors);
+        return _buildServicesWidget(context, ref, services, isDarkMode, colors, onSelectionChanged);
       },
       loading: () => const SizedBox.shrink(),
       error: (error, stackTrace) => const SizedBox.shrink(),
@@ -41,6 +50,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
     List<AdditionalServiceModel> services,
     bool isDarkMode,
     MinimalistColorSchemeAdapter colors,
+    VoidCallback? onSelectionChanged,
   ) {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
@@ -72,7 +82,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.m),
           Column(
             children: [
-              ...services.map((service) => _buildServiceItem(context, ref, service, colors)),
+              ...services.map((service) => _buildServiceItem(context, ref, service, colors, onSelectionChanged)),
               const SizedBox(height: SpacingTokens.m),
               Divider(color: colors.borderDefault),
               const SizedBox(height: SpacingTokens.xs),
@@ -89,6 +99,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
     WidgetRef ref,
     AdditionalServiceModel service,
     MinimalistColorSchemeAdapter colors,
+    VoidCallback? onSelectionChanged,
   ) {
     final selectedServices = ref.watch(selectedAdditionalServicesProvider);
     final quantity = selectedServices[service.id] ?? 0;
@@ -122,6 +133,8 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   return newState;
                 });
               }
+              // Notify parent for iframe height update
+              onSelectionChanged?.call();
             },
           ),
           const SizedBox(width: SpacingTokens.xs),
@@ -183,6 +196,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                             ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
                               return {...state, service.id: quantity - 1};
                             });
+                            onSelectionChanged?.call();
                           }
                         : null,
                     padding: const EdgeInsets.all(SpacingTokens.xxs),
@@ -216,6 +230,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                       ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
                         return {...state, service.id: quantity + 1};
                       });
+                      onSelectionChanged?.call();
                     },
                     padding: const EdgeInsets.all(SpacingTokens.xxs),
                     constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

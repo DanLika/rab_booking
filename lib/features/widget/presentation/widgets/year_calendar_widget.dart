@@ -77,8 +77,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               });
             }
           },
-          child: Column(
-            children: [
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Take only needed height for iframe embedding
+              children: [
               // Combined header matching month/week view layout
               CalendarCombinedHeaderWidget(
                 colors: colors,
@@ -93,14 +95,14 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                   colors: colors,
                   translations: WidgetTranslations.of(context, ref),
                 ),
-              Expanded(
-                child: calendarData.when(
-                  data: (data) => _buildYearGridWithIntegratedSelector(data, colors),
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
-                ),
+              // No Expanded - calendar takes natural height for proper inline layout
+              calendarData.when(
+                data: (data) => _buildYearGridWithIntegratedSelector(data, colors),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
               ),
-            ],
+              ],
+            ),
           ),
         ),
         // Hover tooltip overlay (desktop) - highest z-index
@@ -112,6 +114,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               mousePosition: _mousePosition,
               data: data,
               colors: colors,
+              // Use unit's base price as fallback when no daily_price exists
+              fallbackPrice: widgetCtxAsync.valueOrNull?.unit.pricePerNight,
             ),
             loading: () => const SizedBox.shrink(),
             error: (error, stack) => const SizedBox.shrink(),
@@ -200,30 +204,42 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   }
 
   Widget _buildYearGridWithIntegratedSelector(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
-    // Get responsive cell size
-    final cellSize = ResponsiveHelper.getYearCellSize(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1024;
+    final padding = isDesktop ? SpacingTokens.l : SpacingTokens.m;
 
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(isDesktop ? SpacingTokens.l : SpacingTokens.m),
-        child: Stack(
-          children: [
-            // Year calendar grid - part of page flow (no internal scroll)
-            SizedBox(
-              width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
-              child: Column(
-                children: [
-                  _buildHeaderRowWithYearSelector(cellSize, colors),
-                  const SizedBox(height: SpacingTokens.s),
-                  ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize, colors)),
-                ],
-              ),
+    // Use LayoutBuilder to get actual available width for accurate cell sizing
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate available width after padding
+        final availableWidth = constraints.maxWidth - (padding * 2);
+        // Get cell size that fits within available width
+        final cellSize = ResponsiveHelper.getYearCellSizeForWidth(availableWidth);
+        final calendarWidth = ConstraintTokens.monthLabelWidth + (31 * cellSize);
+
+        return Center(
+          child: Padding(
+            // No top padding - spacing handled by CalendarCompactLegend margin
+            padding: EdgeInsets.only(left: padding, right: padding, bottom: padding),
+            child: Stack(
+              children: [
+                // Year calendar grid - sized to fit within container
+                SizedBox(
+                  width: calendarWidth,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min, // Take only needed height
+                    children: [
+                      _buildHeaderRowWithYearSelector(cellSize, colors),
+                      const SizedBox(height: SpacingTokens.s),
+                      ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize, colors)),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -304,47 +320,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  /// Generate semantic label for screen readers (localized) - year view
-  String _getSemanticLabelForDateYear(
-    DateTime date,
-    DateStatus status,
-    bool isPending,
-    bool isRangeStart,
-    bool isRangeEnd,
-    WidgetTranslations translations,
-  ) {
-    // Status description (localized)
-    final statusStr = status == DateStatus.available
-        ? translations.semanticAvailable
-        : status == DateStatus.booked
-        ? translations.semanticBooked
-        : status == DateStatus.partialCheckIn
-        ? translations.semanticCheckIn
-        : status == DateStatus.partialCheckOut
-        ? translations.semanticCheckOut
-        : status == DateStatus.partialBoth
-        ? translations.semanticTurnover
-        : status == DateStatus.blocked
-        ? translations.semanticBlocked
-        : status == DateStatus.disabled
-        ? translations.semanticUnavailable
-        : translations.semanticPastReservation;
-
-    final pendingStr = isPending ? ', ${translations.semanticPendingApproval}' : '';
-
-    // Range indicators (localized)
-    final rangeStr = isRangeStart
-        ? ', ${translations.semanticCheckInDate}'
-        : isRangeEnd
-        ? ', ${translations.semanticCheckOutDate}'
-        : '';
-
-    // Format date (localized)
-    final dateStr = translations.formatDateForSemantic(date);
-
-    return '$dateStr, $statusStr$pendingStr$rangeStr';
-  }
-
   Widget _buildDayCell(
     int month,
     int day,
@@ -393,13 +368,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
       // Generate semantic label for screen readers (localized)
       final translations = WidgetTranslations.of(context, ref);
-      final String semanticLabel = _getSemanticLabelForDateYear(
-        date,
-        dateInfo.status,
-        dateInfo.isPendingBooking,
-        isRangeStart,
-        isRangeEnd,
-        translations,
+      final String semanticLabel = CalendarDateUtils.getSemanticLabel(
+        date: date,
+        status: dateInfo.status,
+        isPending: dateInfo.isPendingBooking,
+        isRangeStart: isRangeStart,
+        isRangeEnd: isRangeEnd,
+        translations: translations,
       );
 
       return Semantics(
@@ -429,8 +404,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             });
           },
           child: GestureDetector(
-            // Disable tap in calendar_only mode (when onRangeSelected is null)
-            onTap: widget.onRangeSelected != null ? () => _onDateTapped(date, dateInfo, data, colors) : null,
+            // In calendar_only mode (onRangeSelected is null), show helpful snackbar
+            onTap: widget.onRangeSelected != null
+                ? () => _onDateTapped(date, dateInfo, data, colors)
+                : () => _onViewOnlyTap(translations),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               width: cellSize,
@@ -669,6 +646,14 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     });
 
     widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
+  }
+
+  /// Show helpful snackbar when user taps in calendar_only mode
+  void _onViewOnlyTap(WidgetTranslations translations) {
+    SnackBarHelper.showInfo(
+      context: context,
+      message: translations.calendarOnlyTapMessage,
+    );
   }
 
   /// Check if there are any booked, pending, or partial dates between start and end (inclusive)

@@ -11,22 +11,22 @@ class ValidationResult {
   final bool isWarning; // Warning doesn't block, just shows message
 
   const ValidationResult.success()
-      : isValid = true,
-        errorMessage = null,
-        snackBarDuration = const Duration(seconds: 3),
-        isWarning = false;
+    : isValid = true,
+      errorMessage = null,
+      snackBarDuration = const Duration(seconds: 3),
+      isWarning = false;
 
   const ValidationResult.failure(
     this.errorMessage, {
     this.snackBarDuration = const Duration(seconds: 3),
-  })  : isValid = false,
-        isWarning = false;
+  }) : isValid = false,
+       isWarning = false;
 
   const ValidationResult.warning(
     this.errorMessage, {
     this.snackBarDuration = const Duration(seconds: 7),
-  })  : isValid = true, // Warnings don't block
-        isWarning = true;
+  }) : isValid = true, // Warnings don't block
+       isWarning = true;
 }
 
 /// Service for validating booking form data
@@ -102,11 +102,7 @@ class BookingValidationService {
     // Bug #65 Fix: Use UTC for DST-safe date comparison
     final now = DateTime.now().toUtc();
     final today = DateTime.utc(now.year, now.month, now.day);
-    final checkInDate = DateTime.utc(
-      checkIn.year,
-      checkIn.month,
-      checkIn.day,
-    );
+    final checkInDate = DateTime.utc(checkIn.year, checkIn.month, checkIn.day);
 
     if (checkInDate.isAtSameMomentAs(today)) {
       if (now.hour >= checkInTimeHour) {

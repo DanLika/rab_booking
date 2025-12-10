@@ -97,8 +97,81 @@ void setupIframeScrollCapture() {
     bodyElement?.style.setProperty('overflow', 'hidden');
     bodyElement?.style.setProperty('height', '100%');
 
-    web.console.log('[IFRAME] Scroll capture configured'.toJS);
+    // Add wheel event listener to prevent scroll propagation to parent
+    // This is critical for desktop where wheel scrolling is common
+    web.document.addEventListener(
+      'wheel',
+      _handleWheelEvent.toJS,
+      web.AddEventListenerOptions(passive: false),
+    );
+
+    web.console.log('[IFRAME] Scroll capture configured with wheel handler'.toJS);
   } catch (e) {
     web.console.log('[IFRAME] Scroll capture error: $e'.toJS);
   }
+}
+
+/// Handle wheel events to prevent propagation to parent window
+/// when scrollable elements reach their boundaries
+void _handleWheelEvent(web.WheelEvent event) {
+  // Find the scrollable element under the cursor
+  final target = event.target;
+  if (target == null) return;
+
+  final scrollableElement = _findScrollableParent(target as web.Element);
+
+  if (scrollableElement != null) {
+    final scrollTop = scrollableElement.scrollTop;
+    final scrollHeight = scrollableElement.scrollHeight;
+    final clientHeight = scrollableElement.clientHeight;
+
+    // Calculate if we're at scroll boundaries
+    final atTop = scrollTop <= 0;
+    final atBottom = scrollTop + clientHeight >= scrollHeight - 1; // -1 for rounding
+
+    // Determine scroll direction (positive deltaY = scrolling down)
+    final scrollingDown = event.deltaY > 0;
+    final scrollingUp = event.deltaY < 0;
+
+    // Prevent default if trying to scroll beyond boundaries
+    // This stops the event from propagating to parent window
+    if ((scrollingUp && atTop) || (scrollingDown && atBottom)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  } else {
+    // No scrollable element found - prevent all scroll propagation
+    // This ensures parent page never scrolls from iframe wheel events
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+
+/// Find the nearest scrollable parent element
+web.Element? _findScrollableParent(web.Element element) {
+  web.Element? current = element;
+
+  while (current != null) {
+    // Check if element is scrollable
+    final style = web.window.getComputedStyle(current);
+    final overflowY = style.getPropertyValue('overflow-y');
+    final overflow = style.getPropertyValue('overflow');
+
+    final isScrollable = overflowY == 'auto' ||
+        overflowY == 'scroll' ||
+        overflow == 'auto' ||
+        overflow == 'scroll';
+
+    if (isScrollable) {
+      // Verify it actually has scrollable content
+      if (current.scrollHeight > current.clientHeight) {
+        return current;
+      }
+    }
+
+    // Move to parent
+    current = current.parentElement;
+  }
+
+  return null;
 }

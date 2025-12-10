@@ -62,18 +62,11 @@ class TaxLegalConfig {
 
   /// Get the full disclaimer text to display.
   ///
-  /// Returns:
-  /// - Empty string if [enabled] is false
-  /// - Default Croatian tax text if [useDefaultText] is true
-  /// - [customText] if [useDefaultText] is false
+  /// Returns empty string if disabled, default text if [useDefaultText],
+  /// otherwise [customText].
   String get disclaimerText {
     if (!enabled) return '';
-
-    if (useDefaultText) {
-      return _defaultCroatianTaxText;
-    } else {
-      return customText ?? '';
-    }
+    return useDefaultText ? _defaultCroatianTaxText : (customText ?? '');
   }
 
   /// Short version of disclaimer for emails (3-4 key points).

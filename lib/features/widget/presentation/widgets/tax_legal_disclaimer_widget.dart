@@ -61,7 +61,8 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
     return Container(
       margin: const EdgeInsets.only(left: SpacingTokens.m, right: SpacingTokens.m, top: SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundTertiary,
+        // Pure white (light) / pure black (dark) for form containers
+        color: colors.backgroundPrimary,
         border: Border.all(color: colors.borderDefault),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         boxShadow: isDarkMode ? MinimalistShadows.medium : MinimalistShadows.light,

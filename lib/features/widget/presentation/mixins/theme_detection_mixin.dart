@@ -19,7 +19,8 @@ import '../providers/theme_provider.dart';
 ///   }
 /// }
 /// ```
-mixin ThemeDetectionMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
+mixin ThemeDetectionMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
   /// Flag to prevent override after initial detection.
   /// This preserves manual theme toggles by the user.
   bool _hasDetectedSystemTheme = false;

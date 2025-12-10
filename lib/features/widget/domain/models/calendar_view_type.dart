@@ -3,34 +3,19 @@ enum CalendarViewType {
   month,
   year;
 
-  String get label {
-    switch (this) {
-      case CalendarViewType.month:
-        return 'Month';
-      case CalendarViewType.year:
-        return 'Year';
-    }
-  }
+  /// Minimum width required for desktop/year view
+  static const double desktopMinWidth = 1024;
+
+  String get label => switch (this) {
+    CalendarViewType.month => 'Month',
+    CalendarViewType.year => 'Year',
+  };
 
   /// Check if this view is available on the given screen size
-  bool isAvailableForWidth(double width) {
-    // Year view only on desktop (>1024px)
-    if (this == CalendarViewType.year) {
-      return width >= 1024;
-    }
-    // Month available on all devices
-    return true;
-  }
+  bool isAvailableForWidth(double width) =>
+      this == CalendarViewType.month || width >= desktopMinWidth;
 
   /// Get default view for screen width
-  static CalendarViewType getDefaultForWidth(double width) {
-    // Desktop: default to year view
-    if (width >= 1024) {
-      return CalendarViewType.year;
-    }
-    // Tablet and Mobile: default to month view
-    else {
-      return CalendarViewType.month;
-    }
-  }
+  static CalendarViewType getDefaultForWidth(double width) =>
+      width >= desktopMinWidth ? CalendarViewType.year : CalendarViewType.month;
 }

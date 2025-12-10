@@ -47,15 +47,23 @@ class ResponsiveHelper {
     );
   }
 
-  /// Get year cell size
+  /// Get year cell size based on available width
+  /// [availableWidth] is the actual container width (after padding)
+  static double getYearCellSizeForWidth(double availableWidth) {
+    // monthLabelWidth = 60px (from ConstraintTokens)
+    const monthLabelWidth = 60.0;
+    final widthForCells = availableWidth - monthLabelWidth;
+    // 31 days in a month - calculate cell size to fit
+    // Minimum 14px to keep text readable, max 40px for aesthetics
+    return (widthForCells / 31).clamp(14.0, 40.0);
+  }
+
+  /// Legacy method - uses screen width estimate (less accurate)
   static double getYearCellSize(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-
-    // Calculate cell size dynamically based on available width
-    // Reserve space for month label (80px) and padding (32px)
-    final availableWidth = screenWidth - 112;
-    final calculatedCellSize = (availableWidth / 31).clamp(20.0, 40.0);
-
-    return calculatedCellSize;
+    // Estimate padding: 32px mobile, 48px desktop
+    final isDesktop = screenWidth >= tablet;
+    final estimatedPadding = isDesktop ? 48.0 : 32.0;
+    return getYearCellSizeForWidth(screenWidth - estimatedPadding);
   }
 }

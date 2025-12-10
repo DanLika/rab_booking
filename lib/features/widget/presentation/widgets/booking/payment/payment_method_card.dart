@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
@@ -56,11 +57,21 @@ class PaymentMethodCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AutoSizeText(
                   title,
+                  maxLines: 1,
+                  minFontSize: 11,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
                 ),
-                if (subtitle != null) Text(subtitle!, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+                if (subtitle != null)
+                  AutoSizeText(
+                    subtitle!,
+                    maxLines: 2,
+                    minFontSize: 10,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                  ),
               ],
             ),
           ),

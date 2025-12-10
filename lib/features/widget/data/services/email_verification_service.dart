@@ -1,10 +1,15 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import '../../../../../core/services/logging_service.dart';
+import 'package:flutter/foundation.dart';
 
-/// Response model for email verification status check
+import '../../../../core/services/logging_service.dart';
+
+const _tag = '[EmailVerification]';
+
+/// Response model for email verification status check.
 ///
 /// Returned by [EmailVerificationService.checkStatus] with detailed
 /// information about email verification state.
+@immutable
 class EmailVerificationStatus {
   /// Is email verified and not expired?
   final bool verified;
@@ -15,13 +20,13 @@ class EmailVerificationStatus {
   /// Is verification expired (past TTL)?
   final bool expired;
 
-  /// How many minutes remaining until expiry (0 if expired)
+  /// How many minutes remaining until expiry (0 if expired).
   final int remainingMinutes;
 
-  /// ISO timestamp when email was verified (null if not verified)
+  /// ISO timestamp when email was verified (null if not verified).
   final String? verifiedAt;
 
-  /// Session ID for tracking (from backend)
+  /// Session ID for tracking (from backend).
   final String? sessionId;
 
   const EmailVerificationStatus({
@@ -33,7 +38,7 @@ class EmailVerificationStatus {
     this.sessionId,
   });
 
-  /// Parse response from Cloud Function
+  /// Parse response from Cloud Function.
   factory EmailVerificationStatus.fromJson(Map<String, dynamic> json) {
     return EmailVerificationStatus(
       verified: json['verified'] as bool? ?? false,
@@ -45,32 +50,25 @@ class EmailVerificationStatus {
     );
   }
 
-  /// Helper: Is email verified and NOT expired?
+  /// Whether email is verified and NOT expired.
   ///
   /// Use this for quick boolean check before proceeding with booking.
   bool get isValid => verified && !expired;
 
-  /// User-friendly status message for UI display
+  /// User-friendly status message for UI display.
   String get statusMessage {
-    if (isValid) {
-      return 'Email verified ✓ (expires in $remainingMinutes min)';
-    } else if (expired) {
-      return 'Verification expired. Please verify again.';
-    } else if (exists) {
-      return 'Verification pending.';
-    } else {
-      return 'Email not verified.';
-    }
+    if (isValid) return 'Email verified ✓ (expires in $remainingMinutes min)';
+    if (expired) return 'Verification expired. Please verify again.';
+    if (exists) return 'Verification pending.';
+    return 'Email not verified.';
   }
 
   @override
-  String toString() {
-    return 'EmailVerificationStatus('
-        'verified: $verified, '
-        'expired: $expired, '
-        'remainingMinutes: $remainingMinutes, '
-        'sessionId: $sessionId)';
-  }
+  String toString() => 'EmailVerificationStatus('
+      'verified: $verified, '
+      'expired: $expired, '
+      'remainingMinutes: $remainingMinutes, '
+      'sessionId: $sessionId)';
 }
 
 /// Service for email verification operations
@@ -114,9 +112,7 @@ class EmailVerificationService {
   /// ```
   static Future<EmailVerificationStatus> checkStatus(String email) async {
     try {
-      LoggingService.logOperation(
-        '[EmailVerificationService] Checking status for: $email',
-      );
+      LoggingService.logOperation('$_tag Checking status for: $email');
 
       final callable = _functions.httpsCallable('checkEmailVerificationStatus');
       final result = await callable.call({'email': email});
@@ -125,22 +121,16 @@ class EmailVerificationService {
       final status = EmailVerificationStatus.fromJson(data);
 
       LoggingService.logSuccess(
-        '[EmailVerificationService] Status: verified=${status.verified}, '
+        '$_tag Status: verified=${status.verified}, '
         'expired=${status.expired}, remaining=${status.remainingMinutes}min',
       );
 
       return status;
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError(
-        '[EmailVerificationService] Functions error: ${e.code} - ${e.message}',
-        e,
-      );
+      await LoggingService.logError('$_tag Functions error: ${e.code}', e);
       rethrow;
     } catch (e) {
-      await LoggingService.logError(
-        '[EmailVerificationService] Unexpected error',
-        e,
-      );
+      await LoggingService.logError('$_tag Unexpected error', e);
       rethrow;
     }
   }
@@ -163,26 +153,18 @@ class EmailVerificationService {
   /// ```
   static Future<bool> sendCode(String email) async {
     try {
-      LoggingService.logOperation(
-        '[EmailVerificationService] Sending code to: $email',
-      );
+      LoggingService.logOperation('$_tag Sending code to: $email');
 
       final callable = _functions.httpsCallable('sendEmailVerificationCode');
       await callable.call({'email': email});
 
-      LoggingService.logSuccess('[EmailVerificationService] Code sent');
+      LoggingService.logSuccess('$_tag Code sent');
       return true;
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError(
-        '[EmailVerificationService] Failed to send code: ${e.code} - ${e.message}',
-        e,
-      );
+      await LoggingService.logError('$_tag Failed to send: ${e.code}', e);
       return false;
     } catch (e) {
-      await LoggingService.logError(
-        '[EmailVerificationService] Failed to send code',
-        e,
-      );
+      await LoggingService.logError('$_tag Failed to send code', e);
       return false;
     }
   }
@@ -204,9 +186,7 @@ class EmailVerificationService {
   /// ```
   static Future<bool> verifyCode(String email, String code) async {
     try {
-      LoggingService.logOperation(
-        '[EmailVerificationService] Verifying code',
-      );
+      LoggingService.logOperation('$_tag Verifying code');
 
       final callable = _functions.httpsCallable('verifyEmailCode');
       final result = await callable.call({'email': email, 'code': code});
@@ -215,21 +195,15 @@ class EmailVerificationService {
       final verified = data['verified'] as bool? ?? false;
 
       if (verified) {
-        LoggingService.logSuccess('[EmailVerificationService] Verified!');
+        LoggingService.logSuccess('$_tag Verified!');
       }
 
       return verified;
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError(
-        '[EmailVerificationService] Verification failed: ${e.code} - ${e.message}',
-        e,
-      );
+      await LoggingService.logError('$_tag Verify failed: ${e.code}', e);
       return false;
     } catch (e) {
-      await LoggingService.logError(
-        '[EmailVerificationService] Verification failed',
-        e,
-      );
+      await LoggingService.logError('$_tag Verification failed', e);
       return false;
     }
   }

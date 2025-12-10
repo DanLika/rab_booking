@@ -95,10 +95,8 @@ class BookingBehaviorConfig {
   /// Check if a booking duration is valid.
   bool isValidDuration(int nights) {
     if (nights < minNights) return false;
-    if (maxNights != null && maxNights! > 0 && nights > maxNights!) {
-      return false;
-    }
-    return true;
+    final max = maxNights;
+    return max == null || max <= 0 || nights <= max;
   }
 
   /// Check if a date is considered a weekend day.
@@ -174,6 +172,11 @@ class BookingBehaviorConfig {
         minDaysAdvance,
         maxDaysAdvance,
       );
+
+  @override
+  String toString() =>
+      'BookingBehaviorConfig(minNights: $minNights, maxNights: $maxNights, '
+      'requireOwnerApproval: $requireOwnerApproval)';
 
   static bool _listEquals<T>(List<T> a, List<T> b) {
     if (a.length != b.length) return false;

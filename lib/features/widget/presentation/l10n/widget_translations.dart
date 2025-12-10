@@ -125,14 +125,46 @@ class WidgetTranslations {
   List<String> get weekdaysFull {
     switch (locale.languageCode) {
       case 'hr':
-        return ['Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota', 'Nedjelja'];
+        return [
+          'Ponedjeljak',
+          'Utorak',
+          'Srijeda',
+          'Četvrtak',
+          'Petak',
+          'Subota',
+          'Nedjelja',
+        ];
       case 'de':
-        return ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+        return [
+          'Montag',
+          'Dienstag',
+          'Mittwoch',
+          'Donnerstag',
+          'Freitag',
+          'Samstag',
+          'Sonntag',
+        ];
       case 'it':
-        return ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+        return [
+          'Lunedì',
+          'Martedì',
+          'Mercoledì',
+          'Giovedì',
+          'Venerdì',
+          'Sabato',
+          'Domenica',
+        ];
       case 'en':
       default:
-        return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        return [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ];
     }
   }
 
@@ -875,6 +907,20 @@ class WidgetTranslations {
       case 'en':
       default:
         return 'Guest Information';
+    }
+  }
+
+  String get completeYourBooking {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Dovršite rezervaciju';
+      case 'de':
+        return 'Buchung abschließen';
+      case 'it':
+        return 'Completa la prenotazione';
+      case 'en':
+      default:
+        return 'Complete Your Booking';
     }
   }
 
@@ -3795,6 +3841,10 @@ class WidgetTranslations {
     }
   }
 
+  /// Currency symbol - currently EUR for all locales
+  /// TODO: In future, this could be fetched from unit/property config
+  String get currencySymbol => '€';
+
   String get errorMissingBookingParams {
     switch (locale.languageCode) {
       case 'hr':
@@ -4289,6 +4339,149 @@ class WidgetTranslations {
       case 'en':
       default:
         return count == 1 ? 'night' : 'nights';
+    }
+  }
+
+  // ============================================================================
+  // AVAILABILITY ERROR TRANSLATIONS
+  // ============================================================================
+
+  /// Error: Conflict with existing booking.
+  String get errorBookingConflict {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Odabrani datumi nisu dostupni zbog postojeće rezervacije.';
+      case 'de':
+        return 'Die ausgewählten Daten sind aufgrund einer bestehenden Buchung nicht verfügbar.';
+      case 'it':
+        return 'Le date selezionate non sono disponibili a causa di una prenotazione esistente.';
+      case 'en':
+      default:
+        return 'Selected dates are not available due to an existing booking.';
+    }
+  }
+
+  /// Error: Conflict with iCal event (external calendar).
+  String errorIcalConflict(String source) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Odabrani datumi nisu dostupni zbog rezervacije s $source.';
+      case 'de':
+        return 'Die ausgewählten Daten sind aufgrund einer Buchung von $source nicht verfügbar.';
+      case 'it':
+        return 'Le date selezionate non sono disponibili a causa di una prenotazione da $source.';
+      case 'en':
+      default:
+        return 'Selected dates are not available due to a booking from $source.';
+    }
+  }
+
+  /// Error: Date is blocked.
+  String errorBlockedDate(String formattedDate) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Datum $formattedDate nije dostupan za rezervaciju.';
+      case 'de':
+        return 'Das Datum $formattedDate ist nicht für Buchungen verfügbar.';
+      case 'it':
+        return 'La data $formattedDate non è disponibile per la prenotazione.';
+      case 'en':
+      default:
+        return 'Date $formattedDate is not available for booking.';
+    }
+  }
+
+  /// Error: Check-in blocked on date.
+  String errorBlockedCheckIn(String formattedDate) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Dolazak nije moguć na datum $formattedDate.';
+      case 'de':
+        return 'Anreise ist am $formattedDate nicht möglich.';
+      case 'it':
+        return 'Il check-in non è possibile il $formattedDate.';
+      case 'en':
+      default:
+        return 'Check-in is not allowed on $formattedDate.';
+    }
+  }
+
+  /// Error: Check-out blocked on date.
+  String errorBlockedCheckOut(String formattedDate) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Odlazak nije moguć na datum $formattedDate.';
+      case 'de':
+        return 'Abreise ist am $formattedDate nicht möglich.';
+      case 'it':
+        return 'Il check-out non è possibile il $formattedDate.';
+      case 'en':
+      default:
+        return 'Check-out is not allowed on $formattedDate.';
+    }
+  }
+
+  /// Error: Generic availability check error.
+  String get errorAvailabilityCheck {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Došlo je do greške pri provjeri dostupnosti. Molimo pokušajte ponovo.';
+      case 'de':
+        return 'Bei der Verfügbarkeitsprüfung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.';
+      case 'it':
+        return 'Si è verificato un errore durante il controllo della disponibilità. Riprova.';
+      case 'en':
+      default:
+        return 'An error occurred while checking availability. Please try again.';
+    }
+  }
+
+  // ============================================================================
+  // CALENDAR ONLY MODE TRANSLATIONS
+  // ============================================================================
+
+  /// Banner message for calendar_only mode explaining view-only nature
+  String get calendarOnlyBanner {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ovaj kalendar prikazuje samo dostupnost. Za rezervaciju kontaktirajte vlasnika.';
+      case 'de':
+        return 'Dieser Kalender zeigt nur die Verfügbarkeit. Kontaktieren Sie den Eigentümer für eine Reservierung.';
+      case 'it':
+        return 'Questo calendario mostra solo la disponibilità. Contatta il proprietario per prenotare.';
+      case 'en':
+      default:
+        return 'This calendar shows availability only. Contact the owner to make a reservation.';
+    }
+  }
+
+  /// Message shown when user taps on a date in calendar_only mode
+  String get calendarOnlyTapMessage {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Za rezervaciju ovog termina kontaktirajte vlasnika putem kontakt podataka ispod.';
+      case 'de':
+        return 'Um diesen Termin zu buchen, kontaktieren Sie den Eigentümer über die Kontaktdaten unten.';
+      case 'it':
+        return 'Per prenotare questo periodo, contatta il proprietario tramite i contatti qui sotto.';
+      case 'en':
+      default:
+        return 'To book this period, contact the owner using the contact details below.';
+    }
+  }
+
+  /// Short label for view-only calendar indicator
+  String get viewOnlyCalendar {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Samo pregled';
+      case 'de':
+        return 'Nur Ansicht';
+      case 'it':
+        return 'Solo visualizzazione';
+      case 'en':
+      default:
+        return 'View only';
     }
   }
 }

@@ -95,16 +95,32 @@ class PaymentOptionWidget extends StatelessWidget {
             ),
             const SizedBox(width: SpacingTokens.s),
 
-            // Text content
+            // Text content + deposit amount (flex layout for responsiveness)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AutoSizeText(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                  // Title row with optional deposit amount
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AutoSizeText(
+                          title,
+                          maxLines: 1,
+                          minFontSize: 11,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                        ),
+                      ),
+                      // Deposit amount inline with title
+                      if (depositAmount case final amount?) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          amount,
+                          style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 4),
                   AutoSizeText(
@@ -118,13 +134,6 @@ class PaymentOptionWidget extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Deposit amount (only show if not null)
-            if (depositAmount case final amount?)
-              Text(
-                amount,
-                style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold, color: colors.textPrimary),
-              ),
           ],
         ),
       ),

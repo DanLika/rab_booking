@@ -3,13 +3,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
-import '../common/contact/contact_item_widget.dart';
 
 /// Contact pill card widget for calendar-only mode.
 ///
 /// Displays contact options (email, phone) in a compact pill-shaped card.
-/// Automatically switches between row (desktop) and column (mobile) layout
-/// based on screen width.
+///
+/// Responsive layout:
+/// - Mobile (< 600px): Column layout with email on top, phone below (~80px height)
+/// - Tablet/Desktop (≥ 600px): Row layout with email and phone side by side (~48px height)
 ///
 /// Extracted from BookingWidgetScreen to reduce build() method complexity.
 class ContactPillCardWidget extends StatelessWidget {
@@ -23,6 +24,9 @@ class ContactPillCardWidget extends StatelessWidget {
     required this.isDarkMode,
     required this.screenWidth,
   });
+
+  /// Returns true if using column layout (mobile)
+  bool get _useColumnLayout => screenWidth < 600;
 
   @override
   Widget build(BuildContext context) {
@@ -43,40 +47,78 @@ class ContactPillCardWidget extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    // Only use column layout on very small screens (< 350px)
-    final useRowLayout = screenWidth >= 350;
+    final isDesktop = screenWidth >= 1024;
 
-    // Dynamic max width: allow row layout on most screens
-    final maxWidth = useRowLayout ? 500.0 : 200.0;
+    // Match calendar width: 650px desktop, 600px mobile/tablet (same as CalendarCompactLegend)
+    final maxWidth = isDesktop ? 650.0 : 600.0;
 
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: colors.backgroundTertiary,
-            borderRadius: BorderRadius.circular(12), // Pill style
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colors.borderDefault),
             boxShadow: [
               BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
             ],
           ),
-          child: useRowLayout
-              ? _buildDesktopContactRow(hasEmail, hasPhone, colors)
-              : _buildMobileContactColumn(hasEmail, hasPhone, colors),
+          child: _useColumnLayout
+              ? _buildColumnLayout(hasEmail, hasPhone, colors)
+              : _buildRowLayout(hasEmail, hasPhone, colors),
         ),
       ),
     );
   }
 
-  /// Desktop layout: email + phone in same row with divider
-  Widget _buildDesktopContactRow(bool hasEmail, bool hasPhone, MinimalistColorSchemeAdapter colors) {
-    // Defensive check: if no items, return empty widget to avoid empty Row
-    if (!hasEmail && !hasPhone) {
-      return const SizedBox.shrink();
-    }
+  /// Column layout for mobile (< 600px)
+  /// Email on top, phone below with horizontal divider between
+  Widget _buildColumnLayout(
+    bool hasEmail,
+    bool hasPhone,
+    MinimalistColorSchemeAdapter colors,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Email row
+        if (hasEmail)
+          _ContactRow(
+            icon: Icons.email,
+            value: contactOptions!.emailAddress!,
+            onTap: () => _launchUrl('mailto:${contactOptions!.emailAddress}'),
+            colors: colors,
+          ),
 
+        // Horizontal divider (only if both email and phone are shown)
+        if (hasEmail && hasPhone)
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            color: colors.borderDefault,
+          ),
+
+        // Phone row
+        if (hasPhone)
+          _ContactRow(
+            icon: Icons.phone,
+            value: contactOptions!.phoneNumber!,
+            onTap: () => _launchUrl('tel:${contactOptions!.phoneNumber}'),
+            colors: colors,
+          ),
+      ],
+    );
+  }
+
+  /// Row layout for tablet/desktop (≥ 600px)
+  /// Email and phone side by side with vertical divider between
+  Widget _buildRowLayout(
+    bool hasEmail,
+    bool hasPhone,
+    MinimalistColorSchemeAdapter colors,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -84,15 +126,16 @@ class ContactPillCardWidget extends StatelessWidget {
         // Email
         if (hasEmail)
           Flexible(
-            child: ContactItemWidget(
+            child: _ContactRow(
               icon: Icons.email,
               value: contactOptions!.emailAddress!,
               onTap: () => _launchUrl('mailto:${contactOptions!.emailAddress}'),
-              isDarkMode: isDarkMode,
+              colors: colors,
+              centerContent: true,
             ),
           ),
 
-        // Vertical divider
+        // Vertical divider (only if both email and phone are shown)
         if (hasEmail && hasPhone)
           Container(
             height: 24,
@@ -104,45 +147,13 @@ class ContactPillCardWidget extends StatelessWidget {
         // Phone
         if (hasPhone)
           Flexible(
-            child: ContactItemWidget(
+            child: _ContactRow(
               icon: Icons.phone,
               value: contactOptions!.phoneNumber!,
               onTap: () => _launchUrl('tel:${contactOptions!.phoneNumber}'),
-              isDarkMode: isDarkMode,
+              colors: colors,
+              centerContent: true,
             ),
-          ),
-      ],
-    );
-  }
-
-  /// Mobile layout: email and phone stacked vertically
-  Widget _buildMobileContactColumn(bool hasEmail, bool hasPhone, MinimalistColorSchemeAdapter colors) {
-    // Defensive check: if no items, return empty widget to avoid empty Column
-    if (!hasEmail && !hasPhone) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      children: [
-        // Email
-        if (hasEmail)
-          ContactItemWidget(
-            icon: Icons.email,
-            value: contactOptions!.emailAddress!,
-            onTap: () => _launchUrl('mailto:${contactOptions!.emailAddress}'),
-            isDarkMode: isDarkMode,
-          ),
-
-        // Horizontal divider between email and phone
-        if (hasEmail && hasPhone) Divider(color: colors.borderDefault, height: 12, thickness: 1),
-
-        // Phone
-        if (hasPhone)
-          ContactItemWidget(
-            icon: Icons.phone,
-            value: contactOptions!.phoneNumber!,
-            onTap: () => _launchUrl('tel:${contactOptions!.phoneNumber}'),
-            isDarkMode: isDarkMode,
           ),
       ],
     );
@@ -154,5 +165,57 @@ class ContactPillCardWidget extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+}
+
+/// Internal widget for a single contact row (email or phone)
+class _ContactRow extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final VoidCallback onTap;
+  final MinimalistColorSchemeAdapter colors;
+  final bool centerContent;
+
+  const _ContactRow({
+    required this.icon,
+    required this.value,
+    required this.onTap,
+    required this.colors,
+    this.centerContent = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Row(
+          mainAxisSize: centerContent ? MainAxisSize.min : MainAxisSize.max,
+          mainAxisAlignment: centerContent ? MainAxisAlignment.center : MainAxisAlignment.start,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: colors.buttonPrimary,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colors.textPrimary,
+                  decoration: TextDecoration.underline,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

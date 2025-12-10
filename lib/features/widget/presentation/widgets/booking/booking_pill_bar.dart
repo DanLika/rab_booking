@@ -63,11 +63,12 @@ class BookingPillBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(30),
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                12,
-                8,
-                12,
+                12, // left
+                8, // top (close button header adds visual padding above content)
+                12, // right
+                // Bottom: 24px for symmetry with top (8px + close button header ~16px)
                 // Bug #46: Add keyboard height to bottom padding
-                8 + keyboardInset,
+                24 + keyboardInset,
               ),
               child: child,
             ),

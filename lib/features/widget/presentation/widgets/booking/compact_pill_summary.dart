@@ -117,41 +117,75 @@ class CompactPillSummary extends StatelessWidget {
         ),
         const SizedBox(height: 8),
 
-        // Range info with nights badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: colors.buttonPrimary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.buttonPrimary.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.calendar_month, size: 18, color: colors.buttonPrimary),
-              const SizedBox(width: 8),
-              Text(
-                '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textPrimary),
+        // Range info with nights badge (responsive layout)
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Use column layout on very narrow screens (< 280px content width)
+            final useColumnLayout = constraints.maxWidth < 280;
+
+            final nightsBadge = Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: colors.statusAvailableBackground,
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: colors.statusAvailableBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  translations.nightCount(nights),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
+              child: Text(
+                translations.nightCount(nights),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black87,
                 ),
               ),
-            ],
-          ),
+            );
+
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: colors.buttonPrimary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.buttonPrimary.withValues(alpha: 0.3)),
+              ),
+              child: useColumnLayout
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.calendar_month, size: 16, color: colors.buttonPrimary),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        nightsBadge,
+                      ],
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_month, size: 16, color: colors.buttonPrimary),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        nightsBadge,
+                      ],
+                    ),
+            );
+          },
         ),
         const SizedBox(height: 12),
 

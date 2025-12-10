@@ -8,14 +8,56 @@ import '../../../../core/services/logging_service.dart';
 class FirebaseDailyPriceRepository implements DailyPriceRepository {
   final FirebaseFirestore _firestore;
 
+  /// Firestore collection name for daily prices
+  static const String _collectionName = 'daily_prices';
+
+  /// Maximum operations per Firestore batch
+  static const int _maxBatchSize = 500;
+
+  /// Maximum values for Firestore whereIn query
+  static const int _maxWhereInSize = 30;
+
   FirebaseDailyPriceRepository(this._firestore);
+
+  /// Normalize DateTime to midnight (strips time component)
+  DateTime _normalizeDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  /// Normalize DateTime to end of day (23:59:59)
+  DateTime _normalizeEndOfDay(DateTime date) =>
+      DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+  /// Validate and check if document data has required fields
+  bool _isValidPriceDocument(Map<String, dynamic> data) =>
+      data['date'] != null &&
+      data['date'] is Timestamp &&
+      data['unit_id'] != null;
+
+  /// Parse Firestore document to DailyPriceModel (returns null on error)
+  DailyPriceModel? _parseDocument(QueryDocumentSnapshot doc) {
+    try {
+      return DailyPriceModel.fromJson({...doc.data() as Map<String, dynamic>, 'id': doc.id});
+    } catch (e) {
+      LoggingService.logError('Error parsing daily price', e);
+      return null;
+    }
+  }
+
+  /// Parse list of documents, filtering invalid ones
+  List<DailyPriceModel> _parseDocuments(List<QueryDocumentSnapshot> docs) {
+    return docs
+        .where((doc) => _isValidPriceDocument(doc.data() as Map<String, dynamic>))
+        .map(_parseDocument)
+        .whereType<DailyPriceModel>()
+        .toList();
+  }
 
   @override
   Future<double?> getPriceForDate({required String unitId, required DateTime date}) async {
     try {
-      final dateOnly = DateTime(date.year, date.month, date.day);
+      final dateOnly = _normalizeDate(date);
       final snapshot = await _firestore
-          .collection('daily_prices')
+          .collection(_collectionName)
           .where('unit_id', isEqualTo: unitId)
           .where('date', isEqualTo: Timestamp.fromDate(dateOnly))
           .limit(1)
@@ -38,33 +80,17 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required DateTime endDate,
   }) async {
     try {
-      final startDateOnly = DateTime(startDate.year, startDate.month, startDate.day);
-      final endDateOnly = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+      final startDateOnly = _normalizeDate(startDate);
+      final endDateOnly = _normalizeEndOfDay(endDate);
 
       final snapshot = await _firestore
-          .collection('daily_prices')
+          .collection(_collectionName)
           .where('unit_id', isEqualTo: unitId)
           .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDateOnly))
           .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDateOnly))
           .get();
 
-      return snapshot.docs
-          .where((doc) {
-            final data = doc.data();
-            // Skip documents without valid date or unit_id field
-            // FIXED: Also check if date is a valid Timestamp
-            return data['date'] != null && data['date'] is Timestamp && data['unit_id'] != null;
-          })
-          .map((doc) {
-            try {
-              return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
-            } catch (e) {
-              LoggingService.logError('Error parsing daily price', e);
-              return null;
-            }
-          })
-          .whereType<DailyPriceModel>()
-          .toList();
+      return _parseDocuments(snapshot.docs);
     } catch (e) {
       unawaited(LoggingService.logError('Error getting prices for date range', e));
       return [];
@@ -141,12 +167,12 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required double price,
     DailyPriceModel? priceModel,
   }) async {
-    final dateOnly = DateTime(date.year, date.month, date.day);
+    final dateOnly = _normalizeDate(date);
     final now = DateTime.now();
 
     // Check if a document already exists for this date
     final existingSnapshot = await _firestore
-        .collection('daily_prices')
+        .collection(_collectionName)
         .where('unit_id', isEqualTo: unitId)
         .where('date', isEqualTo: Timestamp.fromDate(dateOnly))
         .limit(1)
@@ -167,7 +193,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         return priceModel.copyWith(id: existingDoc.id, unitId: unitId, date: dateOnly, updatedAt: now);
       } else {
         // CREATE new document
-        final docRef = await _firestore.collection('daily_prices').add(data);
+        final docRef = await _firestore.collection(_collectionName).add(data);
         return priceModel.copyWith(id: docRef.id, unitId: unitId, date: dateOnly, updatedAt: now);
       }
     }
@@ -188,7 +214,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     } else {
       // CREATE new document
       data['created_at'] = Timestamp.fromDate(now);
-      final docRef = await _firestore.collection('daily_prices').add(data);
+      final docRef = await _firestore.collection(_collectionName).add(data);
       return DailyPriceModel(id: docRef.id, unitId: unitId, date: dateOnly, price: price, createdAt: now);
     }
   }
@@ -201,15 +227,14 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required double price,
   }) async {
     final List<DailyPriceModel> createdPrices = [];
-    DateTime current = DateTime(startDate.year, startDate.month, startDate.day);
-    final end = DateTime(endDate.year, endDate.month, endDate.day);
+    DateTime current = _normalizeDate(startDate);
+    final end = _normalizeDate(endDate);
 
     final batch = _firestore.batch();
     int operationCount = 0;
-    const maxBatchSize = 500; // Firestore limit
 
     while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-      final docRef = _firestore.collection('daily_prices').doc();
+      final docRef = _firestore.collection(_collectionName).doc();
       final data = {
         'unit_id': unitId,
         'date': Timestamp.fromDate(current),
@@ -224,7 +249,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         DailyPriceModel(id: docRef.id, unitId: unitId, date: current, price: price, createdAt: DateTime.now()),
       );
 
-      if (operationCount >= maxBatchSize) {
+      if (operationCount >= _maxBatchSize) {
         await batch.commit();
         operationCount = 0;
       }
@@ -250,11 +275,10 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     final List<DailyPriceModel> createdPrices = [];
     final batch = _firestore.batch();
     int operationCount = 0;
-    const maxBatchSize = 500; // Firestore limit
 
     for (final date in dates) {
-      final dateOnly = DateTime(date.year, date.month, date.day);
-      final docRef = _firestore.collection('daily_prices').doc();
+      final dateOnly = _normalizeDate(date);
+      final docRef = _firestore.collection(_collectionName).doc();
 
       // Create model for this specific date
       final model = modelTemplate.copyWith(
@@ -275,7 +299,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
       createdPrices.add(model);
 
       // Commit batch if reaching limit
-      if (operationCount >= maxBatchSize) {
+      if (operationCount >= _maxBatchSize) {
         await batch.commit();
         operationCount = 0;
       }
@@ -306,7 +330,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     final List<DailyPriceModel> updatedPrices = [];
 
     // Normalize all dates to midnight (date-only)
-    final normalizedDates = dates.map((d) => DateTime(d.year, d.month, d.day)).toSet().toList();
+    final normalizedDates = dates.map(_normalizeDate).toSet().toList();
 
     // Add timestamp to partial data
     final dataToUpdate = {...partialData, 'updated_at': Timestamp.now()};
@@ -316,12 +340,11 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     final existingDocsByDate = <DateTime, QueryDocumentSnapshot>{};
 
     // Split dates into chunks of 30 (Firestore whereIn limit)
-    const maxWhereInSize = 30;
-    for (int i = 0; i < normalizedDates.length; i += maxWhereInSize) {
-      final chunk = normalizedDates.skip(i).take(maxWhereInSize).toList();
+    for (int i = 0; i < normalizedDates.length; i += _maxWhereInSize) {
+      final chunk = normalizedDates.skip(i).take(_maxWhereInSize).toList();
 
       final existingDocsQuery = await _firestore
-          .collection('daily_prices')
+          .collection(_collectionName)
           .where('unit_id', isEqualTo: unitId)
           .where('date', whereIn: chunk.map(Timestamp.fromDate).toList())
           .get();
@@ -330,13 +353,12 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
       for (final doc in existingDocsQuery.docs) {
         final data = doc.data();
         final timestamp = data['date'] as Timestamp;
-        final date = DateTime(timestamp.toDate().year, timestamp.toDate().month, timestamp.toDate().day);
+        final date = _normalizeDate(timestamp.toDate());
         existingDocsByDate[date] = doc;
       }
     }
 
     // Process in batches (Firestore limit is 500 operations per batch)
-    const maxBatchSize = 500;
     int batchCount = 0;
     WriteBatch batch = _firestore.batch();
 
@@ -358,7 +380,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         }
       } else {
         // Document doesn't exist - CREATE with defaults + partial data
-        final docRef = _firestore.collection('daily_prices').doc();
+        final docRef = _firestore.collection(_collectionName).doc();
         final fullData = {
           'unit_id': unitId,
           'date': Timestamp.fromDate(date),
@@ -380,7 +402,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
       batchCount++;
 
       // Commit batch when reaching max size
-      if (batchCount >= maxBatchSize) {
+      if (batchCount >= _maxBatchSize) {
         await batch.commit();
         batch = _firestore.batch();
         batchCount = 0;
@@ -399,9 +421,9 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
   @override
   Future<void> deletePriceForDate({required String unitId, required DateTime date}) async {
-    final dateOnly = DateTime(date.year, date.month, date.day);
+    final dateOnly = _normalizeDate(date);
     final snapshot = await _firestore
-        .collection('daily_prices')
+        .collection(_collectionName)
         .where('unit_id', isEqualTo: unitId)
         .where('date', isEqualTo: Timestamp.fromDate(dateOnly))
         .get();
@@ -419,11 +441,11 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final startDateOnly = DateTime(startDate.year, startDate.month, startDate.day);
-    final endDateOnly = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    final startDateOnly = _normalizeDate(startDate);
+    final endDateOnly = _normalizeEndOfDay(endDate);
 
     final snapshot = await _firestore
-        .collection('daily_prices')
+        .collection(_collectionName)
         .where('unit_id', isEqualTo: unitId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDateOnly))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDateOnly))
@@ -440,28 +462,12 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
   Future<List<DailyPriceModel>> fetchAllPricesForUnit(String unitId) async {
     try {
       final snapshot = await _firestore
-          .collection('daily_prices')
+          .collection(_collectionName)
           .where('unit_id', isEqualTo: unitId)
           .orderBy('date', descending: false)
           .get();
 
-      return snapshot.docs
-          .where((doc) {
-            final data = doc.data();
-            // Skip documents without valid date or unit_id field
-            // FIXED: Also check if date is a valid Timestamp
-            return data['date'] != null && data['date'] is Timestamp && data['unit_id'] != null;
-          })
-          .map((doc) {
-            try {
-              return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
-            } catch (e) {
-              LoggingService.logError('Error parsing daily price', e);
-              return null;
-            }
-          })
-          .whereType<DailyPriceModel>()
-          .toList();
+      return _parseDocuments(snapshot.docs);
     } catch (e) {
       unawaited(LoggingService.logError('Error fetching all prices for unit', e));
       return [];
@@ -470,9 +476,9 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
   @override
   Future<bool> hasCustomPrice({required String unitId, required DateTime date}) async {
-    final dateOnly = DateTime(date.year, date.month, date.day);
+    final dateOnly = _normalizeDate(date);
     final snapshot = await _firestore
-        .collection('daily_prices')
+        .collection(_collectionName)
         .where('unit_id', isEqualTo: unitId)
         .where('date', isEqualTo: Timestamp.fromDate(dateOnly))
         .limit(1)
@@ -487,33 +493,15 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required DateTime startDate,
     required DateTime endDate,
   }) {
-    final startDateOnly = DateTime(startDate.year, startDate.month, startDate.day);
-    final endDateOnly = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+    final startDateOnly = _normalizeDate(startDate);
+    final endDateOnly = _normalizeEndOfDay(endDate);
 
     return _firestore
-        .collection('daily_prices')
+        .collection(_collectionName)
         .where('unit_id', isEqualTo: unitId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDateOnly))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDateOnly))
         .snapshots()
-        .map((snapshot) {
-          return snapshot.docs
-              .where((doc) {
-                final data = doc.data();
-                // Skip documents without valid date or unit_id field
-                // FIXED: Also check if date is a valid Timestamp
-                return data['date'] != null && data['date'] is Timestamp && data['unit_id'] != null;
-              })
-              .map((doc) {
-                try {
-                  return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
-                } catch (e) {
-                  LoggingService.logError('Error parsing daily price', e);
-                  return null;
-                }
-              })
-              .whereType<DailyPriceModel>()
-              .toList();
-        });
+        .map((snapshot) => _parseDocuments(snapshot.docs));
   }
 }

@@ -6,21 +6,22 @@ import '../../utils/date_key_generator.dart';
 import '../../utils/date_normalizer.dart';
 
 /// Parsed iCal event data for calendar building.
-class ParsedIcalEvent {
-  final String id;
-  final DateTime startDate;
-  final DateTime endDate;
-  final String source;
-  final String guestName;
+///
+/// Using Dart 3 record for immutable, value-equality data.
+typedef ParsedIcalEvent = ({
+  String id,
+  DateTime startDate,
+  DateTime endDate,
+  String source,
+  String guestName,
+});
 
-  const ParsedIcalEvent({
-    required this.id,
-    required this.startDate,
-    required this.endDate,
-    required this.source,
-    required this.guestName,
-  });
-}
+/// Date range intersection result.
+typedef _DateRangeIntersection = ({
+  DateTime start,
+  DateTime end,
+  bool hasOverlap,
+});
 
 /// Builds calendar data maps from bookings, prices, and iCal events.
 ///
@@ -35,7 +36,7 @@ class ParsedIcalEvent {
 ///
 /// ## Usage
 /// ```dart
-/// final builder = CalendarDataBuilder();
+/// const builder = CalendarDataBuilder();
 ///
 /// final calendar = builder.buildMonthCalendar(
 ///   bookings: bookings,
@@ -47,6 +48,10 @@ class ParsedIcalEvent {
 /// );
 /// ```
 class CalendarDataBuilder {
+  const CalendarDataBuilder();
+
+  static const _oneDay = Duration(days: 1);
+
   /// Build calendar map for a specific month.
   Map<DateTime, CalendarDateInfo> buildMonthCalendar({
     required List<BookingModel> bookings,
@@ -56,25 +61,20 @@ class CalendarDataBuilder {
     required int minNights,
     List<ParsedIcalEvent>? icalEvents,
   }) {
-    final Map<DateTime, CalendarDateInfo> calendar = {};
+    final calendar = <DateTime, CalendarDateInfo>{};
     final daysInMonth = DateTime.utc(year, month + 1, 0).day;
 
     // Bug #65 Fix: Use UTC for DST-safe date handling
     final monthStart = DateTime.utc(year, month);
     final monthEnd = DateTime.utc(year, month, daysInMonth);
 
-    // 1. Initialize all days as available with prices
     _initializeMonthDays(calendar, priceMap, year, month, daysInMonth);
-
-    // 2. Mark booked dates from regular bookings
     _markBookedDates(calendar, bookings, priceMap, monthStart, monthEnd);
 
-    // 3. Mark booked dates from iCal events
     if (icalEvents != null && icalEvents.isNotEmpty) {
       _markIcalEventDates(calendar, icalEvents, priceMap, monthStart, monthEnd);
     }
 
-    // 4. Apply gap blocking based on minimum nights requirement
     _applyMinNightsGapBlocking(calendar, bookings, priceMap, minNights);
 
     return calendar;
@@ -88,26 +88,23 @@ class CalendarDataBuilder {
     required int minNights,
     List<ParsedIcalEvent>? icalEvents,
   }) {
-    final Map<DateTime, CalendarDateInfo> calendar = {};
+    final calendar = <DateTime, CalendarDateInfo>{};
 
-    final yearStart = DateTime(year);
-    final yearEnd = DateTime(year, 12, 31);
+    // Bug fix: Use UTC consistently (was using local DateTime)
+    final yearStart = DateTime.utc(year);
+    final yearEnd = DateTime.utc(year, 12, 31);
 
-    // 1. Initialize all days in year as available with prices
     for (int month = 1; month <= 12; month++) {
-      final daysInMonth = DateTime(year, month + 1, 0).day;
+      final daysInMonth = DateTime.utc(year, month + 1, 0).day;
       _initializeMonthDays(calendar, priceMap, year, month, daysInMonth);
     }
 
-    // 2. Mark booked dates from regular bookings
     _markBookedDates(calendar, bookings, priceMap, yearStart, yearEnd);
 
-    // 3. Mark booked dates from iCal events
     if (icalEvents != null && icalEvents.isNotEmpty) {
       _markIcalEventDates(calendar, icalEvents, priceMap, yearStart, yearEnd);
     }
 
-    // 4. Apply gap blocking based on minimum nights requirement
     _applyMinNightsGapBlocking(calendar, bookings, priceMap, minNights);
 
     return calendar;
@@ -123,15 +120,31 @@ class CalendarDataBuilder {
   ) {
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime.utc(year, month, day);
-      final priceKey = DateKeyGenerator.fromDate(date);
-      final priceModel = priceMap[priceKey];
-
       calendar[date] = CalendarDateInfo(
         date: date,
         status: DateStatus.available,
-        price: priceModel?.price,
+        price: priceMap[DateKeyGenerator.fromDate(date)]?.price,
       );
     }
+  }
+
+  /// Calculate intersection of two date ranges.
+  _DateRangeIntersection _calculateIntersection({
+    required DateTime bookingStart,
+    required DateTime bookingEnd,
+    required DateTime rangeStart,
+    required DateTime rangeEnd,
+  }) {
+    final effectiveStart = bookingStart.isAfter(rangeStart)
+        ? bookingStart
+        : rangeStart;
+    final effectiveEnd = bookingEnd.isBefore(rangeEnd) ? bookingEnd : rangeEnd;
+
+    return (
+      start: effectiveStart,
+      end: effectiveEnd,
+      hasOverlap: !effectiveStart.isAfter(effectiveEnd),
+    );
   }
 
   /// Mark dates as booked from regular bookings.
@@ -148,24 +161,25 @@ class CalendarDataBuilder {
     for (final booking in bookings) {
       final checkIn = DateNormalizer.normalize(booking.checkIn);
       final checkOut = DateNormalizer.normalize(booking.checkOut);
-      final isPending = booking.status == BookingStatus.pending;
 
-      // Calculate intersection of booking range with current range
-      final effectiveStart = checkIn.isAfter(rangeStart) ? checkIn : rangeStart;
-      final effectiveEnd = checkOut.isBefore(rangeEnd) ? checkOut : rangeEnd;
+      final intersection = _calculateIntersection(
+        bookingStart: checkIn,
+        bookingEnd: checkOut,
+        rangeStart: rangeStart,
+        rangeEnd: rangeEnd,
+      );
 
-      // Only iterate if booking overlaps with current range
-      if (!effectiveStart.isAfter(effectiveEnd)) {
-        _markDateRange(
-          calendar: calendar,
-          priceMap: priceMap,
-          start: effectiveStart,
-          end: effectiveEnd,
-          checkIn: checkIn,
-          checkOut: checkOut,
-          isPending: isPending,
-        );
-      }
+      if (!intersection.hasOverlap) continue;
+
+      _markDateRange(
+        calendar: calendar,
+        priceMap: priceMap,
+        start: intersection.start,
+        end: intersection.end,
+        checkIn: checkIn,
+        checkOut: checkOut,
+        isPending: booking.status == BookingStatus.pending,
+      );
     }
   }
 
@@ -181,26 +195,36 @@ class CalendarDataBuilder {
       final checkIn = DateNormalizer.normalize(event.startDate);
       final checkOut = DateNormalizer.normalize(event.endDate);
 
-      // Calculate intersection of event range with current range
-      final effectiveStart = checkIn.isAfter(rangeStart) ? checkIn : rangeStart;
-      final effectiveEnd = checkOut.isBefore(rangeEnd) ? checkOut : rangeEnd;
+      final intersection = _calculateIntersection(
+        bookingStart: checkIn,
+        bookingEnd: checkOut,
+        rangeStart: rangeStart,
+        rangeEnd: rangeEnd,
+      );
 
-      // Only iterate if event overlaps with current range
-      if (!effectiveStart.isAfter(effectiveEnd)) {
-        DateTime current = effectiveStart;
-        while (current.isBefore(effectiveEnd) ||
-            current.isAtSameMomentAs(effectiveEnd)) {
-          // Mark as booked (always fully booked for iCal events)
-          final priceKey = DateKeyGenerator.fromDate(current);
-          calendar[current] = CalendarDateInfo(
-            date: current,
-            status: DateStatus.booked,
-            price: priceMap[priceKey]?.price,
-          );
+      if (!intersection.hasOverlap) continue;
 
-          current = current.add(const Duration(days: 1));
-        }
-      }
+      // Mark all days as booked (iCal events are always confirmed)
+      _iterateDates(intersection.start, intersection.end, (date) {
+        calendar[date] = CalendarDateInfo(
+          date: date,
+          status: DateStatus.booked,
+          price: priceMap[DateKeyGenerator.fromDate(date)]?.price,
+        );
+      });
+    }
+  }
+
+  /// Iterate over dates in range [start, end] inclusive.
+  void _iterateDates(
+    DateTime start,
+    DateTime end,
+    void Function(DateTime date) action,
+  ) {
+    var current = start;
+    while (!current.isAfter(end)) {
+      action(current);
+      current = current.add(_oneDay);
     }
   }
 
@@ -214,36 +238,33 @@ class CalendarDataBuilder {
     required DateTime checkOut,
     required bool isPending,
   }) {
-    DateTime current = start;
+    _iterateDates(start, end, (current) {
+      final status = _determineStatus(
+        isCheckInDay: DateNormalizer.isSameDay(current, checkIn),
+        isCheckOutDay: DateNormalizer.isSameDay(current, checkOut),
+        isPending: isPending,
+      );
 
-    while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-      final isCheckIn = DateNormalizer.isSameDay(current, checkIn);
-      final isCheckOut = DateNormalizer.isSameDay(current, checkOut);
-
-      DateStatus status;
-      if (isPending) {
-        // Pending bookings show as RED with diagonal pattern (blocks dates)
-        status = DateStatus.pending;
-      } else if (isCheckIn && isCheckOut) {
-        status = DateStatus.booked;
-      } else if (isCheckIn) {
-        status = DateStatus.partialCheckIn;
-      } else if (isCheckOut) {
-        status = DateStatus.partialCheckOut;
-      } else {
-        status = DateStatus.booked;
-      }
-
-      // Preserve price when updating status
-      final priceKey = DateKeyGenerator.fromDate(current);
       calendar[current] = CalendarDateInfo(
         date: current,
         status: status,
-        price: priceMap[priceKey]?.price,
+        price: priceMap[DateKeyGenerator.fromDate(current)]?.price,
+        isPendingBooking: isPending,
       );
+    });
+  }
 
-      current = current.add(const Duration(days: 1));
-    }
+  /// Determine the appropriate DateStatus for a date in a booking.
+  DateStatus _determineStatus({
+    required bool isCheckInDay,
+    required bool isCheckOutDay,
+    required bool isPending,
+  }) {
+    if (isPending) return DateStatus.pending;
+    if (isCheckInDay && isCheckOutDay) return DateStatus.booked;
+    if (isCheckInDay) return DateStatus.partialCheckIn;
+    if (isCheckOutDay) return DateStatus.partialCheckOut;
+    return DateStatus.booked;
   }
 
   /// Apply gap blocking based on minimum nights requirement.
@@ -255,82 +276,54 @@ class CalendarDataBuilder {
     Map<String, DailyPriceModel> priceMap,
     int defaultMinNights,
   ) {
-    // Sort bookings by check-in date
-    final sortedBookings = List<BookingModel>.from(bookings)
+    if (bookings.length < 2) return;
+
+    final sortedBookings = bookings.toList()
       ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
-    // Check gaps between consecutive bookings
     for (int i = 0; i < sortedBookings.length - 1; i++) {
-      final currentBooking = sortedBookings[i];
-      final nextBooking = sortedBookings[i + 1];
-
-      final checkOutCurrent = DateNormalizer.normalize(currentBooking.checkOut);
-      final checkInNext = DateNormalizer.normalize(nextBooking.checkIn);
-
-      // Calculate gap in days
-      final gapStart = checkOutCurrent;
-      final gapEnd = checkInNext;
+      final gapStart = DateNormalizer.normalize(sortedBookings[i].checkOut);
+      final gapEnd = DateNormalizer.normalize(sortedBookings[i + 1].checkIn);
       final gapDays = gapEnd.difference(gapStart).inDays;
 
-      // Get minNights from first day of gap (or use default)
-      final priceKey = DateKeyGenerator.fromDate(gapStart);
-      final priceModel = priceMap[priceKey];
-      final minNights = priceModel?.minNightsOnArrival ?? defaultMinNights;
+      if (gapDays <= 0) continue;
 
-      // If gap is less than minNights, block all days in the gap
-      if (gapDays > 0 && gapDays < minNights) {
-        DateTime current = gapStart;
-        while (current.isBefore(gapEnd)) {
-          // Only block if it exists in calendar and is available
-          final existingInfo = calendar[current];
-          if (existingInfo != null &&
-              existingInfo.status == DateStatus.available) {
-            calendar[current] = CalendarDateInfo(
-              date: current,
-              status: DateStatus.blocked,
-              price: existingInfo.price,
-            );
-          }
-          current = current.add(const Duration(days: 1));
-        }
+      final minNights =
+          priceMap[DateKeyGenerator.fromDate(gapStart)]?.minNightsOnArrival ??
+          defaultMinNights;
+
+      if (gapDays < minNights) {
+        _blockGapDates(calendar, gapStart, gapEnd);
       }
     }
   }
 
-  /// Check if a date falls within a booking range.
-  bool isDateInBookingRange(DateTime date, BookingModel booking) {
-    final normalizedDate = DateNormalizer.normalize(date);
-    final checkIn = DateNormalizer.normalize(booking.checkIn);
-    final checkOut = DateNormalizer.normalize(booking.checkOut);
-
-    return !normalizedDate.isBefore(checkIn) &&
-        normalizedDate.isBefore(checkOut);
+  /// Block all available dates in a gap range.
+  void _blockGapDates(
+    Map<DateTime, CalendarDateInfo> calendar,
+    DateTime gapStart,
+    DateTime gapEnd,
+  ) {
+    var current = gapStart;
+    while (current.isBefore(gapEnd)) {
+      final existingInfo = calendar[current];
+      if (existingInfo?.status == DateStatus.available) {
+        calendar[current] = existingInfo!.copyWith(status: DateStatus.blocked);
+      }
+      current = current.add(_oneDay);
+    }
   }
 
   /// Get the status for a specific date within a booking.
-  DateStatus getBookingDateStatus(
-    DateTime date,
-    BookingModel booking,
-  ) {
+  DateStatus getBookingDateStatus(DateTime date, BookingModel booking) {
     final normalizedDate = DateNormalizer.normalize(date);
     final checkIn = DateNormalizer.normalize(booking.checkIn);
     final checkOut = DateNormalizer.normalize(booking.checkOut);
 
-    if (booking.status == BookingStatus.pending) {
-      return DateStatus.pending;
-    }
-
-    final isCheckIn = DateNormalizer.isSameDay(normalizedDate, checkIn);
-    final isCheckOut = DateNormalizer.isSameDay(normalizedDate, checkOut);
-
-    if (isCheckIn && isCheckOut) {
-      return DateStatus.booked;
-    } else if (isCheckIn) {
-      return DateStatus.partialCheckIn;
-    } else if (isCheckOut) {
-      return DateStatus.partialCheckOut;
-    }
-
-    return DateStatus.booked;
+    return _determineStatus(
+      isCheckInDay: DateNormalizer.isSameDay(normalizedDate, checkIn),
+      isCheckOutDay: DateNormalizer.isSameDay(normalizedDate, checkOut),
+      isPending: booking.status == BookingStatus.pending,
+    );
   }
 }

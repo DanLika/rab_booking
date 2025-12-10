@@ -31,7 +31,8 @@ class WidgetInputDecorationHelper {
       labelStyle: TextStyle(color: colors.textSecondary),
       hintStyle: TextStyle(color: colors.textSecondary.withValues(alpha: 0.5)),
       filled: true,
-      fillColor: colors.backgroundTertiary,
+      // Pure white (light) / pure black (dark) for form containers
+      fillColor: colors.backgroundPrimary,
       isDense: isDense,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(

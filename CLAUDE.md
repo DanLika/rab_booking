@@ -274,9 +274,17 @@ ne sekcije
 
 **Skeleton loaders**: `SkeletonColors.baseColor/highlightColor` iz `skeleton_loader.dart`
 
+**Snackbars (Widget)**: `SnackBarHelper` u `shared/utils/ui/snackbar_helper.dart`
+- Boje prate calendar status: Success=Available(zelena), Error=Booked(crvena), Warning=Pending(amber), Info=plava
+- Light: `#10B981`, `#EF4444`, `#F59E0B`, `#3B82F6`
+- Dark: `#34D399`, `#F87171`, `#FBBF24`, `#60A5FA`
+- Auto-hide prethodnog, centrirani tekst, sve poruke koriste `WidgetTranslations`
+
 ---
 
-**Last Updated**: 2025-12-07 | **Version**: 4.7
+**Last Updated**: 2025-12-10 | **Version**: 4.8
+
+**Changelog 4.8**: Widget snackbar boje usklađene sa calendar statusima.
 
 **Changelog 4.7**: Multi-platform build dokumentacija - Android release mode, conditional imports, dependency verzije.
 

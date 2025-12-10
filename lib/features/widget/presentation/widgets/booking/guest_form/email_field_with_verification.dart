@@ -116,11 +116,11 @@ class EmailFieldWithVerification extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: SpacingTokens.m),
-        // Verification status/button
+        // Verification status/button (height matches verify button at 44px)
         if (emailVerified)
           Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: colors.success.withValues(alpha: 0.1),
               borderRadius: BorderTokens.circularMedium,

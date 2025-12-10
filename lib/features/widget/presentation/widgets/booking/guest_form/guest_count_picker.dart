@@ -58,7 +58,8 @@ class GuestCountPicker extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundTertiary,
+        // Pure white (light) / pure black (dark) for form containers
+        color: colors.backgroundPrimary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(color: colors.borderDefault),
       ),

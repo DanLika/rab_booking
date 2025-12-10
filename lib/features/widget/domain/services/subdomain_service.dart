@@ -13,7 +13,7 @@ class SubdomainService {
   final FirebaseFirestore _firestore;
 
   SubdomainService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Get the current subdomain from the URL.
   ///
@@ -65,7 +65,6 @@ class SubdomainService {
   /// Returns null if no property is found with the given subdomain.
   Future<PropertyModel?> getPropertyBySubdomain(String subdomain) async {
     try {
-
       final query = await _firestore
           .collection('properties')
           .where('subdomain', isEqualTo: subdomain.toLowerCase())
@@ -77,10 +76,7 @@ class SubdomainService {
       }
 
       final doc = query.docs.first;
-      final property = PropertyModel.fromJson({
-        ...doc.data(),
-        'id': doc.id,
-      });
+      final property = PropertyModel.fromJson({...doc.data(), 'id': doc.id});
 
       return property;
     } catch (e) {
@@ -97,10 +93,7 @@ class SubdomainService {
     if (property == null) return null;
 
     // Return branding or create default branding from property name
-    return property.branding ??
-        PropertyBranding(
-          displayName: property.name,
-        );
+    return property.branding ?? PropertyBranding(displayName: property.name);
   }
 
   /// Resolve property context from current URL.
@@ -116,10 +109,7 @@ class SubdomainService {
 
     final property = await getPropertyBySubdomain(subdomain);
     if (property == null) {
-      return SubdomainContext(
-        subdomain: subdomain,
-        found: false,
-      );
+      return SubdomainContext(subdomain: subdomain, found: false);
     }
 
     return SubdomainContext(
@@ -163,11 +153,7 @@ class SubdomainService {
         unitId: doc.id,
       );
     } catch (e) {
-      return UnitSlugContext(
-        slug: slug,
-        propertyId: propertyId,
-        found: false,
-      );
+      return UnitSlugContext(slug: slug, propertyId: propertyId, found: false);
     }
   }
 

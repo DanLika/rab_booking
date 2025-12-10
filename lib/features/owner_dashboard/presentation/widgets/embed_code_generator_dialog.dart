@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -35,8 +34,6 @@ class EmbedCodeGeneratorDialog extends StatefulWidget {
 }
 
 class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
-  // Note: Language selector removed - widget has its own language picker in header
-  String _widgetHeight = '700'; // Lower default since widget auto-resizes
 
   static const String _defaultWidgetBaseUrl = 'https://bookbed.io';
   static const String _subdomainBaseDomain = 'bookbed.io';
@@ -76,32 +73,13 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
     return 'https://${widget.propertySubdomain}.$_subdomainBaseDomain/${widget.unitSlug}';
   }
 
-  String get _embedCode {
-    final url = _widgetUrl;
-
-    return '''
-<iframe
-  src="$url"
-  width="100%"
-  height="${_widgetHeight}px"
-  frameborder="0"
-  allow="payment"
-  style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-></iframe>''';
-  }
-
-  String get _responsiveEmbedCode {
-    final url = _widgetUrl;
-
-    return '''
-<div style="position: relative; width: 100%; padding-bottom: 75%; overflow: hidden;">
-  <iframe
-    src="$url"
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 8px;"
-    frameborder="0"
-    allow="payment"
-  ></iframe>
-</div>''';
+  /// Embed.js code - auto-resize, loading indicator, responsive
+  String get _embedJsCode {
+    return '''<div id="bookbed-widget"
+     data-property-id="${widget.propertyId}"
+     data-unit-id="${widget.unitId}">
+</div>
+<script src="https://bookbed.io/embed.js"></script>''';
   }
 
   void _copyToClipboard(String text, String label) {
@@ -192,80 +170,10 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
 
                       const SizedBox(height: 24),
 
-                      // Configuration Options
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.embedCodeOptions,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 12),
-
-                              // Info: Language is handled by widget itself
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.withAlpha(20),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.blue.withAlpha(50)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.info_outline, size: 18, color: Colors.blue.shade700),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Language selection is built into the widget header',
-                                        style: TextStyle(fontSize: 13, color: Colors.blue.shade700),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(height: 12),
-
-                              // Height
-                              Builder(
-                                builder: (ctx) => TextFormField(
-                                  initialValue: _widgetHeight,
-                                  decoration: InputDecorationHelper.buildDecoration(
-                                    labelText: l10n.embedCodeHeight,
-                                    context: ctx,
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  onChanged: (value) {
-                                    setState(() => _widgetHeight = value);
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Fixed Height Embed Code
-                      _buildCodeCard(
-                        title: l10n.embedCodeFixedHeight,
-                        description: l10n.embedCodeFixedHeightDesc(_widgetHeight),
-                        code: _embedCode,
-                        onCopy: () => _copyToClipboard(_embedCode, 'Embed kod'),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Responsive Embed Code
-                      _buildCodeCard(
-                        title: l10n.embedCodeResponsive,
-                        description: l10n.embedCodeResponsiveDesc,
-                        code: _responsiveEmbedCode,
-                        onCopy: () => _copyToClipboard(_responsiveEmbedCode, 'Responsive embed kod'),
+                      // Embed code card
+                      _buildSimpleEmbedCard(
+                        code: _embedJsCode,
+                        onCopy: () => _copyToClipboard(_embedJsCode, 'Embed kod'),
                       ),
 
                       const SizedBox(height: 24),
@@ -399,9 +307,8 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
     );
   }
 
-  Widget _buildCodeCard({
-    required String title,
-    required String description,
+  /// Simple embed code card - clean and easy to copy
+  Widget _buildSimpleEmbedCard({
     required String code,
     required VoidCallback onCopy,
   }) {
@@ -412,33 +319,44 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text(description, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                  ],
+                const Icon(Icons.code, size: 20, color: AppColors.authSecondary),
+                const SizedBox(width: 8),
+                const Text(
+                  'Embed Code',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
+                const Spacer(),
                 ElevatedButton.icon(
                   onPressed: onCopy,
                   icon: const Icon(Icons.copy, size: 16),
                   label: const Text('Kopiraj'),
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.authSecondary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Zalijepi ovaj kod na svoju web stranicu',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
             const SizedBox(height: 12),
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(4),
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey.shade300),
               ),
-              child: SelectableText(code, style: const TextStyle(fontSize: 12, fontFamily: 'monospace', height: 1.5)),
+              child: SelectableText(
+                code,
+                style: const TextStyle(fontSize: 13, fontFamily: 'monospace', height: 1.6),
+              ),
             ),
           ],
         ),

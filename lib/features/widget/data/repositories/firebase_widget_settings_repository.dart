@@ -8,7 +8,34 @@ import '../../../../core/services/logging_service.dart';
 class FirebaseWidgetSettingsRepository {
   final FirebaseFirestore _firestore;
 
+  /// Firestore collection names
+  static const String _propertiesCollection = 'properties';
+  static const String _widgetSettingsSubcollection = 'widget_settings';
+
+  /// Log tag for this repository
+  static const String _logTag = 'WidgetSettingsRepository';
+
   FirebaseWidgetSettingsRepository(this._firestore);
+
+  /// Get document reference for widget settings
+  DocumentReference<Map<String, dynamic>> _settingsDocRef(
+    String propertyId,
+    String unitId,
+  ) =>
+      _firestore
+          .collection(_propertiesCollection)
+          .doc(propertyId)
+          .collection(_widgetSettingsSubcollection)
+          .doc(unitId);
+
+  /// Get collection reference for all widget settings in a property
+  CollectionReference<Map<String, dynamic>> _settingsCollectionRef(
+    String propertyId,
+  ) =>
+      _firestore
+          .collection(_propertiesCollection)
+          .doc(propertyId)
+          .collection(_widgetSettingsSubcollection);
 
   /// Get widget settings for a specific unit
   Future<WidgetSettings?> getWidgetSettings({
@@ -16,23 +43,13 @@ class FirebaseWidgetSettingsRepository {
     required String unitId,
   }) async {
     try {
-      final doc = await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .doc(unitId)
-          .get();
+      final doc = await _settingsDocRef(propertyId, unitId).get();
 
-      if (!doc.exists) {
-        return null;
-      }
+      if (!doc.exists) return null;
 
       return WidgetSettings.fromFirestore(doc);
     } catch (e) {
-      LoggingService.log(
-        'Error getting settings: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error getting settings: $e', tag: _logTag);
       return null;
     }
   }
@@ -42,16 +59,10 @@ class FirebaseWidgetSettingsRepository {
     required String propertyId,
     required String unitId,
   }) {
-    return _firestore
-        .collection('properties')
-        .doc(propertyId)
-        .collection('widget_settings')
-        .doc(unitId)
-        .snapshots()
-        .map((doc) {
-          if (!doc.exists) return null;
-          return WidgetSettings.fromFirestore(doc);
-        });
+    return _settingsDocRef(propertyId, unitId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return WidgetSettings.fromFirestore(doc);
+    });
   }
 
   /// Create default widget settings for a new unit
@@ -67,38 +78,24 @@ class FirebaseWidgetSettingsRepository {
         id: unitId,
         propertyId: propertyId,
         ownerId: ownerId, // Required for Firestore security rules
-        widgetMode: WidgetMode
-            .calendarOnly, // Default to calendar only (show availability + contact)
+        widgetMode: WidgetMode.calendarOnly, // Default: show availability + contact
         contactOptions: ContactOptions(
           emailAddress: ownerEmail,
           phoneNumber: ownerPhone,
           customMessage: 'Kontaktirajte nas za rezervaciju!',
         ),
-        emailConfig:
-            const EmailNotificationConfig(), // Default disabled email config
-        taxLegalConfig:
-            const TaxLegalConfig(), // Default enabled tax/legal config
-        requireOwnerApproval: true, // Owner approval required for bookings
+        emailConfig: const EmailNotificationConfig(), // Default disabled
+        taxLegalConfig: const TaxLegalConfig(), // Default enabled
+        requireOwnerApproval: true, // Owner approval required
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .doc(unitId)
-          .set(settings.toFirestore());
+      await _settingsDocRef(propertyId, unitId).set(settings.toFirestore());
 
-      LoggingService.log(
-        'Default settings created for unit: $unitId',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Default settings created for unit: $unitId', tag: _logTag);
     } catch (e) {
-      LoggingService.log(
-        'Error creating default settings: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error creating default settings: $e', tag: _logTag);
       rethrow;
     }
   }
@@ -108,22 +105,12 @@ class FirebaseWidgetSettingsRepository {
     try {
       final updatedSettings = settings.copyWith(updatedAt: DateTime.now());
 
-      await _firestore
-          .collection('properties')
-          .doc(settings.propertyId)
-          .collection('widget_settings')
-          .doc(settings.id)
+      await _settingsDocRef(settings.propertyId, settings.id)
           .set(updatedSettings.toFirestore(), SetOptions(merge: true));
 
-      LoggingService.log(
-        'Settings updated for unit: ${settings.id}',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Settings updated for unit: ${settings.id}', tag: _logTag);
     } catch (e) {
-      LoggingService.log(
-        'Error updating settings: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error updating settings: $e', tag: _logTag);
       rethrow;
     }
   }
@@ -135,25 +122,14 @@ class FirebaseWidgetSettingsRepository {
     required WidgetMode widgetMode,
   }) async {
     try {
-      await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .doc(unitId)
-          .update({
-            'widget_mode': widgetMode.toStringValue(),
-            'updated_at': Timestamp.now(),
-          });
+      await _settingsDocRef(propertyId, unitId).update({
+        'widget_mode': widgetMode.toStringValue(),
+        'updated_at': Timestamp.now(),
+      });
 
-      LoggingService.log(
-        'Widget mode updated to: ${widgetMode.toStringValue()}',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Widget mode updated to: ${widgetMode.toStringValue()}', tag: _logTag);
     } catch (e) {
-      LoggingService.log(
-        'Error updating widget mode: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error updating widget mode: $e', tag: _logTag);
       rethrow;
     }
   }
@@ -165,25 +141,14 @@ class FirebaseWidgetSettingsRepository {
     required StripePaymentConfig config,
   }) async {
     try {
-      await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .doc(unitId)
-          .update({
-            'stripe_config': config.toMap(),
-            'updated_at': Timestamp.now(),
-          });
+      await _settingsDocRef(propertyId, unitId).update({
+        'stripe_config': config.toMap(),
+        'updated_at': Timestamp.now(),
+      });
 
-      LoggingService.log(
-        'Stripe config updated',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Stripe config updated', tag: _logTag);
     } catch (e) {
-      LoggingService.log(
-        'Error updating Stripe config: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error updating Stripe config: $e', tag: _logTag);
       rethrow;
     }
   }
@@ -195,25 +160,14 @@ class FirebaseWidgetSettingsRepository {
     required BankTransferConfig config,
   }) async {
     try {
-      await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .doc(unitId)
-          .update({
-            'bank_transfer_config': config.toMap(),
-            'updated_at': Timestamp.now(),
-          });
+      await _settingsDocRef(propertyId, unitId).update({
+        'bank_transfer_config': config.toMap(),
+        'updated_at': Timestamp.now(),
+      });
 
-      LoggingService.log(
-        'Bank transfer config updated',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Bank transfer config updated', tag: _logTag);
     } catch (e) {
-      LoggingService.log(
-        'Error updating bank transfer config: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error updating bank transfer config: $e', tag: _logTag);
       rethrow;
     }
   }
@@ -225,25 +179,14 @@ class FirebaseWidgetSettingsRepository {
     required ContactOptions contactOptions,
   }) async {
     try {
-      await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .doc(unitId)
-          .update({
-            'contact_options': contactOptions.toMap(),
-            'updated_at': Timestamp.now(),
-          });
+      await _settingsDocRef(propertyId, unitId).update({
+        'contact_options': contactOptions.toMap(),
+        'updated_at': Timestamp.now(),
+      });
 
-      LoggingService.log(
-        'Contact options updated',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Contact options updated', tag: _logTag);
     } catch (e) {
-      LoggingService.log(
-        'Error updating contact options: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error updating contact options: $e', tag: _logTag);
       rethrow;
     }
   }
@@ -254,22 +197,11 @@ class FirebaseWidgetSettingsRepository {
     required String unitId,
   }) async {
     try {
-      await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .doc(unitId)
-          .delete();
+      await _settingsDocRef(propertyId, unitId).delete();
 
-      LoggingService.log(
-        'Settings deleted for unit: $unitId',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Settings deleted for unit: $unitId', tag: _logTag);
     } catch (e) {
-      LoggingService.log(
-        'Error deleting settings: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error deleting settings: $e', tag: _logTag);
       rethrow;
     }
   }
@@ -277,18 +209,11 @@ class FirebaseWidgetSettingsRepository {
   /// Get all widget settings for a property
   Future<List<WidgetSettings>> getAllPropertySettings(String propertyId) async {
     try {
-      final snapshot = await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .get();
+      final snapshot = await _settingsCollectionRef(propertyId).get();
 
       return snapshot.docs.map(WidgetSettings.fromFirestore).toList();
     } catch (e) {
-      LoggingService.log(
-        'Error getting all property settings: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error getting all property settings: $e', tag: _logTag);
       return [];
     }
   }
@@ -299,19 +224,10 @@ class FirebaseWidgetSettingsRepository {
     required String unitId,
   }) async {
     try {
-      final doc = await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('widget_settings')
-          .doc(unitId)
-          .get();
-
+      final doc = await _settingsDocRef(propertyId, unitId).get();
       return doc.exists;
     } catch (e) {
-      LoggingService.log(
-        'Error checking if settings exist: $e',
-        tag: 'WidgetSettingsRepository',
-      );
+      LoggingService.log('Error checking if settings exist: $e', tag: _logTag);
       return false;
     }
   }

@@ -73,8 +73,10 @@ class PriceBreakdownWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundTertiary,
+        // Pure white (light) / pure black (dark) for form containers
+        color: colors.backgroundPrimary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         children: [

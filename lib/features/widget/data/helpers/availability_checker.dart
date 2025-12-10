@@ -1,100 +1,12 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
+import '../../domain/constants/widget_constants.dart';
 import '../../domain/services/i_availability_checker.dart';
 import '../../utils/date_normalizer.dart';
-
-/// Result of an availability check with detailed conflict information.
-class AvailabilityCheckResult {
-  /// Whether the dates are available for booking.
-  final bool isAvailable;
-
-  /// Type of conflict found (if any).
-  final ConflictType? conflictType;
-
-  /// Human-readable conflict message (if any).
-  final String? conflictMessage;
-
-  /// ID of the conflicting document (booking, iCal event, or daily_price).
-  final String? conflictingDocId;
-
-  const AvailabilityCheckResult({
-    required this.isAvailable,
-    this.conflictType,
-    this.conflictMessage,
-    this.conflictingDocId,
-  });
-
-  /// Factory for available result.
-  const AvailabilityCheckResult.available()
-      : isAvailable = true,
-        conflictType = null,
-        conflictMessage = null,
-        conflictingDocId = null;
-
-  /// Factory for booking conflict.
-  factory AvailabilityCheckResult.bookingConflict(String bookingId) {
-    return AvailabilityCheckResult(
-      isAvailable: false,
-      conflictType: ConflictType.booking,
-      conflictMessage: 'Conflict with existing booking',
-      conflictingDocId: bookingId,
-    );
-  }
-
-  /// Factory for iCal conflict.
-  factory AvailabilityCheckResult.icalConflict(String eventId, String source) {
-    return AvailabilityCheckResult(
-      isAvailable: false,
-      conflictType: ConflictType.icalEvent,
-      conflictMessage: 'Conflict with $source event',
-      conflictingDocId: eventId,
-    );
-  }
-
-  /// Factory for blocked date conflict.
-  factory AvailabilityCheckResult.blockedDateConflict(
-    String priceDocId,
-    DateTime blockedDate,
-  ) {
-    return AvailabilityCheckResult(
-      isAvailable: false,
-      conflictType: ConflictType.blockedDate,
-      conflictMessage: 'Date ${blockedDate.toString().split(' ')[0]} is blocked',
-      conflictingDocId: priceDocId,
-    );
-  }
-
-  /// Factory for blocked check-in conflict.
-  factory AvailabilityCheckResult.blockedCheckInConflict(
-    String priceDocId,
-    DateTime checkInDate,
-  ) {
-    return AvailabilityCheckResult(
-      isAvailable: false,
-      conflictType: ConflictType.blockedCheckIn,
-      conflictMessage:
-          'Check-in is not allowed on ${checkInDate.toString().split(' ')[0]}',
-      conflictingDocId: priceDocId,
-    );
-  }
-
-  /// Factory for blocked check-out conflict.
-  factory AvailabilityCheckResult.blockedCheckOutConflict(
-    String priceDocId,
-    DateTime checkOutDate,
-  ) {
-    return AvailabilityCheckResult(
-      isAvailable: false,
-      conflictType: ConflictType.blockedCheckOut,
-      conflictMessage:
-          'Check-out is not allowed on ${checkOutDate.toString().split(' ')[0]}',
-      conflictingDocId: priceDocId,
-    );
-  }
-}
 
 /// Type of availability conflict.
 enum ConflictType {
@@ -112,6 +24,113 @@ enum ConflictType {
 
   /// Check-out is blocked on the requested check-out date.
   blockedCheckOut,
+}
+
+/// Result of an availability check with detailed conflict information.
+///
+/// Uses [AvailabilityErrorCode] instead of hardcoded strings to support
+/// internationalization. The UI layer maps error codes to localized messages.
+class AvailabilityCheckResult {
+  /// Whether the dates are available for booking.
+  final bool isAvailable;
+
+  /// Type of conflict found (if any).
+  final ConflictType? conflictType;
+
+  /// Error code for UI localization (if any).
+  ///
+  /// Use this instead of [conflictMessage] for i18n support.
+  final AvailabilityErrorCode? errorCode;
+
+  /// ID of the conflicting document (booking, iCal event, or daily_price).
+  final String? conflictingDocId;
+
+  /// Date involved in the conflict (for formatting in UI).
+  final DateTime? conflictDate;
+
+  /// Source of iCal conflict (e.g., "Booking.com", "Airbnb").
+  final String? icalSource;
+
+  const AvailabilityCheckResult({
+    required this.isAvailable,
+    this.conflictType,
+    this.errorCode,
+    this.conflictingDocId,
+    this.conflictDate,
+    this.icalSource,
+  });
+
+  /// Factory for available result.
+  const AvailabilityCheckResult.available()
+    : isAvailable = true,
+      conflictType = null,
+      errorCode = null,
+      conflictingDocId = null,
+      conflictDate = null,
+      icalSource = null;
+
+  /// Factory for booking conflict.
+  factory AvailabilityCheckResult.bookingConflict(String bookingId) =>
+      AvailabilityCheckResult(
+        isAvailable: false,
+        conflictType: ConflictType.booking,
+        errorCode: AvailabilityErrorCode.bookingConflict,
+        conflictingDocId: bookingId,
+      );
+
+  /// Factory for iCal conflict.
+  factory AvailabilityCheckResult.icalConflict(String eventId, String source) =>
+      AvailabilityCheckResult(
+        isAvailable: false,
+        conflictType: ConflictType.icalEvent,
+        errorCode: AvailabilityErrorCode.icalConflict,
+        conflictingDocId: eventId,
+        icalSource: source,
+      );
+
+  /// Factory for blocked date conflict.
+  factory AvailabilityCheckResult.blockedDateConflict(
+    String priceDocId,
+    DateTime blockedDate,
+  ) => AvailabilityCheckResult(
+    isAvailable: false,
+    conflictType: ConflictType.blockedDate,
+    errorCode: AvailabilityErrorCode.blockedDate,
+    conflictingDocId: priceDocId,
+    conflictDate: blockedDate,
+  );
+
+  /// Factory for blocked check-in conflict.
+  factory AvailabilityCheckResult.blockedCheckInConflict(
+    String priceDocId,
+    DateTime checkInDate,
+  ) => AvailabilityCheckResult(
+    isAvailable: false,
+    conflictType: ConflictType.blockedCheckIn,
+    errorCode: AvailabilityErrorCode.blockedCheckIn,
+    conflictingDocId: priceDocId,
+    conflictDate: checkInDate,
+  );
+
+  /// Factory for blocked check-out conflict.
+  factory AvailabilityCheckResult.blockedCheckOutConflict(
+    String priceDocId,
+    DateTime checkOutDate,
+  ) => AvailabilityCheckResult(
+    isAvailable: false,
+    conflictType: ConflictType.blockedCheckOut,
+    errorCode: AvailabilityErrorCode.blockedCheckOut,
+    conflictingDocId: priceDocId,
+    conflictDate: checkOutDate,
+  );
+
+  /// Factory for error state (fails safe - unavailable).
+  factory AvailabilityCheckResult.error(ConflictType type) =>
+      AvailabilityCheckResult(
+        isAvailable: false,
+        conflictType: type,
+        errorCode: AvailabilityErrorCode.checkError,
+      );
 }
 
 /// Checks availability for bookings against multiple sources.
@@ -135,58 +154,64 @@ enum ConflictType {
 /// );
 ///
 /// if (!result.isAvailable) {
-///   print('Conflict: ${result.conflictMessage}');
+///   // Use result.errorCode for localized messages
+///   print('Error code: ${result.errorCode}');
 /// }
 /// ```
 class AvailabilityChecker implements IAvailabilityChecker {
   final FirebaseFirestore _firestore;
+
+  // Collection names
+  static const _bookingsCollection = 'bookings';
+  static const _icalEventsCollection = 'ical_events';
+  static const _dailyPricesCollection = 'daily_prices';
 
   AvailabilityChecker(this._firestore);
 
   /// Check if date range is available for booking.
   ///
   /// Returns [AvailabilityCheckResult] with detailed conflict info.
+  /// Use [AvailabilityCheckResult.errorCode] for localized error messages.
   @override
   Future<AvailabilityCheckResult> check({
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
-    // Normalize dates to midnight for consistent comparison
     final normalizedCheckIn = DateNormalizer.normalize(checkIn);
     final normalizedCheckOut = DateNormalizer.normalize(checkOut);
 
-    // 1. Check regular bookings
-    final bookingResult = await _checkBookings(
+    // Check bookings first (most common conflict)
+    var result = await _checkBookings(
       unitId: unitId,
       checkIn: normalizedCheckIn,
       checkOut: normalizedCheckOut,
     );
-    if (!bookingResult.isAvailable) return bookingResult;
+    if (!result.isAvailable) return result;
 
-    // 2. Check iCal events
-    final icalResult = await _checkIcalEvents(
+    // Check iCal events (external calendar sync)
+    result = await _checkIcalEvents(
       unitId: unitId,
       checkIn: normalizedCheckIn,
       checkOut: normalizedCheckOut,
     );
-    if (!icalResult.isAvailable) return icalResult;
+    if (!result.isAvailable) return result;
 
-    // 3. Check blocked dates
-    final blockedResult = await _checkBlockedDates(
+    // Check blocked dates
+    result = await _checkBlockedDates(
       unitId: unitId,
       checkIn: normalizedCheckIn,
       checkOut: normalizedCheckOut,
     );
-    if (!blockedResult.isAvailable) return blockedResult;
+    if (!result.isAvailable) return result;
 
-    // 4. Check blocked check-in/check-out restrictions
-    final checkInOutResult = await _checkBlockedCheckInOut(
+    // Check blocked check-in/check-out
+    result = await _checkBlockedCheckInOut(
       unitId: unitId,
       checkIn: normalizedCheckIn,
       checkOut: normalizedCheckOut,
     );
-    if (!checkInOutResult.isAvailable) return checkInOutResult;
+    if (!result.isAvailable) return result;
 
     LoggingService.log(
       '✅ No conflicts found for $normalizedCheckIn to $normalizedCheckOut',
@@ -218,27 +243,26 @@ class AvailabilityChecker implements IAvailabilityChecker {
     required DateTime checkOut,
   }) async {
     try {
-      // Note: Using client-side filtering to avoid Firestore limitation of
-      // whereIn + inequality filters requiring composite index
+      // Using client-side filtering to avoid Firestore composite index requirement
       final snapshot = await _firestore
-          .collection('bookings')
+          .collection(_bookingsCollection)
           .where('unit_id', isEqualTo: unitId)
-          .where('status', whereIn: ['pending', 'confirmed', 'in_progress'])
+          .where('status', whereIn: ActiveBookingStatuses.values)
           .get();
 
       for (final doc in snapshot.docs) {
         try {
           final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
 
-          // Normalize booking dates for comparison
           final bookingCheckIn = DateNormalizer.normalize(booking.checkIn);
           final bookingCheckOut = DateNormalizer.normalize(booking.checkOut);
 
-          // Overlap logic with turnover day support:
-          // Conflict exists if: (bookingCheckOut > checkIn) AND (bookingCheckIn < checkOut)
-          // Using > (not >=) allows same-day turnover (checkOut = checkIn is OK)
-          if (bookingCheckOut.isAfter(checkIn) &&
-              bookingCheckIn.isBefore(checkOut)) {
+          if (_hasDateOverlap(
+            start1: bookingCheckIn,
+            end1: bookingCheckOut,
+            start2: checkIn,
+            end2: checkOut,
+          )) {
             LoggingService.log(
               '❌ Booking conflict found: ${booking.id}',
               tag: 'AVAILABILITY_CHECK',
@@ -247,7 +271,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
           }
         } catch (e) {
           unawaited(
-            LoggingService.logError('Error checking booking availability', e),
+            LoggingService.logError('Error parsing booking document', e),
           );
         }
       }
@@ -255,12 +279,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
       return const AvailabilityCheckResult.available();
     } catch (e) {
       unawaited(LoggingService.logError('Error fetching bookings', e));
-      // Return unavailable on error to be safe
-      return const AvailabilityCheckResult(
-        isAvailable: false,
-        conflictType: ConflictType.booking,
-        conflictMessage: 'Error checking booking availability',
-      );
+      return AvailabilityCheckResult.error(ConflictType.booking);
     }
   }
 
@@ -271,9 +290,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
     required DateTime checkOut,
   }) async {
     try {
-      // Note: Using client-side filtering to avoid Firestore index requirement
+      // Using client-side filtering to avoid Firestore index requirement
       final snapshot = await _firestore
-          .collection('ical_events')
+          .collection(_icalEventsCollection)
           .where('unit_id', isEqualTo: unitId)
           .get();
 
@@ -291,8 +310,12 @@ class AvailabilityChecker implements IAvailabilityChecker {
 
           final source = data['source'] as String? ?? 'iCal';
 
-          // Overlap logic with turnover day support
-          if (eventEnd.isAfter(checkIn) && eventStart.isBefore(checkOut)) {
+          if (_hasDateOverlap(
+            start1: eventStart,
+            end1: eventEnd,
+            start2: checkIn,
+            end2: checkOut,
+          )) {
             LoggingService.log(
               '❌ iCal conflict found: $source event from $eventStart to $eventEnd',
               tag: 'AVAILABILITY_CHECK',
@@ -301,7 +324,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
           }
         } catch (e) {
           unawaited(
-            LoggingService.logError('Error checking iCal event availability', e),
+            LoggingService.logError('Error parsing iCal event document', e),
           );
         }
       }
@@ -309,11 +332,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
       return const AvailabilityCheckResult.available();
     } catch (e) {
       unawaited(LoggingService.logError('Error fetching iCal events', e));
-      return const AvailabilityCheckResult(
-        isAvailable: false,
-        conflictType: ConflictType.icalEvent,
-        conflictMessage: 'Error checking iCal event availability',
-      );
+      return AvailabilityCheckResult.error(ConflictType.icalEvent);
     }
   }
 
@@ -325,7 +344,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
   }) async {
     try {
       final snapshot = await _firestore
-          .collection('daily_prices')
+          .collection(_dailyPricesCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('available', isEqualTo: false)
           .get();
@@ -339,11 +358,11 @@ class AvailabilityChecker implements IAvailabilityChecker {
 
           if (blockedDate == null) continue;
 
-          // Blocked date is a conflict if: blockedDate >= checkIn AND blockedDate < checkOut
-          // (checkOut day is not counted as a night stay)
-          if ((blockedDate.isAfter(checkIn) ||
-                  blockedDate.isAtSameMomentAs(checkIn)) &&
-              blockedDate.isBefore(checkOut)) {
+          // Blocked date conflicts if within stay nights: checkIn <= blockedDate < checkOut
+          final isWithinStay =
+              !blockedDate.isBefore(checkIn) && blockedDate.isBefore(checkOut);
+
+          if (isWithinStay) {
             LoggingService.log(
               '❌ Blocked date conflict found: $blockedDate',
               tag: 'AVAILABILITY_CHECK',
@@ -355,7 +374,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
           }
         } catch (e) {
           unawaited(
-            LoggingService.logError('Error checking blocked date availability', e),
+            LoggingService.logError('Error parsing blocked date document', e),
           );
         }
       }
@@ -363,11 +382,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
       return const AvailabilityCheckResult.available();
     } catch (e) {
       unawaited(LoggingService.logError('Error fetching blocked dates', e));
-      return const AvailabilityCheckResult(
-        isAvailable: false,
-        conflictType: ConflictType.blockedDate,
-        conflictMessage: 'Error checking blocked date availability',
-      );
+      return AvailabilityCheckResult.error(ConflictType.blockedDate);
     }
   }
 
@@ -383,51 +398,53 @@ class AvailabilityChecker implements IAvailabilityChecker {
     required DateTime checkOut,
   }) async {
     try {
-      // Check if check-in date has blockCheckIn set
-      final checkInSnapshot = await _firestore
-          .collection('daily_prices')
+      // Batch both queries together for efficiency
+      final checkInTimestamp = Timestamp.fromDate(checkIn);
+      final checkOutTimestamp = Timestamp.fromDate(checkOut);
+
+      // Single query fetching both dates if they exist
+      final snapshot = await _firestore
+          .collection(_dailyPricesCollection)
           .where('unit_id', isEqualTo: unitId)
-          .where('date', isEqualTo: Timestamp.fromDate(checkIn))
-          .limit(1)
+          .where('date', whereIn: [checkInTimestamp, checkOutTimestamp])
           .get();
 
-      if (checkInSnapshot.docs.isNotEmpty) {
-        final data = checkInSnapshot.docs.first.data();
-        final blockCheckIn = data['block_checkin'] as bool? ?? false;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final docDate = DateNormalizer.fromTimestamp(
+          data['date'] as Timestamp?,
+        );
 
-        if (blockCheckIn) {
-          LoggingService.log(
-            '❌ Check-in blocked on $checkIn',
-            tag: 'AVAILABILITY_CHECK',
-          );
-          return AvailabilityCheckResult.blockedCheckInConflict(
-            checkInSnapshot.docs.first.id,
-            checkIn,
-          );
+        if (docDate == null) continue;
+
+        // Check if this doc is for check-in date
+        if (docDate.isAtSameMomentAs(checkIn)) {
+          final isBlockedCheckIn = data['block_checkin'] as bool? ?? false;
+          if (isBlockedCheckIn) {
+            LoggingService.log(
+              '❌ Check-in blocked on $checkIn',
+              tag: 'AVAILABILITY_CHECK',
+            );
+            return AvailabilityCheckResult.blockedCheckInConflict(
+              doc.id,
+              checkIn,
+            );
+          }
         }
-      }
 
-      // Check if check-out date has blockCheckOut set
-      final checkOutSnapshot = await _firestore
-          .collection('daily_prices')
-          .where('unit_id', isEqualTo: unitId)
-          .where('date', isEqualTo: Timestamp.fromDate(checkOut))
-          .limit(1)
-          .get();
-
-      if (checkOutSnapshot.docs.isNotEmpty) {
-        final data = checkOutSnapshot.docs.first.data();
-        final blockCheckOut = data['block_checkout'] as bool? ?? false;
-
-        if (blockCheckOut) {
-          LoggingService.log(
-            '❌ Check-out blocked on $checkOut',
-            tag: 'AVAILABILITY_CHECK',
-          );
-          return AvailabilityCheckResult.blockedCheckOutConflict(
-            checkOutSnapshot.docs.first.id,
-            checkOut,
-          );
+        // Check if this doc is for check-out date
+        if (docDate.isAtSameMomentAs(checkOut)) {
+          final isBlockedCheckOut = data['block_checkout'] as bool? ?? false;
+          if (isBlockedCheckOut) {
+            LoggingService.log(
+              '❌ Check-out blocked on $checkOut',
+              tag: 'AVAILABILITY_CHECK',
+            );
+            return AvailabilityCheckResult.blockedCheckOutConflict(
+              doc.id,
+              checkOut,
+            );
+          }
         }
       }
 
@@ -437,8 +454,18 @@ class AvailabilityChecker implements IAvailabilityChecker {
         LoggingService.logError('Error checking blockCheckIn/blockCheckOut', e),
       );
       // Return available on error - don't block legitimate bookings
-      // The UI validation will catch these cases anyway
       return const AvailabilityCheckResult.available();
     }
   }
+
+  /// Check if two date ranges overlap with turnover day support.
+  ///
+  /// Overlap exists if: (end1 > start2) AND (start1 < end2)
+  /// Using > (not >=) allows same-day turnover (checkOut = checkIn is OK)
+  bool _hasDateOverlap({
+    required DateTime start1,
+    required DateTime end1,
+    required DateTime start2,
+    required DateTime end2,
+  }) => end1.isAfter(start2) && start1.isBefore(end2);
 }

@@ -9,6 +9,7 @@ import '../../../owner_dashboard/data/firebase/firebase_ical_repository.dart';
 import '../../../owner_dashboard/domain/models/ical_feed.dart';
 import '../models/calendar_date_status.dart';
 import '../constants/calendar_constants.dart';
+import '../constants/widget_constants.dart';
 
 /// Parameters for loading calendar data
 class CalendarDataParams {
@@ -46,9 +47,9 @@ class CalendarDataService {
     required BookingRepository bookingRepository,
     required DailyPriceRepository dailyPriceRepository,
     required FirebaseIcalRepository icalRepository,
-  })  : _bookingRepository = bookingRepository,
-        _dailyPriceRepository = dailyPriceRepository,
-        _icalRepository = icalRepository;
+  }) : _bookingRepository = bookingRepository,
+       _dailyPriceRepository = dailyPriceRepository,
+       _icalRepository = icalRepository;
 
   /// Load calendar data for a date range
   ///
@@ -58,7 +59,7 @@ class CalendarDataService {
     CalendarDataParams params,
   ) async {
     final effectiveWeekendDays =
-        params.weekendDays ?? CalendarConstants.defaultWeekendDays;
+        params.weekendDays ?? WidgetConstants.defaultWeekendDays;
 
     // Calculate extended range for gap detection
     final extendedStart = DateTime.utc(
@@ -150,7 +151,7 @@ class CalendarDataService {
 
     // 2. Weekend price (if it's a weekend and weekendBasePrice is set)
     final effectiveWeekendDays =
-        weekendDays ?? CalendarConstants.defaultWeekendDays;
+        weekendDays ?? WidgetConstants.defaultWeekendDays;
     if (weekendBasePrice != null &&
         effectiveWeekendDays.contains(date.weekday)) {
       return weekendBasePrice;
@@ -324,7 +325,8 @@ class CalendarDataService {
 
           final status = _calculateBookingStatus(
             isPast: isPast,
-            isPending: false, // Use normal status, isPendingBooking flag handles the pattern
+            isPending:
+                false, // Use normal status, isPendingBooking flag handles the pattern
             isCheckIn: isCheckIn,
             isCheckOut: isCheckOut,
             existingStatus: existingInfo.status,
@@ -355,7 +357,8 @@ class CalendarDataService {
 
           calendarData[key] = existingInfo.copyWith(
             status: status,
-            isPendingBooking: isPending, // Set flag for pending pattern overlay (full days)
+            isPendingBooking:
+                isPending, // Set flag for pending pattern overlay (full days)
             isCheckOutPending: newIsCheckOutPending,
             isCheckInPending: newIsCheckInPending,
           );
@@ -460,33 +463,37 @@ class CalendarDataService {
     final allReservations = <_ReservationPeriod>[];
 
     for (final booking in bookings) {
-      allReservations.add(_ReservationPeriod(
-        checkIn: DateTime.utc(
-          booking.checkIn.year,
-          booking.checkIn.month,
-          booking.checkIn.day,
+      allReservations.add(
+        _ReservationPeriod(
+          checkIn: DateTime.utc(
+            booking.checkIn.year,
+            booking.checkIn.month,
+            booking.checkIn.day,
+          ),
+          checkOut: DateTime.utc(
+            booking.checkOut.year,
+            booking.checkOut.month,
+            booking.checkOut.day,
+          ),
         ),
-        checkOut: DateTime.utc(
-          booking.checkOut.year,
-          booking.checkOut.month,
-          booking.checkOut.day,
-        ),
-      ));
+      );
     }
 
     for (final event in icalEvents) {
-      allReservations.add(_ReservationPeriod(
-        checkIn: DateTime.utc(
-          event.startDate.year,
-          event.startDate.month,
-          event.startDate.day,
+      allReservations.add(
+        _ReservationPeriod(
+          checkIn: DateTime.utc(
+            event.startDate.year,
+            event.startDate.month,
+            event.startDate.day,
+          ),
+          checkOut: DateTime.utc(
+            event.endDate.year,
+            event.endDate.month,
+            event.endDate.day,
+          ),
         ),
-        checkOut: DateTime.utc(
-          event.endDate.year,
-          event.endDate.month,
-          event.endDate.day,
-        ),
-      ));
+      );
     }
 
     // Sort by checkout date
@@ -528,8 +535,5 @@ class _ReservationPeriod {
   final DateTime checkIn;
   final DateTime checkOut;
 
-  const _ReservationPeriod({
-    required this.checkIn,
-    required this.checkOut,
-  });
+  const _ReservationPeriod({required this.checkIn, required this.checkOut});
 }

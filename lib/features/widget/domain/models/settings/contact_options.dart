@@ -84,34 +84,21 @@ class ContactOptions {
   }
 
   /// Check if at least one contact method is available and configured.
-  ///
-  /// Returns true if any of the following conditions are met:
-  /// - Phone is enabled AND phone number is not empty
-  /// - Email is enabled AND email address is not empty
-  /// - WhatsApp is enabled AND WhatsApp number is not empty
-  bool get hasContactMethod {
-    return (showPhone && phoneNumber != null && phoneNumber!.isNotEmpty) ||
-        (showEmail && emailAddress != null && emailAddress!.isNotEmpty) ||
-        (showWhatsApp && whatsAppNumber != null && whatsAppNumber!.isNotEmpty);
-  }
+  bool get hasContactMethod =>
+      _isValidContact(showPhone, phoneNumber) ||
+      _isValidContact(showEmail, emailAddress) ||
+      _isValidContact(showWhatsApp, whatsAppNumber);
 
   /// Get list of enabled contact methods.
-  ///
-  /// Returns a list of strings describing available contact methods.
-  /// Useful for displaying in UI or generating summaries.
-  List<String> get enabledMethods {
-    final methods = <String>[];
-    if (showPhone && phoneNumber != null && phoneNumber!.isNotEmpty) {
-      methods.add('phone');
-    }
-    if (showEmail && emailAddress != null && emailAddress!.isNotEmpty) {
-      methods.add('email');
-    }
-    if (showWhatsApp && whatsAppNumber != null && whatsAppNumber!.isNotEmpty) {
-      methods.add('whatsapp');
-    }
-    return methods;
-  }
+  List<String> get enabledMethods => [
+        if (_isValidContact(showPhone, phoneNumber)) 'phone',
+        if (_isValidContact(showEmail, emailAddress)) 'email',
+        if (_isValidContact(showWhatsApp, whatsAppNumber)) 'whatsapp',
+      ];
+
+  /// Helper to check if a contact method is enabled and has valid value.
+  static bool _isValidContact(bool isEnabled, String? value) =>
+      isEnabled && value != null && value.isNotEmpty;
 
   /// Get the count of enabled contact methods.
   int get enabledMethodCount => enabledMethods.length;

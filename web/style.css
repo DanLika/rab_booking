@@ -1,3 +1,10 @@
+/* Ensure full height for Flutter app (needed for iframe vertical centering) */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 /* Enable text selection globally */
 * {
   -webkit-user-select: text !important;

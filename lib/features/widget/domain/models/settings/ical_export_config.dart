@@ -177,6 +177,10 @@ class ICalExportConfig {
         feedTitle,
       );
 
+  @override
+  String toString() =>
+      'ICalExportConfig(enabled: $enabled, isConfigured: $isConfigured)';
+
   static DateTime? _parseDateTime(dynamic value) {
     if (value == null) return null;
     if (value is Timestamp) return value.toDate();

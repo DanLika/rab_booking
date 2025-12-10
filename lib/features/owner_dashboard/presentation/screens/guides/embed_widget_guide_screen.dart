@@ -26,37 +26,24 @@ class EmbedWidgetGuideScreen extends ConsumerStatefulWidget {
 class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen> {
   int? _expandedStep;
 
-  static const String _defaultWidgetBaseUrl = 'https://bookbed.io';
   static const String _subdomainBaseDomain = 'bookbed.io';
 
-  /// Generate iframe code for a unit (uses stable IDs, not slug)
-  /// Note: Language parameter removed - widget has its own language selector in header
-  String _generateIframeCode(UnitModel unit, String? propertySubdomain) {
-    final baseUrl = propertySubdomain != null && propertySubdomain.isNotEmpty
-        ? 'https://$propertySubdomain.$_subdomainBaseDomain'
-        : _defaultWidgetBaseUrl;
-
-    final url = '$baseUrl?property=${unit.propertyId}&unit=${unit.id}';
-
-    return '''<iframe
-  src="$url"
-  width="100%"
-  height="700px"
-  frameborder="0"
-  allow="payment"
-  style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-></iframe>''';
+  /// Generate embed.js code for a unit
+  /// Simple code that handles auto-resize, loading, and responsive height
+  String _generateEmbedCode(String propertyId, UnitModel unit) {
+    return '''<div id="bookbed-widget"
+     data-property-id="$propertyId"
+     data-unit-id="${unit.id}">
+</div>
+<script src="https://bookbed.io/embed.js"></script>''';
   }
 
   final String _exampleCode = '''
-<iframe
-  src="https://bookbed.io/?unit=YOUR_UNIT_ID"
-  width="100%"
-  height="700px"
-  frameborder="0"
-  allow="payment"
-  style="border: none; border-radius: 8px;"
-></iframe>''';
+<div id="bookbed-widget"
+     data-property-id="YOUR_PROPERTY_ID"
+     data-unit-id="YOUR_UNIT_ID">
+</div>
+<script src="https://bookbed.io/embed.js"></script>''';
 
   @override
   Widget build(BuildContext context) {
@@ -777,18 +764,18 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
           ),
 
           // Units list
-          ...units.map((unit) => _buildUnitEmbedCard(unit, property.subdomain)),
+          ...units.map((unit) => _buildUnitEmbedCard(property.id, unit)),
         ],
       ),
     );
   }
 
   /// Build embed card for a single unit
-  Widget _buildUnitEmbedCard(UnitModel unit, String? propertySubdomain) {
+  Widget _buildUnitEmbedCard(String propertyId, UnitModel unit) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final iframeCode = _generateIframeCode(unit, propertySubdomain);
+    final embedCode = _generateEmbedCode(propertyId, unit);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -806,7 +793,7 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
               ),
               TextButton.icon(
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: iframeCode));
+                  Clipboard.setData(ClipboardData(text: embedCode));
                   ErrorDisplayUtils.showSuccessSnackBar(context, l10n.embedGuideCodeCopied);
                 },
                 icon: const Icon(Icons.copy, size: 16),
@@ -831,7 +818,7 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
               border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())),
             ),
             child: SelectableText(
-              iframeCode,
+              embedCode,
               style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: theme.colorScheme.primary, height: 1.4),
             ),
           ),

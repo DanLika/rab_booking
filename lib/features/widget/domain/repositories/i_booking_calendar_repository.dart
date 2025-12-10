@@ -1,12 +1,22 @@
 import '../models/calendar_date_status.dart';
 
+/// Days of the week for weekend pricing (1 = Monday, 7 = Sunday).
+///
+/// Example: `[5, 6]` for Friday and Saturday weekend pricing.
+typedef WeekendDays = List<int>;
+
 /// Abstract repository for booking calendar operations.
+///
 /// Implementations can use Firebase, Supabase, REST API, or mock data.
 ///
 /// This abstraction enables:
 /// - Unit testing without Firebase emulator
 /// - Swapping backend implementations
-/// - Following Dependency Inversion Principle (depend on abstractions, not concrete implementations)
+/// - Following Dependency Inversion Principle
+///
+/// See also:
+/// - [FirebaseBookingCalendarRepository] for the production implementation
+/// - [DatesNotAvailableException] thrown when dates conflict
 abstract class IBookingCalendarRepository {
   /// Watch year calendar data with realtime updates
   ///
@@ -39,9 +49,13 @@ abstract class IBookingCalendarRepository {
     required DateTime checkOut,
   });
 
-  /// Calculate total price for date range
+  /// Calculate total price for date range.
   ///
-  /// Calculates the total price for the specified date range.
+  /// Uses price hierarchy:
+  /// 1. Custom daily price (highest priority)
+  /// 2. Weekend base price - for days in [weekendDays]
+  /// 3. Base price - fallback for all other days
+  ///
   /// Throws [DatesNotAvailableException] if dates are not available.
   Future<double> calculateBookingPrice({
     required String unitId,
@@ -49,6 +63,6 @@ abstract class IBookingCalendarRepository {
     required DateTime checkOut,
     required double basePrice,
     double? weekendBasePrice,
-    List<int>? weekendDays,
+    WeekendDays? weekendDays,
   });
 }

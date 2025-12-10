@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/config/router_widget.dart';
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
@@ -38,6 +39,10 @@ void main() async {
 
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize date formatting for all locales (required by intl package)
+  // Supports: hr, en, de, it based on URL ?language= parameter
+  await initializeDateFormatting();
 
   runApp(const ProviderScope(child: BookingWidgetApp()));
 }
@@ -84,7 +89,7 @@ class BookingWidgetApp extends ConsumerWidget {
     );
 
     return MaterialApp.router(
-      title: 'BooBed Widget',
+      title: 'BookBed Widget',
       debugShowCheckedModeBanner: false,
 
       // Use Minimalist theme with dark mode support

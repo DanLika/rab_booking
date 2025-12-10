@@ -54,6 +54,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Column(
+      mainAxisSize: MainAxisSize.min, // Take only needed height for iframe embedding
       children: [
         // Combined header - explicitly outside any GestureDetector
         CalendarCombinedHeaderWidget(
@@ -71,75 +72,76 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
 
         // Calendar and tooltip in Stack for overlay positioning
-        Expanded(
-          child: MouseRegion(
-            onHover: (event) => setState(() => _mousePosition = event.localPosition),
-            child: GestureDetector(
-              // Swipe gesture for month navigation
-              onHorizontalDragEnd: (details) {
-                // Swipe right (previous month) - positive velocity
-                if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
-                  setState(() {
-                    _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
-                    // Only clear range if BOTH dates are selected (complete selection)
-                    if (_rangeStart != null && _rangeEnd != null) {
-                      _rangeStart = null;
-                      _rangeEnd = null;
+        // Note: No Expanded - calendar takes natural height for proper inline layout
+        MouseRegion(
+          onHover: (event) => setState(() => _mousePosition = event.localPosition),
+          child: GestureDetector(
+            // Swipe gesture for month navigation
+            onHorizontalDragEnd: (details) {
+              // Swipe right (previous month) - positive velocity
+              if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
+                setState(() {
+                  _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+                  // Only clear range if BOTH dates are selected (complete selection)
+                  if (_rangeStart != null && _rangeEnd != null) {
+                    _rangeStart = null;
+                    _rangeEnd = null;
+                    widget.onRangeSelected?.call(null, null);
+                  }
+                });
+              }
+              // Swipe left (next month) - negative velocity
+              else if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
+                setState(() {
+                  _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+                  // Only clear range if BOTH dates are selected (complete selection)
+                  if (_rangeStart != null && _rangeEnd != null) {
+                    _rangeStart = null;
+                    _rangeEnd = null;
+                    widget.onRangeSelected?.call(null, null);
+                  }
+                });
+              }
+            },
+            child: Stack(
+              children: [
+                // Calendar with GestureDetector for deselection
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    // Deselect dates when clicking outside the calendar
+                    if (_rangeStart != null || _rangeEnd != null) {
+                      setState(() {
+                        _rangeStart = null;
+                        _rangeEnd = null;
+                      });
                       widget.onRangeSelected?.call(null, null);
                     }
-                  });
-                }
-                // Swipe left (next month) - negative velocity
-                else if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
-                  setState(() {
-                    _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
-                    // Only clear range if BOTH dates are selected (complete selection)
-                    if (_rangeStart != null && _rangeEnd != null) {
-                      _rangeStart = null;
-                      _rangeEnd = null;
-                      widget.onRangeSelected?.call(null, null);
-                    }
-                  });
-                }
-              },
-              child: Stack(
-                children: [
-                  // Calendar with GestureDetector for deselection
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      // Deselect dates when clicking outside the calendar
-                      if (_rangeStart != null || _rangeEnd != null) {
-                        setState(() {
-                          _rangeStart = null;
-                          _rangeEnd = null;
-                        });
-                        widget.onRangeSelected?.call(null, null);
-                      }
-                    },
-                    child: calendarData.when(
-                      data: (data) => _buildMonthView(data, colors),
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
-                    ),
+                  },
+                  child: calendarData.when(
+                    data: (data) => _buildMonthView(data, colors),
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
                   ),
-                  // Hover tooltip overlay (desktop) - highest z-index
-                  if (_hoveredDate != null)
-                    calendarData.when(
-                      data: (data) => CalendarTooltipBuilder.build(
-                        context: context,
-                        hoveredDate: _hoveredDate,
-                        mousePosition: _mousePosition,
-                        data: data,
-                        colors: colors,
-                        tooltipHeight: 120.0,
-                        ignorePointer: true,
-                      ),
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, stackTrace) => const SizedBox.shrink(),
+                ),
+                // Hover tooltip overlay (desktop) - highest z-index
+                if (_hoveredDate != null)
+                  calendarData.when(
+                    data: (data) => CalendarTooltipBuilder.build(
+                      context: context,
+                      hoveredDate: _hoveredDate,
+                      mousePosition: _mousePosition,
+                      data: data,
+                      colors: colors,
+                      tooltipHeight: 120.0,
+                      ignorePointer: true,
+                      // Use unit's base price as fallback when no daily_price exists
+                      fallbackPrice: widgetCtxAsync.valueOrNull?.unit.pricePerNight,
                     ),
-                ],
-              ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, stackTrace) => const SizedBox.shrink(),
+                  ),
+              ],
             ),
           ),
         ),
@@ -241,10 +243,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   ) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.l, vertical: SpacingTokens.m),
-        child: SizedBox(
-          width: 650,
-          height: maxHeight,
+        // No top padding - spacing handled by CalendarCompactLegend margin (consistent with year view)
+        padding: const EdgeInsets.only(left: SpacingTokens.l, right: SpacingTokens.l, bottom: SpacingTokens.m),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 650),
           child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
         ),
       ),
@@ -254,10 +256,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   Widget _buildMobileLayout(Map<String, CalendarDateInfo> data, double maxHeight, WidgetColorScheme colors) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
-        child: SizedBox(
-          width: 600,
-          height: maxHeight,
+        // No top padding - spacing handled by CalendarCompactLegend margin (consistent with year view)
+        padding: const EdgeInsets.only(left: SpacingTokens.m, right: SpacingTokens.m, bottom: SpacingTokens.s),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
           child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
         ),
       ),
@@ -271,6 +273,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     WidgetColorScheme colors,
   ) {
     return Column(
+      mainAxisSize: MainAxisSize.min, // Take only needed height
       children: [
         // Week day headers
         _buildWeekDayHeaders(colors),
@@ -355,47 +358,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  /// Generate semantic label for screen readers (localized)
-  String _getSemanticLabelForDate(
-    DateTime date,
-    DateStatus status,
-    bool isPending,
-    bool isRangeStart,
-    bool isRangeEnd,
-    WidgetTranslations translations,
-  ) {
-    // Status description (localized)
-    final statusStr = status == DateStatus.available
-        ? translations.semanticAvailable
-        : status == DateStatus.booked
-        ? translations.semanticBooked
-        : status == DateStatus.partialCheckIn
-        ? translations.semanticCheckIn
-        : status == DateStatus.partialCheckOut
-        ? translations.semanticCheckOut
-        : status == DateStatus.partialBoth
-        ? translations.semanticTurnover
-        : status == DateStatus.blocked
-        ? translations.semanticBlocked
-        : status == DateStatus.disabled
-        ? translations.semanticUnavailable
-        : translations.semanticPastReservation;
-
-    final pendingStr = isPending ? ', ${translations.semanticPendingApproval}' : '';
-
-    // Range indicators (localized)
-    final rangeStr = isRangeStart
-        ? ', ${translations.semanticCheckInDate}'
-        : isRangeEnd
-        ? ', ${translations.semanticCheckOutDate}'
-        : '';
-
-    // Format date (localized)
-    final dateStr = translations.formatDateForSemantic(date);
-
-    return '$dateStr, $statusStr$pendingStr$rangeStr';
-  }
-
   Widget _buildDayCell(DateTime date, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     final key = CalendarDateUtils.getDateKey(date);
     final dateInfo = data[key];
@@ -416,13 +378,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
     // Generate semantic label for screen readers (localized)
     final translations = WidgetTranslations.of(context, ref);
-    final String semanticLabel = _getSemanticLabelForDate(
-      date,
-      dateInfo.status,
-      dateInfo.isPendingBooking,
-      isRangeStart,
-      isRangeEnd,
-      translations,
+    final String semanticLabel = CalendarDateUtils.getSemanticLabel(
+      date: date,
+      status: dateInfo.status,
+      isPending: dateInfo.isPendingBooking,
+      isRangeStart: isRangeStart,
+      isRangeEnd: isRangeEnd,
+      translations: translations,
     );
 
     return Semantics(
@@ -435,8 +397,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         onExit: (_) => setState(() => _hoveredDate = null),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          // Disable tap in calendar_only mode (when onRangeSelected is null)
-          onTap: widget.onRangeSelected != null ? () => _onDateTapped(date, dateInfo, data, colors) : null,
+          // In calendar_only mode (onRangeSelected is null), show helpful message on tap
+          onTap: widget.onRangeSelected != null
+              ? () => _onDateTapped(date, dateInfo, data, colors)
+              : () => _onViewOnlyTap(translations),
           child: Container(
             margin: const EdgeInsets.all(BorderTokens.widthThin),
             decoration: BoxDecoration(
@@ -595,6 +559,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         _validateAndSetRange(start, end, colors);
       }
     });
+  }
+
+  /// Show helpful message when user taps date in calendar_only (view-only) mode
+  void _onViewOnlyTap(WidgetTranslations translations) {
+    SnackBarHelper.showInfo(
+      context: context,
+      message: translations.calendarOnlyTapMessage,
+    );
   }
 
   /// Bug #72 Fix: Async validation using backend availability check

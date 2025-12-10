@@ -154,7 +154,7 @@ class BookingSummaryCard extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.s),
           DetailRowWidget(
             label: tr.totalPrice,
-            value: '€${totalPrice.toStringAsFixed(2)}',
+            value: '${tr.currencySymbol}${totalPrice.toStringAsFixed(2)}',
             isDarkMode: isDarkMode,
             hasPadding: true,
             isHighlighted: true,

@@ -159,3 +159,40 @@ abstract final class PaymentOptionValues {
   static const String deposit = 'deposit';
   static const String none = 'none';
 }
+
+/// Active booking statuses for availability checks.
+///
+/// These statuses indicate bookings that block dates from being booked.
+/// Used by [AvailabilityChecker] and calendar building logic.
+abstract final class ActiveBookingStatuses {
+  /// Statuses that block dates from being available.
+  static const List<String> values = [
+    BookingStatusValues.pending,
+    BookingStatusValues.confirmed,
+    'in_progress', // Legacy status still in some documents
+  ];
+}
+
+/// Error codes for availability check conflicts.
+///
+/// Used to communicate conflict types without hardcoded UI strings.
+/// The UI layer maps these to localized messages.
+enum AvailabilityErrorCode {
+  /// Dates conflict with an existing booking.
+  bookingConflict,
+
+  /// Dates conflict with an iCal event (Booking.com, Airbnb, etc.).
+  icalConflict,
+
+  /// A date in the range is manually blocked.
+  blockedDate,
+
+  /// Check-in is not allowed on the requested date.
+  blockedCheckIn,
+
+  /// Check-out is not allowed on the requested date.
+  blockedCheckOut,
+
+  /// Error occurred while checking availability (fail-safe: unavailable).
+  checkError,
+}

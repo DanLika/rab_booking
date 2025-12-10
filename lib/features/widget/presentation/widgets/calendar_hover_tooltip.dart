@@ -11,7 +11,6 @@ class CalendarHoverTooltip extends ConsumerWidget {
   final DateTime date;
   final double? price;
   final DateStatus status;
-  final Offset position;
   final VoidCallback? onClose;
   final WidgetColorScheme colors;
   final WidgetTranslations? translations;
@@ -21,7 +20,6 @@ class CalendarHoverTooltip extends ConsumerWidget {
     required this.date,
     required this.price,
     required this.status,
-    required this.position,
     required this.colors,
     this.onClose,
     this.translations,
@@ -31,12 +29,12 @@ class CalendarHoverTooltip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = translations ?? WidgetTranslations.of(context, ref);
 
-    // Format date: "Monday, Oct 27, 2025"
-    final dateFormatter = DateFormat('EEEE, MMM d, y');
+    // Format date: "Monday, Oct 27, 2025" (localized to widget language)
+    final dateFormatter = DateFormat('EEEE, MMM d, y', t.locale.languageCode);
     final formattedDate = dateFormatter.format(date);
 
     // Format price: "€85 / night" (localized)
-    final formattedPrice = price != null ? '€${price!.toStringAsFixed(0)} / ${t.perNightShort}' : t.notAvailableShort;
+    final formattedPrice = price != null ? '${t.currencySymbol}${price!.toStringAsFixed(0)} / ${t.perNightShort}' : t.notAvailableShort;
 
     // Get status label (localized)
     final statusLabel = _getStatusLabel(status, t);

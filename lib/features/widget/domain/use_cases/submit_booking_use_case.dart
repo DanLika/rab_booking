@@ -31,7 +31,8 @@ class SubmitBookingParams {
 
   // Payment
   final double totalPrice;
-  final String paymentMethod; // 'stripe', 'bank_transfer', 'pay_on_arrival', 'none'
+  final String
+  paymentMethod; // 'stripe', 'bank_transfer', 'pay_on_arrival', 'none'
   final String paymentOption; // 'deposit', 'full', 'none'
 
   // Tax/Legal
@@ -89,17 +90,32 @@ class SubmitBookingUseCase {
 
   SubmitBookingUseCase(this._bookingService);
 
+  /// Compute taxLegalAccepted value for booking creation.
+  ///
+  /// Returns null if tax/legal config is disabled, otherwise returns the accepted value.
+  bool? _computeTaxLegalAccepted(WidgetSettings? settings, bool accepted) {
+    if (settings?.taxLegalConfig == null || !settings!.taxLegalConfig.enabled) {
+      return null;
+    }
+    return accepted;
+  }
+
   /// Submit booking and return result.
   ///
   /// Throws exceptions on failure (BookingConflictException, PaymentException, etc.).
   /// Widget should catch and handle errors with appropriate UI feedback.
   Future<BookingSubmissionResult> execute(SubmitBookingParams params) async {
-    final widgetMode = params.widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
+    final widgetMode =
+        params.widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     // Sanitize user input to prevent XSS and injection attacks
-    final sanitizedGuestName = InputSanitizer.sanitizeName(params.fullGuestName);
+    final sanitizedGuestName = InputSanitizer.sanitizeName(
+      params.fullGuestName,
+    );
     final sanitizedEmail = InputSanitizer.sanitizeEmail(params.email);
-    final sanitizedPhone = InputSanitizer.sanitizePhone(params.phoneWithCountryCode);
+    final sanitizedPhone = InputSanitizer.sanitizePhone(
+      params.phoneWithCountryCode,
+    );
     final sanitizedNotes = params.notes?.trim().isEmpty ?? true
         ? null
         : InputSanitizer.sanitizeText(params.notes!.trim());
@@ -119,12 +135,13 @@ class SubmitBookingUseCase {
         totalPrice: params.totalPrice,
         paymentOption: 'none', // No payment for pending bookings
         paymentMethod: 'none',
-        requireOwnerApproval: true, // Always requires approval in bookingPending mode
+        requireOwnerApproval:
+            true, // Always requires approval in bookingPending mode
         notes: sanitizedNotes,
-        taxLegalAccepted: params.widgetSettings?.taxLegalConfig != null &&
-                params.widgetSettings!.taxLegalConfig.enabled
-            ? params.taxLegalAccepted
-            : null,
+        taxLegalAccepted: _computeTaxLegalAccepted(
+          params.widgetSettings,
+          params.taxLegalAccepted,
+        ),
       );
 
       final booking = bookingResult.booking!;
@@ -153,18 +170,21 @@ class SubmitBookingUseCase {
       guestCount: params.totalGuests,
       totalPrice: params.totalPrice,
       paymentOption: params.paymentOption, // 'deposit' or 'full'
-      paymentMethod: params.paymentMethod, // 'stripe', 'bank_transfer', 'pay_on_arrival'
-      requireOwnerApproval: params.widgetSettings?.requireOwnerApproval ?? false,
+      paymentMethod:
+          params.paymentMethod, // 'stripe', 'bank_transfer', 'pay_on_arrival'
+      requireOwnerApproval:
+          params.widgetSettings?.requireOwnerApproval ?? false,
       notes: sanitizedNotes,
-      taxLegalAccepted: params.widgetSettings?.taxLegalConfig != null &&
-              params.widgetSettings!.taxLegalConfig.enabled
-          ? params.taxLegalAccepted
-          : null,
+      taxLegalAccepted: _computeTaxLegalAccepted(
+        params.widgetSettings,
+        params.taxLegalAccepted,
+      ),
     );
 
     // Stripe flow: Return booking data for checkout (booking not created yet)
     if (params.paymentMethod == 'stripe') {
-      if (!bookingResult.isStripeValidation || bookingResult.stripeBookingData == null) {
+      if (!bookingResult.isStripeValidation ||
+          bookingResult.stripeBookingData == null) {
         throw Exception(
           'Invalid Stripe validation response from booking service',
         );
@@ -200,9 +220,11 @@ class SubmitBookingUseCase {
     // Calculate payment deadline for bank transfer (if applicable)
     String? paymentDeadline;
     if (paymentMethod == 'bank_transfer') {
-      final deadlineDays = widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
+      final deadlineDays =
+          widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
       final deadline = DateTime.now().add(Duration(days: deadlineDays));
-      paymentDeadline = '${deadline.day.toString().padLeft(2, '0')}'
+      paymentDeadline =
+          '${deadline.day.toString().padLeft(2, '0')}'
           '.${deadline.month.toString().padLeft(2, '0')}'
           '.${deadline.year}';
     }

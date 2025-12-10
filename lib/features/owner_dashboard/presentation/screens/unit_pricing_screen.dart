@@ -14,6 +14,7 @@ import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_calendar_provider.dart';
+import '../providers/owner_properties_provider.dart';
 
 /// Screen for managing unit pricing (base price and bulk month pricing)
 /// Can be accessed from drawer (no unit selected) or from unit management (specific unit)
@@ -522,8 +523,14 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
       final repository = ref.read(ownerPropertiesRepositoryProvider);
       await repository.updateUnit(propertyId: _selectedUnit!.propertyId, unitId: _selectedUnit!.id, basePrice: price);
 
-      // Invalidate unit provider to refresh data across app
+      // Update local state immediately for responsive UI
+      _selectedUnit = _selectedUnit!.copyWith(pricePerNight: price);
+
+      // Invalidate BOTH unit providers to refresh data across app
+      // - allOwnerUnitsProvider: used by calendar, timeline
+      // - ownerUnitsProvider: used by unified_unit_hub_screen (stream-based)
       ref.invalidate(allOwnerUnitsProvider);
+      ref.invalidate(ownerUnitsProvider);
 
       if (mounted) {
         // Try to show success message, but don't crash if no Scaffold available

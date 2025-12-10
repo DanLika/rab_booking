@@ -20,11 +20,13 @@ class CalendarCompactLegend extends StatelessWidget {
 
     // Match calendar width: 650px desktop, 600px mobile/tablet
     final maxWidth = isDesktop ? 650.0 : 600.0;
+    // Responsive vertical spacing: 24px desktop, 16px mobile/tablet
+    final verticalMargin = isDesktop ? SpacingTokens.l : SpacingTokens.m;
 
     return Center(
       child: Container(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        margin: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+        margin: EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: verticalMargin),
         padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
         decoration: BoxDecoration(
           color: colors.backgroundTertiary,

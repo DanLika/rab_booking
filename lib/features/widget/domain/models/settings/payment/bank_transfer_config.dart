@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'payment_config_base.dart';
 
 /// Bank transfer payment configuration
@@ -23,6 +25,7 @@ import 'payment_config_base.dart';
 ///   // Fetch bank details from CompanyDetails
 /// }
 /// ```
+@immutable
 class BankTransferConfig with PaymentConfigBase {
   final bool enabled;
 
@@ -99,28 +102,23 @@ class BankTransferConfig with PaymentConfigBase {
     };
   }
 
-  /// Check if this config has an ownerId for fetching bank details from profile
-  bool get hasOwnerId => ownerId != null && ownerId!.isNotEmpty;
+  /// Whether this config has an ownerId for fetching bank details from profile.
+  bool get hasOwnerId => ownerId?.isNotEmpty ?? false;
 
-  /// Check if bank details are available (either from ownerId or legacy fields)
-  /// Widget should first check hasOwnerId, then fall back to legacy fields
-  bool get hasCompleteDetails {
-    // New approach: ownerId points to CompanyDetails
-    if (hasOwnerId) return true;
-    // Legacy approach: bank details stored in config
-    return bankName != null &&
-        accountHolder != null &&
-        (iban != null || accountNumber != null);
-  }
+  /// Whether bank details are available (either from ownerId or legacy fields).
+  ///
+  /// Widget should first check [hasOwnerId], then fall back to legacy fields.
+  bool get hasCompleteDetails =>
+      hasOwnerId ||
+      (bankName != null &&
+          accountHolder != null &&
+          (iban != null || accountNumber != null));
 
-  /// Check if this config has legacy bank details (for backward compatibility)
-  bool get hasLegacyBankDetails {
-    return bankName != null &&
-        bankName!.isNotEmpty &&
-        accountHolder != null &&
-        accountHolder!.isNotEmpty &&
-        (iban != null && iban!.isNotEmpty);
-  }
+  /// Whether this config has legacy bank details (for backward compatibility).
+  bool get hasLegacyBankDetails =>
+      (bankName?.isNotEmpty ?? false) &&
+      (accountHolder?.isNotEmpty ?? false) &&
+      (iban?.isNotEmpty ?? false);
 
   BankTransferConfig copyWith({
     bool? enabled,

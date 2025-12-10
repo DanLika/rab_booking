@@ -10,9 +10,6 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../helpers/availability_checker.dart';
 import '../helpers/booking_price_calculator.dart';
-// CalendarDataBuilder available for testing or future extraction
-// ignore: unused_import
-import '../helpers/calendar_data_builder.dart';
 import '../../utils/date_key_generator.dart';
 
 /// Firebase repository for booking calendar with realtime updates and prices.

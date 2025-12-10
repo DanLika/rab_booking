@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookBed Widget Test</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+    }
+    .page-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .widget-wrapper {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .info-text {
+      margin-top: 20px;
+      padding: 16px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #1565c0;
+    }
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <h1>Book Your Stay</h1>
+
+    <!-- BookBed Widget using embed.js -->
+    <div class="widget-wrapper">
+      <div id="bookbed-widget"
+           data-property-id="YOUR_PROPERTY_ID"
+           data-unit-id="YOUR_UNIT_ID"
+           data-theme="light"
+           data-height="auto">
+      </div>
+    </div>
+
+    <div class="info-text">
+      <strong>How to embed on your website:</strong><br><br>
+      1. Add this div where you want the widget:<br>
+      <code>&lt;div id="bookbed-widget" data-property-id="YOUR_PROPERTY_ID" data-unit-id="YOUR_UNIT_ID"&gt;&lt;/div&gt;</code><br><br>
+      2. Add the embed script before &lt;/body&gt;:<br>
+      <code>&lt;script src="https://bookbed.io/embed.js"&gt;&lt;/script&gt;</code>
+    </div>
+  </div>
+
+  <!-- BookBed Embed Script - handles iframe creation and auto-resize -->
+  <script src="https://bookbed.io/embed.js"></script>
+
+  <!-- Optional: Listen for booking events -->
+  <script>
+    document.addEventListener('bookbed-booking-completed', function(event) {
+      console.log('Booking completed!', event.detail);
+      // You can trigger analytics, show confirmation, etc.
+    });
+  </script>
+</body>
+</html>

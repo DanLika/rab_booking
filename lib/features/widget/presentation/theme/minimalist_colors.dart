@@ -13,7 +13,7 @@ class MinimalistColors {
   /// Off-white - secondary background for subtle contrast
   static const Color backgroundSecondary = Color(0xFFFAFAFA);
 
-  /// Light grey - tertiary background for disabled/inactive areas
+  /// Light grey - tertiary background for headers, legends, banners
   static const Color backgroundTertiary = Color(0xFFF5F5F5);
 
   /// White with shadow - elevated cards
@@ -184,7 +184,7 @@ class MinimalistColorsDark {
   /// Off-black - secondary background for subtle contrast
   static const Color backgroundSecondary = Color(0xFF0A0A0A);
 
-  /// Dark grey - tertiary background (past days not booked)
+  /// Dark grey - tertiary background for headers, legends, banners
   static const Color backgroundTertiary = Color(0xFF1f2937); // #1f2937
 
   /// Black with shadow - elevated cards

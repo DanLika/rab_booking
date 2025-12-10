@@ -15,6 +15,16 @@ import '../../theme/minimalist_colors.dart';
 /// )
 /// ```
 class BookBedLoader extends StatelessWidget {
+  // Layout constants
+  static const double _defaultLogoSize = 80;
+  static const double _logoToBarSpacing = 32;
+  static const double _progressBarWidth = 200;
+  static const double _progressBarHeight = 4;
+  static const double _progressBarRadius = 2;
+  static const double _barToTextSpacing = 12;
+  static const double _percentageFontSize = 14;
+  static const double _backgroundOpacity = 0.2;
+
   /// Whether dark mode is active
   final bool isDarkMode;
 
@@ -25,7 +35,12 @@ class BookBedLoader extends StatelessWidget {
   /// Logo size
   final double logoSize;
 
-  const BookBedLoader({super.key, required this.isDarkMode, this.progress, this.logoSize = 80});
+  const BookBedLoader({
+    super.key,
+    required this.isDarkMode,
+    this.progress,
+    this.logoSize = _defaultLogoSize,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,63 +49,62 @@ class BookBedLoader extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Animated BookBed logo (uses theme colors by default)
         AuthLogoIcon(size: logoSize),
-
-        const SizedBox(height: 32),
-
-        // Progress bar
+        const SizedBox(height: _logoToBarSpacing),
         SizedBox(
-          width: 200,
+          width: _progressBarWidth,
           child: Column(
             children: [
-              // Progress bar track
-              ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: SizedBox(
-                  height: 4,
-                  child: Stack(
-                    children: [
-                      // Background track
-                      Container(color: colors.primary.withValues(alpha: 0.2)),
-                      // Progress fill
-                      if (progress != null)
-                        FractionallySizedBox(
-                          widthFactor: progress!.clamp(0.0, 1.0),
-                          alignment: Alignment.centerLeft,
-                          child: Container(color: colors.primary),
-                        )
-                      else
-                        // Indeterminate progress
-                        _IndeterminateProgress(color: colors.primary),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Percentage text
-              if (progress != null)
-                Text(
-                  '${(progress! * 100).toInt()}%',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: colors.textSecondary,
-                    fontFamily: 'Manrope',
-                  ),
-                ),
+              _buildProgressBar(colors),
+              const SizedBox(height: _barToTextSpacing),
+              if (progress != null) _buildPercentageText(colors),
             ],
           ),
         ),
       ],
     );
   }
+
+  Widget _buildProgressBar(MinimalistColorSchemeAdapter colors) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(_progressBarRadius),
+      child: SizedBox(
+        height: _progressBarHeight,
+        child: Stack(
+          children: [
+            Container(color: colors.primary.withValues(alpha: _backgroundOpacity)),
+            if (progress != null)
+              FractionallySizedBox(
+                widthFactor: progress!.clamp(0.0, 1.0),
+                alignment: Alignment.centerLeft,
+                child: Container(color: colors.primary),
+              )
+            else
+              _IndeterminateProgress(color: colors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPercentageText(MinimalistColorSchemeAdapter colors) {
+    return Text(
+      '${(progress! * 100).toInt()}%',
+      style: TextStyle(
+        fontSize: _percentageFontSize,
+        fontWeight: FontWeight.w500,
+        color: colors.textSecondary,
+        fontFamily: 'Manrope',
+      ),
+    );
+  }
 }
 
 /// Indeterminate progress animation
 class _IndeterminateProgress extends StatefulWidget {
+  static const Duration _animationDuration = Duration(milliseconds: 1500);
+  static const double _indicatorWidth = 0.3;
+
   final Color color;
 
   const _IndeterminateProgress({required this.color});
@@ -99,19 +113,22 @@ class _IndeterminateProgress extends StatefulWidget {
   State<_IndeterminateProgress> createState() => _IndeterminateProgressState();
 }
 
-class _IndeterminateProgressState extends State<_IndeterminateProgress> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+class _IndeterminateProgressState extends State<_IndeterminateProgress>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(duration: const Duration(milliseconds: 1500), vsync: this)..repeat();
+    _controller = AnimationController(
+      duration: _IndeterminateProgress._animationDuration,
+      vsync: this,
+    )..repeat();
 
-    _animation = Tween<double>(
-      begin: -1.0,
-      end: 2.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -126,7 +143,7 @@ class _IndeterminateProgressState extends State<_IndeterminateProgress> with Sin
       animation: _animation,
       builder: (context, child) {
         return FractionallySizedBox(
-          widthFactor: 0.3,
+          widthFactor: _IndeterminateProgress._indicatorWidth,
           alignment: Alignment(_animation.value, 0),
           child: Container(color: widget.color),
         );

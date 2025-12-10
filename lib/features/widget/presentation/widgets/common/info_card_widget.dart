@@ -24,6 +24,11 @@ import '../../theme/minimalist_colors.dart';
 /// )
 /// ```
 class InfoCardWidget extends StatelessWidget {
+  // Layout constants
+  static const double _iconSizeWithTitle = 24.0;
+  static const double _iconSizeSimple = 16.0;
+  static const double _iconToTextSpacingSimple = 6.0;
+
   /// The main message text to display
   final String message;
 
@@ -61,7 +66,10 @@ class InfoCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final hasTitle = title != null && title!.isNotEmpty;
-    final effectiveIconSize = iconSize ?? (hasTitle ? 24.0 : 16.0);
+    final effectiveIconSize =
+        iconSize ?? (hasTitle ? _iconSizeWithTitle : _iconSizeSimple);
+    final iconSpacing =
+        hasTitle ? SpacingTokens.s : _iconToTextSpacingSimple;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -75,50 +83,57 @@ class InfoCardWidget extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: useMinimalWidth ? MainAxisSize.min : MainAxisSize.max,
-        crossAxisAlignment: centerContent ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            centerContent ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
           Padding(
             padding: EdgeInsets.only(top: (hasTitle || centerContent) ? 0 : 1),
             child: Icon(icon, color: colors.textSecondary, size: effectiveIconSize),
           ),
-          SizedBox(width: hasTitle ? SpacingTokens.s : 6),
-          // Flexible allows text to wrap to multiple lines when constrained
-          if (useMinimalWidth)
-            Flexible(
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
-              ),
-            )
-          else
-            Expanded(
-              child: hasTitle
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title!,
-                          style: TextStyle(
-                            fontSize: TypographyTokens.fontSizeM,
-                            fontWeight: TypographyTokens.bold,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: SpacingTokens.xs),
-                        Text(
-                          message,
-                          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
-                        ),
-                      ],
-                    )
-                  : Text(
-                      message,
-                      style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
-                    ),
-            ),
+          SizedBox(width: iconSpacing),
+          _buildContent(colors, hasTitle),
         ],
       ),
+    );
+  }
+
+  Widget _buildContent(MinimalistColorSchemeAdapter colors, bool hasTitle) {
+    final messageStyle = TextStyle(
+      fontSize: TypographyTokens.fontSizeS,
+      color: colors.textSecondary,
+    );
+
+    if (useMinimalWidth) {
+      return Flexible(
+        child: Text(message, textAlign: TextAlign.center, style: messageStyle),
+      );
+    }
+
+    return Expanded(
+      child: hasTitle
+          ? _buildTitleAndMessage(colors, messageStyle)
+          : Text(message, style: messageStyle),
+    );
+  }
+
+  Widget _buildTitleAndMessage(
+    MinimalistColorSchemeAdapter colors,
+    TextStyle messageStyle,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title!,
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeM,
+            fontWeight: TypographyTokens.bold,
+            color: colors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: SpacingTokens.xs),
+        Text(message, style: messageStyle),
+      ],
     );
   }
 }

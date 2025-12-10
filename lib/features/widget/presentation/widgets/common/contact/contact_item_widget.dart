@@ -26,6 +26,14 @@ import '../../../theme/minimalist_colors.dart';
 /// )
 /// ```
 class ContactItemWidget extends StatelessWidget {
+  // Layout constants
+  static const double _borderRadius = 12;
+  static const double _padding = 8;
+  static const double _iconSize = 20;
+  static const double _iconToTextSpacing = 8;
+  static const double _fontSize = 14;
+  static const double _minFontSize = 10;
+
   /// Icon to display
   final IconData icon;
 
@@ -57,32 +65,28 @@ class ContactItemWidget extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(_borderRadius),
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(_padding),
         child: Row(
-          mainAxisSize: MainAxisSize.min, // CRITICAL: Prevent unbounded expansion
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: colors.buttonPrimary,
-            ),
-            const SizedBox(width: 8),
+            Icon(icon, size: _iconSize, color: colors.buttonPrimary),
+            const SizedBox(width: _iconToTextSpacing),
             Flexible(
               child: AutoSizeText(
                 value,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: _fontSize,
                   color: colors.textPrimary,
                   decoration: TextDecoration.underline,
                 ),
-                minFontSize: 10, // Minimum readable size
+                minFontSize: _minFontSize,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                group: autoSizeGroup, // Sync font size with other items in group
+                group: autoSizeGroup,
               ),
             ),
           ],

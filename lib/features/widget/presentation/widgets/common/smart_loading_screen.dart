@@ -252,9 +252,7 @@ class _SmartLoadingScreenWithProviderState<T>
     if (_showContent) {
       return widget.asyncValue.when(
         data: widget.onData,
-        error: (e, st) =>
-            widget.onError?.call(e, st) ??
-            buildErrorWidget(e),
+        error: (e, st) => widget.onError?.call(e, st) ?? _buildErrorWidget(e),
         loading: _buildLoadingWidget,
       );
     }
@@ -277,7 +275,7 @@ class _SmartLoadingScreenWithProviderState<T>
     );
   }
 
-  Widget buildErrorWidget(Object error) {
+  Widget _buildErrorWidget(Object error) {
     final colors = MinimalistColorSchemeAdapter(dark: widget.isDarkMode);
 
     return Scaffold(

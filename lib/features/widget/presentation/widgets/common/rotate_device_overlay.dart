@@ -20,6 +20,12 @@ import '../../l10n/widget_translations.dart';
 /// }
 /// ```
 class RotateDeviceOverlay extends StatelessWidget {
+  // Layout constants
+  static const double _smallScreenBreakpoint = 360;
+  static const double _iconSizeSmall = 56.0;
+  static const double _iconSizeNormal = 80.0;
+  static const double _backgroundOpacity = 0.95;
+
   /// Whether dark mode is active
   final bool isDarkMode;
 
@@ -42,20 +48,24 @@ class RotateDeviceOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Responsive icon size: smaller on very small screens
     final screenWidth = MediaQuery.of(context).size.width;
-    final iconSize = screenWidth < 360 ? 56.0 : 80.0;
+    final isSmallScreen = screenWidth < _smallScreenBreakpoint;
+    final iconSize = isSmallScreen ? _iconSizeSmall : _iconSizeNormal;
 
     return Positioned.fill(
       child: Container(
-        color: colors.backgroundPrimary.withValues(alpha: 0.95),
+        color: colors.backgroundPrimary.withValues(alpha: _backgroundOpacity),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(SpacingTokens.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.screen_rotation, size: iconSize, color: colors.textPrimary),
+                Icon(
+                  Icons.screen_rotation,
+                  size: iconSize,
+                  color: colors.textPrimary,
+                ),
                 const SizedBox(height: SpacingTokens.l),
                 Text(
                   translations.rotateYourDevice,
@@ -69,26 +79,44 @@ class RotateDeviceOverlay extends StatelessWidget {
                 const SizedBox(height: SpacingTokens.m),
                 Text(
                   translations.rotateForBestExperience,
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeM,
+                    color: colors.textSecondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: SpacingTokens.xl),
-                ElevatedButton(
-                  onPressed: onSwitchToMonthView,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack,
-                    foregroundColor: isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite,
-                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xl, vertical: SpacingTokens.m),
-                    shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
-                  ),
-                  child: Text(
-                    translations.switchToMonthView,
-                    style: const TextStyle(fontSize: TypographyTokens.fontSizeM, fontWeight: TypographyTokens.semiBold),
-                  ),
-                ),
+                _buildSwitchButton(),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwitchButton() {
+    final backgroundColor =
+        isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
+    final foregroundColor =
+        isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
+
+    return ElevatedButton(
+      onPressed: onSwitchToMonthView,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        foregroundColor: foregroundColor,
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingTokens.xl,
+          vertical: SpacingTokens.m,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
+      ),
+      child: Text(
+        translations.switchToMonthView,
+        style: const TextStyle(
+          fontSize: TypographyTokens.fontSizeM,
+          fontWeight: TypographyTokens.semiBold,
         ),
       ),
     );

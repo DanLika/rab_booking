@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../theme/minimalist_colors.dart';
 import 'bookbed_loader.dart';
 
@@ -14,17 +13,21 @@ import 'bookbed_loader.dart';
 ///   return WidgetLoadingScreen(isDarkMode: isDarkMode);
 /// }
 /// ```
-class WidgetLoadingScreen extends ConsumerWidget {
+class WidgetLoadingScreen extends StatelessWidget {
   /// Whether dark mode is active
   final bool isDarkMode;
 
   /// Optional loading progress (0.0 to 1.0)
   final double? progress;
 
-  const WidgetLoadingScreen({super.key, required this.isDarkMode, this.progress});
+  const WidgetLoadingScreen({
+    super.key,
+    required this.isDarkMode,
+    this.progress,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Scaffold(

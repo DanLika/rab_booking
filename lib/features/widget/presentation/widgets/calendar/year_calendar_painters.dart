@@ -117,12 +117,12 @@ class PendingPatternPainter extends CustomPainter with DiagonalPatternMixin {
 
 /// Painter for partialBoth (turnover day) with split colors in year calendar.
 ///
+/// Uses [DiagonalPatternMixin] for pending pattern rendering.
 /// Top-left triangle = checkout (previous booking ends)
 /// Bottom-right triangle = checkin (new booking starts)
-/// Supports pending pattern on each triangle independently.
-class PartialBothPainter extends CustomPainter {
-  final Color checkoutColor; // Top-left triangle color
-  final Color checkinColor; // Bottom-right triangle color
+class PartialBothPainter extends CustomPainter with DiagonalPatternMixin {
+  final Color checkoutColor;
+  final Color checkinColor;
   final bool isCheckOutPending;
   final bool isCheckInPending;
   final Color? patternLineColor;
@@ -139,55 +139,51 @@ class PartialBothPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
 
-    // Draw top-left triangle (checkout)
-    final checkoutPath = Path()
-      ..moveTo(0, 0) // Top-left
-      ..lineTo(size.width, 0) // Top-right
-      ..lineTo(0, size.height) // Bottom-left
-      ..close();
+    final checkoutPath = _buildCheckoutPath(size);
+    final checkinPath = _buildCheckinPath(size);
+
+    // Draw triangles
     paint.color = checkoutColor;
     canvas.drawPath(checkoutPath, paint);
 
-    // Draw bottom-right triangle (checkin)
-    final checkinPath = Path()
-      ..moveTo(0, size.height) // Bottom-left
-      ..lineTo(size.width, size.height) // Bottom-right
-      ..lineTo(size.width, 0) // Top-right
-      ..close();
     paint.color = checkinColor;
     canvas.drawPath(checkinPath, paint);
 
-    // Draw pending pattern on checkout triangle if pending
-    if (isCheckOutPending && patternLineColor != null) {
-      canvas.save();
-      canvas.clipPath(checkoutPath);
-      _drawDiagonalPattern(canvas, size, patternLineColor!);
-      canvas.restore();
-    }
-
-    // Draw pending pattern on checkin triangle if pending
-    if (isCheckInPending && patternLineColor != null) {
-      canvas.save();
-      canvas.clipPath(checkinPath);
-      _drawDiagonalPattern(canvas, size, patternLineColor!);
-      canvas.restore();
-    }
+    // Draw pending patterns
+    _drawPendingPatternIfNeeded(canvas, size, checkoutPath, isCheckOutPending);
+    _drawPendingPatternIfNeeded(canvas, size, checkinPath, isCheckInPending);
   }
 
-  void _drawDiagonalPattern(Canvas canvas, Size size, Color lineColor) {
-    final paint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+  /// Top-left triangle (checkout - previous booking ends)
+  Path _buildCheckoutPath(Size size) {
+    return Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(0, size.height)
+      ..close();
+  }
 
-    const double spacing = 4.0;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
+  /// Bottom-right triangle (checkin - new booking starts)
+  Path _buildCheckinPath(Size size) {
+    return Path()
+      ..moveTo(0, size.height)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
+  }
+
+  void _drawPendingPatternIfNeeded(
+    Canvas canvas,
+    Size size,
+    Path clipPath,
+    bool isPending,
+  ) {
+    if (!isPending || patternLineColor == null) return;
+
+    canvas.save();
+    canvas.clipPath(clipPath);
+    drawDiagonalPattern(canvas, size, patternLineColor!);
+    canvas.restore();
   }
 
   @override

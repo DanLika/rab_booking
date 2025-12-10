@@ -66,7 +66,11 @@ Future<void> downloadIcsFile(String content, String filename) async {
     // The share sheet will just close if user cancels
   } catch (e, stackTrace) {
     // Log error using LoggingService instead of print
-    await LoggingService.logError('[ICS Download] Failed to share ICS file on mobile/desktop', e, stackTrace);
+    await LoggingService.logError(
+      '[ICS Download] Failed to share ICS file on mobile/desktop',
+      e,
+      stackTrace,
+    );
     // Throw typed exception for better error handling upstream
     throw FileException.icsShareFailed(e);
   }

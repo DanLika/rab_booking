@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
 import '../../l10n/widget_translations.dart';
@@ -6,17 +7,7 @@ import '../../l10n/widget_translations.dart';
 /// Card displaying cancellation policy information.
 ///
 /// Shows whether booking can still be cancelled and deadline info.
-///
-/// Usage:
-/// ```dart
-/// CancellationPolicyCard(
-///   deadlineHours: 48,
-///   checkIn: '2024-01-15',
-///   colors: ColorTokens.light,
-///   translations: WidgetTranslations.of(context, ref),
-/// )
-/// ```
-class CancellationPolicyCard extends StatelessWidget {
+class CancellationPolicyCard extends ConsumerWidget {
   /// Hours before check-in when cancellation is no longer allowed
   final int deadlineHours;
 
@@ -26,29 +17,29 @@ class CancellationPolicyCard extends StatelessWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  /// Translations for localization
-  final WidgetTranslations translations;
-
   const CancellationPolicyCard({
     super.key,
     required this.deadlineHours,
     required this.checkIn,
     required this.colors,
-    required this.translations,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final checkInDate = DateTimeParser.parseOrThrow(checkIn, context: 'CancellationPolicyCard.checkIn');
-    final now = DateTime.now();
-    final hoursUntilCheckIn = checkInDate.difference(now).inHours;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tr = WidgetTranslations.of(context, ref);
+    final checkInDate = DateTimeParser.parseOrThrow(
+      checkIn,
+      context: 'CancellationPolicyCard.checkIn',
+    );
+    final hoursUntilCheckIn = checkInDate.difference(DateTime.now()).inHours;
     final canCancel = hoursUntilCheckIn >= deadlineHours;
-
     final statusColor = canCancel ? colors.success : colors.warning;
 
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -63,10 +54,14 @@ class CancellationPolicyCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(canCancel ? Icons.event_available : Icons.event_busy, size: 20, color: statusColor),
+              Icon(
+                canCancel ? Icons.event_available : Icons.event_busy,
+                size: 20,
+                color: statusColor,
+              ),
               const SizedBox(width: SpacingTokens.xs),
               Text(
-                translations.cancellationPolicy,
+                tr.cancellationPolicy,
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeM,
                   fontWeight: TypographyTokens.bold,
@@ -87,7 +82,9 @@ class CancellationPolicyCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  canCancel ? translations.freeCancellationAvailable : translations.cancellationDeadlinePassedShort,
+                  canCancel
+                      ? tr.freeCancellationAvailable
+                      : tr.cancellationDeadlinePassedShort,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeS,
                     fontWeight: TypographyTokens.semiBold,
@@ -96,13 +93,16 @@ class CancellationPolicyCard extends StatelessWidget {
                 ),
                 const SizedBox(height: SpacingTokens.xs),
                 Text(
-                  translations.canCancelUpToHours(deadlineHours),
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                  tr.canCancelUpToHours(deadlineHours),
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeS,
+                    color: colors.textSecondary,
+                  ),
                 ),
                 if (!canCancel) ...[
                   const SizedBox(height: SpacingTokens.xs),
                   Text(
-                    translations.cancellationDeadlinePassedContactOwner,
+                    tr.cancellationDeadlinePassedContactOwner,
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,
                       color: colors.warning,

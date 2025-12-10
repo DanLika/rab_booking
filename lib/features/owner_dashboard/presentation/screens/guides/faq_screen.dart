@@ -121,7 +121,7 @@ class _FAQScreenState extends State<FAQScreen> {
     final filteredFAQs = _getFilteredFAQs(l10n);
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       drawer: const OwnerAppDrawer(currentRoute: 'guides/faq'),
       appBar: CommonAppBar(
         title: l10n.ownerFaqTitle,

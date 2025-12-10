@@ -42,7 +42,9 @@ class PropertyInfoCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
     // Use backgroundTertiary in dark mode for better contrast
-    final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDarkMode
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Container(

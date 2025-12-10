@@ -231,7 +231,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       appBar: CommonAppBar(
         title: _isEditing ? l10n.propertyFormTitleEdit : l10n.propertyFormTitleAdd,
         leadingIcon: Icons.arrow_back,

@@ -39,7 +39,9 @@ class CancelConfirmationDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
     // Use pure black background for dark theme
-    final dialogBg = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final dialogBg = isDarkMode
+        ? ColorTokens.pureBlack
+        : colors.backgroundPrimary;
 
     return AlertDialog(
       backgroundColor: dialogBg,
@@ -50,7 +52,10 @@ class CancelConfirmationDialog extends ConsumerWidget {
           const SizedBox(width: SpacingTokens.s),
           Text(
             tr.cancelBooking,
-            style: TextStyle(fontWeight: TypographyTokens.bold, color: colors.textPrimary),
+            style: TextStyle(
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
+            ),
           ),
         ],
       ),
@@ -60,7 +65,10 @@ class CancelConfirmationDialog extends ConsumerWidget {
         children: [
           Text(
             tr.areYouSureCancelBooking,
-            style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textPrimary),
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeM,
+              color: colors.textPrimary,
+            ),
           ),
           const SizedBox(height: SpacingTokens.m),
           Container(
@@ -68,7 +76,9 @@ class CancelConfirmationDialog extends ConsumerWidget {
             padding: const EdgeInsets.all(SpacingTokens.m),
             decoration: BoxDecoration(
               // Use backgroundTertiary in dark mode for better contrast
-              color: isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary,
+              color: isDarkMode
+                  ? colors.backgroundTertiary
+                  : colors.backgroundSecondary,
               borderRadius: BorderTokens.circularMedium,
               border: Border.all(
                 color: isDarkMode ? colors.borderMedium : colors.borderDefault,
@@ -80,7 +90,10 @@ class CancelConfirmationDialog extends ConsumerWidget {
               children: [
                 Text(
                   tr.bookingReference,
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeXS, color: colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeXS,
+                    color: colors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: SpacingTokens.xxs),
                 Text(
@@ -109,7 +122,10 @@ class CancelConfirmationDialog extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     tr.actionCannotBeUndone,
-                    style: TextStyle(fontSize: TypographyTokens.fontSizeXS, color: colors.textPrimary),
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeXS,
+                      color: colors.textPrimary,
+                    ),
                   ),
                 ),
               ],
@@ -122,7 +138,10 @@ class CancelConfirmationDialog extends ConsumerWidget {
           onPressed: () => Navigator.pop(context, false),
           child: Text(
             tr.keepBooking,
-            style: TextStyle(color: colors.textSecondary, fontWeight: TypographyTokens.medium),
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontWeight: TypographyTokens.medium,
+            ),
           ),
         ),
         ElevatedButton(
@@ -131,9 +150,14 @@ class CancelConfirmationDialog extends ConsumerWidget {
             backgroundColor: colors.error,
             foregroundColor: Colors.white,
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderTokens.circularMedium,
+            ),
           ),
-          child: Text(tr.cancelBooking, style: const TextStyle(fontWeight: TypographyTokens.semiBold)),
+          child: Text(
+            tr.cancelBooking,
+            style: const TextStyle(fontWeight: TypographyTokens.semiBold),
+          ),
         ),
       ],
     );

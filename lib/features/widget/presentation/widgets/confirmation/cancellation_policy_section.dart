@@ -24,7 +24,9 @@ class CancellationPolicySection extends ConsumerWidget {
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final tr = WidgetTranslations.of(context, ref);
     // Use backgroundTertiary in dark mode for better contrast
-    final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDarkMode
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Padding(
@@ -52,12 +54,19 @@ class CancellationPolicySection extends ConsumerWidget {
             const SizedBox(height: SpacingTokens.xs),
             Text(
               tr.toCancelYourBooking,
-              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                color: colors.textSecondary,
+              ),
             ),
             const SizedBox(height: SpacingTokens.xs),
             _buildCancellationStep(colors, tr.replyToConfirmationEmail),
-            _buildCancellationStep(colors, tr.includeBookingReference(bookingReference)),
-            if (fromEmail != null) _buildCancellationStep(colors, tr.orEmailTo(fromEmail!)),
+            _buildCancellationStep(
+              colors,
+              tr.includeBookingReference(bookingReference),
+            ),
+            if (fromEmail != null)
+              _buildCancellationStep(colors, tr.orEmailTo(fromEmail!)),
           ],
         ),
       ),
@@ -83,18 +92,27 @@ class CancellationPolicySection extends ConsumerWidget {
 
   Widget _buildCancellationStep(dynamic colors, String text) {
     return Padding(
-      padding: const EdgeInsets.only(left: SpacingTokens.m, top: SpacingTokens.xxs),
+      padding: const EdgeInsets.only(
+        left: SpacingTokens.m,
+        top: SpacingTokens.xxs,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '• ',
-            style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeM,
+              color: colors.textSecondary,
+            ),
           ),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                color: colors.textSecondary,
+              ),
             ),
           ),
         ],

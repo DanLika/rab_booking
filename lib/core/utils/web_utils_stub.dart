@@ -45,3 +45,29 @@ void sendIframeHeight(double height) {
 void setupIframeScrollCapture() {
   // No-op on non-web platforms
 }
+
+/// Listen to visualViewport resize events - more reliable than Flutter's MediaQuery
+/// on Android Chrome when keyboard is dismissed via back button.
+/// Returns a function to remove the listener.
+void Function() listenToVisualViewport(void Function() onResize) {
+  // No-op on non-web platforms
+  return () {};
+}
+
+/// Get current visual viewport height (excluding keyboard)
+/// Returns null on non-web platforms
+double? getVisualViewportHeight() {
+  return null;
+}
+
+/// Get window.innerHeight (full window height including keyboard area)
+/// Returns 0 on non-web platforms
+double getWindowInnerHeight() {
+  return 0;
+}
+
+/// Calculate keyboard height by comparing window height to visual viewport
+/// Returns 0 on non-web platforms
+double getKeyboardHeight() {
+  return 0;
+}

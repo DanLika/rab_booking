@@ -371,7 +371,6 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                 widget.widgetSettings!.cancellationDeadlineHours ?? 48,
             checkIn: widget.booking.checkIn,
             colors: colors,
-            translations: WidgetTranslations.of(context, ref),
           ),
         ],
         // Notes

@@ -64,7 +64,9 @@ class PaymentInfoCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -92,27 +94,41 @@ class PaymentInfoCard extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.xs),
           _buildPaymentRow(tr.paid, paidAmount, color: colors.success),
           const SizedBox(height: SpacingTokens.xs),
-          _buildPaymentRow(tr.remaining, remainingAmount, color: remainingAmount > 0 ? colors.error : colors.success),
+          _buildPaymentRow(
+            tr.remaining,
+            remainingAmount,
+            color: remainingAmount > 0 ? colors.error : colors.success,
+          ),
           const SizedBox(height: SpacingTokens.s),
           Divider(color: colors.borderDefault),
           const SizedBox(height: SpacingTokens.s),
           _buildStatusRow(tr),
           const SizedBox(height: SpacingTokens.xs),
           _buildMethodRow(tr),
-          if (paymentDeadline != null) ...[const SizedBox(height: SpacingTokens.xs), _buildDeadlineRow(tr)],
+          if (paymentDeadline != null) ...[
+            const SizedBox(height: SpacingTokens.xs),
+            _buildDeadlineRow(tr),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildPaymentRow(String label, double amount, {bool bold = false, Color? color}) {
+  Widget _buildPaymentRow(
+    String label,
+    double amount, {
+    bool bold = false,
+    Color? color,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
-            fontSize: bold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
+            fontSize: bold
+                ? TypographyTokens.fontSizeM
+                : TypographyTokens.fontSizeS,
             fontWeight: bold ? TypographyTokens.bold : TypographyTokens.regular,
             color: color ?? colors.textSecondary,
           ),
@@ -120,8 +136,12 @@ class PaymentInfoCard extends ConsumerWidget {
         Text(
           '€${amount.toStringAsFixed(2)}',
           style: TextStyle(
-            fontSize: bold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
-            fontWeight: bold ? TypographyTokens.bold : TypographyTokens.semiBold,
+            fontSize: bold
+                ? TypographyTokens.fontSizeL
+                : TypographyTokens.fontSizeM,
+            fontWeight: bold
+                ? TypographyTokens.bold
+                : TypographyTokens.semiBold,
             color: color ?? colors.textPrimary,
           ),
         ),
@@ -135,7 +155,10 @@ class PaymentInfoCard extends ConsumerWidget {
       children: [
         Text(
           tr.paymentStatusLabel,
-          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeS,
+            color: colors.textSecondary,
+          ),
         ),
         _buildPaymentStatusChip(tr),
       ],
@@ -148,7 +171,10 @@ class PaymentInfoCard extends ConsumerWidget {
       children: [
         Text(
           tr.paymentMethodLabel,
-          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeS,
+            color: colors.textSecondary,
+          ),
         ),
         Text(
           _formatPaymentMethod(tr),
@@ -168,12 +194,18 @@ class PaymentInfoCard extends ConsumerWidget {
       children: [
         Text(
           tr.paymentDeadline,
-          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeS,
+            color: colors.textSecondary,
+          ),
         ),
         Text(
-          DateFormat(
-            'MMM d, yyyy',
-          ).format(DateTimeParser.parseOrThrow(paymentDeadline, context: 'PaymentInfoCard.paymentDeadline')),
+          DateFormat('MMM d, yyyy').format(
+            DateTimeParser.parseOrThrow(
+              paymentDeadline,
+              context: 'PaymentInfoCard.paymentDeadline',
+            ),
+          ),
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             fontWeight: TypographyTokens.semiBold,
@@ -185,31 +217,18 @@ class PaymentInfoCard extends ConsumerWidget {
   }
 
   Widget _buildPaymentStatusChip(WidgetTranslations tr) {
-    Color statusColor;
-    String statusText;
-
-    switch (paymentStatus.toLowerCase()) {
-      case 'paid':
-      case 'completed':
-        statusColor = colors.success;
-        statusText = tr.paid;
-        break;
-      case 'pending':
-        statusColor = colors.warning;
-        statusText = tr.statusPending;
-        break;
-      case 'failed':
-      case 'refunded':
-        statusColor = colors.error;
-        statusText = paymentStatus;
-        break;
-      default:
-        statusColor = colors.textSecondary;
-        statusText = paymentStatus;
-    }
+    final (statusColor, statusText) = switch (paymentStatus.toLowerCase()) {
+      'paid' || 'completed' => (colors.success, tr.paid),
+      'pending' => (colors.warning, tr.statusPending),
+      'failed' || 'refunded' => (colors.error, paymentStatus),
+      _ => (colors.textSecondary, paymentStatus),
+    };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xxs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.s,
+        vertical: SpacingTokens.xxs,
+      ),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderTokens.circularRounded,
@@ -226,16 +245,11 @@ class PaymentInfoCard extends ConsumerWidget {
     );
   }
 
-  String _formatPaymentMethod(WidgetTranslations tr) {
-    switch (paymentMethod.toLowerCase()) {
-      case 'bank_transfer':
-        return tr.bankTransfer;
-      case 'stripe':
-        return tr.creditCard;
-      case 'cash':
-        return tr.cash;
-      default:
-        return paymentMethod;
-    }
-  }
+  String _formatPaymentMethod(WidgetTranslations tr) =>
+      switch (paymentMethod.toLowerCase()) {
+        'bank_transfer' => tr.bankTransfer,
+        'stripe' => tr.creditCard,
+        'cash' => tr.cash,
+        _ => paymentMethod,
+      };
 }

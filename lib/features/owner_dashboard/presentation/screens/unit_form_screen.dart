@@ -108,7 +108,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: theme.colorScheme.surface,
       appBar: CommonAppBar(
         title: _isEditing ? l10n.unitFormTitleEdit : l10n.unitFormTitleAdd,

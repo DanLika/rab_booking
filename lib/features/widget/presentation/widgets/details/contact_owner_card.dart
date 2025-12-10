@@ -25,14 +25,21 @@ class ContactOwnerCard extends ConsumerWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const ContactOwnerCard({super.key, this.ownerEmail, this.ownerPhone, required this.colors});
+  const ContactOwnerCard({
+    super.key,
+    this.ownerEmail,
+    this.ownerPhone,
+    required this.colors,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -54,7 +61,8 @@ class ContactOwnerCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
-          if (ownerEmail != null) _buildInfoRow(tr.email, ownerEmail!, Icons.email),
+          if (ownerEmail != null)
+            _buildInfoRow(tr.email, ownerEmail!, Icons.email),
           if (ownerPhone != null) ...[
             if (ownerEmail != null) const SizedBox(height: SpacingTokens.s),
             _buildInfoRow(tr.phone, ownerPhone!, Icons.phone),
@@ -75,7 +83,10 @@ class ContactOwnerCard extends ConsumerWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: TypographyTokens.fontSizeXS, color: colors.textSecondary),
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeXS,
+                  color: colors.textSecondary,
+                ),
               ),
               Text(
                 value,

@@ -23,7 +23,11 @@ class DetailsReferenceCard extends ConsumerWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const DetailsReferenceCard({super.key, required this.bookingReference, required this.colors});
+  const DetailsReferenceCard({
+    super.key,
+    required this.bookingReference,
+    required this.colors,
+  });
 
   Future<void> _copyToClipboard(BuildContext context, WidgetRef ref) async {
     final tr = WidgetTranslations.of(context, ref);
@@ -42,7 +46,9 @@ class DetailsReferenceCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -56,7 +62,10 @@ class DetailsReferenceCard extends ConsumerWidget {
         children: [
           Text(
             tr.bookingReference,
-            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeS,
+              color: colors.textSecondary,
+            ),
           ),
           const SizedBox(height: SpacingTokens.xs),
           Row(

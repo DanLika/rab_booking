@@ -20,7 +20,8 @@ class CalendarViewSwitcher extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CalendarViewSwitcher> createState() => _CalendarViewSwitcherState();
+  ConsumerState<CalendarViewSwitcher> createState() =>
+      _CalendarViewSwitcherState();
 }
 
 class _CalendarViewSwitcherState extends ConsumerState<CalendarViewSwitcher> {
@@ -46,20 +47,16 @@ class _CalendarViewSwitcherState extends ConsumerState<CalendarViewSwitcher> {
     return _buildCalendarView(currentView);
   }
 
-  Widget _buildCalendarView(CalendarViewType viewType) {
-    switch (viewType) {
-      case CalendarViewType.month:
-        return MonthCalendarWidget(
-          propertyId: widget.propertyId,
-          unitId: widget.unitId,
-          onRangeSelected: widget.onRangeSelected,
-        );
-      case CalendarViewType.year:
-        return YearCalendarWidget(
-          propertyId: widget.propertyId,
-          unitId: widget.unitId,
-          onRangeSelected: widget.onRangeSelected,
-        );
-    }
-  }
+  Widget _buildCalendarView(CalendarViewType viewType) => switch (viewType) {
+    CalendarViewType.month => MonthCalendarWidget(
+      propertyId: widget.propertyId,
+      unitId: widget.unitId,
+      onRangeSelected: widget.onRangeSelected,
+    ),
+    CalendarViewType.year => YearCalendarWidget(
+      propertyId: widget.propertyId,
+      unitId: widget.unitId,
+      onRangeSelected: widget.onRangeSelected,
+    ),
+  };
 }

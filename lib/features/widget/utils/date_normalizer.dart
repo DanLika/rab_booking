@@ -99,10 +99,7 @@ class DateNormalizer {
     }
 
     final days = normalizedEnd.difference(normalizedStart).inDays + 1;
-    return List.generate(
-      days,
-      (i) => normalizedStart.add(Duration(days: i)),
-    );
+    return List.generate(days, (i) => normalizedStart.add(Duration(days: i)));
   }
 
   /// Generates a list of dates for booking nights (checkIn to checkOut-1).
@@ -119,10 +116,7 @@ class DateNormalizer {
     }
 
     final nights = normalizedOut.difference(normalizedIn).inDays;
-    return List.generate(
-      nights,
-      (i) => normalizedIn.add(Duration(days: i)),
-    );
+    return List.generate(nights, (i) => normalizedIn.add(Duration(days: i)));
   }
 
   /// Checks if [date] falls within the range [start, end] (inclusive).

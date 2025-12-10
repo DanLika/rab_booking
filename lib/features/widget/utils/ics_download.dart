@@ -19,5 +19,4 @@ library;
 
 // Default export: Mobile/Desktop implementation (stub)
 // Override: If dart:html is available (web), use web implementation
-export 'ics_download_stub.dart'
-    if (dart.library.html) 'ics_download_web.dart';
+export 'ics_download_stub.dart' if (dart.library.html) 'ics_download_web.dart';

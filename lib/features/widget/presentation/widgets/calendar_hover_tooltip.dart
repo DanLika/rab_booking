@@ -34,7 +34,9 @@ class CalendarHoverTooltip extends ConsumerWidget {
     final formattedDate = dateFormatter.format(date);
 
     // Format price: "€85 / night" (localized)
-    final formattedPrice = price != null ? '${t.currencySymbol}${price!.toStringAsFixed(0)} / ${t.perNightShort}' : t.notAvailableShort;
+    final formattedPrice = price != null
+        ? '${t.currencySymbol}${price!.toStringAsFixed(0)} / ${t.perNightShort}'
+        : t.notAvailableShort;
 
     // Get status label (localized)
     final statusLabel = _getStatusLabel(status, t);
@@ -50,7 +52,10 @@ class CalendarHoverTooltip extends ConsumerWidget {
         decoration: BoxDecoration(
           color: colors.backgroundPrimary,
           borderRadius: BorderTokens.circularSmall,
-          border: Border.all(color: colors.borderStrong, width: BorderTokens.widthMedium),
+          border: Border.all(
+            color: colors.borderStrong,
+            width: BorderTokens.widthMedium,
+          ),
           boxShadow: colors.shadowMedium,
         ),
         child: Column(
@@ -67,8 +72,15 @@ class CalendarHoverTooltip extends ConsumerWidget {
                     onTap: onClose,
                     child: Container(
                       padding: const EdgeInsets.all(SpacingTokens.xxs),
-                      decoration: BoxDecoration(color: colors.backgroundTertiary, shape: BoxShape.circle),
-                      child: Icon(Icons.close, size: TypographyTokens.fontSizeS, color: colors.textPrimary),
+                      decoration: BoxDecoration(
+                        color: colors.backgroundTertiary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.close,
+                        size: TypographyTokens.fontSizeS,
+                        color: colors.textPrimary,
+                      ),
                     ),
                   ),
               ],
@@ -123,8 +135,14 @@ class CalendarHoverTooltip extends ConsumerWidget {
                 status == DateStatus.partialCheckOut) ...[
               const SizedBox(height: SpacingTokens.xs),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs, vertical: SpacingTokens.xxs),
-                decoration: BoxDecoration(color: colors.backgroundTertiary, borderRadius: BorderTokens.circularTiny),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingTokens.xs,
+                  vertical: SpacingTokens.xxs,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.backgroundTertiary,
+                  borderRadius: BorderTokens.circularTiny,
+                ),
                 child: Text(
                   t.tooltipClickToSelect,
                   style: TextStyle(
@@ -173,50 +191,34 @@ class CalendarHoverTooltip extends ConsumerWidget {
     );
   }
 
-  String _getStatusLabel(DateStatus status, WidgetTranslations t) {
-    switch (status) {
-      case DateStatus.available:
-        return t.available;
-      case DateStatus.booked:
-        return t.booked;
-      case DateStatus.pending:
-        return t.tooltipPending;
-      case DateStatus.blocked:
-        return t.semanticBlocked;
-      case DateStatus.partialCheckIn:
-        return t.tooltipCheckInDay;
-      case DateStatus.partialCheckOut:
-        return t.tooltipCheckOutDay;
-      case DateStatus.partialBoth:
-        return t.tooltipTurnoverDay;
-      case DateStatus.disabled:
-        return t.tooltipPastDate;
-      case DateStatus.pastReservation:
-        return t.tooltipPastReservation;
-    }
-  }
+  String _getStatusLabel(DateStatus status, WidgetTranslations t) =>
+      switch (status) {
+        DateStatus.available => t.available,
+        DateStatus.booked => t.booked,
+        DateStatus.pending => t.tooltipPending,
+        DateStatus.blocked => t.semanticBlocked,
+        DateStatus.partialCheckIn => t.tooltipCheckInDay,
+        DateStatus.partialCheckOut => t.tooltipCheckOutDay,
+        DateStatus.partialBoth => t.tooltipTurnoverDay,
+        DateStatus.disabled => t.tooltipPastDate,
+        DateStatus.pastReservation => t.tooltipPastReservation,
+      };
 
-  Color _getStatusColor(DateStatus status) {
-    switch (status) {
-      case DateStatus.available:
-        return colors.statusAvailableBorder;
-      case DateStatus.booked:
-        return colors.statusBookedBorder;
-      case DateStatus.pending:
-        return colors.statusPendingBorder;
-      case DateStatus.blocked:
-        return colors.textPrimary; // Changed from textSecondary for better visibility
-      case DateStatus.partialCheckIn:
-      case DateStatus.partialCheckOut:
-        return colors.statusPendingBorder;
-      case DateStatus.partialBoth:
-        return colors.statusBookedBorder; // Turnover day - fully booked
-      case DateStatus.disabled:
-        return colors.textPrimary; // Changed from textSecondary for better visibility
-      case DateStatus.pastReservation:
-        return colors.textPrimary; // Theme-aware: black for light, white for dark
-    }
-  }
+  Color _getStatusColor(DateStatus status) => switch (status) {
+    DateStatus.available => colors.statusAvailableBorder,
+    DateStatus.booked => colors.statusBookedBorder,
+    DateStatus.pending => colors.statusPendingBorder,
+    DateStatus.blocked =>
+      colors.textPrimary, // Changed from textSecondary for better visibility
+    DateStatus.partialCheckIn ||
+    DateStatus.partialCheckOut => colors.statusPendingBorder,
+    DateStatus.partialBoth =>
+      colors.statusBookedBorder, // Turnover day - fully booked
+    DateStatus.disabled =>
+      colors.textPrimary, // Changed from textSecondary for better visibility
+    DateStatus.pastReservation =>
+      colors.textPrimary, // Theme-aware: black for light, white for dark
+  };
 }
 
 /// Custom painter for pending pattern in tooltip status dot
@@ -224,7 +226,10 @@ class _TooltipPendingPatternPainter extends CustomPainter {
   final Color backgroundColor;
   final Color lineColor;
 
-  _TooltipPendingPatternPainter({required this.backgroundColor, required this.lineColor});
+  _TooltipPendingPatternPainter({
+    required this.backgroundColor,
+    required this.lineColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -242,12 +247,17 @@ class _TooltipPendingPatternPainter extends CustomPainter {
 
     const spacing = 3.0;
     for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(Offset(i, 0), Offset(i + size.height, size.height), linePaint);
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        linePaint,
+      );
     }
   }
 
   @override
   bool shouldRepaint(covariant _TooltipPendingPatternPainter oldDelegate) {
-    return oldDelegate.backgroundColor != backgroundColor || oldDelegate.lineColor != lineColor;
+    return oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.lineColor != lineColor;
   }
 }

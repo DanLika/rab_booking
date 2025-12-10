@@ -12,10 +12,13 @@ class SplitDayCalendarPainter extends CustomPainter {
   final String? priceText; // Price to display in cell (e.g., "€50")
   final WidgetColorScheme colors;
   final bool isInRange; // Whether this date is in a selected range
-  final bool isPendingBooking; // Whether this date is from a pending booking (diagonal pattern)
+  final bool
+  isPendingBooking; // Whether this date is from a pending booking (diagonal pattern)
   // For partialBoth (turnover day) - track which half is pending
-  final bool isCheckOutPending; // Is the checkout half (top-left triangle) pending?
-  final bool isCheckInPending; // Is the checkin half (bottom-right triangle) pending?
+  final bool
+  isCheckOutPending; // Is the checkout half (top-left triangle) pending?
+  final bool
+  isCheckInPending; // Is the checkin half (bottom-right triangle) pending?
 
   SplitDayCalendarPainter({
     required this.status,
@@ -41,11 +44,17 @@ class SplitDayCalendarPainter extends CustomPainter {
 
       case DateStatus.booked:
         // Solid booked color (or pending yellow if isPendingBooking)
-        paint.color = isPendingBooking ? colors.statusPendingBackground : status.getColor(colors);
+        paint.color = isPendingBooking
+            ? colors.statusPendingBackground
+            : status.getColor(colors);
         canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
         // Draw diagonal pattern for pending bookings
         if (isPendingBooking) {
-          _drawDiagonalPattern(canvas, size, DateStatus.pending.getPatternLineColor(colors));
+          _drawDiagonalPattern(
+            canvas,
+            size,
+            DateStatus.pending.getPatternLineColor(colors),
+          );
         }
         break;
 
@@ -103,7 +112,12 @@ class SplitDayCalendarPainter extends CustomPainter {
 
         // Draw diagonal pattern for pending bookings (only on booked half)
         if (isPendingBooking) {
-          _drawDiagonalPatternClipped(canvas, size, DateStatus.pending.getPatternLineColor(colors), isCheckIn: true);
+          _drawDiagonalPatternClipped(
+            canvas,
+            size,
+            DateStatus.pending.getPatternLineColor(colors),
+            isCheckIn: true,
+          );
         }
         break;
 
@@ -133,7 +147,12 @@ class SplitDayCalendarPainter extends CustomPainter {
 
         // Draw diagonal pattern for pending bookings (only on booked half)
         if (isPendingBooking) {
-          _drawDiagonalPatternClipped(canvas, size, DateStatus.pending.getPatternLineColor(colors), isCheckIn: false);
+          _drawDiagonalPatternClipped(
+            canvas,
+            size,
+            DateStatus.pending.getPatternLineColor(colors),
+            isCheckIn: false,
+          );
         }
         break;
 
@@ -168,12 +187,22 @@ class SplitDayCalendarPainter extends CustomPainter {
 
         // Draw diagonal pattern for pending checkout (top-left triangle)
         if (isCheckOutPending) {
-          _drawDiagonalPatternClipped(canvas, size, DateStatus.pending.getPatternLineColor(colors), isCheckIn: false);
+          _drawDiagonalPatternClipped(
+            canvas,
+            size,
+            DateStatus.pending.getPatternLineColor(colors),
+            isCheckIn: false,
+          );
         }
 
         // Draw diagonal pattern for pending checkin (bottom-right triangle)
         if (isCheckInPending) {
-          _drawDiagonalPatternClipped(canvas, size, DateStatus.pending.getPatternLineColor(colors), isCheckIn: true);
+          _drawDiagonalPatternClipped(
+            canvas,
+            size,
+            DateStatus.pending.getPatternLineColor(colors),
+            isCheckIn: true,
+          );
         }
         break;
     }
@@ -183,7 +212,10 @@ class SplitDayCalendarPainter extends CustomPainter {
       final overlayPaint = Paint()
         ..style = PaintingStyle.fill
         ..color = colors.buttonPrimary.withValues(alpha: 0.2);
-      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), overlayPaint);
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        overlayPaint,
+      );
     }
 
     // Draw price text in center of cell - prominent and readable
@@ -232,13 +264,22 @@ class SplitDayCalendarPainter extends CustomPainter {
     // Draw diagonal lines from top-left to bottom-right
     // Start from negative to cover the entire cell
     for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(Offset(i, 0), Offset(i + size.height, size.height), paint);
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
     }
   }
 
   /// Draw diagonal line pattern clipped to only the booked half of split day
   /// isCheckIn: true = bottom-right triangle, false = top-left triangle
-  void _drawDiagonalPatternClipped(Canvas canvas, Size size, Color lineColor, {required bool isCheckIn}) {
+  void _drawDiagonalPatternClipped(
+    Canvas canvas,
+    Size size,
+    Color lineColor, {
+    required bool isCheckIn,
+  }) {
     canvas.save();
 
     // Create clipping path for the booked triangle
@@ -305,21 +346,17 @@ class SplitDayCalendarCell extends ConsumerWidget {
 
   /// Generate semantic label for screen readers (localized)
   String _getSemanticLabel(WidgetTranslations t) {
-    final statusStr = status == DateStatus.available
-        ? t.semanticAvailable
-        : status == DateStatus.booked
-        ? t.semanticBooked
-        : status == DateStatus.partialCheckIn
-        ? t.semanticCheckIn
-        : status == DateStatus.partialCheckOut
-        ? t.semanticCheckOut
-        : status == DateStatus.partialBoth
-        ? t.semanticTurnover
-        : status == DateStatus.blocked
-        ? t.semanticBlocked
-        : status == DateStatus.disabled
-        ? t.semanticUnavailable
-        : t.semanticPastReservation;
+    final statusStr = switch (status) {
+      DateStatus.available => t.semanticAvailable,
+      DateStatus.booked => t.semanticBooked,
+      DateStatus.pending => t.semanticPendingApproval,
+      DateStatus.partialCheckIn => t.semanticCheckIn,
+      DateStatus.partialCheckOut => t.semanticCheckOut,
+      DateStatus.partialBoth => t.semanticTurnover,
+      DateStatus.blocked => t.semanticBlocked,
+      DateStatus.disabled => t.semanticUnavailable,
+      DateStatus.pastReservation => t.semanticPastReservation,
+    };
 
     final pendingStr = isPending ? ', ${t.semanticPendingApproval}' : '';
 
@@ -345,7 +382,12 @@ class SplitDayCalendarCell extends ConsumerWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            border: isSelected ? Border.all(color: colors.borderFocus, width: BorderTokens.widthThick) : null,
+            border: isSelected
+                ? Border.all(
+                    color: colors.borderFocus,
+                    width: BorderTokens.widthThick,
+                  )
+                : null,
           ),
           child: CustomPaint(
             painter: SplitDayCalendarPainter(

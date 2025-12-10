@@ -21,10 +21,12 @@ class TaxLegalDisclaimerWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TaxLegalDisclaimerWidget> createState() => _TaxLegalDisclaimerWidgetState();
+  ConsumerState<TaxLegalDisclaimerWidget> createState() =>
+      _TaxLegalDisclaimerWidgetState();
 }
 
-class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWidget> {
+class _TaxLegalDisclaimerWidgetState
+    extends ConsumerState<TaxLegalDisclaimerWidget> {
   bool _isExpanded = false;
   bool _isAccepted = false;
 
@@ -34,7 +36,9 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Get tax/legal config from Firestore (Sync Point 1 integration)
-    final widgetSettingsAsync = ref.watch(widgetSettingsProvider((widget.propertyId, widget.unitId)));
+    final widgetSettingsAsync = ref.watch(
+      widgetSettingsProvider((widget.propertyId, widget.unitId)),
+    );
 
     return widgetSettingsAsync.when(
       data: (widgetSettings) {
@@ -48,7 +52,8 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
         return _buildDisclaimerUI(context, taxConfig, isDarkMode, colors);
       },
       loading: () => const SizedBox.shrink(), // Don't show while loading
-      error: (error, stackTrace) => const SizedBox.shrink(), // Don't show on error
+      error: (error, stackTrace) =>
+          const SizedBox.shrink(), // Don't show on error
     );
   }
 
@@ -59,20 +64,28 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
     MinimalistColorSchemeAdapter colors,
   ) {
     return Container(
-      margin: const EdgeInsets.only(left: SpacingTokens.m, right: SpacingTokens.m, top: SpacingTokens.m),
+      margin: const EdgeInsets.only(
+        left: SpacingTokens.m,
+        right: SpacingTokens.m,
+        top: SpacingTokens.m,
+      ),
       decoration: BoxDecoration(
         // Pure white (light) / pure black (dark) for form containers
         color: colors.backgroundPrimary,
         border: Border.all(color: colors.borderDefault),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        boxShadow: isDarkMode ? MinimalistShadows.medium : MinimalistShadows.light,
+        boxShadow: isDarkMode
+            ? MinimalistShadows.medium
+            : MinimalistShadows.light,
       ),
       child: Column(
         children: [
           // Collapsible header
           InkWell(
             onTap: () => setState(() => _isExpanded = !_isExpanded),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(BorderTokens.radiusMedium)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(BorderTokens.radiusMedium),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(SpacingTokens.m),
               child: Row(
@@ -90,7 +103,10 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
                       ),
                     ),
                   ),
-                  Icon(_isExpanded ? Icons.expand_less : Icons.expand_more, color: colors.textSecondary),
+                  Icon(
+                    _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: colors.textSecondary,
+                  ),
                 ],
               ),
             ),

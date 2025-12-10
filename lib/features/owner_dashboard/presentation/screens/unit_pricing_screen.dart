@@ -108,7 +108,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           }
 
           return Scaffold(
-            resizeToAvoidBottomInset: true,
+            resizeToAvoidBottomInset: false,
             appBar: CommonAppBar(
               title: l10n.unitPricingTitle,
               leadingIcon: Icons.arrow_back,
@@ -129,7 +129,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     }
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       appBar: CommonAppBar(
         title: l10n.unitPricingTitle,
         leadingIcon: Icons.arrow_back,
@@ -251,7 +251,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CommonAppBar(
         title: l10n.unitPricingTitle,
@@ -291,7 +291,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
   Widget _buildLoadingState(AppLocalizations l10n) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CommonAppBar(
         title: l10n.unitPricingTitle,
@@ -306,7 +306,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CommonAppBar(
         title: l10n.unitPricingTitle,

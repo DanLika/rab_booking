@@ -57,15 +57,27 @@ class ConfirmationHeader extends ConsumerWidget {
   Widget _getConfirmationIcon(double iconSize) {
     switch (paymentMethod) {
       case 'stripe':
-        return Icon(Icons.check_circle, size: iconSize, color: colors.textPrimary);
+        return Icon(
+          Icons.check_circle,
+          size: iconSize,
+          color: colors.textPrimary,
+        );
       case 'bank_transfer':
-        return Icon(Icons.schedule, size: iconSize, color: colors.textSecondary);
+        return Icon(
+          Icons.schedule,
+          size: iconSize,
+          color: colors.textSecondary,
+        );
       case 'pay_on_arrival':
         return Icon(Icons.hotel, size: iconSize, color: colors.textPrimary);
       case 'pending':
         return Icon(Icons.pending, size: iconSize, color: colors.textSecondary);
       default:
-        return Icon(Icons.check_circle, size: iconSize, color: colors.textPrimary);
+        return Icon(
+          Icons.check_circle,
+          size: iconSize,
+          color: colors.textPrimary,
+        );
     }
   }
 
@@ -85,14 +97,18 @@ class ConfirmationHeader extends ConsumerWidget {
             imageUrl: customLogoUrl!,
             height: logoHeight,
             fit: BoxFit.contain,
-            placeholder: (context, url) => SizedBox(height: logoHeight, width: logoHeight),
+            placeholder: (context, url) =>
+                SizedBox(height: logoHeight, width: logoHeight),
             errorWidget: (context, url, error) => const SizedBox.shrink(),
           ),
           const SizedBox(height: SpacingTokens.l),
         ],
 
         // Success icon with animation
-        ScaleTransition(scale: scaleAnimation, child: _getConfirmationIcon(iconSize)),
+        ScaleTransition(
+          scale: scaleAnimation,
+          child: _getConfirmationIcon(iconSize),
+        ),
 
         const SizedBox(height: SpacingTokens.l),
 

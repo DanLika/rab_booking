@@ -1119,7 +1119,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _sendIframeHeight();
 
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Bug #46: Resize when keyboard appears
+      resizeToAvoidBottomInset: false,
       backgroundColor: minimalistColors.backgroundPrimary,
       body: SafeArea(
         bottom:

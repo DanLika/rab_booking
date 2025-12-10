@@ -7,14 +7,6 @@ import '../../l10n/widget_translations.dart';
 ///
 /// Shows status (Confirmed, Pending, Cancelled) with visual styling.
 /// Used at the top of booking details screen.
-///
-/// Usage:
-/// ```dart
-/// BookingStatusBanner(
-///   status: 'confirmed',
-///   colors: ColorTokens.light,
-/// )
-/// ```
 class BookingStatusBanner extends ConsumerWidget {
   /// Booking status string (confirmed, pending, cancelled, approved)
   final String status;
@@ -22,23 +14,27 @@ class BookingStatusBanner extends ConsumerWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const BookingStatusBanner({super.key, required this.status, required this.colors});
+  const BookingStatusBanner({
+    super.key,
+    required this.status,
+    required this.colors,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
-    final statusInfo = _getStatusInfo(tr);
+    final (color, text, icon) = _getStatusInfo(tr);
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: statusInfo.color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: statusInfo.color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(statusInfo.icon, color: statusInfo.color, size: 24),
+          Icon(icon, color: color, size: 24),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Column(
@@ -46,14 +42,17 @@ class BookingStatusBanner extends ConsumerWidget {
               children: [
                 Text(
                   tr.bookingStatus,
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeXS, color: colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeXS,
+                    color: colors.textSecondary,
+                  ),
                 ),
                 Text(
-                  statusInfo.text,
+                  text,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeL,
                     fontWeight: TypographyTokens.bold,
-                    color: statusInfo.color,
+                    color: color,
                   ),
                 ),
               ],
@@ -64,25 +63,13 @@ class BookingStatusBanner extends ConsumerWidget {
     );
   }
 
-  _StatusInfo _getStatusInfo(WidgetTranslations tr) {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-      case 'approved':
-        return _StatusInfo(color: colors.success, text: tr.statusConfirmed, icon: Icons.check_circle);
-      case 'pending':
-        return _StatusInfo(color: colors.warning, text: tr.statusPending, icon: Icons.schedule);
-      case 'cancelled':
-        return _StatusInfo(color: colors.error, text: tr.statusCancelled, icon: Icons.cancel);
-      default:
-        return _StatusInfo(color: colors.textSecondary, text: status, icon: Icons.info);
-    }
-  }
-}
-
-class _StatusInfo {
-  final Color color;
-  final String text;
-  final IconData icon;
-
-  _StatusInfo({required this.color, required this.text, required this.icon});
+  /// Returns (color, text, icon) for the current status.
+  (Color, String, IconData) _getStatusInfo(WidgetTranslations tr) =>
+      switch (status.toLowerCase()) {
+        'confirmed' ||
+        'approved' => (colors.success, tr.statusConfirmed, Icons.check_circle),
+        'pending' => (colors.warning, tr.statusPending, Icons.schedule),
+        'cancelled' => (colors.error, tr.statusCancelled, Icons.cancel),
+        _ => (colors.textSecondary, status, Icons.info),
+      };
 }

@@ -175,3 +175,86 @@ web.Element? _findScrollableParent(web.Element element) {
 
   return null;
 }
+
+/// Store callback for visualViewport listener
+void Function()? _visualViewportCallback;
+
+/// Store the JS function reference so we can remove it later
+/// CRITICAL: .toJS creates a new JS function each time, so we must store the reference
+JSFunction? _jsResizeHandler;
+
+/// Listen to visualViewport resize events - more reliable than Flutter's MediaQuery
+/// on Android Chrome when keyboard is dismissed via back button.
+/// Returns a function to remove the listener.
+void Function() listenToVisualViewport(void Function() onResize) {
+  try {
+    final visualViewport = web.window.visualViewport;
+    if (visualViewport == null) {
+      web.console.log('[VIEWPORT] visualViewport API not available'.toJS);
+      return () {};
+    }
+
+    // Store callback reference
+    _visualViewportCallback = onResize;
+
+    // Create JS function ONCE and store it for later removal
+    final handler = _onVisualViewportResize.toJS;
+    _jsResizeHandler = handler;
+
+    // Listen to resize events on visualViewport
+    visualViewport.addEventListener('resize', handler);
+
+    web.console.log('[VIEWPORT] visualViewport listener attached'.toJS);
+
+    // Return cleanup function that uses the SAME JS function reference
+    return () {
+      if (_jsResizeHandler != null) {
+        visualViewport.removeEventListener('resize', _jsResizeHandler);
+        _jsResizeHandler = null;
+      }
+      _visualViewportCallback = null;
+      web.console.log('[VIEWPORT] visualViewport listener removed'.toJS);
+    };
+  } catch (e) {
+    web.console.log('[VIEWPORT] Error setting up listener: $e'.toJS);
+    return () {};
+  }
+}
+
+/// Handle visualViewport resize event
+void _onVisualViewportResize(web.Event event) {
+  final height = web.window.visualViewport?.height ?? 0;
+  web.console.log('[VIEWPORT] resize event - height: ${height.toStringAsFixed(0)}px'.toJS);
+  _visualViewportCallback?.call();
+}
+
+/// Get current visual viewport height (excluding keyboard)
+double? getVisualViewportHeight() {
+  try {
+    final visualViewport = web.window.visualViewport;
+    if (visualViewport != null) {
+      return visualViewport.height.toDouble();
+    }
+  } catch (e) {
+    // Ignore
+  }
+  return null;
+}
+
+/// Get window.innerHeight (full window height including keyboard area)
+double getWindowInnerHeight() {
+  return web.window.innerHeight.toDouble();
+}
+
+/// Calculate keyboard height by comparing window height to visual viewport
+/// Returns 0 if keyboard is not visible or API not available
+double getKeyboardHeight() {
+  final viewportHeight = getVisualViewportHeight();
+  if (viewportHeight == null) return 0;
+
+  final windowHeight = getWindowInnerHeight();
+  final keyboardHeight = windowHeight - viewportHeight;
+
+  // Only return positive values (keyboard visible)
+  return keyboardHeight > 0 ? keyboardHeight : 0;
+}

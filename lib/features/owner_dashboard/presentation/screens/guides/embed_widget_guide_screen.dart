@@ -52,7 +52,7 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       drawer: const OwnerAppDrawer(currentRoute: 'guides/embed-widget'),
       appBar: CommonAppBar(
         title: l10n.embedGuideTitle,

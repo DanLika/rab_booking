@@ -58,13 +58,21 @@ class BookingDatesCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
-    final checkInDate = DateTimeParser.parseOrThrow(checkIn, context: 'BookingDatesCard.checkIn');
-    final checkOutDate = DateTimeParser.parseOrThrow(checkOut, context: 'BookingDatesCard.checkOut');
+    final checkInDate = DateTimeParser.parseOrThrow(
+      checkIn,
+      context: 'BookingDatesCard.checkIn',
+    );
+    final checkOutDate = DateTimeParser.parseOrThrow(
+      checkOut,
+      context: 'BookingDatesCard.checkOut',
+    );
     // Match BookingSummaryCard date format
     final formatter = DateFormat('EEEE, MMM dd, yyyy');
 
     // Use backgroundTertiary in dark mode for better contrast
-    final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDarkMode
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Container(

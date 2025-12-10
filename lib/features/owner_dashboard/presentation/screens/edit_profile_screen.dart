@@ -467,7 +467,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         }
       },
       child: Scaffold(
-        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomInset: false,
         body: AuthBackground(
           child: userDataAsync.when(
             data: (userData) {

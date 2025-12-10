@@ -22,7 +22,9 @@ class EmailSpamWarningCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -52,7 +54,10 @@ class EmailSpamWarningCard extends ConsumerWidget {
                 const SizedBox(height: SpacingTokens.xxs),
                 Text(
                   tr.checkInboxForConfirmation,
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeS,
+                    color: colors.textSecondary,
+                  ),
                 ),
               ],
             ),

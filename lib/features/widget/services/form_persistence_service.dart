@@ -50,23 +50,23 @@ class PersistedFormData {
 
   /// Convert to JSON map for storage
   Map<String, dynamic> toJson() => {
-        'unitId': unitId,
-        'propertyId': propertyId,
-        'checkIn': checkIn?.toIso8601String(),
-        'checkOut': checkOut?.toIso8601String(),
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': email,
-        'phone': phone,
-        'countryCode': countryCode,
-        'adults': adults,
-        'children': children,
-        'notes': notes,
-        'paymentMethod': paymentMethod,
-        'pillBarDismissed': pillBarDismissed,
-        'hasInteractedWithBookingFlow': hasInteractedWithBookingFlow,
-        'timestamp': timestamp.toIso8601String(),
-      };
+    'unitId': unitId,
+    'propertyId': propertyId,
+    'checkIn': checkIn?.toIso8601String(),
+    'checkOut': checkOut?.toIso8601String(),
+    'firstName': firstName,
+    'lastName': lastName,
+    'email': email,
+    'phone': phone,
+    'countryCode': countryCode,
+    'adults': adults,
+    'children': children,
+    'notes': notes,
+    'paymentMethod': paymentMethod,
+    'pillBarDismissed': pillBarDismissed,
+    'hasInteractedWithBookingFlow': hasInteractedWithBookingFlow,
+    'timestamp': timestamp.toIso8601String(),
+  };
 
   /// Create from JSON map
   ///
@@ -143,7 +143,10 @@ class FormPersistenceService {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('${_formDataKey}_$unitId', jsonEncode(data.toJson()));
+      await prefs.setString(
+        '${_formDataKey}_$unitId',
+        jsonEncode(data.toJson()),
+      );
     } catch (e) {
       // Silent fail - persistence is not critical
       LoggingService.log(

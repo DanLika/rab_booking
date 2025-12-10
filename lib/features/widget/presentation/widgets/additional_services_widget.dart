@@ -37,7 +37,14 @@ class AdditionalServicesWidget extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        return _buildServicesWidget(context, ref, services, isDarkMode, colors, onSelectionChanged);
+        return _buildServicesWidget(
+          context,
+          ref,
+          services,
+          isDarkMode,
+          colors,
+          onSelectionChanged,
+        );
       },
       loading: () => const SizedBox.shrink(),
       error: (error, stackTrace) => const SizedBox.shrink(),
@@ -58,7 +65,9 @@ class AdditionalServicesWidget extends ConsumerWidget {
         color: colors.backgroundTertiary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(color: colors.borderDefault),
-        boxShadow: isDarkMode ? MinimalistShadows.medium : MinimalistShadows.light,
+        boxShadow: isDarkMode
+            ? MinimalistShadows.medium
+            : MinimalistShadows.light,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +91,15 @@ class AdditionalServicesWidget extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.m),
           Column(
             children: [
-              ...services.map((service) => _buildServiceItem(context, ref, service, colors, onSelectionChanged)),
+              ...services.map(
+                (service) => _buildServiceItem(
+                  context,
+                  ref,
+                  service,
+                  colors,
+                  onSelectionChanged,
+                ),
+              ),
               const SizedBox(height: SpacingTokens.m),
               Divider(color: colors.borderDefault),
               const SizedBox(height: SpacingTokens.xs),
@@ -110,11 +127,15 @@ class AdditionalServicesWidget extends ConsumerWidget {
       padding: const EdgeInsets.all(SpacingTokens.s),
       decoration: BoxDecoration(
         border: Border.all(
-          color: isSelected ? colors.statusAvailableBorder : colors.borderDefault,
+          color: isSelected
+              ? colors.statusAvailableBorder
+              : colors.borderDefault,
           width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
         ),
         borderRadius: BorderTokens.circularSmall,
-        color: isSelected ? colors.statusAvailableBackground : colors.backgroundPrimary,
+        color: isSelected
+            ? colors.statusAvailableBackground
+            : colors.backgroundPrimary,
       ),
       child: Row(
         children: [
@@ -123,11 +144,15 @@ class AdditionalServicesWidget extends ConsumerWidget {
             value: isSelected,
             onChanged: (value) {
               if (value == true) {
-                ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
+                ref.read(selectedAdditionalServicesProvider.notifier).update((
+                  state,
+                ) {
                   return {...state, service.id: 1};
                 });
               } else {
-                ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
+                ref.read(selectedAdditionalServicesProvider.notifier).update((
+                  state,
+                ) {
                   final newState = Map<String, int>.from(state);
                   newState.remove(service.id);
                   return newState;
@@ -153,7 +178,8 @@ class AdditionalServicesWidget extends ConsumerWidget {
                     fontFamily: 'Manrope',
                   ),
                 ),
-                if (service.description != null && service.description!.isNotEmpty)
+                if (service.description != null &&
+                    service.description!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: SpacingTokens.xxs),
                     child: Text(
@@ -190,20 +216,33 @@ class AdditionalServicesWidget extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.remove, size: 16, color: colors.textPrimary),
+                    icon: Icon(
+                      Icons.remove,
+                      size: 16,
+                      color: colors.textPrimary,
+                    ),
                     onPressed: quantity > 1
                         ? () {
-                            ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
-                              return {...state, service.id: quantity - 1};
-                            });
+                            ref
+                                .read(
+                                  selectedAdditionalServicesProvider.notifier,
+                                )
+                                .update((state) {
+                                  return {...state, service.id: quantity - 1};
+                                });
                             onSelectionChanged?.call();
                           }
                         : null,
                     padding: const EdgeInsets.all(SpacingTokens.xxs),
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SpacingTokens.xs,
+                    ),
                     child: Text(
                       quantity.toString(),
                       style: TextStyle(
@@ -218,22 +257,31 @@ class AdditionalServicesWidget extends ConsumerWidget {
                     icon: Icon(Icons.add, size: 16, color: colors.textPrimary),
                     onPressed: () {
                       // Check max quantity
-                      if (service.maxQuantity != null && quantity >= service.maxQuantity!) {
+                      if (service.maxQuantity != null &&
+                          quantity >= service.maxQuantity!) {
                         SnackBarHelper.showWarning(
                           context: context,
-                          message: WidgetTranslations.of(context, ref).maxQuantityReached(service.maxQuantity!),
+                          message: WidgetTranslations.of(
+                            context,
+                            ref,
+                          ).maxQuantityReached(service.maxQuantity!),
                           duration: const Duration(seconds: 2),
                         );
                         return;
                       }
 
-                      ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
-                        return {...state, service.id: quantity + 1};
-                      });
+                      ref
+                          .read(selectedAdditionalServicesProvider.notifier)
+                          .update((state) {
+                            return {...state, service.id: quantity + 1};
+                          });
                       onSelectionChanged?.call();
                     },
                     padding: const EdgeInsets.all(SpacingTokens.xxs),
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ],
               ),
@@ -250,7 +298,14 @@ class AdditionalServicesWidget extends ConsumerWidget {
     MinimalistColorSchemeAdapter colors,
   ) {
     final selectedServices = ref.watch(selectedAdditionalServicesProvider);
-    final total = ref.watch(additionalServicesTotalProvider((services, selectedServices, nights, guests)));
+    final total = ref.watch(
+      additionalServicesTotalProvider((
+        services,
+        selectedServices,
+        nights,
+        guests,
+      )),
+    );
 
     if (selectedServices.isEmpty) {
       return const SizedBox.shrink();

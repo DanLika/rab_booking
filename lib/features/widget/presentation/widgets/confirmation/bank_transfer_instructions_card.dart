@@ -48,14 +48,21 @@ class BankTransferInstructionsCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isDark ? colors.backgroundTertiary : colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: isDark ? colors.borderMedium : colors.borderDefault, width: isDark ? 1.5 : 2),
+        border: Border.all(
+          color: isDark ? colors.borderMedium : colors.borderDefault,
+          width: isDark ? 1.5 : 2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.account_balance, color: colors.textSecondary, size: 24),
+              Icon(
+                Icons.account_balance,
+                color: colors.textSecondary,
+                size: 24,
+              ),
               const SizedBox(width: SpacingTokens.s),
               Text(
                 tr.bankTransferInstructions,
@@ -68,12 +75,28 @@ class BankTransferInstructionsCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: SpacingTokens.m),
-          _BankTransferDetailRow(label: tr.bankName, value: bankConfig.bankName!, colors: colors, tr: tr),
+          _BankTransferDetailRow(
+            label: tr.bankName,
+            value: bankConfig.bankName!,
+            colors: colors,
+            tr: tr,
+          ),
           const SizedBox(height: SpacingTokens.s),
-          _BankTransferDetailRow(label: tr.accountHolder, value: bankConfig.accountHolder!, colors: colors, tr: tr),
+          _BankTransferDetailRow(
+            label: tr.accountHolder,
+            value: bankConfig.accountHolder!,
+            colors: colors,
+            tr: tr,
+          ),
           const SizedBox(height: SpacingTokens.s),
           if (bankConfig.iban != null)
-            _BankTransferDetailRow(label: 'IBAN', value: bankConfig.iban!, colors: colors, copyable: true, tr: tr)
+            _BankTransferDetailRow(
+              label: 'IBAN',
+              value: bankConfig.iban!,
+              colors: colors,
+              copyable: true,
+              tr: tr,
+            )
           else if (bankConfig.accountNumber != null)
             _BankTransferDetailRow(
               label: tr.accountNumber,
@@ -104,7 +127,10 @@ class BankTransferInstructionsCard extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.m),
           Container(
             padding: const EdgeInsets.all(SpacingTokens.s),
-            decoration: BoxDecoration(color: colors.backgroundTertiary, borderRadius: BorderTokens.circularSmall),
+            decoration: BoxDecoration(
+              color: colors.backgroundTertiary,
+              borderRadius: BorderTokens.circularSmall,
+            ),
             child: Row(
               children: [
                 Icon(Icons.info_outline, size: 16, color: colors.textSecondary),
@@ -112,7 +138,10 @@ class BankTransferInstructionsCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     tr.bankTransferNote,
-                    style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeS,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -177,7 +206,10 @@ class _BankTransferDetailRow extends StatelessWidget {
               Expanded(
                 child: Container(
                   padding: highlight
-                      ? const EdgeInsets.symmetric(horizontal: SpacingTokens.xs, vertical: SpacingTokens.xxs)
+                      ? const EdgeInsets.symmetric(
+                          horizontal: SpacingTokens.xs,
+                          vertical: SpacingTokens.xxs,
+                        )
                       : null,
                   decoration: highlight
                       ? BoxDecoration(
@@ -190,7 +222,9 @@ class _BankTransferDetailRow extends StatelessWidget {
                     value,
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,
-                      fontWeight: highlight ? TypographyTokens.bold : TypographyTokens.medium,
+                      fontWeight: highlight
+                          ? TypographyTokens.bold
+                          : TypographyTokens.medium,
                       color: colors.textPrimary,
                       fontFamily: 'monospace',
                     ),
@@ -204,7 +238,10 @@ class _BankTransferDetailRow extends StatelessWidget {
                   onPressed: () => _copyToClipboard(context),
                   tooltip: tr.copyLabel(label),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                 ),
               ],
             ],

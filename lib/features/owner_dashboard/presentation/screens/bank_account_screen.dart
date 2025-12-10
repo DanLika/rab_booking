@@ -341,7 +341,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
         }
       },
       child: Scaffold(
-        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomInset: false,
         drawer: const OwnerAppDrawer(currentRoute: 'integrations/payments/bank-account'),
         appBar: CommonAppBar(
           title: l10n.bankAccountTitle,

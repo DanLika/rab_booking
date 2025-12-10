@@ -24,9 +24,16 @@ class BookingReferenceCard extends ConsumerWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const BookingReferenceCard({super.key, required this.bookingReference, required this.colors});
+  const BookingReferenceCard({
+    super.key,
+    required this.bookingReference,
+    required this.colors,
+  });
 
-  Future<void> _copyToClipboard(BuildContext context, WidgetTranslations tr) async {
+  Future<void> _copyToClipboard(
+    BuildContext context,
+    WidgetTranslations tr,
+  ) async {
     await Clipboard.setData(ClipboardData(text: bookingReference));
     if (context.mounted) {
       SnackBarHelper.showSuccess(
@@ -49,13 +56,19 @@ class BookingReferenceCard extends ConsumerWidget {
         // Slightly elevated background in dark mode for better contrast
         color: isDark ? colors.backgroundTertiary : colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: isDark ? colors.borderMedium : colors.borderDefault, width: isDark ? 1.5 : 1.0),
+        border: Border.all(
+          color: isDark ? colors.borderMedium : colors.borderDefault,
+          width: isDark ? 1.5 : 1.0,
+        ),
       ),
       child: Column(
         children: [
           Text(
             tr.bookingReference,
-            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeS,
+              color: colors.textSecondary,
+            ),
           ),
           const SizedBox(height: SpacingTokens.xs),
           Row(

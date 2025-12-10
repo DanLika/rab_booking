@@ -543,10 +543,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
-                        width: 32,
-                        height: 32,
+                        width: 28,
+                        height: 28,
                         child: IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 16),
+                          icon: const Icon(Icons.edit_outlined, size: 14),
                           onPressed: () {
                             context.push(OwnerRoutes.propertyEdit.replaceAll(':id', property.id));
                           },
@@ -556,12 +556,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                         ),
                       ),
                       SizedBox(
-                        width: 32,
-                        height: 32,
+                        width: 28,
+                        height: 28,
                         child: IconButton(
                           icon: Icon(
                             Icons.delete_outline,
-                            size: 16,
+                            size: 14,
                             color: units.isEmpty
                                 ? theme.colorScheme.error
                                 : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -579,10 +579,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
-                        width: 32,
-                        height: 32,
+                        width: 28,
+                        height: 28,
                         child: IconButton(
-                          icon: const Icon(Icons.add_circle_outline, size: 16),
+                          icon: const Icon(Icons.add_circle_outline, size: 14),
                           onPressed: () {
                             context.push('${OwnerRoutes.unitWizard}?propertyId=${property.id}');
                           },
@@ -591,7 +591,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                           constraints: const BoxConstraints(),
                         ),
                       ),
-                      const SizedBox(width: 32, height: 32, child: Icon(Icons.expand_more, size: 20)),
+                      const SizedBox(width: 28, height: 28, child: Icon(Icons.expand_more, size: 18)),
                     ],
                   ),
                 ],

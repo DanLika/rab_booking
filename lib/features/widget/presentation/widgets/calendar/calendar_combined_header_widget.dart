@@ -74,32 +74,51 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // View Switcher (year/month toggle)
-            CalendarViewSwitcherWidget(colors: colors, isDarkMode: isDarkMode, translations: translations),
-            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
+            CalendarViewSwitcherWidget(
+              colors: colors,
+              isDarkMode: isDarkMode,
+              translations: translations,
+            ),
+            SizedBox(
+              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
+            ),
 
             // Theme Toggle Button
             IconButton(
               icon: Icon(
                 isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                size: isSmallScreen ? 16 : IconSizeTokens.small,
+                size: isSmallScreen ? _smallIconSize : IconSizeTokens.small,
                 color: colors.textPrimary,
               ),
               onPressed: () {
                 ref.read(themeProvider.notifier).state = !isDarkMode;
               },
-              tooltip: isDarkMode ? translations.tooltipSwitchToLightMode : translations.tooltipSwitchToDarkMode,
+              tooltip: isDarkMode
+                  ? translations.tooltipSwitchToLightMode
+                  : translations.tooltipSwitchToDarkMode,
               padding: EdgeInsets.zero,
               constraints: BoxConstraints(
-                minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
-                minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+                minWidth: isSmallScreen
+                    ? _smallContainerSize
+                    : ConstraintTokens.iconContainerSmall,
+                minHeight: isSmallScreen
+                    ? _smallContainerSize
+                    : ConstraintTokens.iconContainerSmall,
               ),
             ),
 
             // Language Switcher Button
-            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
-            _LanguageSwitcherButton(colors: colors, isSmallScreen: isSmallScreen),
+            SizedBox(
+              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
+            ),
+            _LanguageSwitcherButton(
+              colors: colors,
+              isSmallScreen: isSmallScreen,
+            ),
 
-            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
+            SizedBox(
+              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
+            ),
 
             // Custom Navigation Widget (year or month navigation)
             navigationWidget,
@@ -115,7 +134,20 @@ class _LanguageSwitcherButton extends ConsumerWidget {
   final WidgetColorScheme colors;
   final bool isSmallScreen;
 
-  const _LanguageSwitcherButton({required this.colors, required this.isSmallScreen});
+  const _LanguageSwitcherButton({
+    required this.colors,
+    required this.isSmallScreen,
+  });
+
+  // Size constants
+  static const _smallFontSize = 14.0;
+  static const _normalFontSize = 16.0;
+  static const _smallButtonWidth = 40.0;
+  static const _normalButtonWidth = 48.0;
+  static const _menuOffset = 40.0;
+  static const _menuItemFontSize = 18.0;
+  static const _menuItemSpacing = 12.0;
+  static const _checkIconSize = 18.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -124,17 +156,28 @@ class _LanguageSwitcherButton extends ConsumerWidget {
       icon: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_getFlagEmoji(currentLanguage), style: TextStyle(fontSize: isSmallScreen ? 14 : 16)),
-          Icon(Icons.arrow_drop_down, size: isSmallScreen ? 14 : 16, color: colors.textPrimary),
+          Text(
+            _getFlagEmoji(currentLanguage),
+            style: TextStyle(
+              fontSize: isSmallScreen ? _smallFontSize : _normalFontSize,
+            ),
+          ),
+          Icon(
+            Icons.arrow_drop_down,
+            size: isSmallScreen ? _smallFontSize : _normalFontSize,
+            color: colors.textPrimary,
+          ),
         ],
       ),
       tooltip: WidgetTranslations.of(context, ref).tooltipChangeLanguage,
       padding: EdgeInsets.zero,
       constraints: BoxConstraints(
-        minWidth: isSmallScreen ? 40 : 48,
-        minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+        minWidth: isSmallScreen ? _smallButtonWidth : _normalButtonWidth,
+        minHeight: isSmallScreen
+            ? CalendarCombinedHeaderWidget._smallContainerSize
+            : ConstraintTokens.iconContainerSmall,
       ),
-      offset: const Offset(0, 40),
+      offset: const Offset(0, _menuOffset),
       shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
       color: colors.backgroundPrimary,
       onSelected: (code) => _changeLanguage(code, ref),
@@ -147,14 +190,19 @@ class _LanguageSwitcherButton extends ConsumerWidget {
     );
   }
 
-  PopupMenuItem<String> _buildLanguageItem(String code, String name, String flag, String currentLanguage) {
+  PopupMenuItem<String> _buildLanguageItem(
+    String code,
+    String name,
+    String flag,
+    String currentLanguage,
+  ) {
     final isSelected = currentLanguage == code;
     return PopupMenuItem<String>(
       value: code,
       child: Row(
         children: [
-          Text(flag, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 12),
+          Text(flag, style: const TextStyle(fontSize: _menuItemFontSize)),
+          const SizedBox(width: _menuItemSpacing),
           Text(
             name,
             style: TextStyle(
@@ -162,7 +210,10 @@ class _LanguageSwitcherButton extends ConsumerWidget {
               color: isSelected ? colors.primary : colors.textPrimary,
             ),
           ),
-          if (isSelected) ...[const Spacer(), Icon(Icons.check, size: 18, color: colors.primary)],
+          if (isSelected) ...[
+            const Spacer(),
+            Icon(Icons.check, size: _checkIconSize, color: colors.primary),
+          ],
         ],
       ),
     );

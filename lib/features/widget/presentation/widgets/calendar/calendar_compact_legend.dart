@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Compact info banner showing minimum stay requirement.
@@ -11,23 +11,41 @@ class CalendarCompactLegend extends StatelessWidget {
   final WidgetColorScheme colors;
   final WidgetTranslations translations;
 
-  const CalendarCompactLegend({super.key, required this.minNights, required this.colors, required this.translations});
+  const CalendarCompactLegend({
+    super.key,
+    required this.minNights,
+    required this.colors,
+    required this.translations,
+  });
+
+  // Layout constants
+  static const _desktopBreakpoint = 1024.0;
+  static const _desktopMaxWidth = 650.0;
+  static const _mobileMaxWidth = 600.0;
+  static const _iconSize = 16.0;
+  static const _fontSize = 12.0;
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1024;
+    final isDesktop = screenWidth >= _desktopBreakpoint;
 
-    // Match calendar width: 650px desktop, 600px mobile/tablet
-    final maxWidth = isDesktop ? 650.0 : 600.0;
-    // Responsive vertical spacing: 24px desktop, 16px mobile/tablet
+    // Match calendar width responsive sizing
+    final maxWidth = isDesktop ? _desktopMaxWidth : _mobileMaxWidth;
+    // Responsive vertical spacing
     final verticalMargin = isDesktop ? SpacingTokens.l : SpacingTokens.m;
 
     return Center(
       child: Container(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        margin: EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: verticalMargin),
-        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+        margin: EdgeInsets.symmetric(
+          horizontal: SpacingTokens.m,
+          vertical: verticalMargin,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingTokens.m,
+          vertical: SpacingTokens.s,
+        ),
         decoration: BoxDecoration(
           color: colors.backgroundTertiary,
           borderRadius: BorderTokens.circularMedium,
@@ -37,11 +55,19 @@ class CalendarCompactLegend extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.info_outline, size: 16, color: colors.textSecondary),
+            Icon(
+              Icons.info_outline,
+              size: _iconSize,
+              color: colors.textSecondary,
+            ),
             const SizedBox(width: SpacingTokens.xs),
             Text(
               translations.minStayNights(minNights),
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: colors.textPrimary),
+              style: TextStyle(
+                fontSize: _fontSize,
+                fontWeight: FontWeight.w500,
+                color: colors.textPrimary,
+              ),
             ),
           ],
         ),

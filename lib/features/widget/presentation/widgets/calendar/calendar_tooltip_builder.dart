@@ -22,6 +22,10 @@ import 'calendar_date_utils.dart';
 /// )
 /// ```
 class CalendarTooltipBuilder {
+  // Layout constants
+  static const double _tooltipWidth = 200.0;
+  static const double _cursorOffset = 10.0;
+  static const double _screenPadding = 20.0;
   /// Builds a positioned hover tooltip for calendar date cells.
   ///
   /// Returns [SizedBox.shrink] if no date is hovered or date info is null.
@@ -55,23 +59,21 @@ class CalendarTooltipBuilder {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    const tooltipWidth = 200.0;
-
     // Position tooltip near mouse cursor, offset to avoid cursor overlap
-    double xPosition = mousePosition.dx + 10;
-    double yPosition = mousePosition.dy - tooltipHeight - 10;
+    double xPosition = mousePosition.dx + _cursorOffset;
+    double yPosition = mousePosition.dy - tooltipHeight - _cursorOffset;
 
     // Adjust if tooltip goes off screen
-    if (xPosition + tooltipWidth > screenWidth) {
-      xPosition = mousePosition.dx - tooltipWidth - 10; // Show on left instead
+    if (xPosition + _tooltipWidth > screenWidth) {
+      xPosition = mousePosition.dx - _tooltipWidth - _cursorOffset;
     }
-    if (yPosition < 20) {
-      yPosition = mousePosition.dy + 20; // Show below cursor instead
+    if (yPosition < _screenPadding) {
+      yPosition = mousePosition.dy + _screenPadding;
     }
 
     // Clamp to screen bounds with padding
-    xPosition = xPosition.clamp(20, screenWidth - tooltipWidth - 20);
-    yPosition = yPosition.clamp(20, screenHeight - tooltipHeight - 20);
+    xPosition = xPosition.clamp(_screenPadding, screenWidth - _tooltipWidth - _screenPadding);
+    yPosition = yPosition.clamp(_screenPadding, screenHeight - tooltipHeight - _screenPadding);
 
     // For pending bookings, show "Pending" status instead of "Booked"
     final effectiveStatus =

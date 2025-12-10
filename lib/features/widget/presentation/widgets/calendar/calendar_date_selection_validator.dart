@@ -36,13 +36,21 @@ class CalendarDateSelectionValidator {
   final BuildContext context;
   final WidgetRef ref;
 
-  const CalendarDateSelectionValidator({required this.context, required this.ref});
+  const CalendarDateSelectionValidator({
+    required this.context,
+    required this.ref,
+  });
+
+  /// Duration for error snackbar display
+  static const _errorSnackbarDuration = Duration(seconds: 3);
 
   /// Validates if a past date was selected.
   /// Returns invalid if date status is disabled (past).
   ValidationResult validatePastDate(DateStatus status) {
     if (status == DateStatus.disabled) {
-      return ValidationResult.invalid(WidgetTranslations.of(context, ref).errorCannotSelectPastDates);
+      return ValidationResult.invalid(
+        WidgetTranslations.of(context, ref).errorCannotSelectPastDates,
+      );
     }
     return const ValidationResult.valid();
   }
@@ -99,13 +107,15 @@ class CalendarDateSelectionValidator {
   /// Checks if date can be selected for check-in.
   /// Allows: available, partialCheckOut (checkout day of previous booking)
   bool canSelectForCheckIn(DateStatus status) {
-    return status == DateStatus.available || status == DateStatus.partialCheckOut;
+    return status == DateStatus.available ||
+        status == DateStatus.partialCheckOut;
   }
 
   /// Checks if date can be selected for check-out.
   /// Allows: available, partialCheckIn (checkin day of next booking)
   bool canSelectForCheckOut(DateStatus status) {
-    return status == DateStatus.available || status == DateStatus.partialCheckIn;
+    return status == DateStatus.available ||
+        status == DateStatus.partialCheckIn;
   }
 
   /// Validates if date can be selected based on status.
@@ -129,28 +139,52 @@ class CalendarDateSelectionValidator {
   }
 
   /// Validates global minimum nights requirement.
-  ValidationResult validateMinNights({required int selectedNights, required int minNights}) {
+  ValidationResult validateMinNights({
+    required int selectedNights,
+    required int minNights,
+  }) {
     if (selectedNights < minNights) {
-      return ValidationResult.invalid(WidgetTranslations.of(context, ref).errorMinNights(minNights, selectedNights));
+      return ValidationResult.invalid(
+        WidgetTranslations.of(
+          context,
+          ref,
+        ).errorMinNights(minNights, selectedNights),
+      );
     }
     return const ValidationResult.valid();
   }
 
   /// Validates per-date minNightsOnArrival requirement.
-  ValidationResult validateMinNightsOnArrival({required int selectedNights, required int? minNightsOnArrival}) {
-    if (minNightsOnArrival != null && minNightsOnArrival > 0 && selectedNights < minNightsOnArrival) {
+  ValidationResult validateMinNightsOnArrival({
+    required int selectedNights,
+    required int? minNightsOnArrival,
+  }) {
+    if (minNightsOnArrival != null &&
+        minNightsOnArrival > 0 &&
+        selectedNights < minNightsOnArrival) {
       return ValidationResult.invalid(
-        WidgetTranslations.of(context, ref).errorMinNightsOnArrival(minNightsOnArrival, selectedNights),
+        WidgetTranslations.of(
+          context,
+          ref,
+        ).errorMinNightsOnArrival(minNightsOnArrival, selectedNights),
       );
     }
     return const ValidationResult.valid();
   }
 
   /// Validates per-date maxNightsOnArrival requirement.
-  ValidationResult validateMaxNightsOnArrival({required int selectedNights, required int? maxNightsOnArrival}) {
-    if (maxNightsOnArrival != null && maxNightsOnArrival > 0 && selectedNights > maxNightsOnArrival) {
+  ValidationResult validateMaxNightsOnArrival({
+    required int selectedNights,
+    required int? maxNightsOnArrival,
+  }) {
+    if (maxNightsOnArrival != null &&
+        maxNightsOnArrival > 0 &&
+        selectedNights > maxNightsOnArrival) {
       return ValidationResult.invalid(
-        WidgetTranslations.of(context, ref).errorMaxNightsOnArrival(maxNightsOnArrival, selectedNights),
+        WidgetTranslations.of(
+          context,
+          ref,
+        ).errorMaxNightsOnArrival(maxNightsOnArrival, selectedNights),
       );
     }
     return const ValidationResult.valid();
@@ -163,7 +197,10 @@ class CalendarDateSelectionValidator {
   }) {
     final isSelectingCheckIn = rangeStart == null || rangeEnd != null;
     final isSelectingCheckOut = rangeStart != null && rangeEnd == null;
-    return (isSelectingCheckIn: isSelectingCheckIn, isSelectingCheckOut: isSelectingCheckOut);
+    return (
+      isSelectingCheckIn: isSelectingCheckIn,
+      isSelectingCheckOut: isSelectingCheckOut,
+    );
   }
 
   /// Full pre-selection validation (before setting range).
@@ -239,7 +276,10 @@ class CalendarDateSelectionValidator {
     // 3. Fallback to global minNights (only if no per-date minNightsOnArrival)
     final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
     if (minNightsOnArrival == null || minNightsOnArrival == 0) {
-      final result = validateMinNights(selectedNights: selectedNights, minNights: minNights);
+      final result = validateMinNights(
+        selectedNights: selectedNights,
+        minNights: minNights,
+      );
       if (!result.isValid) return result;
     }
 
@@ -249,7 +289,11 @@ class CalendarDateSelectionValidator {
   /// Shows error snackbar for invalid result.
   void showError(ValidationResult result) {
     if (!result.isValid && result.errorMessage != null) {
-      SnackBarHelper.showError(context: context, message: result.errorMessage!, duration: const Duration(seconds: 3));
+      SnackBarHelper.showError(
+        context: context,
+        message: result.errorMessage!,
+        duration: _errorSnackbarDuration,
+      );
     }
   }
 }

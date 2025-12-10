@@ -57,7 +57,9 @@ class CalendarDateUtils {
         ? translations.semanticUnavailable
         : translations.semanticPastReservation;
 
-    final pendingStr = isPending ? ', ${translations.semanticPendingApproval}' : '';
+    final pendingStr = isPending
+        ? ', ${translations.semanticPendingApproval}'
+        : '';
 
     // Range indicators (localized)
     final rangeStr = isRangeStart

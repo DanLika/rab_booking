@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
 
+/// Shared constants and utilities for calendar painters.
+///
+/// Extracted to eliminate duplication across DiagonalLinePainter,
+/// PendingPatternPainter, and PartialBothPainter.
+mixin DiagonalPatternMixin on CustomPainter {
+  /// Spacing between diagonal pattern lines.
+  static const double patternSpacing = 4.0;
+
+  /// Stroke width for pattern lines.
+  static const double patternStrokeWidth = 1.0;
+
+  /// Draws diagonal lines from top-left to bottom-right across the canvas.
+  ///
+  /// Used to indicate pending status on calendar date cells.
+  void drawDiagonalPattern(Canvas canvas, Size size, Color lineColor) {
+    final paint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = patternStrokeWidth;
+
+    for (double i = -size.height; i < size.width + size.height; i += patternSpacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
+    }
+  }
+}
+
 /// Simple painter for diagonal lines on check-in/check-out days (year calendar).
 ///
-/// Used for partialCheckIn and partialCheckOut status in year calendar view.
+/// Uses [DiagonalPatternMixin] for pending pattern rendering.
 /// Creates a diagonal split with optional pending pattern overlay.
-class DiagonalLinePainter extends CustomPainter {
+class DiagonalLinePainter extends CustomPainter with DiagonalPatternMixin {
   final Color diagonalColor;
   final bool isCheckIn;
   final bool isPending;
@@ -19,58 +49,41 @@ class DiagonalLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    paint.color = diagonalColor;
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = diagonalColor;
 
-    if (isCheckIn) {
-      // Check-in: diagonal from bottom-left to top-right (green to pink/pending)
-      final path = Path()
-        ..moveTo(0, size.height) // Bottom-left
-        ..lineTo(size.width, 0) // Top-right
-        ..lineTo(size.width, size.height) // Bottom-right
-        ..close();
-      canvas.drawPath(path, paint);
+    final path = isCheckIn
+        ? _buildCheckInPath(size)
+        : _buildCheckOutPath(size);
 
-      // Draw pending pattern on booked triangle
-      if (isPending && patternLineColor != null) {
-        canvas.save();
-        canvas.clipPath(path);
-        _drawDiagonalPattern(canvas, size, patternLineColor!);
-        canvas.restore();
-      }
-    } else {
-      // Check-out: diagonal from top-left to bottom-right (pink/pending to green)
-      final path = Path()
-        ..moveTo(0, 0) // Top-left
-        ..lineTo(size.width, size.height) // Bottom-right
-        ..lineTo(0, size.height) // Bottom-left
-        ..close();
-      canvas.drawPath(path, paint);
+    canvas.drawPath(path, paint);
 
-      // Draw pending pattern on booked triangle
-      if (isPending && patternLineColor != null) {
-        canvas.save();
-        canvas.clipPath(path);
-        _drawDiagonalPattern(canvas, size, patternLineColor!);
-        canvas.restore();
-      }
+    // Draw pending pattern on booked triangle
+    if (isPending && patternLineColor != null) {
+      canvas.save();
+      canvas.clipPath(path);
+      drawDiagonalPattern(canvas, size, patternLineColor!);
+      canvas.restore();
     }
   }
 
-  void _drawDiagonalPattern(Canvas canvas, Size size, Color lineColor) {
-    final paint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+  /// Check-in: diagonal from bottom-left to top-right (green to pink/pending)
+  Path _buildCheckInPath(Size size) {
+    return Path()
+      ..moveTo(0, size.height)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..close();
+  }
 
-    const double spacing = 4.0;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
+  /// Check-out: diagonal from top-left to bottom-right (pink/pending to green)
+  Path _buildCheckOutPath(Size size) {
+    return Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
   }
 
   @override
@@ -84,28 +97,16 @@ class DiagonalLinePainter extends CustomPainter {
 
 /// Painter for full-cell pending pattern (diagonal lines) in year calendar.
 ///
-/// Used for full booked days that are from pending bookings.
+/// Uses [DiagonalPatternMixin] for consistent pattern rendering.
 /// Creates diagonal stripe pattern across the entire cell.
-class PendingPatternPainter extends CustomPainter {
+class PendingPatternPainter extends CustomPainter with DiagonalPatternMixin {
   final Color lineColor;
 
   PendingPatternPainter({required this.lineColor});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    const double spacing = 4.0;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
+    drawDiagonalPattern(canvas, size, lineColor);
   }
 
   @override

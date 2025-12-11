@@ -6,10 +6,8 @@ part 'booking_details_model.g.dart';
 /// Guest count for booking details
 @freezed
 class GuestCount with _$GuestCount {
-  const factory GuestCount({
-    required int adults,
-    @Default(0) int children,
-  }) = _GuestCount;
+  const factory GuestCount({required int adults, @Default(0) int children}) =
+      _GuestCount;
 
   factory GuestCount.fromJson(Map<String, dynamic> json) =>
       _$GuestCountFromJson(json);

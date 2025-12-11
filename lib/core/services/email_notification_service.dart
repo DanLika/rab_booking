@@ -7,13 +7,25 @@ import '../../features/widget/domain/models/widget_settings.dart';
 import 'logging_service.dart';
 import '../exceptions/app_exceptions.dart';
 
-/// Service for sending email notifications using Resend API
+/// Service for sending email notifications using Resend API.
 ///
 /// This service handles:
 /// - Booking confirmation emails (pre-payment)
 /// - Payment receipt emails (post-payment)
 /// - Owner notification emails
 /// - Email verification (optional)
+///
+/// Usage:
+/// ```dart
+/// final service = EmailNotificationService();
+///
+/// await service.sendBookingConfirmationEmail(
+///   booking: booking,
+///   emailConfig: settings.emailConfig,
+///   propertyName: 'Villa Marina',
+///   bookingReference: 'BK-ABC123',
+/// );
+/// ```
 class EmailNotificationService {
   final http.Client _httpClient;
 

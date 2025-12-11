@@ -3,8 +3,23 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'logging_service.dart';
 
-/// Performance optimization service
-/// Provides caching, memoization, and performance monitoring
+/// Performance optimization service.
+///
+/// Provides caching, memoization, and performance monitoring.
+///
+/// Usage:
+/// ```dart
+/// final service = PerformanceOptimizationService.instance;
+///
+/// // Memoize expensive computation
+/// final result = service.memoize('key', () => expensiveOperation());
+///
+/// // Track API call performance
+/// await fetchData().measureTime<Data>('fetchData');
+///
+/// // Get performance report
+/// service.logPerformanceReport();
+/// ```
 class PerformanceOptimizationService {
   PerformanceOptimizationService._();
   static final instance = PerformanceOptimizationService._();

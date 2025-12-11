@@ -26,6 +26,7 @@ class CalendarTooltipBuilder {
   static const double _tooltipWidth = 200.0;
   static const double _cursorOffset = 10.0;
   static const double _screenPadding = 20.0;
+
   /// Builds a positioned hover tooltip for calendar date cells.
   ///
   /// Returns [SizedBox.shrink] if no date is hovered or date info is null.
@@ -72,12 +73,19 @@ class CalendarTooltipBuilder {
     }
 
     // Clamp to screen bounds with padding
-    xPosition = xPosition.clamp(_screenPadding, screenWidth - _tooltipWidth - _screenPadding);
-    yPosition = yPosition.clamp(_screenPadding, screenHeight - tooltipHeight - _screenPadding);
+    xPosition = xPosition.clamp(
+      _screenPadding,
+      screenWidth - _tooltipWidth - _screenPadding,
+    );
+    yPosition = yPosition.clamp(
+      _screenPadding,
+      screenHeight - tooltipHeight - _screenPadding,
+    );
 
     // For pending bookings, show "Pending" status instead of "Booked"
-    final effectiveStatus =
-        dateInfo.isPendingBooking ? DateStatus.pending : dateInfo.status;
+    final effectiveStatus = dateInfo.isPendingBooking
+        ? DateStatus.pending
+        : dateInfo.status;
 
     // Use fallback price (unit's base pricePerNight) when no daily_price exists
     final effectivePrice = dateInfo.price ?? fallbackPrice;

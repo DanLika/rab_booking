@@ -4,6 +4,23 @@
 /// Example: "Villa Jasko - Apartman 6" → "villa-jasko-apartman-6"
 library;
 
+/// Cached character replacements for slug generation (Croatian/European characters)
+const _charReplacements = {
+  'č': 'c', 'ć': 'c', 'đ': 'd', 'š': 's', 'ž': 'z',
+  'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a',
+  'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+  'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+  'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o',
+  'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+  'ñ': 'n',
+};
+
+/// Cached regex patterns for slug generation
+final RegExp _whitespaceRegex = RegExp(r'[\s_]+');
+final RegExp _nonAlphanumericRegex = RegExp(r'[^a-z0-9\-]');
+final RegExp _multipleHyphensRegex = RegExp(r'-+');
+final RegExp _leadingTrailingHyphensRegex = RegExp(r'^-+|-+$');
+
 /// Generate URL-friendly slug from a string
 ///
 /// Converts string to lowercase, replaces spaces with hyphens,
@@ -17,56 +34,24 @@ library;
 String generateSlug(String input, {int maxLength = 50}) {
   if (input.isEmpty) return '';
 
-  String slug = input;
+  String slug = input.toLowerCase();
 
-  // Convert to lowercase
-  slug = slug.toLowerCase();
-
-  // Replace Croatian/special characters with ASCII equivalents
-  final replacements = {
-    'č': 'c',
-    'ć': 'c',
-    'đ': 'd',
-    'š': 's',
-    'ž': 'z',
-    'á': 'a',
-    'à': 'a',
-    'â': 'a',
-    'ä': 'a',
-    'é': 'e',
-    'è': 'e',
-    'ê': 'e',
-    'ë': 'e',
-    'í': 'i',
-    'ì': 'i',
-    'î': 'i',
-    'ï': 'i',
-    'ó': 'o',
-    'ò': 'o',
-    'ô': 'o',
-    'ö': 'o',
-    'ú': 'u',
-    'ù': 'u',
-    'û': 'u',
-    'ü': 'u',
-    'ñ': 'n',
-  };
-
-  replacements.forEach((char, replacement) {
+  // Replace special characters with ASCII equivalents (using cached map)
+  _charReplacements.forEach((char, replacement) {
     slug = slug.replaceAll(char, replacement);
   });
 
-  // Replace spaces and underscores with hyphens
-  slug = slug.replaceAll(RegExp(r'[\s_]+'), '-');
+  // Replace spaces and underscores with hyphens (using cached regex)
+  slug = slug.replaceAll(_whitespaceRegex, '-');
 
-  // Remove all characters except alphanumeric and hyphens
-  slug = slug.replaceAll(RegExp(r'[^a-z0-9\-]'), '');
+  // Remove all characters except alphanumeric and hyphens (using cached regex)
+  slug = slug.replaceAll(_nonAlphanumericRegex, '');
 
-  // Replace multiple consecutive hyphens with single hyphen
-  slug = slug.replaceAll(RegExp(r'-+'), '-');
+  // Replace multiple consecutive hyphens with single hyphen (using cached regex)
+  slug = slug.replaceAll(_multipleHyphensRegex, '-');
 
-  // Remove leading/trailing hyphens
-  slug = slug.replaceAll(RegExp(r'^-+|-+$'), '');
+  // Remove leading/trailing hyphens (using cached regex)
+  slug = slug.replaceAll(_leadingTrailingHyphensRegex, '');
 
   // Truncate to max length (but keep whole words if possible)
   if (slug.length > maxLength) {
@@ -82,8 +67,8 @@ String generateSlug(String input, {int maxLength = 50}) {
       }
     }
 
-    // Remove trailing hyphen if present
-    slug = slug.replaceAll(RegExp(r'-+$'), '');
+    // Remove trailing hyphen if present (reuse cached regex)
+    slug = slug.replaceAll(_leadingTrailingHyphensRegex, '');
   }
 
   return slug;

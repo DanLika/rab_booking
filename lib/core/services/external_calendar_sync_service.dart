@@ -8,13 +8,27 @@ import '../utils/date_time_parser.dart'; // Used in commented example code
 import 'logging_service.dart';
 import '../exceptions/app_exceptions.dart';
 
-/// Service for syncing with external calendar platforms (Booking.com, Airbnb)
+/// Service for syncing with external calendar platforms (Booking.com, Airbnb).
 ///
 /// This service handles:
 /// - OAuth authentication with external platforms
 /// - Periodic sync of external bookings
 /// - Importing external bookings to prevent double-booking
 /// - Updating sync status
+///
+/// Usage:
+/// ```dart
+/// final service = ExternalCalendarSyncService();
+///
+/// // Check if sync is needed
+/// if (service.isSyncNeeded(config)) {
+///   await service.syncExternalCalendars(
+///     propertyId: 'prop123',
+///     ownerId: 'owner456',
+///     config: settings.externalCalendarConfig,
+///   );
+/// }
+/// ```
 class ExternalCalendarSyncService {
   final FirebaseFirestore _firestore;
   final http.Client _httpClient;

@@ -1,3 +1,20 @@
+/// Currency conversion service with persistent storage.
+///
+/// Supports EUR, USD, GBP, and HRK with configurable exchange rates.
+///
+/// Usage:
+/// ```dart
+/// // Watch selected currency
+/// final currency = ref.watch(selectedCurrencyProvider).valueOrNull ?? Currency.eur;
+///
+/// // Change currency
+/// ref.read(selectedCurrencyProvider.notifier).setCurrency(Currency.usd);
+///
+/// // Format price (converts from EUR)
+/// final formatted = 150.0.toCurrency(currency); // "$163.50"
+/// ```
+library;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';

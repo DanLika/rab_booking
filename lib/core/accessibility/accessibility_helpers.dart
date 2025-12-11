@@ -108,11 +108,7 @@ class AccessibleGestureDetector extends StatelessWidget {
       button: isButton,
       label: semanticLabel,
       enabled: onTap != null,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: behavior,
-        child: child,
-      ),
+      child: GestureDetector(onTap: onTap, behavior: behavior, child: child),
     );
   }
 }
@@ -149,9 +145,7 @@ class AccessibleCard extends StatelessWidget {
       shape: borderRadius != null
           ? RoundedRectangleBorder(borderRadius: borderRadius!)
           : null,
-      child: padding != null
-          ? Padding(padding: padding!, child: child)
-          : child,
+      child: padding != null ? Padding(padding: padding!, child: child) : child,
     );
 
     if (onTap != null) {
@@ -167,10 +161,7 @@ class AccessibleCard extends StatelessWidget {
       );
     }
 
-    return Semantics(
-      label: semanticLabel,
-      child: cardWidget,
-    );
+    return Semantics(label: semanticLabel, child: cardWidget);
   }
 }
 
@@ -264,10 +255,7 @@ Widget withMinTapTarget({
   double size = A11yConstants.minTapTargetSize,
 }) {
   return ConstrainedBox(
-    constraints: BoxConstraints(
-      minWidth: size,
-      minHeight: size,
-    ),
+    constraints: BoxConstraints(minWidth: size, minHeight: size),
     child: child,
   );
 }

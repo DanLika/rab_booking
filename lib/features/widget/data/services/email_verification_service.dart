@@ -64,7 +64,8 @@ class EmailVerificationStatus {
   }
 
   @override
-  String toString() => 'EmailVerificationStatus('
+  String toString() =>
+      'EmailVerificationStatus('
       'verified: $verified, '
       'expired: $expired, '
       'remainingMinutes: $remainingMinutes, '

@@ -1,10 +1,24 @@
 import 'package:flutter/widgets.dart';
 
-/// Shadow design tokens for consistent elevation across the widget
+/// Shadow design tokens for consistent elevation across the app
+///
+/// Usage:
+/// ```dart
+/// Container(
+///   decoration: BoxDecoration(
+///     boxShadow: ShadowTokens.light,
+///   ),
+/// )
+/// ```
 class ShadowTokens {
-  // Modern, subtle shadows (not too strong)
+  // Prevent instantiation
+  ShadowTokens._();
 
-  // No shadow
+  // ============================================================
+  // SHADOW PRESETS
+  // ============================================================
+
+  /// No shadow
   static List<BoxShadow> get none => [];
 
   // Subtle shadow - for slightly elevated elements

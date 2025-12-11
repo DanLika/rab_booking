@@ -5,7 +5,20 @@ import '../exceptions/app_exceptions.dart';
 import '../services/logging_service.dart';
 
 /// Utility class for handling errors and converting them to user-friendly messages
+///
+/// Usage:
+/// ```dart
+/// try {
+///   await someOperation();
+/// } catch (e, stackTrace) {
+///   ErrorHandler.logError(e, stackTrace);
+///   ErrorHandler.showErrorSnackBar(context, e);
+/// }
+/// ```
 class ErrorHandler {
+  // Prevent instantiation
+  ErrorHandler._();
+
   /// Convert technical errors to user-friendly messages in Croatian/Serbian
   /// Uses getUserMessage() from AppException when available
   static String getUserFriendlyMessage(dynamic error) {

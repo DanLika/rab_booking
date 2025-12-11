@@ -32,9 +32,10 @@ class _MonthCalendarSkeletonState extends State<MonthCalendarSkeleton>
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: 0.4, end: 0.8).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 0.8,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -145,11 +146,17 @@ class _MonthCalendarSkeletonState extends State<MonthCalendarSkeleton>
     return Container(
       decoration: BoxDecoration(
         color: isEmpty
-            ? (isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground)
-            : (isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary),
+            ? (isDark
+                  ? SkeletonColors.darkCardBackground
+                  : SkeletonColors.lightCardBackground)
+            : (isDark
+                  ? SkeletonColors.darkPrimary
+                  : SkeletonColors.lightPrimary),
         borderRadius: BorderTokens.circularSubtle,
         border: Border.all(
-          color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder,
+          color: isDark
+              ? SkeletonColors.darkBorder
+              : SkeletonColors.lightBorder,
           width: 0.5,
         ),
       ),

@@ -37,10 +37,12 @@ class BankTransferConfig with PaymentConfigBase {
   final String? ownerId;
 
   // Widget-specific options (NOT bank details)
-  final int paymentDeadlineDays; // Days until payment deadline (1-14, default: 3)
+  final int
+  paymentDeadlineDays; // Days until payment deadline (1-14, default: 3)
   final bool enableQrCode; // Show EPC QR code for bank transfer
   final String? customNotes; // Custom notes from owner (max 500 chars)
-  final bool useCustomNotes; // If true, show customNotes; if false, show default legal notes
+  final bool
+  useCustomNotes; // If true, show customNotes; if false, show default legal notes
 
   // LEGACY FIELDS - For backward compatibility with existing widgets
   // New widgets should NOT write these fields, but still read them

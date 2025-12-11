@@ -91,10 +91,10 @@ class ContactOptions {
 
   /// Get list of enabled contact methods.
   List<String> get enabledMethods => [
-        if (_isValidContact(showPhone, phoneNumber)) 'phone',
-        if (_isValidContact(showEmail, emailAddress)) 'email',
-        if (_isValidContact(showWhatsApp, whatsAppNumber)) 'whatsapp',
-      ];
+    if (_isValidContact(showPhone, phoneNumber)) 'phone',
+    if (_isValidContact(showEmail, emailAddress)) 'email',
+    if (_isValidContact(showWhatsApp, whatsAppNumber)) 'whatsapp',
+  ];
 
   /// Helper to check if a contact method is enabled and has valid value.
   static bool _isValidContact(bool isEnabled, String? value) =>

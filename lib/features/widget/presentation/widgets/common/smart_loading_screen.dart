@@ -74,18 +74,20 @@ class _SmartLoadingScreenState extends ConsumerState<SmartLoadingScreen> {
     });
 
     // Wait for actual loading to complete
-    widget.loadingFuture?.then((_) {
-      if (mounted) {
-        _loadingDone = true;
-        _finishProgress();
-      }
-    }).catchError((e) {
-      // Even on error, complete the progress
-      if (mounted) {
-        _loadingDone = true;
-        _finishProgress();
-      }
-    });
+    widget.loadingFuture
+        ?.then((_) {
+          if (mounted) {
+            _loadingDone = true;
+            _finishProgress();
+          }
+        })
+        .catchError((e) {
+          // Even on error, complete the progress
+          if (mounted) {
+            _loadingDone = true;
+            _finishProgress();
+          }
+        });
   }
 
   void _onProgressChanged() {

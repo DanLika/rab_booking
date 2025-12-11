@@ -1,12 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
-/// Service for logging messages throughout the application
+/// Service for logging messages throughout the application.
 ///
 /// Provides tagged logging with different severity levels.
-/// In debug mode, logs to console. In production, can be extended
-/// to send logs to external services (Firebase, Sentry, etc.)
+/// In debug mode, logs to console. In production, sends errors
+/// to Firebase Crashlytics.
+///
+/// Usage:
+/// ```dart
+/// LoggingService.logInfo('User logged in');
+/// LoggingService.logWarning('Low memory');
+/// await LoggingService.logError('Failed to save', error, stackTrace);
+/// LoggingService.logSuccess('Data saved');
+/// ```
 class LoggingService {
+  // Prevent instantiation - all methods are static
+  LoggingService._();
+
   /// Log a message with an optional tag
   static void log(String message, {String? tag}) {
     debugPrint('[${tag ?? 'APP'}] $message');

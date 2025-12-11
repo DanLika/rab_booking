@@ -21,21 +21,19 @@ class FirebaseWidgetSettingsRepository {
   DocumentReference<Map<String, dynamic>> _settingsDocRef(
     String propertyId,
     String unitId,
-  ) =>
-      _firestore
-          .collection(_propertiesCollection)
-          .doc(propertyId)
-          .collection(_widgetSettingsSubcollection)
-          .doc(unitId);
+  ) => _firestore
+      .collection(_propertiesCollection)
+      .doc(propertyId)
+      .collection(_widgetSettingsSubcollection)
+      .doc(unitId);
 
   /// Get collection reference for all widget settings in a property
   CollectionReference<Map<String, dynamic>> _settingsCollectionRef(
     String propertyId,
-  ) =>
-      _firestore
-          .collection(_propertiesCollection)
-          .doc(propertyId)
-          .collection(_widgetSettingsSubcollection);
+  ) => _firestore
+      .collection(_propertiesCollection)
+      .doc(propertyId)
+      .collection(_widgetSettingsSubcollection);
 
   /// Get widget settings for a specific unit
   Future<WidgetSettings?> getWidgetSettings({
@@ -78,7 +76,8 @@ class FirebaseWidgetSettingsRepository {
         id: unitId,
         propertyId: propertyId,
         ownerId: ownerId, // Required for Firestore security rules
-        widgetMode: WidgetMode.calendarOnly, // Default: show availability + contact
+        widgetMode:
+            WidgetMode.calendarOnly, // Default: show availability + contact
         contactOptions: ContactOptions(
           emailAddress: ownerEmail,
           phoneNumber: ownerPhone,
@@ -93,7 +92,10 @@ class FirebaseWidgetSettingsRepository {
 
       await _settingsDocRef(propertyId, unitId).set(settings.toFirestore());
 
-      LoggingService.log('Default settings created for unit: $unitId', tag: _logTag);
+      LoggingService.log(
+        'Default settings created for unit: $unitId',
+        tag: _logTag,
+      );
     } catch (e) {
       LoggingService.log('Error creating default settings: $e', tag: _logTag);
       rethrow;
@@ -105,10 +107,15 @@ class FirebaseWidgetSettingsRepository {
     try {
       final updatedSettings = settings.copyWith(updatedAt: DateTime.now());
 
-      await _settingsDocRef(settings.propertyId, settings.id)
-          .set(updatedSettings.toFirestore(), SetOptions(merge: true));
+      await _settingsDocRef(
+        settings.propertyId,
+        settings.id,
+      ).set(updatedSettings.toFirestore(), SetOptions(merge: true));
 
-      LoggingService.log('Settings updated for unit: ${settings.id}', tag: _logTag);
+      LoggingService.log(
+        'Settings updated for unit: ${settings.id}',
+        tag: _logTag,
+      );
     } catch (e) {
       LoggingService.log('Error updating settings: $e', tag: _logTag);
       rethrow;
@@ -127,7 +134,10 @@ class FirebaseWidgetSettingsRepository {
         'updated_at': Timestamp.now(),
       });
 
-      LoggingService.log('Widget mode updated to: ${widgetMode.toStringValue()}', tag: _logTag);
+      LoggingService.log(
+        'Widget mode updated to: ${widgetMode.toStringValue()}',
+        tag: _logTag,
+      );
     } catch (e) {
       LoggingService.log('Error updating widget mode: $e', tag: _logTag);
       rethrow;
@@ -167,7 +177,10 @@ class FirebaseWidgetSettingsRepository {
 
       LoggingService.log('Bank transfer config updated', tag: _logTag);
     } catch (e) {
-      LoggingService.log('Error updating bank transfer config: $e', tag: _logTag);
+      LoggingService.log(
+        'Error updating bank transfer config: $e',
+        tag: _logTag,
+      );
       rethrow;
     }
   }
@@ -213,7 +226,10 @@ class FirebaseWidgetSettingsRepository {
 
       return snapshot.docs.map(WidgetSettings.fromFirestore).toList();
     } catch (e) {
-      LoggingService.log('Error getting all property settings: $e', tag: _logTag);
+      LoggingService.log(
+        'Error getting all property settings: $e',
+        tag: _logTag,
+      );
       return [];
     }
   }

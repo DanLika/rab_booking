@@ -1,11 +1,29 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'logging_service.dart';
 
-/// Service for Stripe payment integration
+/// Service for Stripe payment integration.
 ///
 /// This service calls existing Firebase Cloud Functions:
 /// - createStripeCheckoutSession (stripePayment.ts)
 /// - handleStripeWebhook (stripePayment.ts)
+///
+/// Usage:
+/// ```dart
+/// final service = StripeService();
+///
+/// // Create checkout session (booking created after payment)
+/// final result = await service.createCheckoutSession(
+///   bookingData: bookingData,
+///   returnUrl: returnUrl,
+/// );
+/// // Redirect to result.checkoutUrl
+///
+/// // Check Stripe account status
+/// final status = await service.getAccountStatus();
+/// if (!status.isFullySetup) {
+///   // Prompt owner to complete Stripe onboarding
+/// }
+/// ```
 class StripeService {
   final FirebaseFunctions _functions;
 

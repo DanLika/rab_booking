@@ -4,9 +4,38 @@ import '../../core/constants/enums.dart';
 import '../../shared/models/booking_model.dart';
 import 'logging_service.dart';
 
-/// Service for managing bookings in Firestore
+/// Service for managing bookings in Firestore.
 ///
-/// This service creates and manages bookings before payment processing
+/// This service creates and manages bookings before payment processing.
+///
+/// Usage:
+/// ```dart
+/// final service = BookingService();
+///
+/// // Create a booking
+/// final result = await service.createBooking(
+///   unitId: 'unit123',
+///   propertyId: 'prop456',
+///   ownerId: 'owner789',
+///   checkIn: DateTime(2024, 7, 1),
+///   checkOut: DateTime(2024, 7, 5),
+///   guestName: 'John Doe',
+///   guestEmail: 'john@example.com',
+///   guestPhone: '+385123456789',
+///   guestCount: 2,
+///   totalPrice: 500.0,
+///   paymentOption: 'full',
+///   paymentMethod: 'bank_transfer',
+/// );
+///
+/// // Handle result
+/// if (result.isStripeValidation) {
+///   // Proceed to Stripe checkout
+/// } else {
+///   // Booking created, show confirmation
+///   print('Booking ID: ${result.booking!.id}');
+/// }
+/// ```
 class BookingService {
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;

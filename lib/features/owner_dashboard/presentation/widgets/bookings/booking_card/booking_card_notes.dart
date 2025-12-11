@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../../../shared/models/booking_model.dart';
 import '../../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../../../core/theme/app_colors.dart';
 
 /// Notes/special requests section for booking card
 ///
@@ -20,10 +21,14 @@ class BookingCardNotes extends StatelessWidget {
 
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       children: [
-        Divider(height: isMobile ? 16 : 24),
+        Divider(
+          height: isMobile ? 16 : 24,
+          color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+        ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

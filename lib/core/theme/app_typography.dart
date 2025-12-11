@@ -222,13 +222,20 @@ class AppTypography {
   /// Display small text (direct access to displaySmall)
   static TextStyle get displaySmall => textTheme.displaySmall!;
 
-  /// Body text medium size (shortcut to bodyLarge from theme)
+  // NOTE: Legacy aliases below - these names are misleading but kept for backwards compatibility.
+  // bodyMedium returns bodyLarge (16px), bodyLarge returns titleLarge (22px), bodySmall returns bodyMedium (14px)
+  // Consider using textTheme directly or semantic names like `paragraph`, `sectionTitle` for new code.
+
+  /// @Deprecated('Use textTheme.bodyLarge instead - this naming is confusing')
+  /// Legacy alias: Returns 16px body text (actually textTheme.bodyLarge)
   static TextStyle get bodyMedium => textTheme.bodyLarge!;
 
-  /// Body text large size (shortcut to titleLarge from theme)
+  /// @Deprecated('Use textTheme.titleLarge instead - this naming is confusing')
+  /// Legacy alias: Returns 22px title text (actually textTheme.titleLarge)
   static TextStyle get bodyLarge => textTheme.titleLarge!;
 
-  /// Body text small size (shortcut to bodyMedium from theme)
+  /// @Deprecated('Use textTheme.bodyMedium instead - this naming is confusing')
+  /// Legacy alias: Returns 14px body text (actually textTheme.bodyMedium)
   static TextStyle get bodySmall => textTheme.bodyMedium!;
 
   // ============================================================================

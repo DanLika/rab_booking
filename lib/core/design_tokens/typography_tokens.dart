@@ -1,9 +1,31 @@
 import 'package:flutter/widgets.dart';
 import 'responsive_breakpoints.dart';
 
-/// Typography design tokens for consistent text styles across the widget
+/// Typography design tokens for consistent text styles across the app
+///
+/// Usage:
+/// ```dart
+/// Text(
+///   'Hello',
+///   style: TypographyTokens.heading(color: Colors.black),
+/// )
+///
+/// // Or use individual values
+/// Text(
+///   'Body text',
+///   style: TextStyle(
+///     fontSize: TypographyTokens.fontSizeM,
+///     fontWeight: TypographyTokens.regular,
+///   ),
+/// )
+/// ```
 class TypographyTokens {
-  // Font families
+  // Prevent instantiation
+  TypographyTokens._();
+
+  // ============================================================
+  // FONT FAMILIES
+  // ============================================================
   static const String primaryFont = 'Inter';
   static const List<String> fontFallback = [
     'Inter',

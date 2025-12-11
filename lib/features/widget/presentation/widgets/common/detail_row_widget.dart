@@ -82,12 +82,8 @@ class DetailRowWidget extends StatelessWidget {
           value,
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeM,
-            fontWeight: isHighlighted
-                ? TypographyTokens.bold
-                : valueFontWeight,
-            color: isHighlighted
-                ? colors.buttonPrimary
-                : colors.textPrimary,
+            fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
+            color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
           ),
         ),
       ],

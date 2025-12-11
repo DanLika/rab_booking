@@ -67,7 +67,8 @@ class BookingBehaviorConfig {
       cancellationDeadlineHours: map['cancellation_deadline_hours'] ?? 48,
       minNights: map['min_nights'] ?? WidgetConstants.defaultMinStayNights,
       maxNights: map['max_nights'],
-      weekendDays: (map['weekend_days'] as List<dynamic>?)
+      weekendDays:
+          (map['weekend_days'] as List<dynamic>?)
               ?.map((e) => e as int)
               .toList() ??
           WidgetConstants.defaultWeekendDays,
@@ -163,15 +164,15 @@ class BookingBehaviorConfig {
 
   @override
   int get hashCode => Object.hash(
-        requireOwnerApproval,
-        allowGuestCancellation,
-        cancellationDeadlineHours,
-        minNights,
-        maxNights,
-        Object.hashAll(weekendDays),
-        minDaysAdvance,
-        maxDaysAdvance,
-      );
+    requireOwnerApproval,
+    allowGuestCancellation,
+    cancellationDeadlineHours,
+    minNights,
+    maxNights,
+    Object.hashAll(weekendDays),
+    minDaysAdvance,
+    maxDaysAdvance,
+  );
 
   @override
   String toString() =>

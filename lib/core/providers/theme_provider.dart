@@ -1,3 +1,22 @@
+/// Theme mode provider with persistent storage.
+///
+/// Manages light/dark/system theme mode with SharedPreferences persistence.
+///
+/// Usage:
+/// ```dart
+/// // Watch current theme mode
+/// final themeMode = ref.watch(currentThemeModeProvider);
+///
+/// // Set theme mode
+/// ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+///
+/// // Use in MaterialApp
+/// MaterialApp(
+///   themeMode: ref.watch(currentThemeModeProvider),
+/// )
+/// ```
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

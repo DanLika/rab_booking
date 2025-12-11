@@ -49,6 +49,12 @@ class PasswordValidator {
   /// Maximum password length
   static const int maxLength = 128;
 
+  // Cached regex patterns for performance
+  static final RegExp _uppercaseRegex = RegExp(r'[A-Z]');
+  static final RegExp _lowercaseRegex = RegExp(r'[a-z]');
+  static final RegExp _digitRegex = RegExp(r'[0-9]');
+  static final RegExp _specialCharRegex = RegExp(r'[!@#$%^&*(),.?":{}|<>]');
+
   /// Validate password and return detailed result
   static PasswordValidationResult validate(String? password) {
     if (password == null || password.isEmpty) {
@@ -72,22 +78,22 @@ class PasswordValidator {
     }
 
     // Check for uppercase letter
-    if (!password.contains(RegExp(r'[A-Z]'))) {
+    if (!_uppercaseRegex.hasMatch(password)) {
       missing.add('One uppercase letter');
     }
 
     // Check for lowercase letter
-    if (!password.contains(RegExp(r'[a-z]'))) {
+    if (!_lowercaseRegex.hasMatch(password)) {
       missing.add('One lowercase letter');
     }
 
     // Check for digit
-    if (!password.contains(RegExp(r'[0-9]'))) {
+    if (!_digitRegex.hasMatch(password)) {
       missing.add('One number');
     }
 
     // Check for special character
-    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+    if (!_specialCharRegex.hasMatch(password)) {
       missing.add('One special character');
     }
 
@@ -116,33 +122,22 @@ class PasswordValidator {
       score += 1;
     }
 
-    // Complexity score
-    if (password.contains(RegExp(r'[A-Z]'))) score += 1;
-    if (password.contains(RegExp(r'[a-z]'))) score += 1;
-    if (password.contains(RegExp(r'[0-9]'))) score += 1;
-    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) score += 1;
+    // Complexity score (using cached regex)
+    if (_uppercaseRegex.hasMatch(password)) score += 1;
+    if (_lowercaseRegex.hasMatch(password)) score += 1;
+    if (_digitRegex.hasMatch(password)) score += 1;
+    if (_specialCharRegex.hasMatch(password)) score += 1;
 
-    // Multiple digits/special chars bonus
-    if (password.split('').where((c) => c.contains(RegExp(r'[0-9]'))).length >=
-        2) {
-      score += 1;
-    }
-    if (password
-            .split('')
-            .where((c) => c.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]')))
-            .length >=
-        2) {
-      score += 1;
-    }
+    // Multiple digits/special chars bonus (using efficient allMatches)
+    if (_digitRegex.allMatches(password).length >= 2) score += 1;
+    if (_specialCharRegex.allMatches(password).length >= 2) score += 1;
 
-    // Determine strength
-    if (score >= 7) {
-      return PasswordStrength.strong;
-    } else if (score >= 5) {
-      return PasswordStrength.medium;
-    } else {
-      return PasswordStrength.weak;
-    }
+    // Determine strength using switch expression
+    return switch (score) {
+      >= 7 => PasswordStrength.strong,
+      >= 5 => PasswordStrength.medium,
+      _ => PasswordStrength.weak,
+    };
   }
 
   /// Simple validation for form fields (returns error message or null)

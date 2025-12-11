@@ -169,6 +169,9 @@ class CacheStats {
 
 /// Global cache instances for common use cases
 class AppCache {
+  // Prevent instantiation
+  AppCache._();
+
   // Cache for property data (5 minutes TTL)
   static final properties = CacheService<dynamic>();
 

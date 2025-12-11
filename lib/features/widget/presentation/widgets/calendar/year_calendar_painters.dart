@@ -20,7 +20,11 @@ mixin DiagonalPatternMixin on CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = patternStrokeWidth;
 
-    for (double i = -size.height; i < size.width + size.height; i += patternSpacing) {
+    for (
+      double i = -size.height;
+      i < size.width + size.height;
+      i += patternSpacing
+    ) {
       canvas.drawLine(
         Offset(i, 0),
         Offset(i + size.height, size.height),
@@ -53,9 +57,7 @@ class DiagonalLinePainter extends CustomPainter with DiagonalPatternMixin {
       ..style = PaintingStyle.fill
       ..color = diagonalColor;
 
-    final path = isCheckIn
-        ? _buildCheckInPath(size)
-        : _buildCheckOutPath(size);
+    final path = isCheckIn ? _buildCheckInPath(size) : _buildCheckOutPath(size);
 
     canvas.drawPath(path, paint);
 

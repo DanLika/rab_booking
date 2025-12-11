@@ -5,13 +5,27 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../shared/models/user_model.dart';
 import 'logging_service.dart';
 
-/// Service for logging and managing security events
+/// Service for logging and managing security events.
 ///
 /// Implements BedBooking security audit requirements:
 /// - Log all authentication events
 /// - Track device information
 /// - Detect suspicious activity
 /// - Send notifications for important events
+///
+/// Usage:
+/// ```dart
+/// final service = SecurityEventsService();
+///
+/// // Log successful login
+/// await service.logLogin(user, deviceId: deviceId, location: 'Zagreb, HR');
+///
+/// // Track device for session management
+/// await service.trackDevice(userId, deviceId: deviceId, platform: 'web');
+///
+/// // Get recent security events
+/// final events = await service.getSecurityEvents(userId, limit: 10);
+/// ```
 class SecurityEventsService {
   final FirebaseFirestore _firestore;
 

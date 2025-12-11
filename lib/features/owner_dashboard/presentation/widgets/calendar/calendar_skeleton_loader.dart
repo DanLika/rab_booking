@@ -2,59 +2,26 @@ import 'package:flutter/material.dart';
 import '../../../../../l10n/app_localizations.dart';
 
 /// Skeleton loader for calendar
-/// Shows animated placeholders while loading data
-class CalendarSkeletonLoader extends StatefulWidget {
+/// Simple static placeholders - no shimmer for snappier feel
+class CalendarSkeletonLoader extends StatelessWidget {
   final int unitCount;
   final int dayCount;
 
   const CalendarSkeletonLoader({super.key, this.unitCount = 5, this.dayCount = 7});
 
   @override
-  State<CalendarSkeletonLoader> createState() => _CalendarSkeletonLoaderState();
-}
-
-class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(duration: const Duration(milliseconds: 1500), vsync: this)..repeat(reverse: true);
-
-    _animation = Tween<double>(
-      begin: 0.3,
-      end: 0.7,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _animation.value,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header skeleton
-              _buildHeaderSkeleton(context),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header skeleton
+        _buildHeaderSkeleton(context),
 
-              const SizedBox(height: 16),
+        const SizedBox(height: 16),
 
-              // Calendar grid skeleton
-              Expanded(child: _buildGridSkeleton(context)),
-            ],
-          ),
-        );
-      },
+        // Calendar grid skeleton
+        Expanded(child: _buildGridSkeleton(context)),
+      ],
     );
   }
 
@@ -96,7 +63,7 @@ class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader> with Si
   Widget _buildGridSkeleton(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-        children: List.generate(widget.unitCount, (unitIndex) => _buildUnitRowSkeleton(context, unitIndex)),
+        children: List.generate(unitCount, (unitIndex) => _buildUnitRowSkeleton(context, unitIndex)),
       ),
     );
   }

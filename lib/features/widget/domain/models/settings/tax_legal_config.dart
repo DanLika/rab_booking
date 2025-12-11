@@ -79,7 +79,8 @@ class TaxLegalConfig {
   }
 
   /// Default Croatian tax and legal disclaimer text.
-  static const String _defaultCroatianTaxText = '''VAŽNO - Pravne i porezne informacije:
+  static const String _defaultCroatianTaxText =
+      '''VAŽNO - Pravne i porezne informacije:
 
 • Boravišna pristojba: Gosti su dužni platiti boravišnu pristojbu prema Zakonu o boravišnoj pristojbi (NN 52/22). Iznos pristojbe ovisi o kategoriji smještaja i dobi gosta.
 

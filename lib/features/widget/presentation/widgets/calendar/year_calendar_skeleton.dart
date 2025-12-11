@@ -32,9 +32,10 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: 0.4, end: 0.8).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 0.8,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -59,8 +60,11 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
             builder: (context, constraints) {
               // Calculate cell size same as real calendar
               final availableWidth = constraints.maxWidth - (padding * 2);
-              final cellSize = ResponsiveHelper.getYearCellSizeForWidth(availableWidth);
-              final calendarWidth = ConstraintTokens.monthLabelWidth + (31 * cellSize);
+              final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
+                availableWidth,
+              );
+              final calendarWidth =
+                  ConstraintTokens.monthLabelWidth + (31 * cellSize);
 
               return Center(
                 child: Padding(
@@ -80,7 +84,8 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
                         // 12 month rows skeleton
                         ...List.generate(
                           12,
-                          (index) => _buildMonthRowSkeleton(cellSize, isDark, index),
+                          (index) =>
+                              _buildMonthRowSkeleton(cellSize, isDark, index),
                         ),
                       ],
                     ),
@@ -102,9 +107,13 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
           width: ConstraintTokens.monthLabelWidth,
           height: cellSize,
           decoration: BoxDecoration(
-            color: isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary,
+            color: isDark
+                ? SkeletonColors.darkPrimary
+                : SkeletonColors.lightPrimary,
             border: Border.all(
-              color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder,
+              color: isDark
+                  ? SkeletonColors.darkBorder
+                  : SkeletonColors.lightBorder,
               width: 0.5,
             ),
             borderRadius: const BorderRadius.only(
@@ -116,7 +125,9 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
               width: 36,
               height: 10,
               decoration: BoxDecoration(
-                color: isDark ? SkeletonColors.darkSecondary : SkeletonColors.lightSecondary,
+                color: isDark
+                    ? SkeletonColors.darkSecondary
+                    : SkeletonColors.lightSecondary,
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
@@ -128,9 +139,13 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
             width: cellSize,
             height: cellSize,
             decoration: BoxDecoration(
-              color: isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary,
+              color: isDark
+                  ? SkeletonColors.darkPrimary
+                  : SkeletonColors.lightPrimary,
               border: Border.all(
-                color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder,
+                color: isDark
+                    ? SkeletonColors.darkBorder
+                    : SkeletonColors.lightBorder,
                 width: 0.5,
               ),
               borderRadius: dayIndex == 30
@@ -144,7 +159,9 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
                 width: cellSize * 0.5,
                 height: cellSize * 0.35,
                 decoration: BoxDecoration(
-                  color: isDark ? SkeletonColors.darkSecondary : SkeletonColors.lightSecondary,
+                  color: isDark
+                      ? SkeletonColors.darkSecondary
+                      : SkeletonColors.lightSecondary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -163,9 +180,13 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
           width: ConstraintTokens.monthLabelWidth,
           height: cellSize,
           decoration: BoxDecoration(
-            color: isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary,
+            color: isDark
+                ? SkeletonColors.darkPrimary
+                : SkeletonColors.lightPrimary,
             border: Border.all(
-              color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder,
+              color: isDark
+                  ? SkeletonColors.darkBorder
+                  : SkeletonColors.lightBorder,
               width: 0.5,
             ),
             borderRadius: monthIndex == 11
@@ -179,7 +200,9 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
               width: 28,
               height: 10,
               decoration: BoxDecoration(
-                color: isDark ? SkeletonColors.darkSecondary : SkeletonColors.lightSecondary,
+                color: isDark
+                    ? SkeletonColors.darkSecondary
+                    : SkeletonColors.lightSecondary,
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
@@ -195,10 +218,16 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
             height: cellSize,
             decoration: BoxDecoration(
               color: isEmptyDay
-                  ? (isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground)
-                  : (isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary),
+                  ? (isDark
+                        ? SkeletonColors.darkCardBackground
+                        : SkeletonColors.lightCardBackground)
+                  : (isDark
+                        ? SkeletonColors.darkPrimary
+                        : SkeletonColors.lightPrimary),
               border: Border.all(
-                color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder,
+                color: isDark
+                    ? SkeletonColors.darkBorder
+                    : SkeletonColors.lightBorder,
                 width: 0.5,
               ),
               borderRadius: (monthIndex == 11 && dayIndex == 30)
@@ -219,7 +248,9 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
     final day = dayIndex + 1; // 1-indexed day
 
     // Days that don't exist in shorter months
-    if (month == 2 && day > 28) return true; // Feb (ignore leap years for skeleton)
+    if (month == 2 && day > 28) {
+      return true; // Feb (ignore leap years for skeleton)
+    }
     if ([4, 6, 9, 11].contains(month) && day > 30) return true; // 30-day months
 
     return false;

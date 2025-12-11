@@ -2,7 +2,33 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import '../exceptions/app_exceptions.dart';
 
-/// Service for handling Firebase Storage operations
+/// Service for handling Firebase Storage operations.
+///
+/// Provides upload and delete operations for user content:
+/// - Profile images
+/// - Property images
+/// - Unit images
+///
+/// Usage:
+/// ```dart
+/// final service = StorageService();
+///
+/// // Upload profile image
+/// final url = await service.uploadProfileImage(
+///   userId: userId,
+///   imageBytes: bytes,
+///   fileName: 'profile.jpg',
+/// );
+///
+/// // Upload unit image
+/// final unitUrl = await service.uploadUnitImage(
+///   userId: userId,
+///   propertyId: propertyId,
+///   unitId: unitId,
+///   imageBytes: bytes,
+///   fileName: 'room.jpg',
+/// );
+/// ```
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 

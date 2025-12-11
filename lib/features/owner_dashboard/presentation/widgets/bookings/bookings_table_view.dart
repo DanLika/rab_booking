@@ -110,7 +110,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                       icon: const Icon(Icons.close, size: 18),
                       label: Text(l10n.ownerTableClearSelection, overflow: TextOverflow.ellipsis),
                       style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
                     ),
@@ -131,8 +131,8 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                           icon: const Icon(Icons.edit_note),
                           tooltip: l10n.ownerTableBulkActions,
                           style: IconButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                            foregroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.15),
+                            foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
                           ),
                         );
                       },

@@ -82,7 +82,10 @@ class AppGradients extends ThemeExtension<AppGradients> {
 
   /// Light theme gradients
   static const AppGradients light = AppGradients(
-    pageBackground: LinearGradient(colors: [_lightStart, _lightEnd], stops: [0.0, 0.6]),
+    pageBackground: LinearGradient(
+      colors: [_lightStart, _lightEnd],
+      stops: [0.0, 0.6],
+    ),
     sectionBackground: LinearGradient(
       begin: Alignment.centerRight,
       end: Alignment.centerLeft,
@@ -101,7 +104,10 @@ class AppGradients extends ThemeExtension<AppGradients> {
 
   /// Dark theme gradients
   static const AppGradients dark = AppGradients(
-    pageBackground: LinearGradient(colors: [_darkStart, _darkEnd], stops: [0.0, 0.6]),
+    pageBackground: LinearGradient(
+      colors: [_darkStart, _darkEnd],
+      stops: [0.0, 0.6],
+    ),
     sectionBackground: LinearGradient(
       begin: Alignment.centerRight,
       end: Alignment.centerLeft,
@@ -146,8 +152,16 @@ class AppGradients extends ThemeExtension<AppGradients> {
     if (other is! AppGradients) return this;
 
     return AppGradients(
-      pageBackground: LinearGradient.lerp(pageBackground, other.pageBackground, t)!,
-      sectionBackground: LinearGradient.lerp(sectionBackground, other.sectionBackground, t)!,
+      pageBackground: LinearGradient.lerp(
+        pageBackground,
+        other.pageBackground,
+        t,
+      )!,
+      sectionBackground: LinearGradient.lerp(
+        sectionBackground,
+        other.sectionBackground,
+        t,
+      )!,
       brandPrimary: LinearGradient.lerp(brandPrimary, other.brandPrimary, t)!,
       sectionBorder: Color.lerp(sectionBorder, other.sectionBorder, t)!,
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,

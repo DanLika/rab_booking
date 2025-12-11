@@ -33,27 +33,24 @@ extension ThemeColors on BuildContext {
   /// Returns:
   /// - Light mode: AppColors.backgroundLight (0xFFFAFAFA)
   /// - Dark mode: AppColors.backgroundDark (0xFF000000 - TRUE BLACK, OLED optimized)
-  Color get backgroundColor => isDarkMode
-      ? AppColors.backgroundDark
-      : AppColors.backgroundLight;
+  Color get backgroundColor =>
+      isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight;
 
   /// Get theme-aware surface color (for cards, dialogs, etc.)
   ///
   /// Returns:
   /// - Light mode: AppColors.surfaceLight (0xFFFFFFFF)
   /// - Dark mode: AppColors.surfaceDark (0xFF121212 - MD3 standard)
-  Color get surfaceColor => isDarkMode
-      ? AppColors.surfaceDark
-      : AppColors.surfaceLight;
+  Color get surfaceColor =>
+      isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight;
 
   /// Get theme-aware surface variant color
   ///
   /// Returns:
   /// - Light mode: AppColors.surfaceVariantLight (0xFFF5F5F5)
   /// - Dark mode: AppColors.surfaceVariantDark (0xFF1E1E1E - higher elevation)
-  Color get surfaceVariantColor => isDarkMode
-      ? AppColors.surfaceVariantDark
-      : AppColors.surfaceVariantLight;
+  Color get surfaceVariantColor =>
+      isDarkMode ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight;
 
   // ============================================================================
   // TEXT COLORS
@@ -64,27 +61,24 @@ extension ThemeColors on BuildContext {
   /// Returns:
   /// - Light mode: AppColors.textPrimaryLight (0xFF2D3748)
   /// - Dark mode: AppColors.textPrimaryDark (0xFFE2E8F0)
-  Color get textColor => isDarkMode
-      ? AppColors.textPrimaryDark
-      : AppColors.textPrimaryLight;
+  Color get textColor =>
+      isDarkMode ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
 
   /// Get theme-aware secondary text color
   ///
   /// Returns:
   /// - Light mode: AppColors.textSecondaryLight (0xFF4A5568)
   /// - Dark mode: AppColors.textSecondaryDark (0xFFA0AEC0)
-  Color get textColorSecondary => isDarkMode
-      ? AppColors.textSecondaryDark
-      : AppColors.textSecondaryLight;
+  Color get textColorSecondary =>
+      isDarkMode ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
 
   /// Get theme-aware tertiary text color (hint text, disabled text)
   ///
   /// Returns:
   /// - Light mode: AppColors.textTertiaryLight (0xFF718096)
   /// - Dark mode: AppColors.textTertiaryDark (0xFF718096)
-  Color get textColorTertiary => isDarkMode
-      ? AppColors.textTertiaryDark
-      : AppColors.textTertiaryLight;
+  Color get textColorTertiary =>
+      isDarkMode ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
 
   // ============================================================================
   // BORDER & DIVIDER COLORS
@@ -95,9 +89,8 @@ extension ThemeColors on BuildContext {
   /// Returns:
   /// - Light mode: AppColors.borderLight (0xFFE2E8F0)
   /// - Dark mode: AppColors.borderDark (0xFF2D3748 - better contrast with black)
-  Color get borderColor => isDarkMode
-      ? AppColors.borderDark
-      : AppColors.borderLight;
+  Color get borderColor =>
+      isDarkMode ? AppColors.borderDark : AppColors.borderLight;
 
   // ============================================================================
   // SEMANTIC COLORS
@@ -117,9 +110,8 @@ extension ThemeColors on BuildContext {
   /// Returns:
   /// - Light mode: AppColors.dividerLight (0xFFF7FAFC)
   /// - Dark mode: AppColors.dividerDark (0xFF1E1E1E - subtle, not harsh)
-  Color get dividerColor => isDarkMode
-      ? AppColors.dividerDark
-      : AppColors.dividerLight;
+  Color get dividerColor =>
+      isDarkMode ? AppColors.dividerDark : AppColors.dividerLight;
 
   // ============================================================================
   // ICON COLORS
@@ -136,14 +128,12 @@ extension ThemeColors on BuildContext {
   // ============================================================================
 
   /// Get theme-aware elevation color for cards at level 1 (1dp)
-  Color get elevation1Color => isDarkMode
-      ? AppColors.elevation1Dark
-      : AppColors.elevation1Light;
+  Color get elevation1Color =>
+      isDarkMode ? AppColors.elevation1Dark : AppColors.elevation1Light;
 
   /// Get theme-aware elevation color for level 2 (2dp)
-  Color get elevation2Color => isDarkMode
-      ? AppColors.elevation2Dark
-      : AppColors.elevation2Light;
+  Color get elevation2Color =>
+      isDarkMode ? AppColors.elevation2Dark : AppColors.elevation2Light;
 
   /// Get theme-aware shadow color for subtle shadows
   Color get shadowColor => isDarkMode
@@ -160,14 +150,12 @@ extension ThemeColors on BuildContext {
   // ============================================================================
 
   /// Get theme-aware scrim color for modal backdrops
-  Color get scrimColor => isDarkMode
-      ? AppColors.scrimDark
-      : AppColors.scrimLight;
+  Color get scrimColor =>
+      isDarkMode ? AppColors.scrimDark : AppColors.scrimLight;
 
   /// Get theme-aware blur backdrop color for glass morphism
-  Color get blurBackdropColor => isDarkMode
-      ? AppColors.blurBackdropDark
-      : AppColors.blurBackdropLight;
+  Color get blurBackdropColor =>
+      isDarkMode ? AppColors.blurBackdropDark : AppColors.blurBackdropLight;
 
   // ============================================================================
   // INVERTED COLORS (for buttons on primary background)

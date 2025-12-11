@@ -215,30 +215,47 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Guest Info - Modern card design
+                      // Guest Info - Modern card design with professional blue theme
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              theme.colorScheme.errorContainer,
-                              theme.colorScheme.errorContainer.withAlpha((0.7 * 255).toInt()),
-                            ],
+                            colors: isDark
+                                ? [
+                                    const Color(0xFF1E293B), // slate800
+                                    const Color(0xFF0F172A), // slate900
+                                  ]
+                                : [
+                                    const Color(0xFFE0F2FE), // sky100
+                                    const Color(0xFFF0F9FF), // sky50 equivalent
+                                  ],
                           ),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt())),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF334155).withAlpha((0.5 * 255).toInt()) // slate700
+                                : const Color(0xFF0EA5E9).withAlpha((0.25 * 255).toInt()), // sky500
+                          ),
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.error.withAlpha((0.15 * 255).toInt()),
+                                color: isDark
+                                    ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+                                    : const Color(0xFF0EA5E9).withAlpha((0.12 * 255).toInt()), // sky500
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Icon(Icons.person, color: theme.colorScheme.error, size: 24),
+                              child: Icon(
+                                Icons.person,
+                                color: isDark
+                                    ? theme.colorScheme.primary
+                                    : const Color(0xFF0284C7), // sky600
+                                size: 24,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -250,7 +267,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      color: theme.colorScheme.onErrorContainer,
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF0C4A6E), // sky900
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -258,7 +277,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                     widget.booking.guestEmail ?? '',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: theme.colorScheme.onErrorContainer.withAlpha((0.8 * 255).toInt()),
+                                      color: isDark
+                                          ? Colors.white.withAlpha((0.75 * 255).toInt())
+                                          : const Color(0xFF0369A1), // sky700
                                     ),
                                   ),
                                 ],
@@ -360,22 +381,39 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Info box
+                      // Info box - Subtle informational style
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiaryContainer,
+                          color: isDark
+                              ? const Color(0xFF1E293B).withAlpha((0.6 * 255).toInt()) // slate800
+                              : const Color(0xFFF1F5F9), // slate100
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF475569).withAlpha((0.4 * 255).toInt()) // slate600
+                                : const Color(0xFFCBD5E1), // slate300
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.info_outline, size: 20, color: theme.colorScheme.tertiary),
+                            Icon(
+                              Icons.info_outline,
+                              size: 20,
+                              color: isDark
+                                  ? const Color(0xFF94A3B8) // slate400
+                                  : const Color(0xFF64748B), // slate500
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 l10n.sendEmailInfo,
-                                style: TextStyle(fontSize: 12, color: theme.colorScheme.onTertiaryContainer),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark
+                                      ? const Color(0xFFCBD5E1) // slate300
+                                      : const Color(0xFF475569), // slate600
+                                ),
                               ),
                             ),
                           ],

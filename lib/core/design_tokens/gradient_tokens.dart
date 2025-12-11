@@ -1,7 +1,19 @@
 import 'package:flutter/widgets.dart';
 
-/// Gradient design tokens for consistent gradients across the widget
+/// Gradient design tokens for consistent gradients across the app
+///
+/// Usage:
+/// ```dart
+/// Container(
+///   decoration: BoxDecoration(
+///     gradient: GradientTokens.brandPrimary,
+///   ),
+/// )
+/// ```
 class GradientTokens {
+  // Prevent instantiation
+  GradientTokens._();
+
   // ============================================================================
   // Linear Gradients
   // ============================================================================

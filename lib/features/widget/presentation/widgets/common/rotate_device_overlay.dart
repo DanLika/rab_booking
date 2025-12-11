@@ -96,10 +96,12 @@ class RotateDeviceOverlay extends StatelessWidget {
   }
 
   Widget _buildSwitchButton() {
-    final backgroundColor =
-        isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
-    final foregroundColor =
-        isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
+    final backgroundColor = isDarkMode
+        ? ColorTokens.pureWhite
+        : ColorTokens.pureBlack;
+    final foregroundColor = isDarkMode
+        ? ColorTokens.pureBlack
+        : ColorTokens.pureWhite;
 
     return ElevatedButton(
       onPressed: onSwitchToMonthView,
@@ -110,7 +112,9 @@ class RotateDeviceOverlay extends StatelessWidget {
           horizontal: SpacingTokens.xl,
           vertical: SpacingTokens.m,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderTokens.circularMedium,
+        ),
       ),
       child: Text(
         translations.switchToMonthView,

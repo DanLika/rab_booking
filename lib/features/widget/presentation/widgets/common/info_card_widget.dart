@@ -68,8 +68,7 @@ class InfoCardWidget extends StatelessWidget {
     final hasTitle = title != null && title!.isNotEmpty;
     final effectiveIconSize =
         iconSize ?? (hasTitle ? _iconSizeWithTitle : _iconSizeSimple);
-    final iconSpacing =
-        hasTitle ? SpacingTokens.s : _iconToTextSpacingSimple;
+    final iconSpacing = hasTitle ? SpacingTokens.s : _iconToTextSpacingSimple;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -83,12 +82,17 @@ class InfoCardWidget extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: useMinimalWidth ? MainAxisSize.min : MainAxisSize.max,
-        crossAxisAlignment:
-            centerContent ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        crossAxisAlignment: centerContent
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
         children: [
           Padding(
             padding: EdgeInsets.only(top: (hasTitle || centerContent) ? 0 : 1),
-            child: Icon(icon, color: colors.textSecondary, size: effectiveIconSize),
+            child: Icon(
+              icon,
+              color: colors.textSecondary,
+              size: effectiveIconSize,
+            ),
           ),
           SizedBox(width: iconSpacing),
           _buildContent(colors, hasTitle),

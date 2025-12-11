@@ -54,13 +54,13 @@ class DashboardStatsSkeleton extends StatelessWidget {
     final bgColor = isDark ? const Color(0xFF2D2D3A) : const Color(0xFFE8E8F0);
 
     return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 600 + animationDelay),
+      duration: Duration(milliseconds: 300 + animationDelay ~/ 2),
       tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeOut,
       builder: (context, value, child) {
         return Opacity(
           opacity: value,
-          child: Transform.translate(offset: Offset(0, 20 * (1 - value)), child: child),
+          child: Transform.translate(offset: Offset(0, 10 * (1 - value)), child: child),
         );
       },
       child: Container(

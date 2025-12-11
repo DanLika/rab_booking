@@ -1,3 +1,22 @@
+/// Language preference provider with persistent storage.
+///
+/// Manages app locale with SharedPreferences persistence.
+///
+/// Usage:
+/// ```dart
+/// // Watch current locale
+/// final locale = ref.watch(currentLocaleProvider);
+///
+/// // Change language
+/// ref.read(languageNotifierProvider.notifier).setLanguage('en');
+///
+/// // Get supported locales for MaterialApp
+/// MaterialApp(
+///   supportedLocales: LanguageNotifier.supportedLocales,
+/// )
+/// ```
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

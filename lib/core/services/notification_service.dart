@@ -2,7 +2,29 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/owner_dashboard/domain/models/notification_model.dart';
 import '../exceptions/app_exceptions.dart';
 
-/// Service for managing owner notifications
+/// Service for managing owner notifications.
+///
+/// Handles creating, reading, updating, and deleting notifications
+/// stored in Firestore. Supports batch operations with Firestore's
+/// 500 operation limit.
+///
+/// Usage:
+/// ```dart
+/// final service = NotificationService();
+///
+/// // Create a booking notification
+/// await service.createBookingNotification(
+///   ownerId: 'owner123',
+///   bookingId: 'booking456',
+///   guestName: 'John Doe',
+///   action: 'created',
+/// );
+///
+/// // Stream notifications
+/// service.getNotifications(ownerId).listen((notifications) {
+///   print('Got ${notifications.length} notifications');
+/// });
+/// ```
 class NotificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _collectionName = 'notifications';

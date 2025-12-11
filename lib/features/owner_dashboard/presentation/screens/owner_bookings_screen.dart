@@ -13,6 +13,7 @@ import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings/bookings_table_view.dart';
 import '../widgets/booking_details_dialog.dart';
@@ -616,7 +617,10 @@ class _BookingCard extends ConsumerWidget {
                   // Guest info
                   BookingCardGuestInfo(ownerBooking: ownerBooking, isMobile: isMobile),
 
-                  Divider(height: isMobile ? 16 : 24, color: theme.dividerColor),
+                  Divider(
+                    height: isMobile ? 16 : 24,
+                    color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                  ),
 
                   // Property and unit info
                   BookingCardPropertyInfo(property: property, unit: unit, isMobile: isMobile),
@@ -637,7 +641,10 @@ class _BookingCard extends ConsumerWidget {
                     ),
                   ),
 
-                  Divider(height: isMobile ? 16 : 24, color: theme.dividerColor),
+                  Divider(
+                    height: isMobile ? 16 : 24,
+                    color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                  ),
 
                   // Payment info
                   BookingCardPaymentInfo(booking: booking, isMobile: isMobile),

@@ -11,6 +11,9 @@ import 'package:flutter/material.dart';
 /// - Dark mode: ColorTokens.dark.primary
 /// - Get color set: ColorTokens.forBrightness(Brightness.light)
 class ColorTokens {
+  // Prevent instantiation
+  ColorTokens._();
+
   // ============================================================================
   // THEME COLORS - Access point for all colors
   // ============================================================================

@@ -20,9 +20,9 @@ class SkeletonColors {
   static const Color lightHeader = Color(0xFFF8F8FA); // Very subtle header
 }
 
-/// Skeleton loader with shimmer effect
-/// Replaces CircularProgressIndicator for better UX
-class SkeletonLoader extends StatefulWidget {
+/// Skeleton loader placeholder
+/// Simple static gradient - no shimmer animation for snappier feel
+class SkeletonLoader extends StatelessWidget {
   const SkeletonLoader({this.width, this.height, this.borderRadius = 8.0, super.key});
 
   final double? width;
@@ -60,53 +60,23 @@ class SkeletonLoader extends StatefulWidget {
   static Widget bookingsTable({int rowCount = 5}) => BookingsTableSkeleton(rowCount: rowCount);
 
   @override
-  State<SkeletonLoader> createState() => _SkeletonLoaderState();
-}
-
-class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..repeat();
-
-    _animation = Tween<double>(
-      begin: -2.0,
-      end: 2.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? [SkeletonColors.darkPrimary, SkeletonColors.darkSecondary]
-                  : [SkeletonColors.lightPrimary, SkeletonColors.lightSecondary],
-              stops: const [0.0, 0.3],
-            ),
-          ),
-        );
-      },
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: isDark
+              ? [SkeletonColors.darkPrimary, SkeletonColors.darkSecondary]
+              : [SkeletonColors.lightPrimary, SkeletonColors.lightSecondary],
+          stops: const [0.0, 0.3],
+        ),
+      ),
     );
   }
 }

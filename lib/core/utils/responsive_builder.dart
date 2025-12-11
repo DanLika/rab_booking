@@ -266,29 +266,16 @@ class ResponsiveWrap extends StatelessWidget {
       builder: (context, constraints) {
         final screenType = getScreenType(constraints.maxWidth);
 
-        // Responsive spacing based on screen size
-        double effectiveSpacing;
-        double effectiveRunSpacing;
-
-        switch (screenType) {
-          case ScreenType.mobile:
-            effectiveSpacing = spacing ?? AppDimensions.spaceS;
-            effectiveRunSpacing = runSpacing ?? AppDimensions.spaceS;
-            break;
-          case ScreenType.tablet:
-            effectiveSpacing = spacing ?? AppDimensions.spaceM;
-            effectiveRunSpacing = runSpacing ?? AppDimensions.spaceM;
-            break;
-          case ScreenType.desktop:
-          case ScreenType.largeDesktop:
-            effectiveSpacing = spacing ?? AppDimensions.spaceL;
-            effectiveRunSpacing = runSpacing ?? AppDimensions.spaceL;
-            break;
-        }
+        // Responsive spacing based on screen size (using switch expression)
+        final defaultSpacing = switch (screenType) {
+          ScreenType.mobile => AppDimensions.spaceS,
+          ScreenType.tablet => AppDimensions.spaceM,
+          ScreenType.desktop || ScreenType.largeDesktop => AppDimensions.spaceL,
+        };
 
         return Wrap(
-          spacing: effectiveSpacing,
-          runSpacing: effectiveRunSpacing,
+          spacing: spacing ?? defaultSpacing,
+          runSpacing: runSpacing ?? defaultSpacing,
           alignment: alignment,
           runAlignment: runAlignment,
           children: children,

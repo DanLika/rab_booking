@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/profile_validators.dart';
-import '../../../../core/utils/password_validator.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../widgets/auth_background.dart';
-import '../widgets/glass_card.dart';
-import '../widgets/auth_logo_icon.dart';
-import '../widgets/premium_input_field.dart';
-import '../widgets/gradient_auth_button.dart';
-import '../../../../shared/widgets/loading_overlay.dart';
-
-// Import the keyboard fix mixin
 import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
+import '../../../../core/utils/password_validator.dart';
+import '../../../../core/utils/profile_validators.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/loading_overlay.dart';
+import '../widgets/auth_background.dart';
+import '../widgets/auth_logo_icon.dart';
+import '../widgets/glass_card.dart';
+import '../widgets/gradient_auth_button.dart';
+import '../widgets/premium_input_field.dart';
+import '../widgets/social_login_button.dart';
 
 /// Enhanced Login Screen with Premium Design
 ///
@@ -28,10 +29,12 @@ class EnhancedLoginScreen extends ConsumerStatefulWidget {
   ConsumerState<EnhancedLoginScreen> createState() => _EnhancedLoginScreenState();
 }
 
-class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> with AndroidKeyboardDismissFix {
+class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
+    with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _obscurePassword = true;
   bool _rememberMe = true;
   bool _isLoading = false;
@@ -40,13 +43,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> with 
   @override
   void initState() {
     super.initState();
-
-    // Clear server error when user starts typing
-    _passwordController.addListener(() {
-      if (_passwordErrorFromServer != null) {
-        setState(() => _passwordErrorFromServer = null);
-      }
-    });
+    _passwordController.addListener(_clearServerError);
   }
 
   @override
@@ -54,6 +51,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> with 
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _clearServerError() {
+    if (_passwordErrorFromServer != null) {
+      setState(() => _passwordErrorFromServer = null);
+    }
   }
 
   Future<void> _handleLogin() async {
@@ -65,86 +68,74 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> with 
     setState(() => _isLoading = true);
 
     try {
-      await ref
-          .read(enhancedAuthProvider.notifier)
-          .signInWithEmail(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            rememberMe: _rememberMe,
-          );
+      await ref.read(enhancedAuthProvider.notifier).signInWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        rememberMe: _rememberMe,
+      );
 
-      if (mounted) {
-        final authState = ref.read(enhancedAuthProvider);
+      if (!mounted) return;
 
-        if (authState.error != null) {
-          setState(() => _isLoading = false);
-          ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
-          return;
-        }
+      final authState = ref.read(enhancedAuthProvider);
 
-        if (authState.requiresEmailVerification) {
-          setState(() => _isLoading = false);
-          context.go(OwnerRoutes.emailVerification);
-          return;
-        }
-
+      if (authState.error != null) {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showSuccessSnackBar(context, 'Welcome back, ${authState.userModel?.firstName ?? "User"}!');
+        ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
+        return;
       }
-    } catch (e) {
-      if (mounted) {
-        final authState = ref.read(enhancedAuthProvider);
-        final errorMessage = authState.error ?? e.toString();
 
-        if (errorMessage.contains('Incorrect password') ||
-            errorMessage.contains('Invalid password') ||
-            errorMessage.contains('wrong-password') ||
-            errorMessage.contains('invalid-credential')) {
-          setState(() {
-            _passwordErrorFromServer = 'Incorrect password. Try again or reset your password.';
-            _isLoading = false;
-          });
-          _formKey.currentState!.validate();
-        } else {
-          setState(() => _isLoading = false);
-          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
-        }
+      if (authState.requiresEmailVerification) {
+        setState(() => _isLoading = false);
+        context.go(OwnerRoutes.emailVerification);
+        return;
+      }
+
+      setState(() => _isLoading = false);
+      ErrorDisplayUtils.showSuccessSnackBar(
+        context,
+        'Welcome back, ${authState.userModel?.firstName ?? "User"}!',
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      final authState = ref.read(enhancedAuthProvider);
+      final errorMessage = authState.error ?? e.toString();
+
+      if (_isPasswordError(errorMessage)) {
+        setState(() {
+          _passwordErrorFromServer = 'Incorrect password. Try again or reset your password.';
+          _isLoading = false;
+        });
+        _formKey.currentState!.validate();
+      } else {
+        setState(() => _isLoading = false);
+        ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
       }
     }
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
-
-    try {
-      await ref.read(enhancedAuthProvider.notifier).signInWithGoogle();
-
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        final authState = ref.read(enhancedAuthProvider);
-        ErrorDisplayUtils.showErrorSnackBar(context, authState.error ?? e.toString());
-      }
-    }
+  bool _isPasswordError(String message) {
+    const passwordErrorPatterns = [
+      'Incorrect password',
+      'Invalid password',
+      'wrong-password',
+      'invalid-credential',
+    ];
+    return passwordErrorPatterns.any(message.contains);
   }
 
-  Future<void> _handleAppleSignIn() async {
+  Future<void> _handleOAuthSignIn(Future<void> Function() signInMethod) async {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(enhancedAuthProvider.notifier).signInWithApple();
-
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      await signInMethod();
     } catch (e) {
+      if (!mounted) return;
+      final authState = ref.read(enhancedAuthProvider);
+      ErrorDisplayUtils.showErrorSnackBar(context, authState.error ?? e.toString());
+    } finally {
       if (mounted) {
         setState(() => _isLoading = false);
-        final authState = ref.read(enhancedAuthProvider);
-        ErrorDisplayUtils.showErrorSnackBar(context, authState.error ?? e.toString());
       }
     }
   }
@@ -153,28 +144,26 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> with 
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 400;
+    final isCompact = Breakpoints.isCompactMobile(context);
 
-    // CRITICAL: KeyedSubtree forces full rebuild when keyboardFixRebuildKey changes
-    // This is the key to fixing the Android Chrome keyboard dismiss bug
     return KeyedSubtree(
       key: ValueKey('login_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
-        // Set to false - we handle keyboard via mixin + meta tag
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
             AuthBackground(
               child: SafeArea(
-                // REMOVED: LayoutBuilder - it caches constraints and causes issues
-                // Instead, use MediaQuery directly where needed
                 child: Center(
                   child: SingleChildScrollView(
-                    // Add bottom padding for keyboard space
-                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20, vertical: isMobile ? 16 : 20),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isCompact ? 12 : 20,
+                        vertical: isCompact ? 16 : 20,
+                      ),
                       child: GlassCard(
                         child: Form(
                           key: _formKey,
@@ -182,194 +171,26 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> with 
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // Logo
-                              Center(
-                                child: AuthLogoIcon(
-                                  size: isMobile ? 70 : 80,
-                                  isWhite: theme.brightness == Brightness.dark,
-                                ),
-                              ),
-                              SizedBox(height: isMobile ? 16 : 20),
-
-                              // Title
-                              Text(
-                                l10n.authOwnerLogin,
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: isMobile ? 22 : 26,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 6),
-
-                              // Subtitle
-                              Text(
-                                l10n.authManageProperties,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  fontSize: isMobile ? 13 : 14,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: isMobile ? 24 : 32),
-
-                              // Email field
-                              PremiumInputField(
-                                controller: _emailController,
-                                labelText: l10n.email,
-                                prefixIcon: Icons.email_outlined,
-                                keyboardType: TextInputType.emailAddress,
-                                validator: ProfileValidators.validateEmail,
-                              ),
-                              SizedBox(height: isMobile ? 12 : 14),
-
-                              // Password field
-                              PremiumInputField(
-                                controller: _passwordController,
-                                labelText: l10n.password,
-                                prefixIcon: Icons.lock_outline,
-                                obscureText: _obscurePassword,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    size: 20,
-                                  ),
-                                  onPressed: () {
-                                    setState(() => _obscurePassword = !_obscurePassword);
-                                  },
-                                ),
-                                validator: (value) {
-                                  if (_passwordErrorFromServer != null) {
-                                    return _passwordErrorFromServer;
-                                  }
-                                  return PasswordValidator.validateMinimumLength(value);
-                                },
-                              ),
-                              SizedBox(height: isMobile ? 12 : 14),
-
-                              // Remember me & Forgot password
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () => setState(() => _rememberMe = !_rememberMe),
-                                      child: Row(
-                                        children: [
-                                          SizedBox(
-                                            height: 22,
-                                            width: 22,
-                                            child: Checkbox(
-                                              value: _rememberMe,
-                                              onChanged: (value) => setState(() => _rememberMe = value!),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                                              activeColor: theme.colorScheme.primary,
-                                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            l10n.authRememberMe,
-                                            style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => context.push(OwnerRoutes.forgotPassword),
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: Text(
-                                      l10n.authForgotPassword,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        fontSize: 13,
-                                        color: theme.colorScheme.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: isMobile ? 20 : 24),
-
-                              // Login Button
+                              _buildHeader(theme, l10n, isCompact),
+                              SizedBox(height: isCompact ? 24 : 32),
+                              _buildEmailField(l10n),
+                              SizedBox(height: isCompact ? 12 : 14),
+                              _buildPasswordField(theme, l10n),
+                              SizedBox(height: isCompact ? 12 : 14),
+                              _buildRememberMeRow(theme, l10n),
+                              SizedBox(height: isCompact ? 20 : 24),
                               GradientAuthButton(
                                 text: l10n.login,
                                 onPressed: _handleLogin,
                                 isLoading: _isLoading,
                                 icon: Icons.login_rounded,
                               ),
-                              SizedBox(height: isMobile ? 16 : 20),
-
-                              // Divider
-                              Row(
-                                children: [
-                                  Expanded(child: Divider(color: theme.colorScheme.outline)),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    child: Text(
-                                      l10n.authOrContinueWith,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(child: Divider(color: theme.colorScheme.outline)),
-                                ],
-                              ),
-                              SizedBox(height: isMobile ? 16 : 20),
-
-                              // Social Login Buttons
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _SocialLoginButton(
-                                      customIcon: const _GoogleIcon(),
-                                      label: 'Google',
-                                      onPressed: _handleGoogleSignIn,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: _SocialLoginButton(
-                                      customIcon: const _AppleIcon(),
-                                      label: 'Apple',
-                                      onPressed: _handleAppleSignIn,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: isMobile ? 20 : 24),
-
-                              // Register Link
-                              Center(
-                                child: TextButton(
-                                  onPressed: () => context.go(OwnerRoutes.register),
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                                  ),
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
-                                      children: [
-                                        TextSpan(text: '${l10n.authNoAccount} '),
-                                        TextSpan(
-                                          text: l10n.authCreateAccount,
-                                          style: TextStyle(
-                                            color: theme.colorScheme.primary,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              SizedBox(height: isCompact ? 16 : 20),
+                              _buildDivider(theme, l10n),
+                              SizedBox(height: isCompact ? 16 : 20),
+                              _buildSocialButtons(),
+                              SizedBox(height: isCompact ? 20 : 24),
+                              _buildRegisterLink(theme, l10n),
                             ],
                           ),
                         ),
@@ -379,276 +200,193 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> with 
                 ),
               ),
             ),
-            // Loading overlay
             if (_isLoading) const LoadingOverlay(message: 'Signing in...'),
           ],
         ),
       ),
     );
   }
-}
 
-// ============================================================================
-// Supporting Widgets (unchanged from original)
-// ============================================================================
-
-class _SocialLoginButton extends StatefulWidget {
-  final IconData? icon;
-  final Widget? customIcon;
-  final String label;
-  final VoidCallback onPressed;
-
-  const _SocialLoginButton({this.icon, this.customIcon, required this.label, required this.onPressed})
-    : assert(icon != null || customIcon != null, 'Either icon or customIcon must be provided');
-
-  @override
-  State<_SocialLoginButton> createState() => _SocialLoginButtonState();
-}
-
-class _SocialLoginButtonState extends State<_SocialLoginButton> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.outline, width: 1.5),
-          color: _isHovered
-              ? theme.colorScheme.primary.withAlpha((0.08 * 255).toInt())
-              : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+  Widget _buildHeader(ThemeData theme, AppLocalizations l10n, bool isCompact) {
+    return Column(
+      children: [
+        Center(
+          child: AuthLogoIcon(
+            size: isCompact ? 70 : 80,
+            isWhite: theme.brightness == Brightness.dark,
+          ),
         ),
-        child: Material(
-          color: Colors.transparent,
+        SizedBox(height: isCompact ? 16 : 20),
+        Text(
+          l10n.authOwnerLogin,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: isCompact ? 22 : 26,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.authManageProperties,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: isCompact ? 13 : 14,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailField(AppLocalizations l10n) {
+    return PremiumInputField(
+      controller: _emailController,
+      labelText: l10n.email,
+      prefixIcon: Icons.email_outlined,
+      keyboardType: TextInputType.emailAddress,
+      validator: ProfileValidators.validateEmail,
+    );
+  }
+
+  Widget _buildPasswordField(ThemeData theme, AppLocalizations l10n) {
+    return PremiumInputField(
+      controller: _passwordController,
+      labelText: l10n.password,
+      prefixIcon: Icons.lock_outline,
+      obscureText: _obscurePassword,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+          color: theme.colorScheme.onSurfaceVariant,
+          size: 20,
+        ),
+        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+      ),
+      validator: (value) {
+        if (_passwordErrorFromServer != null) {
+          return _passwordErrorFromServer;
+        }
+        return PasswordValidator.validateMinimumLength(value);
+      },
+    );
+  }
+
+  Widget _buildRememberMeRow(ThemeData theme, AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(
           child: InkWell(
-            onTap: widget.onPressed,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.customIcon != null)
-                    widget.customIcon!
-                  else
-                    Icon(
-                      widget.icon,
-                      size: 22,
-                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+            onTap: () => setState(() => _rememberMe = !_rememberMe),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: Checkbox(
+                    value: _rememberMe,
+                    onChanged: (value) => setState(() => _rememberMe = value!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                  const SizedBox(width: 8),
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                    ),
+                    activeColor: theme.colorScheme.primary,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.authRememberMe,
+                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                ),
+              ],
             ),
+          ),
+        ),
+        TextButton(
+          onPressed: () => context.push(OwnerRoutes.forgotPassword),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            l10n.authForgotPassword,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 13,
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDivider(ThemeData theme, AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: theme.colorScheme.outline)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            l10n.authOrContinueWith,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: theme.colorScheme.outline)),
+      ],
+    );
+  }
+
+  Widget _buildSocialButtons() {
+    final authNotifier = ref.read(enhancedAuthProvider.notifier);
+
+    return Row(
+      children: [
+        Expanded(
+          child: SocialLoginButton(
+            customIcon: const GoogleBrandIcon(),
+            label: 'Google',
+            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: SocialLoginButton(
+            customIcon: const AppleBrandIcon(),
+            label: 'Apple',
+            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegisterLink(ThemeData theme, AppLocalizations l10n) {
+    return Center(
+      child: TextButton(
+        onPressed: () => context.go(OwnerRoutes.register),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        ),
+        child: RichText(
+          text: TextSpan(
+            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
+            children: [
+              TextSpan(text: '${l10n.authNoAccount} '),
+              TextSpan(
+                text: l10n.authCreateAccount,
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
-
-/// Google "G" Icon with proper brand colors
-class _GoogleIcon extends StatelessWidget {
-  const _GoogleIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(width: 22, height: 22, child: CustomPaint(painter: _GoogleLogoPainter()));
-  }
-}
-
-class _GoogleLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final outerRadius = size.width * 0.45;
-    final innerRadius = size.width * 0.30;
-    final strokeWidth = outerRadius - innerRadius;
-
-    final bluePaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: (outerRadius + innerRadius) / 2),
-      -1.5708,
-      1.5708,
-      false,
-      bluePaint,
-    );
-
-    final greenPaint = Paint()
-      ..color = const Color(0xFF34A853)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: (outerRadius + innerRadius) / 2),
-      0.0,
-      1.1,
-      false,
-      greenPaint,
-    );
-
-    final yellowPaint = Paint()
-      ..color = const Color(0xFFFBBC04)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: (outerRadius + innerRadius) / 2),
-      1.5708,
-      1.5708,
-      false,
-      yellowPaint,
-    );
-
-    final redPaint = Paint()
-      ..color = const Color(0xFFEA4335)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: (outerRadius + innerRadius) / 2),
-      3.1416,
-      1.37,
-      false,
-      redPaint,
-    );
-
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.fill;
-
-    final barWidth = outerRadius * 0.85;
-    final barHeight = strokeWidth * 0.6;
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(center.dx + barWidth / 4, center.dy), width: barWidth, height: barHeight),
-        Radius.circular(barHeight / 2),
-      ),
-      barPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _AppleIcon extends StatelessWidget {
-  const _AppleIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SizedBox(
-      width: 22,
-      height: 22,
-      child: CustomPaint(painter: _AppleLogoPainter(color: theme.colorScheme.onSurface)),
-    );
-  }
-}
-
-class _AppleLogoPainter extends CustomPainter {
-  final Color color;
-
-  const _AppleLogoPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    final scale = size.width / 24;
-    final centerX = size.width / 2;
-    final centerY = size.height / 2 + 1 * scale;
-
-    path.moveTo(centerX, centerY - 7 * scale);
-    path.cubicTo(
-      centerX + 6 * scale,
-      centerY - 7 * scale,
-      centerX + 8 * scale,
-      centerY - 4 * scale,
-      centerX + 8 * scale,
-      centerY + 2 * scale,
-    );
-    path.cubicTo(
-      centerX + 8 * scale,
-      centerY + 6 * scale,
-      centerX + 5 * scale,
-      centerY + 8 * scale,
-      centerX,
-      centerY + 8 * scale,
-    );
-    path.cubicTo(
-      centerX - 5 * scale,
-      centerY + 8 * scale,
-      centerX - 8 * scale,
-      centerY + 6 * scale,
-      centerX - 8 * scale,
-      centerY + 2 * scale,
-    );
-    path.cubicTo(
-      centerX - 8 * scale,
-      centerY - 4 * scale,
-      centerX - 6 * scale,
-      centerY - 7 * scale,
-      centerX,
-      centerY - 7 * scale,
-    );
-    path.close();
-
-    final bitePath = Path();
-    bitePath.addOval(Rect.fromCircle(center: Offset(centerX + 5 * scale, centerY - 3 * scale), radius: 2.5 * scale));
-
-    final applePath = Path.combine(PathOperation.difference, path, bitePath);
-    canvas.drawPath(applePath, paint);
-
-    final leafPath = Path();
-    leafPath.moveTo(centerX + 1 * scale, centerY - 7 * scale);
-    leafPath.cubicTo(
-      centerX + 2 * scale,
-      centerY - 9 * scale,
-      centerX + 4 * scale,
-      centerY - 10 * scale,
-      centerX + 5 * scale,
-      centerY - 10 * scale,
-    );
-    leafPath.cubicTo(
-      centerX + 4 * scale,
-      centerY - 9.5 * scale,
-      centerX + 3 * scale,
-      centerY - 8.5 * scale,
-      centerX + 1 * scale,
-      centerY - 7 * scale,
-    );
-    leafPath.close();
-
-    canvas.drawPath(leafPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

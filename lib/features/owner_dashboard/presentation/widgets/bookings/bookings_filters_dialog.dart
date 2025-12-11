@@ -329,7 +329,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         ),
         const SizedBox(height: 12),
 
-        // Date range picker button
+        // Date range picker button - styled to match dropdown fields
         InkWell(
           onTap: () async {
             final DateTimeRange? initialRange = (_selectedStartDate != null && _selectedEndDate != null)
@@ -353,9 +353,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           },
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             decoration: BoxDecoration(
-              border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
+              color: context.gradients.inputFillColor,
+              border: Border.all(color: context.gradients.sectionBorder),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -381,6 +382,8 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                       });
                     },
                     tooltip: l10n.ownerFiltersClear,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
               ],
             ),
@@ -435,11 +438,16 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
   Widget _buildClearButton(ThemeData theme, bool isFullWidth, AppLocalizations l10n) {
     return OutlinedButton.icon(
       onPressed: () {
+        // Clear local state
         setState(() {
           _filters = const BookingsFilters();
           _selectedStartDate = null;
           _selectedEndDate = null;
         });
+
+        // Also immediately apply cleared filters to the provider
+        final notifier = ref.read(bookingsFiltersNotifierProvider.notifier);
+        notifier.clearFilters();
       },
       icon: const Icon(Icons.clear_all),
       label: Text(l10n.ownerFiltersClear),

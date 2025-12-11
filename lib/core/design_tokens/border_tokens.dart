@@ -1,14 +1,31 @@
 import 'package:flutter/widgets.dart';
 
-/// Border design tokens for consistent borders across the widget
+/// Border design tokens for consistent borders across the app
+///
+/// Usage:
+/// ```dart
+/// Container(
+///   decoration: BoxDecoration(
+///     borderRadius: BorderTokens.circularMedium,
+///     border: Border.all(width: BorderTokens.widthThin),
+///   ),
+/// )
+/// ```
 class BorderTokens {
-  // Border width values
+  // Prevent instantiation
+  BorderTokens._();
+
+  // ============================================================
+  // BORDER WIDTH VALUES
+  // ============================================================
   static const double widthNone = 0.0;
   static const double widthThin = 1.0;
   static const double widthMedium = 1.5; // More pronounced than thin
   static const double widthThick = 2.0;
 
-  // Border radius values
+  // ============================================================
+  // BORDER RADIUS VALUES
+  // ============================================================
   static const double radiusSharp = 0.0;
   static const double radiusTiny = 2.0;    // Very small rounded corners
   static const double radiusSubtle = 4.0;
@@ -31,31 +48,31 @@ class BorderTokens {
   // Button border radius
   static const double buttonRadius = radiusMedium;
 
-  // Input field border radius
+  /// Input field border radius
   static const double inputRadius = radiusMedium;
 
-  // BorderRadius helpers
-  static BorderRadius circularSharp = BorderRadius.circular(radiusSharp);
-  static BorderRadius circularTiny = BorderRadius.circular(radiusTiny);
-  static BorderRadius circularSubtle = BorderRadius.circular(radiusSubtle);
-  static BorderRadius circularSmall = BorderRadius.circular(radiusSmall);
-  static BorderRadius circularMedium = BorderRadius.circular(radiusMedium);
-  static BorderRadius circularRounded = BorderRadius.circular(radiusRounded);
-  static BorderRadius circularLarge = BorderRadius.circular(radiusLarge);
-  static BorderRadius circularXL = BorderRadius.circular(radiusXL);
+  // ============================================================
+  // BORDER RADIUS HELPERS
+  // ============================================================
 
-  // Calendar cell border radius
-  static BorderRadius calendarCell = BorderRadius.circular(calendarCellRadius);
+  static final BorderRadius circularSharp = BorderRadius.circular(radiusSharp);
+  static final BorderRadius circularTiny = BorderRadius.circular(radiusTiny);
+  static final BorderRadius circularSubtle = BorderRadius.circular(radiusSubtle);
+  static final BorderRadius circularSmall = BorderRadius.circular(radiusSmall);
+  static final BorderRadius circularMedium = BorderRadius.circular(radiusMedium);
+  static final BorderRadius circularRounded = BorderRadius.circular(radiusRounded);
+  static final BorderRadius circularLarge = BorderRadius.circular(radiusLarge);
+  static final BorderRadius circularXL = BorderRadius.circular(radiusXL);
 
-  // Widget container border radius
-  static BorderRadius widgetContainer = BorderRadius.circular(widgetContainerRadius);
+  // ============================================================
+  // COMPONENT-SPECIFIC HELPERS
+  // ============================================================
 
-  // Card border radius
-  static BorderRadius card = BorderRadius.circular(cardRadius);
-
-  // Button border radius
-  static BorderRadius button = BorderRadius.circular(buttonRadius);
-
-  // Input field border radius
-  static BorderRadius input = BorderRadius.circular(inputRadius);
+  static final BorderRadius calendarCell =
+      BorderRadius.circular(calendarCellRadius);
+  static final BorderRadius widgetContainer =
+      BorderRadius.circular(widgetContainerRadius);
+  static final BorderRadius card = BorderRadius.circular(cardRadius);
+  static final BorderRadius button = BorderRadius.circular(buttonRadius);
+  static final BorderRadius input = BorderRadius.circular(inputRadius);
 }

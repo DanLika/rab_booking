@@ -11,6 +11,7 @@ class PremiumInputField extends StatefulWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final int? maxLines;
+  final FocusNode? focusNode;
 
   const PremiumInputField({
     super.key,
@@ -22,6 +23,7 @@ class PremiumInputField extends StatefulWidget {
     this.keyboardType,
     this.validator,
     this.maxLines = 1,
+    this.focusNode,
   });
 
   @override
@@ -49,6 +51,7 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
         ),
         child: TextFormField(
           controller: widget.controller,
+          focusNode: widget.focusNode,
           obscureText: widget.obscureText,
           keyboardType: widget.keyboardType,
           validator: widget.validator,

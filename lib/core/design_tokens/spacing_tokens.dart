@@ -1,9 +1,25 @@
 import 'package:flutter/widgets.dart';
 import 'responsive_breakpoints.dart';
 
-/// Spacing design tokens for consistent spacing across the widget
+/// Spacing design tokens for consistent spacing across the app
+///
+/// Usage:
+/// ```dart
+/// Padding(
+///   padding: EdgeInsets.all(SpacingTokens.m),
+///   child: Column(
+///     spacing: SpacingTokens.s,
+///     children: [...],
+///   ),
+/// )
+/// ```
 class SpacingTokens {
-  // Base spacing values
+  // Prevent instantiation
+  SpacingTokens._();
+
+  // ============================================================
+  // BASE SPACING VALUES
+  // ============================================================
   static const double xxs = 2.0;
   static const double xs = 4.0;
   static const double xs2 = 6.0;  // Between xs and s
@@ -117,15 +133,18 @@ class SpacingTokens {
     vertical: m,
   );
 
-  // Consistent EdgeInsets helpers
-  static EdgeInsets allXS = const EdgeInsets.all(xs);
-  static EdgeInsets allS = const EdgeInsets.all(s);
-  static EdgeInsets allM = const EdgeInsets.all(m);
-  static EdgeInsets allL = const EdgeInsets.all(l);
-  static EdgeInsets allXL = const EdgeInsets.all(xl);
+  // ============================================================
+  // EDGE INSETS HELPERS
+  // ============================================================
 
-  static EdgeInsets horizontalM = const EdgeInsets.symmetric(horizontal: m);
-  static EdgeInsets horizontalL = const EdgeInsets.symmetric(horizontal: l);
-  static EdgeInsets verticalM = const EdgeInsets.symmetric(vertical: m);
-  static EdgeInsets verticalL = const EdgeInsets.symmetric(vertical: l);
+  static const EdgeInsets allXS = EdgeInsets.all(xs);
+  static const EdgeInsets allS = EdgeInsets.all(s);
+  static const EdgeInsets allM = EdgeInsets.all(m);
+  static const EdgeInsets allL = EdgeInsets.all(l);
+  static const EdgeInsets allXL = EdgeInsets.all(xl);
+
+  static const EdgeInsets horizontalM = EdgeInsets.symmetric(horizontal: m);
+  static const EdgeInsets horizontalL = EdgeInsets.symmetric(horizontal: l);
+  static const EdgeInsets verticalM = EdgeInsets.symmetric(vertical: m);
+  static const EdgeInsets verticalL = EdgeInsets.symmetric(vertical: l);
 }

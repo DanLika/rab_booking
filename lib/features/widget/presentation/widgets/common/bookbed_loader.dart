@@ -72,7 +72,9 @@ class BookBedLoader extends StatelessWidget {
         height: _progressBarHeight,
         child: Stack(
           children: [
-            Container(color: colors.primary.withValues(alpha: _backgroundOpacity)),
+            Container(
+              color: colors.primary.withValues(alpha: _backgroundOpacity),
+            ),
             if (progress != null)
               FractionallySizedBox(
                 widthFactor: progress!.clamp(0.0, 1.0),
@@ -126,9 +128,10 @@ class _IndeterminateProgressState extends State<_IndeterminateProgress>
       vsync: this,
     )..repeat();
 
-    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: -1.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

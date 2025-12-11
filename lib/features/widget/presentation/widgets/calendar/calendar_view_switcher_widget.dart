@@ -52,8 +52,9 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
 
     final padding = isSmallScreen ? _paddingSmall : _paddingNormal;
     final gap = isSmallScreen ? _gapSmall : _gapNormal;
-    final containerRadius =
-        isSmallScreen ? _containerRadiusSmall : _containerRadiusNormal;
+    final containerRadius = isSmallScreen
+        ? _containerRadiusSmall
+        : _containerRadiusNormal;
 
     return Container(
       padding: EdgeInsets.all(padding),
@@ -97,17 +98,22 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
   }) {
     // Dark theme: selected button has white background with black text
     // Light theme: selected button has black background with white text
-    final selectedBg =
-        isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
-    final selectedText =
-        isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
+    final selectedBg = isDarkMode
+        ? ColorTokens.pureWhite
+        : ColorTokens.pureBlack;
+    final selectedText = isDarkMode
+        ? ColorTokens.pureBlack
+        : ColorTokens.pureWhite;
 
-    final borderRadius =
-        isSmallScreen ? _borderRadiusSmall : _borderRadiusNormal;
-    final horizontalPadding =
-        isSmallScreen ? _horizontalPaddingSmall : _horizontalPaddingNormal;
-    final verticalPadding =
-        isSmallScreen ? _verticalPaddingSmall : _verticalPaddingNormal;
+    final borderRadius = isSmallScreen
+        ? _borderRadiusSmall
+        : _borderRadiusNormal;
+    final horizontalPadding = isSmallScreen
+        ? _horizontalPaddingSmall
+        : _horizontalPaddingNormal;
+    final verticalPadding = isSmallScreen
+        ? _verticalPaddingSmall
+        : _verticalPaddingNormal;
     final iconSize = isSmallScreen ? _iconSizeSmall : IconSizeTokens.small;
 
     return Semantics(

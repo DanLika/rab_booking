@@ -7,13 +7,32 @@ import '../constants/enums.dart';
 import 'ical_generator.dart';
 import 'logging_service.dart';
 
-/// Service for managing iCal export functionality
+/// Service for managing iCal export functionality.
 ///
 /// Handles:
 /// - Generating .ics files from bookings
 /// - Uploading to Firebase Storage
 /// - Auto-regeneration when bookings change
 /// - Public URL management
+///
+/// Usage:
+/// ```dart
+/// final service = IcalExportService(bookingRepository: repo);
+///
+/// // Generate and upload iCal
+/// final url = await service.generateAndUploadIcal(
+///   propertyId: 'prop123',
+///   unitId: 'unit456',
+///   unit: unitModel,
+/// );
+///
+/// // Auto-regenerate on booking changes
+/// await service.autoRegenerateIfEnabled(
+///   propertyId: 'prop123',
+///   unitId: 'unit456',
+///   unit: unitModel,
+/// );
+/// ```
 class IcalExportService {
   final BookingRepository _bookingRepository;
   final FirebaseStorage _storage;

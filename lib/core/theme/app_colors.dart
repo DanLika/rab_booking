@@ -203,13 +203,19 @@ class AppColors {
   static const Color statusCompleted = Color(0xFF6B7280); // Gray 500
 
   /// Activity type colors
-  static const Color activityBooking = Color(0xFF7C3AED); // Purple 600 - new booking
-  static const Color activityConfirmed = Color(0xFF10B981); // Emerald 500 - confirmed
+  static const Color activityBooking = Color(
+    0xFF7C3AED,
+  ); // Purple 600 - new booking
+  static const Color activityConfirmed = Color(
+    0xFF10B981,
+  ); // Emerald 500 - confirmed
   static const Color activityReview = Color(0xFFD97706); // Amber 600
   static const Color activityMessage = Color(0xFF5B8DEE); // Blue 500
   static const Color activityPayment = Color(0xFF0891B2); // Cyan 600
   static const Color activityCancellation = Color(0xFFDC2626); // Red 600
-  static const Color activityCompleted = Color(0xFF6B7280); // Gray 500 - completed
+  static const Color activityCompleted = Color(
+    0xFF6B7280,
+  ); // Gray 500 - completed
 
   // ============================================================================
   // AUTH SCREEN COLORS (Premium Purple-Blue Theme)
@@ -239,6 +245,10 @@ class AppColors {
   // ============================================================================
   // GRADIENT COLORS
   // ============================================================================
+  //
+  // NOTE: For theme-aware gradients that switch between light/dark mode,
+  // use `context.gradients` from AppGradients (via GradientExtension).
+  // The gradients below are static and don't adapt to theme changes.
 
   /// Auth gradient - Modern Purple to Blue
   /// Use for: auth buttons, auth accents
@@ -443,18 +453,29 @@ class AppColors {
   /// Surface elevation levels for light theme (subtle brightness variations)
   static const Color elevation0Light = surfaceLight; // Base surface (0dp)
   static const Color elevation1Light = Color(0xFFFEFEFE); // +1dp (cards)
-  static const Color elevation2Light = Color(0xFFFDFDFD); // +2dp (floating buttons)
+  static const Color elevation2Light = Color(
+    0xFFFDFDFD,
+  ); // +2dp (floating buttons)
   static const Color elevation3Light = Color(0xFFFCFCFC); // +4dp (modals)
   static const Color elevation4Light = Color(0xFFFBFBFB); // +8dp (dialogs)
 
   /// Surface elevation levels for dark theme (brighter on elevation - Material Design 3)
   /// UPGRADED: All levels recalculated for true black base (0xFF000000)
   /// Uses white overlay technique: elevation = base + white opacity
-  static const Color elevation0Dark = surfaceDark; // Base surface (0dp) = 0xFF121212
-  static const Color elevation1Dark = Color(0xFF1E1E1E); // +1dp (cards) - 5% white overlay
-  static const Color elevation2Dark = Color(0xFF232323); // +2dp (floating buttons) - 8% white overlay
-  static const Color elevation3Dark = Color(0xFF282828); // +4dp (modals) - 11% white overlay
-  static const Color elevation4Dark = Color(0xFF2C2C2C); // +8dp (dialogs) - 14% white overlay
+  static const Color elevation0Dark =
+      surfaceDark; // Base surface (0dp) = 0xFF121212
+  static const Color elevation1Dark = Color(
+    0xFF1E1E1E,
+  ); // +1dp (cards) - 5% white overlay
+  static const Color elevation2Dark = Color(
+    0xFF232323,
+  ); // +2dp (floating buttons) - 8% white overlay
+  static const Color elevation3Dark = Color(
+    0xFF282828,
+  ); // +4dp (modals) - 11% white overlay
+  static const Color elevation4Dark = Color(
+    0xFF2C2C2C,
+  ); // +8dp (dialogs) - 14% white overlay
 
   // ============================================================================
   // SCRIM & BACKDROP COLORS
@@ -477,11 +498,15 @@ class AppColors {
   // ============================================================================
 
   /// Get color with opacity
+  /// Note: Consider using `color.withValues(alpha: opacity)` directly for clarity
   static Color withOpacity(Color color, double opacity) {
     return color.withValues(alpha: opacity);
   }
 
-  /// Get status color based on booking status
+  /// Get status color based on booking status string
+  ///
+  /// Prefer using [getStatusColorFromEnum] with BookingStatus enum for type safety.
+  /// This string-based method is kept for backwards compatibility.
   static Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -498,6 +523,12 @@ class AppColors {
   }
 
   /// Get rating color based on value (1-5 stars)
+  ///
+  /// Returns:
+  /// - [success] (green) for ratings >= 4.5
+  /// - [star] (amber) for ratings >= 3.5
+  /// - [warning] (orange) for ratings >= 2.5
+  /// - [error] (red) for ratings < 2.5
   static Color getRatingColor(double rating) {
     if (rating >= 4.5) return success;
     if (rating >= 3.5) return star;

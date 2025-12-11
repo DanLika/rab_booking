@@ -18,26 +18,25 @@ enum UserRole {
   final String value;
 
   /// Get display name for the role
-  String get displayName {
-    switch (this) {
-      case UserRole.guest:
-        return 'Guest';
-      case UserRole.owner:
-        return 'Property Owner';
-      case UserRole.admin:
-        return 'Administrator';
-    }
-  }
+  String get displayName => switch (this) {
+    UserRole.guest => 'Guest',
+    UserRole.owner => 'Property Owner',
+    UserRole.admin => 'Administrator',
+  };
 
   /// Check if user has admin privileges
   bool get isAdmin => this == UserRole.admin;
 
   /// Check if user can manage properties
-  bool get canManageProperties => this == UserRole.owner || this == UserRole.admin;
+  bool get canManageProperties =>
+      this == UserRole.owner || this == UserRole.admin;
 
   /// Parse from string value
   static UserRole fromString(String value) {
-    return UserRole.values.firstWhere((role) => role.value == value, orElse: () => UserRole.guest);
+    return UserRole.values.firstWhere(
+      (role) => role.value == value,
+      orElse: () => UserRole.guest,
+    );
   }
 }
 
@@ -217,7 +216,10 @@ enum PropertyAmenity {
 
   /// Parse from string value
   static PropertyAmenity fromString(String value) {
-    return PropertyAmenity.values.firstWhere((amenity) => amenity.value == value, orElse: () => PropertyAmenity.wifi);
+    return PropertyAmenity.values.firstWhere(
+      (amenity) => amenity.value == value,
+      orElse: () => PropertyAmenity.wifi,
+    );
   }
 
   /// Parse list from string list
@@ -254,40 +256,29 @@ enum PropertyType {
   final String value;
 
   /// Get display name for the property type
-  String get displayName {
-    switch (this) {
-      case PropertyType.villa:
-        return 'Villa';
-      case PropertyType.apartment:
-        return 'Apartment';
-      case PropertyType.studio:
-        return 'Studio';
-      case PropertyType.house:
-        return 'House';
-      case PropertyType.room:
-        return 'Room';
-    }
-  }
+  String get displayName => switch (this) {
+    PropertyType.villa => 'Villa',
+    PropertyType.apartment => 'Apartment',
+    PropertyType.studio => 'Studio',
+    PropertyType.house => 'House',
+    PropertyType.room => 'Room',
+  };
 
   /// Get Croatian display name
-  String get displayNameHR {
-    switch (this) {
-      case PropertyType.villa:
-        return 'Vila';
-      case PropertyType.apartment:
-        return 'Apartman';
-      case PropertyType.studio:
-        return 'Studio';
-      case PropertyType.house:
-        return 'Kuća';
-      case PropertyType.room:
-        return 'Soba';
-    }
-  }
+  String get displayNameHR => switch (this) {
+    PropertyType.villa => 'Vila',
+    PropertyType.apartment => 'Apartman',
+    PropertyType.studio => 'Studio',
+    PropertyType.house => 'Kuća',
+    PropertyType.room => 'Soba',
+  };
 
   /// Parse from string value
   static PropertyType fromString(String value) {
-    return PropertyType.values.firstWhere((type) => type.value == value, orElse: () => PropertyType.apartment);
+    return PropertyType.values.firstWhere(
+      (type) => type.value == value,
+      orElse: () => PropertyType.apartment,
+    );
   }
 }
 
@@ -310,34 +301,24 @@ enum BookingStatus {
   const BookingStatus(this.value);
   final String value;
 
-  String get displayName {
-    switch (this) {
-      case BookingStatus.pending:
-        return 'Pending Approval';
-      case BookingStatus.confirmed:
-        return 'Confirmed';
-      case BookingStatus.cancelled:
-        return 'Cancelled';
-      case BookingStatus.completed:
-        return 'Completed';
-    }
-  }
+  String get displayName => switch (this) {
+    BookingStatus.pending => 'Pending Approval',
+    BookingStatus.confirmed => 'Confirmed',
+    BookingStatus.cancelled => 'Cancelled',
+    BookingStatus.completed => 'Completed',
+  };
 
   /// Get color for booking status
   /// Note: On calendar, pending uses RED with diagonal pattern (same as booked)
   /// This color is used in owner dashboard badges
-  Color get color {
-    switch (this) {
-      case BookingStatus.pending:
-        return const Color(0xFFFFA726); // Orange - for dashboard badge
-      case BookingStatus.confirmed:
-        return const Color(0xFF4CAF50); // Green (softer, less saturated)
-      case BookingStatus.cancelled:
-        return const Color(0xFFEF5350); // Red
-      case BookingStatus.completed:
-        return const Color(0xFF42A5F5); // Blue
-    }
-  }
+  Color get color => switch (this) {
+    BookingStatus.pending => const Color(
+      0xFFFFA726,
+    ), // Orange - dashboard badge
+    BookingStatus.confirmed => const Color(0xFF4CAF50), // Green
+    BookingStatus.cancelled => const Color(0xFFEF5350), // Red
+    BookingStatus.completed => const Color(0xFF42A5F5), // Blue
+  };
 
   /// Check if booking can be cancelled
   /// Note: Pending bookings should be rejected, not cancelled
@@ -377,20 +358,17 @@ enum BookingStatus {
 
   /// Sort priority for displaying bookings (higher = more urgent/important)
   /// Used in owner bookings list to show pending first, then confirmed, etc.
-  int get sortPriority {
-    switch (this) {
-      case BookingStatus.pending:
-        return 4; // Highest - needs action
-      case BookingStatus.confirmed:
-        return 3; // Active bookings
-      case BookingStatus.completed:
-        return 2; // Historical
-      case BookingStatus.cancelled:
-        return 1; // Lowest - cancelled
-    }
-  }
+  int get sortPriority => switch (this) {
+    BookingStatus.pending => 4, // Highest - needs action
+    BookingStatus.confirmed => 3, // Active bookings
+    BookingStatus.completed => 2, // Historical
+    BookingStatus.cancelled => 1, // Lowest - cancelled
+  };
 
   static BookingStatus fromString(String value) {
-    return BookingStatus.values.firstWhere((status) => status.value == value, orElse: () => BookingStatus.pending);
+    return BookingStatus.values.firstWhere(
+      (status) => status.value == value,
+      orElse: () => BookingStatus.pending,
+    );
   }
 }

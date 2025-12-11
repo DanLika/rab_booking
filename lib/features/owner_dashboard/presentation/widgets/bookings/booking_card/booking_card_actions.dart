@@ -53,26 +53,30 @@ class BookingCardActions extends StatelessWidget {
           final iconSize = isVeryNarrow ? 15.0 : 17.0;
           final fontSize = isVeryNarrow ? 12.0 : 14.0;
 
-          // Define buttons
+          final isDark = theme.brightness == Brightness.dark;
+
+          // Define buttons - using slate colors for better dark mode visibility
           final detailsBtn = OutlinedButton.icon(
             onPressed: onShowDetails,
             icon: Icon(
               Icons.visibility_outlined,
               size: iconSize,
-              color: theme.brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700],
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569), // slate300/slate600
             ),
             label: Text(
               l10n.ownerBookingCardDetails,
               style: TextStyle(
-                color: theme.brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700],
+                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569), // slate300/slate600
                 fontSize: fontSize,
               ),
             ),
             style: OutlinedButton.styleFrom(
-              backgroundColor: theme.brightness == Brightness.dark ? Colors.grey[850] : Colors.grey[50],
+              backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC), // slate800/slate50
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              side: BorderSide(color: theme.brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[300]!),
+              side: BorderSide(
+                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1), // slate600/slate300
+              ),
             ),
           );
 
@@ -85,7 +89,12 @@ class BookingCardActions extends StatelessWidget {
               backgroundColor: const Color(0xFF4CAF50), // Softirana zelena
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: const Color(0xFF4CAF50).withAlpha((0.3 * 255).toInt()),
+                ),
+              ),
               elevation: 0,
             ),
           );
@@ -98,7 +107,12 @@ class BookingCardActions extends StatelessWidget {
               backgroundColor: const Color(0xFFE57373), // Softirana crvena (manje agresivna)
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: const Color(0xFFE57373).withAlpha((0.3 * 255).toInt()),
+                ),
+              ),
               elevation: 0,
             ),
           );
@@ -111,7 +125,12 @@ class BookingCardActions extends StatelessWidget {
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+                ),
+              ),
               elevation: 0,
             ),
           );
@@ -121,20 +140,22 @@ class BookingCardActions extends StatelessWidget {
             icon: Icon(
               Icons.close,
               size: iconSize,
-              color: theme.brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700],
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569), // slate300/slate600
             ),
             label: Text(
               l10n.ownerBookingCardCancel,
               style: TextStyle(
-                color: theme.brightness == Brightness.dark ? Colors.grey[300] : Colors.grey[700],
+                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569), // slate300/slate600
                 fontSize: fontSize,
               ),
             ),
             style: OutlinedButton.styleFrom(
-              backgroundColor: theme.brightness == Brightness.dark ? Colors.grey[850] : Colors.grey[50],
+              backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC), // slate800/slate50
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              side: BorderSide(color: theme.brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[300]!),
+              side: BorderSide(
+                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1), // slate600/slate300
+              ),
             ),
           );
 

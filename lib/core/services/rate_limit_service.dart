@@ -45,12 +45,30 @@ class LoginAttempt {
   }
 }
 
-/// Service for rate limiting login attempts
+/// Service for rate limiting login attempts.
 ///
 /// Implements BedBooking security policy:
 /// - Max 5 failed attempts
 /// - 15 minute lockout period
 /// - Attempts reset after 1 hour of inactivity
+///
+/// Usage:
+/// ```dart
+/// final service = RateLimitService();
+///
+/// // Check if user is locked out
+/// final attempt = await service.checkRateLimit('user@example.com');
+/// if (attempt?.isLocked ?? false) {
+///   showError(service.getRateLimitMessage(attempt!));
+///   return;
+/// }
+///
+/// // Record failed attempt
+/// await service.recordFailedAttempt('user@example.com');
+///
+/// // Reset after successful login
+/// await service.resetAttempts('user@example.com');
+/// ```
 class RateLimitService {
   final FirebaseFirestore _firestore;
 

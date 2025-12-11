@@ -1234,16 +1234,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                         ),
                                         decoration: BoxDecoration(
                                           // Consistent styling with contact pill bar
-                                          color: minimalistColors.backgroundTertiary,
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: minimalistColors
+                                              .backgroundTertiary,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           border: Border.all(
-                                            color: minimalistColors.borderDefault,
+                                            color:
+                                                minimalistColors.borderDefault,
                                           ),
                                           // Subtle elevation - matches contact pill bar
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.04),
+                                              color: Colors.black.withValues(
+                                                alpha: 0.04,
+                                              ),
                                               blurRadius: 2,
                                               offset: const Offset(0, 1),
                                             ),
@@ -1255,17 +1260,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                             Icon(
                                               Icons.info_outline,
                                               size: 18,
-                                              color: minimalistColors.buttonPrimary,
+                                              color: minimalistColors
+                                                  .buttonPrimary,
                                             ),
                                             const SizedBox(width: 8),
                                             Flexible(
                                               child: Text(
-                                                WidgetTranslations.of(context, ref)
-                                                    .calendarOnlyBanner,
+                                                WidgetTranslations.of(
+                                                  context,
+                                                  ref,
+                                                ).calendarOnlyBanner,
                                                 style: TextStyle(
                                                   fontSize: 13,
-                                                  color:
-                                                      minimalistColors.textSecondary,
+                                                  color: minimalistColors
+                                                      .textSecondary,
                                                 ),
                                               ),
                                             ),
@@ -1352,7 +1360,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             ),
                           ),
                         ),
-
                       ],
                     ),
                   ),

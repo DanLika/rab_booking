@@ -1,7 +1,18 @@
 import 'package:flutter/widgets.dart';
 
-/// Layout constraint design tokens for consistent sizing across the widget
+/// Layout constraint design tokens for consistent sizing across the app
+///
+/// Usage:
+/// ```dart
+/// ConstrainedBox(
+///   constraints: ConstraintTokens.widgetContainer,
+///   child: YourWidget(),
+/// )
+/// ```
 class ConstraintTokens {
+  // Prevent instantiation
+  ConstraintTokens._();
+
   // ============================================================================
   // Maximum Width Constraints
   // ============================================================================

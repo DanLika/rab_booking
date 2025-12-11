@@ -81,10 +81,15 @@ class PriceBreakdownWidget extends StatelessWidget {
       child: Column(
         children: [
           // Room price
-          PriceRowWidget(label: translations.roomNights(nights), amount: formattedRoomPrice, isDarkMode: isDarkMode),
+          PriceRowWidget(
+            label: translations.roomNights(nights),
+            amount: formattedRoomPrice,
+            isDarkMode: isDarkMode,
+          ),
 
           // Additional services (only show if > 0)
-          if (additionalServicesTotal > 0 && formattedAdditionalServices != null) ...[
+          if (additionalServicesTotal > 0 &&
+              formattedAdditionalServices != null) ...[
             const SizedBox(height: SpacingTokens.s),
             PriceRowWidget(
               label: translations.additionalServices,
@@ -100,13 +105,25 @@ class PriceBreakdownWidget extends StatelessWidget {
           ),
 
           // Total
-          PriceRowWidget(label: translations.total, amount: formattedTotal, isDarkMode: isDarkMode, isBold: true),
+          PriceRowWidget(
+            label: translations.total,
+            amount: formattedTotal,
+            isDarkMode: isDarkMode,
+            isBold: true,
+          ),
 
           // Deposit info
           const SizedBox(height: SpacingTokens.s),
           Text(
-            translations.depositWithPercentage(formattedDeposit, depositPercentage),
-            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary, fontFamily: 'Manrope'),
+            translations.depositWithPercentage(
+              formattedDeposit,
+              depositPercentage,
+            ),
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeS,
+              color: colors.textSecondary,
+              fontFamily: 'Manrope',
+            ),
           ),
         ],
       ),

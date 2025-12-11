@@ -403,7 +403,8 @@ extension AppDimensionsExtension on BuildContext {
   bool get isDesktop => screenWidth >= AppDimensions.tablet;
 
   /// Get responsive horizontal padding
-  double get horizontalPadding => AppDimensions.getHorizontalPadding(screenWidth);
+  double get horizontalPadding =>
+      AppDimensions.getHorizontalPadding(screenWidth);
 
   /// Get responsive vertical padding
   double get verticalPadding => AppDimensions.getVerticalPadding(screenWidth);
@@ -418,5 +419,6 @@ extension AppDimensionsExtension on BuildContext {
   double get calendarCellSize => AppDimensions.getCalendarCellSize(screenWidth);
 
   /// Get responsive spacing
-  double get responsiveSpacing => AppDimensions.getResponsiveSpacing(screenWidth);
+  double get responsiveSpacing =>
+      AppDimensions.getResponsiveSpacing(screenWidth);
 }

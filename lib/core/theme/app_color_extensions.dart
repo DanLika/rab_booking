@@ -1,59 +1,67 @@
 import 'package:flutter/material.dart';
 
+import 'app_colors.dart';
+
 /// Extension to add custom brand colors to ColorScheme
 ///
-/// This centralizes all hardcoded color values used throughout the app,
-/// making it easier to maintain consistency and update the brand colors.
+/// This provides convenient access to brand colors via ColorScheme.
+/// All colors reference [AppColors] constants for single source of truth.
+///
+/// Usage:
+/// ```dart
+/// final color = Theme.of(context).colorScheme.brandPurple;
+/// ```
 extension AppColorExtensions on ColorScheme {
   /// Primary brand purple color
   /// Used for: primary buttons, accents, highlights
-  Color get brandPurple => const Color(0xFF6B4CE6);
+  Color get brandPurple => AppColors.primary;
 
   /// Secondary brand blue color
   /// Used for: secondary buttons, gradients, accents
-  Color get brandBlue => const Color(0xFF4A90E2);
+  Color get brandBlue => AppColors.authSecondary;
 
   /// Success/positive state color
   /// Used for: success messages, positive indicators
-  Color get success => const Color(0xFF10B981);
+  Color get success => AppColors.success;
 
   /// Error/danger state color
   /// Used for: error messages, destructive actions, warnings
-  Color get danger => const Color(0xFFEF4444);
+  Color get danger => AppColors.error;
 
   /// Warning state color
   /// Used for: warning messages, caution indicators
-  Color get warning => const Color(0xFFF59E0B);
+  Color get warning => AppColors.statusPending; // Amber 500
 
   /// Info state color
   /// Used for: informational messages, neutral indicators
-  Color get info => const Color(0xFF3B82F6);
+  Color get info => AppColors.info;
 
   /// Light gray for backgrounds and borders
   /// Used for: card backgrounds, dividers, borders
-  Color get lightGray => const Color(0xFFF3F4F6);
+  Color get lightGray => const Color(0xFFF3F4F6); // Not in AppColors
 
   /// Medium gray for text and icons
   /// Used for: secondary text, disabled states
-  Color get mediumGray => const Color(0xFF9CA3AF);
+  Color get mediumGray => AppColors.textDisabled;
 
   /// Dark gray for dark mode backgrounds
   /// Used for: dark mode surfaces, elevated cards
-  Color get darkGray => const Color(0xFF1E1E1E);
+  Color get darkGray => AppColors.surfaceVariantDark;
 
   /// Very dark gray for dark mode
   /// Used for: dark mode page backgrounds, deep surfaces
-  Color get veryDarkGray => const Color(0xFF1A1A1A);
+  Color get veryDarkGray => const Color(0xFF1A1A1A); // Specific gradient color
 
   /// Medium dark gray for dark mode
   /// Used for: dark mode elevated surfaces
-  Color get mediumDarkGray => const Color(0xFF2D2D2D);
+  Color get mediumDarkGray =>
+      const Color(0xFF2D2D2D); // Specific gradient color
 
   /// Light gray for light mode backgrounds
   /// Used for: light mode page backgrounds, gradients
-  Color get veryLightGray => const Color(0xFFF5F5F5);
+  Color get veryLightGray => AppColors.surfaceVariantLight;
 
   /// Beige for light mode backgrounds
   /// Used for: light mode drawer and warm backgrounds
-  Color get beige => const Color(0xFFFAF8F3);
+  Color get beige => AppColors.authBackgroundStart;
 }

@@ -30,6 +30,41 @@ class ErrorDisplayUtils {
   // Standard snackbar elevation for floating effect
   static const double _snackBarElevation = 6;
 
+  /// Build a styled snackbar with consistent appearance
+  static SnackBar _buildSnackBar({
+    required Widget content,
+    required Color backgroundColor,
+    required Duration duration,
+    SnackBarAction? action,
+  }) {
+    return SnackBar(
+      content: content,
+      backgroundColor: backgroundColor,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: _snackBarMargin,
+      elevation: _snackBarElevation,
+      duration: duration,
+      action: action,
+    );
+  }
+
+  /// Build snackbar content row with icon and text
+  static Widget _buildContent({
+    required IconData icon,
+    required String message,
+    required Color iconColor,
+    required Color textColor,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 20),
+        const SizedBox(width: 12),
+        Expanded(child: Text(message, style: TextStyle(color: textColor))),
+      ],
+    );
+  }
+
   /// Show error snackbar with user-friendly message
   /// Hides stack traces and technical details in release mode
   static void showErrorSnackBar(
@@ -48,26 +83,17 @@ class ErrorDisplayUtils {
     final displayMessage = _getUserFriendlyMessage(error, userMessage);
 
     messenger.showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(child: Text(displayMessage, style: const TextStyle(color: Colors.white))),
-          ],
+      _buildSnackBar(
+        content: _buildContent(
+          icon: Icons.error_outline,
+          message: displayMessage,
+          iconColor: Colors.white,
+          textColor: Colors.white,
         ),
-        backgroundColor: AppColors.error, // Red (#EF4444)
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: _snackBarMargin,
-        elevation: _snackBarElevation,
+        backgroundColor: AppColors.error,
         duration: duration,
         action: onRetry != null
-            ? SnackBarAction(
-                label: 'Pokušaj ponovo',
-                textColor: Colors.white,
-                onPressed: onRetry,
-              )
+            ? SnackBarAction(label: 'Pokušaj ponovo', textColor: Colors.white, onPressed: onRetry)
             : null,
       ),
     );
@@ -88,26 +114,17 @@ class ErrorDisplayUtils {
     messenger.clearSnackBars();
 
     messenger.showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
-          ],
+      _buildSnackBar(
+        content: _buildContent(
+          icon: Icons.check_circle_outline,
+          message: message,
+          iconColor: Colors.white,
+          textColor: Colors.white,
         ),
-        backgroundColor: AppColors.success, // Emerald (#10B981)
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: _snackBarMargin,
-        elevation: _snackBarElevation,
+        backgroundColor: AppColors.success,
         duration: duration,
         action: actionLabel != null && onAction != null
-            ? SnackBarAction(
-                label: actionLabel,
-                textColor: Colors.white,
-                onPressed: onAction,
-              )
+            ? SnackBarAction(label: actionLabel, textColor: Colors.white, onPressed: onAction)
             : null,
       ),
     );
@@ -125,19 +142,14 @@ class ErrorDisplayUtils {
     messenger.clearSnackBars();
 
     messenger.showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.warning_amber_outlined, color: AppColors.textOnWarning, size: 20),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(color: AppColors.textOnWarning))),
-          ],
+      _buildSnackBar(
+        content: _buildContent(
+          icon: Icons.warning_amber_outlined,
+          message: message,
+          iconColor: AppColors.textOnWarning,
+          textColor: AppColors.textOnWarning,
         ),
-        backgroundColor: AppColors.warning, // Orange (#F97316)
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: _snackBarMargin,
-        elevation: _snackBarElevation,
+        backgroundColor: AppColors.warning,
         duration: duration,
       ),
     );
@@ -155,19 +167,14 @@ class ErrorDisplayUtils {
     messenger.clearSnackBars();
 
     messenger.showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
-          ],
+      _buildSnackBar(
+        content: _buildContent(
+          icon: Icons.info_outline,
+          message: message,
+          iconColor: Colors.white,
+          textColor: Colors.white,
         ),
-        backgroundColor: AppColors.info, // Blue (#3B82F6)
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: _snackBarMargin,
-        elevation: _snackBarElevation,
+        backgroundColor: AppColors.info,
         duration: duration,
       ),
     );
@@ -184,27 +191,20 @@ class ErrorDisplayUtils {
     messenger.clearSnackBars();
 
     messenger.showSnackBar(
-      SnackBar(
+      _buildSnackBar(
         content: Row(
           children: [
             const SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
             ),
             const SizedBox(width: 12),
             Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
           ],
         ),
+        backgroundColor: AppColors.info,
         duration: const Duration(seconds: 30), // Long duration, manually dismissed
-        backgroundColor: AppColors.info, // Blue (#3B82F6)
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: _snackBarMargin,
-        elevation: _snackBarElevation,
       ),
     );
   }

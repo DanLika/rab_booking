@@ -20,9 +20,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();
@@ -72,14 +70,7 @@ class BookBedApp extends ConsumerWidget {
       routerConfig: router,
       // Global navigation loader + error boundary
       builder: (context, child) {
-        return ErrorBoundary(
-          child: GlobalNavigationOverlay(child: child!),
-          onError: (details) {
-            // Log errors in debug mode
-            if (kDebugMode) {
-            }
-          },
-        );
+        return ErrorBoundary(child: GlobalNavigationOverlay(child: child!));
       },
       // Localization configuration
       locale: locale,

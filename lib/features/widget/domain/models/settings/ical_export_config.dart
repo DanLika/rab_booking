@@ -123,8 +123,9 @@ class ICalExportConfig {
   /// Check if the feed needs regeneration (older than sync interval).
   bool get needsRegeneration {
     if (!enabled || lastGenerated == null) return true;
-    final hoursSinceGeneration =
-        DateTime.now().difference(lastGenerated!).inHours;
+    final hoursSinceGeneration = DateTime.now()
+        .difference(lastGenerated!)
+        .inHours;
     return hoursSinceGeneration >= WidgetConstants.icalSyncIntervalHours;
   }
 
@@ -168,14 +169,14 @@ class ICalExportConfig {
 
   @override
   int get hashCode => Object.hash(
-        enabled,
-        exportUrl,
-        exportToken,
-        lastGenerated,
-        includeBlockedDates,
-        includePricing,
-        feedTitle,
-      );
+    enabled,
+    exportUrl,
+    exportToken,
+    lastGenerated,
+    includeBlockedDates,
+    includePricing,
+    feedTitle,
+  );
 
   @override
   String toString() =>

@@ -51,24 +51,20 @@ class CopyableTextField extends StatelessWidget {
 
     // Use monospace font for IBAN and reference numbers
     final useMonospace =
-        label.contains('IBAN') || label.contains('Broj') || label.contains('Reference');
+        label.contains('IBAN') ||
+        label.contains('Broj') ||
+        label.contains('Reference');
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.s),
       decoration: BoxDecoration(
         color: colors.backgroundPrimary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
-        border: Border.all(
-          color: colors.borderDefault,
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: colors.buttonPrimary,
-            size: IconSizeTokens.small,
-          ),
+          Icon(icon, color: colors.buttonPrimary, size: IconSizeTokens.small),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Column(

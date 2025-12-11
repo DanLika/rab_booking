@@ -3,7 +3,21 @@ import 'package:flutter/foundation.dart';
 
 /// Firebase Analytics Service - Phase 3 Feature
 ///
-/// Centralized service for tracking user events and behavior across the app
+/// Centralized service for tracking user events and behavior across the app.
+///
+/// Usage:
+/// ```dart
+/// // Track booking created
+/// AnalyticsService.instance.logBookingCreated(
+///   bookingId: 'abc123',
+///   unitId: 'unit456',
+///   amount: 150.0,
+///   paymentMethod: 'stripe',
+/// );
+///
+/// // Track screen views (use observer in GoRouter)
+/// GoRouter(observers: [AnalyticsService.instance.observer])
+/// ```
 class AnalyticsService {
   final FirebaseAnalytics _analytics;
   final FirebaseAnalyticsObserver _observer;

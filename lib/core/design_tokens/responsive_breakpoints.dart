@@ -1,13 +1,37 @@
 import 'package:flutter/widgets.dart';
 
-/// Responsive breakpoints for the widget
+/// Responsive breakpoints for the app
+///
+/// Usage:
+/// ```dart
+/// // Check device type
+/// if (ResponsiveBreakpoints.isMobile(context)) {
+///   return MobileLayout();
+/// }
+///
+/// // Get responsive value
+/// final padding = ResponsiveBreakpoints.responsive(
+///   context,
+///   mobile: 16.0,
+///   tablet: 24.0,
+///   desktop: 32.0,
+/// );
+/// ```
 class ResponsiveBreakpoints {
-  // Breakpoint values
+  // Prevent instantiation
+  ResponsiveBreakpoints._();
+
+  // ============================================================
+  // BREAKPOINT VALUES
+  // ============================================================
   static const double mobile = 768;
   static const double tablet = 1024;
   static const double desktop = 1440;
 
-  // Device type detection
+  // ============================================================
+  // DEVICE TYPE DETECTION
+  // ============================================================
+
   static bool isMobile(BuildContext context) {
     return MediaQuery.of(context).size.width < mobile;
   }
@@ -34,7 +58,11 @@ class ResponsiveBreakpoints {
     return DeviceType.largeDesktop;
   }
 
-  // Responsive value selector
+  // ============================================================
+  // HELPER METHODS
+  // ============================================================
+
+  /// Select value based on current device type
   static T responsive<T>(
     BuildContext context, {
     required T mobile,

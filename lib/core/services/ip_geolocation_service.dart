@@ -41,12 +41,24 @@ class GeoLocationResult {
   }
 }
 
-/// Free IP Geolocation Service
+/// Free IP Geolocation Service.
 ///
 /// Uses multiple free APIs as fallbacks:
 /// 1. ipapi.co (150 requests/day, no key required)
 /// 2. ip-api.com (45 requests/minute, no key required)
 /// 3. ipwhois.app (10000 requests/month, no key required)
+///
+/// Usage:
+/// ```dart
+/// final service = IpGeolocationService();
+///
+/// // Get current location (auto-detect IP)
+/// final location = await service.getCurrentLocation();
+/// print(location?.locationString); // "Zagreb, Croatia"
+///
+/// // Get location for specific IP
+/// final result = await service.getGeolocation('8.8.8.8');
+/// ```
 class IpGeolocationService {
   final http.Client _client;
 

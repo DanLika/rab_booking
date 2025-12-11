@@ -12,6 +12,9 @@ import 'dart:ui';
 /// - Firefox: Partial support (enable in about:config)
 /// - Fallback: Semi-transparent backgrounds without blur
 class GlassmorphismTokens {
+  // Prevent instantiation
+  GlassmorphismTokens._();
+
   // ==================== BLUR INTENSITY LEVELS ====================
 
   /// No blur (disabled)

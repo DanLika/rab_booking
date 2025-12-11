@@ -72,5 +72,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'rab-booking-248fc.firebasestorage.app',
     iosBundleId: 'io.bookbed.app',
   );
-
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../widgets/auth_background.dart';
@@ -13,6 +14,9 @@ import '../widgets/premium_input_field.dart';
 import '../widgets/gradient_auth_button.dart';
 
 /// Forgot password screen
+///
+/// Uses [AndroidKeyboardDismissFix] mixin to handle the Android Chrome
+/// keyboard dismiss bug (Flutter issue #175074).
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -20,7 +24,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
+    with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _isLoading = false;
@@ -59,9 +64,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: AuthBackground(
+    // CRITICAL: KeyedSubtree forces full rebuild when keyboardFixRebuildKey changes
+    return KeyedSubtree(
+      key: ValueKey('forgot_password_screen_$keyboardFixRebuildKey'),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: AuthBackground(
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -89,6 +97,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             },
           ),
         ),
+      ),
       ),
     );
   }

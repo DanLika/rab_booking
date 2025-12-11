@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../state/unit_wizard_provider.dart';
@@ -17,7 +18,7 @@ class Step3Pricing extends ConsumerStatefulWidget {
   ConsumerState<Step3Pricing> createState() => _Step3PricingState();
 }
 
-class _Step3PricingState extends ConsumerState<Step3Pricing> {
+class _Step3PricingState extends ConsumerState<Step3Pricing> with AndroidKeyboardDismissFix {
   final _priceController = TextEditingController();
   final _weekendPriceController = TextEditingController();
   final _minStayController = TextEditingController();
@@ -105,9 +106,11 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
         _loadData(draft);
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
-        return Container(
-          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-          child: SingleChildScrollView(
+        return KeyedSubtree(
+          key: ValueKey('step3_pricing_$keyboardFixRebuildKey'),
+          child: Container(
+            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+            child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,6 +571,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
               ],
+            ),
             ),
           ),
         );

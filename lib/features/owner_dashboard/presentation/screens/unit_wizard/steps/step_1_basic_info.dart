@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../../../core/utils/slug_utils.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
@@ -17,7 +18,7 @@ class Step1BasicInfo extends ConsumerStatefulWidget {
   ConsumerState<Step1BasicInfo> createState() => _Step1BasicInfoState();
 }
 
-class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
+class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> with AndroidKeyboardDismissFix {
   final _nameController = TextEditingController();
   final _slugController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -123,9 +124,11 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
         _loadData(draft);
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
-        return Container(
-          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-          child: SingleChildScrollView(
+        return KeyedSubtree(
+          key: ValueKey('step1_basic_info_$keyboardFixRebuildKey'),
+          child: Container(
+            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+            child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,6 +408,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
               ],
+            ),
             ),
           ),
         );

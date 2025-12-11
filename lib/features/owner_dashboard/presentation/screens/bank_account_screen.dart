@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
@@ -20,7 +21,7 @@ class BankAccountScreen extends ConsumerStatefulWidget {
   ConsumerState<BankAccountScreen> createState() => _BankAccountScreenState();
 }
 
-class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
+class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   bool _isDirty = false;
   bool _isSaving = false;
@@ -340,15 +341,17 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
           }
         }
       },
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        drawer: const OwnerAppDrawer(currentRoute: 'integrations/payments/bank-account'),
-        appBar: CommonAppBar(
-          title: l10n.bankAccountTitle,
-          leadingIcon: Icons.menu,
-          onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-        ),
-        body: Container(
+      child: KeyedSubtree(
+        key: ValueKey('bank_account_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          drawer: const OwnerAppDrawer(currentRoute: 'integrations/payments/bank-account'),
+          appBar: CommonAppBar(
+            title: l10n.bankAccountTitle,
+            leadingIcon: Icons.menu,
+            onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+          ),
+          body: Container(
           decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: companyDetailsAsync.when(
             data: (companyDetails) {
@@ -402,6 +405,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
           ),
+        ),
         ),
       ),
     );

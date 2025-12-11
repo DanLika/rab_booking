@@ -10,6 +10,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -31,7 +32,7 @@ class PropertyFormScreen extends ConsumerStatefulWidget {
   ConsumerState<PropertyFormScreen> createState() => _PropertyFormScreenState();
 }
 
-class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
+class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _slugController = TextEditingController();
@@ -230,14 +231,16 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     final isMobile = screenWidth < 600;
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: CommonAppBar(
-        title: _isEditing ? l10n.propertyFormTitleEdit : l10n.propertyFormTitleAdd,
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
-      ),
-      body: Container(
+    return KeyedSubtree(
+      key: ValueKey('property_form_$keyboardFixRebuildKey'),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        appBar: CommonAppBar(
+          title: _isEditing ? l10n.propertyFormTitleEdit : l10n.propertyFormTitleAdd,
+          leadingIcon: Icons.arrow_back,
+          onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        ),
+        body: Container(
         // Page background gradient (topLeft → bottomRight)
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: Stack(
@@ -619,6 +622,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                 ),
               ),
           ],
+        ),
         ),
       ),
     );

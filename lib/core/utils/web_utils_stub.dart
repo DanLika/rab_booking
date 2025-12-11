@@ -71,3 +71,28 @@ double getWindowInnerHeight() {
 double getKeyboardHeight() {
   return 0;
 }
+
+/// Force scroll window to top - used for Android Chrome keyboard bug
+/// No-op on non-web platforms
+void forceWindowScrollToTop() {
+  // No-op on non-web platforms
+}
+
+/// Blur active element to dismiss keyboard on Android Chrome
+/// No-op on non-web platforms
+void blurActiveElement() {
+  // No-op on non-web platforms
+}
+
+/// Force full layout reset - aggressive fix for Android Chrome keyboard bug
+/// No-op on non-web platforms
+void forceLayoutReset() {
+  // No-op on non-web platforms
+}
+
+/// Setup aggressive keyboard dismiss handler for Android Chrome
+/// No-op on non-web platforms, returns empty cleanup function
+void Function() setupAndroidKeyboardFix() {
+  // No-op on non-web platforms
+  return () {};
+}

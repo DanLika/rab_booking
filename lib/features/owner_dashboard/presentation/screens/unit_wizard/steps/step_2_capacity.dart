@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../state/unit_wizard_provider.dart';
@@ -17,7 +18,7 @@ class Step2Capacity extends ConsumerStatefulWidget {
   ConsumerState<Step2Capacity> createState() => _Step2CapacityState();
 }
 
-class _Step2CapacityState extends ConsumerState<Step2Capacity> {
+class _Step2CapacityState extends ConsumerState<Step2Capacity> with AndroidKeyboardDismissFix {
   final _bedroomsController = TextEditingController();
   final _bathroomsController = TextEditingController();
   final _maxGuestsController = TextEditingController();
@@ -105,9 +106,11 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
         _loadData(draft);
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
-        return Container(
-          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-          child: SingleChildScrollView(
+        return KeyedSubtree(
+          key: ValueKey('step2_capacity_$keyboardFixRebuildKey'),
+          child: Container(
+            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+            child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,6 +320,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                   ),
                 ),
               ],
+            ),
             ),
           ),
         );

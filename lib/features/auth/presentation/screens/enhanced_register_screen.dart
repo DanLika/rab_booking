@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -18,6 +19,9 @@ import 'terms_conditions_screen.dart';
 import 'privacy_policy_screen.dart';
 
 /// Enhanced Registration Screen with Premium Design
+///
+/// Uses [AndroidKeyboardDismissFix] mixin to handle the Android Chrome
+/// keyboard dismiss bug (Flutter issue #175074).
 class EnhancedRegisterScreen extends ConsumerStatefulWidget {
   const EnhancedRegisterScreen({super.key});
 
@@ -25,7 +29,8 @@ class EnhancedRegisterScreen extends ConsumerStatefulWidget {
   ConsumerState<EnhancedRegisterScreen> createState() => _EnhancedRegisterScreenState();
 }
 
-class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen> {
+class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
+    with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -158,9 +163,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: AuthBackground(
+    // CRITICAL: KeyedSubtree forces full rebuild when keyboardFixRebuildKey changes
+    // This is the key to fixing the Android Chrome keyboard dismiss bug
+    return KeyedSubtree(
+      key: ValueKey('register_screen_$keyboardFixRebuildKey'),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: AuthBackground(
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -448,6 +457,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             },
           ),
         ),
+      ),
       ),
     );
   }

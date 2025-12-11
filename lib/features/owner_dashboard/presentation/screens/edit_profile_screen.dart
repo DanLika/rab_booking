@@ -9,6 +9,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../auth/presentation/widgets/auth_background.dart';
@@ -26,7 +27,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   bool _isDirty = false;
   bool _isSaving = false;
@@ -466,10 +467,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           }
         }
       },
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: AuthBackground(
-          child: userDataAsync.when(
+      child: KeyedSubtree(
+        key: ValueKey('edit_profile_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: AuthBackground(
+            child: userDataAsync.when(
             data: (userData) {
               // Create default userData if null
               final effectiveUserData =
@@ -727,6 +730,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               final l10n = AppLocalizations.of(context);
               return Center(child: Text(l10n.errorWithMessage(error.toString())));
             },
+          ),
           ),
         ),
       ),

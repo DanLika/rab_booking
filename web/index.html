@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CRITICAL: interactive-widget=resizes-content for Android Chrome keyboard -->
+  <!-- This tells Chrome to resize Layout Viewport when keyboard opens/closes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+
+  <style>
+    /* Prevent any scroll on html/body level */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
 
   <!-- SEO Meta Tags -->
   <meta name="description" content="Discover your perfect vacation rental on the beautiful island of Rab, Croatia. Browse luxury properties, villas, and apartments with stunning Adriatic Sea views.">
@@ -60,6 +60,127 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- AGGRESSIVE FIX for Flutter Issue #175074 - Android Chrome keyboard dismiss bug -->
+  <!-- This workaround forces Flutter to recalculate physicalSize when keyboard closes -->
+  <script>
+    (function() {
+      // Only run on Android
+      var isAndroid = /Android/i.test(navigator.userAgent);
+      if (!isAndroid) return;
+
+      var viewport = window.visualViewport;
+      if (!viewport) return;
+
+      var fullHeight = viewport.height;
+      var lastHeight = viewport.height;
+      var wasKeyboardOpen = false;
+
+      // Track the full screen height (when keyboard is closed)
+      function updateFullHeight() {
+        if (viewport.height > fullHeight) {
+          fullHeight = viewport.height;
+        }
+      }
+
+      // Force Flutter to recalculate by "jiggling" the container
+      function forceFlutterRecalc() {
+        var glassPane = document.querySelector('flt-glass-pane');
+        if (!glassPane) return;
+
+        // Get the shadow root where Flutter's canvas lives
+        var shadowRoot = glassPane.shadowRoot;
+        if (!shadowRoot) return;
+
+        // Method 1: Temporarily change glass-pane dimensions
+        var originalWidth = glassPane.style.width;
+        var originalHeight = glassPane.style.height;
+
+        // Jiggle: change size slightly, then restore
+        glassPane.style.width = 'calc(100% - 1px)';
+        glassPane.style.height = 'calc(100% - 1px)';
+
+        // Force reflow
+        void glassPane.offsetHeight;
+
+        // Dispatch resize event
+        window.dispatchEvent(new Event('resize'));
+
+        // Restore after a frame
+        requestAnimationFrame(function() {
+          glassPane.style.width = originalWidth || '100%';
+          glassPane.style.height = originalHeight || '100%';
+
+          // Force another reflow and resize
+          void glassPane.offsetHeight;
+          window.dispatchEvent(new Event('resize'));
+
+          // Schedule more resize events with delays
+          [50, 100, 200, 300].forEach(function(delay) {
+            setTimeout(function() {
+              window.dispatchEvent(new Event('resize'));
+              // Also scroll to top
+              window.scrollTo(0, 0);
+            }, delay);
+          });
+        });
+      }
+
+      // Listen to viewport resize
+      viewport.addEventListener('resize', function() {
+        var currentHeight = viewport.height;
+        var heightDiff = currentHeight - lastHeight;
+
+        updateFullHeight();
+
+        // Detect keyboard dismiss: height increased significantly AND we're near full height
+        var keyboardDismissed = heightDiff > 100 && currentHeight >= fullHeight - 50;
+
+        // Also track if keyboard was previously open
+        var keyboardWasOpen = lastHeight < fullHeight - 100;
+
+        if (keyboardDismissed || (keyboardWasOpen && currentHeight >= fullHeight - 50)) {
+          // Keyboard just closed - force Flutter to recalculate
+          console.log('[KB-FIX] Keyboard dismissed, forcing Flutter recalc');
+
+          // Blur active element first
+          if (document.activeElement) {
+            document.activeElement.blur();
+          }
+
+          // Force recalc with multiple attempts
+          forceFlutterRecalc();
+
+          // Additional attempts with delays
+          setTimeout(forceFlutterRecalc, 100);
+          setTimeout(forceFlutterRecalc, 250);
+          setTimeout(forceFlutterRecalc, 500);
+
+          wasKeyboardOpen = false;
+        } else if (heightDiff < -100) {
+          // Keyboard opened
+          wasKeyboardOpen = true;
+        }
+
+        lastHeight = currentHeight;
+      });
+
+      // Also listen to focusout as backup
+      window.addEventListener('focusout', function() {
+        setTimeout(function() {
+          window.scrollTo(0, 0);
+          // Check if we should trigger recalc
+          if (viewport.height >= fullHeight - 50 && wasKeyboardOpen) {
+            console.log('[KB-FIX] Focusout detected, forcing Flutter recalc');
+            forceFlutterRecalc();
+            wasKeyboardOpen = false;
+          }
+        }, 150);
+      });
+
+      console.log('[KB-FIX] Android keyboard fix initialized');
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

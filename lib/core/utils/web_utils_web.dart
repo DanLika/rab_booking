@@ -1,3 +1,19 @@
+/// Web-specific implementation of web utilities using dart:js_interop.
+///
+/// This file provides the web implementation for conditional imports.
+/// It is automatically selected when running on web platform via:
+/// ```dart
+/// export 'web_utils_stub.dart'
+///     if (dart.library.js_interop) 'web_utils_web.dart';
+/// ```
+///
+/// Available functions:
+/// - URL manipulation: [replaceUrlState], [pushUrlState], [navigateToUrl]
+/// - Iframe support: [isInIframe], [sendIframeHeight], [setupIframeScrollCapture]
+/// - Visual viewport: [listenToVisualViewport], [getVisualViewportHeight]
+/// - Keyboard handling: [setupAndroidKeyboardFix], [blurActiveElement]
+library;
+
 import 'dart:convert';
 import 'dart:js_interop';
 
@@ -5,8 +21,6 @@ import 'package:web/web.dart' as web;
 
 import '../services/tab_communication_service.dart';
 import '../services/tab_communication_service_web.dart';
-
-/// Web implementation of web utilities using dart:js_interop.
 
 /// Helper to convert Dart Map to JS object via JSON.parse
 @JS('JSON.parse')
@@ -257,4 +271,116 @@ double getKeyboardHeight() {
 
   // Only return positive values (keyboard visible)
   return keyboardHeight > 0 ? keyboardHeight : 0;
+}
+
+/// Force scroll window to top - used for Android Chrome keyboard bug
+/// This uses native browser scroll, not Flutter's scroll controller
+void forceWindowScrollToTop() {
+  try {
+    // Scroll document body and html element
+    web.document.body?.scrollTop = 0;
+    final htmlElement = web.document.documentElement;
+    if (htmlElement != null) {
+      htmlElement.scrollTop = 0;
+    }
+
+    // Also try window.scrollTo
+    _windowScrollTo(0, 0);
+
+    web.console.log('[SCROLL_FIX] Forced window scroll to top'.toJS);
+  } catch (e) {
+    web.console.log('[SCROLL_FIX] Error: $e'.toJS);
+  }
+}
+
+/// JS interop for window.scrollTo
+@JS('window.scrollTo')
+external void _windowScrollTo(int x, int y);
+
+/// Force full layout reset - aggressive fix for Android Chrome keyboard bug
+/// This forces browser to recalculate layout after keyboard dismisses
+void forceLayoutReset() {
+  try {
+    final body = web.document.body;
+    if (body == null) return;
+
+    // Force reflow by toggling display
+    final originalDisplay = body.style.getPropertyValue('display');
+    body.style.setProperty('display', 'none');
+
+    // Force browser to acknowledge the change
+    // ignore: unnecessary_statements
+    body.offsetHeight; // Trigger reflow
+
+    // Restore display
+    body.style.setProperty('display', originalDisplay.isEmpty ? '' : originalDisplay);
+
+    // Reset scroll positions
+    body.scrollTop = 0;
+    web.document.documentElement?.scrollTop = 0;
+    _windowScrollTo(0, 0);
+
+    web.console.log('[LAYOUT_RESET] Forced layout reset'.toJS);
+  } catch (e) {
+    web.console.log('[LAYOUT_RESET] Error: $e'.toJS);
+  }
+}
+
+/// Setup aggressive keyboard dismiss handler for Android Chrome
+/// This listens to visualViewport and forces layout reset when keyboard closes
+/// Note: Works in both iframe and non-iframe contexts
+void Function() setupAndroidKeyboardFix() {
+  double lastHeight = web.window.visualViewport?.height.toDouble() ?? 0;
+  double fullHeight = lastHeight;
+
+  void onResize(web.Event event) {
+    final currentHeight = web.window.visualViewport?.height.toDouble() ?? 0;
+
+    // Update full height if we see a larger value
+    if (currentHeight > fullHeight) {
+      fullHeight = currentHeight;
+    }
+
+    // Detect keyboard dismiss: height increased significantly
+    final heightIncrease = currentHeight - lastHeight;
+    final isNearFullHeight = currentHeight >= fullHeight - 50;
+
+    if (heightIncrease > 100 && isNearFullHeight) {
+      web.console.log('[KEYBOARD_FIX] Keyboard dismissed, forcing layout reset'.toJS);
+
+      // Multiple delayed resets to catch async layout updates
+      for (final delay in [0, 50, 100, 200, 300]) {
+        Future.delayed(Duration(milliseconds: delay), () {
+          forceLayoutReset();
+          blurActiveElement();
+        });
+      }
+    }
+
+    lastHeight = currentHeight;
+  }
+
+  final handler = onResize.toJS;
+  web.window.visualViewport?.addEventListener('resize', handler);
+
+  web.console.log('[KEYBOARD_FIX] Android keyboard fix installed'.toJS);
+
+  return () {
+    web.window.visualViewport?.removeEventListener('resize', handler);
+    web.console.log('[KEYBOARD_FIX] Android keyboard fix removed'.toJS);
+  };
+}
+
+/// Blur active element to dismiss keyboard on Android Chrome
+void blurActiveElement() {
+  try {
+    final activeElement = web.document.activeElement;
+    if (activeElement != null) {
+      // Call blur on the active element
+      (activeElement as dynamic).blur();
+      web.console.log('[BLUR] Blurred active element'.toJS);
+    }
+  } catch (e) {
+    web.console.log('[BLUR] Error: $e'.toJS);
+  }
 }

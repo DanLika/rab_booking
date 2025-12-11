@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../auth/presentation/widgets/auth_background.dart';
 import '../../../auth/presentation/widgets/glass_card.dart';
@@ -12,6 +13,9 @@ import '../../../auth/presentation/widgets/gradient_auth_button.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Change Password Screen
+///
+/// Uses [AndroidKeyboardDismissFix] mixin to handle the Android Chrome
+/// keyboard dismiss bug (Flutter issue #175074).
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -19,7 +23,8 @@ class ChangePasswordScreen extends ConsumerStatefulWidget {
   ConsumerState<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
 
-class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
+class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
+    with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -122,9 +127,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: AuthBackground(
+    return KeyedSubtree(
+      key: ValueKey('change_password_screen_$keyboardFixRebuildKey'),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: AuthBackground(
         child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
@@ -394,6 +401,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

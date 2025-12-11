@@ -36,7 +36,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
         state = OnboardingState.fromJson(doc.data()!);
       }
     } catch (e) {
-      unawaited(LoggingService.logError('Failed to load onboarding progress', e));
+      unawaited(
+        LoggingService.logError('Failed to load onboarding progress', e),
+      );
     }
   }
 
@@ -58,7 +60,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
         tag: 'ONBOARDING',
       );
     } catch (e) {
-      unawaited(LoggingService.logError('Failed to save onboarding progress', e));
+      unawaited(
+        LoggingService.logError('Failed to save onboarding progress', e),
+      );
       rethrow;
     }
   }
@@ -78,7 +82,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
 
       LoggingService.log('Onboarding progress deleted', tag: 'ONBOARDING');
     } catch (e) {
-      unawaited(LoggingService.logError('Failed to delete onboarding progress', e));
+      unawaited(
+        LoggingService.logError('Failed to delete onboarding progress', e),
+      );
     }
   }
 
@@ -119,12 +125,18 @@ class OnboardingNotifier extends _$OnboardingNotifier {
   /// Create actual property in Firebase (from Step 1 data)
   Future<String> createProperty() async {
     if (state.propertyData == null) {
-      throw PropertyException('Property data is null', code: 'property/data-missing');
+      throw PropertyException(
+        'Property data is null',
+        code: 'property/data-missing',
+      );
     }
 
     final userId = ref.read(enhancedAuthProvider).firebaseUser?.uid;
     if (userId == null) {
-      throw AuthException('User not authenticated', code: 'auth/not-authenticated');
+      throw AuthException(
+        'User not authenticated',
+        code: 'auth/not-authenticated',
+      );
     }
 
     final data = state.propertyData!;
@@ -186,7 +198,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
 
       LoggingService.log('Wizard completed successfully', tag: 'ONBOARDING');
     } catch (e) {
-      unawaited(LoggingService.logError('Failed to complete onboarding wizard', e));
+      unawaited(
+        LoggingService.logError('Failed to complete onboarding wizard', e),
+      );
       rethrow;
     }
   }

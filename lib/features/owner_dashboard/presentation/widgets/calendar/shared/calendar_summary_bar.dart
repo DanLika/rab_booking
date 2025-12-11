@@ -36,7 +36,11 @@ class CalendarSummaryBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1A1A24) : const Color(0xFFFAFAFC),
           border: Border(
-            top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+            top: BorderSide(
+              color: isDark
+                  ? AppColors.sectionDividerDark
+                  : AppColors.sectionDividerLight,
+            ),
           ),
         ),
         child: Row(
@@ -89,9 +93,18 @@ class CalendarSummaryBar extends StatelessWidget {
             : isWeekend
             ? (isDark ? const Color(0xFF2A2A35) : const Color(0xFFF5F5FA))
             : (isDark ? const Color(0xFF1E1E28) : Colors.white),
-        border: Border(left: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight)),
+        border: Border(
+          left: BorderSide(
+            color: isDark
+                ? AppColors.sectionDividerDark
+                : AppColors.sectionDividerLight,
+          ),
+        ),
       ),
-      padding: EdgeInsets.symmetric(vertical: isNarrow ? 4 : 6, horizontal: isNarrow ? 2 : 4),
+      padding: EdgeInsets.symmetric(
+        vertical: isNarrow ? 4 : 6,
+        horizontal: isNarrow ? 2 : 4,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.min,
@@ -125,8 +138,14 @@ class CalendarSummaryBar extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 6, vertical: isNarrow ? 2 : 3),
-        decoration: BoxDecoration(color: color.withAlpha((0.15 * 255).toInt()), borderRadius: BorderRadius.circular(6)),
+        padding: EdgeInsets.symmetric(
+          horizontal: isNarrow ? 4 : 6,
+          vertical: isNarrow ? 2 : 3,
+        ),
+        decoration: BoxDecoration(
+          color: color.withAlpha((0.15 * 255).toInt()),
+          borderRadius: BorderRadius.circular(6),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -135,7 +154,11 @@ class CalendarSummaryBar extends StatelessWidget {
             SizedBox(width: isNarrow ? 2 : 4),
             Text(
               value,
-              style: TextStyle(fontSize: isNarrow ? 10 : 12, fontWeight: FontWeight.w700, color: color),
+              style: TextStyle(
+                fontSize: isNarrow ? 10 : 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
           ],
         ),
@@ -144,14 +167,22 @@ class CalendarSummaryBar extends StatelessWidget {
   }
 
   /// Build combined check-in/check-out badge
-  Widget _buildCheckInOutBadge(BuildContext context, int checkIns, int checkOuts, bool isNarrow) {
+  Widget _buildCheckInOutBadge(
+    BuildContext context,
+    int checkIns,
+    int checkOuts,
+    bool isNarrow,
+  ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Tooltip(
       message: 'Dolasci: $checkIns / Odlasci: $checkOuts',
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 6, vertical: isNarrow ? 2 : 3),
+        padding: EdgeInsets.symmetric(
+          horizontal: isNarrow ? 4 : 6,
+          vertical: isNarrow ? 2 : 3,
+        ),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF0F0F5),
           borderRadius: BorderRadius.circular(6),
@@ -160,11 +191,19 @@ class CalendarSummaryBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.login, size: isNarrow ? 10 : 12, color: AppColors.success),
+            Icon(
+              Icons.login,
+              size: isNarrow ? 10 : 12,
+              color: AppColors.success,
+            ),
             SizedBox(width: isNarrow ? 1 : 2),
             Text(
               '$checkIns',
-              style: TextStyle(fontSize: isNarrow ? 9 : 11, fontWeight: FontWeight.w600, color: AppColors.success),
+              style: TextStyle(
+                fontSize: isNarrow ? 9 : 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.success,
+              ),
             ),
             Text(
               '/',
@@ -176,10 +215,18 @@ class CalendarSummaryBar extends StatelessWidget {
             ),
             Text(
               '$checkOuts',
-              style: TextStyle(fontSize: isNarrow ? 9 : 11, fontWeight: FontWeight.w600, color: AppColors.error),
+              style: TextStyle(
+                fontSize: isNarrow ? 9 : 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.error,
+              ),
             ),
             SizedBox(width: isNarrow ? 1 : 2),
-            Icon(Icons.logout, size: isNarrow ? 10 : 12, color: AppColors.error),
+            Icon(
+              Icons.logout,
+              size: isNarrow ? 10 : 12,
+              color: AppColors.error,
+            ),
           ],
         ),
       ),

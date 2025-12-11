@@ -37,14 +37,18 @@ class RoomRowHeader extends StatelessWidget {
           color: theme.cardColor,
           border: Border(
             right: BorderSide(color: theme.dividerColor),
-            bottom: BorderSide(color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
+            bottom: BorderSide(
+              color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+            ),
           ),
         ),
         padding: EdgeInsets.symmetric(
           horizontal: isCompact ? 8 : 12,
           vertical: 8,
         ),
-        child: isCompact ? _buildCompactContent(theme) : _buildFullContent(theme),
+        child: isCompact
+            ? _buildCompactContent(theme)
+            : _buildFullContent(theme),
       ),
     );
   }
@@ -80,20 +84,22 @@ class RoomRowHeader extends StatelessWidget {
             Icon(
               Icons.bed,
               size: 16,
-              color: theme.textTheme.bodySmall?.color?.withAlpha((0.7 * 255).toInt()),
+              color: theme.textTheme.bodySmall?.color?.withAlpha(
+                (0.7 * 255).toInt(),
+              ),
             ),
             const SizedBox(width: 2),
             Icon(
               Icons.person,
               size: 16,
-              color: theme.textTheme.bodySmall?.color?.withAlpha((0.7 * 255).toInt()),
+              color: theme.textTheme.bodySmall?.color?.withAlpha(
+                (0.7 * 255).toInt(),
+              ),
             ),
             const SizedBox(width: 2),
             Text(
               '${unit.maxGuests}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 11,
-              ),
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
             ),
           ],
         ),
@@ -111,11 +117,7 @@ class RoomRowHeader extends StatelessWidget {
             color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.bed,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
+          child: Icon(Icons.bed, size: 20, color: theme.colorScheme.primary),
         ),
         const SizedBox(width: 12),
 
@@ -182,13 +184,16 @@ class RoomRowHeader extends StatelessWidget {
     final List<Color> dotColors = [];
 
     // Priority: pending > confirmed > completed > cancelled
-    if (statusCounts[BookingStatus.pending] != null && statusCounts[BookingStatus.pending]! > 0) {
+    if (statusCounts[BookingStatus.pending] != null &&
+        statusCounts[BookingStatus.pending]! > 0) {
       dotColors.add(AppColors.warning); // Orange - waiting approval
     }
-    if (statusCounts[BookingStatus.confirmed] != null && statusCounts[BookingStatus.confirmed]! > 0) {
+    if (statusCounts[BookingStatus.confirmed] != null &&
+        statusCounts[BookingStatus.confirmed]! > 0) {
       dotColors.add(AppColors.error); // Red - booked
     }
-    if (statusCounts[BookingStatus.completed] != null && statusCounts[BookingStatus.completed]! > 0) {
+    if (statusCounts[BookingStatus.completed] != null &&
+        statusCounts[BookingStatus.completed]! > 0) {
       dotColors.add(AppColors.success); // Green - completed
     }
 
@@ -203,10 +208,12 @@ class RoomRowHeader extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: displayDots
-          .map((color) => Padding(
-                padding: const EdgeInsets.only(left: 3),
-                child: _StatusDot(color: color),
-              ))
+          .map(
+            (color) => Padding(
+              padding: const EdgeInsets.only(left: 3),
+              child: _StatusDot(color: color),
+            ),
+          )
           .toList(),
     );
   }
@@ -216,9 +223,7 @@ class RoomRowHeader extends StatelessWidget {
 class _StatusDot extends StatelessWidget {
   final Color color;
 
-  const _StatusDot({
-    required this.color,
-  });
+  const _StatusDot({required this.color});
 
   @override
   Widget build(BuildContext context) {

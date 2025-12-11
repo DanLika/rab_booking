@@ -45,7 +45,10 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+        boxShadow: AppShadows.getElevation(
+          1,
+          isDark: theme.brightness == Brightness.dark,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -53,21 +56,35 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
           ),
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               initiallyExpanded: taxLegalEnabled,
-              tilePadding: EdgeInsets.symmetric(horizontal: isMobile ? 14 : 18, vertical: 8),
-              childrenPadding: EdgeInsets.fromLTRB(isMobile ? 14 : 18, 0, isMobile ? 14 : 18, isMobile ? 14 : 18),
+              tilePadding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 14 : 18,
+                vertical: 8,
+              ),
+              childrenPadding: EdgeInsets.fromLTRB(
+                isMobile ? 14 : 18,
+                0,
+                isMobile ? 14 : 18,
+                isMobile ? 14 : 18,
+              ),
               leading: _buildLeadingIcon(theme),
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     l10n.taxLegalTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Container(
@@ -83,9 +100,13 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  taxLegalEnabled ? l10n.taxLegalEnabled : l10n.taxLegalDisabled,
+                  taxLegalEnabled
+                      ? l10n.taxLegalEnabled
+                      : l10n.taxLegalDisabled,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: taxLegalEnabled ? AppColors.success : context.textColorSecondary,
+                    color: taxLegalEnabled
+                        ? AppColors.success
+                        : context.textColorSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -97,7 +118,11 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                     // Master toggle - compact
                     Row(
                       children: [
-                        Icon(Icons.toggle_on_outlined, size: 18, color: theme.colorScheme.primary),
+                        Icon(
+                          Icons.toggle_on_outlined,
+                          size: 18,
+                          color: theme.colorScheme.primary,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -105,7 +130,10 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                             children: [
                               Text(
                                 l10n.taxLegalToggleTitle,
-                                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
                               ),
                               Text(
                                 l10n.taxLegalToggleSubtitle,
@@ -126,7 +154,12 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                     ),
 
                     if (taxLegalEnabled) ...[
-                      Divider(height: 24, color: theme.colorScheme.outline.withAlpha((0.2 * 255).toInt())),
+                      Divider(
+                        height: 24,
+                        color: theme.colorScheme.outline.withAlpha(
+                          (0.2 * 255).toInt(),
+                        ),
+                      ),
 
                       // Disclaimer text source selector
                       _buildTextSourceSection(theme, context, l10n),
@@ -139,7 +172,9 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                           onPressed: onPreview,
                           icon: const Icon(Icons.preview, size: 18),
                           label: Text(l10n.taxLegalPreviewButton),
-                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
                         ),
                       ),
                     ],
@@ -164,11 +199,20 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTextSourceSection(ThemeData theme, BuildContext context, AppLocalizations l10n) {
+  Widget _buildTextSourceSection(
+    ThemeData theme,
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.taxLegalTextSource, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          l10n.taxLegalTextSource,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 12),
 
         // Radio group for text source selection
@@ -188,7 +232,9 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                 ),
                 subtitle: Text(
                   l10n.taxLegalDefaultSubtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                 ),
@@ -206,7 +252,9 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
                 ),
                 subtitle: Text(
                   l10n.taxLegalCustomSubtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                 ),

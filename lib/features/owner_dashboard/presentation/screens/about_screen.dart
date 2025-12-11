@@ -35,7 +35,9 @@ class AboutScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: context.gradients.brandPrimary,
                   borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
-                  boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+                  boxShadow: isDark
+                      ? AppShadows.elevation4Dark
+                      : AppShadows.elevation4,
                 ),
                 padding: EdgeInsets.all(isMobile ? 32 : 48),
                 child: Column(
@@ -66,7 +68,11 @@ class AboutScreen extends StatelessWidget {
                     // App Name
                     Text(
                       l10n.aboutAppName,
-                      style: TextStyle(fontSize: isMobile ? 28 : 32, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: isMobile ? 28 : 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                     SizedBox(height: isMobile ? 8 : 12),
 
@@ -83,7 +89,10 @@ class AboutScreen extends StatelessWidget {
 
                     // Version Badge
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: isMobile ? 8 : 10),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 20,
+                        vertical: isMobile ? 8 : 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(20),
@@ -199,14 +208,14 @@ class AboutScreen extends StatelessWidget {
                     _ContactItem(
                       icon: Icons.email_outlined,
                       label: l10n.aboutEmailLabel,
-                      value: 'support@rabbooking.com',
+                      value: 'info@bookbed.io',
                       isMobile: isMobile,
                     ),
                     const SizedBox(height: 12),
                     _ContactItem(
                       icon: Icons.language,
                       label: l10n.aboutWebsiteLabel,
-                      value: 'www.rabbooking.com',
+                      value: 'bookbed.io',
                       isMobile: isMobile,
                     ),
                   ],
@@ -259,7 +268,9 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
-        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+        ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -274,7 +285,11 @@ class _InfoCard extends StatelessWidget {
                   color: theme.colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: theme.colorScheme.primary, size: isMobile ? 20 : 22),
+                child: Icon(
+                  icon,
+                  color: theme.colorScheme.primary,
+                  size: isMobile ? 20 : 22,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
@@ -302,7 +317,12 @@ class _FeatureItem extends StatelessWidget {
   final String description;
   final bool isMobile;
 
-  const _FeatureItem({required this.icon, required this.title, required this.description, required this.isMobile});
+  const _FeatureItem({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -351,15 +371,24 @@ class _TechChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 6 : 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: isMobile ? 6 : 8,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        ),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: isMobile ? 12 : 14, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+        style: TextStyle(
+          fontSize: isMobile ? 12 : 14,
+          fontWeight: FontWeight.w600,
+          color: theme.colorScheme.primary,
+        ),
       ),
     );
   }
@@ -372,21 +401,33 @@ class _ContactItem extends StatelessWidget {
   final String value;
   final bool isMobile;
 
-  const _ContactItem({required this.icon, required this.label, required this.value, required this.isMobile});
+  const _ContactItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: isMobile ? 18 : 20, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+        Icon(
+          icon,
+          size: isMobile ? 18 : 20,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: isMobile ? 12 : 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+              style: TextStyle(
+                fontSize: isMobile ? 12 : 13,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
             Text(
               value,

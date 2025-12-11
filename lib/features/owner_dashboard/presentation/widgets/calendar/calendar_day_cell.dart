@@ -28,7 +28,8 @@ class CalendarDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isToday = DateTime.now().year == date.year &&
+    final isToday =
+        DateTime.now().year == date.year &&
         DateTime.now().month == date.month &&
         DateTime.now().day == date.day;
     final isWeekend =
@@ -46,7 +47,8 @@ class CalendarDayCell extends StatelessWidget {
     final hasWeekendPrice = weekendPrice != null;
     final blockCheckIn = priceData?.blockCheckIn ?? false;
     final blockCheckOut = priceData?.blockCheckOut ?? false;
-    final hasRestrictions = blockCheckIn ||
+    final hasRestrictions =
+        blockCheckIn ||
         blockCheckOut ||
         (priceData?.minNightsOnArrival != null);
 
@@ -67,10 +69,10 @@ class CalendarDayCell extends StatelessWidget {
             color: isSelected
                 ? context.primaryColor
                 : isToday
-                    ? context.primaryColor.withValues(alpha: 0.5)
-                    : hasRestrictions
-                        ? context.warningColor.withValues(alpha: 0.6)
-                        : context.borderColor.withValues(alpha: 0.5),
+                ? context.primaryColor.withValues(alpha: 0.5)
+                : hasRestrictions
+                ? context.warningColor.withValues(alpha: 0.6)
+                : context.borderColor.withValues(alpha: 0.5),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -80,7 +82,14 @@ class CalendarDayCell extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildDayNumber(context, isToday, isAvailable),
-            _buildPrice(context, price, isAvailable, hasWeekendPrice, isWeekend, hasPrice),
+            _buildPrice(
+              context,
+              price,
+              isAvailable,
+              hasWeekendPrice,
+              isWeekend,
+              hasPrice,
+            ),
             if (blockCheckIn || blockCheckOut)
               _buildStatusIndicators(context, blockCheckIn, blockCheckOut),
           ],
@@ -128,10 +137,10 @@ class CalendarDayCell extends StatelessWidget {
               child: Text(
                 '${date.day}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                      fontSize: isSmallMobile ? 9 : (isMobile ? 10 : null),
-                      color: !isAvailable ? context.textColorTertiary : null,
-                    ),
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                  fontSize: isSmallMobile ? 9 : (isMobile ? 10 : null),
+                  color: !isAvailable ? context.textColorTertiary : null,
+                ),
               ),
             ),
           ),
@@ -164,16 +173,16 @@ class CalendarDayCell extends StatelessWidget {
               Text(
                 '€${price.toStringAsFixed(0)}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: isSmallMobile ? 11 : (isMobile ? 12 : null),
-                      color: !isAvailable
-                          ? context.textColorTertiary
-                          : hasWeekendPrice && isWeekend
-                              ? context.secondaryColor
-                              : hasPrice
-                                  ? context.primaryColor
-                                  : context.textColorSecondary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: isSmallMobile ? 11 : (isMobile ? 12 : null),
+                  color: !isAvailable
+                      ? context.textColorTertiary
+                      : hasWeekendPrice && isWeekend
+                      ? context.secondaryColor
+                      : hasPrice
+                      ? context.primaryColor
+                      : context.textColorSecondary,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
               ),
@@ -181,9 +190,9 @@ class CalendarDayCell extends StatelessWidget {
                 Text(
                   'base',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: isMobile ? 7 : 8,
-                        color: context.textColorTertiary,
-                      ),
+                    fontSize: isMobile ? 7 : 8,
+                    color: context.textColorTertiary,
+                  ),
                 ),
             ],
           ),

@@ -20,7 +20,8 @@ class CalendarSearchDialog extends ConsumerStatefulWidget {
   const CalendarSearchDialog({super.key});
 
   @override
-  ConsumerState<CalendarSearchDialog> createState() => _CalendarSearchDialogState();
+  ConsumerState<CalendarSearchDialog> createState() =>
+      _CalendarSearchDialogState();
 }
 
 class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
@@ -79,14 +80,17 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
       final bookingsAsync = ref.read(calendarBookingsProvider);
       await bookingsAsync.when(
         data: (bookingsMap) async {
-          final allBookings = bookingsMap.values.expand((list) => list).toList();
+          final allBookings = bookingsMap.values
+              .expand((list) => list)
+              .toList();
 
           // Filter bookings based on search query
           final results = allBookings.where((booking) {
             final guestName = booking.guestName?.toLowerCase() ?? '';
             final guestEmail = booking.guestEmail?.toLowerCase() ?? '';
             final bookingId = booking.id.toLowerCase();
-            final unitName = _unitsMap[booking.unitId]?.name.toLowerCase() ?? '';
+            final unitName =
+                _unitsMap[booking.unitId]?.name.toLowerCase() ?? '';
 
             return guestName.contains(_searchQuery) ||
                 guestEmail.contains(_searchQuery) ||
@@ -130,12 +134,18 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
         width: screenWidth < 400 ? screenWidth * 0.95 : screenWidth * 0.8,
         constraints: BoxConstraints(
           maxWidth: 800,
-          maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
         ),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -145,7 +155,9 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
+                ),
               ),
               child: Row(
                 children: [
@@ -155,13 +167,21 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.search, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.search,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: AutoSizeText(
                       l10n.calendarSearchTitle,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                       maxLines: 1,
                       minFontSize: 14,
                     ),
@@ -205,21 +225,31 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             // Search info
             if (_searchQuery.isNotEmpty)
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 12 : 16),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth < 400 ? 12 : 16,
+                ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         gradient: context.gradients.brandPrimary,
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                       ),
-                      child: const Icon(Icons.format_list_numbered, color: Colors.white, size: 14),
+                      child: const Icon(
+                        Icons.format_list_numbered,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Text(
                       l10n.calendarSearchResultsCount(_searchResults.length),
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -249,16 +279,24 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search, size: 64, color: Theme.of(context).disabledColor),
+            Icon(
+              Icons.search,
+              size: 64,
+              color: Theme.of(context).disabledColor,
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.calendarSearchEnterTerm,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).disabledColor),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).disabledColor,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               l10n.calendarSearchDescription,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).disabledColor),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).disabledColor,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -271,16 +309,24 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: Theme.of(context).disabledColor),
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Theme.of(context).disabledColor,
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.calendarSearchNoResults,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).disabledColor),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).disabledColor,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               l10n.calendarSearchTryAnother,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).disabledColor),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).disabledColor,
+              ),
             ),
           ],
         ),
@@ -310,7 +356,11 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
       decoration: BoxDecoration(
         gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+        border: Border.all(
+          color: isDark
+              ? AppColors.sectionDividerDark
+              : AppColors.sectionDividerLight,
+        ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Material(
@@ -329,18 +379,28 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                     Container(
                       width: 12,
                       height: 12,
-                      decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: booking.status.color,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         booking.guestName ?? 'N/A',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Text(
                       booking.status.displayName,
-                      style: TextStyle(fontSize: 12, color: booking.status.color, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: booking.status.color,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -351,9 +411,18 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                 if (unit != null) ...[
                   Row(
                     children: [
-                      Icon(Icons.bed_outlined, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        Icons.bed_outlined,
+                        size: 16,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 8),
-                      Text(unit.name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                      Text(
+                        unit.name,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -362,7 +431,11 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                 // Dates
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -371,14 +444,23 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '$nights noć${nights > 1 ? 'i' : ''}',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -389,7 +471,11 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                 // Email
                 Row(
                   children: [
-                    Icon(Icons.email_outlined, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.email_outlined,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -405,7 +491,11 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.euro, size: 16, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.euro,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       '${booking.totalPrice.toStringAsFixed(2)} €',

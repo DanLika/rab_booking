@@ -17,7 +17,12 @@ class TimelineUnitNameCell extends StatelessWidget {
   /// Callback when unit name is tapped (to show future bookings dialog)
   final VoidCallback? onTap;
 
-  const TimelineUnitNameCell({super.key, required this.unit, required this.unitRowHeight, this.onTap});
+  const TimelineUnitNameCell({
+    super.key,
+    required this.unit,
+    required this.unitRowHeight,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +34,15 @@ class TimelineUnitNameCell extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: unitRowHeight,
-        padding: EdgeInsets.all(isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS),
+        padding: EdgeInsets.all(
+          isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
+        ),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6))),
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withValues(alpha: 0.6),
+            ),
+          ),
         ),
         child: Row(
           children: [
@@ -76,7 +87,9 @@ class TimelineUnitNameCell extends StatelessWidget {
                           '${unit.maxGuests} ${l10n.guestsPlural}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: isMobile ? 10 : 11,
-                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                            color: theme.textTheme.bodySmall?.color?.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

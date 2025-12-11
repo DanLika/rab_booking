@@ -9,7 +9,7 @@ class AppLocalizationsHr extends AppLocalizations {
   AppLocalizationsHr([String locale = 'hr']) : super(locale);
 
   @override
-  String get appName => 'RAB Booking';
+  String get appName => 'BookBed';
 
   @override
   String get save => 'Spremi';
@@ -826,7 +826,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get privacyYourRightsBody =>
-      'Prema GDPR-u, imate pravo na:\n\n• Pristup vašim osobnim podacima\n• Ispravak netočnih podataka\n• Zahtjev za brisanje vaših podataka\n• Prigovor na obradu podataka\n• Prenosivost podataka\n• Povlačenje suglasnosti\n\nKontaktirajte nas na privacy@rabbooking.com da biste ostvarili svoja prava.';
+      'Prema GDPR-u, imate pravo na:\n\n• Pristup vašim osobnim podacima\n• Ispravak netočnih podataka\n• Zahtjev za brisanje vaših podataka\n• Prigovor na obradu podataka\n• Prenosivost podataka\n• Povlačenje suglasnosti\n\nKontaktirajte nas na info@bookbed.io da biste ostvarili svoja prava.';
 
   @override
   String get privacyCookiesTitle => '7. Kolačići i Praćenje';
@@ -861,7 +861,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get privacyContactBody =>
-      'Ako imate pitanja o ovim Pravilima privatnosti, molimo vas da nas kontaktirate:\n\nEmail: privacy@rabbooking.com\nTelefon: +1 (555) 123-4567';
+      'Ako imate pitanja o ovim Pravilima privatnosti, molimo vas da nas kontaktirate:\n\nEmail: info@bookbed.io\nWeb stranica: bookbed.io';
 
   @override
   String get helpFaq => 'Pomoć i Pitanja';
@@ -1396,7 +1396,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerOccupancyRate => 'Popunjenost';
 
   @override
-  String get ownerWelcomeTitle => 'Dobrodošli u RAB Booking!';
+  String get ownerWelcomeTitle => 'Dobrodošli u BookBed!';
 
   @override
   String get ownerWelcomeSubtitle =>
@@ -1506,7 +1506,10 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDrawerAddToSite => 'Dodavanje na sajt';
 
   @override
-  String get ownerDrawerFaq => 'Česta Pitanja';
+  String get ownerDrawerFaq => 'FAQ';
+
+  @override
+  String get ownerDrawerFaqSubtitle => 'Česta pitanja i odgovori';
 
   @override
   String get ownerDrawerNotifications => 'Obavještenja';
@@ -2635,7 +2638,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get aboutTitle => 'O Aplikaciji';
 
   @override
-  String get aboutAppName => 'Rab Booking';
+  String get aboutAppName => 'BookBed';
 
   @override
   String get aboutTagline => 'Sustav za Upravljanje Nekretninama';
@@ -2644,11 +2647,11 @@ class AppLocalizationsHr extends AppLocalizations {
   String get aboutVersion => 'Verzija 1.0.0';
 
   @override
-  String get aboutWhatIs => 'Što je Rab Booking?';
+  String get aboutWhatIs => 'Što je BookBed?';
 
   @override
   String get aboutDescription =>
-      'Rab Booking je sveobuhvatan sustav za upravljanje nekretninama dizajniran za vlasnike smještaja za odmor. Upravljajte svojim nekretninama, rezervacijama, kalendarom i integracijama na jednom mjestu. Naš ugrađeni widget za rezervacije olakšava gostima izravno rezerviranje na vašoj web stranici.';
+      'BookBed je sveobuhvatan sustav za upravljanje nekretninama dizajniran za vlasnike smještaja za odmor. Upravljajte svojim nekretninama, rezervacijama, kalendarom i integracijama na jednom mjestu. Naš ugrađeni widget za rezervacije olakšava gostima izravno rezerviranje na vašoj web stranici.';
 
   @override
   String get aboutKeyFeatures => 'Ključne Značajke';
@@ -2701,7 +2704,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get aboutWebsiteLabel => 'Web stranica';
 
   @override
-  String get aboutCopyright => '© 2025 Rab Booking. Sva prava pridržana.';
+  String get aboutCopyright => '© 2025 BookBed. Sva prava pridržana.';
 
   @override
   String get unitHubTitle => 'Smještajne Jedinice';
@@ -3133,6 +3136,9 @@ class AppLocalizationsHr extends AppLocalizations {
       'Greška prilikom odspajanja Stripe računa';
 
   @override
+  String get stripeLoadingAccount => 'Učitavanje postavki plaćanja...';
+
+  @override
   String get advancedSettingsTitle => 'Napredne Postavke';
 
   @override
@@ -3359,7 +3365,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get propertyFormSubdomainHelper =>
-      'Prilagođeni URL: [subdomain].rabbooking.com';
+      'Prilagođeni URL: [subdomain].bookbed.io';
 
   @override
   String get propertyFormSubdomainAvailable => 'Subdomena je dostupna';
@@ -4201,7 +4207,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitPricingError => 'Greška pri ažuriranju cijene';
 
   @override
-  String get ownerFaqTitle => 'Česta Pitanja (FAQ)';
+  String get ownerFaqTitle => 'FAQ';
 
   @override
   String get ownerFaqSearchHint => 'Pretražite pitanja...';
@@ -4668,6 +4674,40 @@ class AppLocalizationsHr extends AppLocalizations {
       '• Osvježite stranicu (Ctrl+F5 za hard refresh)\n• Kalendar se automatski ažurira svakih 5 minuta';
 
   @override
+  String get embedGuideSimpleStepsTitle => '3 Jednostavna Koraka';
+
+  @override
+  String get embedGuideSimpleStep1 => 'Kopirajte embed kod za vaš apartman';
+
+  @override
+  String get embedGuideSimpleStep2 => 'Zalijepite ga u HTML vaše web stranice';
+
+  @override
+  String get embedGuideSimpleStep3 => 'Spremite i objavite';
+
+  @override
+  String get embedGuideNeedHelp => 'Trebate pomoć?';
+
+  @override
+  String get embedGuideInstallationGuide => 'Vodič za Instalaciju';
+
+  @override
+  String get embedGuideLanguageNote =>
+      'Widget ima ugrađen odabir jezika. Korisnici mogu birati između HR, EN, DE, IT.';
+
+  @override
+  String get embedHelpTitle => 'Pomoć za Embed Widget';
+
+  @override
+  String get embedHelpTabInstallation => 'Vodič';
+
+  @override
+  String get embedHelpTabAdvanced => 'Napredno';
+
+  @override
+  String get embedHelpTabTroubleshooting => 'Pomoć';
+
+  @override
   String get stripeGuideTitle => 'Stripe Integracija - Uputstvo';
 
   @override
@@ -5096,7 +5136,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get propertyFormSubdomainEmailHelper =>
-      'URL za email linkove: [subdomain].rabbooking.com';
+      'URL za email linkove: [subdomain].bookbed.io';
 
   @override
   String get icalExportTitle => 'iCal Izvoz';
@@ -5542,6 +5582,9 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get priceCalendarClear => 'Očisti';
+
+  @override
+  String get priceCalendarSelectAll => 'Odaberi sve';
 
   @override
   String get priceCalendarSelectAllDays => 'Odaberi sve dane';

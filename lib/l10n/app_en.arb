@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appName": "RAB Booking",
+  "appName": "BookBed",
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
@@ -287,7 +287,7 @@
   "privacyDataRetentionTitle": "5. Data Retention",
   "privacyDataRetentionBody": "We retain your personal information for as long as necessary to provide our services and comply with legal obligations. You may request deletion of your data at any time, subject to legal requirements.",
   "privacyYourRightsTitle": "6. Your Rights",
-  "privacyYourRightsBody": "Under GDPR, you have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Request deletion of your data\n• Object to data processing\n• Data portability\n• Withdraw consent\n\nContact us at privacy@rabbooking.com to exercise your rights.",
+  "privacyYourRightsBody": "Under GDPR, you have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Request deletion of your data\n• Object to data processing\n• Data portability\n• Withdraw consent\n\nContact us at info@bookbed.io to exercise your rights.",
   "privacyCookiesTitle": "7. Cookies and Tracking",
   "privacyCookiesBody": "We use cookies and similar tracking technologies to improve your browsing experience. You can control cookies through your browser settings. Some features may not function properly if cookies are disabled.",
   "privacyThirdPartyTitle": "8. Third-Party Services",
@@ -297,7 +297,7 @@
   "privacyChangesTitle": "10. Changes to Privacy Policy",
   "privacyChangesBody": "We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page. Changes are effective immediately upon posting.",
   "privacyContactTitle": "Contact Us",
-  "privacyContactBody": "If you have questions about this Privacy Policy, please contact us at:\n\nEmail: privacy@rabbooking.com\nPhone: +1 (555) 123-4567",
+  "privacyContactBody": "If you have questions about this Privacy Policy, please contact us at:\n\nEmail: info@bookbed.io\nWebsite: bookbed.io",
 
   "helpFaq": "Help & FAQ",
   "searchForHelp": "Search for help...",
@@ -490,7 +490,7 @@
   "ownerActiveProperties": "Active properties",
   "ownerOccupancyRate": "Occupancy rate",
 
-  "ownerWelcomeTitle": "Welcome to RAB Booking!",
+  "ownerWelcomeTitle": "Welcome to BookBed!",
   "ownerWelcomeSubtitle": "Get started by adding your first property to start receiving bookings.",
   "ownerAddFirstProperty": "Add Property",
 
@@ -543,6 +543,7 @@
   "ownerDrawerEmbedWidget": "Embed Widget",
   "ownerDrawerAddToSite": "Adding to website",
   "ownerDrawerFaq": "FAQ",
+  "ownerDrawerFaqSubtitle": "Common questions & answers",
   "ownerDrawerNotifications": "Notifications",
   "ownerDrawerProfile": "Profile",
   "ownerDrawerLogout": "Log out",
@@ -1029,11 +1030,11 @@
   },
 
   "aboutTitle": "About",
-  "aboutAppName": "Rab Booking",
+  "aboutAppName": "BookBed",
   "aboutTagline": "Property Management System",
   "aboutVersion": "Version 1.0.0",
-  "aboutWhatIs": "What is Rab Booking?",
-  "aboutDescription": "Rab Booking is a comprehensive property management system designed for vacation rental owners. Manage your properties, bookings, calendar, and integrations all in one place. Our embedded booking widget makes it easy for guests to book directly on your website.",
+  "aboutWhatIs": "What is BookBed?",
+  "aboutDescription": "BookBed is a comprehensive property management system designed for vacation rental owners. Manage your properties, bookings, calendar, and integrations all in one place. Our embedded booking widget makes it easy for guests to book directly on your website.",
   "aboutKeyFeatures": "Key Features",
   "aboutFeatureCalendar": "Smart Calendar",
   "aboutFeatureCalendarDesc": "Manage availability across multiple properties",
@@ -1049,7 +1050,7 @@
   "aboutContactSupport": "Contact & Support",
   "aboutEmailLabel": "Email",
   "aboutWebsiteLabel": "Website",
-  "aboutCopyright": "© 2025 Rab Booking. All rights reserved.",
+  "aboutCopyright": "© 2025 BookBed. All rights reserved.",
 
   "unitHubTitle": "Accommodation Units",
   "unitHubShowAllUnits": "Show all units",
@@ -1272,6 +1273,7 @@
   "stripeDisconnectConfirm": "Disconnect",
   "stripeDisconnectSuccess": "Stripe account disconnected successfully",
   "stripeDisconnectError": "Error disconnecting Stripe account",
+  "stripeLoadingAccount": "Loading payment settings...",
 
   "advancedSettingsTitle": "Advanced Settings",
   "advancedSettingsSaveSuccess": "Advanced settings saved successfully",
@@ -1353,7 +1355,7 @@
   "propertyFormRegenerateSlug": "Regenerate from name",
   "propertyFormSubdomain": "Subdomain",
   "propertyFormSubdomainHint": "your-property",
-  "propertyFormSubdomainHelper": "Custom URL: [subdomain].rabbooking.com",
+  "propertyFormSubdomainHelper": "Custom URL: [subdomain].bookbed.io",
   "propertyFormSubdomainAvailable": "Available",
   "propertyFormSubdomainTaken": "Taken",
   "propertyFormSubdomainUseSuggestion": "Use suggestion",
@@ -1704,7 +1706,7 @@
   "unitPricingSuccess": "Base price successfully updated",
   "unitPricingError": "Error updating price",
 
-  "ownerFaqTitle": "Frequently Asked Questions (FAQ)",
+  "ownerFaqTitle": "FAQ",
   "ownerFaqSearchHint": "Search questions...",
   "ownerFaqCategoryAll": "All",
   "ownerFaqCategoryGeneral": "General",
@@ -1899,6 +1901,19 @@
   "embedGuideTroubleOldData": "Calendar shows old data",
   "embedGuideTroubleOldDataSolution": "• Refresh page (Ctrl+F5 for hard refresh)\n• Calendar automatically updates every 5 minutes",
 
+  "embedGuideSimpleStepsTitle": "3 Simple Steps",
+  "embedGuideSimpleStep1": "Copy the embed code for your unit",
+  "embedGuideSimpleStep2": "Paste it into your website's HTML",
+  "embedGuideSimpleStep3": "Save and publish",
+  "embedGuideNeedHelp": "Need help?",
+  "embedGuideInstallationGuide": "Installation Guide",
+  "embedGuideLanguageNote": "Widget has a built-in language selector. Users can switch between HR, EN, DE, IT.",
+
+  "embedHelpTitle": "Embed Widget Help",
+  "embedHelpTabInstallation": "Guide",
+  "embedHelpTabAdvanced": "Advanced",
+  "embedHelpTabTroubleshooting": "Help",
+
   "stripeGuideTitle": "Stripe Integration - Guide",
   "stripeGuideHeaderTitle": "Stripe Connect",
   "stripeGuideHeaderSubtitle": "Accept card payments directly to your Stripe account",
@@ -2074,7 +2089,7 @@
   "propertyFormNoPhotos": "No photos",
   "propertyFormGenerateFromName": "Generate from name",
   "propertyFormSubdomainLabel": "Subdomain (for email links)",
-  "propertyFormSubdomainEmailHelper": "URL for email links: [subdomain].rabbooking.com",
+  "propertyFormSubdomainEmailHelper": "URL for email links: [subdomain].bookbed.io",
 
   "icalExportTitle": "iCal Export",
   "icalExportUnit": "Unit",
@@ -2274,6 +2289,7 @@
     }
   },
   "priceCalendarClear": "Clear",
+  "priceCalendarSelectAll": "Select all",
   "priceCalendarSelectAllDays": "Select all days",
   "priceCalendarDeselectAll": "Deselect all",
   "priceCalendarErrorLoadingPrices": "Error loading prices",

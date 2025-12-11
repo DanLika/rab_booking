@@ -10,9 +10,13 @@ part 'date_range_selection.g.dart';
 class DateRangeSelection with _$DateRangeSelection {
   const DateRangeSelection._();
 
-  const factory DateRangeSelection({required DateTime startDate, required DateTime endDate}) = _DateRangeSelection;
+  const factory DateRangeSelection({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) = _DateRangeSelection;
 
-  factory DateRangeSelection.fromJson(Map<String, dynamic> json) => _$DateRangeSelectionFromJson(json);
+  factory DateRangeSelection.fromJson(Map<String, dynamic> json) =>
+      _$DateRangeSelectionFromJson(json);
 
   /// Create a week range (Monday-Sunday) from a given date
   factory DateRangeSelection.week(DateTime date) {
@@ -41,7 +45,10 @@ class DateRangeSelection with _$DateRangeSelection {
   factory DateRangeSelection.days(DateTime startDate, int numberOfDays) {
     final start = DateTime(startDate.year, startDate.month, startDate.day);
     final end = start.add(Duration(days: numberOfDays - 1));
-    return DateRangeSelection(startDate: start, endDate: DateTime(end.year, end.month, end.day, 23, 59, 59));
+    return DateRangeSelection(
+      startDate: start,
+      endDate: DateTime(end.year, end.month, end.day, 23, 59, 59),
+    );
   }
 
   /// Get Monday of the week for a given date
@@ -72,7 +79,8 @@ class DateRangeSelection with _$DateRangeSelection {
     final dateOnly = DateTime(date.year, date.month, date.day);
     final startOnly = DateTime(startDate.year, startDate.month, startDate.day);
     final endOnly = DateTime(endDate.year, endDate.month, endDate.day);
-    return (dateOnly.isAfter(startOnly) || dateOnly.isAtSameMomentAs(startOnly)) &&
+    return (dateOnly.isAfter(startOnly) ||
+            dateOnly.isAtSameMomentAs(startOnly)) &&
         (dateOnly.isBefore(endOnly) || dateOnly.isAtSameMomentAs(endOnly));
   }
 
@@ -84,7 +92,8 @@ class DateRangeSelection with _$DateRangeSelection {
     } else {
       final currentDayCount = dayCount;
       // Check if this is a true month view (starts on 1st day of month)
-      final isMonthView = startDate.day == 1 && currentDayCount >= 28 && currentDayCount <= 31;
+      final isMonthView =
+          startDate.day == 1 && currentDayCount >= 28 && currentDayCount <= 31;
 
       if (isMonthView) {
         // Handle month overflow explicitly
@@ -107,11 +116,14 @@ class DateRangeSelection with _$DateRangeSelection {
   /// For custom ranges, moves backward by the same number of days
   DateRangeSelection previous({required bool isWeek}) {
     if (isWeek) {
-      return DateRangeSelection.week(startDate.subtract(const Duration(days: 7)));
+      return DateRangeSelection.week(
+        startDate.subtract(const Duration(days: 7)),
+      );
     } else {
       final currentDayCount = dayCount;
       // Check if this is a true month view (starts on 1st day of month)
-      final isMonthView = startDate.day == 1 && currentDayCount >= 28 && currentDayCount <= 31;
+      final isMonthView =
+          startDate.day == 1 && currentDayCount >= 28 && currentDayCount <= 31;
 
       if (isMonthView) {
         // Handle month underflow explicitly
@@ -151,7 +163,20 @@ class DateRangeSelection with _$DateRangeSelection {
   }
 
   static String _getMonthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[month - 1];
   }
 }

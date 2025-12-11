@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'RAB Booking'**
+  /// **'BookBed'**
   String get appName;
 
   /// No description provided for @save.
@@ -1673,7 +1673,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyYourRightsBody.
   ///
   /// In en, this message translates to:
-  /// **'Under GDPR, you have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Request deletion of your data\n• Object to data processing\n• Data portability\n• Withdraw consent\n\nContact us at privacy@rabbooking.com to exercise your rights.'**
+  /// **'Under GDPR, you have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Request deletion of your data\n• Object to data processing\n• Data portability\n• Withdraw consent\n\nContact us at info@bookbed.io to exercise your rights.'**
   String get privacyYourRightsBody;
 
   /// No description provided for @privacyCookiesTitle.
@@ -1733,7 +1733,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyContactBody.
   ///
   /// In en, this message translates to:
-  /// **'If you have questions about this Privacy Policy, please contact us at:\n\nEmail: privacy@rabbooking.com\nPhone: +1 (555) 123-4567'**
+  /// **'If you have questions about this Privacy Policy, please contact us at:\n\nEmail: info@bookbed.io\nWebsite: bookbed.io'**
   String get privacyContactBody;
 
   /// No description provided for @helpFaq.
@@ -2705,7 +2705,7 @@ abstract class AppLocalizations {
   /// No description provided for @ownerWelcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to RAB Booking!'**
+  /// **'Welcome to BookBed!'**
   String get ownerWelcomeTitle;
 
   /// No description provided for @ownerWelcomeSubtitle.
@@ -2911,6 +2911,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'FAQ'**
   String get ownerDrawerFaq;
+
+  /// No description provided for @ownerDrawerFaqSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Common questions & answers'**
+  String get ownerDrawerFaqSubtitle;
 
   /// No description provided for @ownerDrawerNotifications.
   ///
@@ -5007,7 +5013,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutAppName.
   ///
   /// In en, this message translates to:
-  /// **'Rab Booking'**
+  /// **'BookBed'**
   String get aboutAppName;
 
   /// No description provided for @aboutTagline.
@@ -5025,13 +5031,13 @@ abstract class AppLocalizations {
   /// No description provided for @aboutWhatIs.
   ///
   /// In en, this message translates to:
-  /// **'What is Rab Booking?'**
+  /// **'What is BookBed?'**
   String get aboutWhatIs;
 
   /// No description provided for @aboutDescription.
   ///
   /// In en, this message translates to:
-  /// **'Rab Booking is a comprehensive property management system designed for vacation rental owners. Manage your properties, bookings, calendar, and integrations all in one place. Our embedded booking widget makes it easy for guests to book directly on your website.'**
+  /// **'BookBed is a comprehensive property management system designed for vacation rental owners. Manage your properties, bookings, calendar, and integrations all in one place. Our embedded booking widget makes it easy for guests to book directly on your website.'**
   String get aboutDescription;
 
   /// No description provided for @aboutKeyFeatures.
@@ -5127,7 +5133,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutCopyright.
   ///
   /// In en, this message translates to:
-  /// **'© 2025 Rab Booking. All rights reserved.'**
+  /// **'© 2025 BookBed. All rights reserved.'**
   String get aboutCopyright;
 
   /// No description provided for @unitHubTitle.
@@ -5850,6 +5856,12 @@ abstract class AppLocalizations {
   /// **'Error disconnecting Stripe account'**
   String get stripeDisconnectError;
 
+  /// No description provided for @stripeLoadingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading payment settings...'**
+  String get stripeLoadingAccount;
+
   /// No description provided for @advancedSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -6279,7 +6291,7 @@ abstract class AppLocalizations {
   /// No description provided for @propertyFormSubdomainHelper.
   ///
   /// In en, this message translates to:
-  /// **'Custom URL: [subdomain].rabbooking.com'**
+  /// **'Custom URL: [subdomain].bookbed.io'**
   String get propertyFormSubdomainHelper;
 
   /// No description provided for @propertyFormSubdomainAvailable.
@@ -7833,7 +7845,7 @@ abstract class AppLocalizations {
   /// No description provided for @ownerFaqTitle.
   ///
   /// In en, this message translates to:
-  /// **'Frequently Asked Questions (FAQ)'**
+  /// **'FAQ'**
   String get ownerFaqTitle;
 
   /// No description provided for @ownerFaqSearchHint.
@@ -8658,6 +8670,72 @@ abstract class AppLocalizations {
   /// **'• Refresh page (Ctrl+F5 for hard refresh)\n• Calendar automatically updates every 5 minutes'**
   String get embedGuideTroubleOldDataSolution;
 
+  /// No description provided for @embedGuideSimpleStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'3 Simple Steps'**
+  String get embedGuideSimpleStepsTitle;
+
+  /// No description provided for @embedGuideSimpleStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the embed code for your unit'**
+  String get embedGuideSimpleStep1;
+
+  /// No description provided for @embedGuideSimpleStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste it into your website\'s HTML'**
+  String get embedGuideSimpleStep2;
+
+  /// No description provided for @embedGuideSimpleStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and publish'**
+  String get embedGuideSimpleStep3;
+
+  /// No description provided for @embedGuideNeedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help?'**
+  String get embedGuideNeedHelp;
+
+  /// No description provided for @embedGuideInstallationGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Installation Guide'**
+  String get embedGuideInstallationGuide;
+
+  /// No description provided for @embedGuideLanguageNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget has a built-in language selector. Users can switch between HR, EN, DE, IT.'**
+  String get embedGuideLanguageNote;
+
+  /// No description provided for @embedHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed Widget Help'**
+  String get embedHelpTitle;
+
+  /// No description provided for @embedHelpTabInstallation.
+  ///
+  /// In en, this message translates to:
+  /// **'Guide'**
+  String get embedHelpTabInstallation;
+
+  /// No description provided for @embedHelpTabAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get embedHelpTabAdvanced;
+
+  /// No description provided for @embedHelpTabTroubleshooting.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get embedHelpTabTroubleshooting;
+
   /// No description provided for @stripeGuideTitle.
   ///
   /// In en, this message translates to:
@@ -9441,7 +9519,7 @@ abstract class AppLocalizations {
   /// No description provided for @propertyFormSubdomainEmailHelper.
   ///
   /// In en, this message translates to:
-  /// **'URL for email links: [subdomain].rabbooking.com'**
+  /// **'URL for email links: [subdomain].bookbed.io'**
   String get propertyFormSubdomainEmailHelper;
 
   /// No description provided for @icalExportTitle.
@@ -10193,6 +10271,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get priceCalendarClear;
+
+  /// No description provided for @priceCalendarSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get priceCalendarSelectAll;
 
   /// No description provided for @priceCalendarSelectAllDays.
   ///

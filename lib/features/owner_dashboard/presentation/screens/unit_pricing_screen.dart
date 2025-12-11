@@ -87,7 +87,8 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
           // Auto-select first unit if none selected
           // Use flag to prevent adding multiple callbacks on rebuild
-          if ((_selectedUnit == null || !units.contains(_selectedUnit)) && !_hasScheduledAutoSelect) {
+          if ((_selectedUnit == null || !units.contains(_selectedUnit)) &&
+              !_hasScheduledAutoSelect) {
             _hasScheduledAutoSelect = true; // Set flag BEFORE adding callback
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
@@ -104,7 +105,12 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
           // When showAppBar is false, return only content (for embedding in tabs)
           if (!widget.showAppBar) {
-            return _buildMainContent(isMobile: isMobile, units: units, showUnitSelector: true, l10n: l10n);
+            return _buildMainContent(
+              isMobile: isMobile,
+              units: units,
+              showUnitSelector: true,
+              l10n: l10n,
+            );
           }
 
           return Scaffold(
@@ -114,7 +120,12 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               leadingIcon: Icons.arrow_back,
               onLeadingIconTap: (context) => Navigator.of(context).pop(),
             ),
-            body: _buildMainContent(isMobile: isMobile, units: units, showUnitSelector: true, l10n: l10n),
+            body: _buildMainContent(
+              isMobile: isMobile,
+              units: units,
+              showUnitSelector: true,
+              l10n: l10n,
+            ),
           );
         },
         loading: () => _buildLoadingState(l10n),
@@ -125,7 +136,12 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     // Unit was provided (accessed from unit management)
     // When showAppBar is false, return only content (for embedding in tabs)
     if (!widget.showAppBar) {
-      return _buildMainContent(isMobile: isMobile, units: null, showUnitSelector: false, l10n: l10n);
+      return _buildMainContent(
+        isMobile: isMobile,
+        units: null,
+        showUnitSelector: false,
+        l10n: l10n,
+      );
     }
 
     return Scaffold(
@@ -135,7 +151,12 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: _buildMainContent(isMobile: isMobile, units: null, showUnitSelector: false, l10n: l10n),
+      body: _buildMainContent(
+        isMobile: isMobile,
+        units: null,
+        showUnitSelector: false,
+        l10n: l10n,
+      ),
     );
   }
 
@@ -179,7 +200,11 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     );
   }
 
-  Widget _buildUnitSelector(List<UnitModel> units, bool isMobile, AppLocalizations l10n) {
+  Widget _buildUnitSelector(
+    List<UnitModel> units,
+    bool isMobile,
+    AppLocalizations l10n,
+  ) {
     final theme = Theme.of(context);
     final cardPadding = context.horizontalPadding;
 
@@ -191,7 +216,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
         side: BorderSide(color: context.gradients.sectionBorder, width: 1.5),
       ),
       child: Container(
-        decoration: BoxDecoration(color: context.gradients.cardBackground, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          color: context.gradients.cardBackground,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Padding(
           padding: EdgeInsets.all(cardPadding),
           child: Column(
@@ -204,16 +232,24 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                      color: theme.colorScheme.primary.withAlpha(
+                        (0.1 * 255).toInt(),
+                      ),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.home_outlined, color: theme.colorScheme.primary, size: 24),
+                    child: Icon(
+                      Icons.home_outlined,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.unitPricingSelectUnit,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -269,16 +305,29 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.1 * 255).toInt(),
+                  ),
                 ),
-                child: Icon(Icons.meeting_room_outlined, size: 70, color: theme.colorScheme.primary),
+                child: Icon(
+                  Icons.meeting_room_outlined,
+                  size: 70,
+                  color: theme.colorScheme.primary,
+                ),
               ),
               const SizedBox(height: AppDimensions.spaceL),
-              Text(l10n.unitPricingNoUnits, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                l10n.unitPricingNoUnits,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: AppDimensions.spaceS),
               Text(
                 l10n.unitPricingNoUnitsDesc,
-                style: theme.textTheme.bodyMedium?.copyWith(color: context.textColorSecondary),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: context.textColorSecondary,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 3,
               ),
@@ -319,16 +368,24 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: AppDimensions.spaceM),
               Text(
                 l10n.unitPricingLoadError,
-                style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.error),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
               ),
               const SizedBox(height: AppDimensions.spaceXS),
               Text(
                 error.toString(),
-                style: theme.textTheme.bodyMedium?.copyWith(color: context.textColorSecondary),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: context.textColorSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -345,7 +402,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+        boxShadow: AppShadows.getElevation(
+          1,
+          isDark: theme.brightness == Brightness.dark,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -353,7 +413,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.all(sectionPadding),
@@ -366,10 +429,16 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.12 * 255).toInt(),
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.euro_outlined, color: theme.colorScheme.primary, size: 18),
+                      child: Icon(
+                        Icons.euro_outlined,
+                        color: theme.colorScheme.primary,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -378,7 +447,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                         children: [
                           Text(
                             l10n.unitPricingBasePrice,
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Container(
@@ -397,7 +468,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 const SizedBox(height: 12),
                 Text(
                   l10n.unitPricingBasePriceDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -413,19 +486,30 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
                     // Extract common TextField widget
                     final priceInput = _buildPriceTextField(theme, l10n);
-                    final saveButton = _buildSaveButton(theme, isVerySmall, l10n);
+                    final saveButton = _buildSaveButton(
+                      theme,
+                      isVerySmall,
+                      l10n,
+                    );
 
                     if (isVerySmall) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [priceInput, const SizedBox(height: 12), saveButton],
+                        children: [
+                          priceInput,
+                          const SizedBox(height: 12),
+                          saveButton,
+                        ],
                       );
                     }
 
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        SizedBox(width: 250, child: priceInput), // Match month dropdown width
+                        SizedBox(
+                          width: 250,
+                          child: priceInput,
+                        ), // Match month dropdown width
                         const SizedBox(width: 16),
                         SizedBox(
                           width: 180, // Same width as Bulk Edit buttons
@@ -456,7 +540,11 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     );
   }
 
-  Widget _buildSaveButton(ThemeData theme, bool isVerySmall, AppLocalizations l10n) {
+  Widget _buildSaveButton(
+    ThemeData theme,
+    bool isVerySmall,
+    AppLocalizations l10n,
+  ) {
     // Use brand gradient for consistent button styling
     return Container(
       decoration: BoxDecoration(
@@ -471,7 +559,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: 10, // Reduced from 20 (width -20px)
-              vertical: isVerySmall ? 13 : 15, // Reduced from 14/16 (height -3px)
+              vertical: isVerySmall
+                  ? 13
+                  : 15, // Reduced from 14/16 (height -3px)
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -481,7 +571,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                     ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(
                         Icons.check, // Modern check icon
@@ -490,8 +583,13 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                       ),
                 const SizedBox(width: 8),
                 Text(
-                  isVerySmall ? l10n.unitPricingSavePrice : l10n.unitPricingSave,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  isVerySmall
+                      ? l10n.unitPricingSavePrice
+                      : l10n.unitPricingSave,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -507,13 +605,19 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     final l10n = AppLocalizations.of(context);
     final priceText = _basePriceController.text.trim();
     if (priceText.isEmpty) {
-      ErrorDisplayUtils.showWarningSnackBar(context, l10n.unitPricingEnterPrice);
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        l10n.unitPricingEnterPrice,
+      );
       return;
     }
 
     final price = double.tryParse(priceText);
     if (price == null || price <= 0) {
-      ErrorDisplayUtils.showWarningSnackBar(context, l10n.unitPricingPriceGreaterThanZero);
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        l10n.unitPricingPriceGreaterThanZero,
+      );
       return;
     }
 
@@ -521,7 +625,11 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
     try {
       final repository = ref.read(ownerPropertiesRepositoryProvider);
-      await repository.updateUnit(propertyId: _selectedUnit!.propertyId, unitId: _selectedUnit!.id, basePrice: price);
+      await repository.updateUnit(
+        propertyId: _selectedUnit!.propertyId,
+        unitId: _selectedUnit!.id,
+        basePrice: price,
+      );
 
       // Update local state immediately for responsive UI
       _selectedUnit = _selectedUnit!.copyWith(pricePerNight: price);
@@ -535,14 +643,21 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
       if (mounted) {
         // Try to show success message, but don't crash if no Scaffold available
         try {
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.unitPricingSuccessUpdate);
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.unitPricingSuccessUpdate,
+          );
         } catch (scaffoldError) {
           // Embedded in tab without Scaffold - silently succeed
         }
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.unitPricingErrorUpdate);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.unitPricingErrorUpdate,
+        );
       }
     } finally {
       if (mounted) {

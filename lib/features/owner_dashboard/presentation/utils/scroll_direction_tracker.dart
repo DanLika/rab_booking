@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Scroll direction enum for tracking user scroll behavior
-enum ScrollDirection {
-  up,
-  down,
-  idle,
-}
+import '../../domain/models/scroll_direction.dart';
+
+export '../../domain/models/scroll_direction.dart';
 
 /// Utility class for tracking scroll direction and triggering load events
 ///
@@ -40,7 +37,9 @@ class ScrollDirectionTracker {
 
     // Detect direction change
     if (delta.abs() > directionThreshold) {
-      final newDirection = delta > 0 ? ScrollDirection.down : ScrollDirection.up;
+      final newDirection = delta > 0
+          ? ScrollDirection.down
+          : ScrollDirection.up;
 
       if (newDirection != _currentDirection) {
         final now = DateTime.now();
@@ -67,7 +66,8 @@ class ScrollDirectionTracker {
     if (!controller.hasClients) return false;
 
     // Don't trigger if direction doesn't match
-    if (_currentDirection != direction && _currentDirection != ScrollDirection.idle) {
+    if (_currentDirection != direction &&
+        _currentDirection != ScrollDirection.idle) {
       return false;
     }
 

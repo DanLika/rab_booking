@@ -87,7 +87,9 @@ class TimelineUnitColumnWidget extends StatelessWidget {
                     ),
                     border: Border(
                       top: BorderSide(
-                        color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
+                        color: theme.dividerColor.withAlpha(
+                          (0.5 * 255).toInt(),
+                        ),
                         width: 2,
                       ),
                     ),

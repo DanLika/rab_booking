@@ -38,7 +38,9 @@ class WizardNavigationButtons extends StatelessWidget {
     final isMobile = screenType == ScreenType.portraitMobile || isLandscape;
 
     // Use responsive bottom bar padding
-    final bottomBarPadding = ResponsiveSpacingHelper.getBottomBarPadding(context);
+    final bottomBarPadding = ResponsiveSpacingHelper.getBottomBarPadding(
+      context,
+    );
 
     return Container(
       padding: bottomBarPadding,
@@ -55,7 +57,9 @@ class WizardNavigationButtons extends StatelessWidget {
                     onPressed: onBack,
                     icon: const Icon(Icons.arrow_back, size: 20),
                     style: IconButton.styleFrom(
-                      side: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+                      side: BorderSide(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                      ),
                     ),
                     tooltip: l10n.unitWizardBack,
                   )
@@ -64,8 +68,13 @@ class WizardNavigationButtons extends StatelessWidget {
                     icon: const Icon(Icons.arrow_back, size: 18),
                     label: Text(l10n.unitWizardBack),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24, vertical: isMobile ? 12 : 14),
-                      side: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 24,
+                        vertical: isMobile ? 12 : 14,
+                      ),
+                      side: BorderSide(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                      ),
                     ),
                   )
           else
@@ -78,9 +87,14 @@ class WizardNavigationButtons extends StatelessWidget {
             TextButton(
               onPressed: onSkip,
               style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: isVerySmall ? 8 : (isMobile ? 12 : 16)),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isVerySmall ? 8 : (isMobile ? 12 : 16),
+                ),
               ),
-              child: Text(l10n.unitWizardSkip, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+              child: Text(
+                l10n.unitWizardSkip,
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              ),
             ),
             SizedBox(width: isVerySmall ? 4 : (isMobile ? 8 : 12)),
           ],
@@ -103,9 +117,14 @@ class WizardNavigationButtons extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: theme.colorScheme.surfaceContainerHighest,
-                    disabledForegroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.38),
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: isLandscape ? 8 : 12),
+                    disabledBackgroundColor:
+                        theme.colorScheme.surfaceContainerHighest,
+                    disabledForegroundColor: theme.colorScheme.onSurface
+                        .withValues(alpha: 0.38),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: isLandscape ? 8 : 12,
+                    ),
                   ),
                 )
               : FilledButton.icon(
@@ -119,13 +138,20 @@ class WizardNavigationButtons extends StatelessWidget {
                             valueColor: AlwaysStoppedAnimation(Colors.white),
                           ),
                         )
-                      : Icon(nextLabel == l10n.unitWizardPublish ? Icons.publish : Icons.arrow_forward, size: 18),
+                      : Icon(
+                          nextLabel == l10n.unitWizardPublish
+                              ? Icons.publish
+                              : Icons.arrow_forward,
+                          size: 18,
+                        ),
                   label: Text(nextLabel),
                   style: FilledButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: theme.colorScheme.surfaceContainerHighest,
-                    disabledForegroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.38),
+                    disabledBackgroundColor:
+                        theme.colorScheme.surfaceContainerHighest,
+                    disabledForegroundColor: theme.colorScheme.onSurface
+                        .withValues(alpha: 0.38),
                     padding: EdgeInsets.symmetric(
                       horizontal: isVerySmall ? 16 : (isMobile ? 20 : 32),
                       vertical: isLandscape ? 8 : (isMobile ? 12 : 14),

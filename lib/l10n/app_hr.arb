@@ -1,7 +1,7 @@
 {
   "@@locale": "hr",
 
-  "appName": "RAB Booking",
+  "appName": "BookBed",
   "save": "Spremi",
   "cancel": "Odustani",
   "delete": "Obriši",
@@ -287,7 +287,7 @@
   "privacyDataRetentionTitle": "5. Pohrana podataka",
   "privacyDataRetentionBody": "Čuvamo vaše osobne informacije onoliko dugo koliko je potrebno za pružanje naših usluga i poštovanje zakonskih obaveza. Možete zatražiti brisanje vaših podataka u bilo kojem trenutku, podložno zakonskim zahtjevima.",
   "privacyYourRightsTitle": "6. Vaša Prava",
-  "privacyYourRightsBody": "Prema GDPR-u, imate pravo na:\n\n• Pristup vašim osobnim podacima\n• Ispravak netočnih podataka\n• Zahtjev za brisanje vaših podataka\n• Prigovor na obradu podataka\n• Prenosivost podataka\n• Povlačenje suglasnosti\n\nKontaktirajte nas na privacy@rabbooking.com da biste ostvarili svoja prava.",
+  "privacyYourRightsBody": "Prema GDPR-u, imate pravo na:\n\n• Pristup vašim osobnim podacima\n• Ispravak netočnih podataka\n• Zahtjev za brisanje vaših podataka\n• Prigovor na obradu podataka\n• Prenosivost podataka\n• Povlačenje suglasnosti\n\nKontaktirajte nas na info@bookbed.io da biste ostvarili svoja prava.",
   "privacyCookiesTitle": "7. Kolačići i Praćenje",
   "privacyCookiesBody": "Koristimo kolačiće i slične tehnologije praćenja da poboljšamo vaše iskustvo pregledavanja. Možete kontrolirati kolačiće kroz postavke vašeg preglednika. Neke funkcije možda neće raditi pravilno ako su kolačići onemogućeni.",
   "privacyThirdPartyTitle": "8. Usluge Trećih Strana",
@@ -297,7 +297,7 @@
   "privacyChangesTitle": "10. Izmjene pravila privatnosti",
   "privacyChangesBody": "Možemo ažurirati ova pravila privatnosti s vremena na vrijeme. Obavijestit ćemo vas o svim promjenama objavljivanjem novih pravila na ovoj stranici. Izmjene stupaju na snagu odmah nakon objavljivanja.",
   "privacyContactTitle": "Kontaktirajte Nas",
-  "privacyContactBody": "Ako imate pitanja o ovim Pravilima privatnosti, molimo vas da nas kontaktirate:\n\nEmail: privacy@rabbooking.com\nTelefon: +1 (555) 123-4567",
+  "privacyContactBody": "Ako imate pitanja o ovim Pravilima privatnosti, molimo vas da nas kontaktirate:\n\nEmail: info@bookbed.io\nWeb stranica: bookbed.io",
 
   "helpFaq": "Pomoć i Pitanja",
   "searchForHelp": "Pretražite pomoć...",
@@ -490,7 +490,7 @@
   "ownerActiveProperties": "Aktivne nekretnine",
   "ownerOccupancyRate": "Popunjenost",
 
-  "ownerWelcomeTitle": "Dobrodošli u RAB Booking!",
+  "ownerWelcomeTitle": "Dobrodošli u BookBed!",
   "ownerWelcomeSubtitle": "Započnite dodavanjem vaše prve nekretnine kako biste mogli primati rezervacije.",
   "ownerAddFirstProperty": "Dodaj nekretninu",
 
@@ -542,7 +542,8 @@
   "ownerDrawerGuides": "Uputstva",
   "ownerDrawerEmbedWidget": "Embed Widget",
   "ownerDrawerAddToSite": "Dodavanje na sajt",
-  "ownerDrawerFaq": "Česta Pitanja",
+  "ownerDrawerFaq": "FAQ",
+  "ownerDrawerFaqSubtitle": "Česta pitanja i odgovori",
   "ownerDrawerNotifications": "Obavještenja",
   "ownerDrawerProfile": "Profil",
   "ownerDrawerLogout": "Odjavi se",
@@ -1029,11 +1030,11 @@
   },
 
   "aboutTitle": "O Aplikaciji",
-  "aboutAppName": "Rab Booking",
+  "aboutAppName": "BookBed",
   "aboutTagline": "Sustav za Upravljanje Nekretninama",
   "aboutVersion": "Verzija 1.0.0",
-  "aboutWhatIs": "Što je Rab Booking?",
-  "aboutDescription": "Rab Booking je sveobuhvatan sustav za upravljanje nekretninama dizajniran za vlasnike smještaja za odmor. Upravljajte svojim nekretninama, rezervacijama, kalendarom i integracijama na jednom mjestu. Naš ugrađeni widget za rezervacije olakšava gostima izravno rezerviranje na vašoj web stranici.",
+  "aboutWhatIs": "Što je BookBed?",
+  "aboutDescription": "BookBed je sveobuhvatan sustav za upravljanje nekretninama dizajniran za vlasnike smještaja za odmor. Upravljajte svojim nekretninama, rezervacijama, kalendarom i integracijama na jednom mjestu. Naš ugrađeni widget za rezervacije olakšava gostima izravno rezerviranje na vašoj web stranici.",
   "aboutKeyFeatures": "Ključne Značajke",
   "aboutFeatureCalendar": "Pametni Kalendar",
   "aboutFeatureCalendarDesc": "Upravljajte dostupnošću više nekretnina",
@@ -1049,7 +1050,7 @@
   "aboutContactSupport": "Kontakt i Podrška",
   "aboutEmailLabel": "Email",
   "aboutWebsiteLabel": "Web stranica",
-  "aboutCopyright": "© 2025 Rab Booking. Sva prava pridržana.",
+  "aboutCopyright": "© 2025 BookBed. Sva prava pridržana.",
 
   "unitHubTitle": "Smještajne Jedinice",
   "unitHubShowAllUnits": "Prikaži sve jedinice",
@@ -1272,6 +1273,7 @@
   "stripeDisconnectConfirm": "Odspoji",
   "stripeDisconnectSuccess": "Stripe račun uspješno odspojen",
   "stripeDisconnectError": "Greška prilikom odspajanja Stripe računa",
+  "stripeLoadingAccount": "Učitavanje postavki plaćanja...",
 
   "advancedSettingsTitle": "Napredne Postavke",
   "advancedSettingsSaveSuccess": "Napredne postavke uspješno spremljene",
@@ -1353,7 +1355,7 @@
   "propertyFormRegenerateSlug": "Regeneriši iz naziva",
   "propertyFormSubdomain": "Poddomena",
   "propertyFormSubdomainHint": "vasa-nekretnina",
-  "propertyFormSubdomainHelper": "Prilagođeni URL: [subdomain].rabbooking.com",
+  "propertyFormSubdomainHelper": "Prilagođeni URL: [subdomain].bookbed.io",
   "propertyFormSubdomainAvailable": "Dostupno",
   "propertyFormSubdomainTaken": "Zauzeto",
   "propertyFormSubdomainUseSuggestion": "Koristi prijedlog",
@@ -1704,7 +1706,7 @@
   "unitPricingSuccess": "Osnovna cijena uspješno ažurirana",
   "unitPricingError": "Greška pri ažuriranju cijene",
 
-  "ownerFaqTitle": "Česta Pitanja (FAQ)",
+  "ownerFaqTitle": "FAQ",
   "ownerFaqSearchHint": "Pretražite pitanja...",
   "ownerFaqCategoryAll": "Sve",
   "ownerFaqCategoryGeneral": "Općenito",
@@ -1905,6 +1907,19 @@
   "embedGuideNoProperties": "Nemate nekretnina. Kreirajte nekretninu da biste dobili embed kodove.",
   "embedGuideNoUnits": "Nemate apartmana. Kreirajte apartman da biste dobili embed kod.",
 
+  "embedGuideSimpleStepsTitle": "3 Jednostavna Koraka",
+  "embedGuideSimpleStep1": "Kopirajte embed kod za vaš apartman",
+  "embedGuideSimpleStep2": "Zalijepite ga u HTML vaše web stranice",
+  "embedGuideSimpleStep3": "Spremite i objavite",
+  "embedGuideNeedHelp": "Trebate pomoć?",
+  "embedGuideInstallationGuide": "Vodič za Instalaciju",
+  "embedGuideLanguageNote": "Widget ima ugrađen odabir jezika. Korisnici mogu birati između HR, EN, DE, IT.",
+
+  "embedHelpTitle": "Pomoć za Embed Widget",
+  "embedHelpTabInstallation": "Vodič",
+  "embedHelpTabAdvanced": "Napredno",
+  "embedHelpTabTroubleshooting": "Pomoć",
+
   "stripeGuideTitle": "Stripe Integracija - Uputstvo",
   "stripeGuideHeaderTitle": "Stripe Connect",
   "stripeGuideHeaderSubtitle": "Prihvaćajte plaćanja karticama izravno na vaš Stripe račun",
@@ -2080,7 +2095,7 @@
   "propertyFormNoPhotos": "Nema fotografija",
   "propertyFormGenerateFromName": "Generiraj iz naziva",
   "propertyFormSubdomainLabel": "Subdomena (za email linkove)",
-  "propertyFormSubdomainEmailHelper": "URL za email linkove: [subdomain].rabbooking.com",
+  "propertyFormSubdomainEmailHelper": "URL za email linkove: [subdomain].bookbed.io",
 
   "icalExportTitle": "iCal Export",
   "icalExportUnit": "Jedinica",
@@ -2280,6 +2295,7 @@
     }
   },
   "priceCalendarClear": "Očisti",
+  "priceCalendarSelectAll": "Odaberi sve",
   "priceCalendarSelectAllDays": "Odaberi sve dane",
   "priceCalendarDeselectAll": "Poništi odabir",
   "priceCalendarErrorLoadingPrices": "Greška pri učitavanju cijena",

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
@@ -17,7 +18,8 @@ class IcalExportListScreen extends ConsumerStatefulWidget {
   const IcalExportListScreen({super.key});
 
   @override
-  ConsumerState<IcalExportListScreen> createState() => _IcalExportListScreenState();
+  ConsumerState<IcalExportListScreen> createState() =>
+      _IcalExportListScreenState();
 }
 
 class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
@@ -40,14 +42,22 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       // Generate iCal content
       await ref
           .read(icalExportServiceProvider)
-          .generateAndUploadIcal(propertyId: propertyId, unitId: unit.id, unit: unit);
+          .generateAndUploadIcal(
+            propertyId: propertyId,
+            unitId: unit.id,
+            unit: unit,
+          );
 
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalExportSuccess);
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.error,
+        );
       }
     } finally {
       if (mounted) {
@@ -104,28 +114,43 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical/export-list'),
+      drawer: const OwnerAppDrawer(
+        currentRoute: 'integrations/ical/export-list',
+      ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: _isLoading
-            ? Center(child: CircularProgressIndicator(color: theme.colorScheme.primary))
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.primary,
+                ),
+              )
             : LayoutBuilder(
                 builder: (context, constraints) {
                   final isDesktop = constraints.maxWidth > 900;
                   final isTablet = constraints.maxWidth > 600;
-                  final horizontalPadding = isDesktop ? 48.0 : (isTablet ? 32.0 : 16.0);
+                  final horizontalPadding = isDesktop
+                      ? 48.0
+                      : (isTablet ? 32.0 : 16.0);
 
                   return SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: 20,
+                    ),
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: isDesktop ? 1200.0 : double.infinity),
+                        constraints: BoxConstraints(
+                          maxWidth: isDesktop ? 1200.0 : double.infinity,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // Hero Card
                             ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: isDesktop ? 800.0 : double.infinity),
+                              constraints: BoxConstraints(
+                                maxWidth: isDesktop ? 800.0 : double.infinity,
+                              ),
                               child: _buildHeroCard(context),
                             ),
                             const SizedBox(height: 24),
@@ -135,7 +160,9 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(child: _buildBenefitsSection(context)),
+                                  Expanded(
+                                    child: _buildBenefitsSection(context),
+                                  ),
                                   const SizedBox(width: 24),
                                   Expanded(child: _buildUnitsSection(context)),
                                 ],
@@ -144,7 +171,9 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(child: _buildHowItWorksSection(context)),
+                                  Expanded(
+                                    child: _buildHowItWorksSection(context),
+                                  ),
                                   const SizedBox(width: 24),
                                   Expanded(child: _buildFaqSection(context)),
                                 ],
@@ -177,9 +206,13 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     final l10n = AppLocalizations.of(context);
 
     final hasUnits = _allUnits.isNotEmpty;
-    final statusColor = hasUnits ? const Color(0xFF66BB6A) : theme.colorScheme.outline;
+    final statusColor = hasUnits
+        ? const Color(0xFF66BB6A)
+        : theme.colorScheme.outline;
     final statusIcon = hasUnits ? Icons.check_circle : Icons.sync_disabled;
-    final statusTitle = hasUnits ? l10n.icalExportReady : l10n.icalExportListNoUnits;
+    final statusTitle = hasUnits
+        ? l10n.icalExportReady
+        : l10n.icalExportListNoUnits;
     final statusDescription = hasUnits
         ? l10n.icalExportUnitsAvailable(_allUnits.length)
         : l10n.icalExportListNoUnitsDesc;
@@ -199,7 +232,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(statusIcon, size: 32, color: Colors.white),
@@ -210,20 +243,30 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: statusColor.withAlpha((0.9 * 255).toInt()),
+                        color: statusColor.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         statusTitle,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       statusDescription,
-                      style: TextStyle(color: Colors.white.withAlpha((0.9 * 255).toInt()), fontSize: 14),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -237,12 +280,17 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               child: FilledButton.icon(
                 onPressed: () => context.push(OwnerRoutes.propertyNew),
                 icon: const Icon(Icons.add, size: 20),
-                label: Text(l10n.icalExportListAddProperty, style: const TextStyle(fontWeight: FontWeight.bold)),
+                label: Text(
+                  l10n.icalExportListAddProperty,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: theme.colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -258,10 +306,26 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     final l10n = AppLocalizations.of(context);
 
     final benefits = [
-      (Icons.calendar_month, l10n.icalExportBenefit1Title, l10n.icalExportBenefit1Desc),
-      (Icons.sync_rounded, l10n.icalExportBenefit2Title, l10n.icalExportBenefit2Desc),
-      (Icons.devices, l10n.icalExportBenefit3Title, l10n.icalExportBenefit3Desc),
-      (Icons.notifications_active, l10n.icalExportBenefit4Title, l10n.icalExportBenefit4Desc),
+      (
+        Icons.calendar_month,
+        l10n.icalExportBenefit1Title,
+        l10n.icalExportBenefit1Desc,
+      ),
+      (
+        Icons.sync_rounded,
+        l10n.icalExportBenefit2Title,
+        l10n.icalExportBenefit2Desc,
+      ),
+      (
+        Icons.devices,
+        l10n.icalExportBenefit3Title,
+        l10n.icalExportBenefit3Desc,
+      ),
+      (
+        Icons.notifications_active,
+        l10n.icalExportBenefit4Title,
+        l10n.icalExportBenefit4Desc,
+      ),
     ];
 
     return Container(
@@ -279,7 +343,12 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
             children: [
               Icon(Icons.star, color: theme.colorScheme.primary, size: 22),
               const SizedBox(width: 8),
-              Text(l10n.icalExportWhyExport, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                l10n.icalExportWhyExport,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -289,7 +358,12 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     );
   }
 
-  Widget _buildBenefitItem(BuildContext context, IconData icon, String title, String description) {
+  Widget _buildBenefitItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String description,
+  ) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -300,7 +374,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: theme.colorScheme.primary, size: 20),
@@ -310,12 +384,17 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   description,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -344,12 +423,18 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Icon(Icons.apartment, color: theme.colorScheme.primary, size: 22),
+                Icon(
+                  Icons.apartment,
+                  color: theme.colorScheme.primary,
+                  size: 22,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.icalExportSelectUnit,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 Text(
@@ -368,18 +453,27 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.05 * 255).toInt()),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.apartment_outlined, size: 48, color: theme.colorScheme.outline),
+                    Icon(
+                      Icons.apartment_outlined,
+                      size: 48,
+                      color: theme.colorScheme.outline,
+                    ),
                     const SizedBox(height: 12),
-                    Text(l10n.icalExportListNoUnits, style: theme.textTheme.titleSmall),
+                    Text(
+                      l10n.icalExportListNoUnits,
+                      style: theme.textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       l10n.icalExportListNoUnitsDesc,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -387,7 +481,12 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               ),
             )
           else ...[
-            Divider(height: 1, color: theme.dividerColor),
+            Divider(
+              height: 1,
+              color: isDark
+                  ? AppColors.sectionDividerDark
+                  : AppColors.sectionDividerLight,
+            ),
             ..._allUnits.map((item) => _buildUnitItem(context, item)),
           ],
         ],
@@ -404,23 +503,49 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     return Column(
       children: [
         ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 8,
+          ),
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+              color: theme.colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.apartment, color: theme.colorScheme.primary, size: 20),
+            child: Icon(
+              Icons.apartment,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
           ),
-          title: Text(unit.name ?? l10n.icalExportListUnknownUnit, style: const TextStyle(fontWeight: FontWeight.w600)),
-          subtitle: Text(property.name ?? l10n.icalExportListUnknownProperty, style: theme.textTheme.bodySmall),
+          title: Text(
+            unit.name ?? l10n.icalExportListUnknownUnit,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            property.name ?? l10n.icalExportListUnknownProperty,
+            style: theme.textTheme.bodySmall,
+          ),
           trailing: _generatingUnitId == unit.id
-              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : Icon(Icons.download, color: theme.colorScheme.primary),
-          onTap: _generatingUnitId == null ? () => _generateAndDownloadIcal(unit, property.id) : null,
+          onTap: _generatingUnitId == null
+              ? () => _generateAndDownloadIcal(unit, property.id)
+              : null,
         ),
-        Divider(height: 1, indent: 20, endIndent: 20, color: theme.dividerColor),
+        Divider(
+          height: 1,
+          indent: 20,
+          endIndent: 20,
+          color: theme.brightness == Brightness.dark
+              ? AppColors.sectionDividerDark
+              : AppColors.sectionDividerLight,
+        ),
       ],
     );
   }
@@ -430,7 +555,12 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
-    final steps = [l10n.icalExportStep1, l10n.icalExportStep2, l10n.icalExportStep3, l10n.icalExportStep4];
+    final steps = [
+      l10n.icalExportStep1,
+      l10n.icalExportStep2,
+      l10n.icalExportStep3,
+      l10n.icalExportStep4,
+    ];
 
     return Container(
       decoration: BoxDecoration(
@@ -445,11 +575,17 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.help_outline, color: theme.colorScheme.primary, size: 22),
+              Icon(
+                Icons.help_outline,
+                color: theme.colorScheme.primary,
+                size: 22,
+              ),
               const SizedBox(width: 8),
               Text(
                 l10n.icalExportHowItWorks,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -465,11 +601,20 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                     backgroundColor: theme.colorScheme.primary,
                     child: Text(
                       '${e.key + 1}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(child: Text(e.value, style: theme.textTheme.bodyMedium?.copyWith(height: 1.4))),
+                  Expanded(
+                    child: Text(
+                      e.value,
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -506,21 +651,35 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  Icon(Icons.question_answer, color: theme.colorScheme.primary, size: 22),
+                  Icon(
+                    Icons.question_answer,
+                    color: theme.colorScheme.primary,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l10n.icalExportFaqTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  Icon(_showFaq ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.outline),
+                  Icon(
+                    _showFaq ? Icons.expand_less : Icons.expand_more,
+                    color: theme.colorScheme.outline,
+                  ),
                 ],
               ),
             ),
           ),
           if (_showFaq) ...[
-            Divider(height: 1, color: theme.dividerColor),
+            Divider(
+              height: 1,
+              color: isDark
+                  ? AppColors.sectionDividerDark
+                  : AppColors.sectionDividerLight,
+            ),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -533,13 +692,17 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                           children: [
                             Text(
                               '❓ ${faq.$1}',
-                              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               faq.$2,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
                                 height: 1.5,
                               ),
                             ),

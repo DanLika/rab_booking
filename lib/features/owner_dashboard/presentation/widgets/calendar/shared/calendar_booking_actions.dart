@@ -12,15 +12,24 @@ import '../../send_email_dialog.dart';
 /// Contains common booking operations used across calendar views
 class CalendarBookingActions {
   /// Delete booking with confirmation
-  static Future<void> deleteBooking(BuildContext context, WidgetRef ref, BookingModel booking) async {
+  static Future<void> deleteBooking(
+    BuildContext context,
+    WidgetRef ref,
+    BookingModel booking,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.calendarActionsDeleteTitle),
-        content: Text(l10n.calendarActionsDeleteConfirm(booking.guestName ?? 'N/A')),
+        content: Text(
+          l10n.calendarActionsDeleteConfirm(booking.guestName ?? 'N/A'),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.calendarActionsCancel)),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.calendarActionsCancel),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -66,7 +75,10 @@ class CalendarBookingActions {
 
         if (context.mounted) {
           final l10nSuccess = AppLocalizations.of(context);
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10nSuccess.calendarActionsDeleted);
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10nSuccess.calendarActionsDeleted,
+          );
         }
       } catch (e) {
         // Close loading dialog
@@ -103,7 +115,9 @@ class CalendarBookingActions {
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
-                  Text(l10n.calendarActionsChangingStatus(newStatus.displayName)),
+                  Text(
+                    l10n.calendarActionsChangingStatus(newStatus.displayName),
+                  ),
                 ],
               ),
             ),
@@ -124,7 +138,10 @@ class CalendarBookingActions {
 
       if (context.mounted) {
         final l10nSuccess = AppLocalizations.of(context);
-        ErrorDisplayUtils.showSuccessSnackBar(context, l10nSuccess.calendarActionsStatusChanged(newStatus.displayName));
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10nSuccess.calendarActionsStatusChanged(newStatus.displayName),
+        );
       }
     } catch (e) {
       // Close loading dialog
@@ -139,7 +156,11 @@ class CalendarBookingActions {
   }
 
   /// Send email to guest
-  static void sendEmailToGuest(BuildContext context, WidgetRef ref, BookingModel booking) {
+  static void sendEmailToGuest(
+    BuildContext context,
+    WidgetRef ref,
+    BookingModel booking,
+  ) {
     showSendEmailDialog(context, ref, booking);
   }
 }

@@ -13,36 +13,51 @@ import '../theme/app_colors.dart';
 /// - Info: Blue (#3B82F6) - White text + info_outline icon
 ///
 /// All snackbars use:
-/// - SnackBarBehavior.floating for proper z-index above FAB
-/// - Bottom margin of 80px to ensure visibility above FAB
+/// - SnackBarBehavior.floating for proper z-index
+/// - Constrained width on desktop (max 400px) for cleaner appearance
 /// - Auto-dismiss previous snackbar before showing new one
 /// - Consistent 12px border radius
 class ErrorDisplayUtils {
   ErrorDisplayUtils._(); // Private constructor
 
-  // Standard snackbar margin to ensure visibility above FAB
-  static const EdgeInsets _snackBarMargin = EdgeInsets.only(
-    bottom: 80, // FAB height (~56px) + padding
-    left: 16,
-    right: 16,
-  );
-
   // Standard snackbar elevation for floating effect
   static const double _snackBarElevation = 6;
 
+  // Preferred max width for desktop snackbars (content-based, not forced)
+  static const double _preferredMaxWidth = 500.0;
+
+  // Breakpoint for desktop layout
+  static const double _desktopBreakpoint = 600.0;
+
   /// Build a styled snackbar with consistent appearance
+  /// Uses margin-based positioning to prevent full-width on desktop
   static SnackBar _buildSnackBar({
+    required BuildContext context,
     required Widget content,
     required Color backgroundColor,
     required Duration duration,
     SnackBarAction? action,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= _desktopBreakpoint;
+
+    // Calculate horizontal margin to achieve max width effect on desktop
+    // This allows content to expand naturally while capping max width
+    final double horizontalMargin;
+    if (isDesktop && screenWidth > _preferredMaxWidth) {
+      // Center snackbar with calculated margins to cap max width
+      horizontalMargin = ((screenWidth - _preferredMaxWidth) / 2).clamp(16.0, double.infinity);
+    } else {
+      // Mobile or small desktop: standard margins
+      horizontalMargin = 16.0;
+    }
+
     return SnackBar(
       content: content,
       backgroundColor: backgroundColor,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: _snackBarMargin,
+      margin: EdgeInsets.only(bottom: 16, left: horizontalMargin, right: horizontalMargin),
       elevation: _snackBarElevation,
       duration: duration,
       action: action,
@@ -84,6 +99,7 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       _buildSnackBar(
+        context: context,
         content: _buildContent(
           icon: Icons.error_outline,
           message: displayMessage,
@@ -115,6 +131,7 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       _buildSnackBar(
+        context: context,
         content: _buildContent(
           icon: Icons.check_circle_outline,
           message: message,
@@ -143,6 +160,7 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       _buildSnackBar(
+        context: context,
         content: _buildContent(
           icon: Icons.warning_amber_outlined,
           message: message,
@@ -168,6 +186,7 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       _buildSnackBar(
+        context: context,
         content: _buildContent(
           icon: Icons.info_outline,
           message: message,
@@ -192,6 +211,7 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       _buildSnackBar(
+        context: context,
         content: Row(
           children: [
             const SizedBox(

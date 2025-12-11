@@ -7,7 +7,11 @@ class CalendarSkeletonLoader extends StatelessWidget {
   final int unitCount;
   final int dayCount;
 
-  const CalendarSkeletonLoader({super.key, this.unitCount = 5, this.dayCount = 7});
+  const CalendarSkeletonLoader({
+    super.key,
+    this.unitCount = 5,
+    this.dayCount = 7,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +67,10 @@ class CalendarSkeletonLoader extends StatelessWidget {
   Widget _buildGridSkeleton(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-        children: List.generate(unitCount, (unitIndex) => _buildUnitRowSkeleton(context, unitIndex)),
+        children: List.generate(
+          unitCount,
+          (unitIndex) => _buildUnitRowSkeleton(context, unitIndex),
+        ),
       ),
     );
   }
@@ -79,7 +86,11 @@ class CalendarSkeletonLoader extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 1),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.3 * 255).toInt()))),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -136,7 +147,11 @@ class _SkeletonBox extends StatelessWidget {
   final double height;
   final double borderRadius;
 
-  const _SkeletonBox({required this.width, required this.height, this.borderRadius = 4});
+  const _SkeletonBox({
+    required this.width,
+    required this.height,
+    this.borderRadius = 4,
+  });
 
   // Consistent skeleton colors (matching SkeletonColors design system)
   static const Color _darkBackground = Color(0xFF2D2D3A);
@@ -178,7 +193,9 @@ class CalendarSkeletonCompact extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation(
-                isDark ? Colors.white.withAlpha((0.5 * 255).toInt()) : Colors.grey.shade400,
+                isDark
+                    ? Colors.white.withAlpha((0.5 * 255).toInt())
+                    : Colors.grey.shade400,
               ),
             ),
           ),
@@ -186,7 +203,9 @@ class CalendarSkeletonCompact extends StatelessWidget {
           Text(
             l10n.ownerCalendarLoading,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodyLarge?.color?.withAlpha((0.5 * 255).toInt()),
+              color: theme.textTheme.bodyLarge?.color?.withAlpha(
+                (0.5 * 255).toInt(),
+              ),
             ),
           ),
         ],

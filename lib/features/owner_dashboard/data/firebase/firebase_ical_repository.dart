@@ -138,12 +138,12 @@ class FirebaseIcalRepository {
   /// Update feed status (active/error/paused)
   Future<void> updateFeedStatus(
     String feedId,
-    String status, {
+    IcalStatus status, {
     String? errorMessage,
   }) async {
     try {
       await _firestore.collection('ical_feeds').doc(feedId).update({
-        'status': status,
+        'status': status.toFirestoreValue(),
         'last_error': errorMessage,
         'updated_at': Timestamp.now(),
       });

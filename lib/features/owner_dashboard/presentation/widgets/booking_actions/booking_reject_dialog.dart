@@ -29,7 +29,10 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: 450);
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(
+      context,
+      maxWidth: 450,
+    );
     final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
     final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
@@ -42,7 +45,11 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -53,7 +60,9 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
               padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
+                ),
               ),
               child: Row(
                 children: [
@@ -63,13 +72,21 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.cancel, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.cancel,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.bookingRejectTitle,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
@@ -84,7 +101,13 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.bookingRejectMessage, style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface)),
+                    Text(
+                      l10n.bookingRejectMessage,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _reasonController,
@@ -103,16 +126,32 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
 
             // Footer
             Container(
-              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: contentPadding,
+                vertical: 12,
+              ),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
-                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
+                color: isDark
+                    ? const Color(0xFF1E1E2A)
+                    : const Color(0xFFF8F8FA),
+                border: Border(
+                  top: BorderSide(
+                    color: context.gradients.sectionBorder.withAlpha(
+                      (0.5 * 255).toInt(),
+                    ),
+                  ),
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(11),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.bookingRejectCancel)),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l10n.bookingRejectCancel),
+                  ),
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: () {
@@ -121,7 +160,9 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                     style: FilledButton.styleFrom(
                       backgroundColor: theme.colorScheme.error,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
                     child: Text(l10n.bookingRejectConfirm),

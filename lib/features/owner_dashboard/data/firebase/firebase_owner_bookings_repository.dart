@@ -410,7 +410,7 @@ class FirebaseOwnerBookingsRepository {
     }
   }
 
-/// OPTIMIZED: Get bookings using pre-fetched unitIds
+  /// OPTIMIZED: Get bookings using pre-fetched unitIds
   /// Skips redundant properties/units queries by accepting unitIds directly
   /// Use this when unitIds are already cached (e.g., from allOwnerUnitsProvider)
   ///
@@ -1125,7 +1125,7 @@ class FirebaseOwnerBookingsRepository {
     final ownerPropertiesSnapshot = await _firestore
         .collection('properties')
         .where('owner_id', isEqualTo: userId)
-        .get();  // 1 QUERY
+        .get(); // 1 QUERY
 
     for (final propDoc in ownerPropertiesSnapshot.docs) {
       propertiesMap[propDoc.id] = PropertyModel.fromJson({
@@ -1147,7 +1147,7 @@ class FirebaseOwnerBookingsRepository {
             .doc(propertyId)
             .collection('units')
             .where(FieldPath.documentId, whereIn: batch)
-            .get();  // 1 QUERY per property (max ~5 for typical owner)
+            .get(); // 1 QUERY per property (max ~5 for typical owner)
 
         for (final unitDoc in unitsSnapshot.docs) {
           unitsMap[unitDoc.id] = UnitModel.fromJson({
@@ -1174,7 +1174,7 @@ class FirebaseOwnerBookingsRepository {
         final usersSnapshot = await _firestore
             .collection('users')
             .where(FieldPath.documentId, whereIn: batch)
-            .get();  // 1 QUERY for up to 30 users
+            .get(); // 1 QUERY for up to 30 users
 
         for (final userDoc in usersSnapshot.docs) {
           usersMap[userDoc.id] = userDoc.data();
@@ -1281,7 +1281,10 @@ class FirebaseOwnerBookingsRepository {
             .collection('bookings')
             .where('unit_id', whereIn: batch)
             .where('status', isEqualTo: status.value)
-            .where('created_at', isGreaterThanOrEqualTo: Timestamp.fromDate(createdAfter))
+            .where(
+              'created_at',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(createdAfter),
+            )
             .orderBy('created_at', descending: true)
             .limit(batchLimit);
 
@@ -1322,7 +1325,10 @@ class FirebaseOwnerBookingsRepository {
             .collection('bookings')
             .where('unit_id', whereIn: batch)
             .where('status', isEqualTo: status.value)
-            .where('check_in', isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter))
+            .where(
+              'check_in',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter),
+            )
             .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
             .limit(batchLimit);
 

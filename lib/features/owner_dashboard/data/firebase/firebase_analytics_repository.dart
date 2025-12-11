@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/models/analytics_summary.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import 'firestore_repository_mixin.dart';
 
 /// Firebase implementation of Analytics Repository
-class FirebaseAnalyticsRepository {
+class FirebaseAnalyticsRepository with FirestoreRepositoryMixin {
   final FirebaseFirestore _firestore;
 
   FirebaseAnalyticsRepository(this._firestore);
@@ -32,7 +33,7 @@ class FirebaseAnalyticsRepository {
     try {
       // Build property cache from pre-fetched data
       final Map<String, Map<String, dynamic>> propertiesDataCache = {
-        for (final p in properties) p['id'] as String: p
+        for (final p in properties) p['id'] as String: p,
       };
 
       // SINGLE COMBINED QUERY: Get ALL bookings (including cancelled) in date range
@@ -52,8 +53,12 @@ class FirebaseAnalyticsRepository {
       }
 
       // Separate active and cancelled bookings (no second query needed!)
-      final bookings = allBookingsRaw.where((b) => b['status'] != 'cancelled').toList();
-      final cancelledBookings = allBookingsRaw.where((b) => b['status'] == 'cancelled').toList();
+      final bookings = allBookingsRaw
+          .where((b) => b['status'] != 'cancelled')
+          .toList();
+      final cancelledBookings = allBookingsRaw
+          .where((b) => b['status'] == 'cancelled')
+          .toList();
 
       // Calculate metrics using the same logic as original method
       return _calculateAnalyticsSummary(
@@ -93,10 +98,13 @@ class FirebaseAnalyticsRepository {
     // Get monthly bookings (last portion of date range, max 30 days)
     final totalDays = dateRange.endDate.difference(dateRange.startDate).inDays;
     final monthlyPeriodDays = totalDays > 30 ? 30 : totalDays;
-    final monthStart = dateRange.endDate.subtract(Duration(days: monthlyPeriodDays));
+    final monthStart = dateRange.endDate.subtract(
+      Duration(days: monthlyPeriodDays),
+    );
     final monthlyBookings = bookings.where((b) {
       final checkIn = (b['check_in'] as Timestamp).toDate();
-      return checkIn.isAfter(monthStart) && checkIn.isBefore(dateRange.endDate.add(const Duration(days: 1)));
+      return checkIn.isAfter(monthStart) &&
+          checkIn.isBefore(dateRange.endDate.add(const Duration(days: 1)));
     }).toList();
 
     final monthlyRevenue = monthlyBookings.fold<double>(
@@ -120,14 +128,18 @@ class FirebaseAnalyticsRepository {
     }
 
     // Calculate occupancy rate
-    final totalDaysInRange = dateRange.endDate.difference(dateRange.startDate).inDays;
+    final totalDaysInRange = dateRange.endDate
+        .difference(dateRange.startDate)
+        .inDays;
     final bookedDays = bookings.fold<int>(0, (total, b) {
       final checkIn = (b['check_in'] as Timestamp).toDate();
       final checkOut = (b['check_out'] as Timestamp).toDate();
       return total + checkOut.difference(checkIn).inDays;
     });
     final availableDays = totalDaysInRange * unitIds.length;
-    final occupancyRate = availableDays > 0 ? (bookedDays / availableDays) * 100 : 0.0;
+    final occupancyRate = availableDays > 0
+        ? (bookedDays / availableDays) * 100
+        : 0.0;
 
     // Calculate average nightly rate
     final averageNightlyRate = bookedDays > 0 ? totalRevenue / bookedDays : 0.0;
@@ -201,7 +213,8 @@ class FirebaseAnalyticsRepository {
       // OPTIMIZATION: Cache property data for reuse in _getPropertyPerformance
       // Eliminates 5 individual property lookups later
       final Map<String, Map<String, dynamic>> propertiesDataCache = {
-        for (final doc in propertiesSnapshot.docs) doc.id: {...doc.data(), 'id': doc.id}
+        for (final doc in propertiesSnapshot.docs)
+          doc.id: {...doc.data(), 'id': doc.id},
       };
 
       // OPTIMIZATION: Fetch units in PARALLEL instead of sequential loop
@@ -212,17 +225,21 @@ class FirebaseAnalyticsRepository {
             .doc(propertyId)
             .collection('units')
             .get();
-        return unitsSnapshot.docs.map((doc) => MapEntry(doc.id, propertyId)).toList();
+        return unitsSnapshot.docs
+            .map((doc) => MapEntry(doc.id, propertyId))
+            .toList();
       });
 
       final unitsResults = await Future.wait(unitsFutures);
 
       final List<String> unitIds = [];
-      final Map<String, String> unitToPropertyMap = {}; // Cache for optimization
+      final Map<String, String> unitToPropertyMap =
+          {}; // Cache for optimization
       for (final unitEntries in unitsResults) {
         for (final entry in unitEntries) {
           unitIds.add(entry.key);
-          unitToPropertyMap[entry.key] = entry.value; // Map unitId -> propertyId
+          unitToPropertyMap[entry.key] =
+              entry.value; // Map unitId -> propertyId
         }
       }
 
@@ -258,12 +275,17 @@ class FirebaseAnalyticsRepository {
       final totalBookings = bookings.length;
 
       // Get monthly bookings (last portion of date range, max 30 days)
-      final totalDays = dateRange.endDate.difference(dateRange.startDate).inDays;
+      final totalDays = dateRange.endDate
+          .difference(dateRange.startDate)
+          .inDays;
       final monthlyPeriodDays = totalDays > 30 ? 30 : totalDays;
-      final monthStart = dateRange.endDate.subtract(Duration(days: monthlyPeriodDays));
+      final monthStart = dateRange.endDate.subtract(
+        Duration(days: monthlyPeriodDays),
+      );
       final monthlyBookings = bookings.where((b) {
         final checkIn = (b['check_in'] as Timestamp).toDate();
-        return checkIn.isAfter(monthStart) && checkIn.isBefore(dateRange.endDate.add(const Duration(days: 1)));
+        return checkIn.isAfter(monthStart) &&
+            checkIn.isBefore(dateRange.endDate.add(const Duration(days: 1)));
       }).toList();
 
       final monthlyRevenue = monthlyBookings.fold<double>(
@@ -514,23 +536,7 @@ class FirebaseAnalyticsRepository {
     return performances.take(5).toList();
   }
 
-  String _getMonthLabel(int month) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return months[month - 1];
-  }
+  String _getMonthLabel(int month) => getMonthLabel(month);
 
   AnalyticsSummary _emptyAnalytics() {
     return const AnalyticsSummary(

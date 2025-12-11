@@ -22,7 +22,8 @@ class CalendarFiltersPanel extends ConsumerStatefulWidget {
   const CalendarFiltersPanel({super.key});
 
   @override
-  ConsumerState<CalendarFiltersPanel> createState() => _CalendarFiltersPanelState();
+  ConsumerState<CalendarFiltersPanel> createState() =>
+      _CalendarFiltersPanelState();
 }
 
 class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
@@ -59,11 +60,19 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: isMobile ? screenWidth * 0.9 : 700,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
+        constraints: BoxConstraints(
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -74,7 +83,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
+                ),
               ),
               child: Row(
                 children: [
@@ -84,13 +95,20 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.filter_list, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.filter_list,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: AutoSizeText(
                       l10n.calendarFiltersTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       minFontSize: 14,
                     ),
@@ -143,13 +161,24 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
             // Footer buttons (responsive)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth < 400 ? 8 : 16, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth < 400 ? 8 : 16,
+                vertical: 12,
+              ),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
+                color: isDark
+                    ? AppColors.dialogFooterDark
+                    : AppColors.dialogFooterLight,
                 border: Border(
-                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                  top: BorderSide(
+                    color: isDark
+                        ? AppColors.sectionDividerDark
+                        : AppColors.sectionDividerLight,
+                  ),
                 ),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(11),
+                ),
               ),
               child: isMobile
                   ? Column(
@@ -159,17 +188,24 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                         Container(
                           decoration: BoxDecoration(
                             gradient: context.gradients.brandPrimary,
-                            borderRadius: const BorderRadius.all(Radius.circular(8)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(8),
+                            ),
                           ),
                           child: ElevatedButton.icon(
                             onPressed: _applyFilters,
                             icon: const Icon(Icons.check),
-                            label: AutoSizeText(l10n.calendarFiltersApply, maxLines: 1),
+                            label: AutoSizeText(
+                              l10n.calendarFiltersApply,
+                              maxLines: 1,
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                           ),
                         ),
@@ -180,7 +216,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: AutoSizeText(l10n.calendarFiltersCancel, maxLines: 1, minFontSize: 11),
+                                child: AutoSizeText(
+                                  l10n.calendarFiltersCancel,
+                                  maxLines: 1,
+                                  minFontSize: 11,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -189,14 +229,19 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 onPressed: _filters.hasActiveFilters
                                     ? () {
                                         setState(() {
-                                          _filters = const CalendarFilterOptions();
+                                          _filters =
+                                              const CalendarFilterOptions();
                                           _guestSearchController.clear();
                                           _bookingIdSearchController.clear();
                                         });
                                       }
                                     : null,
                                 icon: const Icon(Icons.clear_all, size: 16),
-                                label: AutoSizeText(l10n.calendarFiltersClear, maxLines: 1, minFontSize: 11),
+                                label: AutoSizeText(
+                                  l10n.calendarFiltersClear,
+                                  maxLines: 1,
+                                  minFontSize: 11,
+                                ),
                               ),
                             ),
                           ],
@@ -218,7 +263,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 }
                               : null,
                           icon: const Icon(Icons.clear_all),
-                          label: AutoSizeText(l10n.calendarFiltersClearAll, maxLines: 1),
+                          label: AutoSizeText(
+                            l10n.calendarFiltersClearAll,
+                            maxLines: 1,
+                          ),
                         ),
 
                         // Apply filters button
@@ -228,24 +276,34 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                             children: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: AutoSizeText(l10n.calendarFiltersCancel, maxLines: 1),
+                                child: AutoSizeText(
+                                  l10n.calendarFiltersCancel,
+                                  maxLines: 1,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               // Apply button with brand gradient
                               Container(
                                 decoration: BoxDecoration(
                                   gradient: context.gradients.brandPrimary,
-                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(8),
+                                  ),
                                 ),
                                 child: ElevatedButton.icon(
                                   onPressed: _applyFilters,
                                   icon: const Icon(Icons.check),
-                                  label: AutoSizeText(l10n.calendarFiltersApply, maxLines: 1),
+                                  label: AutoSizeText(
+                                    l10n.calendarFiltersApply,
+                                    maxLines: 1,
+                                  ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.transparent,
                                     foregroundColor: Colors.white,
                                     shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -288,10 +346,14 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                     setState(() {
                       if (isSelected) {
                         _filters = _filters.copyWith(
-                          propertyIds: _filters.propertyIds.where((id) => id != property.id).toList(),
+                          propertyIds: _filters.propertyIds
+                              .where((id) => id != property.id)
+                              .toList(),
                         );
                       } else {
-                        _filters = _filters.copyWith(propertyIds: [..._filters.propertyIds, property.id]);
+                        _filters = _filters.copyWith(
+                          propertyIds: [..._filters.propertyIds, property.id],
+                        );
                       }
                     });
                   },
@@ -318,7 +380,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         // Filter units by selected properties
         final filteredUnits = _filters.propertyIds.isEmpty
             ? units
-            : units.where((unit) => _filters.propertyIds.contains(unit.propertyId)).toList();
+            : units
+                  .where(
+                    (unit) => _filters.propertyIds.contains(unit.propertyId),
+                  )
+                  .toList();
 
         if (filteredUnits.isEmpty) {
           return const SizedBox.shrink();
@@ -327,7 +393,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SectionHeader(icon: Icons.meeting_room_outlined, title: 'Jedinice'),
+            const _SectionHeader(
+              icon: Icons.meeting_room_outlined,
+              title: 'Jedinice',
+            ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -341,9 +410,15 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   onSelected: () {
                     setState(() {
                       if (isSelected) {
-                        _filters = _filters.copyWith(unitIds: _filters.unitIds.where((id) => id != unit.id).toList());
+                        _filters = _filters.copyWith(
+                          unitIds: _filters.unitIds
+                              .where((id) => id != unit.id)
+                              .toList(),
+                        );
                       } else {
-                        _filters = _filters.copyWith(unitIds: [..._filters.unitIds, unit.id]);
+                        _filters = _filters.copyWith(
+                          unitIds: [..._filters.unitIds, unit.id],
+                        );
                       }
                     });
                   },
@@ -383,19 +458,27 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             return Theme(
               data: theme.copyWith(
                 splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                highlightColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
               ),
               child: FilterChip(
                 selected: isSelected,
                 label: Text(status.displayName),
                 selectedColor: theme.colorScheme.primary,
-                backgroundColor: isSelected ? theme.colorScheme.primary : context.gradients.cardBackground,
+                backgroundColor: isSelected
+                    ? theme.colorScheme.primary
+                    : context.gradients.cardBackground,
                 side: BorderSide(
-                  color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : context.gradients.sectionBorder,
                   width: 1.5,
                 ),
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                  color: isSelected
+                      ? Colors.white
+                      : theme.colorScheme.onSurface,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   fontSize: 14,
                 ),
@@ -406,20 +489,32 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   decoration: BoxDecoration(
                     color: status.color,
                     shape: BoxShape.circle,
-                    border: Border.all(color: isSelected ? Colors.white : Colors.transparent, width: 2),
+                    border: Border.all(
+                      color: isSelected ? Colors.white : Colors.transparent,
+                      width: 2,
+                    ),
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 elevation: isSelected ? 2 : 0,
                 shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
                 onSelected: (selected) {
                   setState(() {
                     if (selected) {
-                      _filters = _filters.copyWith(statuses: [..._filters.statuses, statusString]);
+                      _filters = _filters.copyWith(
+                        statuses: [..._filters.statuses, statusString],
+                      );
                     } else {
                       _filters = _filters.copyWith(
-                        statuses: _filters.statuses.where((s) => s != statusString).toList(),
+                        statuses: _filters.statuses
+                            .where((s) => s != statusString)
+                            .toList(),
                       );
                     }
                   });
@@ -452,7 +547,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(icon: Icons.source_outlined, title: 'Izvori rezervacija'),
+        const _SectionHeader(
+          icon: Icons.source_outlined,
+          title: 'Izvori rezervacija',
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -464,34 +562,57 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             return Theme(
               data: theme.copyWith(
                 splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                highlightColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
               ),
               child: FilterChip(
                 selected: isSelected,
                 label: Text(label),
                 selectedColor: theme.colorScheme.primary,
-                backgroundColor: isSelected ? theme.colorScheme.primary : context.gradients.cardBackground,
+                backgroundColor: isSelected
+                    ? theme.colorScheme.primary
+                    : context.gradients.cardBackground,
                 side: BorderSide(
-                  color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : context.gradients.sectionBorder,
                   width: 1.5,
                 ),
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                  color: isSelected
+                      ? Colors.white
+                      : theme.colorScheme.onSurface,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   fontSize: 14,
                 ),
                 checkmarkColor: Colors.white,
-                avatar: Icon(icon, size: 18, color: isSelected ? Colors.white : color),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                avatar: Icon(
+                  icon,
+                  size: 18,
+                  color: isSelected ? Colors.white : color,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 elevation: isSelected ? 2 : 0,
                 shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
                 onSelected: (selected) {
                   setState(() {
                     if (selected) {
-                      _filters = _filters.copyWith(sources: [..._filters.sources, value]);
+                      _filters = _filters.copyWith(
+                        sources: [..._filters.sources, value],
+                      );
                     } else {
-                      _filters = _filters.copyWith(sources: _filters.sources.where((s) => s != value).toList());
+                      _filters = _filters.copyWith(
+                        sources: _filters.sources
+                            .where((s) => s != value)
+                            .toList(),
+                      );
                     }
                   });
                 },
@@ -507,7 +628,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(icon: Icons.date_range_outlined, title: 'Raspon datuma'),
+        const _SectionHeader(
+          icon: Icons.date_range_outlined,
+          title: 'Raspon datuma',
+        ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: _showDateRangePicker,
@@ -517,7 +641,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                 ? '${_filters.startDate!.day}.${_filters.startDate!.month}.${_filters.startDate!.year}. - ${_filters.endDate!.day}.${_filters.endDate!.month}.${_filters.endDate!.year}.'
                 : 'Odaberi raspon datuma',
           ),
-          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
         ),
         if (_filters.startDate != null && _filters.endDate != null)
           Padding(
@@ -529,7 +655,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                 });
               },
               icon: const Icon(Icons.clear, size: 16),
-              label: Text(AppLocalizations.of(context).calendarFiltersClearDate),
+              label: Text(
+                AppLocalizations.of(context).calendarFiltersClearDate,
+              ),
             ),
           ),
       ],
@@ -542,7 +670,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(icon: Icons.person_search_outlined, title: l10n.calendarFiltersSearchGuest),
+        _SectionHeader(
+          icon: Icons.person_search_outlined,
+          title: l10n.calendarFiltersSearchGuest,
+        ),
         const SizedBox(height: 12),
         Builder(
           builder: (ctx) => TextField(
@@ -555,7 +686,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             ),
             onChanged: (value) {
               setState(() {
-                _filters = _filters.copyWith(guestSearchQuery: value.isEmpty ? null : value);
+                _filters = _filters.copyWith(
+                  guestSearchQuery: value.isEmpty ? null : value,
+                );
               });
             },
           ),
@@ -570,7 +703,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(icon: Icons.tag_outlined, title: l10n.calendarFiltersSearchBookingId),
+        _SectionHeader(
+          icon: Icons.tag_outlined,
+          title: l10n.calendarFiltersSearchBookingId,
+        ),
         const SizedBox(height: 12),
         Builder(
           builder: (ctx) => TextField(
@@ -583,7 +719,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             ),
             onChanged: (value) {
               setState(() {
-                _filters = _filters.copyWith(bookingIdSearch: value.isEmpty ? null : value);
+                _filters = _filters.copyWith(
+                  bookingIdSearch: value.isEmpty ? null : value,
+                );
               });
             },
           ),
@@ -604,20 +742,31 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
     if (picked != null) {
       setState(() {
-        _filters = _filters.copyWith(startDate: picked.start, endDate: picked.end);
+        _filters = _filters.copyWith(
+          startDate: picked.start,
+          endDate: picked.end,
+        );
       });
     }
   }
 
   void _applyFilters() {
     // Apply filters to provider
-    ref.read(calendarFiltersProvider.notifier).setPropertyIds(_filters.propertyIds);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setPropertyIds(_filters.propertyIds);
     ref.read(calendarFiltersProvider.notifier).setUnitIds(_filters.unitIds);
     ref.read(calendarFiltersProvider.notifier).setStatuses(_filters.statuses);
     ref.read(calendarFiltersProvider.notifier).setSources(_filters.sources);
-    ref.read(calendarFiltersProvider.notifier).setDateRange(startDate: _filters.startDate, endDate: _filters.endDate);
-    ref.read(calendarFiltersProvider.notifier).setGuestSearchQuery(_filters.guestSearchQuery);
-    ref.read(calendarFiltersProvider.notifier).setBookingIdSearch(_filters.bookingIdSearch);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setDateRange(startDate: _filters.startDate, endDate: _filters.endDate);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setGuestSearchQuery(_filters.guestSearchQuery);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setBookingIdSearch(_filters.bookingIdSearch);
 
     // Close dialog
     Navigator.of(context).pop(true);
@@ -647,7 +796,9 @@ class _SectionHeader extends StatelessWidget {
         Expanded(
           child: AutoSizeText(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             maxLines: 1,
           ),
         ),

@@ -10,7 +10,11 @@ class BookingCardNotes extends StatelessWidget {
   final BookingModel booking;
   final bool isMobile;
 
-  const BookingCardNotes({super.key, required this.booking, required this.isMobile});
+  const BookingCardNotes({
+    super.key,
+    required this.booking,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +31,9 @@ class BookingCardNotes extends StatelessWidget {
       children: [
         Divider(
           height: isMobile ? 16 : 24,
-          color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+          color: isDark
+              ? AppColors.sectionDividerDark
+              : AppColors.sectionDividerLight,
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,7 +45,11 @@ class BookingCardNotes extends StatelessWidget {
                 color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Icon(Icons.note_outlined, size: 20, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.note_outlined,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -50,7 +60,9 @@ class BookingCardNotes extends StatelessWidget {
                   Text(
                     l10n.ownerBookingCardNotes,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.6 * 255).toInt(),
+                      ),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -58,7 +70,9 @@ class BookingCardNotes extends StatelessWidget {
                   // Notes text
                   Text(
                     booking.notes!,
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),

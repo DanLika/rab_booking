@@ -14,7 +14,6 @@ import '../widgets/calendar/booking_inline_edit_dialog.dart';
 /// (Week, Month, Timeline)
 mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget>
     on ConsumerState<T> {
-
   /// Show search dialog (unified with Month and Timeline views)
   void showSearchDialog() async {
     final selectedBooking = await showDialog<BookingModel>(
@@ -67,15 +66,11 @@ mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget>
   }
 
   /// Show booking details dialog with quick edit option
+  /// Calendar is refreshed by the dialog itself on successful edit
   Future<void> showBookingDetailsDialog(BookingModel booking) async {
-    final result = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       builder: (context) => BookingInlineEditDialog(booking: booking),
     );
-
-    // If edited successfully, result will be true
-    if (result == true && mounted) {
-      // Calendar already refreshed by dialog
-    }
   }
 }

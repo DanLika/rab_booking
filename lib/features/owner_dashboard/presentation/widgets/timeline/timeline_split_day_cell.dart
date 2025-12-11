@@ -70,9 +70,12 @@ class TimelineSplitDayCell extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          checkOutBooking.guestName ?? l10n.ownerCalendarDefaultGuest,
+                          checkOutBooking.guestName ??
+                              l10n.ownerCalendarDefaultGuest,
                           style: TextStyle(
-                            color: _getContrastTextColor(checkOutBooking.status.color),
+                            color: _getContrastTextColor(
+                              checkOutBooking.status.color,
+                            ),
                             fontWeight: FontWeight.w600,
                             fontSize: 10,
                           ),
@@ -84,7 +87,9 @@ class TimelineSplitDayCell extends StatelessWidget {
                       Icon(
                         Icons.logout,
                         size: 10,
-                        color: _getContrastTextColor(checkOutBooking.status.color).withValues(alpha: 0.7),
+                        color: _getContrastTextColor(
+                          checkOutBooking.status.color,
+                        ).withValues(alpha: 0.7),
                       ),
                     ],
                   ),
@@ -110,14 +115,19 @@ class TimelineSplitDayCell extends StatelessWidget {
                       Icon(
                         Icons.login,
                         size: 10,
-                        color: _getContrastTextColor(checkInBooking.status.color).withValues(alpha: 0.7),
+                        color: _getContrastTextColor(
+                          checkInBooking.status.color,
+                        ).withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
-                          checkInBooking.guestName ?? l10n.ownerCalendarDefaultGuest,
+                          checkInBooking.guestName ??
+                              l10n.ownerCalendarDefaultGuest,
                           style: TextStyle(
-                            color: _getContrastTextColor(checkInBooking.status.color),
+                            color: _getContrastTextColor(
+                              checkInBooking.status.color,
+                            ),
                             fontWeight: FontWeight.w600,
                             fontSize: 10,
                           ),
@@ -152,7 +162,10 @@ class SplitDayCellPainter extends CustomPainter {
   final Color checkOutColor;
   final Color checkInColor;
 
-  SplitDayCellPainter({required this.checkOutColor, required this.checkInColor});
+  SplitDayCellPainter({
+    required this.checkOutColor,
+    required this.checkInColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -189,12 +202,17 @@ class SplitDayCellPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.5)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-    canvas.drawLine(const Offset(0, 0), Offset(size.width, size.height), dividerPaint);
+    canvas.drawLine(
+      const Offset(0, 0),
+      Offset(size.width, size.height),
+      dividerPaint,
+    );
   }
 
   @override
   bool shouldRepaint(SplitDayCellPainter oldDelegate) {
-    return oldDelegate.checkOutColor != checkOutColor || oldDelegate.checkInColor != checkInColor;
+    return oldDelegate.checkOutColor != checkOutColor ||
+        oldDelegate.checkInColor != checkInColor;
   }
 }
 

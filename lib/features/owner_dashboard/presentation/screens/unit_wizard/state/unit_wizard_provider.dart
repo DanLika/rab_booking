@@ -13,7 +13,9 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     // If editing existing unit, load it
     if (unitId != null) {
       try {
-        final unit = await ref.read(unitRepositoryProvider).fetchUnitById(unitId);
+        final unit = await ref
+            .read(unitRepositoryProvider)
+            .fetchUnitById(unitId);
         if (unit != null) {
           return UnitWizardDraft.fromUnit(unit);
         }
@@ -31,9 +33,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     final currentState = state.value;
     if (currentState == null) return;
 
-    state = AsyncValue.data(
-      _updateDraftField(currentState, field, value),
-    );
+    state = AsyncValue.data(_updateDraftField(currentState, field, value));
   }
 
   /// Update multiple fields at once (in-memory only)
@@ -55,9 +55,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     if (currentState == null || currentState.currentStep >= 5) return;
 
     final nextStep = currentState.currentStep + 1;
-    state = AsyncValue.data(
-      currentState.copyWith(currentStep: nextStep),
-    );
+    state = AsyncValue.data(currentState.copyWith(currentStep: nextStep));
   }
 
   /// Go to previous step
@@ -66,9 +64,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     if (currentState == null || currentState.currentStep <= 1) return;
 
     final prevStep = currentState.currentStep - 1;
-    state = AsyncValue.data(
-      currentState.copyWith(currentStep: prevStep),
-    );
+    state = AsyncValue.data(currentState.copyWith(currentStep: prevStep));
   }
 
   /// Jump to specific step
@@ -78,9 +74,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     final currentState = state.value;
     if (currentState == null) return;
 
-    state = AsyncValue.data(
-      currentState.copyWith(currentStep: step),
-    );
+    state = AsyncValue.data(currentState.copyWith(currentStep: step));
   }
 
   /// Mark step as completed
@@ -88,7 +82,9 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     final currentState = state.value;
     if (currentState == null) return;
 
-    final updatedCompletedSteps = Map<int, bool>.from(currentState.completedSteps);
+    final updatedCompletedSteps = Map<int, bool>.from(
+      currentState.completedSteps,
+    );
     updatedCompletedSteps[step] = true;
 
     state = AsyncValue.data(
@@ -114,70 +110,41 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     UnitWizardDraft draft,
     String field,
     dynamic value,
-  ) {
-    switch (field) {
-      // Step 1 - Basic Info
-      case 'name':
-        return draft.copyWith(name: value);
-      case 'propertyId':
-        return draft.copyWith(propertyId: value);
-      case 'slug':
-        return draft.copyWith(slug: value);
-      case 'description':
-        return draft.copyWith(description: value);
-      // Step 2 - Capacity
-      case 'bedrooms':
-        return draft.copyWith(bedrooms: value);
-      case 'bathrooms':
-        return draft.copyWith(bathrooms: value);
-      case 'maxGuests':
-        return draft.copyWith(maxGuests: value);
-      case 'areaSqm':
-        return draft.copyWith(areaSqm: value);
-      // Step 3 - Pricing & Availability (merged)
-      case 'pricePerNight':
-        return draft.copyWith(pricePerNight: value);
-      case 'weekendBasePrice':
-        return draft.copyWith(weekendBasePrice: value);
-      case 'weekendDays':
-        return draft.copyWith(weekendDays: value);
-      case 'minStayNights':
-        return draft.copyWith(minStayNights: value);
-      case 'maxStayNights':
-        return draft.copyWith(maxStayNights: value);
-      case 'seasons':
-        return draft.copyWith(seasons: value);
-      case 'availableYearRound':
-        return draft.copyWith(availableYearRound: value);
-      case 'seasonStartDate':
-        return draft.copyWith(seasonStartDate: value);
-      case 'seasonEndDate':
-        return draft.copyWith(seasonEndDate: value);
-      case 'blockedDates':
-        return draft.copyWith(blockedDates: value);
-      // Step 4 - Photos (optional)
-      case 'images':
-        return draft.copyWith(images: value);
-      case 'coverImageUrl':
-        return draft.copyWith(coverImageUrl: value);
-      // Step 5 - Review & Publish (no fields to update here)
-      // Additional fields for future use
-      case 'widgetMode':
-        return draft.copyWith(widgetMode: value);
-      case 'widgetTheme':
-        return draft.copyWith(widgetTheme: value);
-      case 'widgetSettings':
-        return draft.copyWith(widgetSettings: value);
-      case 'icalConfig':
-        return draft.copyWith(icalConfig: value);
-      case 'emailConfig':
-        return draft.copyWith(emailConfig: value);
-      case 'taxLegalConfig':
-        return draft.copyWith(taxLegalConfig: value);
-      default:
-        return draft;
-    }
-  }
+  ) => switch (field) {
+    // Step 1 - Basic Info
+    'name' => draft.copyWith(name: value),
+    'propertyId' => draft.copyWith(propertyId: value),
+    'slug' => draft.copyWith(slug: value),
+    'description' => draft.copyWith(description: value),
+    // Step 2 - Capacity
+    'bedrooms' => draft.copyWith(bedrooms: value),
+    'bathrooms' => draft.copyWith(bathrooms: value),
+    'maxGuests' => draft.copyWith(maxGuests: value),
+    'areaSqm' => draft.copyWith(areaSqm: value),
+    // Step 3 - Pricing & Availability (merged)
+    'pricePerNight' => draft.copyWith(pricePerNight: value),
+    'weekendBasePrice' => draft.copyWith(weekendBasePrice: value),
+    'weekendDays' => draft.copyWith(weekendDays: value),
+    'minStayNights' => draft.copyWith(minStayNights: value),
+    'maxStayNights' => draft.copyWith(maxStayNights: value),
+    'seasons' => draft.copyWith(seasons: value),
+    'availableYearRound' => draft.copyWith(availableYearRound: value),
+    'seasonStartDate' => draft.copyWith(seasonStartDate: value),
+    'seasonEndDate' => draft.copyWith(seasonEndDate: value),
+    'blockedDates' => draft.copyWith(blockedDates: value),
+    // Step 4 - Photos (optional)
+    'images' => draft.copyWith(images: value),
+    'coverImageUrl' => draft.copyWith(coverImageUrl: value),
+    // Step 5 - Review & Publish (no fields to update here)
+    // Additional fields for future use
+    'widgetMode' => draft.copyWith(widgetMode: value),
+    'widgetTheme' => draft.copyWith(widgetTheme: value),
+    'widgetSettings' => draft.copyWith(widgetSettings: value),
+    'icalConfig' => draft.copyWith(icalConfig: value),
+    'emailConfig' => draft.copyWith(emailConfig: value),
+    'taxLegalConfig' => draft.copyWith(taxLegalConfig: value),
+    _ => draft,
+  };
 
   // Note: Riverpod will automatically dispose the provider when no longer used
 }

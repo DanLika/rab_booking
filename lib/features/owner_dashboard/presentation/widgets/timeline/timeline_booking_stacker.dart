@@ -18,7 +18,8 @@ class TimelineBookingStacker {
     if (bookings.isEmpty) return stackLevels;
 
     // Sort bookings by check-in date
-    final sorted = List<BookingModel>.from(bookings)..sort((a, b) => a.checkIn.compareTo(b.checkIn));
+    final sorted = List<BookingModel>.from(bookings)
+      ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
     // Track active bookings at each stack level
     final List<DateTime?> stackEndDates = [];
@@ -57,13 +58,16 @@ class TimelineBookingStacker {
   ///
   /// Returns a map of date → list of booking pairs that have turnover on that date
   /// Each pair contains [checkOutBooking, checkInBooking]
-  static Map<DateTime, List<List<BookingModel>>> detectSameDayTurnovers(List<BookingModel> bookings) {
+  static Map<DateTime, List<List<BookingModel>>> detectSameDayTurnovers(
+    List<BookingModel> bookings,
+  ) {
     final Map<DateTime, List<List<BookingModel>>> turnovers = {};
 
     if (bookings.length < 2) return turnovers;
 
     // Sort bookings by check-in date
-    final sorted = List<BookingModel>.from(bookings)..sort((a, b) => a.checkIn.compareTo(b.checkIn));
+    final sorted = List<BookingModel>.from(bookings)
+      ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
     // Find pairs where checkOut date matches checkIn date
     for (int i = 0; i < sorted.length - 1; i++) {
@@ -92,7 +96,10 @@ class TimelineBookingStacker {
     if (bookings.isEmpty) return 1; // Minimum 1 for empty rows
 
     final stackLevels = assignStackLevels(bookings);
-    final maxLevel = stackLevels.values.fold<int>(0, (max, level) => level > max ? level : max);
+    final maxLevel = stackLevels.values.fold<int>(
+      0,
+      (max, level) => level > max ? level : max,
+    );
 
     return maxLevel + 1; // +1 because levels are 0-indexed
   }

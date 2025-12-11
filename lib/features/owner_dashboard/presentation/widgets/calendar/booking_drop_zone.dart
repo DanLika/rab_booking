@@ -65,7 +65,9 @@ class BookingDropZone extends ConsumerWidget {
       child: DragTarget<BookingModel>(
         onWillAcceptWithDetails: (details) {
           // Validate drop in real-time
-          ref.read(dragDropProvider.notifier).validateDrop(
+          ref
+              .read(dragDropProvider.notifier)
+              .validateDrop(
                 dropDate: date,
                 targetUnitId: unit.id,
                 allBookings: allBookings,
@@ -125,8 +127,8 @@ class BookingDropZone extends ConsumerWidget {
       color: isPast
           ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
           : (isToday
-              ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
-              : Colors.transparent), // Transparent to show parent gradient
+                ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
+                : Colors.transparent), // Transparent to show parent gradient
       border: Border(
         right: BorderSide(
           color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
@@ -162,17 +164,14 @@ class BookingDropZone extends ConsumerWidget {
       backgroundColor = isPast
           ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
           : (isToday
-              ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
-              : Colors.transparent); // Transparent to show parent gradient
+                ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
+                : Colors.transparent); // Transparent to show parent gradient
       borderColor = theme.dividerColor.withAlpha((0.6 * 255).toInt());
     }
 
     return BoxDecoration(
       color: backgroundColor,
-      border: Border.all(
-        color: borderColor,
-        width: isHovering ? 2 : 1,
-      ),
+      border: Border.all(color: borderColor, width: isHovering ? 2 : 1),
       borderRadius: BorderRadius.circular(isHovering ? 4 : 0),
     );
   }
@@ -191,10 +190,12 @@ class BookingDropZone extends ConsumerWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            (isValid ? AppColors.success : AppColors.error)
-                .withAlpha((0.3 * 255).toInt()),
-            (isValid ? AppColors.success : AppColors.error)
-                .withAlpha((0.1 * 255).toInt()),
+            (isValid ? AppColors.success : AppColors.error).withAlpha(
+              (0.3 * 255).toInt(),
+            ),
+            (isValid ? AppColors.success : AppColors.error).withAlpha(
+              (0.1 * 255).toInt(),
+            ),
           ],
         ),
         borderRadius: BorderRadius.circular(4),

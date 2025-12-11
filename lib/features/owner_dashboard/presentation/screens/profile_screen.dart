@@ -57,20 +57,26 @@ class ProfileScreen extends ConsumerWidget {
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: user == null
             ? Center(child: Text(l10n.ownerProfileNotAuthenticated))
-            : Builder(builder: (context) {
-                // OPTIMIZED: Use authState.userModel directly instead of separate Firestore query
-                final isAnonymous = authState.isAnonymous;
-                final displayName =
-                    authState.userModel?.displayName ??
-                    authState.userModel?.fullName ??
-                    user.displayName ??
-                    (isAnonymous ? l10n.ownerProfileGuestUser : l10n.ownerProfileOwner);
-                final email =
-                    user.email ?? (isAnonymous ? l10n.ownerProfileAnonymousAccount : l10n.ownerProfileNoEmail);
-                final screenWidth = MediaQuery.of(context).size.width;
-                final isMobile = screenWidth < 600;
+            : Builder(
+                builder: (context) {
+                  // OPTIMIZED: Use authState.userModel directly instead of separate Firestore query
+                  final isAnonymous = authState.isAnonymous;
+                  final displayName =
+                      authState.userModel?.displayName ??
+                      authState.userModel?.fullName ??
+                      user.displayName ??
+                      (isAnonymous
+                          ? l10n.ownerProfileGuestUser
+                          : l10n.ownerProfileOwner);
+                  final email =
+                      user.email ??
+                      (isAnonymous
+                          ? l10n.ownerProfileAnonymousAccount
+                          : l10n.ownerProfileNoEmail);
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isMobile = screenWidth < 600;
 
-                return SingleChildScrollView(
+                  return SingleChildScrollView(
                     padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
                     child: Column(
                       children: [
@@ -79,7 +85,9 @@ class ProfileScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             gradient: context.gradients.brandPrimary,
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                            boxShadow: isDark
+                                ? AppShadows.elevation2Dark
+                                : AppShadows.elevation2,
                           ),
                           child: Padding(
                             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -89,12 +97,16 @@ class ProfileScreen extends ConsumerWidget {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.3),
+                                      color: Colors.white.withValues(
+                                        alpha: isDark ? 0.2 : 0.3,
+                                      ),
                                       width: 3,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.15),
+                                        color: Colors.black.withValues(
+                                          alpha: isDark ? 0.3 : 0.15,
+                                        ),
                                         blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),
@@ -102,7 +114,10 @@ class ProfileScreen extends ConsumerWidget {
                                   ),
                                   child:
                                       authState.userModel?.avatarUrl != null &&
-                                          authState.userModel!.avatarUrl!.isNotEmpty
+                                          authState
+                                              .userModel!
+                                              .avatarUrl!
+                                              .isNotEmpty
                                       ? ClipOval(
                                           child: Image.network(
                                             authState.userModel!.avatarUrl!,
@@ -110,54 +125,84 @@ class ProfileScreen extends ConsumerWidget {
                                             height: isMobile ? 72 : 88,
                                             fit: BoxFit.cover,
                                             loadingBuilder: (context, child, loadingProgress) {
-                                              if (loadingProgress == null) return child;
+                                              if (loadingProgress == null)
+                                                return child;
                                               return CircleAvatar(
                                                 radius: isMobile ? 36 : 44,
-                                                backgroundColor: isDark ? AppColors.primary : Colors.white,
+                                                backgroundColor: isDark
+                                                    ? AppColors.primary
+                                                    : Colors.white,
                                                 child: CircularProgressIndicator(
-                                                  value: loadingProgress.expectedTotalBytes != null
-                                                      ? loadingProgress.cumulativeBytesLoaded /
-                                                            loadingProgress.expectedTotalBytes!
+                                                  value:
+                                                      loadingProgress
+                                                              .expectedTotalBytes !=
+                                                          null
+                                                      ? loadingProgress
+                                                                .cumulativeBytesLoaded /
+                                                            loadingProgress
+                                                                .expectedTotalBytes!
                                                       : null,
                                                   strokeWidth: 2,
-                                                  color: isDark ? Colors.white : AppColors.primary,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : AppColors.primary,
                                                 ),
                                               );
                                             },
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return CircleAvatar(
-                                                radius: isMobile ? 36 : 44,
-                                                backgroundColor: isDark ? AppColors.primary : Colors.white,
-                                                child: Text(
-                                                  displayName.isNotEmpty
-                                                      ? displayName.substring(0, 1).toUpperCase()
-                                                      : '?',
-                                                  style: TextStyle(
-                                                    fontSize: isMobile ? 28 : 34,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: isDark ? Colors.white : AppColors.primary,
-                                                  ),
-                                                ),
-                                              );
-                                            },
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                                  return CircleAvatar(
+                                                    radius: isMobile ? 36 : 44,
+                                                    backgroundColor: isDark
+                                                        ? AppColors.primary
+                                                        : Colors.white,
+                                                    child: Text(
+                                                      displayName.isNotEmpty
+                                                          ? displayName
+                                                                .substring(0, 1)
+                                                                .toUpperCase()
+                                                          : '?',
+                                                      style: TextStyle(
+                                                        fontSize: isMobile
+                                                            ? 28
+                                                            : 34,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: isDark
+                                                            ? Colors.white
+                                                            : AppColors.primary,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
                                           ),
                                         )
                                       : CircleAvatar(
                                           radius: isMobile ? 36 : 44,
-                                          backgroundColor: isDark ? AppColors.primary : Colors.white,
+                                          backgroundColor: isDark
+                                              ? AppColors.primary
+                                              : Colors.white,
                                           child: Text(
-                                            displayName.isNotEmpty ? displayName.substring(0, 1).toUpperCase() : '?',
+                                            displayName.isNotEmpty
+                                                ? displayName
+                                                      .substring(0, 1)
+                                                      .toUpperCase()
+                                                : '?',
                                             style: TextStyle(
                                               fontSize: isMobile ? 28 : 34,
                                               fontWeight: FontWeight.bold,
-                                              color: isDark ? Colors.white : AppColors.primary,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : AppColors.primary,
                                             ),
                                           ),
                                         ),
                                 ),
                                 SizedBox(height: isMobile ? 12 : 14),
                                 ConstrainedBox(
-                                  constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 400),
+                                  constraints: BoxConstraints(
+                                    maxWidth: isMobile ? double.infinity : 400,
+                                  ),
                                   child: Text(
                                     displayName,
                                     maxLines: 2,
@@ -172,9 +217,14 @@ class ProfileScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 5,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.2),
+                                    color: Colors.white.withValues(
+                                      alpha: isDark ? 0.15 : 0.2,
+                                    ),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Text(
@@ -184,7 +234,9 @@ class ProfileScreen extends ConsumerWidget {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: isMobile ? 12 : 13,
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -200,8 +252,14 @@ class ProfileScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
                           ),
                           child: Column(
                             children: [
@@ -211,23 +269,40 @@ class ProfileScreen extends ConsumerWidget {
                                 subtitle: isAnonymous
                                     ? l10n.ownerProfileEditProfileSubtitleAnonymous
                                     : l10n.ownerProfileEditProfileSubtitle,
-                                onTap: isAnonymous ? null : () => context.push(OwnerRoutes.profileEdit),
+                                onTap: isAnonymous
+                                    ? null
+                                    : () =>
+                                          context.push(OwnerRoutes.profileEdit),
                               ),
                               if (!isAnonymous) ...[
-                                Divider(height: 1, indent: 72, color: theme.dividerColor),
+                                Divider(
+                                  height: 1,
+                                  indent: 72,
+                                  color: theme.dividerColor,
+                                ),
                                 PremiumListTile(
                                   icon: Icons.lock_outline,
                                   title: l10n.ownerProfileChangePassword,
-                                  subtitle: l10n.ownerProfileChangePasswordSubtitle,
-                                  onTap: () => context.push(OwnerRoutes.profileChangePassword),
+                                  subtitle:
+                                      l10n.ownerProfileChangePasswordSubtitle,
+                                  onTap: () => context.push(
+                                    OwnerRoutes.profileChangePassword,
+                                  ),
                                 ),
                               ],
-                              Divider(height: 1, indent: 72, color: theme.dividerColor),
+                              Divider(
+                                height: 1,
+                                indent: 72,
+                                color: theme.dividerColor,
+                              ),
                               PremiumListTile(
                                 icon: Icons.notifications_outlined,
                                 title: l10n.ownerProfileNotificationSettings,
-                                subtitle: l10n.ownerProfileNotificationSettingsSubtitle,
-                                onTap: () => context.push(OwnerRoutes.profileNotifications),
+                                subtitle: l10n
+                                    .ownerProfileNotificationSettingsSubtitle,
+                                onTap: () => context.push(
+                                  OwnerRoutes.profileNotifications,
+                                ),
                                 isLast: true,
                               ),
                             ],
@@ -240,8 +315,14 @@ class ProfileScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
                           ),
                           child: Column(
                             children: [
@@ -249,14 +330,22 @@ class ProfileScreen extends ConsumerWidget {
                                 icon: Icons.language,
                                 title: l10n.ownerProfileLanguage,
                                 subtitle: languageName,
-                                onTap: () => showLanguageSelectionBottomSheet(context, ref),
+                                onTap: () => showLanguageSelectionBottomSheet(
+                                  context,
+                                  ref,
+                                ),
                               ),
-                              Divider(height: 1, indent: 56, color: theme.dividerColor),
+                              Divider(
+                                height: 1,
+                                indent: 56,
+                                color: theme.dividerColor,
+                              ),
                               PremiumListTile(
                                 icon: Icons.brightness_6_outlined,
                                 title: l10n.ownerProfileTheme,
                                 subtitle: themeName,
-                                onTap: () => showThemeSelectionBottomSheet(context, ref),
+                                onTap: () =>
+                                    showThemeSelectionBottomSheet(context, ref),
                                 isLast: true,
                               ),
                             ],
@@ -269,8 +358,14 @@ class ProfileScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
                           ),
                           child: Column(
                             children: [
@@ -279,10 +374,17 @@ class ProfileScreen extends ConsumerWidget {
                                 title: l10n.ownerProfileHelpSupport,
                                 subtitle: l10n.ownerProfileHelpSupportSubtitle,
                                 onTap: () {
-                                  ErrorDisplayUtils.showInfoSnackBar(context, l10n.ownerProfileHelpSupportComingSoon);
+                                  ErrorDisplayUtils.showInfoSnackBar(
+                                    context,
+                                    l10n.ownerProfileHelpSupportComingSoon,
+                                  );
                                 },
                               ),
-                              Divider(height: 1, indent: 56, color: theme.dividerColor),
+                              Divider(
+                                height: 1,
+                                indent: 56,
+                                color: theme.dividerColor,
+                              ),
                               PremiumListTile(
                                 icon: Icons.info_outline,
                                 title: l10n.ownerProfileAbout,
@@ -300,14 +402,22 @@ class ProfileScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
                           ),
                           child: LogoutTile(
                             title: l10n.ownerProfileLogout,
                             subtitle: l10n.ownerProfileLogoutSubtitle,
                             onLogout: () async {
-                              await ref.read(enhancedAuthProvider.notifier).signOut();
+                              await ref
+                                  .read(enhancedAuthProvider.notifier)
+                                  .signOut();
                               if (context.mounted) {
                                 context.go(OwnerRoutes.login);
                               }
@@ -321,30 +431,50 @@ class ProfileScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: context.gradients.cardBackground,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                            boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
                           ),
                           child: Column(
                             children: [
                               PremiumListTile(
                                 icon: Icons.description_outlined,
                                 title: l10n.ownerProfileTermsConditions,
-                                subtitle: l10n.ownerProfileTermsConditionsSubtitle,
-                                onTap: () => context.push(OwnerRoutes.termsConditions),
+                                subtitle:
+                                    l10n.ownerProfileTermsConditionsSubtitle,
+                                onTap: () =>
+                                    context.push(OwnerRoutes.termsConditions),
                               ),
-                              Divider(height: 1, indent: 56, color: theme.dividerColor),
+                              Divider(
+                                height: 1,
+                                indent: 56,
+                                color: theme.dividerColor,
+                              ),
                               PremiumListTile(
                                 icon: Icons.privacy_tip_outlined,
                                 title: l10n.ownerProfilePrivacyPolicy,
-                                subtitle: l10n.ownerProfilePrivacyPolicySubtitle,
-                                onTap: () => context.push(OwnerRoutes.privacyPolicy),
+                                subtitle:
+                                    l10n.ownerProfilePrivacyPolicySubtitle,
+                                onTap: () =>
+                                    context.push(OwnerRoutes.privacyPolicy),
                               ),
-                              Divider(height: 1, indent: 56, color: theme.dividerColor),
+                              Divider(
+                                height: 1,
+                                indent: 56,
+                                color: theme.dividerColor,
+                              ),
                               PremiumListTile(
                                 icon: Icons.cookie_outlined,
                                 title: l10n.ownerProfileCookiesPolicy,
-                                subtitle: l10n.ownerProfileCookiesPolicySubtitle,
-                                onTap: () => context.push(OwnerRoutes.cookiesPolicy),
+                                subtitle:
+                                    l10n.ownerProfileCookiesPolicySubtitle,
+                                onTap: () =>
+                                    context.push(OwnerRoutes.cookiesPolicy),
                                 isLast: true,
                               ),
                             ],
@@ -354,7 +484,8 @@ class ProfileScreen extends ConsumerWidget {
                       ],
                     ),
                   );
-                }),
+                },
+              ),
       ),
     );
   }

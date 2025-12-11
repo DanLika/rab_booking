@@ -22,7 +22,10 @@ Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
   final userId = auth.currentUser?.uid;
 
   if (userId == null) {
-    throw AuthException('User not authenticated', code: 'auth/not-authenticated');
+    throw AuthException(
+      'User not authenticated',
+      code: 'auth/not-authenticated',
+    );
   }
 
   return repository.getOwnerProperties(userId);
@@ -62,7 +65,10 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   final userId = auth.currentUser?.uid;
 
   if (userId == null) {
-    throw AuthException('User not authenticated', code: 'auth/not-authenticated');
+    throw AuthException(
+      'User not authenticated',
+      code: 'auth/not-authenticated',
+    );
   }
 
   // OPTIMIZED: Get unitIds from cached provider instead of re-fetching
@@ -143,7 +149,11 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
     // Only listen for bookings that could affect the visible calendar
     // Must match the date range used by calendarBookingsProvider
     final now = DateTime.now();
-    final endDate = DateTime(now.year + 1, now.month, now.day); // 1 year forward
+    final endDate = DateTime(
+      now.year + 1,
+      now.month,
+      now.day,
+    ); // 1 year forward
 
     try {
       // OPTIMIZED: Get unitIds from cached provider instead of re-fetching
@@ -233,7 +243,9 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
         }
       }
     } catch (e) {
-      unawaited(LoggingService.logError('Failed to setup realtime subscription', e));
+      unawaited(
+        LoggingService.logError('Failed to setup realtime subscription', e),
+      );
     }
   }
 

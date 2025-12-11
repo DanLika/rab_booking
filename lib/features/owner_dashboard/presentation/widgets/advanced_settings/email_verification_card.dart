@@ -30,7 +30,10 @@ class EmailVerificationCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+        boxShadow: AppShadows.getElevation(
+          1,
+          isDark: theme.brightness == Brightness.dark,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -38,7 +41,10 @@ class EmailVerificationCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 14 : 18),
@@ -50,7 +56,10 @@ class EmailVerificationCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   l10n.emailVerificationSubtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 13),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: context.textColorSecondary,
+                    fontSize: 13,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -59,7 +68,11 @@ class EmailVerificationCard extends StatelessWidget {
                 // Compact toggle with inline layout
                 Row(
                   children: [
-                    Icon(Icons.email_outlined, size: 18, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.email_outlined,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -67,11 +80,17 @@ class EmailVerificationCard extends StatelessWidget {
                         children: [
                           Text(
                             l10n.emailVerificationToggleTitle,
-                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
                           Text(
                             l10n.emailVerificationToggleSubtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 12),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: context.textColorSecondary,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -85,7 +104,10 @@ class EmailVerificationCard extends StatelessWidget {
                 ),
 
                 // Compact info message
-                if (requireEmailVerification) ...[const SizedBox(height: 12), _buildInfoMessage(theme, l10n)],
+                if (requireEmailVerification) ...[
+                  const SizedBox(height: 12),
+                  _buildInfoMessage(theme, l10n),
+                ],
               ],
             ),
           ),
@@ -103,7 +125,11 @@ class EmailVerificationCard extends StatelessWidget {
             color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(Icons.verified_user, color: theme.colorScheme.primary, size: 18),
+          child: Icon(
+            Icons.verified_user,
+            color: theme.colorScheme.primary,
+            size: 18,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -112,7 +138,9 @@ class EmailVerificationCard extends StatelessWidget {
             children: [
               Text(
                 l10n.emailVerificationTitle,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Container(
@@ -136,7 +164,9 @@ class EmailVerificationCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.info.withAlpha((0.08 * 255).toInt()),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.info.withAlpha((0.2 * 255).toInt())),
+        border: Border.all(
+          color: AppColors.info.withAlpha((0.2 * 255).toInt()),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +176,12 @@ class EmailVerificationCard extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.emailVerificationInfoEnabled,
-              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt())),
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.7 * 255).toInt(),
+                ),
+              ),
             ),
           ),
         ],

@@ -36,14 +36,19 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
 
       setState(() => _isUploading = true);
 
-      final wizardState = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
+      final wizardState = ref
+          .read(unitWizardNotifierProvider(widget.unitId))
+          .value;
       if (wizardState == null) return;
 
       // Get user ID
       final userId = ref.read(enhancedAuthProvider).firebaseUser?.uid;
 
       if (userId == null) {
-        throw AuthException('User not authenticated', code: 'auth/not-authenticated');
+        throw AuthException(
+          'User not authenticated',
+          code: 'auth/not-authenticated',
+        );
       }
 
       // Use propertyId if available, otherwise use 'draft' folder
@@ -55,12 +60,14 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
       final List<String> uploadedUrls = [];
       for (final file in pickedFiles) {
         final bytes = await file.readAsBytes();
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
 
         final url = await _storageService.uploadUnitImage(
           userId: userId,
           propertyId: propertyId,
-          unitId: widget.unitId ?? 'draft_${DateTime.now().millisecondsSinceEpoch}',
+          unitId:
+              widget.unitId ?? 'draft_${DateTime.now().millisecondsSinceEpoch}',
           imageBytes: bytes,
           fileName: fileName,
         );
@@ -73,21 +80,31 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
       final updatedImages = [...currentImages, ...uploadedUrls];
 
       // Update draft
-      ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('images', updatedImages);
+      ref
+          .read(unitWizardNotifierProvider(widget.unitId).notifier)
+          .updateField('images', updatedImages);
 
       // Set cover image if not set
       if (wizardState.coverImageUrl == null && updatedImages.isNotEmpty) {
-        ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('coverImageUrl', updatedImages.first);
+        ref
+            .read(unitWizardNotifierProvider(widget.unitId).notifier)
+            .updateField('coverImageUrl', updatedImages.first);
       }
 
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.unitWizardStep4UploadSuccess(uploadedUrls.length));
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.unitWizardStep4UploadSuccess(uploadedUrls.length),
+        );
       }
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, l10n.unitWizardStep4UploadError(e.toString()));
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          l10n.unitWizardStep4UploadError(e.toString()),
+        );
       }
     } finally {
       if (mounted) {
@@ -99,36 +116,58 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
   /// Delete an image
   void _deleteImage(String imageUrl, List<String> currentImages) {
     // Remove from list
-    final updatedImages = currentImages.where((url) => url != imageUrl).toList();
+    final updatedImages = currentImages
+        .where((url) => url != imageUrl)
+        .toList();
 
-    ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('images', updatedImages);
+    ref
+        .read(unitWizardNotifierProvider(widget.unitId).notifier)
+        .updateField('images', updatedImages);
 
     // Update cover image if deleted
-    final wizardState = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
+    final wizardState = ref
+        .read(unitWizardNotifierProvider(widget.unitId))
+        .value;
     if (wizardState?.coverImageUrl == imageUrl) {
       ref
           .read(unitWizardNotifierProvider(widget.unitId).notifier)
-          .updateField('coverImageUrl', updatedImages.isNotEmpty ? updatedImages.first : null);
+          .updateField(
+            'coverImageUrl',
+            updatedImages.isNotEmpty ? updatedImages.first : null,
+          );
     }
 
     if (mounted) {
       final l10n = AppLocalizations.of(context);
-      ErrorDisplayUtils.showSuccessSnackBar(context, l10n.unitWizardStep4ImageDeleted);
+      ErrorDisplayUtils.showSuccessSnackBar(
+        context,
+        l10n.unitWizardStep4ImageDeleted,
+      );
     }
   }
 
   /// Set cover image
   void _setCoverImage(String imageUrl) {
-    ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('coverImageUrl', imageUrl);
+    ref
+        .read(unitWizardNotifierProvider(widget.unitId).notifier)
+        .updateField('coverImageUrl', imageUrl);
 
     if (mounted) {
       final l10n = AppLocalizations.of(context);
-      ErrorDisplayUtils.showSuccessSnackBar(context, l10n.unitWizardStep4CoverUpdated);
+      ErrorDisplayUtils.showSuccessSnackBar(
+        context,
+        l10n.unitWizardStep4CoverUpdated,
+      );
     }
   }
 
   /// Build images grid with Wrap layout
-  Widget _buildImagesGrid(List<String> images, String? coverImageUrl, ThemeData theme, AppLocalizations l10n) {
+  Widget _buildImagesGrid(
+    List<String> images,
+    String? coverImageUrl,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -147,7 +186,9 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isCover ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.3),
+                    color: isCover
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outline.withValues(alpha: 0.3),
                     width: isCover ? 3 : 1,
                   ),
                 ),
@@ -161,7 +202,11 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: theme.colorScheme.surfaceContainerHighest,
-                        child: Icon(Icons.broken_image, color: theme.colorScheme.error, size: 24),
+                        child: Icon(
+                          Icons.broken_image,
+                          color: theme.colorScheme.error,
+                          size: 24,
+                        ),
                       );
                     },
                   ),
@@ -174,8 +219,14 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                   top: 4,
                   left: 4,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(6)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text(
                       l10n.unitWizardStep4Cover,
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -264,7 +315,9 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                 // Subtitle
                 Text(
                   l10n.unitWizardStep4Subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 24),
 
@@ -290,7 +343,10 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
                         color: context.gradients.cardBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+                        border: Border.all(
+                          color: context.gradients.sectionBorder,
+                          width: 1.5,
+                        ),
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -303,16 +359,23 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.12,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(Icons.photo_library, color: theme.colorScheme.primary, size: 18),
+                                  child: Icon(
+                                    Icons.photo_library,
+                                    color: theme.colorScheme.primary,
+                                    size: 18,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     l10n.unitWizardStep4Gallery,
-                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -320,7 +383,9 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                             const SizedBox(height: 8),
                             Text(
                               l10n.unitWizardStep4GalleryDesc,
-                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -334,41 +399,62 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                 children: [
                                   // Upload button aligned left
                                   ElevatedButton.icon(
-                                    onPressed: _isUploading ? null : _pickAndUploadImages,
+                                    onPressed: _isUploading
+                                        ? null
+                                        : _pickAndUploadImages,
                                     icon: _isUploading
                                         ? SizedBox(
                                             width: 20,
                                             height: 20,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation(theme.colorScheme.onPrimary),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation(
+                                                    theme.colorScheme.onPrimary,
+                                                  ),
                                             ),
                                           )
-                                        : const Icon(Icons.add_photo_alternate, size: 20),
+                                        : const Icon(
+                                            Icons.add_photo_alternate,
+                                            size: 20,
+                                          ),
                                     label: Text(
-                                      _isUploading ? l10n.unitWizardStep4Uploading : l10n.unitWizardStep4AddPhotos,
+                                      _isUploading
+                                          ? l10n.unitWizardStep4Uploading
+                                          : l10n.unitWizardStep4AddPhotos,
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: theme.colorScheme.primary,
+                                      backgroundColor:
+                                          theme.colorScheme.primary,
                                       foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 14,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
 
                                   // Photo count
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                      color: theme.colorScheme.primaryContainer
+                                          .withValues(alpha: 0.3),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      l10n.unitWizardStep4PhotoCount(images.length),
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.primary,
-                                        fontWeight: FontWeight.w600,
+                                      l10n.unitWizardStep4PhotoCount(
+                                        images.length,
                                       ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                   ),
                                   const SizedBox(height: 16),
@@ -381,20 +467,31 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                           Icon(
                                             Icons.photo_library_outlined,
                                             size: 48,
-                                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant
+                                                .withValues(alpha: 0.5),
                                           ),
                                           const SizedBox(height: 12),
                                           Text(
                                             l10n.unitWizardStep4NoPhotos,
-                                            style: theme.textTheme.bodyMedium?.copyWith(
-                                              color: theme.colorScheme.onSurfaceVariant,
-                                            ),
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
                                           ),
                                         ],
                                       ),
                                     )
                                   else
-                                    _buildImagesGrid(images, coverImageUrl, theme, l10n),
+                                    _buildImagesGrid(
+                                      images,
+                                      coverImageUrl,
+                                      theme,
+                                      l10n,
+                                    ),
                                 ],
                               )
                             else
@@ -404,45 +501,74 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                 children: [
                                   // Left column: Button + count
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       // Upload button
                                       ElevatedButton.icon(
-                                        onPressed: _isUploading ? null : _pickAndUploadImages,
+                                        onPressed: _isUploading
+                                            ? null
+                                            : _pickAndUploadImages,
                                         icon: _isUploading
                                             ? SizedBox(
                                                 width: 20,
                                                 height: 20,
                                                 child: CircularProgressIndicator(
                                                   strokeWidth: 2,
-                                                  valueColor: AlwaysStoppedAnimation(theme.colorScheme.onPrimary),
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation(
+                                                        theme
+                                                            .colorScheme
+                                                            .onPrimary,
+                                                      ),
                                                 ),
                                               )
-                                            : const Icon(Icons.add_photo_alternate, size: 20),
+                                            : const Icon(
+                                                Icons.add_photo_alternate,
+                                                size: 20,
+                                              ),
                                         label: Text(
-                                          _isUploading ? l10n.unitWizardStep4Uploading : l10n.unitWizardStep4AddPhotos,
+                                          _isUploading
+                                              ? l10n.unitWizardStep4Uploading
+                                              : l10n.unitWizardStep4AddPhotos,
                                         ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: theme.colorScheme.primary,
+                                          backgroundColor:
+                                              theme.colorScheme.primary,
                                           foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                            vertical: 14,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(height: 12),
 
                                       // Photo count
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: theme
+                                              .colorScheme
+                                              .primaryContainer
+                                              .withValues(alpha: 0.3),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Text(
-                                          l10n.unitWizardStep4PhotoCount(images.length),
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: theme.colorScheme.primary,
-                                            fontWeight: FontWeight.w600,
+                                          l10n.unitWizardStep4PhotoCount(
+                                            images.length,
                                           ),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -458,19 +584,32 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
                                                 Icon(
                                                   Icons.photo_library_outlined,
                                                   size: 48,
-                                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant
+                                                      .withValues(alpha: 0.5),
                                                 ),
                                                 const SizedBox(height: 12),
                                                 Text(
                                                   l10n.unitWizardStep4NoPhotos,
-                                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                                    color: theme.colorScheme.onSurfaceVariant,
-                                                  ),
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        color: theme
+                                                            .colorScheme
+                                                            .onSurfaceVariant,
+                                                      ),
                                                 ),
                                               ],
                                             ),
                                           )
-                                        : _buildImagesGrid(images, coverImageUrl, theme, l10n),
+                                        : _buildImagesGrid(
+                                            images,
+                                            coverImageUrl,
+                                            theme,
+                                            l10n,
+                                          ),
                                   ),
                                 ],
                               ),

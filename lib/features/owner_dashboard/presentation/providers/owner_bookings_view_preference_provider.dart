@@ -7,10 +7,11 @@ import '../../../../shared/providers/repository_providers.dart';
 /// Provider for current bookings view mode (card/table)
 /// Automatically defaults to card on mobile, table on desktop
 /// Persists user's preference
-final ownerBookingsViewProvider = StateNotifierProvider<OwnerBookingsViewNotifier, BookingsViewMode>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return OwnerBookingsViewNotifier(prefs);
-});
+final ownerBookingsViewProvider =
+    StateNotifierProvider<OwnerBookingsViewNotifier, BookingsViewMode>((ref) {
+      final prefs = ref.watch(sharedPreferencesProvider);
+      return OwnerBookingsViewNotifier(prefs);
+    });
 
 /// State notifier for bookings view mode with persistence
 class OwnerBookingsViewNotifier extends StateNotifier<BookingsViewMode> {
@@ -25,19 +26,18 @@ class OwnerBookingsViewNotifier extends StateNotifier<BookingsViewMode> {
       return BookingsViewMode.fromString(saved);
     }
 
-    // Default based on platform
-    // On mobile (iOS/Android), default to card view
-    // On desktop/web, default to table view
-    if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android) {
-      return BookingsViewMode.card;
-    } else {
-      return BookingsViewMode.table;
-    }
+    // Default based on platform: card for mobile, table for desktop/web
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.iOS || TargetPlatform.android => BookingsViewMode.card,
+      _ => BookingsViewMode.table,
+    };
   }
 
   /// Toggle between card and table view
   Future<void> toggle() async {
-    final newMode = state == BookingsViewMode.card ? BookingsViewMode.table : BookingsViewMode.card;
+    final newMode = state == BookingsViewMode.card
+        ? BookingsViewMode.table
+        : BookingsViewMode.card;
     await setView(newMode);
   }
 

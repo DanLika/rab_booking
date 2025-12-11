@@ -30,17 +30,18 @@ class EmbedCodeGeneratorDialog extends StatefulWidget {
   final String? unitSlug;
 
   @override
-  State<EmbedCodeGeneratorDialog> createState() => _EmbedCodeGeneratorDialogState();
+  State<EmbedCodeGeneratorDialog> createState() =>
+      _EmbedCodeGeneratorDialogState();
 }
 
 class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
-
   static const String _defaultWidgetBaseUrl = 'https://bookbed.io';
   static const String _subdomainBaseDomain = 'bookbed.io';
 
   /// Get the base URL - use subdomain if available, otherwise default
   String get _widgetBaseUrl {
-    if (widget.propertySubdomain != null && widget.propertySubdomain!.isNotEmpty) {
+    if (widget.propertySubdomain != null &&
+        widget.propertySubdomain!.isNotEmpty) {
       return 'https://${widget.propertySubdomain}.$_subdomainBaseDomain';
     }
     return _defaultWidgetBaseUrl;
@@ -102,7 +103,10 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor,
-                borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(4),
+                ),
               ),
               child: Builder(
                 builder: (context) {
@@ -114,7 +118,11 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                       Expanded(
                         child: Text(
                           l10n.embedCodeTitle,
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -137,7 +145,11 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                     children: [
                       // Unit name (if available)
                       if (widget.unitName != null) ...[
-                        _buildInfoCard(icon: Icons.apartment, title: l10n.embedCodeUnit, content: widget.unitName!),
+                        _buildInfoCard(
+                          icon: Icons.apartment,
+                          title: l10n.embedCodeUnit,
+                          content: widget.unitName!,
+                        ),
                         const SizedBox(height: 16),
                       ],
 
@@ -146,7 +158,8 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                         icon: Icons.fingerprint,
                         title: l10n.embedCodeUnitIdTechnical,
                         content: widget.unitId,
-                        onCopy: () => _copyToClipboard(widget.unitId, 'Unit ID'),
+                        onCopy: () =>
+                            _copyToClipboard(widget.unitId, 'Unit ID'),
                       ),
 
                       const SizedBox(height: 16),
@@ -164,7 +177,8 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                         const SizedBox(height: 16),
                         _buildShareableUrlCard(
                           content: _slugUrl,
-                          onCopy: () => _copyToClipboard(_slugUrl, 'Shareable URL'),
+                          onCopy: () =>
+                              _copyToClipboard(_slugUrl, 'Shareable URL'),
                         ),
                       ],
 
@@ -173,14 +187,17 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                       // Embed code card
                       _buildSimpleEmbedCard(
                         code: _embedJsCode,
-                        onCopy: () => _copyToClipboard(_embedJsCode, 'Embed kod'),
+                        onCopy: () =>
+                            _copyToClipboard(_embedJsCode, 'Embed kod'),
                       ),
 
                       const SizedBox(height: 24),
 
                       // Instructions
                       Card(
-                        color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                        color: AppColors.authSecondary.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -188,7 +205,10 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.info_outline, color: AppColors.authSecondary),
+                                  const Icon(
+                                    Icons.info_outline,
+                                    color: AppColors.authSecondary,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     l10n.embedCodeInstructions,
@@ -201,7 +221,13 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              Text(l10n.embedCodeInstructionsText, style: const TextStyle(fontSize: 14, height: 1.5)),
+                              Text(
+                                l10n.embedCodeInstructionsText,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  height: 1.5,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -235,7 +261,11 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade700,
+                  ),
                 ),
               ],
             ),
@@ -243,10 +273,20 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
             Row(
               children: [
                 Expanded(
-                  child: SelectableText(content, style: const TextStyle(fontSize: 14, fontFamily: 'monospace')),
+                  child: SelectableText(
+                    content,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
                 ),
                 if (onCopy != null)
-                  IconButton(icon: const Icon(Icons.copy, size: 20), onPressed: onCopy, tooltip: 'Kopiraj'),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: onCopy,
+                    tooltip: 'Kopiraj',
+                  ),
               ],
             ),
           ],
@@ -256,7 +296,10 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   }
 
   /// Build highlighted card for shareable slug URL
-  Widget _buildShareableUrlCard({required String content, VoidCallback? onCopy}) {
+  Widget _buildShareableUrlCard({
+    required String content,
+    VoidCallback? onCopy,
+  }) {
     return Card(
       color: AppColors.authSecondary.withAlpha((0.08 * 255).toInt()),
       child: Padding(
@@ -266,22 +309,39 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
           children: [
             Row(
               children: [
-                const Icon(Icons.share, size: 20, color: AppColors.authSecondary),
+                const Icon(
+                  Icons.share,
+                  size: 20,
+                  color: AppColors.authSecondary,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Shareable URL (Clean Link)',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.authSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.authSecondary,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.authSecondary.withAlpha((0.15 * 255).toInt()),
+                    color: AppColors.authSecondary.withAlpha(
+                      (0.15 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text(
                     'RECOMMENDED',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.authSecondary),
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.authSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -295,10 +355,20 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
             Row(
               children: [
                 Expanded(
-                  child: SelectableText(content, style: const TextStyle(fontSize: 14, fontFamily: 'monospace')),
+                  child: SelectableText(
+                    content,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
                 ),
                 if (onCopy != null)
-                  IconButton(icon: const Icon(Icons.copy, size: 20), onPressed: onCopy, tooltip: 'Copy'),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: onCopy,
+                    tooltip: 'Copy',
+                  ),
               ],
             ),
           ],
@@ -320,7 +390,11 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
           children: [
             Row(
               children: [
-                const Icon(Icons.code, size: 20, color: AppColors.authSecondary),
+                const Icon(
+                  Icons.code,
+                  size: 20,
+                  color: AppColors.authSecondary,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Embed Code',
@@ -334,7 +408,10 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.authSecondary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ],
@@ -355,7 +432,11 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
               ),
               child: SelectableText(
                 code,
-                style: const TextStyle(fontSize: 13, fontFamily: 'monospace', height: 1.6),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontFamily: 'monospace',
+                  height: 1.6,
+                ),
               ),
             ),
           ],

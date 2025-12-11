@@ -7,7 +7,15 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Activity type enum
-enum ActivityType { booking, confirmed, review, message, payment, cancellation, completed }
+enum ActivityType {
+  booking,
+  confirmed,
+  review,
+  message,
+  payment,
+  cancellation,
+  completed,
+}
 
 /// Activity item model
 class ActivityItem {
@@ -72,7 +80,12 @@ class RecentActivityWidget extends StatelessWidget {
   final VoidCallback? onViewAll;
   final void Function(String bookingId)? onActivityTap;
 
-  const RecentActivityWidget({super.key, required this.activities, this.onViewAll, this.onActivityTap});
+  const RecentActivityWidget({
+    super.key,
+    required this.activities,
+    this.onViewAll,
+    this.onActivityTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +97,9 @@ class RecentActivityWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+        ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Column(
@@ -98,7 +113,9 @@ class RecentActivityWidget extends StatelessWidget {
                 Expanded(
                   child: AutoSizeText(
                     l10n.ownerRecentActivities,
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 1,
                     minFontSize: 14,
                     overflow: TextOverflow.ellipsis,
@@ -109,7 +126,10 @@ class RecentActivityWidget extends StatelessWidget {
                   TextButton(
                     onPressed: onViewAll,
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       foregroundColor: theme.colorScheme.primary,
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -119,12 +139,20 @@ class RecentActivityWidget extends StatelessWidget {
                       children: [
                         AutoSizeText(
                           l10n.ownerViewAll,
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.primary,
+                          ),
                           maxLines: 1,
                           minFontSize: 11,
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.arrow_forward, size: 16, color: theme.colorScheme.primary),
+                        Icon(
+                          Icons.arrow_forward,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        ),
                       ],
                     ),
                   ),
@@ -134,12 +162,20 @@ class RecentActivityWidget extends StatelessWidget {
           ),
 
           // Divider
-          Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+          Divider(
+            height: 1,
+            color: isDark
+                ? AppColors.sectionDividerDark
+                : AppColors.sectionDividerLight,
+          ),
 
           // Activities list
           if (activities.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: AppDimensions.spaceL),
+              padding: const EdgeInsets.symmetric(
+                vertical: 32,
+                horizontal: AppDimensions.spaceL,
+              ),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -149,20 +185,26 @@ class RecentActivityWidget extends StatelessWidget {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.notifications_none_rounded,
                         size: 32,
-                        color: theme.colorScheme.primary.withAlpha((0.6 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.6 * 255).toInt(),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     // Title
                     Text(
                       l10n.ownerNoRecentActivities,
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 4),
@@ -185,8 +227,12 @@ class RecentActivityWidget extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: activities.length > 5 ? 5 : activities.length,
-              separatorBuilder: (context, index) =>
-                  Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                color: isDark
+                    ? AppColors.sectionDividerDark
+                    : AppColors.sectionDividerLight,
+              ),
               itemBuilder: (context, index) {
                 final activity = activities[index];
                 return _ActivityTile(
@@ -230,28 +276,33 @@ class _ActivityTile extends StatelessWidget {
       ),
       title: Text(
         activity.title,
-        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
         activity.subtitle,
-        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontSize: 12,
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          // Subtle tinted background that works in both themes
+          // Subtle tinted background using design system colors
           color: isDark
-              ? const Color(0xFF2D2D3A) // Dark: subtle purple-gray
-              : const Color(0xFFF0EDF5), // Light: subtle purple-tinted gray
+              ? AppColors.sectionDividerDark
+              : AppColors.dialogFooterLight,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isDark
-                ? const Color(0xFF3D3D4A) // Dark: subtle border
-                : const Color(0xFFE0DCE8), // Light: subtle border
+                ? AppColors.borderDark
+                : AppColors.sectionDividerLight,
           ),
         ),
         child: Text(
@@ -259,8 +310,8 @@ class _ActivityTile extends StatelessWidget {
           style: theme.textTheme.labelSmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: isDark
-                ? const Color(0xFFB0B0C0) // Dark: lighter text for better contrast
-                : const Color(0xFF6B6B80), // Light: darker text for better contrast
+                ? AppColors.textSecondaryDark
+                : AppColors.textSecondaryLight,
           ),
           textAlign: TextAlign.center,
         ),

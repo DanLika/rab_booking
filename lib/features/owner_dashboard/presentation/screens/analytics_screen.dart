@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,24 +20,15 @@ import '../widgets/owner_app_drawer.dart';
 
 /// Helper function to create purple shade variations (1-6, darkest to lightest).
 /// Uses fixed purple shades for consistent colors in light and dark mode.
-Color _getPurpleShade(int level) {
-  switch (level) {
-    case 1: // Darkest purple
-      return const Color(0xFF4A3A8C); // Dark violet
-    case 2: // Dark purple
-      return const Color(0xFF5B4BA8); // Medium violet
-    case 3: // Original purple (primary-like)
-      return const Color(0xFF6B4CE6); // Standard purple
-    case 4: // Light purple
-      return const Color(0xFF8B6FF5); // Light purple
-    case 5: // Lighter purple
-      return const Color(0xFFA08BFF); // Very light purple
-    case 6: // Lightest purple (more desaturated)
-      return const Color(0xFFB8A8FF); // Pastel purple
-    default:
-      return const Color(0xFF6B4CE6); // Default to standard purple
-  }
-}
+Color _getPurpleShade(int level) => switch (level) {
+  1 => const Color(0xFF4A3A8C), // Darkest - Dark violet
+  2 => const Color(0xFF5B4BA8), // Dark purple - Medium violet
+  3 => const Color(0xFF6B4CE6), // Original purple (primary-like)
+  4 => const Color(0xFF8B6FF5), // Light purple
+  5 => const Color(0xFFA08BFF), // Lighter purple - Very light
+  6 => const Color(0xFFB8A8FF), // Lightest purple (desaturated)
+  _ => const Color(0xFF6B4CE6), // Default to standard purple
+};
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -45,7 +37,9 @@ class AnalyticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final dateRange = ref.watch(dateRangeNotifierProvider);
-    final analyticsAsync = ref.watch(analyticsNotifierProvider(dateRange: dateRange));
+    final analyticsAsync = ref.watch(
+      analyticsNotifierProvider(dateRange: dateRange),
+    );
 
     return Scaffold(
       drawer: const OwnerAppDrawer(currentRoute: 'analytics'),
@@ -61,7 +55,10 @@ class AnalyticsScreen extends ConsumerWidget {
             _DateRangeSelector(dateRange: dateRange),
             Expanded(
               child: analyticsAsync.when(
-                data: (analytics) => _AnalyticsContent(analytics: analytics, dateRange: dateRange),
+                data: (analytics) => _AnalyticsContent(
+                  analytics: analytics,
+                  dateRange: dateRange,
+                ),
                 loading: SkeletonLoader.analytics,
                 error: (error, stack) => ErrorStateWidget(
                   message: l10n.ownerAnalyticsLoadError,
@@ -90,7 +87,10 @@ class _DateRangeSelector extends ConsumerWidget {
     final isMobile = screenWidth < 600;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding, vertical: isMobile ? 12 : 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.horizontalPadding,
+        vertical: isMobile ? 12 : 16,
+      ),
       color: Colors.transparent,
       child: Row(
         children: [
@@ -104,7 +104,9 @@ class _DateRangeSelector extends ConsumerWidget {
                     label: l10n.ownerAnalyticsLastWeek,
                     selected: dateRange.preset == 'week',
                     onSelected: () {
-                      ref.read(dateRangeNotifierProvider.notifier).setPreset('week');
+                      ref
+                          .read(dateRangeNotifierProvider.notifier)
+                          .setPreset('week');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -112,7 +114,9 @@ class _DateRangeSelector extends ConsumerWidget {
                     label: l10n.ownerAnalyticsLastMonth,
                     selected: dateRange.preset == 'month',
                     onSelected: () {
-                      ref.read(dateRangeNotifierProvider.notifier).setPreset('month');
+                      ref
+                          .read(dateRangeNotifierProvider.notifier)
+                          .setPreset('month');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -120,7 +124,9 @@ class _DateRangeSelector extends ConsumerWidget {
                     label: l10n.ownerAnalyticsLastQuarter,
                     selected: dateRange.preset == 'quarter',
                     onSelected: () {
-                      ref.read(dateRangeNotifierProvider.notifier).setPreset('quarter');
+                      ref
+                          .read(dateRangeNotifierProvider.notifier)
+                          .setPreset('quarter');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -128,24 +134,52 @@ class _DateRangeSelector extends ConsumerWidget {
                     label: l10n.ownerAnalyticsLastYear,
                     selected: dateRange.preset == 'year',
                     onSelected: () {
-                      ref.read(dateRangeNotifierProvider.notifier).setPreset('year');
+                      ref
+                          .read(dateRangeNotifierProvider.notifier)
+                          .setPreset('year');
                     },
                   ),
                   const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final picked = await showCustomDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                        initialDateRange: DateTimeRange(start: dateRange.startDate, end: dateRange.endDate),
-                      );
-                      if (picked != null) {
-                        ref.read(dateRangeNotifierProvider.notifier).setCustomRange(picked.start, picked.end);
-                      }
-                    },
-                    icon: const Icon(Icons.calendar_today, size: 16),
-                    label: Text(l10n.ownerAnalyticsCustomRange),
+                  // Custom range button - styled to match filter chips height
+                  SizedBox(
+                    height: 40, // Match FilterChip approximate height
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final picked = await showCustomDateRangePicker(
+                          context: context,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                          initialDateRange: DateTimeRange(
+                            start: dateRange.startDate,
+                            end: dateRange.endDate,
+                          ),
+                        );
+                        if (picked != null) {
+                          ref
+                              .read(dateRangeNotifierProvider.notifier)
+                              .setCustomRange(picked.start, picked.end);
+                        }
+                      },
+                      icon: const Icon(Icons.calendar_today, size: 16),
+                      label: Text(l10n.ownerAnalyticsCustomRange),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        side: BorderSide(
+                          color: context.gradients.sectionBorder,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -171,17 +205,26 @@ class _AnalyticsContent extends StatelessWidget {
     final isDesktop = screenWidth > 900;
 
     return ListView(
-      padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding, vertical: isMobile ? 12 : 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.horizontalPadding,
+        vertical: isMobile ? 12 : 16,
+      ),
       children: [
         // Metric Cards
         _MetricCardsGrid(analytics: analytics, dateRange: dateRange),
         SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
         // Charts Section - Desktop: side-by-side, Mobile/Tablet: stacked
-        if (isDesktop) _buildDesktopChartsRow(l10n) else _buildStackedCharts(isMobile, l10n),
+        if (isDesktop)
+          _buildDesktopChartsRow(l10n)
+        else
+          _buildStackedCharts(isMobile, l10n),
 
         SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
         // Bottom Section - Desktop: side-by-side, Mobile/Tablet: stacked
-        if (isDesktop) _buildDesktopBottomRow(l10n) else _buildStackedBottom(isMobile, l10n),
+        if (isDesktop)
+          _buildDesktopBottomRow(l10n)
+        else
+          _buildStackedBottom(isMobile, l10n),
 
         SizedBox(height: isMobile ? 12 : 16), // Reduced from 16/24
       ],
@@ -229,7 +272,9 @@ class _AnalyticsContent extends StatelessWidget {
             children: [
               _TopPropertiesList(properties: analytics.topPerformingProperties),
               const SizedBox(height: 20),
-              _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
+              _BookingsBySourceChart(
+                bookingsBySource: analytics.bookingsBySource,
+              ),
             ],
           ),
         ),
@@ -298,7 +343,8 @@ class _MetricCardsGrid extends StatelessWidget {
         _MetricCard(
           title: l10n.ownerAnalyticsTotalRevenue,
           value: '\$${analytics.totalRevenue.toStringAsFixed(2)}',
-          subtitle: '${_getRecentPeriodLabel(l10n)}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
+          subtitle:
+              '${_getRecentPeriodLabel(l10n)}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
           icon: Icons.euro_rounded,
           gradientColor: _getPurpleShade(3), // Original purple
           isMobile: isMobile,
@@ -307,7 +353,8 @@ class _MetricCardsGrid extends StatelessWidget {
         _MetricCard(
           title: l10n.ownerAnalyticsTotalBookings,
           value: '${analytics.totalBookings}',
-          subtitle: '${_getRecentPeriodLabel(l10n)}: ${analytics.monthlyBookings}',
+          subtitle:
+              '${_getRecentPeriodLabel(l10n)}: ${analytics.monthlyBookings}',
           icon: Icons.calendar_today_rounded,
           gradientColor: _getPurpleShade(4), // Light purple
           isMobile: isMobile,
@@ -316,7 +363,10 @@ class _MetricCardsGrid extends StatelessWidget {
         _MetricCard(
           title: l10n.ownerAnalyticsOccupancyRate,
           value: '${analytics.occupancyRate.toStringAsFixed(1)}%',
-          subtitle: l10n.ownerAnalyticsPropertiesActive(analytics.activeProperties, analytics.totalProperties),
+          subtitle: l10n.ownerAnalyticsPropertiesActive(
+            analytics.activeProperties,
+            analytics.totalProperties,
+          ),
           icon: Icons.analytics_rounded,
           gradientColor: _getPurpleShade(5), // Lighter purple
           isMobile: isMobile,
@@ -325,7 +375,9 @@ class _MetricCardsGrid extends StatelessWidget {
         _MetricCard(
           title: l10n.ownerAnalyticsAvgNightlyRate,
           value: '\$${analytics.averageNightlyRate.toStringAsFixed(2)}',
-          subtitle: l10n.ownerAnalyticsCancellation(analytics.cancellationRate.toStringAsFixed(1)),
+          subtitle: l10n.ownerAnalyticsCancellation(
+            analytics.cancellationRate.toStringAsFixed(1),
+          ),
           icon: Icons.trending_up_rounded,
           gradientColor: _getPurpleShade(2), // Dark purple
           isMobile: isMobile,
@@ -366,7 +418,8 @@ class _MetricCard extends StatelessWidget {
     double cardWidth;
     if (isMobile) {
       // Mobile: 2 cards per row
-      cardWidth = (screenWidth - (spacing * 3 + 32)) / 2; // 32 = left/right padding
+      cardWidth =
+          (screenWidth - (spacing * 3 + 32)) / 2; // 32 = left/right padding
     } else if (isTablet) {
       // Tablet: 3 cards per row
       cardWidth = (screenWidth - (spacing * 4 + 48)) / 3;
@@ -377,7 +430,9 @@ class _MetricCard extends StatelessWidget {
 
     // Neutralna pozadina umjesto šarenih gradijenata
     final cardBgColor = isDark ? const Color(0xFF1E1E28) : Colors.white;
-    final borderColor = isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight;
+    final borderColor = isDark
+        ? AppColors.sectionDividerDark
+        : AppColors.sectionDividerLight;
 
     // Accent boja samo za ikonu
     final accentColor = gradientColor;
@@ -486,12 +541,16 @@ class _RevenueChart extends StatelessWidget {
               Icon(
                 Icons.insert_chart_outlined_rounded,
                 size: 40,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 l10n.ownerAnalyticsNoData,
-                style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -514,7 +573,10 @@ class _RevenueChart extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+              boxShadow: AppShadows.getElevation(
+                1,
+                isDark: theme.brightness == Brightness.dark,
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
@@ -522,7 +584,10 @@ class _RevenueChart extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: context.gradients.cardBackground,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -535,10 +600,16 @@ class _RevenueChart extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(Icons.show_chart, color: theme.colorScheme.primary, size: 16),
+                            child: Icon(
+                              Icons.show_chart,
+                              color: theme.colorScheme.primary,
+                              size: 16,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -547,7 +618,9 @@ class _RevenueChart extends StatelessWidget {
                               children: [
                                 Text(
                                   l10n.ownerAnalyticsRevenueTitle,
-                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 Text(
                                   l10n.ownerAnalyticsRevenueSubtitle,
@@ -568,45 +641,81 @@ class _RevenueChart extends StatelessWidget {
                           data: data
                               .asMap()
                               .entries
-                              .map((e) => {'index': e.key, 'label': e.value.label, 'amount': e.value.amount})
+                              .map(
+                                (e) => {
+                                  'index': e.key,
+                                  'label': e.value.label,
+                                  'amount': e.value.amount,
+                                },
+                              )
                               .toList(),
                           variables: {
-                            'index': Variable(accessor: (Map map) => map['index'] as num),
-                            'amount': Variable(accessor: (Map map) => map['amount'] as num, scale: LinearScale(min: 0)),
+                            'index': Variable(
+                              accessor: (Map map) => map['index'] as num,
+                            ),
+                            'amount': Variable(
+                              accessor: (Map map) => map['amount'] as num,
+                              scale: LinearScale(min: 0),
+                            ),
                           },
-                          coord: RectCoord(horizontalRangeUpdater: Defaults.horizontalRangeEvent),
+                          coord: RectCoord(
+                            horizontalRangeUpdater:
+                                Defaults.horizontalRangeEvent,
+                          ),
                           marks: [
                             AreaMark(
-                              shape: ShapeEncode(value: BasicAreaShape(smooth: true)),
-                              color: ColorEncode(value: theme.colorScheme.primary.withValues(alpha: 0.15)),
+                              shape: ShapeEncode(
+                                value: BasicAreaShape(smooth: true),
+                              ),
+                              color: ColorEncode(
+                                value: theme.colorScheme.primary.withValues(
+                                  alpha: 0.15,
+                                ),
+                              ),
                               entrance: {MarkEntrance.y},
                             ),
                             LineMark(
-                              shape: ShapeEncode(value: BasicLineShape(smooth: true)),
+                              shape: ShapeEncode(
+                                value: BasicLineShape(smooth: true),
+                              ),
                               size: SizeEncode(value: 3),
-                              color: ColorEncode(value: theme.colorScheme.primary),
+                              color: ColorEncode(
+                                value: theme.colorScheme.primary,
+                              ),
                               entrance: {MarkEntrance.y},
                             ),
                             PointMark(
                               shape: ShapeEncode(value: CircleShape()),
                               size: SizeEncode(value: 8),
-                              color: ColorEncode(value: theme.colorScheme.primary),
+                              color: ColorEncode(
+                                value: theme.colorScheme.primary,
+                              ),
                               entrance: {MarkEntrance.opacity},
                             ),
                           ],
-                          axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+                          axes: [
+                            Defaults.horizontalAxis,
+                            Defaults.verticalAxis,
+                          ],
                           selections: {
                             'touchMove': PointSelection(
                               on: {GestureType.hover},
-                              devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                              devices: {
+                                PointerDeviceKind.touch,
+                                PointerDeviceKind.mouse,
+                              },
                             ),
                           },
                           tooltip: TooltipGuide(
                             backgroundColor: theme.colorScheme.surface,
                             elevation: 8,
-                            textStyle: AppTypography.bodySmall.copyWith(color: theme.colorScheme.onSurface),
+                            textStyle: AppTypography.bodySmall.copyWith(
+                              color: theme.colorScheme.onSurface,
+                            ),
                           ),
-                          crosshair: CrosshairGuide(followPointer: [false, true]),
+                          crosshair: CrosshairGuide(
+                            followPointer: [false, true],
+                          ),
                         ),
                       ),
                     ],
@@ -642,12 +751,16 @@ class _BookingsChart extends StatelessWidget {
               Icon(
                 Icons.event_busy_rounded,
                 size: 40,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 l10n.ownerAnalyticsNoData,
-                style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -670,7 +783,10 @@ class _BookingsChart extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+              boxShadow: AppShadows.getElevation(
+                1,
+                isDark: theme.brightness == Brightness.dark,
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
@@ -678,7 +794,10 @@ class _BookingsChart extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: context.gradients.cardBackground,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -691,10 +810,16 @@ class _BookingsChart extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(Icons.event, color: theme.colorScheme.primary, size: 16),
+                            child: Icon(
+                              Icons.event,
+                              color: theme.colorScheme.primary,
+                              size: 16,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -703,7 +828,9 @@ class _BookingsChart extends StatelessWidget {
                               children: [
                                 Text(
                                   l10n.ownerAnalyticsBookingsTitle,
-                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 Text(
                                   l10n.ownerAnalyticsBookingsSubtitle,
@@ -724,38 +851,69 @@ class _BookingsChart extends StatelessWidget {
                           data: data
                               .asMap()
                               .entries
-                              .map((e) => {'index': e.key, 'label': e.value.label, 'count': e.value.count})
+                              .map(
+                                (e) => {
+                                  'index': e.key,
+                                  'label': e.value.label,
+                                  'count': e.value.count,
+                                },
+                              )
                               .toList(),
                           variables: {
-                            'index': Variable(accessor: (Map map) => map['index'] as num),
-                            'count': Variable(accessor: (Map map) => map['count'] as num, scale: LinearScale(min: 0)),
+                            'index': Variable(
+                              accessor: (Map map) => map['index'] as num,
+                            ),
+                            'count': Variable(
+                              accessor: (Map map) => map['count'] as num,
+                              scale: LinearScale(min: 0),
+                            ),
                           },
-                          coord: RectCoord(horizontalRangeUpdater: Defaults.horizontalRangeEvent),
+                          coord: RectCoord(
+                            horizontalRangeUpdater:
+                                Defaults.horizontalRangeEvent,
+                          ),
                           marks: [
                             IntervalMark(
-                              shape: ShapeEncode(value: RectShape(borderRadius: BorderRadius.circular(8))),
+                              shape: ShapeEncode(
+                                value: RectShape(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
                               elevation: ElevationEncode(value: 2),
                               gradient: GradientEncode(
                                 value: LinearGradient(
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
-                                  colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
+                                  colors: [
+                                    theme.colorScheme.primary,
+                                    theme.colorScheme.primary.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                  ],
                                 ),
                               ),
                               entrance: {MarkEntrance.y},
                             ),
                           ],
-                          axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+                          axes: [
+                            Defaults.horizontalAxis,
+                            Defaults.verticalAxis,
+                          ],
                           selections: {
                             'touchMove': PointSelection(
                               on: {GestureType.hover},
-                              devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                              devices: {
+                                PointerDeviceKind.touch,
+                                PointerDeviceKind.mouse,
+                              },
                             ),
                           },
                           tooltip: TooltipGuide(
                             backgroundColor: theme.colorScheme.surface,
                             elevation: 8,
-                            textStyle: AppTypography.bodySmall.copyWith(color: theme.colorScheme.onSurface),
+                            textStyle: AppTypography.bodySmall.copyWith(
+                              color: theme.colorScheme.onSurface,
+                            ),
                           ),
                         ),
                       ),
@@ -787,7 +945,10 @@ class _TopPropertiesList extends StatelessWidget {
       return Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+          boxShadow: AppShadows.getElevation(
+            1,
+            isDark: theme.brightness == Brightness.dark,
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -795,7 +956,10 @@ class _TopPropertiesList extends StatelessWidget {
             decoration: BoxDecoration(
               color: context.gradients.cardBackground,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -805,12 +969,16 @@ class _TopPropertiesList extends StatelessWidget {
                     Icon(
                       Icons.home_work_outlined,
                       size: 40,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.5,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       l10n.ownerAnalyticsNoData,
-                      style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -824,7 +992,10 @@ class _TopPropertiesList extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+        boxShadow: AppShadows.getElevation(
+          1,
+          isDark: theme.brightness == Brightness.dark,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -832,7 +1003,10 @@ class _TopPropertiesList extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -845,10 +1019,16 @@ class _TopPropertiesList extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.home_work, color: theme.colorScheme.primary, size: 18),
+                      child: Icon(
+                        Icons.home_work,
+                        color: theme.colorScheme.primary,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -885,12 +1065,17 @@ class _TopPropertiesList extends StatelessWidget {
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: properties.length > 3 ? 3 : properties.length, // Limit to Top 3
+                  itemCount: properties.length > 3
+                      ? 3
+                      : properties.length, // Limit to Top 3
                   separatorBuilder: (context, index) => const Divider(),
                   itemBuilder: (context, index) {
                     final property = properties[index];
                     return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), // Compact padding
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ), // Compact padding
                       leading: CircleAvatar(
                         radius: 16, // Smaller circle (default 20)
                         backgroundColor: AppColors.authPrimary,
@@ -903,13 +1088,19 @@ class _TopPropertiesList extends StatelessWidget {
                           ),
                         ),
                       ),
-                      title: Text(
+                      title: AutoSizeText(
                         property.propertyName,
-                        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
                         '${property.bookings} ${l10n.ownerAnalyticsBookings} • ${property.occupancyRate.toStringAsFixed(1)}% ${l10n.ownerAnalyticsOccupancy}',
-                        style: AppTypography.bodySmall.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -925,7 +1116,9 @@ class _TopPropertiesList extends StatelessWidget {
                               style: AppTypography.bodySmall.copyWith(
                                 // Smaller font (was bodyMedium)
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary, // Purple revenue
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary, // Purple revenue
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -936,7 +1129,11 @@ class _TopPropertiesList extends StatelessWidget {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.star, size: 14, color: AppColors.star),
+                                  const Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: AppColors.star,
+                                  ),
                                   const SizedBox(width: 2),
                                   Text(
                                     property.rating.toStringAsFixed(1),
@@ -980,8 +1177,12 @@ class _WidgetAnalyticsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final widgetBookingsPercent = totalBookings > 0 ? (widgetBookings / totalBookings * 100).toStringAsFixed(1) : '0.0';
-    final widgetRevenuePercent = totalRevenue > 0 ? (widgetRevenue / totalRevenue * 100).toStringAsFixed(1) : '0.0';
+    final widgetBookingsPercent = totalBookings > 0
+        ? (widgetBookings / totalBookings * 100).toStringAsFixed(1)
+        : '0.0';
+    final widgetRevenuePercent = totalRevenue > 0
+        ? (widgetRevenue / totalRevenue * 100).toStringAsFixed(1)
+        : '0.0';
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
@@ -989,7 +1190,10 @@ class _WidgetAnalyticsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+        boxShadow: AppShadows.getElevation(
+          1,
+          isDark: theme.brightness == Brightness.dark,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -997,7 +1201,10 @@ class _WidgetAnalyticsCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -1010,10 +1217,16 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.widgets, color: theme.colorScheme.primary, size: 18),
+                      child: Icon(
+                        Icons.widgets,
+                        color: theme.colorScheme.primary,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -1047,39 +1260,37 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                 const SizedBox(height: 14),
 
                 // Widget Bookings Row
-                Row(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.ownerAnalyticsWidgetBookings,
-                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                          ),
-                          const SizedBox(height: 4),
-                          Wrap(
-                            spacing: 8,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                '$widgetBookings',
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              Text(
-                                l10n.ownerAnalyticsOfTotal(widgetBookingsPercent),
-                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                              ),
-                            ],
-                          ),
-                        ],
+                    Text(
+                      l10n.ownerAnalyticsWidgetBookings,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '$widgetBookings',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 18 : 20,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.ownerAnalyticsOfTotal(widgetBookingsPercent),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1087,47 +1298,52 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                 // Progress bar for bookings
                 LinearProgressIndicator(
                   value: totalBookings > 0 ? widgetBookings / totalBookings : 0,
-                  backgroundColor: theme.brightness == Brightness.dark ? AppColors.borderDark : AppColors.borderLight,
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                  backgroundColor: theme.brightness == Brightness.dark
+                      ? AppColors.borderDark
+                      : AppColors.borderLight,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    theme.colorScheme.primary,
+                  ),
                   minHeight: 8,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 const SizedBox(height: 20),
 
                 // Widget Revenue Row
-                Row(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.ownerAnalyticsWidgetRevenue,
-                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                          ),
-                          const SizedBox(height: 4),
-                          Wrap(
-                            spacing: 8,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                '\$${widgetRevenue.toStringAsFixed(2)}',
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              Text(
-                                l10n.ownerAnalyticsOfTotal(widgetRevenuePercent),
-                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                              ),
-                            ],
-                          ),
-                        ],
+                    Text(
+                      l10n.ownerAnalyticsWidgetRevenue,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '\$${widgetRevenue.toStringAsFixed(2)}',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 18 : 20,
+                              letterSpacing: -0.5,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.ownerAnalyticsOfTotal(widgetRevenuePercent),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1135,8 +1351,12 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                 // Progress bar for revenue
                 LinearProgressIndicator(
                   value: totalRevenue > 0 ? widgetRevenue / totalRevenue : 0,
-                  backgroundColor: theme.brightness == Brightness.dark ? AppColors.borderDark : AppColors.borderLight,
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                  backgroundColor: theme.brightness == Brightness.dark
+                      ? AppColors.borderDark
+                      : AppColors.borderLight,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    theme.colorScheme.primary,
+                  ),
                   minHeight: 8,
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -1155,45 +1375,25 @@ class _BookingsBySourceChart extends StatelessWidget {
 
   const _BookingsBySourceChart({required this.bookingsBySource});
 
-  String _getSourceDisplayName(String source) {
-    switch (source.toLowerCase()) {
-      case 'widget':
-        return 'Widget';
-      case 'admin':
-        return 'Admin';
-      case 'direct':
-        return 'Direct';
-      case 'api':
-        return 'API';
-      case 'booking.com':
-      case 'booking_com':
-        return 'Booking.com';
-      case 'airbnb':
-        return 'Airbnb';
-      case 'ical':
-        return 'iCal Sync';
-      default:
-        return source;
-    }
-  }
+  String _getSourceDisplayName(String source) => switch (source.toLowerCase()) {
+    'widget' => 'Widget',
+    'admin' => 'Admin',
+    'direct' => 'Direct',
+    'api' => 'API',
+    'booking.com' || 'booking_com' => 'Booking.com',
+    'airbnb' => 'Airbnb',
+    'ical' => 'iCal Sync',
+    _ => source,
+  };
 
-  Color _getSourceColor(String source) {
-    switch (source.toLowerCase()) {
-      case 'widget':
-        return _getPurpleShade(3); // Original purple
-      case 'admin':
-        return _getPurpleShade(2); // Dark purple
-      case 'direct':
-        return _getPurpleShade(4); // Light purple
-      case 'booking.com':
-      case 'booking_com':
-        return _getPurpleShade(1); // Darkest purple
-      case 'airbnb':
-        return _getPurpleShade(5); // Lighter purple
-      default:
-        return _getPurpleShade(6); // Lightest purple (desaturated)
-    }
-  }
+  Color _getSourceColor(String source) => switch (source.toLowerCase()) {
+    'widget' => _getPurpleShade(3), // Original purple
+    'admin' => _getPurpleShade(2), // Dark purple
+    'direct' => _getPurpleShade(4), // Light purple
+    'booking.com' || 'booking_com' => _getPurpleShade(1), // Darkest purple
+    'airbnb' => _getPurpleShade(5), // Lighter purple
+    _ => _getPurpleShade(6), // Lightest purple (desaturated)
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -1209,11 +1409,19 @@ class _BookingsBySourceChart extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.source_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+              Icon(
+                Icons.source_outlined,
+                size: 48,
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.ownerAnalyticsNoSourceData,
-                style: AppTypography.bodyMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -1221,21 +1429,30 @@ class _BookingsBySourceChart extends StatelessWidget {
       );
     }
 
-    final sortedEntries = bookingsBySource.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sortedEntries = bookingsBySource.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
-    final totalCount = bookingsBySource.values.fold<int>(0, (sum, count) => sum + count);
+    final totalCount = bookingsBySource.values.fold<int>(
+      0,
+      (sum, count) => sum + count,
+    );
 
     // Limit to top 5 sources to prevent overcrowding
     final displayEntries = sortedEntries.take(5).toList();
 
     // Calculate "Other" count if there are more than 5 sources
     final hasOther = sortedEntries.length > 5;
-    final otherCount = hasOther ? sortedEntries.skip(5).fold<int>(0, (sum, entry) => sum + entry.value) : 0;
+    final otherCount = hasOther
+        ? sortedEntries.skip(5).fold<int>(0, (sum, entry) => sum + entry.value)
+        : 0;
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+        boxShadow: AppShadows.getElevation(
+          1,
+          isDark: theme.brightness == Brightness.dark,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -1243,7 +1460,10 @@ class _BookingsBySourceChart extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.4), width: 1.5),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -1256,10 +1476,16 @@ class _BookingsBySourceChart extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.source, color: theme.colorScheme.primary, size: 18),
+                      child: Icon(
+                        Icons.source,
+                        color: theme.colorScheme.primary,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -1294,7 +1520,9 @@ class _BookingsBySourceChart extends StatelessWidget {
                 ...displayEntries.map((sourceEntry) {
                   final source = sourceEntry.key;
                   final count = sourceEntry.value;
-                  final percentage = totalCount > 0 ? (count / totalCount * 100).toStringAsFixed(1) : '0.0';
+                  final percentage = totalCount > 0
+                      ? (count / totalCount * 100).toStringAsFixed(1)
+                      : '0.0';
                   final color = _getSourceColor(source);
 
                   return Padding(
@@ -1311,16 +1539,20 @@ class _BookingsBySourceChart extends StatelessWidget {
                                   Container(
                                     width: 14,
                                     height: 14,
-                                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
                                   const SizedBox(width: 10),
                                   Flexible(
                                     child: Text(
                                       _getSourceDisplayName(source),
-                                      style: theme.textTheme.bodyLarge?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 15,
-                                      ),
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 15,
+                                          ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -1330,7 +1562,10 @@ class _BookingsBySourceChart extends StatelessWidget {
                             ),
                             Text(
                               '$count ($percentage%)',
-                              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 15),
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                             ),
                           ],
                         ),
@@ -1366,14 +1601,18 @@ class _BookingsBySourceChart extends StatelessWidget {
                                     width: 12,
                                     height: 12,
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Flexible(
                                     child: Text(
-                                      l10n.ownerAnalyticsOther(sortedEntries.length - 5),
+                                      l10n.ownerAnalyticsOther(
+                                        sortedEntries.length - 5,
+                                      ),
                                       style: AppTypography.bodyMedium,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -1384,17 +1623,22 @@ class _BookingsBySourceChart extends StatelessWidget {
                             ),
                             Text(
                               '$otherCount (${totalCount > 0 ? (otherCount / totalCount * 100).toStringAsFixed(1) : "0.0"}%)',
-                              style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                              style: AppTypography.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         LinearProgressIndicator(
                           value: totalCount > 0 ? otherCount / totalCount : 0,
-                          backgroundColor: Theme.of(context).brightness == Brightness.dark
+                          backgroundColor:
+                              Theme.of(context).brightness == Brightness.dark
                               ? AppColors.borderDark
                               : AppColors.borderLight,
-                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onSurfaceVariant),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                           minHeight: 8,
                           borderRadius: BorderRadius.circular(4),
                         ),

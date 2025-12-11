@@ -25,9 +25,7 @@ class BookingCardGuestInfo extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withAlpha(
-              (0.08 * 255).toInt(),
-            ),
+            color: theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -65,8 +63,9 @@ class BookingCardGuestInfo extends StatelessWidget {
                     child: Text(
                       ownerBooking.guestEmail,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withAlpha((0.6 * 255).toInt()),
+                        color: theme.colorScheme.onSurface.withAlpha(
+                          (0.6 * 255).toInt(),
+                        ),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -81,18 +80,19 @@ class BookingCardGuestInfo extends StatelessWidget {
                     Icon(
                       Icons.phone_outlined,
                       size: 16,
-                      color: theme.colorScheme.onSurface
-                          .withAlpha((0.5 * 255).toInt()),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.5 * 255).toInt(),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         ownerBooking.guestPhone!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withAlpha((0.6 * 255).toInt()),
-                            ),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withAlpha(
+                            (0.6 * 255).toInt(),
+                          ),
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),

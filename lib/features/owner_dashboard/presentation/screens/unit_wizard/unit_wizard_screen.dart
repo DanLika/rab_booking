@@ -32,7 +32,12 @@ class UnitWizardScreen extends ConsumerStatefulWidget {
   final String? propertyId; // Pre-select property when creating new unit
   final String? duplicateFromId; // ID of unit to duplicate (pre-fill data)
 
-  const UnitWizardScreen({super.key, this.unitId, this.propertyId, this.duplicateFromId});
+  const UnitWizardScreen({
+    super.key,
+    this.unitId,
+    this.propertyId,
+    this.duplicateFromId,
+  });
 
   @override
   ConsumerState<UnitWizardScreen> createState() => _UnitWizardScreenState();
@@ -51,7 +56,9 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
 
   /// Initialize wizard with appropriate data
   Future<void> _initializeWizard() async {
-    final notifier = ref.read(unitWizardNotifierProvider(widget.unitId).notifier);
+    final notifier = ref.read(
+      unitWizardNotifierProvider(widget.unitId).notifier,
+    );
 
     // Case 1: Duplicate existing unit
     if (widget.duplicateFromId != null && widget.unitId == null) {
@@ -69,7 +76,9 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
   Future<void> _loadDuplicateData(UnitWizardNotifier notifier) async {
     try {
       final unitRepository = ref.read(unitRepositoryProvider);
-      final sourceUnit = await unitRepository.fetchUnitById(widget.duplicateFromId!);
+      final sourceUnit = await unitRepository.fetchUnitById(
+        widget.duplicateFromId!,
+      );
 
       if (sourceUnit != null) {
         // Pre-fill all fields from source unit (except id and name)
@@ -103,15 +112,25 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
   Future<void> _goToStep(int step) async {
     if (step < 1 || step > 5) return;
 
-    await _pageController.animateToPage(step - 1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    await _pageController.animateToPage(
+      step - 1,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
 
-    ref.read(unitWizardNotifierProvider(widget.unitId).notifier).jumpToStep(step);
+    ref
+        .read(unitWizardNotifierProvider(widget.unitId).notifier)
+        .jumpToStep(step);
   }
 
   /// Handle next button
   Future<void> _handleNext() async {
-    final notifier = ref.read(unitWizardNotifierProvider(widget.unitId).notifier);
-    final currentState = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
+    final notifier = ref.read(
+      unitWizardNotifierProvider(widget.unitId).notifier,
+    );
+    final currentState = ref
+        .read(unitWizardNotifierProvider(widget.unitId))
+        .value;
 
     if (currentState == null) return;
 
@@ -129,7 +148,12 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     // Move to next step
     if (currentStep < 5) {
       notifier.goToNextStep();
-      unawaited(_pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut));
+      unawaited(
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        ),
+      );
     } else {
       // Final step - publish unit
       await _publishUnit();
@@ -138,16 +162,27 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
 
   /// Handle back button
   void _handleBack() {
-    final notifier = ref.read(unitWizardNotifierProvider(widget.unitId).notifier);
+    final notifier = ref.read(
+      unitWizardNotifierProvider(widget.unitId).notifier,
+    );
     notifier.goToPreviousStep();
 
-    unawaited(_pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut));
+    unawaited(
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   /// Handle skip button (optional steps only)
   void _handleSkip() {
-    final notifier = ref.read(unitWizardNotifierProvider(widget.unitId).notifier);
-    final currentState = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
+    final notifier = ref.read(
+      unitWizardNotifierProvider(widget.unitId).notifier,
+    );
+    final currentState = ref
+        .read(unitWizardNotifierProvider(widget.unitId))
+        .value;
 
     if (currentState == null) return;
 
@@ -155,16 +190,26 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     notifier.markStepSkipped(currentState.currentStep);
     notifier.goToNextStep();
 
-    unawaited(_pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut));
+    unawaited(
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   /// Validate step data
   bool _validateStep(int step, dynamic state) {
     switch (step) {
       case 1: // Basic Info - only validate name and slug (propertyId will be added in Phase 3)
-        return state.name != null && state.name!.isNotEmpty && state.slug != null && state.slug!.isNotEmpty;
+        return state.name != null &&
+            state.name!.isNotEmpty &&
+            state.slug != null &&
+            state.slug!.isNotEmpty;
       case 2: // Capacity & Space
-        return state.bedrooms != null && state.bathrooms != null && state.maxGuests != null;
+        return state.bedrooms != null &&
+            state.bathrooms != null &&
+            state.maxGuests != null;
       case 3: // Pricing & Availability
         return state.pricePerNight != null && state.minStayNights != null;
       case 4: // Photos (optional)
@@ -218,13 +263,21 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       // Get current draft
       final draft = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
       if (draft == null) {
-        throw PropertyException('Draft not found', code: 'property/draft-not-found');
+        throw PropertyException(
+          'Draft not found',
+          code: 'property/draft-not-found',
+        );
       }
 
       // Validate required fields
       // Note: propertyId validation temporarily disabled until Phase 3 (Property Selector)
-      if (draft.name == null || draft.pricePerNight == null || draft.maxGuests == null) {
-        throw PropertyException('Missing required fields', code: 'property/missing-required-fields');
+      if (draft.name == null ||
+          draft.pricePerNight == null ||
+          draft.maxGuests == null) {
+        throw PropertyException(
+          'Missing required fields',
+          code: 'property/missing-required-fields',
+        );
       }
 
       // Get propertyId and ownerId - use draft's propertyId or fetch owner's first property
@@ -232,7 +285,10 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       String ownerId;
       final properties = await ref.read(ownerPropertiesProvider.future);
       if (properties.isEmpty) {
-        throw PropertyException('No properties found. Please create a property first.', code: 'property/no-properties');
+        throw PropertyException(
+          'No properties found. Please create a property first.',
+          code: 'property/no-properties',
+        );
       }
 
       if (draft.propertyId != null && draft.propertyId!.isNotEmpty) {
@@ -244,13 +300,19 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
 
       // ownerId is optional - security rules check parent property's owner_id
       // We still set it for backwards compatibility from parent property
-      final property = properties.firstWhere((p) => p.id == propertyId, orElse: () => properties.first);
+      final property = properties.firstWhere(
+        (p) => p.id == propertyId,
+        orElse: () => properties.first,
+      );
       ownerId = property.ownerId ?? '';
 
       // Generate slug from name if not set
       final slug =
           draft.slug ??
-          draft.name!.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
+          draft.name!
+              .toLowerCase()
+              .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+              .replaceAll(RegExp(r'^-+|-+$'), '');
 
       // Create or update UnitModel
       final unit = UnitModel(
@@ -284,7 +346,11 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       if (widget.unitId == null && mounted) {
         await ref
             .read(widgetSettingsRepositoryProvider)
-            .createDefaultSettings(propertyId: propertyId, unitId: savedUnit.id, ownerId: ownerId);
+            .createDefaultSettings(
+              propertyId: propertyId,
+              unitId: savedUnit.id,
+              ownerId: ownerId,
+            );
       }
 
       // Invalidate units provider so Unit Hub refreshes its list
@@ -295,7 +361,9 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         final l10n = AppLocalizations.of(context);
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          widget.unitId == null ? l10n.unitWizardCreateSuccess : l10n.unitWizardUpdateSuccess,
+          widget.unitId == null
+              ? l10n.unitWizardCreateSuccess
+              : l10n.unitWizardUpdateSuccess,
         );
       }
 
@@ -327,7 +395,9 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       appBar: AppBar(
         toolbarHeight: 56.0, // Standard AppBar height (matches CommonAppBar)
         title: Text(
-          widget.unitId == null ? l10n.unitWizardCreateTitle : l10n.unitWizardEditTitle,
+          widget.unitId == null
+              ? l10n.unitWizardCreateTitle
+              : l10n.unitWizardEditTitle,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -339,7 +409,11 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: GradientTokens.brandPrimary)),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: GradientTokens.brandPrimary,
+          ),
+        ),
       ),
       body: wizardState.when(
         data: (draft) => Column(
@@ -382,13 +456,22 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
-              Text(l10n.unitWizardFailedToLoad, style: theme.textTheme.titleLarge),
+              Text(
+                l10n.unitWizardFailedToLoad,
+                style: theme.textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
               Text(
                 error.toString(),
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

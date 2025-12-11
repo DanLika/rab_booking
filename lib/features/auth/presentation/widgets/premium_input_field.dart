@@ -31,23 +31,26 @@ class PremiumInputField extends StatefulWidget {
 }
 
 class _PremiumInputFieldState extends State<PremiumInputField> {
+  static const _borderRadius = BorderRadius.all(Radius.circular(12));
   bool _isFocused = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final gradients = context.gradients;
+    final primaryColor = theme.colorScheme.primary;
+    final inactiveColor = theme.colorScheme.onSurfaceVariant;
+    final defaultBorder = BorderSide(color: gradients.sectionBorder.withAlpha(128));
 
     return Focus(
-      onFocusChange: (hasFocus) {
-        setState(() => _isFocused = hasFocus);
-      },
+      onFocusChange: (hasFocus) => setState(() => _isFocused = hasFocus),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: _borderRadius,
           boxShadow: _isFocused
-              ? [BoxShadow(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()), blurRadius: 20)]
-              : [],
+              ? [BoxShadow(color: primaryColor.withAlpha(77), blurRadius: 20)]
+              : const [],
         ),
         child: TextFormField(
           controller: widget.controller,
@@ -56,43 +59,41 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           maxLines: widget.maxLines,
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface),
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: theme.colorScheme.onSurface,
+          ),
           decoration: InputDecoration(
             labelText: widget.labelText,
             labelStyle: TextStyle(
-              color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+              color: _isFocused ? primaryColor : inactiveColor,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                    color: _isFocused ? primaryColor : inactiveColor,
                     size: 20,
                   )
                 : null,
             suffixIcon: widget.suffixIcon,
             filled: true,
-            fillColor: context.gradients.inputFillColor,
+            fillColor: gradients.inputFillColor,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-            ),
+            border: OutlineInputBorder(borderRadius: _borderRadius, borderSide: defaultBorder),
+            enabledBorder: OutlineInputBorder(borderRadius: _borderRadius, borderSide: defaultBorder),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+              borderRadius: _borderRadius,
+              borderSide: BorderSide(color: primaryColor, width: 2),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: _borderRadius,
               borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: _borderRadius,
               borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
             ),
           ),

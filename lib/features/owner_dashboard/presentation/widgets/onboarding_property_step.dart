@@ -11,10 +11,12 @@ class OnboardingPropertyStep extends ConsumerStatefulWidget {
   const OnboardingPropertyStep({super.key});
 
   @override
-  ConsumerState<OnboardingPropertyStep> createState() => _OnboardingPropertyStepState();
+  ConsumerState<OnboardingPropertyStep> createState() =>
+      _OnboardingPropertyStepState();
 }
 
-class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep> {
+class _OnboardingPropertyStepState
+    extends ConsumerState<OnboardingPropertyStep> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
@@ -74,9 +76,15 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
         address: _addressController.text.trim(),
         city: _cityController.text.trim(),
         country: _countryController.text.trim(),
-        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-        email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-        website: _websiteController.text.trim().isEmpty ? null : _websiteController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
+        email: _emailController.text.trim().isEmpty
+            ? null
+            : _emailController.text.trim(),
+        website: _websiteController.text.trim().isEmpty
+            ? null
+            : _websiteController.text.trim(),
       );
 
       ref.read(onboardingNotifierProvider.notifier).savePropertyData(data);
@@ -96,12 +104,16 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
           children: [
             Text(
               l10n.onboardingPropertyTitle,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               l10n.onboardingPropertySubtitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
 
@@ -133,7 +145,10 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
                 context: context,
               ),
               items: PropertyType.values.map((type) {
-                return DropdownMenuItem(value: type, child: Text(_getPropertyTypeLabel(type, l10n)));
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(_getPropertyTypeLabel(type, l10n)),
+                );
               }).toList(),
               onChanged: (value) {
                 setState(() => _selectedType = value);
@@ -209,7 +224,9 @@ class _OnboardingPropertyStepState extends ConsumerState<OnboardingPropertyStep>
             // Optional Fields Section
             Text(
               l10n.onboardingPropertyOptional,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
 

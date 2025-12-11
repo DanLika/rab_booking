@@ -13,7 +13,11 @@ class RevenueDataPoint {
   final double value;
   final DateTime date;
 
-  const RevenueDataPoint({required this.label, required this.value, required this.date});
+  const RevenueDataPoint({
+    required this.label,
+    required this.value,
+    required this.date,
+  });
 }
 
 /// Revenue chart widget
@@ -22,7 +26,12 @@ class RevenueChartWidget extends StatelessWidget {
   final String? title;
   final String? subtitle;
 
-  const RevenueChartWidget({super.key, required this.data, this.title, this.subtitle});
+  const RevenueChartWidget({
+    super.key,
+    required this.data,
+    this.title,
+    this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +49,18 @@ class RevenueChartWidget extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title ?? AppLocalizations.of(context).revenueChartTitle, style: AppTypography.h3),
+                    Text(
+                      title ?? AppLocalizations.of(context).revenueChartTitle,
+                      style: AppTypography.h3,
+                    ),
                     if (subtitle != null) ...[
                       const SizedBox(height: AppDimensions.spaceXXS),
                       Text(
                         subtitle!,
                         style: AppTypography.small.copyWith(
-                          color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
+                          color: isDark
+                              ? AppColors.textSecondaryDark
+                              : context.textColorSecondary,
                         ),
                       ),
                     ],
@@ -68,7 +82,9 @@ class RevenueChartWidget extends StatelessWidget {
                   Text(
                     AppLocalizations.of(context).revenueChartLegend,
                     style: AppTypography.small.copyWith(
-                      color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : context.textColorSecondary,
                     ),
                   ),
                 ],
@@ -82,19 +98,25 @@ class RevenueChartWidget extends StatelessWidget {
           if (data.isEmpty)
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppDimensions.spaceXL),
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppDimensions.spaceXL,
+                ),
                 child: Column(
                   children: [
                     Icon(
                       Icons.bar_chart,
                       size: 64,
-                      color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : context.textColorSecondary,
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     Text(
                       AppLocalizations.of(context).revenueChartNoData,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : context.textColorSecondary,
                       ),
                     ),
                   ],
@@ -141,7 +163,8 @@ class _BarChart extends StatelessWidget {
         final yAxisWidth = math.min(60.0, math.max(40.0, maxValueDigits * 8.0));
 
         // Calculate available height for bars
-        final barChartHeight = constraints.maxHeight - 40; // Reserve space for X-axis labels
+        final barChartHeight =
+            constraints.maxHeight - 40; // Reserve space for X-axis labels
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -159,7 +182,9 @@ class _BarChart extends StatelessWidget {
                     child: Text(
                       '€${value.toStringAsFixed(0)}',
                       style: AppTypography.small.copyWith(
-                        color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : context.textColorSecondary,
                         fontSize: 10,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -181,13 +206,17 @@ class _BarChart extends StatelessWidget {
                       children: data.asMap().entries.map((entry) {
                         final index = entry.key;
                         final point = entry.value;
-                        final heightRatio = maxValue > 0 ? point.value / maxValue : 0;
+                        final heightRatio = maxValue > 0
+                            ? point.value / maxValue
+                            : 0;
 
                         return Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(
                               left: index == 0 ? 0 : AppDimensions.spaceXXS,
-                              right: index == data.length - 1 ? 0 : AppDimensions.spaceXXS,
+                              right: index == data.length - 1
+                                  ? 0
+                                  : AppDimensions.spaceXXS,
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -196,9 +225,13 @@ class _BarChart extends StatelessWidget {
                                 Container(
                                   height: heightRatio * barChartHeight,
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                     borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(AppDimensions.radiusS),
+                                      top: Radius.circular(
+                                        AppDimensions.radiusS,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -222,12 +255,16 @@ class _BarChart extends StatelessWidget {
                         child: Padding(
                           padding: EdgeInsets.only(
                             left: index == 0 ? 0 : AppDimensions.spaceXXS,
-                            right: index == data.length - 1 ? 0 : AppDimensions.spaceXXS,
+                            right: index == data.length - 1
+                                ? 0
+                                : AppDimensions.spaceXXS,
                           ),
                           child: Text(
                             point.label,
                             style: AppTypography.small.copyWith(
-                              color: isDark ? AppColors.textSecondaryDark : context.textColorSecondary,
+                              color: isDark
+                                  ? AppColors.textSecondaryDark
+                                  : context.textColorSecondary,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 1,

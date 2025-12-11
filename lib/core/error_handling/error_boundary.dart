@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import '../theme/gradient_extensions.dart';
 
 /// Error Boundary Widget - Catches errors in widget tree and shows fallback UI
 ///
@@ -81,91 +82,287 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   }
 }
 
-/// Default error widget shown when error occurs
-class _DefaultErrorWidget extends StatelessWidget {
+/// Default error widget shown when error occurs - with friendly animation
+class _DefaultErrorWidget extends StatefulWidget {
   final FlutterErrorDetails errorDetails;
 
   const _DefaultErrorWidget({required this.errorDetails});
 
   @override
+  State<_DefaultErrorWidget> createState() => _DefaultErrorWidgetState();
+}
+
+class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _floatAnimation;
+  late final Animation<double> _rotateAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _floatAnimation = Tween<double>(begin: -8, end: 8).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _rotateAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
-    final textColor = isDark ? Colors.white70 : Colors.black87;
-    final errorColor = isDark ? Colors.red[300] : Colors.red[700];
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
 
     return Material(
-      color: backgroundColor,
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline, size: 64, color: errorColor, semanticLabel: 'Error icon'),
-                const SizedBox(height: 16),
-                Text(
-                  'Something went wrong',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'We encountered an unexpected error. Please try again.',
-                  style: TextStyle(fontSize: 14, color: textColor.withValues(alpha: 0.7)),
-                  textAlign: TextAlign.center,
-                ),
-                if (kDebugMode) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: (errorColor ?? Colors.red).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: errorColor ?? Colors.red),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Animated illustration
+                    AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(0, _floatAnimation.value),
+                          child: Transform.rotate(
+                            angle: _rotateAnimation.value,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: _buildErrorIllustration(primaryColor),
                     ),
-                    child: Text(
-                      errorDetails.exception.toString(),
-                      style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: errorColor),
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 32),
+
+                    // Title
+                    Text(
+                      'Oops! Something went wrong',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Try to navigate back using go_router
-                    // If that fails, try to go to home
-                    try {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        // If we can't pop, go to home/dashboard
-                        context.go('/owner/dashboard');
-                      }
-                    } catch (e) {
-                      // Last resort: try to go home
-                      try {
-                        context.go('/owner/dashboard');
-                      } catch (e2) {
-                        // If all else fails, just log the error
-                        debugPrint('Error navigating back: $e2');
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Go Back'),
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                    const SizedBox(height: 12),
+
+                    // Description
+                    Text(
+                      'Don\'t worry, this happens sometimes. You can try again or go back to the dashboard.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    // Debug info (only in debug mode)
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.error.withAlpha((0.5 * 255).toInt()),
+                          ),
+                        ),
+                        child: Text(
+                          widget.errorDetails.exception.toString(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                            color: theme.colorScheme.error,
+                          ),
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 32),
+
+                    // Action buttons
+                    Row(
+                      children: [
+                        // Go Home button (guaranteed to work)
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _navigateToHome(context),
+                            icon: const Icon(Icons.home_outlined, size: 20),
+                            label: const Text('Go Home'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Try Again button
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: context.gradients.brandPrimary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: () => _tryAgain(context),
+                              icon: const Icon(Icons.refresh, size: 20),
+                              label: const Text('Try Again'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildErrorIllustration(Color primaryColor) {
+    return SizedBox(
+      width: 120,
+      height: 120,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background circle
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: primaryColor.withAlpha((0.1 * 255).toInt()),
+            ),
+          ),
+          // Document/page icon
+          Container(
+            width: 60,
+            height: 75,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha((0.1 * 255).toInt()),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Lines representing content
+                for (var i = 0; i < 3; i++)
+                  Container(
+                    margin: EdgeInsets.only(
+                      left: 10,
+                      right: i == 2 ? 20 : 10,
+                      top: i == 0 ? 0 : 6,
+                    ),
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Warning badge
+          Positioned(
+            right: 15,
+            bottom: 15,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFA726),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFFA726).withAlpha((0.4 * 255).toInt()),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.priority_high,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToHome(BuildContext context) {
+    // Direct navigation to dashboard - always works
+    try {
+      context.go('/owner/dashboard');
+    } catch (e) {
+      debugPrint('Error navigating to home: $e');
+      // If go_router fails completely, use Navigator
+      Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
+        '/owner/dashboard',
+        (_) => false,
+      );
+    }
+  }
+
+  void _tryAgain(BuildContext context) {
+    try {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        // Can't go back, go home instead
+        _navigateToHome(context);
+      }
+    } catch (e) {
+      debugPrint('Error trying again: $e');
+      _navigateToHome(context);
+    }
   }
 }
 

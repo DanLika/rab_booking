@@ -39,15 +39,26 @@ class MultiSelectActionBar extends ConsumerWidget {
           // Selection count
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, size: 18, color: theme.colorScheme.onPrimary),
+                Icon(
+                  Icons.check_circle,
+                  size: 18,
+                  color: theme.colorScheme.onPrimary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '$selectedCount ${selectedCount == 1 ? l10n.ownerMultiSelectSelected : l10n.ownerMultiSelectSelectedPlural}',
-                  style: TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -62,7 +73,9 @@ class MultiSelectActionBar extends ConsumerWidget {
             },
             icon: const Icon(Icons.clear, size: 18),
             label: Text(l10n.ownerMultiSelectClear),
-            style: TextButton.styleFrom(foregroundColor: theme.colorScheme.onPrimaryContainer),
+            style: TextButton.styleFrom(
+              foregroundColor: theme.colorScheme.onPrimaryContainer,
+            ),
           ),
 
           const SizedBox(width: 8),
@@ -85,19 +98,34 @@ class MultiSelectActionBar extends ConsumerWidget {
             },
             menuChildren: [
               MenuItemButton(
-                leadingIcon: Icon(Icons.check_circle, color: BookingStatus.confirmed.color, size: 20),
+                leadingIcon: Icon(
+                  Icons.check_circle,
+                  color: BookingStatus.confirmed.color,
+                  size: 20,
+                ),
                 child: Text(l10n.ownerStatusConfirmed),
-                onPressed: () => _bulkUpdateStatus(context, ref, BookingStatus.confirmed),
+                onPressed: () =>
+                    _bulkUpdateStatus(context, ref, BookingStatus.confirmed),
               ),
               MenuItemButton(
-                leadingIcon: Icon(Icons.hourglass_empty, color: BookingStatus.pending.color, size: 20),
+                leadingIcon: Icon(
+                  Icons.hourglass_empty,
+                  color: BookingStatus.pending.color,
+                  size: 20,
+                ),
                 child: Text(l10n.ownerStatusPending),
-                onPressed: () => _bulkUpdateStatus(context, ref, BookingStatus.pending),
+                onPressed: () =>
+                    _bulkUpdateStatus(context, ref, BookingStatus.pending),
               ),
               MenuItemButton(
-                leadingIcon: Icon(Icons.cancel, color: BookingStatus.cancelled.color, size: 20),
+                leadingIcon: Icon(
+                  Icons.cancel,
+                  color: BookingStatus.cancelled.color,
+                  size: 20,
+                ),
                 child: Text(l10n.ownerStatusCancelled),
-                onPressed: () => _bulkUpdateStatus(context, ref, BookingStatus.cancelled),
+                onPressed: () =>
+                    _bulkUpdateStatus(context, ref, BookingStatus.cancelled),
               ),
             ],
           ),
@@ -117,7 +145,11 @@ class MultiSelectActionBar extends ConsumerWidget {
   }
 
   /// Bulk update booking status
-  Future<void> _bulkUpdateStatus(BuildContext context, WidgetRef ref, BookingStatus newStatus) async {
+  Future<void> _bulkUpdateStatus(
+    BuildContext context,
+    WidgetRef ref,
+    BookingStatus newStatus,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final multiSelectState = ref.read(multiSelectProvider);
     final selectedBookings = multiSelectState.selectedBookings;
@@ -143,10 +175,16 @@ class MultiSelectActionBar extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.ownerMultiSelectCancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.ownerMultiSelectCancel),
+            ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
               child: Text(l10n.ownerMultiSelectConfirm),
             ),
           ],
@@ -177,13 +215,20 @@ class MultiSelectActionBar extends ConsumerWidget {
 
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          l10n.ownerMultiSelectStatusChanged(selectedBookings.length, countLabel),
+          l10n.ownerMultiSelectStatusChanged(
+            selectedBookings.length,
+            countLabel,
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerMultiSelectStatusError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.ownerMultiSelectStatusError,
+        );
       }
     }
   }
@@ -212,12 +257,23 @@ class MultiSelectActionBar extends ConsumerWidget {
               Text(l10n.ownerMultiSelectDeleteConfirmTitle),
             ],
           ),
-          content: Text(l10n.ownerMultiSelectDeleteConfirmMessage(selectedBookings.length, countLabel)),
+          content: Text(
+            l10n.ownerMultiSelectDeleteConfirmMessage(
+              selectedBookings.length,
+              countLabel,
+            ),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.ownerMultiSelectCancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.ownerMultiSelectCancel),
+            ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
               child: Text(l10n.ownerMultiSelectDelete),
             ),
           ],
@@ -254,7 +310,11 @@ class MultiSelectActionBar extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerMultiSelectDeleteError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.ownerMultiSelectDeleteError,
+        );
       }
     }
   }

@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'RAB Booking';
+  String get appName => 'BookBed';
 
   @override
   String get save => 'Save';
@@ -826,7 +826,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyYourRightsBody =>
-      'Under GDPR, you have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Request deletion of your data\n• Object to data processing\n• Data portability\n• Withdraw consent\n\nContact us at privacy@rabbooking.com to exercise your rights.';
+      'Under GDPR, you have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Request deletion of your data\n• Object to data processing\n• Data portability\n• Withdraw consent\n\nContact us at info@bookbed.io to exercise your rights.';
 
   @override
   String get privacyCookiesTitle => '7. Cookies and Tracking';
@@ -861,7 +861,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyContactBody =>
-      'If you have questions about this Privacy Policy, please contact us at:\n\nEmail: privacy@rabbooking.com\nPhone: +1 (555) 123-4567';
+      'If you have questions about this Privacy Policy, please contact us at:\n\nEmail: info@bookbed.io\nWebsite: bookbed.io';
 
   @override
   String get helpFaq => 'Help & FAQ';
@@ -1389,7 +1389,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerOccupancyRate => 'Occupancy rate';
 
   @override
-  String get ownerWelcomeTitle => 'Welcome to RAB Booking!';
+  String get ownerWelcomeTitle => 'Welcome to BookBed!';
 
   @override
   String get ownerWelcomeSubtitle =>
@@ -1500,6 +1500,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerDrawerFaq => 'FAQ';
+
+  @override
+  String get ownerDrawerFaqSubtitle => 'Common questions & answers';
 
   @override
   String get ownerDrawerNotifications => 'Notifications';
@@ -2624,7 +2627,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutTitle => 'About';
 
   @override
-  String get aboutAppName => 'Rab Booking';
+  String get aboutAppName => 'BookBed';
 
   @override
   String get aboutTagline => 'Property Management System';
@@ -2633,11 +2636,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutVersion => 'Version 1.0.0';
 
   @override
-  String get aboutWhatIs => 'What is Rab Booking?';
+  String get aboutWhatIs => 'What is BookBed?';
 
   @override
   String get aboutDescription =>
-      'Rab Booking is a comprehensive property management system designed for vacation rental owners. Manage your properties, bookings, calendar, and integrations all in one place. Our embedded booking widget makes it easy for guests to book directly on your website.';
+      'BookBed is a comprehensive property management system designed for vacation rental owners. Manage your properties, bookings, calendar, and integrations all in one place. Our embedded booking widget makes it easy for guests to book directly on your website.';
 
   @override
   String get aboutKeyFeatures => 'Key Features';
@@ -2689,7 +2692,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutWebsiteLabel => 'Website';
 
   @override
-  String get aboutCopyright => '© 2025 Rab Booking. All rights reserved.';
+  String get aboutCopyright => '© 2025 BookBed. All rights reserved.';
 
   @override
   String get unitHubTitle => 'Accommodation Units';
@@ -3119,6 +3122,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stripeDisconnectError => 'Error disconnecting Stripe account';
 
   @override
+  String get stripeLoadingAccount => 'Loading payment settings...';
+
+  @override
   String get advancedSettingsTitle => 'Advanced Settings';
 
   @override
@@ -3344,7 +3350,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get propertyFormSubdomainHelper =>
-      'Custom URL: [subdomain].rabbooking.com';
+      'Custom URL: [subdomain].bookbed.io';
 
   @override
   String get propertyFormSubdomainAvailable => 'Subdomain is available';
@@ -4180,7 +4186,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unitPricingError => 'Error updating price';
 
   @override
-  String get ownerFaqTitle => 'Frequently Asked Questions (FAQ)';
+  String get ownerFaqTitle => 'FAQ';
 
   @override
   String get ownerFaqSearchHint => 'Search questions...';
@@ -4645,6 +4651,40 @@ class AppLocalizationsEn extends AppLocalizations {
       '• Refresh page (Ctrl+F5 for hard refresh)\n• Calendar automatically updates every 5 minutes';
 
   @override
+  String get embedGuideSimpleStepsTitle => '3 Simple Steps';
+
+  @override
+  String get embedGuideSimpleStep1 => 'Copy the embed code for your unit';
+
+  @override
+  String get embedGuideSimpleStep2 => 'Paste it into your website\'s HTML';
+
+  @override
+  String get embedGuideSimpleStep3 => 'Save and publish';
+
+  @override
+  String get embedGuideNeedHelp => 'Need help?';
+
+  @override
+  String get embedGuideInstallationGuide => 'Installation Guide';
+
+  @override
+  String get embedGuideLanguageNote =>
+      'Widget has a built-in language selector. Users can switch between HR, EN, DE, IT.';
+
+  @override
+  String get embedHelpTitle => 'Embed Widget Help';
+
+  @override
+  String get embedHelpTabInstallation => 'Guide';
+
+  @override
+  String get embedHelpTabAdvanced => 'Advanced';
+
+  @override
+  String get embedHelpTabTroubleshooting => 'Help';
+
+  @override
   String get stripeGuideTitle => 'Stripe Integration - Guide';
 
   @override
@@ -5073,7 +5113,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get propertyFormSubdomainEmailHelper =>
-      'URL for email links: [subdomain].rabbooking.com';
+      'URL for email links: [subdomain].bookbed.io';
 
   @override
   String get icalExportTitle => 'iCal Export';
@@ -5514,6 +5554,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get priceCalendarClear => 'Clear';
+
+  @override
+  String get priceCalendarSelectAll => 'Select all';
 
   @override
   String get priceCalendarSelectAllDays => 'Select all days';

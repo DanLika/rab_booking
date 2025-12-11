@@ -45,10 +45,24 @@ class DashboardOverviewTab extends ConsumerWidget {
             if (properties.isEmpty) {
               return _buildWelcomeScreen(context, ref, l10n, theme, isMobile);
             }
-            return _buildDashboardContent(context, ref, l10n, theme, isMobile, statsAsync);
+            return _buildDashboardContent(
+              context,
+              ref,
+              l10n,
+              theme,
+              isMobile,
+              statsAsync,
+            );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => _buildDashboardContent(context, ref, l10n, theme, isMobile, statsAsync),
+          error: (e, s) => _buildDashboardContent(
+            context,
+            ref,
+            l10n,
+            theme,
+            isMobile,
+            statsAsync,
+          ),
         ),
       ),
     );
@@ -71,15 +85,25 @@ class DashboardOverviewTab extends ConsumerWidget {
             Container(
               width: isMobile ? 80 : 100,
               height: isMobile ? 80 : 100,
-              decoration: BoxDecoration(gradient: context.gradients.brandPrimary, shape: BoxShape.circle),
-              child: Icon(Icons.home_work_outlined, size: isMobile ? 40 : 50, color: Colors.white),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.home_work_outlined,
+                size: isMobile ? 40 : 50,
+                color: Colors.white,
+              ),
             ),
             SizedBox(height: isMobile ? 20 : 28),
 
             // Welcome title
             Text(
               l10n.ownerWelcomeTitle,
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: isMobile ? 22 : 26),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: isMobile ? 22 : 26,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -88,7 +112,9 @@ class DashboardOverviewTab extends ConsumerWidget {
             Text(
               l10n.ownerWelcomeSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.7 * 255).toInt(),
+                ),
                 fontSize: isMobile ? 14 : 15,
               ),
               textAlign: TextAlign.center,
@@ -101,8 +127,13 @@ class DashboardOverviewTab extends ConsumerWidget {
               icon: const Icon(Icons.add),
               label: Text(l10n.ownerAddFirstProperty),
               style: FilledButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: isMobile ? 24 : 32, vertical: isMobile ? 14 : 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 24 : 32,
+                  vertical: isMobile ? 14 : 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -158,24 +189,36 @@ class DashboardOverviewTab extends ConsumerWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                              theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
+                              theme.colorScheme.error.withAlpha(
+                                (0.1 * 255).toInt(),
+                              ),
+                              theme.colorScheme.error.withAlpha(
+                                (0.05 * 255).toInt(),
+                              ),
                             ],
                           ),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.error_outline_rounded, size: 40, color: theme.colorScheme.error),
+                        child: Icon(
+                          Icons.error_outline_rounded,
+                          size: 40,
+                          color: theme.colorScheme.error,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         l10n.ownerErrorLoadingData,
-                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         e.toString(),
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                          color: theme.colorScheme.onSurface.withAlpha(
+                            (0.7 * 255).toInt(),
+                          ),
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 3,
@@ -212,17 +255,22 @@ class DashboardOverviewTab extends ConsumerWidget {
 
     return recentBookingsAsync.when(
       data: (bookings) {
-        final activities = bookings.map((b) => _convertBookingToActivity(b, l10n)).toList();
+        final activities = bookings
+            .map((b) => _convertBookingToActivity(b, l10n))
+            .toList();
 
         return RecentActivityWidget(
           activities: activities,
           onViewAll: () => context.go(OwnerRoutes.bookings),
           onActivityTap: (bookingId) {
             // Find booking and show details dialog
-            final ownerBooking = bookings.firstWhere((b) => b.booking.id == bookingId);
+            final ownerBooking = bookings.firstWhere(
+              (b) => b.booking.id == bookingId,
+            );
             showDialog(
               context: context,
-              builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+              builder: (context) =>
+                  BookingDetailsDialog(ownerBooking: ownerBooking),
             );
           },
         );
@@ -231,76 +279,67 @@ class DashboardOverviewTab extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.spaceXL),
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
           ),
         ),
       ),
-      error: (e, s) => RecentActivityWidget(activities: const [], onViewAll: () => context.go(OwnerRoutes.bookings)),
+      error: (e, s) => RecentActivityWidget(
+        activities: const [],
+        onViewAll: () => context.go(OwnerRoutes.bookings),
+      ),
     );
   }
 
-  ActivityItem _convertBookingToActivity(OwnerBooking ownerBooking, AppLocalizations l10n) {
+  ActivityItem _convertBookingToActivity(
+    OwnerBooking ownerBooking,
+    AppLocalizations l10n,
+  ) {
     final booking = ownerBooking.booking;
     final property = ownerBooking.property;
     final unit = ownerBooking.unit;
 
-    // Determine activity type and details based on booking status
-    ActivityType type;
-    String title;
-    String subtitle;
-
-    switch (booking.status) {
-      case BookingStatus.pending:
-        type = ActivityType.booking; // Purple - new booking icon
-        title = l10n.ownerNewBookingReceived;
-        subtitle = '${property.name} - ${unit.name}';
-        break;
-      case BookingStatus.confirmed:
-        type = ActivityType.confirmed; // Green - checkmark icon
-        title = l10n.ownerBookingConfirmedActivity;
-        subtitle = '${property.name} - ${unit.name}';
-        break;
-      case BookingStatus.cancelled:
-        type = ActivityType.cancellation; // Red - cancel icon
-        title = l10n.ownerBookingCancelledActivity;
-        subtitle = '${property.name} - ${unit.name}';
-        break;
-      case BookingStatus.completed:
-        type = ActivityType.completed; // Gray - task complete icon
-        title = l10n.ownerBookingCompleted;
-        subtitle = '${property.name} - ${unit.name}';
-        break;
-    }
+    // Determine activity type and title based on booking status
+    final (type, title) = switch (booking.status) {
+      BookingStatus.pending => (
+        ActivityType.booking,
+        l10n.ownerNewBookingReceived,
+      ),
+      BookingStatus.confirmed => (
+        ActivityType.confirmed,
+        l10n.ownerBookingConfirmedActivity,
+      ),
+      BookingStatus.cancelled => (
+        ActivityType.cancellation,
+        l10n.ownerBookingCancelledActivity,
+      ),
+      BookingStatus.completed => (
+        ActivityType.completed,
+        l10n.ownerBookingCompleted,
+      ),
+    };
 
     return ActivityItem(
       type: type,
       title: title,
-      subtitle: subtitle,
+      subtitle: '${property.name} - ${unit.name}',
       timestamp: booking.createdAt,
       bookingId: booking.id,
     );
   }
 
   // Helper method to create purple shade variations (1-6, darkest to lightest)
-  Color _getPurpleShade(BuildContext context, int level) {
-    // Fixed purple shades - same in both light and dark mode
-    switch (level) {
-      case 1: // Darkest purple
-        return const Color(0xFF4A3A8C); // Dark violet
-      case 2: // Dark purple
-        return const Color(0xFF5B4BA8); // Medium violet
-      case 3: // Original purple (primary-like)
-        return const Color(0xFF6B4CE6); // Standard purple
-      case 4: // Light purple
-        return const Color(0xFF8B6FF5); // Light purple
-      case 5: // Lighter purple
-        return const Color(0xFFA08BFF); // Very light purple
-      case 6: // Lightest purple (more desaturated)
-        return const Color(0xFFB8A8FF); // Pastel purple
-      default:
-        return const Color(0xFF6B4CE6); // Default to standard purple
-    }
-  }
+  // Fixed purple shades - same in both light and dark mode
+  Color _getPurpleShade(BuildContext context, int level) => switch (level) {
+    1 => const Color(0xFF4A3A8C), // Darkest - Dark violet
+    2 => const Color(0xFF5B4BA8), // Dark purple - Medium violet
+    3 => const Color(0xFF6B4CE6), // Original purple (primary-like)
+    4 => const Color(0xFF8B6FF5), // Light purple
+    5 => const Color(0xFFA08BFF), // Lighter purple - Very light
+    6 => const Color(0xFFB8A8FF), // Lightest purple (desaturated)
+    _ => const Color(0xFF6B4CE6), // Default to standard purple
+  };
 
   // Helper method to create theme-aware gradient with alpha fade
   // Uses single color with alpha fade for consistent purple-fade pattern
@@ -315,7 +354,10 @@ class DashboardOverviewTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsCards({required BuildContext context, required DashboardStats stats}) {
+  Widget _buildStatsCards({
+    required BuildContext context,
+    required DashboardStats stats,
+  }) {
     final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
@@ -402,7 +444,8 @@ class DashboardOverviewTab extends ConsumerWidget {
     double cardWidth;
     if (isMobile) {
       // Mobile: 2 cards per row
-      cardWidth = (screenWidth - (spacing * 3 + 32)) / 2; // 32 = left/right padding
+      cardWidth =
+          (screenWidth - (spacing * 3 + 32)) / 2; // 32 = left/right padding
     } else if (isTablet) {
       // Tablet: 3 cards per row
       cardWidth = (screenWidth - (spacing * 4 + 48)) / 3;
@@ -412,7 +455,9 @@ class DashboardOverviewTab extends ConsumerWidget {
     }
 
     // Extract accent color from gradient for icon
-    final accentColor = (gradient.colors.isNotEmpty) ? gradient.colors.first : Theme.of(context).colorScheme.primary;
+    final accentColor = (gradient.colors.isNotEmpty)
+        ? gradient.colors.first
+        : Theme.of(context).colorScheme.primary;
 
     // Neutralna pozadina umjesto šarenih gradijenata
     final cardBgColor = isDark ? const Color(0xFF1E1E28) : Colors.white;
@@ -431,7 +476,10 @@ class DashboardOverviewTab extends ConsumerWidget {
       builder: (context, value, child) {
         return Opacity(
           opacity: value,
-          child: Transform.translate(offset: Offset(0, 20 * (1 - value)), child: child),
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - value)),
+            child: child,
+          ),
         );
       },
       child: Container(
@@ -443,8 +491,20 @@ class DashboardOverviewTab extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: borderColor),
           boxShadow: isDark
-              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(0, 2))]
-              : [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 6, offset: const Offset(0, 2))],
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Padding(
           padding: EdgeInsets.all(isMobile ? 12 : 14),

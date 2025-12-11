@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import 'firestore_repository_mixin.dart';
 
 /// Performance statistics model
 class PerformanceStats {
@@ -10,7 +11,7 @@ class PerformanceStats {
   final int activeListings;
   final double cancellationRate;
 
-  PerformanceStats({
+  const PerformanceStats({
     required this.occupancyRate,
     required this.occupancyTrend,
     required this.totalBookings,
@@ -18,84 +19,112 @@ class PerformanceStats {
     required this.activeListings,
     required this.cancellationRate,
   });
+
+  static const empty = PerformanceStats(
+    occupancyRate: 0,
+    occupancyTrend: 0,
+    totalBookings: 0,
+    bookingsTrend: 0,
+    activeListings: 0,
+    cancellationRate: 0,
+  );
 }
 
 /// Firebase implementation of Property Performance Repository
-class FirebasePropertyPerformanceRepository {
+class FirebasePropertyPerformanceRepository with FirestoreRepositoryMixin {
   final FirebaseFirestore _firestore;
 
   FirebasePropertyPerformanceRepository(this._firestore);
 
-  /// Helper method to get all unit IDs for given properties from subcollections
-  Future<List<String>> _getUnitIdsForProperties(
-    List<String> propertyIds,
-  ) async {
-    final List<String> unitIds = [];
-    for (final propertyId in propertyIds) {
-      final unitsSnapshot = await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('units')
-          .get();
-      unitIds.addAll(unitsSnapshot.docs.map((doc) => doc.id));
+  /// Get all owner's property IDs (active only if specified)
+  Future<List<String>> _getOwnerPropertyIds(
+    String ownerId, {
+    bool activeOnly = false,
+  }) async {
+    var query = _firestore
+        .collection('properties')
+        .where('owner_id', isEqualTo: ownerId);
+
+    if (activeOnly) {
+      query = query.where('is_active', isEqualTo: true);
     }
-    return unitIds;
+
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => doc.id).toList();
   }
 
-  /// Calculate occupancy rate for owner's properties
-  /// Returns percentage of booked nights vs available nights
-  Future<double> getOccupancyRate(String ownerId) async {
-    try {
-      final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month);
-      final endOfMonth = DateTime(now.year, now.month + 1, 0);
+  /// Calculate booked nights from bookings in a date range
+  Future<int> _calculateBookedNights({
+    required List<String> unitIds,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    if (unitIds.isEmpty) return 0;
 
-      // Get all owner's active properties
-      final propertiesSnapshot = await _firestore
-          .collection('properties')
-          .where('owner_id', isEqualTo: ownerId)
-          .where('is_active', isEqualTo: true)
+    int totalBookedNights = 0;
+
+    for (
+      int i = 0;
+      i < unitIds.length;
+      i += FirestoreRepositoryMixin.batchLimit
+    ) {
+      final batch = unitIds
+          .skip(i)
+          .take(FirestoreRepositoryMixin.batchLimit)
+          .toList();
+      final bookingsSnapshot = await _firestore
+          .collection('bookings')
+          .where('unit_id', whereIn: batch)
+          .where('status', whereIn: FirestoreRepositoryMixin.confirmedStatuses)
+          .where('check_in', isGreaterThanOrEqualTo: startDate)
+          .where('check_in', isLessThanOrEqualTo: endDate)
           .get();
 
-      if (propertiesSnapshot.docs.isEmpty) return 0.0;
-
-      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
-
-      // Get all units for these properties from subcollections
-      final unitIds = await _getUnitIdsForProperties(propertyIds);
-      final totalUnits = unitIds.length;
-
-      if (totalUnits == 0) return 0.0;
-
-      // Calculate total available nights (units * days in month)
-      final daysInMonth = endOfMonth.day;
-      final totalAvailableNights = totalUnits * daysInMonth;
-
-      // Get all bookings for this month
-      int totalBookedNights = 0;
-
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
-        final bookingsSnapshot = await _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('status', whereIn: ['confirmed', 'completed'])
-            .where('check_in', isGreaterThanOrEqualTo: startOfMonth)
-            .where('check_in', isLessThanOrEqualTo: endOfMonth)
-            .get();
-
-        for (final doc in bookingsSnapshot.docs) {
-          final data = doc.data();
-          final checkIn = (data['check_in'] as Timestamp).toDate();
-          final checkOut = (data['check_out'] as Timestamp).toDate();
-          final nights = checkOut.difference(checkIn).inDays;
-          totalBookedNights += nights;
-        }
+      for (final doc in bookingsSnapshot.docs) {
+        final data = doc.data();
+        final checkIn = (data['check_in'] as Timestamp).toDate();
+        final checkOut = (data['check_out'] as Timestamp).toDate();
+        totalBookedNights += checkOut.difference(checkIn).inDays;
       }
+    }
 
-      // Calculate occupancy rate
-      if (totalAvailableNights == 0) return 0.0;
-      return (totalBookedNights / totalAvailableNights) * 100;
+    return totalBookedNights;
+  }
+
+  /// Calculate occupancy rate for a date range
+  Future<double> _calculateOccupancyRate({
+    required String ownerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final propertyIds = await _getOwnerPropertyIds(ownerId, activeOnly: true);
+    if (propertyIds.isEmpty) return 0.0;
+
+    final unitIds = await getUnitIdsForProperties(_firestore, propertyIds);
+    if (unitIds.isEmpty) return 0.0;
+
+    final daysInRange = endDate.difference(startDate).inDays + 1;
+    final totalAvailableNights = unitIds.length * daysInRange;
+    if (totalAvailableNights == 0) return 0.0;
+
+    final bookedNights = await _calculateBookedNights(
+      unitIds: unitIds,
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    return (bookedNights / totalAvailableNights) * 100;
+  }
+
+  /// Calculate occupancy rate for owner's properties (current month)
+  Future<double> getOccupancyRate(String ownerId) async {
+    try {
+      final range = getCurrentMonthRange();
+      return await _calculateOccupancyRate(
+        ownerId: ownerId,
+        startDate: range.start,
+        endDate: range.end,
+      );
     } catch (e) {
       throw AnalyticsException(
         'Failed to calculate occupancy rate',
@@ -108,56 +137,12 @@ class FirebasePropertyPerformanceRepository {
   /// Get occupancy rate for last month
   Future<double> getOccupancyRateLastMonth(String ownerId) async {
     try {
-      final now = DateTime.now();
-      final startOfLastMonth = DateTime(now.year, now.month - 1);
-      final endOfLastMonth = DateTime(now.year, now.month, 0);
-
-      // Get all owner's active properties
-      final propertiesSnapshot = await _firestore
-          .collection('properties')
-          .where('owner_id', isEqualTo: ownerId)
-          .where('is_active', isEqualTo: true)
-          .get();
-
-      if (propertiesSnapshot.docs.isEmpty) return 0.0;
-
-      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
-
-      // Get all units for these properties from subcollections
-      final unitIds = await _getUnitIdsForProperties(propertyIds);
-      final totalUnits = unitIds.length;
-
-      if (totalUnits == 0) return 0.0;
-
-      // Calculate total available nights
-      final daysInMonth = endOfLastMonth.day;
-      final totalAvailableNights = totalUnits * daysInMonth;
-
-      // Get all bookings for last month
-      int totalBookedNights = 0;
-
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
-        final bookingsSnapshot = await _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('status', whereIn: ['confirmed', 'completed'])
-            .where('check_in', isGreaterThanOrEqualTo: startOfLastMonth)
-            .where('check_in', isLessThanOrEqualTo: endOfLastMonth)
-            .get();
-
-        for (final doc in bookingsSnapshot.docs) {
-          final data = doc.data();
-          final checkIn = (data['check_in'] as Timestamp).toDate();
-          final checkOut = (data['check_out'] as Timestamp).toDate();
-          final nights = checkOut.difference(checkIn).inDays;
-          totalBookedNights += nights;
-        }
-      }
-
-      // Calculate occupancy rate
-      if (totalAvailableNights == 0) return 0.0;
-      return (totalBookedNights / totalAvailableNights) * 100;
+      final range = getLastMonthRange();
+      return await _calculateOccupancyRate(
+        ownerId: ownerId,
+        startDate: range.start,
+        endDate: range.end,
+      );
     } catch (e) {
       return 0.0;
     }
@@ -168,48 +153,59 @@ class FirebasePropertyPerformanceRepository {
     try {
       final currentRate = await getOccupancyRate(ownerId);
       final lastMonthRate = await getOccupancyRateLastMonth(ownerId);
-
-      if (lastMonthRate == 0) return 0.0;
-
-      return ((currentRate - lastMonthRate) / lastMonthRate) * 100;
+      return calculateTrend(currentRate, lastMonthRate);
     } catch (e) {
       return 0.0;
     }
   }
 
+  /// Count bookings with optional date filter
+  Future<int> _countBookings({
+    required List<String> unitIds,
+    DateTime? createdAfter,
+    DateTime? createdBefore,
+  }) async {
+    if (unitIds.isEmpty) return 0;
+
+    int totalCount = 0;
+
+    for (
+      int i = 0;
+      i < unitIds.length;
+      i += FirestoreRepositoryMixin.batchLimit
+    ) {
+      final batch = unitIds
+          .skip(i)
+          .take(FirestoreRepositoryMixin.batchLimit)
+          .toList();
+
+      Query<Map<String, dynamic>> query = _firestore
+          .collection('bookings')
+          .where('unit_id', whereIn: batch)
+          .where('status', whereIn: FirestoreRepositoryMixin.activeStatuses);
+
+      if (createdAfter != null) {
+        query = query.where('created_at', isGreaterThanOrEqualTo: createdAfter);
+      }
+      if (createdBefore != null) {
+        query = query.where('created_at', isLessThanOrEqualTo: createdBefore);
+      }
+
+      final snapshot = await query.get();
+      totalCount += snapshot.docs.length;
+    }
+
+    return totalCount;
+  }
+
   /// Get total bookings count
   Future<int> getTotalBookingsCount(String ownerId) async {
     try {
-      // Get all owner's properties
-      final propertiesSnapshot = await _firestore
-          .collection('properties')
-          .where('owner_id', isEqualTo: ownerId)
-          .get();
+      final propertyIds = await _getOwnerPropertyIds(ownerId);
+      if (propertyIds.isEmpty) return 0;
 
-      if (propertiesSnapshot.docs.isEmpty) return 0;
-
-      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
-
-      // Get all units for these properties from subcollections
-      final unitIds = await _getUnitIdsForProperties(propertyIds);
-
-      if (unitIds.isEmpty) return 0;
-
-      // Count all bookings
-      int totalCount = 0;
-
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
-        final bookingsSnapshot = await _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('status', whereIn: ['confirmed', 'completed', 'pending'])
-            .get();
-
-        totalCount += bookingsSnapshot.docs.length;
-      }
-
-      return totalCount;
+      final unitIds = await getUnitIdsForProperties(_firestore, propertyIds);
+      return await _countBookings(unitIds: unitIds);
     } catch (e) {
       throw AnalyticsException(
         'Failed to get bookings count',
@@ -222,42 +218,17 @@ class FirebasePropertyPerformanceRepository {
   /// Get bookings count for this month
   Future<int> getBookingsThisMonth(String ownerId) async {
     try {
-      final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month);
-      final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+      final propertyIds = await _getOwnerPropertyIds(ownerId);
+      if (propertyIds.isEmpty) return 0;
 
-      // Get all owner's properties
-      final propertiesSnapshot = await _firestore
-          .collection('properties')
-          .where('owner_id', isEqualTo: ownerId)
-          .get();
+      final unitIds = await getUnitIdsForProperties(_firestore, propertyIds);
+      final range = getCurrentMonthRange();
 
-      if (propertiesSnapshot.docs.isEmpty) return 0;
-
-      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
-
-      // Get all units for these properties from subcollections
-      final unitIds = await _getUnitIdsForProperties(propertyIds);
-
-      if (unitIds.isEmpty) return 0;
-
-      // Count bookings for this month
-      int totalCount = 0;
-
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
-        final bookingsSnapshot = await _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('status', whereIn: ['confirmed', 'completed', 'pending'])
-            .where('created_at', isGreaterThanOrEqualTo: startOfMonth)
-            .where('created_at', isLessThanOrEqualTo: endOfMonth)
-            .get();
-
-        totalCount += bookingsSnapshot.docs.length;
-      }
-
-      return totalCount;
+      return await _countBookings(
+        unitIds: unitIds,
+        createdAfter: range.start,
+        createdBefore: range.end,
+      );
     } catch (e) {
       throw AnalyticsException(
         'Failed to get bookings this month',
@@ -270,42 +241,17 @@ class FirebasePropertyPerformanceRepository {
   /// Get bookings count for last month
   Future<int> getBookingsLastMonth(String ownerId) async {
     try {
-      final now = DateTime.now();
-      final startOfLastMonth = DateTime(now.year, now.month - 1);
-      final endOfLastMonth = DateTime(now.year, now.month, 0, 23, 59, 59);
+      final propertyIds = await _getOwnerPropertyIds(ownerId);
+      if (propertyIds.isEmpty) return 0;
 
-      // Get all owner's properties
-      final propertiesSnapshot = await _firestore
-          .collection('properties')
-          .where('owner_id', isEqualTo: ownerId)
-          .get();
+      final unitIds = await getUnitIdsForProperties(_firestore, propertyIds);
+      final range = getLastMonthRange();
 
-      if (propertiesSnapshot.docs.isEmpty) return 0;
-
-      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
-
-      // Get all units for these properties from subcollections
-      final unitIds = await _getUnitIdsForProperties(propertyIds);
-
-      if (unitIds.isEmpty) return 0;
-
-      // Count bookings for last month
-      int totalCount = 0;
-
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
-        final bookingsSnapshot = await _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('status', whereIn: ['confirmed', 'completed', 'pending'])
-            .where('created_at', isGreaterThanOrEqualTo: startOfLastMonth)
-            .where('created_at', isLessThanOrEqualTo: endOfLastMonth)
-            .get();
-
-        totalCount += bookingsSnapshot.docs.length;
-      }
-
-      return totalCount;
+      return await _countBookings(
+        unitIds: unitIds,
+        createdAfter: range.start,
+        createdBefore: range.end,
+      );
     } catch (e) {
       return 0;
     }
@@ -316,10 +262,7 @@ class FirebasePropertyPerformanceRepository {
     try {
       final thisMonth = await getBookingsThisMonth(ownerId);
       final lastMonth = await getBookingsLastMonth(ownerId);
-
-      if (lastMonth == 0) return 0.0;
-
-      return ((thisMonth - lastMonth) / lastMonth) * 100;
+      return calculateTrend(thisMonth.toDouble(), lastMonth.toDouble());
     } catch (e) {
       return 0.0;
     }
@@ -347,35 +290,31 @@ class FirebasePropertyPerformanceRepository {
   /// Get cancellation rate
   Future<double> getCancellationRate(String ownerId) async {
     try {
-      // Get all owner's properties
-      final propertiesSnapshot = await _firestore
-          .collection('properties')
-          .where('owner_id', isEqualTo: ownerId)
-          .get();
+      final propertyIds = await _getOwnerPropertyIds(ownerId);
+      if (propertyIds.isEmpty) return 0.0;
 
-      if (propertiesSnapshot.docs.isEmpty) return 0.0;
-
-      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
-
-      // Get all units for these properties from subcollections
-      final unitIds = await _getUnitIdsForProperties(propertyIds);
-
+      final unitIds = await getUnitIdsForProperties(_firestore, propertyIds);
       if (unitIds.isEmpty) return 0.0;
 
-      // Get all bookings count
       int totalBookings = 0;
       int cancelledBookings = 0;
 
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
+      for (
+        int i = 0;
+        i < unitIds.length;
+        i += FirestoreRepositoryMixin.batchLimit
+      ) {
+        final batch = unitIds
+            .skip(i)
+            .take(FirestoreRepositoryMixin.batchLimit)
+            .toList();
 
         // All bookings
-        final allBookingsSnapshot = await _firestore
+        final allSnapshot = await _firestore
             .collection('bookings')
             .where('unit_id', whereIn: batch)
             .get();
-
-        totalBookings += allBookingsSnapshot.docs.length;
+        totalBookings += allSnapshot.docs.length;
 
         // Cancelled bookings
         final cancelledSnapshot = await _firestore
@@ -383,35 +322,36 @@ class FirebasePropertyPerformanceRepository {
             .where('unit_id', whereIn: batch)
             .where('status', isEqualTo: 'cancelled')
             .get();
-
         cancelledBookings += cancelledSnapshot.docs.length;
       }
 
       if (totalBookings == 0) return 0.0;
-
       return (cancelledBookings / totalBookings) * 100;
     } catch (e) {
       return 0.0;
     }
   }
 
-  /// Get performance statistics
+  /// Get all performance statistics in parallel
   Future<PerformanceStats> getPerformanceStats(String ownerId) async {
     try {
-      final occupancyRate = await getOccupancyRate(ownerId);
-      final occupancyTrend = await getOccupancyTrend(ownerId);
-      final totalBookings = await getTotalBookingsCount(ownerId);
-      final bookingsTrend = await getBookingsTrend(ownerId);
-      final activeListings = await getActiveListingsCount(ownerId);
-      final cancellationRate = await getCancellationRate(ownerId);
+      // Run independent queries in parallel for better performance
+      final results = await Future.wait([
+        getOccupancyRate(ownerId),
+        getOccupancyTrend(ownerId),
+        getTotalBookingsCount(ownerId),
+        getBookingsTrend(ownerId),
+        getActiveListingsCount(ownerId),
+        getCancellationRate(ownerId),
+      ]);
 
       return PerformanceStats(
-        occupancyRate: occupancyRate,
-        occupancyTrend: occupancyTrend,
-        totalBookings: totalBookings,
-        bookingsTrend: bookingsTrend,
-        activeListings: activeListings,
-        cancellationRate: cancellationRate,
+        occupancyRate: results[0] as double,
+        occupancyTrend: results[1] as double,
+        totalBookings: results[2] as int,
+        bookingsTrend: results[3] as double,
+        activeListings: results[4] as int,
+        cancellationRate: results[5] as double,
       );
     } catch (e) {
       throw AnalyticsException(

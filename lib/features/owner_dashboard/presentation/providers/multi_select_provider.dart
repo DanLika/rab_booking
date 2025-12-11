@@ -18,7 +18,11 @@ class MultiSelectState {
 
   bool isSelected(String bookingId) => selectedBookingIds.contains(bookingId);
 
-  MultiSelectState copyWith({bool? isEnabled, Set<String>? selectedBookingIds, List<BookingModel>? selectedBookings}) {
+  MultiSelectState copyWith({
+    bool? isEnabled,
+    Set<String>? selectedBookingIds,
+    List<BookingModel>? selectedBookings,
+  }) {
     return MultiSelectState(
       isEnabled: isEnabled ?? this.isEnabled,
       selectedBookingIds: selectedBookingIds ?? this.selectedBookingIds,
@@ -56,12 +60,18 @@ class MultiSelectNotifier extends StateNotifier<MultiSelectState> {
       newSelectedBookings.add(booking);
     }
 
-    state = state.copyWith(selectedBookingIds: newSelectedIds, selectedBookings: newSelectedBookings);
+    state = state.copyWith(
+      selectedBookingIds: newSelectedIds,
+      selectedBookings: newSelectedBookings,
+    );
   }
 
   /// Select all bookings
   void selectAll(List<BookingModel> bookings) {
-    state = state.copyWith(selectedBookingIds: bookings.map((b) => b.id).toSet(), selectedBookings: bookings);
+    state = state.copyWith(
+      selectedBookingIds: bookings.map((b) => b.id).toSet(),
+      selectedBookings: bookings,
+    );
   }
 
   /// Clear all selections
@@ -70,13 +80,20 @@ class MultiSelectNotifier extends StateNotifier<MultiSelectState> {
   }
 
   /// Select bookings by predicate
-  void selectWhere(List<BookingModel> allBookings, bool Function(BookingModel) predicate) {
+  void selectWhere(
+    List<BookingModel> allBookings,
+    bool Function(BookingModel) predicate,
+  ) {
     final selected = allBookings.where(predicate).toList();
-    state = state.copyWith(selectedBookingIds: selected.map((b) => b.id).toSet(), selectedBookings: selected);
+    state = state.copyWith(
+      selectedBookingIds: selected.map((b) => b.id).toSet(),
+      selectedBookings: selected,
+    );
   }
 }
 
 /// Multi-select provider
-final multiSelectProvider = StateNotifierProvider<MultiSelectNotifier, MultiSelectState>((ref) {
-  return MultiSelectNotifier();
-});
+final multiSelectProvider =
+    StateNotifierProvider<MultiSelectNotifier, MultiSelectState>((ref) {
+      return MultiSelectNotifier();
+    });

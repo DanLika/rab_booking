@@ -99,231 +99,249 @@ class BookingBlockWidget extends StatelessWidget {
         cursor: SystemMouseCursors.click,
         onEnter: PlatformUtils.supportsHover
             ? (event) => SmartBookingTooltip.show(
-                  context: context,
-                  booking: booking,
-                  position: event.position,
-                )
+                context: context,
+                booking: booking,
+                position: event.position,
+              )
             : null,
         onExit: PlatformUtils.supportsHover
             ? (_) => SmartBookingTooltip.hide()
             : null,
         child: GestureDetector(
-        // In multi-select mode, tap toggles selection
-        // If no onTap callback provided, show tooltip on tap (mobile)
-        onTap: isMultiSelectMode
-            ? onSelectionToggle
-            : onTap ??
-                () => SmartBookingTooltip.show(
+          // In multi-select mode, tap toggles selection
+          // If no onTap callback provided, show tooltip on tap (mobile)
+          onTap: isMultiSelectMode
+              ? onSelectionToggle
+              : onTap ??
+                    () => SmartBookingTooltip.show(
                       context: context,
                       booking: booking,
                     ),
-        onLongPress: onLongPress,
-        onSecondaryTapDown: onSecondaryTapDown,
-        child: SizedBox(
-        width: width,
-        height: height,
-        child: Stack(
-          children: [
-            // Background layer with skewed parallelogram shape
-            // Calculate dayWidth for turnover day alignment
-            CustomPaint(
-              painter: SkewedBookingPainter(
-                backgroundColor: statusColor.withAlpha((0.9 * 255).toInt()),
-                borderColor: hasConflict ? Colors.red : statusColor,
-                dayWidth: dayWidth ?? (width / (booking.numberOfNights + 1)),
-                borderWidth: hasConflict ? 2.5 : 1.5,
-                hasConflict: hasConflict,
-              ),
-              size: Size(width, height),
-            ),
-
-            // Content layer - clipped to skewed shape
-            ClipPath(
-              clipper: SkewedBookingClipper(dayWidth: dayWidth ?? (width / (booking.numberOfNights + 1))),
-              child: Stack(
-                children: [
-              // Check-in diagonal indicator (left edge)
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: CheckInDiagonalIndicator(
-                  height: height,
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
-              ),
-
-              // Check-out diagonal indicator (right edge)
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: CheckOutDiagonalIndicator(
-                  height: height,
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
-              ),
-
-              // ENHANCED: Resize visual feedback overlay
-              if (isResizing)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: AppColors.primary,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+          onLongPress: onLongPress,
+          onSecondaryTapDown: onSecondaryTapDown,
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Stack(
+              children: [
+                // Background layer with skewed parallelogram shape
+                // Calculate dayWidth for turnover day alignment
+                CustomPaint(
+                  painter: SkewedBookingPainter(
+                    backgroundColor: statusColor.withAlpha((0.9 * 255).toInt()),
+                    borderColor: hasConflict ? Colors.red : statusColor,
+                    dayWidth:
+                        dayWidth ?? (width / (booking.numberOfNights + 1)),
+                    borderWidth: hasConflict ? 2.5 : 1.5,
+                    hasConflict: hasConflict,
                   ),
+                  size: Size(width, height),
                 ),
 
-              // ENHANCED: Multi-select overlay (selected state)
-              if (isMultiSelectMode && isSelected)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha((0.2 * 255).toInt()),
-                      border: Border.all(
-                        color: AppColors.primary,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+                // Content layer - clipped to skewed shape
+                ClipPath(
+                  clipper: SkewedBookingClipper(
+                    dayWidth:
+                        dayWidth ?? (width / (booking.numberOfNights + 1)),
                   ),
-                ),
-
-              // ENHANCED: Left border stripe for booking source
-              if (showSourceBorder)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 4,
-                    decoration: BoxDecoration(
-                      color: sourceBorderColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(4),
-                        bottomLeft: Radius.circular(4),
-                      ),
-                    ),
-                  ),
-                ),
-
-              // Main content - BedBooking style: minimal and clean
-              Padding(
-                padding: EdgeInsets.only(
-                  left: showSourceBorder ? 10 : 6,
-                  right: 6,
-                  top: 4,
-                  bottom: 4,
-                ),
-                child: _buildContent(context, isCompact),
-              ),
-
-              // Conflict warning indicator - always visible if conflict exists
-              if (hasConflict)
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Tooltip(
-                    message: 'UPOZORENJE: Preklapanje rezervacija!',
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-                      ),
-                      child: const Icon(
-                        Icons.warning,
-                        size: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-
-              // ENHANCED: Read-only lock icon for external sources
-              if (isFromExternalSource && !isCompact)
-                Positioned(
-                  left: hasConflict ? 4 : null,
-                  right: hasConflict ? null : 4,
-                  top: hasConflict ? 24 : 4,
-                  child: Tooltip(
-                    message: 'Rezervacija iz vanjskog izvora (${_getSourceName(booking.source)}) - nije moguće editirati ovdje',
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade700,
-                        shape: BoxShape.circle,
-                        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-                      ),
-                      child: const Icon(
-                        Icons.lock,
-                        size: 12,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-
-              // ENHANCED: Multi-select checkbox (top-left)
-              if (isMultiSelectMode && width >= 50)
-                Positioned(
-                  left: 4,
-                  top: 4,
-                  child: GestureDetector(
-                    onTap: onSelectionToggle,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary
-                            : Colors.white.withAlpha((0.9 * 255).toInt()),
-                        border: Border.all(
-                          color: isSelected ? AppColors.primary : Colors.grey.shade400,
-                          width: 2,
+                  child: Stack(
+                    children: [
+                      // Check-in diagonal indicator (left edge)
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: CheckInDiagonalIndicator(
+                          height: height,
+                          color: Colors.white.withValues(alpha: 0.85),
                         ),
-                        borderRadius: BorderRadius.circular(4),
-                        boxShadow: AppShadows.getElevation(1, isDark: isDark),
                       ),
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              size: 14,
-                              color: Colors.white,
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-                ],  // Close children of inner Stack
-              ),  // Close inner Stack (child of ClipPath)
-            ),  // Close ClipPath
-          ],  // Close children of outer Stack
-        ),  // Close outer Stack (child of SizedBox)
-      ),  // Close SizedBox (child of GestureDetector)
-    ),  // Close GestureDetector (child of MouseRegion)
-    ),  // Close MouseRegion (child of Semantics)
-    );  // Close Semantics
+
+                      // Check-out diagonal indicator (right edge)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: CheckOutDiagonalIndicator(
+                          height: height,
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
+                      ),
+
+                      // ENHANCED: Resize visual feedback overlay
+                      if (isResizing)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+
+                      // ENHANCED: Multi-select overlay (selected state)
+                      if (isMultiSelectMode && isSelected)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(
+                                (0.2 * 255).toInt(),
+                              ),
+                              border: Border.all(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+
+                      // ENHANCED: Left border stripe for booking source
+                      if (showSourceBorder)
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 4,
+                            decoration: BoxDecoration(
+                              color: sourceBorderColor,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(4),
+                                bottomLeft: Radius.circular(4),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Main content - BedBooking style: minimal and clean
+                      Padding(
+                        padding: EdgeInsets.only(
+                          left: showSourceBorder ? 10 : 6,
+                          right: 6,
+                          top: 4,
+                          bottom: 4,
+                        ),
+                        child: _buildContent(context, isCompact),
+                      ),
+
+                      // Conflict warning indicator - always visible if conflict exists
+                      if (hasConflict)
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Tooltip(
+                            message: 'UPOZORENJE: Preklapanje rezervacija!',
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                                boxShadow: AppShadows.getElevation(
+                                  2,
+                                  isDark: isDark,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.warning,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // ENHANCED: Read-only lock icon for external sources
+                      if (isFromExternalSource && !isCompact)
+                        Positioned(
+                          left: hasConflict ? 4 : null,
+                          right: hasConflict ? null : 4,
+                          top: hasConflict ? 24 : 4,
+                          child: Tooltip(
+                            message:
+                                'Rezervacija iz vanjskog izvora (${_getSourceName(booking.source)}) - nije moguće editirati ovdje',
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade700,
+                                shape: BoxShape.circle,
+                                boxShadow: AppShadows.getElevation(
+                                  2,
+                                  isDark: isDark,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.lock,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // ENHANCED: Multi-select checkbox (top-left)
+                      if (isMultiSelectMode && width >= 50)
+                        Positioned(
+                          left: 4,
+                          top: 4,
+                          child: GestureDetector(
+                            onTap: onSelectionToggle,
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : Colors.white.withAlpha(
+                                        (0.9 * 255).toInt(),
+                                      ),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : Colors.grey.shade400,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: AppShadows.getElevation(
+                                  1,
+                                  isDark: isDark,
+                                ),
+                              ),
+                              child: isSelected
+                                  ? const Icon(
+                                      Icons.check,
+                                      size: 14,
+                                      color: Colors.white,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
+                    ], // Close children of inner Stack
+                  ), // Close inner Stack (child of ClipPath)
+                ), // Close ClipPath
+              ], // Close children of outer Stack
+            ), // Close outer Stack (child of SizedBox)
+          ), // Close SizedBox (child of GestureDetector)
+        ), // Close GestureDetector (child of MouseRegion)
+      ), // Close MouseRegion (child of Semantics)
+    ); // Close Semantics
 
     // Wrap in Draggable if enabled (but not in multi-select mode)
     if (isDraggable && !isMultiSelectMode) {
       return LongPressDraggable<BookingModel>(
         data: booking,
-        onDragStarted: onLongPress, // Call onLongPress when drag starts (optional)
+        onDragStarted:
+            onLongPress, // Call onLongPress when drag starts (optional)
         feedback: EnhancedBookingDragFeedback(
           booking: booking,
           width: width,
           height: height,
         ),
-        childWhenDragging: Opacity(
-          opacity: 0.3,
-          child: block,
-        ),
+        childWhenDragging: Opacity(opacity: 0.3, child: block),
         child: block,
       );
     }
@@ -351,7 +369,8 @@ class BookingBlockWidget extends StatelessWidget {
     }
 
     // Full view: guest name + date range (if cross-month) + nights + guests
-    final isCrossMonth = booking.checkIn.month != booking.checkOut.month ||
+    final isCrossMonth =
+        booking.checkIn.month != booking.checkOut.month ||
         booking.checkIn.year != booking.checkOut.year;
 
     return Column(
@@ -524,4 +543,3 @@ class BookingBlockWidget extends StatelessWidget {
     }
   }
 }
-

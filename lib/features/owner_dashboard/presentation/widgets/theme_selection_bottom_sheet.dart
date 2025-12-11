@@ -8,7 +8,8 @@ import '../../../../core/utils/responsive_spacing_helper.dart';
 /// Show theme selection bottom sheet
 void showThemeSelectionBottomSheet(BuildContext context, WidgetRef ref) {
   final screenHeight = MediaQuery.of(context).size.height;
-  final maxHeightPercent = ResponsiveSpacingHelper.getBottomSheetMaxHeightPercent(context);
+  final maxHeightPercent =
+      ResponsiveSpacingHelper.getBottomSheetMaxHeightPercent(context);
   final maxSheetHeight = screenHeight * maxHeightPercent;
 
   showModalBottomSheet(
@@ -16,7 +17,9 @@ void showThemeSelectionBottomSheet(BuildContext context, WidgetRef ref) {
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     constraints: BoxConstraints(maxHeight: maxSheetHeight),
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
     builder: (context) => const ThemeSelectionBottomSheet(),
   );
 }
@@ -44,12 +47,17 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
             padding: headerPadding,
             child: Row(
               children: [
-                Icon(Icons.brightness_6_outlined, color: Theme.of(context).colorScheme.onSurface),
+                Icon(
+                  Icons.brightness_6_outlined,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.themeSelectionTitle,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -79,7 +87,9 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
                       Navigator.of(context).pop();
                       // Delay theme change to after modal closes to prevent rebuild during animation
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
+                        ref
+                            .read(themeNotifierProvider.notifier)
+                            .setThemeMode(ThemeMode.light);
                       });
                     },
                   ),
@@ -94,7 +104,9 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
                       Navigator.of(context).pop();
                       // Delay theme change to after modal closes to prevent rebuild during animation
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+                        ref
+                            .read(themeNotifierProvider.notifier)
+                            .setThemeMode(ThemeMode.dark);
                       });
                     },
                   ),
@@ -109,7 +121,9 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
                       Navigator.of(context).pop();
                       // Delay theme change to after modal closes to prevent rebuild during animation
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
+                        ref
+                            .read(themeNotifierProvider.notifier)
+                            .setThemeMode(ThemeMode.system);
                       });
                     },
                   ),
@@ -171,9 +185,19 @@ class _ThemeOption extends StatelessWidget {
               : Colors.grey[600],
         ),
       ),
-      title: Text(title, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
       subtitle: Text(subtitle),
-      trailing: isSelected ? Icon(Icons.check_circle, color: isDark ? Colors.white : selectedColor) : null,
+      trailing: isSelected
+          ? Icon(
+              Icons.check_circle,
+              color: isDark ? Colors.white : selectedColor,
+            )
+          : null,
       onTap: onTap,
     );
   }

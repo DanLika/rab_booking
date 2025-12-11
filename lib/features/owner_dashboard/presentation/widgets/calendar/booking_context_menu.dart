@@ -58,8 +58,13 @@ class BookingContextMenu extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: booking.isExternalBooking
                           ? Colors.orange.withAlpha((0.15 * 255).toInt())
-                          : AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
-                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+                          : AppColors.authPrimary.withAlpha(
+                              (0.1 * 255).toInt(),
+                            ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,13 +74,19 @@ class BookingContextMenu extends StatelessWidget {
                             Container(
                               width: 8,
                               height: 8,
-                              decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
+                              decoration: BoxDecoration(
+                                color: booking.status.color,
+                                shape: BoxShape.circle,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 booking.guestName ?? 'N/A',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -85,20 +96,37 @@ class BookingContextMenu extends StatelessWidget {
                         if (booking.isExternalBooking) ...[
                           const SizedBox(height: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withAlpha((0.2 * 255).toInt()),
+                              color: Colors.orange.withAlpha(
+                                (0.2 * 255).toInt(),
+                              ),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.orange.withAlpha((0.5 * 255).toInt())),
+                              border: Border.all(
+                                color: Colors.orange.withAlpha(
+                                  (0.5 * 255).toInt(),
+                                ),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.link, size: 12, color: Colors.orange),
+                                const Icon(
+                                  Icons.link,
+                                  size: 12,
+                                  color: Colors.orange,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   booking.sourceDisplayName,
-                                  style: const TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
@@ -114,12 +142,20 @@ class BookingContextMenu extends StatelessWidget {
                       padding: const EdgeInsets.all(12),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Imported booking - manage on ${booking.sourceDisplayName}',
-                              style: TextStyle(fontSize: 11, color: Colors.grey[600], fontStyle: FontStyle.italic),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ),
                         ],
@@ -152,7 +188,9 @@ class BookingContextMenu extends StatelessWidget {
                     Builder(
                       builder: (context) {
                         final l10n = AppLocalizations.of(context);
-                        return _buildSubmenuHeader(l10n.ownerCalendarChangeStatus);
+                        return _buildSubmenuHeader(
+                          l10n.ownerCalendarChangeStatus,
+                        );
                       },
                     ),
 
@@ -236,7 +274,12 @@ class BookingContextMenu extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem({required IconData icon, required String label, required VoidCallback onTap, Color? color}) {
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -259,12 +302,19 @@ class BookingContextMenu extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
+        ),
       ),
     );
   }
 
-  Widget _buildStatusMenuItem({required BookingStatus status, required VoidCallback onTap}) {
+  Widget _buildStatusMenuItem({
+    required BookingStatus status,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -275,10 +325,18 @@ class BookingContextMenu extends StatelessWidget {
             Container(
               width: 10,
               height: 10,
-              decoration: BoxDecoration(color: status.color, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: status.color,
+                shape: BoxShape.circle,
+              ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text(status.displayName, style: const TextStyle(fontSize: 13))),
+            Expanded(
+              child: Text(
+                status.displayName,
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
           ],
         ),
       ),

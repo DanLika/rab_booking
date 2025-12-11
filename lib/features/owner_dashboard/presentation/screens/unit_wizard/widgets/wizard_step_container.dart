@@ -23,8 +23,7 @@ class WizardStepContainer extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     // Responsive padding
-    final contentPadding = padding ??
-        EdgeInsets.all(isMobile ? 16 : 24);
+    final contentPadding = padding ?? EdgeInsets.all(isMobile ? 16 : 24);
 
     // Max content width (centered on desktop)
     final maxWidth = isMobile ? double.infinity : 800.0;

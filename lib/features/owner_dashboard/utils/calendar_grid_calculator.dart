@@ -48,7 +48,10 @@ class CalendarGridCalculator {
 
   /// Get row header width based on screen width and text scale factor
   /// Dynamically calculated as percentage of screen width with bounds
-  static double getRowHeaderWidth(double screenWidth, {double textScaleFactor = 1.0}) {
+  static double getRowHeaderWidth(
+    double screenWidth, {
+    double textScaleFactor = 1.0,
+  }) {
     double percentageWidth;
 
     if (screenWidth < mobileBreakpoint) {
@@ -67,7 +70,10 @@ class CalendarGridCalculator {
   }
 
   /// Get row height based on screen width and text scale factor
-  static double getRowHeight(double screenWidth, {double textScaleFactor = 1.0}) {
+  static double getRowHeight(
+    double screenWidth, {
+    double textScaleFactor = 1.0,
+  }) {
     double baseHeight;
 
     if (screenWidth < mobileBreakpoint) {
@@ -92,7 +98,10 @@ class CalendarGridCalculator {
     double textScaleFactor = 1.0,
   }) {
     // Calculate available width for day cells
-    final rowHeaderWidth = getRowHeaderWidth(screenWidth, textScaleFactor: textScaleFactor);
+    final rowHeaderWidth = getRowHeaderWidth(
+      screenWidth,
+      textScaleFactor: textScaleFactor,
+    );
     final availableWidth = screenWidth - rowHeaderWidth - 32; // 32 for padding
 
     // Calculate width per day
@@ -136,12 +145,16 @@ class CalendarGridCalculator {
     required double rowHeaderWidth,
   }) {
     // Calculate start day offset
-    final startDayOffset =
-        bookingStartDate.difference(gridStartDate).inDays.toDouble();
+    final startDayOffset = bookingStartDate
+        .difference(gridStartDate)
+        .inDays
+        .toDouble();
 
     // Calculate number of days (booking duration)
-    final numberOfDays =
-        bookingEndDate.difference(bookingStartDate).inDays.toDouble();
+    final numberOfDays = bookingEndDate
+        .difference(bookingStartDate)
+        .inDays
+        .toDouble();
 
     // X position (offset from left, including row header)
     final x = rowHeaderWidth + (startDayOffset * dayCellWidth);
@@ -190,7 +203,10 @@ class CalendarGridCalculator {
   }
 
   /// Get font size for date headers with accessibility scaling
-  static double getDateHeaderFontSize(double screenWidth, {double textScaleFactor = 1.0}) {
+  static double getDateHeaderFontSize(
+    double screenWidth, {
+    double textScaleFactor = 1.0,
+  }) {
     double baseFontSize;
 
     if (screenWidth < mobileBreakpoint) {
@@ -208,7 +224,10 @@ class CalendarGridCalculator {
   }
 
   /// Get font size for room names with accessibility scaling
-  static double getRoomNameFontSize(double screenWidth, {double textScaleFactor = 1.0}) {
+  static double getRoomNameFontSize(
+    double screenWidth, {
+    double textScaleFactor = 1.0,
+  }) {
     double baseFontSize;
 
     if (screenWidth < mobileBreakpoint) {
@@ -224,7 +243,10 @@ class CalendarGridCalculator {
   }
 
   /// Get icon size for room capacity indicators with accessibility scaling
-  static double getRoomIconSize(double screenWidth, {double textScaleFactor = 1.0}) {
+  static double getRoomIconSize(
+    double screenWidth, {
+    double textScaleFactor = 1.0,
+  }) {
     double baseIconSize;
 
     if (screenWidth < mobileBreakpoint) {
@@ -313,11 +335,7 @@ class CalendarGridCalculator {
 }
 
 /// Screen size categories for responsive design
-enum ScreenSizeCategory {
-  mobile,
-  tablet,
-  desktop,
-}
+enum ScreenSizeCategory { mobile, tablet, desktop }
 
 extension ScreenSizeCategoryX on ScreenSizeCategory {
   bool get isMobile => this == ScreenSizeCategory.mobile;

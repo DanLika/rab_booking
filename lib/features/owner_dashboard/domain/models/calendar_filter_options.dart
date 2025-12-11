@@ -72,9 +72,4 @@ extension CalendarFilterOptionsX on CalendarFilterOptions {
     if (bookingIdSearch?.isNotEmpty ?? false) count++;
     return count;
   }
-
-  /// Clear all filters
-  CalendarFilterOptions clear() {
-    return const CalendarFilterOptions();
-  }
 }

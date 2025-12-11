@@ -21,10 +21,7 @@ class BookingStatusChangeDialog extends StatelessWidget {
   /// The booking whose status may be changed
   final BookingModel booking;
 
-  const BookingStatusChangeDialog({
-    super.key,
-    required this.booking,
-  });
+  const BookingStatusChangeDialog({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +30,9 @@ class BookingStatusChangeDialog extends StatelessWidget {
 
     // Constrain dialog height for landscape mode on phones
     final screenHeight = MediaQuery.of(context).size.height;
-    final maxDialogHeight = screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
+    final maxDialogHeight =
+        screenHeight *
+        ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -74,9 +73,7 @@ class BookingStatusChangeDialog extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: context.gradients.brandPrimary,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(11),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
       ),
       child: Row(
         children: [
@@ -86,11 +83,7 @@ class BookingStatusChangeDialog extends StatelessWidget {
               color: Colors.white.withAlpha((0.2 * 255).toInt()),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              Icons.swap_horiz,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: const Icon(Icons.swap_horiz, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -129,8 +122,9 @@ class BookingStatusChangeDialog extends StatelessWidget {
             title: Text(
               status.displayName,
               style: TextStyle(
-                fontWeight:
-                    isCurrentStatus ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isCurrentStatus
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
             ),
             leading: Container(
@@ -140,18 +134,11 @@ class BookingStatusChangeDialog extends StatelessWidget {
                 color: status.color,
                 shape: BoxShape.circle,
                 border: isCurrentStatus
-                    ? Border.all(
-                        color: theme.colorScheme.primary,
-                        width: 2,
-                      )
+                    ? Border.all(color: theme.colorScheme.primary, width: 2)
                     : null,
               ),
               child: isCurrentStatus
-                  ? const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 16,
-                    )
+                  ? const Icon(Icons.check, color: Colors.white, size: 16)
                   : null,
             ),
             trailing: isCurrentStatus

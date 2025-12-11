@@ -14,13 +14,11 @@ class UnitWizardDraft with _$UnitWizardDraft {
     @Default(1) int currentStep, // 1-8
     @Default({}) Map<int, bool> completedSteps, // {1: true, 2: true, ...}
     @Default({}) Map<int, bool> skippedSteps, // {5: true, 7: true}
-
     // Step 1: Basic Info (REQUIRED)
     String? name,
     String? propertyId,
     String? description,
     String? slug, // Auto-generated from name
-
     // Step 2: Capacity & Space (REQUIRED)
     int? bedrooms,
     int? bathrooms,
@@ -30,11 +28,12 @@ class UnitWizardDraft with _$UnitWizardDraft {
     // Step 3: Pricing (REQUIRED)
     double? pricePerNight,
     double? weekendBasePrice, // Weekend price (Sat-Sun by default)
-    @Default([6, 7]) List<int> weekendDays, // Days considered weekend (1=Mon...7=Sun)
+    @Default([6, 7])
+    List<int> weekendDays, // Days considered weekend (1=Mon...7=Sun)
     int? minStayNights,
     int? maxStayNights, // Maximum nights per booking (null = no limit)
-    @Default([]) List<Map<String, dynamic>> seasons, // Seasonal pricing (simplified)
-
+    @Default([])
+    List<Map<String, dynamic>> seasons, // Seasonal pricing (simplified)
     // Step 4: Availability (REQUIRED)
     @Default(true) bool availableYearRound,
     DateTime? seasonStartDate,
@@ -44,12 +43,10 @@ class UnitWizardDraft with _$UnitWizardDraft {
     // Step 5: Photos (RECOMMENDED)
     @Default([]) List<String> images, // URLs after upload
     String? coverImageUrl, // First image by default
-
     // Step 6: Widget Setup (RECOMMENDED)
     String? widgetMode, // 'calendarOnly', 'bookingInstant', 'bookingPending'
     String? widgetTheme, // 'minimalist', 'modern', 'luxury'
     Map<String, dynamic>? widgetSettings, // Full widget_settings data
-
     // Step 7: Advanced Options (OPTIONAL)
     Map<String, dynamic>? icalConfig,
     Map<String, dynamic>? emailConfig,
@@ -57,7 +54,6 @@ class UnitWizardDraft with _$UnitWizardDraft {
 
     // Step 8: Review & Publish (FINAL)
     @Default(false) bool isPublished, // false = draft, true = active unit
-
     // Timestamps
     DateTime? lastSaved,
     DateTime? createdAt,

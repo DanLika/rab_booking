@@ -72,7 +72,8 @@ class DateRangeFilter with _$DateRangeFilter {
   const factory DateRangeFilter({
     required DateTime startDate,
     required DateTime endDate,
-    @Default('custom') String preset, // 'week', 'month', 'quarter', 'year', 'custom'
+    @Default('custom')
+    String preset, // 'week', 'month', 'quarter', 'year', 'custom'
   }) = _DateRangeFilter;
 
   factory DateRangeFilter.fromJson(Map<String, dynamic> json) =>

@@ -48,14 +48,21 @@ class FirebaseOwnerPropertiesRepository {
 
       return properties;
     } catch (e) {
-      throw PropertyException('Failed to fetch properties', code: 'property/fetch-failed', originalError: e);
+      throw PropertyException(
+        'Failed to fetch properties',
+        code: 'property/fetch-failed',
+        originalError: e,
+      );
     }
   }
 
   /// Get property by ID
   Future<PropertyModel?> getPropertyById(String propertyId) async {
     try {
-      final doc = await _firestore.collection('properties').doc(propertyId).get();
+      final doc = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .get();
 
       if (!doc.exists) {
         return null;
@@ -74,7 +81,11 @@ class FirebaseOwnerPropertiesRepository {
 
       return PropertyModel.fromJson(propertyData);
     } catch (e) {
-      throw PropertyException('Failed to fetch property', code: 'property/fetch-failed', originalError: e);
+      throw PropertyException(
+        'Failed to fetch property',
+        code: 'property/fetch-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -94,7 +105,11 @@ class FirebaseOwnerPropertiesRepository {
 
       return UnitModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
-      throw PropertyException('Failed to fetch unit', code: 'property/unit-fetch-failed', originalError: e);
+      throw PropertyException(
+        'Failed to fetch unit',
+        code: 'property/unit-fetch-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -104,9 +119,7 @@ class FirebaseOwnerPropertiesRepository {
     try {
       // NOTE: Cannot use FieldPath.documentId with collectionGroup without full path
       // Instead, get all units and filter in code
-      final snapshot = await _firestore
-          .collectionGroup('units')
-          .get();
+      final snapshot = await _firestore.collectionGroup('units').get();
 
       if (snapshot.docs.isEmpty) {
         return null;
@@ -131,7 +144,11 @@ class FirebaseOwnerPropertiesRepository {
 
       return null;
     } catch (e) {
-      throw PropertyException('Failed to fetch unit', code: 'property/unit-fetch-failed', originalError: e);
+      throw PropertyException(
+        'Failed to fetch unit',
+        code: 'property/unit-fetch-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -219,17 +236,20 @@ class FirebaseOwnerPropertiesRepository {
       if (isActive != null) updates['is_active'] = isActive;
 
       if (updates.isEmpty) {
-        throw PropertyException('No updates provided', code: 'property/no-updates');
+        throw PropertyException(
+          'No updates provided',
+          code: 'property/no-updates',
+        );
       }
 
       updates['updated_at'] = FieldValue.serverTimestamp();
 
-      await _firestore
+      await _firestore.collection('properties').doc(propertyId).update(updates);
+
+      final doc = await _firestore
           .collection('properties')
           .doc(propertyId)
-          .update(updates);
-
-      final doc = await _firestore.collection('properties').doc(propertyId).get();
+          .get();
       return PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
       throw PropertyException.updateFailed(e);
@@ -239,7 +259,6 @@ class FirebaseOwnerPropertiesRepository {
   /// Delete property
   Future<void> deleteProperty(String propertyId) async {
     try {
-
       // Check if property has units in NEW subcollection
       final unitsInSubcollection = await _firestore
           .collection('properties')
@@ -251,7 +270,8 @@ class FirebaseOwnerPropertiesRepository {
       if (unitsInSubcollection.docs.isNotEmpty) {
         throw PropertyException(
           'Cannot delete property with existing units. Please delete all units first.',
-          code: 'property/has-units');
+          code: 'property/has-units',
+        );
       }
 
       // ALSO check OLD top-level units collection (for backwards compatibility)
@@ -264,7 +284,8 @@ class FirebaseOwnerPropertiesRepository {
       if (unitsInOldCollection.docs.isNotEmpty) {
         throw PropertyException(
           'Cannot delete property with existing units in old location. Please delete all units first.',
-          code: 'property/has-units-legacy');
+          code: 'property/has-units-legacy',
+        );
       }
 
       await _firestore.collection('properties').doc(propertyId).delete();
@@ -280,7 +301,8 @@ class FirebaseOwnerPropertiesRepository {
     required List<int> bytes,
   }) async {
     try {
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${filePath.split('/').last}';
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${filePath.split('/').last}';
       final storagePath = 'property-images/$propertyId/$fileName';
 
       final ref = _storage.ref().child(storagePath);
@@ -292,7 +314,11 @@ class FirebaseOwnerPropertiesRepository {
       final downloadUrl = await uploadTask.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      throw PropertyException('Failed to upload image', code: 'property/image-upload-failed', originalError: e);
+      throw PropertyException(
+        'Failed to upload image',
+        code: 'property/image-upload-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -302,7 +328,11 @@ class FirebaseOwnerPropertiesRepository {
       final ref = _storage.refFromURL(imageUrl);
       await ref.delete();
     } catch (e) {
-      throw PropertyException('Failed to delete image', code: 'property/image-delete-failed', originalError: e);
+      throw PropertyException(
+        'Failed to delete image',
+        code: 'property/image-delete-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -320,7 +350,11 @@ class FirebaseOwnerPropertiesRepository {
           .map((doc) => UnitModel.fromJson({...doc.data(), 'id': doc.id}))
           .toList();
     } catch (e) {
-      throw PropertyException('Failed to fetch units', code: 'property/units-fetch-failed', originalError: e);
+      throw PropertyException(
+        'Failed to fetch units',
+        code: 'property/units-fetch-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -339,7 +373,11 @@ class FirebaseOwnerPropertiesRepository {
 
       return allUnits;
     } catch (e) {
-      throw PropertyException('Failed to fetch owner units', code: 'property/owner-units-fetch-failed', originalError: e);
+      throw PropertyException(
+        'Failed to fetch owner units',
+        code: 'property/owner-units-fetch-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -351,22 +389,22 @@ class FirebaseOwnerPropertiesRepository {
         .orderBy('created_at', descending: true)
         .snapshots()
         .asyncMap((snapshot) async {
-      final properties = <PropertyModel>[];
-      for (final doc in snapshot.docs) {
-        final propertyData = {...doc.data(), 'id': doc.id};
+          final properties = <PropertyModel>[];
+          for (final doc in snapshot.docs) {
+            final propertyData = {...doc.data(), 'id': doc.id};
 
-        // Get units count for this property
-        final unitsSnapshot = await _firestore
-            .collection('properties')
-            .doc(doc.id)
-            .collection('units')
-            .get();
+            // Get units count for this property
+            final unitsSnapshot = await _firestore
+                .collection('properties')
+                .doc(doc.id)
+                .collection('units')
+                .get();
 
-        propertyData['units_count'] = unitsSnapshot.docs.length;
-        properties.add(PropertyModel.fromJson(propertyData));
-      }
-      return properties;
-    });
+            propertyData['units_count'] = unitsSnapshot.docs.length;
+            properties.add(PropertyModel.fromJson(propertyData));
+          }
+          return properties;
+        });
   }
 
   /// Watch all owner units (real-time stream using collection group)
@@ -383,11 +421,13 @@ class FirebaseOwnerPropertiesRepository {
             .get();
 
         for (final doc in snapshot.docs) {
-          allUnits.add(UnitModel.fromJson({
-            ...doc.data(),
-            'id': doc.id,
-            'property_id': property.id,
-          }));
+          allUnits.add(
+            UnitModel.fromJson({
+              ...doc.data(),
+              'id': doc.id,
+              'property_id': property.id,
+            }),
+          );
         }
       }
       return allUnits;
@@ -418,25 +458,25 @@ class FirebaseOwnerPropertiesRepository {
           .doc(propertyId)
           .collection('units')
           .add({
-        'property_id': propertyId, // Keep for reference
-        'owner_id': ownerId, // Required for Firestore security rules
-        'name': name,
-        'slug': slug,
-        'description': description,
-        'base_price': basePrice,
-        'max_guests': maxGuests,
-        'bedrooms': bedrooms,
-        'bathrooms': bathrooms,
-        'area_sqm': area,
-        'amenities': amenities ?? [],
-        'images': images ?? [],
-        'cover_image': coverImage,
-        'quantity': quantity,
-        'min_stay_nights': minStayNights,
-        'is_available': true,
-        'created_at': FieldValue.serverTimestamp(),
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+            'property_id': propertyId, // Keep for reference
+            'owner_id': ownerId, // Required for Firestore security rules
+            'name': name,
+            'slug': slug,
+            'description': description,
+            'base_price': basePrice,
+            'max_guests': maxGuests,
+            'bedrooms': bedrooms,
+            'bathrooms': bathrooms,
+            'area_sqm': area,
+            'amenities': amenities ?? [],
+            'images': images ?? [],
+            'cover_image': coverImage,
+            'quantity': quantity,
+            'min_stay_nights': minStayNights,
+            'is_available': true,
+            'created_at': FieldValue.serverTimestamp(),
+            'updated_at': FieldValue.serverTimestamp(),
+          });
 
       final doc = await docRef.get();
       final unitId = doc.id;
@@ -448,10 +488,16 @@ class FirebaseOwnerPropertiesRepository {
           unitId: unitId,
           ownerId: ownerId,
         );
-        LoggingService.log('Widget settings auto-created for unit: $unitId', tag: 'OwnerPropertiesRepository');
+        LoggingService.log(
+          'Widget settings auto-created for unit: $unitId',
+          tag: 'OwnerPropertiesRepository',
+        );
       } catch (e) {
         // Log error but don't fail unit creation
-        LoggingService.log('Warning: Failed to create widget settings for unit $unitId: $e', tag: 'OwnerPropertiesRepository');
+        LoggingService.log(
+          'Warning: Failed to create widget settings for unit $unitId: $e',
+          tag: 'OwnerPropertiesRepository',
+        );
       }
 
       return UnitModel.fromJson({...doc.data()!, 'id': unitId});
@@ -497,7 +543,10 @@ class FirebaseOwnerPropertiesRepository {
       if (isAvailable != null) updates['is_available'] = isAvailable;
 
       if (updates.isEmpty) {
-        throw PropertyException('No updates provided', code: 'property/no-updates');
+        throw PropertyException(
+          'No updates provided',
+          code: 'property/no-updates',
+        );
       }
 
       updates['updated_at'] = FieldValue.serverTimestamp();
@@ -533,7 +582,10 @@ class FirebaseOwnerPropertiesRepository {
           .get();
 
       if (bookingsSnapshot.docs.isNotEmpty) {
-        throw PropertyException('Cannot delete unit with active bookings.', code: 'property/unit-has-bookings');
+        throw PropertyException(
+          'Cannot delete unit with active bookings.',
+          code: 'property/unit-has-bookings',
+        );
       }
 
       await _firestore

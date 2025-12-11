@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
@@ -12,21 +13,28 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
-import '../../../widget/presentation/providers/widget_settings_provider.dart' as widget_provider;
+import '../../../widget/presentation/providers/widget_settings_provider.dart'
+    as widget_provider;
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/user_profile_provider.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
-  const WidgetSettingsScreen({required this.propertyId, required this.unitId, this.showAppBar = true, super.key});
+  const WidgetSettingsScreen({
+    required this.propertyId,
+    required this.unitId,
+    this.showAppBar = true,
+    super.key,
+  });
 
   final String propertyId;
   final String unitId;
   final bool showAppBar;
 
   @override
-  ConsumerState<WidgetSettingsScreen> createState() => _WidgetSettingsScreenState();
+  ConsumerState<WidgetSettingsScreen> createState() =>
+      _WidgetSettingsScreenState();
 }
 
 class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
@@ -86,7 +94,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
     try {
       final repository = ref.read(widgetSettingsRepositoryProvider);
-      final settings = await repository.getWidgetSettings(propertyId: widget.propertyId, unitId: widget.unitId);
+      final settings = await repository.getWidgetSettings(
+        propertyId: widget.propertyId,
+        unitId: widget.unitId,
+      );
 
       if (settings != null) {
         _existingSettings = settings;
@@ -98,7 +109,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.widgetSettingsLoadError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.widgetSettingsLoadError,
+        );
       }
     } finally {
       if (mounted) {
@@ -120,10 +135,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
       // Payment Methods - Bank Transfer (bank details now from profile)
       _bankTransferEnabled = settings.bankTransferConfig?.enabled ?? false;
-      _bankPaymentDeadlineDays = settings.bankTransferConfig?.paymentDeadlineDays ?? 3;
+      _bankPaymentDeadlineDays =
+          settings.bankTransferConfig?.paymentDeadlineDays ?? 3;
       _bankEnableQrCode = settings.bankTransferConfig?.enableQrCode ?? true;
-      _bankCustomNotesController.text = settings.bankTransferConfig?.customNotes ?? '';
-      _bankUseCustomNotes = settings.bankTransferConfig?.useCustomNotes ?? false;
+      _bankCustomNotesController.text =
+          settings.bankTransferConfig?.customNotes ?? '';
+      _bankUseCustomNotes =
+          settings.bankTransferConfig?.useCustomNotes ?? false;
 
       // Pay on Arrival
       _payOnArrivalEnabled = settings.allowPayOnArrival;
@@ -140,14 +158,21 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _emailController.text = settings.contactOptions.emailAddress ?? '';
 
       // External Calendar Sync Options
-      _externalCalendarEnabled = settings.externalCalendarConfig?.enabled ?? false;
-      _syncBookingCom = settings.externalCalendarConfig?.syncBookingCom ?? false;
-      _bookingComAccountIdController.text = settings.externalCalendarConfig?.bookingComAccountId ?? '';
-      _bookingComAccessTokenController.text = settings.externalCalendarConfig?.bookingComAccessToken ?? '';
+      _externalCalendarEnabled =
+          settings.externalCalendarConfig?.enabled ?? false;
+      _syncBookingCom =
+          settings.externalCalendarConfig?.syncBookingCom ?? false;
+      _bookingComAccountIdController.text =
+          settings.externalCalendarConfig?.bookingComAccountId ?? '';
+      _bookingComAccessTokenController.text =
+          settings.externalCalendarConfig?.bookingComAccessToken ?? '';
       _syncAirbnb = settings.externalCalendarConfig?.syncAirbnb ?? false;
-      _airbnbAccountIdController.text = settings.externalCalendarConfig?.airbnbAccountId ?? '';
-      _airbnbAccessTokenController.text = settings.externalCalendarConfig?.airbnbAccessToken ?? '';
-      _syncIntervalMinutes = settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
+      _airbnbAccountIdController.text =
+          settings.externalCalendarConfig?.airbnbAccountId ?? '';
+      _airbnbAccessTokenController.text =
+          settings.externalCalendarConfig?.airbnbAccessToken ?? '';
+      _syncIntervalMinutes =
+          settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
     });
   }
 
@@ -164,8 +189,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             title: Text(l10n.widgetSettingsBankNotEntered),
             content: Text(l10n.widgetSettingsBankNotEnteredDesc),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-              ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.widgetSettingsAddBankDetails)),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l10n.widgetSettingsAddBankDetails),
+              ),
             ],
           ),
         );
@@ -202,11 +233,17 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         decoration: BoxDecoration(
           color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.5)),
+          border: Border.all(
+            color: theme.colorScheme.error.withValues(alpha: 0.5),
+          ),
         ),
         child: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error, size: 24),
+            Icon(
+              Icons.warning_amber_rounded,
+              color: theme.colorScheme.error,
+              size: 24,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Builder(
@@ -217,12 +254,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     children: [
                       Text(
                         l10n.widgetSettingsBankNotEntered,
-                        style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.error),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.error,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         l10n.widgetSettingsBankEnterDetails,
-                        style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
                       ),
                     ],
                   );
@@ -249,60 +294,94 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     }
 
     // Show bank details from profile
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+        color: isDark
+            ? AppColors.sectionDividerDark.withValues(alpha: 0.5)
+            : AppColors.sectionDividerLight.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: isDark
+              ? AppColors.sectionDividerDark
+              : AppColors.sectionDividerLight,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Title row
           Row(
             children: [
-              Icon(Icons.info_outline, color: theme.colorScheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context);
-                  return Text(
-                    l10n.widgetSettingsBankFromProfile,
-                    style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
-                  );
-                },
+              Icon(
+                Icons.info_outline,
+                color: theme.colorScheme.primary,
+                size: 20,
               ),
-              const Spacer(),
-              Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context);
-                  return TextButton.icon(
-                    onPressed: () async {
-                      await context.push(OwnerRoutes.bankAccount);
-                      // OPTIMIZED: Invalidate provider to trigger stream refresh
-                      // The build() watch will auto-update _companyDetails
-                      ref.invalidate(companyDetailsProvider);
-                    },
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: Text(l10n.edit),
-                  );
-                },
+              const SizedBox(width: 8),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    return Text(
+                      l10n.widgetSettingsBankFromProfile,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
+          // Bank details
           Builder(
             builder: (context) {
               final l10n = AppLocalizations.of(context);
               return Column(
                 children: [
-                  _buildBankDetailRow(l10n.widgetSettingsBank, company.bankName),
+                  _buildBankDetailRow(
+                    l10n.widgetSettingsBank,
+                    company.bankName,
+                  ),
                   _buildBankDetailRow('IBAN', company.bankAccountIban),
                   _buildBankDetailRow('SWIFT/BIC', company.swift),
-                  _buildBankDetailRow(l10n.widgetSettingsAccountHolder, company.accountHolder),
+                  _buildBankDetailRow(
+                    l10n.widgetSettingsAccountHolder,
+                    company.accountHolder,
+                  ),
                 ],
               );
             },
+          ),
+          const SizedBox(height: 8),
+          // Edit button - full width below details
+          SizedBox(
+            width: double.infinity,
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return OutlinedButton.icon(
+                  onPressed: () async {
+                    await context.push(OwnerRoutes.bankAccount);
+                    // OPTIMIZED: Invalidate provider to trigger stream refresh
+                    // The build() watch will auto-update _companyDetails
+                    ref.invalidate(companyDetailsProvider);
+                  },
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: Text(l10n.edit),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    side: BorderSide(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -320,13 +399,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             width: 120,
             child: Text(
               '$label:',
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           ),
           Expanded(
             child: Text(
               value.isNotEmpty ? value : '-',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
         ],
@@ -337,14 +423,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Future<void> _saveSettings() async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showWarningSnackBar(context, l10n.widgetPleaseCheckFormErrors);
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        l10n.widgetPleaseCheckFormErrors,
+      );
       return;
     }
 
     // Validation: At least one payment method must be enabled in bookingInstant mode
     // (No validation needed for bookingPending - payment methods are hidden)
     if (_selectedMode == WidgetMode.bookingInstant) {
-      final hasPaymentMethod = _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
+      final hasPaymentMethod =
+          _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
       if (!hasPaymentMethod) {
         if (mounted) {
           ErrorDisplayUtils.showErrorSnackBar(
@@ -375,13 +465,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         stripeConfig: _stripeEnabled
             ? StripePaymentConfig(
                 enabled: true,
-                depositPercentage: _globalDepositPercentage, // Use global deposit
+                depositPercentage:
+                    _globalDepositPercentage, // Use global deposit
               )
             : null,
         bankTransferConfig: _bankTransferEnabled
             ? BankTransferConfig(
                 enabled: true,
-                depositPercentage: _globalDepositPercentage, // Use global deposit
+                depositPercentage:
+                    _globalDepositPercentage, // Use global deposit
                 // Owner ID for fetching bank details from CompanyDetails
                 ownerId: FirebaseAuth.instance.currentUser?.uid,
                 // Bank details copied from CompanyDetails for backward compatibility
@@ -392,14 +484,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 accountHolder: _companyDetails?.accountHolder,
                 paymentDeadlineDays: _bankPaymentDeadlineDays,
                 enableQrCode: _bankEnableQrCode,
-                customNotes: _bankCustomNotesController.text.isEmpty ? null : _bankCustomNotesController.text,
+                customNotes: _bankCustomNotesController.text.isEmpty
+                    ? null
+                    : _bankCustomNotesController.text,
                 useCustomNotes: _bankUseCustomNotes,
               )
             : null,
         allowPayOnArrival: _payOnArrivalEnabled,
         // For bookingPending mode, approval is ALWAYS required (hardcoded true)
         // For bookingInstant mode, use the user's selection
-        requireOwnerApproval: _selectedMode == WidgetMode.bookingPending ? true : _requireApproval,
+        requireOwnerApproval: _selectedMode == WidgetMode.bookingPending
+            ? true
+            : _requireApproval,
         allowGuestCancellation: _allowCancellation,
         cancellationDeadlineHours: _cancellationHours,
         // Use minNights from unit settings (not widget settings)
@@ -407,11 +503,16 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         minNights: _existingSettings?.minNights ?? 1,
         contactOptions: ContactOptions(
           showPhone: _showPhone,
-          phoneNumber: _phoneController.text.isEmpty ? null : _phoneController.text,
+          phoneNumber: _phoneController.text.isEmpty
+              ? null
+              : _phoneController.text,
           showEmail: _showEmail,
-          emailAddress: _emailController.text.isEmpty ? null : _emailController.text,
+          emailAddress: _emailController.text.isEmpty
+              ? null
+              : _emailController.text,
         ),
-        emailConfig: _existingSettings?.emailConfig ?? const EmailNotificationConfig(),
+        emailConfig:
+            _existingSettings?.emailConfig ?? const EmailNotificationConfig(),
         externalCalendarConfig: _externalCalendarEnabled
             ? ExternalCalendarConfig(
                 enabled: true,
@@ -419,16 +520,23 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 bookingComAccountId: _bookingComAccountIdController.text.isEmpty
                     ? null
                     : _bookingComAccountIdController.text,
-                bookingComAccessToken: _bookingComAccessTokenController.text.isEmpty
+                bookingComAccessToken:
+                    _bookingComAccessTokenController.text.isEmpty
                     ? null
                     : _bookingComAccessTokenController.text,
                 syncAirbnb: _syncAirbnb,
-                airbnbAccountId: _airbnbAccountIdController.text.isEmpty ? null : _airbnbAccountIdController.text,
-                airbnbAccessToken: _airbnbAccessTokenController.text.isEmpty ? null : _airbnbAccessTokenController.text,
+                airbnbAccountId: _airbnbAccountIdController.text.isEmpty
+                    ? null
+                    : _airbnbAccountIdController.text,
+                airbnbAccessToken: _airbnbAccessTokenController.text.isEmpty
+                    ? null
+                    : _airbnbAccessTokenController.text,
                 syncIntervalMinutes: _syncIntervalMinutes,
               )
             : null,
-        taxLegalConfig: _existingSettings?.taxLegalConfig ?? const TaxLegalConfig(enabled: false),
+        taxLegalConfig:
+            _existingSettings?.taxLegalConfig ??
+            const TaxLegalConfig(enabled: false),
         themeOptions: _existingSettings?.themeOptions,
         createdAt: _existingSettings?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
@@ -441,7 +549,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.widgetSettingsSaveSuccess);
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.widgetSettingsSaveSuccess,
+        );
         // Only navigate back when used as standalone screen (with AppBar)
         // When embedded in tabs (showAppBar: false), stay on current tab
         if (widget.showAppBar) {
@@ -457,7 +568,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.widgetSettingsSaveError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.widgetSettingsSaveError,
+        );
       }
     } finally {
       if (mounted) {
@@ -533,7 +648,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
                 // Contact Options - ONLY for calendarOnly mode
                 // In booking modes, guests use the booking form, so contact info is not needed
-                if (_selectedMode == WidgetMode.calendarOnly) ...[_buildContactOptionsSection()],
+                if (_selectedMode == WidgetMode.calendarOnly) ...[
+                  _buildContactOptionsSection(),
+                ],
 
                 const SizedBox(height: 32),
 
@@ -549,7 +666,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       onTap: _isSaving ? null : _saveSettings,
                       borderRadius: BorderRadius.circular(10),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 15,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -557,13 +677,25 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   )
-                                : const Icon(Icons.check, size: 18, color: Colors.white),
+                                : const Icon(
+                                    Icons.check,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
                             const SizedBox(width: 8),
                             Text(
-                              _isSaving ? l10n.widgetSettingsSaving : l10n.widgetSettingsSave,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                              _isSaving
+                                  ? l10n.widgetSettingsSaving
+                                  : l10n.widgetSettingsSave,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -615,7 +747,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             // TIP 1: Simple diagonal gradient (2 colors, 2 stops)
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
           ),
           padding: EdgeInsets.all(sectionPadding),
           child: Column(
@@ -630,7 +765,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.widgets_outlined, color: theme.colorScheme.primary, size: 18),
+                    child: Icon(
+                      Icons.widgets_outlined,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -639,7 +778,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       children: [
                         Text(
                           l10n.widgetSettingsWidgetMode,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Container(
@@ -658,7 +799,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               const SizedBox(height: 12),
               Text(
                 l10n.widgetSettingsWidgetModeDesc,
-                style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
               ),
               const SizedBox(height: 12),
               ...WidgetMode.values.map(
@@ -680,7 +826,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                             border: Border.all(
                               color: _selectedMode == mode
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                                  : Theme.of(context).colorScheme.onSurface
+                                        .withValues(alpha: 0.3),
                               width: 2,
                             ),
                           ),
@@ -691,7 +838,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                     height: 10,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                     ),
                                   ),
                                 )
@@ -706,7 +855,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                 mode.description,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -748,7 +898,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
           ),
           padding: EdgeInsets.all(sectionPadding),
           child: Column(
@@ -763,7 +916,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.payment, color: theme.colorScheme.primary, size: 18),
+                    child: Icon(
+                      Icons.payment,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -772,7 +929,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       children: [
                         Text(
                           l10n.widgetSettingsPaymentMethods,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Container(
@@ -792,7 +951,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Info text
               Text(
                 l10n.widgetSettingsPaymentMethodsDesc,
-                style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -800,20 +964,35 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.percent, size: 22, color: Theme.of(context).colorScheme.primary),
+                        Icon(
+                          Icons.percent,
+                          size: 22,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                         const SizedBox(width: 8),
                         Text(
-                          l10n.widgetSettingsDepositAmount(_globalDepositPercentage),
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                          l10n.widgetSettingsDepositAmount(
+                            _globalDepositPercentage,
+                          ),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
                         ),
                       ],
                     ),
@@ -822,18 +1001,29 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       l10n.widgetSettingsDepositDesc,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 8),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         activeTrackColor: Theme.of(context).colorScheme.primary,
-                        inactiveTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                        inactiveTrackColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                         thumbColor: Theme.of(context).colorScheme.primary,
-                        overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                        valueIndicatorColor: Theme.of(context).colorScheme.primary,
-                        valueIndicatorTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        overlayColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.12),
+                        valueIndicatorColor: Theme.of(
+                          context,
+                        ).colorScheme.primary,
+                        valueIndicatorTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       child: Slider(
                         value: _globalDepositPercentage.toDouble(),
@@ -841,7 +1031,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         divisions: 20,
                         label: '$_globalDepositPercentage%',
                         onChanged: (value) {
-                          setState(() => _globalDepositPercentage = value.round());
+                          setState(
+                            () => _globalDepositPercentage = value.round(),
+                          );
                         },
                       ),
                     ),
@@ -852,14 +1044,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           '0% (${l10n.widgetSettingsFullPayment})',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                         Text(
                           '100% (${l10n.widgetSettingsFullPayment})',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -902,7 +1098,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     Builder(
                       builder: (ctx) => DropdownButtonFormField<int>(
                         initialValue: _bankPaymentDeadlineDays,
-                        dropdownColor: InputDecorationHelper.getDropdownColor(ctx),
+                        dropdownColor: InputDecorationHelper.getDropdownColor(
+                          ctx,
+                        ),
                         decoration: InputDecorationHelper.buildDecoration(
                           labelText: l10n.widgetSettingsPaymentDeadline,
                           context: ctx,
@@ -912,23 +1110,38 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         items: [
                           DropdownMenuItem(
                             value: 1,
-                            child: Text('1 ${l10n.widgetSettingsDay}', overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              '1 ${l10n.widgetSettingsDay}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 3,
-                            child: Text('3 ${l10n.widgetSettingsDays}', overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              '3 ${l10n.widgetSettingsDays}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 5,
-                            child: Text('5 ${l10n.widgetSettingsDays}', overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              '5 ${l10n.widgetSettingsDays}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 7,
-                            child: Text('7 ${l10n.widgetSettingsDays}', overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              '7 ${l10n.widgetSettingsDays}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 14,
-                            child: Text('14 ${l10n.widgetSettingsDays}', overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              '14 ${l10n.widgetSettingsDays}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                         onChanged: (value) {
@@ -941,41 +1154,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Additional options in responsive grid
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isDesktop = constraints.maxWidth >= 600;
-
+                    // Custom notes switch
+                    Builder(
+                      builder: (context) {
                         final l10nInner = AppLocalizations.of(context);
-                        final qrSwitch = _buildCompactSwitchCard(
-                          icon: Icons.qr_code,
-                          label: l10nInner.widgetSettingsShowQrCode,
-                          subtitle: l10nInner.widgetSettingsEpcQrCode,
-                          value: _bankEnableQrCode,
-                          onChanged: (val) => setState(() => _bankEnableQrCode = val),
-                        );
-
-                        final customNotesSwitch = _buildCompactSwitchCard(
+                        return _buildCompactSwitchCard(
                           icon: Icons.edit_note,
                           label: l10nInner.widgetSettingsCustomNote,
                           subtitle: l10nInner.widgetSettingsAddMessage,
                           value: _bankUseCustomNotes,
-                          onChanged: (val) => setState(() => _bankUseCustomNotes = val),
+                          onChanged: (val) =>
+                              setState(() => _bankUseCustomNotes = val),
                         );
-
-                        if (isDesktop) {
-                          // Desktop: 2 columns
-                          return Row(
-                            children: [
-                              Expanded(child: qrSwitch),
-                              const SizedBox(width: 12),
-                              Expanded(child: customNotesSwitch),
-                            ],
-                          );
-                        } else {
-                          // Mobile: Vertical
-                          return Column(children: [qrSwitch, const SizedBox(height: 12), customNotesSwitch]);
-                        }
                       },
                     ),
 
@@ -1022,7 +1212,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         ? l10nInner.widgetSettingsPayOnArrivalRequired
                         : l10nInner.widgetSettingsPayOnArrivalDesc,
                     value: _payOnArrivalEnabled,
-                    onChanged: isForced ? null : (val) => setState(() => _payOnArrivalEnabled = val),
+                    onChanged: isForced
+                        ? null
+                        : (val) => setState(() => _payOnArrivalEnabled = val),
                     isWarning: isForced,
                   );
                 },
@@ -1046,8 +1238,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: enabled
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.2)
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.2)
+            : Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: enabled
@@ -1060,16 +1256,26 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          childrenPadding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: 16,
+          ),
           leading: Icon(
             icon,
-            color: enabled ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: enabled
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
 
           controlAffinity: ListTileControlAffinity.trailing,
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          collapsedShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           // Add switch as part of title row instead
           title: Row(
             children: [
@@ -1091,7 +1297,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       subtitle,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -1102,9 +1310,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 onChanged: onToggle,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 activeThumbColor: Theme.of(context).colorScheme.primary,
-                activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                inactiveThumbColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
+                activeTrackColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.5),
+                inactiveThumbColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.4),
+                inactiveTrackColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.12),
               ),
             ],
           ),
@@ -1128,10 +1342,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: value && !isWarning
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.3)
             : isWarning
             ? const Color(0xFFF3E8F5) // Cool lavender warning background
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            : Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value && !isWarning
@@ -1176,8 +1394,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     color: isWarning
-                        ? const Color(0xFF9C7BA8) // Cool purple warning subtitle
-                        : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        ? const Color(
+                            0xFF9C7BA8,
+                          ) // Cool purple warning subtitle
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -1188,9 +1410,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             onChanged: onChanged,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             activeThumbColor: Theme.of(context).colorScheme.primary,
-            activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-            inactiveThumbColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-            inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
+            activeTrackColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.4),
+            inactiveTrackColor: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.12),
           ),
         ],
       ),
@@ -1221,7 +1449,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
           ),
           padding: EdgeInsets.all(sectionPadding),
           child: Column(
@@ -1236,7 +1467,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.settings, color: theme.colorScheme.primary, size: 18),
+                    child: Icon(
+                      Icons.settings,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1245,7 +1480,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       children: [
                         Text(
                           l10n.widgetSettingsBookingBehavior,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Container(
@@ -1268,7 +1505,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isDesktop = constraints.maxWidth >= 600;
-                  final isBookingPending = _selectedMode == WidgetMode.bookingPending;
+                  final isBookingPending =
+                      _selectedMode == WidgetMode.bookingPending;
                   final l10nInner = AppLocalizations.of(context);
 
                   // Build cancellation card (always shown)
@@ -1277,7 +1515,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     label: l10nInner.widgetSettingsAllowCancellation,
                     subtitle: l10nInner.widgetSettingsGuestsCanCancel,
                     value: _allowCancellation,
-                    onChanged: (val) => setState(() => _allowCancellation = val),
+                    onChanged: (val) =>
+                        setState(() => _allowCancellation = val),
                   );
 
                   // Build approval card (only for bookingInstant)
@@ -1297,18 +1536,34 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer
+                                .withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.5),
+                            ),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary, size: 20),
+                              Icon(
+                                Icons.info_outline,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 20,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   l10nInner.widgetSettingsPendingModeInfo,
-                                  style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                  ),
                                 ),
                               ),
                             ],
@@ -1332,7 +1587,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     );
                   } else {
                     // Mobile: Vertical
-                    return Column(children: [approvalCard, const SizedBox(height: 12), cancellationCard]);
+                    return Column(
+                      children: [
+                        approvalCard,
+                        const SizedBox(height: 12),
+                        cancellationCard,
+                      ],
+                    );
                   }
                 },
               ),
@@ -1343,20 +1604,31 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.schedule, size: 20, color: Theme.of(context).colorScheme.primary),
+                          Icon(
+                            Icons.schedule,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              l10n.widgetSettingsCancellationDeadline(_cancellationHours),
+                              l10n.widgetSettingsCancellationDeadline(
+                                _cancellationHours,
+                              ),
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: Theme.of(context).colorScheme.onSurface,
@@ -1368,12 +1640,23 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       const SizedBox(height: 8),
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: Theme.of(context).colorScheme.primary,
-                          inactiveTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                          activeTrackColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          inactiveTrackColor: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.2),
                           thumbColor: Theme.of(context).colorScheme.primary,
-                          overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                          valueIndicatorColor: Theme.of(context).colorScheme.primary,
-                          valueIndicatorTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                          overlayColor: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.12),
+                          valueIndicatorColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          valueIndicatorTextStyle: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         child: Slider(
                           value: _cancellationHours.toDouble(),
@@ -1408,8 +1691,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: value
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+            : Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value
@@ -1423,7 +1710,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           // Leading icon
           Icon(
             icon,
-            color: value ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: value
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             size: 24,
           ),
           const SizedBox(width: 12),
@@ -1447,7 +1736,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -1460,9 +1751,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             onChanged: onChanged,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             activeThumbColor: Theme.of(context).colorScheme.primary,
-            activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-            inactiveThumbColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-            inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
+            activeTrackColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.4),
+            inactiveTrackColor: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.12),
           ),
         ],
       ),
@@ -1493,7 +1790,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
           ),
           padding: EdgeInsets.all(sectionPadding),
           child: Column(
@@ -1508,7 +1808,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.contact_phone, color: theme.colorScheme.primary, size: 18),
+                    child: Icon(
+                      Icons.contact_phone,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1517,7 +1821,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       children: [
                         Text(
                           l10n.widgetSettingsContactInfo,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Container(
@@ -1536,7 +1843,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               const SizedBox(height: 12),
               Text(
                 l10n.widgetSettingsContactDesc,
-                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -1646,7 +1958,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 child: Icon(
                   icon,
                   size: 16,
-                  color: enabled ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                  color: enabled
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: 10),
@@ -1656,7 +1970,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: enabled ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
+                    color: enabled
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -1665,9 +1981,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 onChanged: onToggle,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 activeThumbColor: theme.colorScheme.primary,
-                activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
-                inactiveThumbColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                inactiveTrackColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                activeTrackColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.5,
+                ),
+                inactiveThumbColor: theme.colorScheme.onSurface.withValues(
+                  alpha: 0.4,
+                ),
+                inactiveTrackColor: theme.colorScheme.onSurface.withValues(
+                  alpha: 0.12,
+                ),
               ),
             ],
           ),
@@ -1676,11 +1998,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             Builder(
               builder: (ctx) => TextFormField(
                 controller: controller,
-                decoration: InputDecorationHelper.buildDecoration(
-                  labelText: label,
-                  prefixIcon: Icon(icon, size: 18),
-                  context: ctx,
-                ).copyWith(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
+                decoration:
+                    InputDecorationHelper.buildDecoration(
+                      labelText: label,
+                      prefixIcon: Icon(icon, size: 18),
+                      context: ctx,
+                    ).copyWith(
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
                 keyboardType: keyboardType,
                 style: const TextStyle(fontSize: 14),
               ),
@@ -1719,7 +2048,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
+              colors: [
+                color.withValues(alpha: 0.1),
+                color.withValues(alpha: 0.05),
+              ],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
@@ -1737,14 +2069,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: color),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: color,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       message,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

@@ -53,22 +53,36 @@ class TimelineBookingBlock extends StatefulWidget {
   ///
   /// Normalizes dates to midnight for accurate day difference calculation.
   static int calculateNights(DateTime checkIn, DateTime checkOut) {
-    final normalizedCheckIn = DateTime(checkIn.year, checkIn.month, checkIn.day);
-    final normalizedCheckOut = DateTime(checkOut.year, checkOut.month, checkOut.day);
+    final normalizedCheckIn = DateTime(
+      checkIn.year,
+      checkIn.month,
+      checkIn.day,
+    );
+    final normalizedCheckOut = DateTime(
+      checkOut.year,
+      checkOut.month,
+      checkOut.day,
+    );
     return normalizedCheckOut.difference(normalizedCheckIn).inDays;
   }
 
   /// Check if a booking has conflicts with other bookings in the same unit
   ///
   /// Uses BookingOverlapDetector to find overlapping bookings.
-  static bool hasBookingConflict(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
+  static bool hasBookingConflict(
+    BookingModel booking,
+    Map<String, List<BookingModel>> allBookingsByUnit,
+  ) {
     return getConflictingBookings(booking, allBookingsByUnit).isNotEmpty;
   }
 
   /// Get list of bookings that conflict with this booking
   ///
   /// Uses BookingOverlapDetector to find overlapping bookings.
-  static List<BookingModel> getConflictingBookings(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
+  static List<BookingModel> getConflictingBookings(
+    BookingModel booking,
+    Map<String, List<BookingModel>> allBookingsByUnit,
+  ) {
     return BookingOverlapDetector.getConflictingBookings(
       unitId: booking.unitId,
       newCheckIn: booking.checkIn,
@@ -95,7 +109,10 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
     final blockHeight = unitRowHeight - 8; // Reduced padding for smaller blocks
 
     // Detect conflicts with other bookings in the same unit
-    final conflictingBookings = TimelineBookingBlock.getConflictingBookings(booking, allBookingsByUnit);
+    final conflictingBookings = TimelineBookingBlock.getConflictingBookings(
+      booking,
+      allBookingsByUnit,
+    );
     final hasConflict = conflictingBookings.isNotEmpty;
 
     return MouseRegion(
@@ -126,8 +143,12 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
           curve: Curves.easeOut,
           width: width - 4, // 2px left + 2px right gap
           height: blockHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 2), // 2px gap on each side
-          transform: _isHovered ? Matrix4.diagonal3Values(1.02, 1.02, 1.0) : Matrix4.identity(),
+          margin: const EdgeInsets.symmetric(
+            horizontal: 2,
+          ), // 2px gap on each side
+          transform: _isHovered
+              ? Matrix4.diagonal3Values(1.02, 1.02, 1.0)
+              : Matrix4.identity(),
           transformAlignment: Alignment.center,
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 150),

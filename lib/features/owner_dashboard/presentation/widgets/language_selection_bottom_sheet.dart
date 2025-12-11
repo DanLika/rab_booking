@@ -8,7 +8,8 @@ import '../../../../core/utils/responsive_spacing_helper.dart';
 /// Show language selection bottom sheet
 void showLanguageSelectionBottomSheet(BuildContext context, WidgetRef ref) {
   final screenHeight = MediaQuery.of(context).size.height;
-  final maxHeightPercent = ResponsiveSpacingHelper.getBottomSheetMaxHeightPercent(context);
+  final maxHeightPercent =
+      ResponsiveSpacingHelper.getBottomSheetMaxHeightPercent(context);
   final maxSheetHeight = screenHeight * maxHeightPercent;
 
   showModalBottomSheet(
@@ -16,7 +17,9 @@ void showLanguageSelectionBottomSheet(BuildContext context, WidgetRef ref) {
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     constraints: BoxConstraints(maxHeight: maxSheetHeight),
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
     builder: (context) => const LanguageSelectionBottomSheet(),
   );
 }
@@ -43,12 +46,17 @@ class LanguageSelectionBottomSheet extends ConsumerWidget {
             padding: headerPadding,
             child: Row(
               children: [
-                Icon(Icons.language, color: Theme.of(context).colorScheme.onSurface),
+                Icon(
+                  Icons.language,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     AppLocalizations.of(context).languageSelectTitle,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -74,7 +82,9 @@ class LanguageSelectionBottomSheet extends ConsumerWidget {
                     subtitle: 'Croatian',
                     isSelected: currentLocale.languageCode == 'hr',
                     onTap: () {
-                      ref.read(languageNotifierProvider.notifier).setLanguage('hr');
+                      ref
+                          .read(languageNotifierProvider.notifier)
+                          .setLanguage('hr');
                       Navigator.of(context).pop();
                     },
                   ),
@@ -85,7 +95,9 @@ class LanguageSelectionBottomSheet extends ConsumerWidget {
                     subtitle: 'English',
                     isSelected: currentLocale.languageCode == 'en',
                     onTap: () {
-                      ref.read(languageNotifierProvider.notifier).setLanguage('en');
+                      ref
+                          .read(languageNotifierProvider.notifier)
+                          .setLanguage('en');
                       Navigator.of(context).pop();
                     },
                   ),
@@ -150,9 +162,19 @@ class _LanguageOption extends StatelessWidget {
           ),
         ),
       ),
-      title: Text(title, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
       subtitle: Text(subtitle),
-      trailing: isSelected ? Icon(Icons.check_circle, color: isDark ? Colors.white : selectedColor) : null,
+      trailing: isSelected
+          ? Icon(
+              Icons.check_circle,
+              color: isDark ? Colors.white : selectedColor,
+            )
+          : null,
       onTap: onTap,
     );
   }

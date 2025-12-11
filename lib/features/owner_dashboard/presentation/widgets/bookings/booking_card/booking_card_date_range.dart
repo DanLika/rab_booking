@@ -9,7 +9,11 @@ class BookingCardDateRange extends StatelessWidget {
   final BookingModel booking;
   final bool isMobile;
 
-  const BookingCardDateRange({super.key, required this.booking, required this.isMobile});
+  const BookingCardDateRange({
+    super.key,
+    required this.booking,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +30,11 @@ class BookingCardDateRange extends StatelessWidget {
             color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Icon(Icons.calendar_today_outlined, size: 20, color: theme.colorScheme.primary),
+          child: Icon(
+            Icons.calendar_today_outlined,
+            size: 20,
+            color: theme.colorScheme.primary,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -37,13 +45,17 @@ class BookingCardDateRange extends StatelessWidget {
               Text(
                 '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}. - '
                 '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               // Number of nights
               Text(
                 '(${booking.numberOfNights} ${booking.numberOfNights == 1 ? l10n.ownerBookingCardNight : l10n.ownerBookingCardNights})',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                  color: theme.colorScheme.onSurface.withAlpha(
+                    (0.6 * 255).toInt(),
+                  ),
                 ),
               ),
             ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/services/logging_service.dart';
@@ -16,10 +17,12 @@ class StripeConnectSetupScreen extends ConsumerStatefulWidget {
   const StripeConnectSetupScreen({super.key});
 
   @override
-  ConsumerState<StripeConnectSetupScreen> createState() => _StripeConnectSetupScreenState();
+  ConsumerState<StripeConnectSetupScreen> createState() =>
+      _StripeConnectSetupScreenState();
 }
 
-class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScreen> {
+class _StripeConnectSetupScreenState
+    extends ConsumerState<StripeConnectSetupScreen> {
   bool _isLoading = true;
   bool _isConnecting = false;
   String? _stripeAccountId;
@@ -56,7 +59,10 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
         });
       }
     } catch (e) {
-      LoggingService.log('Error loading Stripe account info', tag: 'StripeConnect');
+      LoggingService.log(
+        'Error loading Stripe account info',
+        tag: 'StripeConnect',
+      );
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -75,28 +81,47 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
       final returnUrl = '$baseUrl/owner/stripe-return';
       final refreshUrl = '$baseUrl/owner/stripe-refresh';
 
-      final result = await callable.call({'returnUrl': returnUrl, 'refreshUrl': refreshUrl});
+      final result = await callable.call({
+        'returnUrl': returnUrl,
+        'refreshUrl': refreshUrl,
+      });
       final data = result.data as Map<String, dynamic>;
       final success = data['success'] == true;
       final onboardingUrl = data['onboardingUrl'] as String?;
 
       if (success && onboardingUrl != null) {
         final uri = Uri.parse(onboardingUrl);
-        final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        final launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
 
         if (!launched && mounted) {
           final l10n = AppLocalizations.of(context);
-          ErrorDisplayUtils.showErrorSnackBar(context, l10n.stripeCannotOpenPage);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            l10n.stripeCannotOpenPage,
+          );
         }
       } else if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, l10n.stripeCreateAccountError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          l10n.stripeCreateAccountError,
+        );
       }
     } catch (e) {
-      LoggingService.log('Error connecting Stripe account', tag: 'StripeConnect');
+      LoggingService.log(
+        'Error connecting Stripe account',
+        tag: 'StripeConnect',
+      );
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.stripeConnectError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.stripeConnectError,
+        );
       }
     } finally {
       if (mounted) {
@@ -105,8 +130,10 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
     }
   }
 
-  bool get _isConnected => _stripeAccountId != null && _stripeAccountStatus == 'complete';
-  bool get _isIncomplete => _stripeAccountId != null && _stripeAccountStatus != 'complete';
+  bool get _isConnected =>
+      _stripeAccountId != null && _stripeAccountStatus == 'complete';
+  bool get _isIncomplete =>
+      _stripeAccountId != null && _stripeAccountStatus != 'complete';
 
   Future<void> _confirmDisconnect(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
@@ -156,15 +183,28 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             _stripeAccountId = null;
             _stripeAccountStatus = null;
           });
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.stripeDisconnectSuccess);
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.stripeDisconnectSuccess,
+          );
         } else {
-          ErrorDisplayUtils.showErrorSnackBar(context, l10n.stripeDisconnectError);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            l10n.stripeDisconnectError,
+          );
         }
       }
     } catch (e) {
-      LoggingService.log('Error disconnecting Stripe account: $e', tag: 'StripeConnect');
+      LoggingService.log(
+        'Error disconnecting Stripe account: $e',
+        tag: 'StripeConnect',
+      );
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.stripeDisconnectError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.stripeDisconnectError,
+        );
       }
     } finally {
       if (mounted) {
@@ -188,7 +228,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: _isLoading
-            ? Center(child: CircularProgressIndicator(color: theme.colorScheme.primary))
+            ? const Center(child: _MoneyLoadingAnimation())
             : RefreshIndicator(
                 onRefresh: _loadStripeAccountInfo,
                 color: theme.colorScheme.primary,
@@ -196,20 +236,29 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                   builder: (context, constraints) {
                     final isDesktop = constraints.maxWidth > 900;
                     final isTablet = constraints.maxWidth > 600;
-                    final horizontalPadding = isDesktop ? 48.0 : (isTablet ? 32.0 : 16.0);
+                    final horizontalPadding = isDesktop
+                        ? 48.0
+                        : (isTablet ? 32.0 : 16.0);
 
                     return SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 20,
+                      ),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: isDesktop ? 1200.0 : double.infinity),
+                          constraints: BoxConstraints(
+                            maxWidth: isDesktop ? 1200.0 : double.infinity,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               // Hero card - always full width
                               ConstrainedBox(
-                                constraints: BoxConstraints(maxWidth: isDesktop ? 800.0 : double.infinity),
+                                constraints: BoxConstraints(
+                                  maxWidth: isDesktop ? 800.0 : double.infinity,
+                                ),
                                 child: _buildHeroCard(context),
                               ),
                               const SizedBox(height: 24),
@@ -220,20 +269,30 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     // Left column: Benefits
-                                    Expanded(child: _buildBenefitsSection(context)),
+                                    Expanded(
+                                      child: _buildBenefitsSection(context),
+                                    ),
                                     const SizedBox(width: 24),
                                     // Right column: Steps (if not connected) or FAQ
                                     Expanded(
-                                      child: !_isConnected ? _buildStepsSection(context) : _buildFaqSection(context),
+                                      child: !_isConnected
+                                          ? _buildStepsSection(context)
+                                          : _buildFaqSection(context),
                                     ),
                                   ],
                                 ),
-                                if (!_isConnected) ...[const SizedBox(height: 24), _buildFaqSection(context)],
+                                if (!_isConnected) ...[
+                                  const SizedBox(height: 24),
+                                  _buildFaqSection(context),
+                                ],
                               ] else ...[
                                 // Mobile/Tablet: Stack vertically
                                 _buildBenefitsSection(context),
                                 const SizedBox(height: 24),
-                                if (!_isConnected) ...[_buildStepsSection(context), const SizedBox(height: 24)],
+                                if (!_isConnected) ...[
+                                  _buildStepsSection(context),
+                                  const SizedBox(height: 24),
+                                ],
                                 _buildFaqSection(context),
                               ],
                               const SizedBox(height: 32),
@@ -313,14 +372,21 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: statusColor.withAlpha((0.9 * 255).toInt()),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
                               statusTitle,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ],
@@ -328,7 +394,10 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                       const SizedBox(height: 8),
                       Text(
                         statusDescription,
-                        style: TextStyle(color: Colors.white.withAlpha((0.9 * 255).toInt()), fontSize: 14),
+                        style: TextStyle(
+                          color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -340,7 +409,10 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             if (_stripeAccountId != null) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withAlpha((0.15 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
@@ -348,7 +420,11 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.badge_outlined, size: 16, color: Colors.white.withAlpha((0.8 * 255).toInt())),
+                    Icon(
+                      Icons.badge_outlined,
+                      size: 16,
+                      color: Colors.white.withAlpha((0.8 * 255).toInt()),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'ID: $_stripeAccountId',
@@ -374,15 +450,26 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
-                      : Icon(_isIncomplete ? Icons.arrow_forward : Icons.link, size: 20),
-                  label: Text(actionLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      : Icon(
+                          _isIncomplete ? Icons.arrow_forward : Icons.link,
+                          size: 20,
+                        ),
+                  label: Text(
+                    actionLabel,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: theme.colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -394,14 +481,24 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _isConnecting ? null : () => _confirmDisconnect(context),
+                  onPressed: _isConnecting
+                      ? null
+                      : () => _confirmDisconnect(context),
                   icon: const Icon(Icons.link_off, size: 20),
-                  label: Text(l10n.stripeDisconnect, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  label: Text(
+                    l10n.stripeDisconnect,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withAlpha((0.5 * 255).toInt()), width: 2),
+                    side: BorderSide(
+                      color: Colors.white.withAlpha((0.5 * 255).toInt()),
+                      width: 2,
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -418,9 +515,17 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
     final isDark = theme.brightness == Brightness.dark;
 
     final benefits = [
-      (Icons.credit_card, l10n.stripeReceivePayments, l10n.stripeReceivePaymentsDesc),
+      (
+        Icons.credit_card,
+        l10n.stripeReceivePayments,
+        l10n.stripeReceivePaymentsDesc,
+      ),
       (Icons.security, l10n.stripeSecurity, l10n.stripeSecurityDesc),
-      (Icons.flash_on, l10n.stripeInstantConfirmations, l10n.stripeInstantConfirmationsDesc),
+      (
+        Icons.flash_on,
+        l10n.stripeInstantConfirmations,
+        l10n.stripeInstantConfirmationsDesc,
+      ),
       (Icons.money_off, l10n.stripeNoHiddenFees, l10n.stripeNoHiddenFeesDesc),
     ];
 
@@ -439,7 +544,12 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             children: [
               Icon(Icons.star, color: theme.colorScheme.primary, size: 22),
               const SizedBox(width: 8),
-              Text(l10n.stripeWhyConnect, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                l10n.stripeWhyConnect,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -449,7 +559,12 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
     );
   }
 
-  Widget _buildBenefitItem(BuildContext context, IconData icon, String title, String description) {
+  Widget _buildBenefitItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String description,
+  ) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -470,12 +585,19 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   description,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      (0.7 * 255).toInt(),
+                    ),
                   ),
                 ),
               ],
@@ -492,10 +614,25 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
     final isDark = theme.brightness == Brightness.dark;
 
     final steps = [
-      (1, Icons.account_circle, l10n.stripeGuideStep1Title, l10n.stripeGuideStep1Desc),
-      (2, Icons.assignment_turned_in, l10n.stripeGuideStep2Title, l10n.stripeGuideStep2Desc),
+      (
+        1,
+        Icons.account_circle,
+        l10n.stripeGuideStep1Title,
+        l10n.stripeGuideStep1Desc,
+      ),
+      (
+        2,
+        Icons.assignment_turned_in,
+        l10n.stripeGuideStep2Title,
+        l10n.stripeGuideStep2Desc,
+      ),
       (3, Icons.link, l10n.stripeGuideStep3Title, l10n.stripeGuideStep3Desc),
-      (4, Icons.settings, l10n.stripeGuideStep4Title, l10n.stripeGuideStep4Desc),
+      (
+        4,
+        Icons.settings,
+        l10n.stripeGuideStep4Title,
+        l10n.stripeGuideStep4Desc,
+      ),
     ];
 
     return Container(
@@ -512,18 +649,29 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Icon(Icons.checklist, color: theme.colorScheme.primary, size: 22),
+                Icon(
+                  Icons.checklist,
+                  color: theme.colorScheme.primary,
+                  size: 22,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.stripeGuideHeaderTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          Divider(height: 1, color: theme.dividerColor),
+          Divider(
+            height: 1,
+            color: isDark
+                ? AppColors.sectionDividerDark
+                : AppColors.sectionDividerLight,
+          ),
           // Steps
           ...steps.map((s) => _buildStepItem(context, s.$1, s.$2, s.$3, s.$4)),
         ],
@@ -531,7 +679,13 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
     );
   }
 
-  Widget _buildStepItem(BuildContext context, int number, IconData icon, String title, String description) {
+  Widget _buildStepItem(
+    BuildContext context,
+    int number,
+    IconData icon,
+    String title,
+    String description,
+  ) {
     final theme = Theme.of(context);
     final isExpanded = _expandedStep == number;
 
@@ -551,21 +705,38 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                   radius: 16,
                   backgroundColor: isExpanded
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface.withAlpha((0.15 * 255).toInt()),
+                      : theme.colorScheme.onSurface.withAlpha(
+                          (0.15 * 255).toInt(),
+                        ),
                   foregroundColor: isExpanded
                       ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-                  child: Text('$number', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      : theme.colorScheme.onSurface.withAlpha(
+                          (0.7 * 255).toInt(),
+                        ),
+                  child: Text(
+                    '$number',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Icon(icon, size: 20, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  child: Text(
+                    title,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
                 Icon(
                   isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                  color: theme.colorScheme.onSurface.withAlpha(
+                    (0.5 * 255).toInt(),
+                  ),
                 ),
               ],
             ),
@@ -578,12 +749,22 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             child: Text(
               description,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.7 * 255).toInt(),
+                ),
                 height: 1.5,
               ),
             ),
           ),
-        if (number < 4) Divider(height: 1, indent: 20, endIndent: 20, color: theme.dividerColor),
+        if (number < 4)
+          Divider(
+            height: 1,
+            indent: 20,
+            endIndent: 20,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.sectionDividerDark
+                : AppColors.sectionDividerLight,
+          ),
       ],
     );
   }
@@ -618,17 +799,25 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  Icon(Icons.question_answer, color: theme.colorScheme.primary, size: 22),
+                  Icon(
+                    Icons.question_answer,
+                    color: theme.colorScheme.primary,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l10n.stripeGuideFaq,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   Icon(
                     _showFaq ? Icons.expand_less : Icons.expand_more,
-                    color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      (0.5 * 255).toInt(),
+                    ),
                   ),
                 ],
               ),
@@ -636,10 +825,19 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
           ),
           // FAQ items
           if (_showFaq) ...[
-            Divider(height: 1, color: theme.dividerColor),
+            Divider(
+              height: 1,
+              color: isDark
+                  ? AppColors.sectionDividerDark
+                  : AppColors.sectionDividerLight,
+            ),
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(children: faqs.map((faq) => _buildFaqItem(context, faq.$1, faq.$2)).toList()),
+              child: Column(
+                children: faqs
+                    .map((faq) => _buildFaqItem(context, faq.$1, faq.$2))
+                    .toList(),
+              ),
             ),
           ],
         ],
@@ -661,7 +859,12 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
               const Text('❓', style: TextStyle(fontSize: 14)),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(question, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                child: Text(
+                  question,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -671,13 +874,146 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             child: Text(
               answer,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.7 * 255).toInt(),
+                ),
                 height: 1.5,
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Animated money loading widget with floating currency symbols
+/// Uses design system colors for consistency
+class _MoneyLoadingAnimation extends StatefulWidget {
+  const _MoneyLoadingAnimation();
+
+  @override
+  State<_MoneyLoadingAnimation> createState() => _MoneyLoadingAnimationState();
+}
+
+class _MoneyLoadingAnimationState extends State<_MoneyLoadingAnimation>
+    with TickerProviderStateMixin {
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _bounceAnimations;
+  late final List<Animation<double>> _fadeAnimations;
+
+  // Currency symbols to animate
+  static const _symbols = ['€', '\$', '£', '¥', '₣'];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controllers = List.generate(
+      _symbols.length,
+      (index) => AnimationController(
+        duration: Duration(milliseconds: 800 + (index * 150)),
+        vsync: this,
+      ),
+    );
+
+    _bounceAnimations = _controllers.map((controller) {
+      return Tween<double>(begin: 0, end: -20).animate(
+        CurvedAnimation(
+          parent: controller,
+          curve: Curves.easeInOut,
+        ),
+      );
+    }).toList();
+
+    _fadeAnimations = _controllers.map((controller) {
+      return Tween<double>(begin: 0.4, end: 1.0).animate(
+        CurvedAnimation(
+          parent: controller,
+          curve: Curves.easeInOut,
+        ),
+      );
+    }).toList();
+
+    // Start animations with staggered delays
+    for (var i = 0; i < _controllers.length; i++) {
+      Future.delayed(Duration(milliseconds: i * 120), () {
+        if (mounted) {
+          _controllers[i].repeat(reverse: true);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Animated currency symbols
+        SizedBox(
+          height: 80,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_symbols.length, (index) {
+              return AnimatedBuilder(
+                animation: _controllers[index],
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _bounceAnimations[index].value),
+                    child: Opacity(
+                      opacity: _fadeAnimations[index].value,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          _symbols[index],
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor.withAlpha(
+                              ((_fadeAnimations[index].value * 0.8 + 0.2) * 255)
+                                  .toInt(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Subtle loading indicator
+        SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: primaryColor.withAlpha((0.6 * 255).toInt()),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Loading text
+        Text(
+          AppLocalizations.of(context).stripeLoadingAccount,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+          ),
+        ),
+      ],
     );
   }
 }

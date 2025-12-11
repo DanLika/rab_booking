@@ -60,7 +60,12 @@ class WizardProgressBar extends StatelessWidget {
   }
 
   /// Full progress bar for desktop/tablet (shows all 8 steps)
-  Widget _buildFullProgressBar(BuildContext context, ThemeData theme, bool isDark, AppLocalizations l10n) {
+  Widget _buildFullProgressBar(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    AppLocalizations l10n,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
@@ -71,7 +76,8 @@ class WizardProgressBar extends StatelessWidget {
         children: [
           for (int i = 1; i <= totalSteps; i++) ...[
             _buildStepIndicator(i, theme, isDark, l10n),
-            if (i < totalSteps) Expanded(child: _buildConnector(i, theme, isDark)),
+            if (i < totalSteps)
+              Expanded(child: _buildConnector(i, theme, isDark)),
           ],
         ],
       ),
@@ -79,7 +85,12 @@ class WizardProgressBar extends StatelessWidget {
   }
 
   /// Compact progress bar for mobile (shows "Step X of 8")
-  Widget _buildCompactProgressBar(BuildContext context, ThemeData theme, bool isDark, AppLocalizations l10n) {
+  Widget _buildCompactProgressBar(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    AppLocalizations l10n,
+  ) {
     final completedCount = completedSteps.values.where((v) => v).length;
 
     return Container(
@@ -105,7 +116,9 @@ class WizardProgressBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: completedCount / totalSteps,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              valueColor: const AlwaysStoppedAnimation(_completedColor), // Green
+              valueColor: const AlwaysStoppedAnimation(
+                _completedColor,
+              ), // Green
               borderRadius: BorderRadius.circular(4),
               minHeight: 6,
             ),
@@ -127,7 +140,12 @@ class WizardProgressBar extends StatelessWidget {
   }
 
   /// Step indicator (circle with icon/checkmark + label)
-  Widget _buildStepIndicator(int step, ThemeData theme, bool isDark, AppLocalizations l10n) {
+  Widget _buildStepIndicator(
+    int step,
+    ThemeData theme,
+    bool isDark,
+    AppLocalizations l10n,
+  ) {
     final isCompleted = completedSteps[step] == true;
     final isCurrent = step == currentStep;
     final isOptional = optionalSteps.contains(step);
@@ -187,7 +205,9 @@ class WizardProgressBar extends StatelessWidget {
           stepLabel,
           style: TextStyle(
             fontSize: 11,
-            fontWeight: isCompleted || isCurrent ? FontWeight.w600 : FontWeight.w400,
+            fontWeight: isCompleted || isCurrent
+                ? FontWeight.w600
+                : FontWeight.w400,
             color: isCompleted
                 ? _completedColor
                 : isCurrent
@@ -202,7 +222,10 @@ class WizardProgressBar extends StatelessWidget {
             padding: const EdgeInsets.only(top: 2),
             child: Text(
               l10n.unitWizardProgressOptional,
-              style: TextStyle(fontSize: 9, color: theme.colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 9,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
       ],

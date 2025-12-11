@@ -12,7 +12,11 @@ class FAQItem {
   final String answer;
   final String categoryKey; // Internal key for filtering
 
-  const FAQItem({required this.question, required this.answer, required this.categoryKey});
+  const FAQItem({
+    required this.question,
+    required this.answer,
+    required this.categoryKey,
+  });
 }
 
 /// FAQ Screen with search and categories
@@ -29,62 +33,160 @@ class _FAQScreenState extends State<FAQScreen> {
   String _selectedCategoryKey = 'all';
 
   // Category keys for internal use (not translated)
-  static const List<String> _categoryKeys = ['all', 'general', 'bookings', 'payments', 'widget', 'icalSync', 'support'];
+  static const List<String> _categoryKeys = [
+    'all',
+    'general',
+    'bookings',
+    'payments',
+    'widget',
+    'icalSync',
+    'support',
+  ];
 
-  String _getCategoryLabel(String key, AppLocalizations l10n) {
-    switch (key) {
-      case 'all':
-        return l10n.ownerFaqCategoryAll;
-      case 'general':
-        return l10n.ownerFaqCategoryGeneral;
-      case 'bookings':
-        return l10n.ownerFaqCategoryBookings;
-      case 'payments':
-        return l10n.ownerFaqCategoryPayments;
-      case 'widget':
-        return l10n.ownerFaqCategoryWidget;
-      case 'icalSync':
-        return l10n.ownerFaqCategoryIcalSync;
-      case 'support':
-        return l10n.ownerFaqCategorySupport;
-      default:
-        return key;
-    }
-  }
+  String _getCategoryLabel(String key, AppLocalizations l10n) => switch (key) {
+    'all' => l10n.ownerFaqCategoryAll,
+    'general' => l10n.ownerFaqCategoryGeneral,
+    'bookings' => l10n.ownerFaqCategoryBookings,
+    'payments' => l10n.ownerFaqCategoryPayments,
+    'widget' => l10n.ownerFaqCategoryWidget,
+    'icalSync' => l10n.ownerFaqCategoryIcalSync,
+    'support' => l10n.ownerFaqCategorySupport,
+    _ => key,
+  };
 
   List<FAQItem> _getAllFAQs(AppLocalizations l10n) {
     return [
       // General
-      FAQItem(categoryKey: 'general', question: l10n.ownerFaqGeneral1Q, answer: l10n.ownerFaqGeneral1A),
-      FAQItem(categoryKey: 'general', question: l10n.ownerFaqGeneral2Q, answer: l10n.ownerFaqGeneral2A),
-      FAQItem(categoryKey: 'general', question: l10n.ownerFaqGeneral3Q, answer: l10n.ownerFaqGeneral3A),
+      FAQItem(
+        categoryKey: 'general',
+        question: l10n.ownerFaqGeneral1Q,
+        answer: l10n.ownerFaqGeneral1A,
+      ),
+      FAQItem(
+        categoryKey: 'general',
+        question: l10n.ownerFaqGeneral2Q,
+        answer: l10n.ownerFaqGeneral2A,
+      ),
+      FAQItem(
+        categoryKey: 'general',
+        question: l10n.ownerFaqGeneral3Q,
+        answer: l10n.ownerFaqGeneral3A,
+      ),
       // Bookings
-      FAQItem(categoryKey: 'bookings', question: l10n.ownerFaqBookings1Q, answer: l10n.ownerFaqBookings1A),
-      FAQItem(categoryKey: 'bookings', question: l10n.ownerFaqBookings2Q, answer: l10n.ownerFaqBookings2A),
-      FAQItem(categoryKey: 'bookings', question: l10n.ownerFaqBookings3Q, answer: l10n.ownerFaqBookings3A),
-      FAQItem(categoryKey: 'bookings', question: l10n.ownerFaqBookings4Q, answer: l10n.ownerFaqBookings4A),
-      FAQItem(categoryKey: 'bookings', question: l10n.ownerFaqBookings5Q, answer: l10n.ownerFaqBookings5A),
+      FAQItem(
+        categoryKey: 'bookings',
+        question: l10n.ownerFaqBookings1Q,
+        answer: l10n.ownerFaqBookings1A,
+      ),
+      FAQItem(
+        categoryKey: 'bookings',
+        question: l10n.ownerFaqBookings2Q,
+        answer: l10n.ownerFaqBookings2A,
+      ),
+      FAQItem(
+        categoryKey: 'bookings',
+        question: l10n.ownerFaqBookings3Q,
+        answer: l10n.ownerFaqBookings3A,
+      ),
+      FAQItem(
+        categoryKey: 'bookings',
+        question: l10n.ownerFaqBookings4Q,
+        answer: l10n.ownerFaqBookings4A,
+      ),
+      FAQItem(
+        categoryKey: 'bookings',
+        question: l10n.ownerFaqBookings5Q,
+        answer: l10n.ownerFaqBookings5A,
+      ),
       // Payments
-      FAQItem(categoryKey: 'payments', question: l10n.ownerFaqPayments1Q, answer: l10n.ownerFaqPayments1A),
-      FAQItem(categoryKey: 'payments', question: l10n.ownerFaqPayments2Q, answer: l10n.ownerFaqPayments2A),
-      FAQItem(categoryKey: 'payments', question: l10n.ownerFaqPayments3Q, answer: l10n.ownerFaqPayments3A),
-      FAQItem(categoryKey: 'payments', question: l10n.ownerFaqPayments4Q, answer: l10n.ownerFaqPayments4A),
+      FAQItem(
+        categoryKey: 'payments',
+        question: l10n.ownerFaqPayments1Q,
+        answer: l10n.ownerFaqPayments1A,
+      ),
+      FAQItem(
+        categoryKey: 'payments',
+        question: l10n.ownerFaqPayments2Q,
+        answer: l10n.ownerFaqPayments2A,
+      ),
+      FAQItem(
+        categoryKey: 'payments',
+        question: l10n.ownerFaqPayments3Q,
+        answer: l10n.ownerFaqPayments3A,
+      ),
+      FAQItem(
+        categoryKey: 'payments',
+        question: l10n.ownerFaqPayments4Q,
+        answer: l10n.ownerFaqPayments4A,
+      ),
       // Widget
-      FAQItem(categoryKey: 'widget', question: l10n.ownerFaqWidget1Q, answer: l10n.ownerFaqWidget1A),
-      FAQItem(categoryKey: 'widget', question: l10n.ownerFaqWidget2Q, answer: l10n.ownerFaqWidget2A),
-      FAQItem(categoryKey: 'widget', question: l10n.ownerFaqWidget3Q, answer: l10n.ownerFaqWidget3A),
-      FAQItem(categoryKey: 'widget', question: l10n.ownerFaqWidget4Q, answer: l10n.ownerFaqWidget4A),
-      FAQItem(categoryKey: 'widget', question: l10n.ownerFaqWidget5Q, answer: l10n.ownerFaqWidget5A),
+      FAQItem(
+        categoryKey: 'widget',
+        question: l10n.ownerFaqWidget1Q,
+        answer: l10n.ownerFaqWidget1A,
+      ),
+      FAQItem(
+        categoryKey: 'widget',
+        question: l10n.ownerFaqWidget2Q,
+        answer: l10n.ownerFaqWidget2A,
+      ),
+      FAQItem(
+        categoryKey: 'widget',
+        question: l10n.ownerFaqWidget3Q,
+        answer: l10n.ownerFaqWidget3A,
+      ),
+      FAQItem(
+        categoryKey: 'widget',
+        question: l10n.ownerFaqWidget4Q,
+        answer: l10n.ownerFaqWidget4A,
+      ),
+      FAQItem(
+        categoryKey: 'widget',
+        question: l10n.ownerFaqWidget5Q,
+        answer: l10n.ownerFaqWidget5A,
+      ),
       // iCal Sync
-      FAQItem(categoryKey: 'icalSync', question: l10n.ownerFaqIcal1Q, answer: l10n.ownerFaqIcal1A),
-      FAQItem(categoryKey: 'icalSync', question: l10n.ownerFaqIcal2Q, answer: l10n.ownerFaqIcal2A),
-      FAQItem(categoryKey: 'icalSync', question: l10n.ownerFaqIcal3Q, answer: l10n.ownerFaqIcal3A),
-      FAQItem(categoryKey: 'icalSync', question: l10n.ownerFaqIcal4Q, answer: l10n.ownerFaqIcal4A),
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.ownerFaqIcal1Q,
+        answer: l10n.ownerFaqIcal1A,
+      ),
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.ownerFaqIcal2Q,
+        answer: l10n.ownerFaqIcal2A,
+      ),
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.ownerFaqIcal3Q,
+        answer: l10n.ownerFaqIcal3A,
+      ),
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.ownerFaqIcal4Q,
+        answer: l10n.ownerFaqIcal4A,
+      ),
       // Technical Support
-      FAQItem(categoryKey: 'support', question: l10n.ownerFaqSupport1Q, answer: l10n.ownerFaqSupport1A),
-      FAQItem(categoryKey: 'support', question: l10n.ownerFaqSupport2Q, answer: l10n.ownerFaqSupport2A),
-      FAQItem(categoryKey: 'support', question: l10n.ownerFaqSupport3Q, answer: l10n.ownerFaqSupport3A),
-      FAQItem(categoryKey: 'support', question: l10n.ownerFaqSupport4Q, answer: l10n.ownerFaqSupport4A),
+      FAQItem(
+        categoryKey: 'support',
+        question: l10n.ownerFaqSupport1Q,
+        answer: l10n.ownerFaqSupport1A,
+      ),
+      FAQItem(
+        categoryKey: 'support',
+        question: l10n.ownerFaqSupport2Q,
+        answer: l10n.ownerFaqSupport2A,
+      ),
+      FAQItem(
+        categoryKey: 'support',
+        question: l10n.ownerFaqSupport3Q,
+        answer: l10n.ownerFaqSupport3A,
+      ),
+      FAQItem(
+        categoryKey: 'support',
+        question: l10n.ownerFaqSupport4Q,
+        answer: l10n.ownerFaqSupport4A,
+      ),
     ];
   }
 
@@ -99,14 +201,17 @@ class _FAQScreenState extends State<FAQScreen> {
 
     // Filter by category
     if (_selectedCategoryKey != 'all') {
-      faqs = faqs.where((faq) => faq.categoryKey == _selectedCategoryKey).toList();
+      faqs = faqs
+          .where((faq) => faq.categoryKey == _selectedCategoryKey)
+          .toList();
     }
 
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
       faqs = faqs.where((faq) {
         final query = _searchQuery.toLowerCase();
-        return faq.question.toLowerCase().contains(query) || faq.answer.toLowerCase().contains(query);
+        return faq.question.toLowerCase().contains(query) ||
+            faq.answer.toLowerCase().contains(query);
       }).toList();
     }
 
@@ -199,11 +304,16 @@ class _FAQScreenState extends State<FAQScreen> {
               // Results Count
               if (_searchQuery.isNotEmpty || _selectedCategoryKey != 'all')
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Text(
                     l10n.ownerFaqResultsFound(filteredFAQs.length),
                     style: TextStyle(
-                      color: isDark ? theme.colorScheme.onSurfaceVariant : Colors.grey.shade600,
+                      color: isDark
+                          ? theme.colorScheme.onSurfaceVariant
+                          : Colors.grey.shade600,
                       fontSize: 12,
                     ),
                     maxLines: 1,
@@ -250,15 +360,27 @@ class _FAQScreenState extends State<FAQScreen> {
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           leading: CircleAvatar(
-            backgroundColor: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-            child: Icon(_getCategoryIcon(faq.categoryKey), color: theme.colorScheme.primary, size: 20),
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            child: Icon(
+              _getCategoryIcon(faq.categoryKey),
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
           ),
-          title: Text(faq.question, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          title: Text(
+            faq.question,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               categoryLabel,
-              style: TextStyle(fontSize: 11, color: isDark ? theme.colorScheme.onSurfaceVariant : Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark
+                    ? theme.colorScheme.onSurfaceVariant
+                    : Colors.grey.shade600,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -270,7 +392,9 @@ class _FAQScreenState extends State<FAQScreen> {
                 faq.answer,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? theme.colorScheme.onSurface : Colors.grey.shade800,
+                  color: isDark
+                      ? theme.colorScheme.onSurface
+                      : Colors.grey.shade800,
                   height: 1.5,
                 ),
               ),
@@ -292,14 +416,22 @@ class _FAQScreenState extends State<FAQScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: isDark ? theme.colorScheme.onSurfaceVariant : Colors.grey.shade400),
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: isDark
+                  ? theme.colorScheme.onSurfaceVariant
+                  : Colors.grey.shade400,
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.ownerFaqNoResults,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isDark ? theme.colorScheme.onSurface : Colors.grey.shade600,
+                color: isDark
+                    ? theme.colorScheme.onSurface
+                    : Colors.grey.shade600,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -307,7 +439,11 @@ class _FAQScreenState extends State<FAQScreen> {
             const SizedBox(height: 8),
             Text(
               l10n.ownerFaqNoResultsDesc,
-              style: TextStyle(color: isDark ? theme.colorScheme.onSurfaceVariant : Colors.grey.shade500),
+              style: TextStyle(
+                color: isDark
+                    ? theme.colorScheme.onSurfaceVariant
+                    : Colors.grey.shade500,
+              ),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -318,22 +454,13 @@ class _FAQScreenState extends State<FAQScreen> {
     );
   }
 
-  IconData _getCategoryIcon(String categoryKey) {
-    switch (categoryKey) {
-      case 'general':
-        return Icons.info_outline;
-      case 'bookings':
-        return Icons.event;
-      case 'payments':
-        return Icons.payment;
-      case 'widget':
-        return Icons.widgets;
-      case 'icalSync':
-        return Icons.sync;
-      case 'support':
-        return Icons.support;
-      default:
-        return Icons.help_outline;
-    }
-  }
+  IconData _getCategoryIcon(String categoryKey) => switch (categoryKey) {
+    'general' => Icons.info_outline,
+    'bookings' => Icons.event,
+    'payments' => Icons.payment,
+    'widget' => Icons.widgets,
+    'icalSync' => Icons.sync,
+    'support' => Icons.support,
+    _ => Icons.help_outline,
+  };
 }

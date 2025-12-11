@@ -145,7 +145,8 @@ class ResponsiveCalendarLayout {
   /// Get maximum dialog height
   static double getMaxDialogHeight(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    return screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
+    return screenHeight *
+        ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
   }
 
   /// Check if booking details should use full-screen dialog
@@ -186,18 +187,10 @@ class ResponsiveCalendarLayout {
 }
 
 /// Calendar layout modes
-enum CalendarLayoutMode {
-  mobilePortrait,
-  mobileLandscape,
-  tablet,
-  desktop,
-}
+enum CalendarLayoutMode { mobilePortrait, mobileLandscape, tablet, desktop }
 
 /// Booking list view modes
-enum BookingListViewMode {
-  card,
-  table,
-}
+enum BookingListViewMode { card, table }
 
 extension CalendarLayoutModeX on CalendarLayoutMode {
   bool get isMobile =>

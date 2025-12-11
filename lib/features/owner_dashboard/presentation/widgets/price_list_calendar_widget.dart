@@ -23,10 +23,9 @@ import 'calendar/calendar_day_cell.dart';
 /// Displays one month at a time with dropdown selector
 /// Shows pricing, availability, and all BedBooking features
 ///
-/// Now with:
+/// Features:
 /// - Optimistic updates for instant UI feedback
 /// - Local state cache for better performance
-/// - Undo/Redo functionality
 /// - Extracted components for better maintainability
 class PriceListCalendarWidget extends ConsumerStatefulWidget {
   final UnitModel unit;
@@ -34,16 +33,18 @@ class PriceListCalendarWidget extends ConsumerStatefulWidget {
   const PriceListCalendarWidget({super.key, required this.unit});
 
   @override
-  ConsumerState<PriceListCalendarWidget> createState() => _PriceListCalendarWidgetState();
+  ConsumerState<PriceListCalendarWidget> createState() =>
+      _PriceListCalendarWidgetState();
 }
 
-class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidget> {
+class _PriceListCalendarWidgetState
+    extends ConsumerState<PriceListCalendarWidget> {
   late DateTime _selectedMonth;
   final Set<DateTime> _selectedDays = {};
   bool _bulkEditMode = false;
   bool _isLoadingMonthChange = false;
 
-  // Local state cache with optimistic updates and undo/redo
+  // Local state cache with optimistic updates
   final PriceCalendarState _localState = PriceCalendarState();
 
   // Cached month list to avoid regenerating on every build
@@ -90,10 +91,16 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           const SizedBox(height: 16),
 
           // Selected days counter (in bulk edit mode)
-          if (_bulkEditMode && _selectedDays.isNotEmpty) ...[_buildSelectionCounter(), const SizedBox(height: 12)],
+          if (_bulkEditMode && _selectedDays.isNotEmpty) ...[
+            _buildSelectionCounter(),
+            const SizedBox(height: 12),
+          ],
 
           // Select All / Deselect All buttons (in bulk edit mode)
-          if (_bulkEditMode) ...[_buildBulkSelectionButtons(), const SizedBox(height: 16)],
+          if (_bulkEditMode) ...[
+            _buildBulkSelectionButtons(),
+            const SizedBox(height: 16),
+          ],
 
           // Calendar grid - constrained height for GridView
           _buildCalendarGrid(),
@@ -101,7 +108,8 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           const SizedBox(height: 16),
 
           // Action buttons
-          if (_bulkEditMode && _selectedDays.isNotEmpty) _buildBulkEditActions(isMobile),
+          if (_bulkEditMode && _selectedDays.isNotEmpty)
+            _buildBulkEditActions(isMobile),
         ],
       ),
     );
@@ -118,12 +126,20 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             icon: const Icon(Icons.euro),
             label: Text(l10n.priceCalendarSetPrice),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
+              padding: const EdgeInsets.symmetric(
+                vertical: 15,
+              ), // Same as Save button
               backgroundColor: context.primaryColor,
               foregroundColor: Colors.white,
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12), // Consistent with inputs
+                borderRadius: BorderRadius.circular(
+                  12,
+                ), // Consistent with inputs
               ),
             ),
           ),
@@ -133,10 +149,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             icon: const Icon(Icons.block),
             label: Text(l10n.priceCalendarAvailability),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+              padding: const EdgeInsets.symmetric(
+                vertical: 15,
+              ), // Same as Save button
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12), // Consistent with inputs
+                borderRadius: BorderRadius.circular(
+                  12,
+                ), // Consistent with inputs
               ),
             ),
           ),
@@ -153,12 +177,20 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             icon: const Icon(Icons.euro),
             label: Text(l10n.priceCalendarSetPrice),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
+              padding: const EdgeInsets.symmetric(
+                vertical: 15,
+              ), // Same as Save button
               backgroundColor: context.primaryColor,
               foregroundColor: Colors.white,
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12), // Consistent with inputs
+                borderRadius: BorderRadius.circular(
+                  12,
+                ), // Consistent with inputs
               ),
             ),
           ),
@@ -171,10 +203,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             icon: const Icon(Icons.block),
             label: Text(l10n.priceCalendarAvailability),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+              padding: const EdgeInsets.symmetric(
+                vertical: 15,
+              ), // Same as Save button
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12), // Consistent with inputs
+                borderRadius: BorderRadius.circular(
+                  12,
+                ), // Consistent with inputs
               ),
             ),
           ),
@@ -197,10 +237,15 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
           ),
           padding: EdgeInsets.all(isMobile ? 16 : 20),
-          child: isMobile ? _buildHeaderMobile(l10n) : _buildHeaderDesktop(l10n),
+          child: isMobile
+              ? _buildHeaderMobile(l10n)
+              : _buildHeaderDesktop(l10n),
         ),
       ),
     );
@@ -222,7 +267,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
               context: context,
             ),
             items: _cachedMonthList.map((month) {
-              return DropdownMenuItem(value: month, child: Text(DateFormat('MMMM yyyy').format(month)));
+              return DropdownMenuItem(
+                value: month,
+                child: Text(DateFormat('MMMM yyyy').format(month)),
+              );
             }).toList(),
             onChanged: (value) {
               if (value != null && value != _selectedMonth) {
@@ -249,13 +297,20 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
               _selectedDays.clear();
             });
           },
-          icon: Icon(_bulkEditMode ? Icons.close : Icons.edit_calendar_rounded, size: 20),
+          icon: Icon(
+            _bulkEditMode ? Icons.close : Icons.edit_calendar_rounded,
+            size: 20,
+          ),
           label: Text(_bulkEditMode ? l10n.cancel : l10n.priceCalendarBulkEdit),
           style: OutlinedButton.styleFrom(
             foregroundColor: _bulkEditMode ? context.primaryColor : null,
-            side: _bulkEditMode ? BorderSide(color: context.primaryColor, width: 2) : null,
+            side: _bulkEditMode
+                ? BorderSide(color: context.primaryColor, width: 2)
+                : null,
             padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
       ],
@@ -268,7 +323,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         // Previous month button
         IconButton(
           onPressed: () {
-            final prevMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+            final prevMonth = DateTime(
+              _selectedMonth.year,
+              _selectedMonth.month - 1,
+            );
             setState(() {
               _isLoadingMonthChange = true;
               _selectedMonth = prevMonth;
@@ -300,7 +358,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                 context: context,
               ),
               items: _cachedMonthList.map((month) {
-                return DropdownMenuItem(value: month, child: Text(DateFormat('MMMM yyyy').format(month)));
+                return DropdownMenuItem(
+                  value: month,
+                  child: Text(DateFormat('MMMM yyyy').format(month)),
+                );
               }).toList(),
               onChanged: (value) {
                 if (value != null && value != _selectedMonth) {
@@ -323,7 +384,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         // Next month button
         IconButton(
           onPressed: () {
-            final nextMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+            final nextMonth = DateTime(
+              _selectedMonth.year,
+              _selectedMonth.month + 1,
+            );
             setState(() {
               _isLoadingMonthChange = true;
               _selectedMonth = nextMonth;
@@ -353,13 +417,22 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                 _selectedDays.clear();
               });
             },
-            icon: Icon(_bulkEditMode ? Icons.close : Icons.edit_calendar_rounded, size: 20),
-            label: Text(_bulkEditMode ? l10n.cancel : l10n.priceCalendarBulkEdit),
+            icon: Icon(
+              _bulkEditMode ? Icons.close : Icons.edit_calendar_rounded,
+              size: 20,
+            ),
+            label: Text(
+              _bulkEditMode ? l10n.cancel : l10n.priceCalendarBulkEdit,
+            ),
             style: OutlinedButton.styleFrom(
               foregroundColor: _bulkEditMode ? context.primaryColor : null,
-              side: _bulkEditMode ? BorderSide(color: context.primaryColor, width: 2) : null,
+              side: _bulkEditMode
+                  ? BorderSide(color: context.primaryColor, width: 2)
+                  : null,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ),
@@ -375,14 +448,24 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       decoration: BoxDecoration(
         color: context.primaryColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: context.primaryColor.withValues(alpha: 0.3), width: 1.5),
+        border: Border.all(
+          color: context.primaryColor.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: context.primaryColor, borderRadius: BorderRadius.circular(6)),
-            child: const Icon(Icons.check_circle, color: Colors.white, size: 18),
+            decoration: BoxDecoration(
+              color: context.primaryColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -414,10 +497,17 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
   Widget _buildBulkSelectionButtons() {
     final l10n = AppLocalizations.of(context);
     final daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
-
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isDeselectDisabled = _selectedDays.isEmpty;
+
+    // Dropdown-style background for disabled state (matches surfaceContainerHighest)
+    final disabledBgColor = isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5F5);
+    final disabledTextColor = theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt());
+
     return Row(
       children: [
+        // Select All button
         Expanded(
           child: Theme(
             data: theme.copyWith(
@@ -428,9 +518,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
               label: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.select_all, size: 16),
-                  const SizedBox(width: 8),
-                  Flexible(child: Text(l10n.priceCalendarSelectAllDays)),
+                  Icon(Icons.select_all, size: 16, color: context.primaryColor),
+                  const SizedBox(width: 6),
+                  Flexible(child: Text(l10n.priceCalendarSelectAll)),
                 ],
               ),
               onSelected: (_) {
@@ -445,40 +535,62 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
               backgroundColor: context.gradients.cardBackground,
               side: BorderSide(color: context.primaryColor, width: 1.5),
               labelStyle: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w600, fontSize: 14),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
+        // Deselect All button - custom styling for disabled state
         Expanded(
-          child: Opacity(
-            opacity: _selectedDays.isEmpty ? 0.5 : 1.0,
-            child: Theme(
-              data: theme.copyWith(
-                splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+          child: Theme(
+            data: theme.copyWith(
+              splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+              highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            ),
+            child: FilterChip(
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.deselect,
+                    size: 16,
+                    color: isDeselectDisabled ? disabledTextColor : context.primaryColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      l10n.priceCalendarDeselectAll,
+                      style: TextStyle(
+                        color: isDeselectDisabled ? disabledTextColor : context.primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: FilterChip(
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.deselect, size: 16, color: context.primaryColor),
-                    const SizedBox(width: 8),
-                    Flexible(child: Text(l10n.priceCalendarDeselectAll)),
-                  ],
-                ),
-                onSelected: _selectedDays.isEmpty
-                    ? null
-                    : (_) {
-                        setState(_selectedDays.clear);
-                      },
-                backgroundColor: context.gradients.cardBackground,
-                side: BorderSide(color: context.primaryColor, width: 1.5),
-                labelStyle: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w600, fontSize: 14),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              onSelected: isDeselectDisabled
+                  ? null
+                  : (_) {
+                      setState(_selectedDays.clear);
+                    },
+              // Use dropdown background for disabled state
+              backgroundColor: isDeselectDisabled ? disabledBgColor : context.gradients.cardBackground,
+              disabledColor: disabledBgColor,
+              side: BorderSide(
+                color: isDeselectDisabled
+                    ? theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())
+                    : context.primaryColor,
+                width: 1.5,
               ),
+              labelStyle: TextStyle(
+                color: isDeselectDisabled ? disabledTextColor : context.primaryColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ),
@@ -487,12 +599,21 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
   }
 
   Widget _buildCalendarGrid() {
-    final daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
-    final firstDayOfWeek = DateTime(_selectedMonth.year, _selectedMonth.month).weekday;
+    final daysInMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month + 1,
+      0,
+    ).day;
+    final firstDayOfWeek = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month,
+    ).weekday;
 
     // Watch monthly prices from Firestore
     final pricesAsync = ref.watch(
-      monthlyPricesProvider(MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth)),
+      monthlyPricesProvider(
+        MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+      ),
     );
 
     // Use LayoutBuilder to get screen constraints for responsive sizing
@@ -517,7 +638,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
               decoration: BoxDecoration(
                 color: context.gradients.cardBackground,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
+                border: Border.all(
+                  color: context.gradients.sectionBorder,
+                  width: 1.5,
+                ),
               ),
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Column(
@@ -536,7 +660,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           child: Padding(
                             padding: const EdgeInsets.all(32.0),
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.primary,
+                              ),
                             ),
                           ),
                         )
@@ -544,21 +670,27 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           data: (priceMap) {
                             // Update local cache with server data
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              _localState.setMonthPrices(_selectedMonth, priceMap);
+                              _localState.setMonthPrices(
+                                _selectedMonth,
+                                priceMap,
+                              );
                             });
 
                             // Use local cache for display (supports optimistic updates)
-                            final displayMap = _localState.getMonthPrices(_selectedMonth) ?? priceMap;
+                            final displayMap =
+                                _localState.getMonthPrices(_selectedMonth) ??
+                                priceMap;
 
                             return GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 7,
-                                mainAxisSpacing: 8,
-                                crossAxisSpacing: 8,
-                                childAspectRatio: aspectRatio,
-                              ),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 7,
+                                    mainAxisSpacing: 8,
+                                    crossAxisSpacing: 8,
+                                    childAspectRatio: aspectRatio,
+                                  ),
                               itemCount: firstDayOfWeek - 1 + daysInMonth,
                               itemBuilder: (context, index) {
                                 if (index < firstDayOfWeek - 1) {
@@ -566,12 +698,21 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                 }
 
                                 final day = index - (firstDayOfWeek - 1) + 1;
-                                final date = DateTime(_selectedMonth.year, _selectedMonth.month, day);
+                                final date = DateTime(
+                                  _selectedMonth.year,
+                                  _selectedMonth.month,
+                                  day,
+                                );
 
                                 // Use extracted CalendarDayCell component
                                 return CalendarDayCell(
                                   date: date,
-                                  priceData: displayMap[DateTime(date.year, date.month, date.day)],
+                                  priceData:
+                                      displayMap[DateTime(
+                                        date.year,
+                                        date.month,
+                                        date.day,
+                                      )],
                                   basePrice: widget.unit.pricePerNight,
                                   isSelected: _selectedDays.contains(date),
                                   isBulkEditMode: _bulkEditMode,
@@ -584,7 +725,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           },
                           loading: () => Center(
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.primary,
+                              ),
                             ),
                           ),
                           error: (error, stack) {
@@ -595,14 +738,22 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+                                    Icon(
+                                      Icons.error_outline,
+                                      size: 48,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                    ),
                                     const SizedBox(height: 12),
                                     Text(
                                       l10n.priceCalendarErrorLoadingPrices,
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.error,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -683,7 +834,12 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
   void _showPriceEditDialog(DateTime date) async {
     // Load existing price data for this date
     final monthlyPrices = await ref.read(
-      monthlyPricesProvider(MonthlyPricesParams(unitId: widget.unit.id, month: DateTime(date.year, date.month))).future,
+      monthlyPricesProvider(
+        MonthlyPricesParams(
+          unitId: widget.unit.id,
+          month: DateTime(date.year, date.month),
+        ),
+      ).future,
     );
 
     final dateKey = DateTime(date.year, date.month, date.day);
@@ -691,13 +847,25 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
     // Controllers for all fields
     final priceController = TextEditingController(
-      text: (existingPrice?.price ?? widget.unit.pricePerNight).toStringAsFixed(0),
+      text: (existingPrice?.price ?? widget.unit.pricePerNight).toStringAsFixed(
+        0,
+      ),
     );
-    final weekendPriceController = TextEditingController(text: existingPrice?.weekendPrice?.toStringAsFixed(0) ?? '');
-    final minNightsController = TextEditingController(text: existingPrice?.minNightsOnArrival?.toString() ?? '');
-    final maxNightsController = TextEditingController(text: existingPrice?.maxNightsOnArrival?.toString() ?? '');
-    final minDaysAdvanceController = TextEditingController(text: existingPrice?.minDaysAdvance?.toString() ?? '');
-    final maxDaysAdvanceController = TextEditingController(text: existingPrice?.maxDaysAdvance?.toString() ?? '');
+    final weekendPriceController = TextEditingController(
+      text: existingPrice?.weekendPrice?.toStringAsFixed(0) ?? '',
+    );
+    final minNightsController = TextEditingController(
+      text: existingPrice?.minNightsOnArrival?.toString() ?? '',
+    );
+    final maxNightsController = TextEditingController(
+      text: existingPrice?.maxNightsOnArrival?.toString() ?? '',
+    );
+    final minDaysAdvanceController = TextEditingController(
+      text: existingPrice?.minDaysAdvance?.toString() ?? '',
+    );
+    final maxDaysAdvanceController = TextEditingController(
+      text: existingPrice?.maxDaysAdvance?.toString() ?? '',
+    );
     bool available = existingPrice?.available ?? true;
     bool blockCheckIn = existingPrice?.blockCheckIn ?? false;
     bool blockCheckOut = existingPrice?.blockCheckOut ?? false;
@@ -724,17 +892,33 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             final isDark = theme.brightness == Brightness.dark;
 
             return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               clipBehavior: Clip.antiAlias,
-              insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
+              insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(
+                context,
+              ),
               child: Container(
                 width: isMobile ? screenWidth * 0.90 : 500,
-                constraints: BoxConstraints(maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
+                constraints: BoxConstraints(
+                  maxHeight:
+                      screenHeight *
+                      ResponsiveSpacingHelper.getDialogMaxHeightPercent(
+                        context,
+                      ),
+                ),
                 decoration: BoxDecoration(
                   color: context.gradients.cardBackground,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
-                  boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+                  border: Border.all(
+                    color: context.gradients.sectionBorder.withAlpha(
+                      (0.5 * 255).toInt(),
+                    ),
+                  ),
+                  boxShadow: isDark
+                      ? AppShadows.elevation4Dark
+                      : AppShadows.elevation4,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -744,17 +928,25 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       padding: EdgeInsets.all(isMobile ? 16 : 20),
                       decoration: BoxDecoration(
                         gradient: context.gradients.brandPrimary,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(11),
+                        ),
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                              color: Colors.white.withAlpha(
+                                (0.2 * 255).toInt(),
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(Icons.calendar_today, color: Colors.white, size: 24),
+                            child: const Icon(
+                              Icons.calendar_today,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -762,7 +954,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  AppLocalizations.of(context).priceCalendarEditDate,
+                                  AppLocalizations.of(
+                                    context,
+                                  ).priceCalendarEditDate,
                                   style: TextStyle(
                                     fontSize: isMobile ? 16 : 18,
                                     fontWeight: FontWeight.bold,
@@ -771,10 +965,15 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  DateFormat('d. MMMM yyyy.', 'hr').format(date),
+                                  DateFormat(
+                                    'd. MMMM yyyy.',
+                                    'hr',
+                                  ).format(date),
                                   style: TextStyle(
                                     fontSize: isMobile ? 12 : 14,
-                                    color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                                    color: Colors.white.withAlpha(
+                                      (0.9 * 255).toInt(),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -795,10 +994,16 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             // Price section with icon header
                             Row(
                               children: [
-                                Icon(Icons.euro, size: 18, color: theme.colorScheme.primary),
+                                Icon(
+                                  Icons.euro,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  AppLocalizations.of(context).priceCalendarPrice,
+                                  AppLocalizations.of(
+                                    context,
+                                  ).priceCalendarPrice,
                                   style: theme.textTheme.labelLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: theme.colorScheme.primary,
@@ -811,13 +1016,17 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             TextField(
                               controller: priceController,
                               decoration: InputDecorationHelper.buildDecoration(
-                                labelText: AppLocalizations.of(context).priceCalendarBasePricePerNight,
+                                labelText: AppLocalizations.of(
+                                  context,
+                                ).priceCalendarBasePricePerNight,
                                 prefixIcon: const Icon(Icons.euro),
                                 isMobile: isMobile,
                                 context: context,
                               ),
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
                             ),
 
                             SizedBox(height: isMobile ? 16 : 24),
@@ -825,10 +1034,16 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             // Availability section with icon header
                             Row(
                               children: [
-                                Icon(Icons.event_available, size: 18, color: theme.colorScheme.primary),
+                                Icon(
+                                  Icons.event_available,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  AppLocalizations.of(context).priceCalendarAvailabilitySection,
+                                  AppLocalizations.of(
+                                    context,
+                                  ).priceCalendarAvailabilitySection,
                                   style: theme.textTheme.labelLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: theme.colorScheme.primary,
@@ -839,37 +1054,60 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             ),
                             SwitchListTile(
                               title: Text(
-                                AppLocalizations.of(context).priceCalendarAvailable,
-                                style: TextStyle(fontSize: isMobile ? 14 : null),
+                                AppLocalizations.of(
+                                  context,
+                                ).priceCalendarAvailable,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 14 : null,
+                                ),
                               ),
                               value: available,
-                              onChanged: (value) => setState(() => available = value),
+                              onChanged: (value) =>
+                                  setState(() => available = value),
                               contentPadding: EdgeInsets.zero,
                             ),
                             SwitchListTile(
                               title: Text(
-                                AppLocalizations.of(context).priceCalendarBlockCheckIn,
-                                style: TextStyle(fontSize: isMobile ? 14 : null),
+                                AppLocalizations.of(
+                                  context,
+                                ).priceCalendarBlockCheckIn,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 14 : null,
+                                ),
                               ),
                               subtitle: Text(
-                                AppLocalizations.of(context).priceCalendarBlockCheckInDesc,
-                                style: TextStyle(fontSize: isMobile ? 12 : null),
+                                AppLocalizations.of(
+                                  context,
+                                ).priceCalendarBlockCheckInDesc,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 12 : null,
+                                ),
                               ),
                               value: blockCheckIn,
-                              onChanged: (value) => setState(() => blockCheckIn = value),
+                              onChanged: (value) =>
+                                  setState(() => blockCheckIn = value),
                               contentPadding: EdgeInsets.zero,
                             ),
                             SwitchListTile(
                               title: Text(
-                                AppLocalizations.of(context).priceCalendarBlockCheckOut,
-                                style: TextStyle(fontSize: isMobile ? 14 : null),
+                                AppLocalizations.of(
+                                  context,
+                                ).priceCalendarBlockCheckOut,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 14 : null,
+                                ),
                               ),
                               subtitle: Text(
-                                AppLocalizations.of(context).priceCalendarBlockCheckOutDesc,
-                                style: TextStyle(fontSize: isMobile ? 12 : null),
+                                AppLocalizations.of(
+                                  context,
+                                ).priceCalendarBlockCheckOutDesc,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 12 : null,
+                                ),
                               ),
                               value: blockCheckOut,
-                              onChanged: (value) => setState(() => blockCheckOut = value),
+                              onChanged: (value) =>
+                                  setState(() => blockCheckOut = value),
                               contentPadding: EdgeInsets.zero,
                             ),
 
@@ -877,35 +1115,57 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
                             // Advanced options in ExpansionTile (collapsed by default)
                             Theme(
-                              data: theme.copyWith(dividerColor: Colors.transparent),
+                              data: theme.copyWith(
+                                dividerColor: Colors.transparent,
+                              ),
                               child: ExpansionTile(
                                 tilePadding: EdgeInsets.zero,
-                                childrenPadding: EdgeInsets.only(top: isMobile ? 8 : 12, bottom: isMobile ? 8 : 12),
-                                leading: Icon(Icons.tune, size: 18, color: theme.colorScheme.tertiary),
+                                childrenPadding: EdgeInsets.only(
+                                  top: isMobile ? 8 : 12,
+                                  bottom: isMobile ? 8 : 12,
+                                ),
+                                leading: Icon(
+                                  Icons.tune,
+                                  size: 18,
+                                  color: theme.colorScheme.tertiary,
+                                ),
                                 title: Text(
-                                  AppLocalizations.of(context).priceCalendarAdvancedOptions,
+                                  AppLocalizations.of(
+                                    context,
+                                  ).priceCalendarAdvancedOptions,
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: theme.colorScheme.tertiary,
                                   ),
                                 ),
                                 subtitle: Text(
-                                  AppLocalizations.of(context).priceCalendarAdvancedOptionsDesc,
-                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                  AppLocalizations.of(
+                                    context,
+                                  ).priceCalendarAdvancedOptionsDesc,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                                 children: [
                                   // Weekend price
                                   TextField(
                                     controller: weekendPriceController,
-                                    decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: AppLocalizations.of(context).priceCalendarWeekendPrice,
-                                      hintText: AppLocalizations.of(context).priceCalendarHintExample('120'),
-                                      prefixIcon: const Icon(Icons.weekend),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                    decoration:
+                                        InputDecorationHelper.buildDecoration(
+                                          labelText: AppLocalizations.of(
+                                            context,
+                                          ).priceCalendarWeekendPrice,
+                                          hintText: AppLocalizations.of(
+                                            context,
+                                          ).priceCalendarHintExample('120'),
+                                          prefixIcon: const Icon(Icons.weekend),
+                                          isMobile: isMobile,
+                                          context: context,
+                                        ),
                                     keyboardType: TextInputType.number,
-                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
                                   ),
                                   SizedBox(height: isMobile ? 12 : 16),
                                   // Min/Max nights row
@@ -914,28 +1174,47 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                       Expanded(
                                         child: TextField(
                                           controller: minNightsController,
-                                          decoration: InputDecorationHelper.buildDecoration(
-                                            labelText: AppLocalizations.of(context).priceCalendarMinNights,
-                                            hintText: AppLocalizations.of(context).priceCalendarHintExample('2'),
-                                            isMobile: isMobile,
-                                            context: context,
-                                          ),
+                                          decoration:
+                                              InputDecorationHelper.buildDecoration(
+                                                labelText: AppLocalizations.of(
+                                                  context,
+                                                ).priceCalendarMinNights,
+                                                hintText: AppLocalizations.of(
+                                                  context,
+                                                ).priceCalendarHintExample('2'),
+                                                isMobile: isMobile,
+                                                context: context,
+                                              ),
                                           keyboardType: TextInputType.number,
-                                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
                                         ),
                                       ),
                                       SizedBox(width: isMobile ? 8 : 12),
                                       Expanded(
                                         child: TextField(
                                           controller: maxNightsController,
-                                          decoration: InputDecorationHelper.buildDecoration(
-                                            labelText: AppLocalizations.of(context).priceCalendarMaxNights,
-                                            hintText: AppLocalizations.of(context).priceCalendarHintExample('14'),
-                                            isMobile: isMobile,
-                                            context: context,
-                                          ),
+                                          decoration:
+                                              InputDecorationHelper.buildDecoration(
+                                                labelText: AppLocalizations.of(
+                                                  context,
+                                                ).priceCalendarMaxNights,
+                                                hintText:
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    ).priceCalendarHintExample(
+                                                      '14',
+                                                    ),
+                                                isMobile: isMobile,
+                                                context: context,
+                                              ),
                                           keyboardType: TextInputType.number,
-                                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -947,28 +1226,47 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                       Expanded(
                                         child: TextField(
                                           controller: minDaysAdvanceController,
-                                          decoration: InputDecorationHelper.buildDecoration(
-                                            labelText: AppLocalizations.of(context).priceCalendarMinDaysAdvance,
-                                            hintText: AppLocalizations.of(context).priceCalendarHintExample('1'),
-                                            isMobile: isMobile,
-                                            context: context,
-                                          ),
+                                          decoration:
+                                              InputDecorationHelper.buildDecoration(
+                                                labelText: AppLocalizations.of(
+                                                  context,
+                                                ).priceCalendarMinDaysAdvance,
+                                                hintText: AppLocalizations.of(
+                                                  context,
+                                                ).priceCalendarHintExample('1'),
+                                                isMobile: isMobile,
+                                                context: context,
+                                              ),
                                           keyboardType: TextInputType.number,
-                                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
                                         ),
                                       ),
                                       SizedBox(width: isMobile ? 8 : 12),
                                       Expanded(
                                         child: TextField(
                                           controller: maxDaysAdvanceController,
-                                          decoration: InputDecorationHelper.buildDecoration(
-                                            labelText: AppLocalizations.of(context).priceCalendarMaxDaysAdvance,
-                                            hintText: AppLocalizations.of(context).priceCalendarHintExample('365'),
-                                            isMobile: isMobile,
-                                            context: context,
-                                          ),
+                                          decoration:
+                                              InputDecorationHelper.buildDecoration(
+                                                labelText: AppLocalizations.of(
+                                                  context,
+                                                ).priceCalendarMaxDaysAdvance,
+                                                hintText:
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    ).priceCalendarHintExample(
+                                                      '365',
+                                                    ),
+                                                isMobile: isMobile,
+                                                context: context,
+                                              ),
                                           keyboardType: TextInputType.number,
-                                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -985,7 +1283,13 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     Container(
                       padding: EdgeInsets.all(isMobile ? 12 : 16),
                       decoration: BoxDecoration(
-                        border: Border(top: BorderSide(color: theme.dividerColor.withAlpha((0.3 * 255).toInt()))),
+                        border: Border(
+                          top: BorderSide(
+                            color: theme.dividerColor.withAlpha(
+                              (0.3 * 255).toInt(),
+                            ),
+                          ),
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -998,20 +1302,35 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                       final navigator = Navigator.of(context);
 
                                       // Show confirmation dialog before deleting
-                                      final l10nDialog = AppLocalizations.of(context);
+                                      final l10nDialog = AppLocalizations.of(
+                                        context,
+                                      );
                                       final confirmed = await showDialog<bool>(
                                         context: context,
                                         builder: (context) => AlertDialog(
-                                          title: Text(l10nDialog.priceCalendarDeleteConfirmTitle),
-                                          content: Text(l10nDialog.priceCalendarDeleteConfirmMessage),
+                                          title: Text(
+                                            l10nDialog
+                                                .priceCalendarDeleteConfirmTitle,
+                                          ),
+                                          content: Text(
+                                            l10nDialog
+                                                .priceCalendarDeleteConfirmMessage,
+                                          ),
                                           actions: [
                                             TextButton(
-                                              onPressed: () => Navigator.of(context).pop(false),
+                                              onPressed: () => Navigator.of(
+                                                context,
+                                              ).pop(false),
                                               child: Text(l10nDialog.cancel),
                                             ),
                                             TextButton(
-                                              onPressed: () => Navigator.of(context).pop(true),
-                                              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                              onPressed: () => Navigator.of(
+                                                context,
+                                              ).pop(true),
+                                              style: TextButton.styleFrom(
+                                                foregroundColor:
+                                                    AppColors.error,
+                                              ),
                                               child: Text(l10nDialog.delete),
                                             ),
                                           ],
@@ -1024,15 +1343,23 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
                                       // Delete custom price (revert to base price)
                                       try {
-                                        final repository = ref.read(dailyPriceRepositoryProvider);
-                                        await repository.deletePriceForDate(unitId: widget.unit.id, date: date);
+                                        final repository = ref.read(
+                                          dailyPriceRepositoryProvider,
+                                        );
+                                        await repository.deletePriceForDate(
+                                          unitId: widget.unit.id,
+                                          date: date,
+                                        );
 
                                         // Invalidate provider to trigger reload
                                         ref.invalidate(
                                           monthlyPricesProvider(
                                             MonthlyPricesParams(
                                               unitId: widget.unit.id,
-                                              month: DateTime(date.year, date.month),
+                                              month: DateTime(
+                                                date.year,
+                                                date.month,
+                                              ),
                                             ),
                                           ),
                                         );
@@ -1040,11 +1367,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         if (mounted) {
                                           dialogClosed = true;
                                           navigator.pop();
-                                          ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarRevertedToBasePrice);
+                                          ErrorDisplayUtils.showSuccessSnackBar(
+                                            this.context,
+                                            l10nDialog
+                                                .priceCalendarRevertedToBasePrice,
+                                          );
                                         }
                                       } catch (e) {
                                         if (mounted) {
-                                          ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                                          ErrorDisplayUtils.showErrorSnackBar(
+                                            this.context,
+                                            e,
+                                          );
                                         }
                                       } finally {
                                         // Only reset processing if dialog is still open
@@ -1053,14 +1387,23 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         }
                                       }
                                     },
-                              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                              ),
                               child: Text(AppLocalizations.of(context).delete),
                             ),
                           TextButton(
-                            onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
+                            onPressed: isProcessing
+                                ? null
+                                : () => Navigator.of(context).pop(),
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                             child: Text(AppLocalizations.of(context).cancel),
                           ),
@@ -1071,7 +1414,11 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                 : () async {
                                     // Debounce: prevent duplicate clicks
                                     final now = DateTime.now();
-                                    if (lastClickTime != null && now.difference(lastClickTime!).inSeconds < 2) {
+                                    if (lastClickTime != null &&
+                                        now
+                                                .difference(lastClickTime!)
+                                                .inSeconds <
+                                            2) {
                                       return;
                                     }
                                     lastClickTime = now;
@@ -1079,61 +1426,111 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     final navigator = Navigator.of(context);
 
                                     // Save price data
-                                    final l10nValidation = AppLocalizations.of(context);
-                                    final priceText = priceController.text.trim();
+                                    final l10nValidation = AppLocalizations.of(
+                                      context,
+                                    );
+                                    final priceText = priceController.text
+                                        .trim();
                                     if (priceText.isEmpty) {
-                                      ErrorDisplayUtils.showWarningSnackBar(context, l10nValidation.priceCalendarEnterPrice);
+                                      ErrorDisplayUtils.showWarningSnackBar(
+                                        context,
+                                        l10nValidation.priceCalendarEnterPrice,
+                                      );
                                       return;
                                     }
 
                                     final price = double.tryParse(priceText);
                                     if (price == null || price <= 0) {
-                                      ErrorDisplayUtils.showWarningSnackBar(context, l10nValidation.priceCalendarPriceMustBeGreaterThanZero);
+                                      ErrorDisplayUtils.showWarningSnackBar(
+                                        context,
+                                        l10nValidation
+                                            .priceCalendarPriceMustBeGreaterThanZero,
+                                      );
                                       return;
                                     }
 
                                     // Validate optional fields
-                                    final weekendPriceText = weekendPriceController.text.trim();
+                                    final weekendPriceText =
+                                        weekendPriceController.text.trim();
                                     if (weekendPriceText.isNotEmpty) {
-                                      final weekendPrice = double.tryParse(weekendPriceText);
-                                      if (weekendPrice == null || weekendPrice <= 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(context, l10nValidation.priceCalendarWeekendPriceMustBeGreaterThanZero);
+                                      final weekendPrice = double.tryParse(
+                                        weekendPriceText,
+                                      );
+                                      if (weekendPrice == null ||
+                                          weekendPrice <= 0) {
+                                        ErrorDisplayUtils.showWarningSnackBar(
+                                          context,
+                                          l10nValidation
+                                              .priceCalendarWeekendPriceMustBeGreaterThanZero,
+                                        );
                                         return;
                                       }
                                     }
 
-                                    final minNightsText = minNightsController.text.trim();
+                                    final minNightsText = minNightsController
+                                        .text
+                                        .trim();
                                     if (minNightsText.isNotEmpty) {
-                                      final minNights = int.tryParse(minNightsText);
+                                      final minNights = int.tryParse(
+                                        minNightsText,
+                                      );
                                       if (minNights == null || minNights <= 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(context, l10nValidation.priceCalendarMinNightsMustBeGreaterThanZero);
+                                        ErrorDisplayUtils.showWarningSnackBar(
+                                          context,
+                                          l10nValidation
+                                              .priceCalendarMinNightsMustBeGreaterThanZero,
+                                        );
                                         return;
                                       }
                                     }
 
-                                    final maxNightsText = maxNightsController.text.trim();
+                                    final maxNightsText = maxNightsController
+                                        .text
+                                        .trim();
                                     if (maxNightsText.isNotEmpty) {
-                                      final maxNights = int.tryParse(maxNightsText);
+                                      final maxNights = int.tryParse(
+                                        maxNightsText,
+                                      );
                                       if (maxNights == null || maxNights <= 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(context, l10nValidation.priceCalendarMaxNightsMustBeGreaterThanZero);
+                                        ErrorDisplayUtils.showWarningSnackBar(
+                                          context,
+                                          l10nValidation
+                                              .priceCalendarMaxNightsMustBeGreaterThanZero,
+                                        );
                                         return;
                                       }
                                     }
 
-                                    final minDaysAdvanceText = minDaysAdvanceController.text.trim();
+                                    final minDaysAdvanceText =
+                                        minDaysAdvanceController.text.trim();
                                     if (minDaysAdvanceText.isNotEmpty) {
-                                      final minDaysAdvance = int.tryParse(minDaysAdvanceText);
-                                      if (minDaysAdvance == null || minDaysAdvance < 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(context, l10nValidation.priceCalendarMinDaysAdvanceMustBeZeroOrMore);
+                                      final minDaysAdvance = int.tryParse(
+                                        minDaysAdvanceText,
+                                      );
+                                      if (minDaysAdvance == null ||
+                                          minDaysAdvance < 0) {
+                                        ErrorDisplayUtils.showWarningSnackBar(
+                                          context,
+                                          l10nValidation
+                                              .priceCalendarMinDaysAdvanceMustBeZeroOrMore,
+                                        );
                                         return;
                                       }
                                     }
 
-                                    final maxDaysAdvanceText = maxDaysAdvanceController.text.trim();
+                                    final maxDaysAdvanceText =
+                                        maxDaysAdvanceController.text.trim();
                                     if (maxDaysAdvanceText.isNotEmpty) {
-                                      final maxDaysAdvance = int.tryParse(maxDaysAdvanceText);
-                                      if (maxDaysAdvance == null || maxDaysAdvance <= 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(context, l10nValidation.priceCalendarMaxDaysAdvanceMustBeGreaterThanZero);
+                                      final maxDaysAdvance = int.tryParse(
+                                        maxDaysAdvanceText,
+                                      );
+                                      if (maxDaysAdvance == null ||
+                                          maxDaysAdvance <= 0) {
+                                        ErrorDisplayUtils.showWarningSnackBar(
+                                          context,
+                                          l10nValidation
+                                              .priceCalendarMaxDaysAdvanceMustBeGreaterThanZero,
+                                        );
                                         return;
                                       }
                                     }
@@ -1141,18 +1538,27 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     setState(() => isProcessing = true);
 
                                     try {
-                                      final repository = ref.read(dailyPriceRepositoryProvider);
+                                      final repository = ref.read(
+                                        dailyPriceRepositoryProvider,
+                                      );
 
                                       // Parse optional fields after validation
-                                      final weekendPrice = weekendPriceText.isEmpty
+                                      final weekendPrice =
+                                          weekendPriceText.isEmpty
                                           ? null
                                           : double.tryParse(weekendPriceText);
-                                      final minNights = minNightsText.isEmpty ? null : int.tryParse(minNightsText);
-                                      final maxNights = maxNightsText.isEmpty ? null : int.tryParse(maxNightsText);
-                                      final minDaysAdvance = minDaysAdvanceText.isEmpty
+                                      final minNights = minNightsText.isEmpty
+                                          ? null
+                                          : int.tryParse(minNightsText);
+                                      final maxNights = maxNightsText.isEmpty
+                                          ? null
+                                          : int.tryParse(maxNightsText);
+                                      final minDaysAdvance =
+                                          minDaysAdvanceText.isEmpty
                                           ? null
                                           : int.tryParse(minDaysAdvanceText);
-                                      final maxDaysAdvance = maxDaysAdvanceText.isEmpty
+                                      final maxDaysAdvance =
+                                          maxDaysAdvanceText.isEmpty
                                           ? null
                                           : int.tryParse(maxDaysAdvanceText);
 
@@ -1170,7 +1576,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         maxNightsOnArrival: maxNights,
                                         minDaysAdvance: minDaysAdvance,
                                         maxDaysAdvance: maxDaysAdvance,
-                                        createdAt: existingPrice?.createdAt ?? DateTime.now(),
+                                        createdAt:
+                                            existingPrice?.createdAt ??
+                                            DateTime.now(),
                                         updatedAt: DateTime.now(),
                                       );
 
@@ -1186,7 +1594,11 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                       if (mounted) {
                                         dialogClosed = true;
                                         navigator.pop();
-                                        ErrorDisplayUtils.showSuccessSnackBar(context, l10nValidation.priceCalendarPriceSaved);
+                                        ErrorDisplayUtils.showSuccessSnackBar(
+                                          context,
+                                          l10nValidation
+                                              .priceCalendarPriceSaved,
+                                        );
                                       }
 
                                       // Save to server in background
@@ -1203,7 +1615,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           monthlyPricesProvider(
                                             MonthlyPricesParams(
                                               unitId: widget.unit.id,
-                                              month: DateTime(date.year, date.month),
+                                              month: DateTime(
+                                                date.year,
+                                                date.month,
+                                              ),
                                             ),
                                           ),
                                         );
@@ -1219,12 +1634,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         }
 
                                         if (mounted) {
-                                          ErrorDisplayUtils.showErrorSnackBar(this.context, e, onRetry: _localState.undo);
+                                          ErrorDisplayUtils.showErrorSnackBar(
+                                            this.context,
+                                            e,
+                                          );
                                         }
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(
+                                          this.context,
+                                          e,
+                                        );
                                       }
                                     } finally {
                                       if (mounted && !dialogClosed) {
@@ -1235,15 +1656,23 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             style: FilledButton.styleFrom(
                               backgroundColor: theme.colorScheme.primary,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               elevation: 0,
                             ),
                             child: isProcessing
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   )
                                 : Text(AppLocalizations.of(context).save),
                           ),
@@ -1285,13 +1714,20 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           final theme = Theme.of(context);
           final isDark = theme.brightness == Brightness.dark;
           final screenHeight = MediaQuery.of(context).size.height;
-          final maxDialogHeight = screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
+          final maxDialogHeight =
+              screenHeight *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
 
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             clipBehavior: Clip.antiAlias,
             child: Container(
-              constraints: BoxConstraints(maxWidth: 400, maxHeight: maxDialogHeight),
+              constraints: BoxConstraints(
+                maxWidth: 400,
+                maxHeight: maxDialogHeight,
+              ),
               decoration: BoxDecoration(
                 color: context.gradients.cardBackground,
                 borderRadius: BorderRadius.circular(16),
@@ -1304,7 +1740,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: context.gradients.brandPrimary,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -1314,13 +1752,23 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.euro, color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.euro,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            l10nDialog.priceCalendarSetPriceForDays(_selectedDays.length),
-                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            l10nDialog.priceCalendarSetPriceForDays(
+                              _selectedDays.length,
+                            ),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         IconButton(
@@ -1345,13 +1793,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             builder: (ctx) => TextField(
                               controller: priceController,
                               decoration: InputDecorationHelper.buildDecoration(
-                                labelText: l10nDialog.priceCalendarPricePerNight,
+                                labelText:
+                                    l10nDialog.priceCalendarPricePerNight,
                                 prefixIcon: const Icon(Icons.euro),
-                                hintText: l10nDialog.priceCalendarHintExample('50'),
+                                hintText: l10nDialog.priceCalendarHintExample(
+                                  '50',
+                                ),
                                 context: ctx,
                               ),
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
                               autofocus: true,
                             ),
                           ),
@@ -1359,24 +1812,33 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withAlpha((0.3 * 255).toInt()),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                                color: Theme.of(context).colorScheme.outline
+                                    .withAlpha((0.3 * 255).toInt()),
                               ),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.info_outline, size: 18, color: context.primaryColor),
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 18,
+                                  color: context.primaryColor,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    l10nDialog.priceCalendarWillSetPriceForAllDates,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall?.copyWith(color: context.textColorSecondary, fontSize: 13),
+                                    l10nDialog
+                                        .priceCalendarWillSetPriceForAllDates,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: context.textColorSecondary,
+                                          fontSize: 13,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -1391,24 +1853,31 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5F7),
-                      border: Border(top: BorderSide(color: theme.dividerColor)),
+                      color: isDark
+                          ? const Color(0xFF2D2D3A)
+                          : const Color(0xFFF5F5F7),
+                      border: Border(
+                        top: BorderSide(color: theme.dividerColor),
+                      ),
                     ),
                     child: Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
+                            onPressed: isProcessing
+                                ? null
+                                : () => Navigator.of(context).pop(),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             child: Text(l10nDialog.cancel),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          flex: 2,
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: context.gradients.brandPrimary,
@@ -1422,21 +1891,35 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     : () async {
                                         // Debounce: prevent duplicate clicks within 2 seconds
                                         final now = DateTime.now();
-                                        if (lastClickTime != null && now.difference(lastClickTime!).inSeconds < 2) {
+                                        if (lastClickTime != null &&
+                                            now
+                                                    .difference(lastClickTime!)
+                                                    .inSeconds <
+                                                2) {
                                           return;
                                         }
                                         lastClickTime = now;
                                         final navigator = Navigator.of(context);
 
-                                        final priceText = priceController.text.trim();
+                                        final priceText = priceController.text
+                                            .trim();
                                         if (priceText.isEmpty) {
-                                          ErrorDisplayUtils.showWarningSnackBar(context, l10nDialog.priceCalendarEnterPrice);
+                                          ErrorDisplayUtils.showWarningSnackBar(
+                                            context,
+                                            l10nDialog.priceCalendarEnterPrice,
+                                          );
                                           return;
                                         }
 
-                                        final price = double.tryParse(priceText);
+                                        final price = double.tryParse(
+                                          priceText,
+                                        );
                                         if (price == null || price <= 0) {
-                                          ErrorDisplayUtils.showWarningSnackBar(context, l10nDialog.priceCalendarPriceMustBeGreaterThanZero);
+                                          ErrorDisplayUtils.showWarningSnackBar(
+                                            context,
+                                            l10nDialog
+                                                .priceCalendarPriceMustBeGreaterThanZero,
+                                          );
                                           return;
                                         }
 
@@ -1444,22 +1927,32 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         final confirmed = await showDialog<bool>(
                                           context: context,
                                           builder: (context) => AlertDialog(
-                                            title: Text(l10nDialog.priceCalendarConfirmation),
+                                            title: Text(
+                                              l10nDialog
+                                                  .priceCalendarConfirmation,
+                                            ),
                                             content: Text(
-                                              l10nDialog.priceCalendarConfirmSetPrice(
-                                                price.toStringAsFixed(0),
-                                                _selectedDays.length,
-                                              ),
+                                              l10nDialog
+                                                  .priceCalendarConfirmSetPrice(
+                                                    price.toStringAsFixed(0),
+                                                    _selectedDays.length,
+                                                  ),
                                             ),
                                             actions: [
                                               TextButton(
-                                                onPressed: () => Navigator.of(context).pop(false),
+                                                onPressed: () => Navigator.of(
+                                                  context,
+                                                ).pop(false),
                                                 child: Text(l10nDialog.cancel),
                                               ),
                                               ElevatedButton(
-                                                onPressed: () => Navigator.of(context).pop(true),
+                                                onPressed: () => Navigator.of(
+                                                  context,
+                                                ).pop(true),
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                                  backgroundColor: Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
                                                 ),
                                                 child: Text(l10nDialog.confirm),
                                               ),
@@ -1472,27 +1965,37 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         setState(() => isProcessing = true);
 
                                         // Get current prices for rollback
-                                        final currentPrices = <DateTime, DailyPriceModel>{};
-                                        final newPrices = <DateTime, DailyPriceModel>{};
-                                        final cachedMonth = _localState.getMonthPrices(_selectedMonth);
+                                        final currentPrices =
+                                            <DateTime, DailyPriceModel>{};
+                                        final newPrices =
+                                            <DateTime, DailyPriceModel>{};
+                                        final cachedMonth = _localState
+                                            .getMonthPrices(_selectedMonth);
 
                                         for (final date in _selectedDays) {
-                                          final dateKey = DateTime(date.year, date.month, date.day);
-                                          final existing = cachedMonth?[dateKey];
+                                          final dateKey = DateTime(
+                                            date.year,
+                                            date.month,
+                                            date.day,
+                                          );
+                                          final existing =
+                                              cachedMonth?[dateKey];
 
                                           if (existing != null) {
                                             currentPrices[dateKey] = existing;
-                                            newPrices[dateKey] = existing.copyWith(price: price);
+                                            newPrices[dateKey] = existing
+                                                .copyWith(price: price);
                                           } else {
                                             // Create new price entry
-                                            newPrices[dateKey] = DailyPriceModel(
-                                              id: '',
-                                              unitId: widget.unit.id,
-                                              date: date,
-                                              price: price,
-                                              createdAt: DateTime.now(),
-                                              updatedAt: DateTime.now(),
-                                            );
+                                            newPrices[dateKey] =
+                                                DailyPriceModel(
+                                                  id: '',
+                                                  unitId: widget.unit.id,
+                                                  date: date,
+                                                  price: price,
+                                                  createdAt: DateTime.now(),
+                                                  updatedAt: DateTime.now(),
+                                                );
                                           }
                                         }
 
@@ -1506,19 +2009,30 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
                                         final count = _selectedDays.length;
                                         // Save dates before clearing for API call
-                                        final datesToUpdate = _selectedDays.toList();
+                                        final datesToUpdate = _selectedDays
+                                            .toList();
 
                                         // Close dialog and clear selection immediately
                                         if (mounted) {
                                           navigator.pop();
                                           _selectedDays.clear();
-                                          this.setState(() => isProcessing = false);
-                                          ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarUpdatedPrices(count));
+                                          this.setState(
+                                            () => isProcessing = false,
+                                          );
+                                          ErrorDisplayUtils.showSuccessSnackBar(
+                                            this.context,
+                                            l10nDialog
+                                                .priceCalendarUpdatedPrices(
+                                                  count,
+                                                ),
+                                          );
                                         }
 
                                         // Save to server in background
                                         try {
-                                          final repository = ref.read(dailyPriceRepositoryProvider);
+                                          final repository = ref.read(
+                                            dailyPriceRepositoryProvider,
+                                          );
 
                                           await repository.bulkPartialUpdate(
                                             unitId: widget.unit.id,
@@ -1529,21 +2043,32 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           // Refresh from server
                                           ref.invalidate(
                                             monthlyPricesProvider(
-                                              MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                              MonthlyPricesParams(
+                                                unitId: widget.unit.id,
+                                                month: _selectedMonth,
+                                              ),
                                             ),
                                           );
                                         } catch (e) {
                                           // ROLLBACK on error
-                                          _localState.rollbackUpdate(_selectedMonth, currentPrices);
+                                          _localState.rollbackUpdate(
+                                            _selectedMonth,
+                                            currentPrices,
+                                          );
 
                                           if (mounted) {
-                                            ErrorDisplayUtils.showErrorSnackBar(this.context, e, onRetry: _localState.undo);
+                                            ErrorDisplayUtils.showErrorSnackBar(
+                                              this.context,
+                                              e,
+                                            );
                                           }
                                         }
                                       },
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
                                   alignment: Alignment.center,
                                   child: isProcessing
                                       ? const SizedBox(
@@ -1551,7 +2076,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                           height: 20,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
                                           ),
                                         )
                                       : Text(
@@ -1578,7 +2106,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       ),
     ).then((_) {
       // Dispose controller after dialog close animation completes (~300ms)
-      Future.delayed(const Duration(milliseconds: 350), priceController.dispose);
+      Future.delayed(
+        const Duration(milliseconds: 350),
+        priceController.dispose,
+      );
     });
   }
 
@@ -1595,13 +2126,20 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           final theme = Theme.of(context);
           final isDark = theme.brightness == Brightness.dark;
           final screenHeight = MediaQuery.of(context).size.height;
-          final maxDialogHeight = screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
+          final maxDialogHeight =
+              screenHeight *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
 
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             clipBehavior: Clip.antiAlias,
             child: Container(
-              constraints: BoxConstraints(maxWidth: 400, maxHeight: maxDialogHeight),
+              constraints: BoxConstraints(
+                maxWidth: 400,
+                maxHeight: maxDialogHeight,
+              ),
               decoration: BoxDecoration(
                 color: context.gradients.cardBackground,
                 borderRadius: BorderRadius.circular(16),
@@ -1614,7 +2152,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: context.gradients.brandPrimary,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -1624,13 +2164,23 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.block, color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.block,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            l10nDialog.priceCalendarAvailabilityForDays(_selectedDays.length),
-                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            l10nDialog.priceCalendarAvailabilityForDays(
+                              _selectedDays.length,
+                            ),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         IconButton(
@@ -1654,17 +2204,31 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                              color: isDark
+                                  ? AppColors.sectionDividerDark
+                                      .withValues(alpha: 0.5)
+                                  : AppColors.sectionDividerLight
+                                      .withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColors.sectionDividerDark
+                                    : AppColors.sectionDividerLight,
+                              ),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.info_outline, size: 18, color: context.primaryColor),
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 18,
+                                  color: context.primaryColor,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    l10nDialog.priceCalendarSelectActionForDays(_selectedDays.length),
+                                    l10nDialog.priceCalendarSelectActionForDays(
+                                      _selectedDays.length,
+                                    ),
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: context.textColorSecondary,
                                       fontSize: 13,
@@ -1675,28 +2239,34 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Theme(
-                          data: theme.copyWith(
-                            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          ),
-                          child: FilterChip(
+                          // Mark as available button - outlined with green icon
+                          FilterChip(
                             label: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (isProcessing)
-                                  const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: context.successColor,
+                                    ),
                                   )
                                 else
-                                  const Icon(Icons.check_circle, size: 18, color: Colors.white),
+                                  Icon(
+                                    Icons.check_circle,
+                                    size: 18,
+                                    color: context.successColor,
+                                  ),
                                 const SizedBox(width: 10),
-                                Expanded(child: Text(l10nDialog.priceCalendarMarkAsAvailable)),
+                                Expanded(
+                                  child: Text(
+                                    l10nDialog.priceCalendarMarkAsAvailable,
+                                  ),
+                                ),
                               ],
                             ),
-                            selected: true,
                             onSelected: isProcessing
                                 ? null
                                 : (_) async {
@@ -1705,7 +2275,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     setState(() => isProcessing = true);
 
                                     try {
-                                      final repository = ref.read(dailyPriceRepositoryProvider);
+                                      final repository = ref.read(
+                                        dailyPriceRepositoryProvider,
+                                      );
 
                                       // Use PARTIAL update to preserve existing data
                                       // Only update 'available' field, keep custom prices
@@ -1721,7 +2293,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                       // Invalidate provider to trigger reload with fresh data
                                       ref.invalidate(
                                         monthlyPricesProvider(
-                                          MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                          MonthlyPricesParams(
+                                            unitId: widget.unit.id,
+                                            month: _selectedMonth,
+                                          ),
                                         ),
                                       );
 
@@ -1732,11 +2307,20 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         _selectedDays.clear();
                                         // Trigger parent widget rebuild
                                         this.setState(() {});
-                                        ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarDaysMarkedAvailable(count));
+                                        ErrorDisplayUtils.showSuccessSnackBar(
+                                          this.context,
+                                          l10nDialog
+                                              .priceCalendarDaysMarkedAvailable(
+                                                count,
+                                              ),
+                                        );
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(
+                                          this.context,
+                                          e,
+                                        );
                                       }
                                     } finally {
                                       // Only reset if dialog still open
@@ -1745,40 +2329,55 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                       }
                                     }
                                   },
-                            selectedColor: context.successColor,
-                            backgroundColor: context.successColor,
-                            side: BorderSide(color: context.successColor, width: 1.5),
-                            labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
-                            checkmarkColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: 2,
-                            shadowColor: context.successColor.withValues(alpha: 0.3),
+                            backgroundColor: context.gradients.cardBackground,
+                            side: BorderSide(
+                              color: isDark
+                                  ? AppColors.sectionDividerDark
+                                  : AppColors.sectionDividerLight,
+                              width: 1.5,
+                            ),
+                            labelStyle: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Theme(
-                          data: theme.copyWith(
-                            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          ),
-                          child: FilterChip(
+                          const SizedBox(height: 12),
+                          // Block dates button - outlined with red icon
+                          FilterChip(
                             label: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (isProcessing)
-                                  const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: context.errorColor,
+                                    ),
                                   )
                                 else
-                                  const Icon(Icons.block, size: 18, color: Colors.white),
+                                  Icon(
+                                    Icons.block,
+                                    size: 18,
+                                    color: context.errorColor,
+                                  ),
                                 const SizedBox(width: 10),
-                                Expanded(child: Text(l10nDialog.priceCalendarBlockDates)),
+                                Expanded(
+                                  child: Text(
+                                    l10nDialog.priceCalendarBlockDates,
+                                  ),
+                                ),
                               ],
                             ),
-                            selected: true,
                             onSelected: isProcessing
                                 ? null
                                 : (_) async {
@@ -1790,20 +2389,33 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     final confirmed = await showDialog<bool>(
                                       context: context,
                                       builder: (dialogContext) => AlertDialog(
-                                        title: Text(l10nDialog.priceCalendarConfirmation),
-                                        content: Text(l10nDialog.priceCalendarConfirmBlockDays(_selectedDays.length)),
+                                        title: Text(
+                                          l10nDialog.priceCalendarConfirmation,
+                                        ),
+                                        content: Text(
+                                          l10nDialog
+                                              .priceCalendarConfirmBlockDays(
+                                                _selectedDays.length,
+                                              ),
+                                        ),
                                         actions: [
                                           TextButton(
-                                            onPressed: () => Navigator.of(dialogContext).pop(false),
+                                            onPressed: () => Navigator.of(
+                                              dialogContext,
+                                            ).pop(false),
                                             child: Text(l10nDialog.cancel),
                                           ),
                                           ElevatedButton(
-                                            onPressed: () => Navigator.of(dialogContext).pop(true),
+                                            onPressed: () => Navigator.of(
+                                              dialogContext,
+                                            ).pop(true),
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: errorColor,
                                               foregroundColor: Colors.white,
                                             ),
-                                            child: Text(l10nDialog.priceCalendarBlock),
+                                            child: Text(
+                                              l10nDialog.priceCalendarBlock,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -1814,7 +2426,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     setState(() => isProcessing = true);
 
                                     try {
-                                      final repository = ref.read(dailyPriceRepositoryProvider);
+                                      final repository = ref.read(
+                                        dailyPriceRepositoryProvider,
+                                      );
 
                                       // Use PARTIAL update to preserve existing data
                                       // Only update 'available' field, keep custom prices
@@ -1832,7 +2446,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                       // Invalidate provider to trigger reload with fresh data
                                       ref.invalidate(
                                         monthlyPricesProvider(
-                                          MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                          MonthlyPricesParams(
+                                            unitId: widget.unit.id,
+                                            month: _selectedMonth,
+                                          ),
                                         ),
                                       );
 
@@ -1843,11 +2460,19 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         _selectedDays.clear();
                                         // Trigger parent widget rebuild
                                         this.setState(() {});
-                                        ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarDaysBlocked(count));
+                                        ErrorDisplayUtils.showSuccessSnackBar(
+                                          this.context,
+                                          l10nDialog.priceCalendarDaysBlocked(
+                                            count,
+                                          ),
+                                        );
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(
+                                          this.context,
+                                          e,
+                                        );
                                       }
                                     } finally {
                                       // Only reset if dialog still open
@@ -1856,36 +2481,52 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                       }
                                     }
                                   },
-                            selectedColor: context.errorColor,
-                            backgroundColor: context.errorColor,
-                            side: BorderSide(color: context.errorColor, width: 1.5),
-                            labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
-                            checkmarkColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: 2,
-                            shadowColor: context.errorColor.withValues(alpha: 0.3),
+                            backgroundColor: context.gradients.cardBackground,
+                            side: BorderSide(
+                              color: isDark
+                                  ? AppColors.sectionDividerDark
+                                  : AppColors.sectionDividerLight,
+                              width: 1.5,
+                            ),
+                            labelStyle: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Theme(
-                          data: theme.copyWith(
-                            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          ),
-                          child: FilterChip(
+                          const SizedBox(height: 12),
+                          // Block check-in button - outlined with amber icon
+                          FilterChip(
                             label: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 isProcessing
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                    ? SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: context.warningColor,
+                                        ),
                                       )
-                                    : const Icon(Icons.login, size: 18),
+                                    : Icon(
+                                        Icons.login,
+                                        size: 18,
+                                        color: context.warningColor,
+                                      ),
                                 const SizedBox(width: 10),
-                                Flexible(child: Text(l10nDialog.priceCalendarBlockCheckInButton)),
+                                Expanded(
+                                  child: Text(
+                                    l10nDialog.priceCalendarBlockCheckInButton,
+                                  ),
+                                ),
                               ],
                             ),
                             onSelected: isProcessing
@@ -1896,7 +2537,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     setState(() => isProcessing = true);
 
                                     try {
-                                      final repository = ref.read(dailyPriceRepositoryProvider);
+                                      final repository = ref.read(
+                                        dailyPriceRepositoryProvider,
+                                      );
 
                                       // Use PARTIAL update to preserve existing data
                                       // Only update 'block_checkin' field, keep prices
@@ -1904,14 +2547,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         unitId: widget.unit.id,
                                         dates: _selectedDays.toList(),
                                         partialData: {
-                                          'block_checkin': true, // Block check-in
+                                          'block_checkin':
+                                              true, // Block check-in
                                         },
                                       );
 
                                       // Invalidate provider to trigger reload with fresh data
                                       ref.invalidate(
                                         monthlyPricesProvider(
-                                          MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                          MonthlyPricesParams(
+                                            unitId: widget.unit.id,
+                                            month: _selectedMonth,
+                                          ),
                                         ),
                                       );
 
@@ -1922,11 +2569,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         _selectedDays.clear();
                                         // Trigger parent widget rebuild
                                         this.setState(() {});
-                                        ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarCheckInBlockedForDays);
+                                        ErrorDisplayUtils.showSuccessSnackBar(
+                                          this.context,
+                                          l10nDialog
+                                              .priceCalendarCheckInBlockedForDays,
+                                        );
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(
+                                          this.context,
+                                          e,
+                                        );
                                       }
                                     } finally {
                                       // Only reset if dialog still open
@@ -1936,36 +2590,51 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     }
                                   },
                             backgroundColor: context.gradients.cardBackground,
-                            selectedColor: theme.colorScheme.primary,
-                            side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), width: 1.5),
+                            side: BorderSide(
+                              color: isDark
+                                  ? AppColors.sectionDividerDark
+                                  : AppColors.sectionDividerLight,
+                              width: 1.5,
+                            ),
                             labelStyle: TextStyle(
                               color: theme.colorScheme.onSurface,
                               fontWeight: FontWeight.w500,
                               fontSize: 14,
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Theme(
-                          data: theme.copyWith(
-                            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                            highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          ),
-                          child: FilterChip(
+                          const SizedBox(height: 12),
+                          // Block check-out button - outlined with amber icon
+                          FilterChip(
                             label: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 isProcessing
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                    ? SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: context.warningColor,
+                                        ),
                                       )
-                                    : const Icon(Icons.logout, size: 18),
+                                    : Icon(
+                                        Icons.logout,
+                                        size: 18,
+                                        color: context.warningColor,
+                                      ),
                                 const SizedBox(width: 10),
-                                Flexible(child: Text(l10nDialog.priceCalendarBlockCheckOutButton)),
+                                Expanded(
+                                  child: Text(
+                                    l10nDialog.priceCalendarBlockCheckOutButton,
+                                  ),
+                                ),
                               ],
                             ),
                             onSelected: isProcessing
@@ -1976,7 +2645,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     setState(() => isProcessing = true);
 
                                     try {
-                                      final repository = ref.read(dailyPriceRepositoryProvider);
+                                      final repository = ref.read(
+                                        dailyPriceRepositoryProvider,
+                                      );
 
                                       // Use PARTIAL update to preserve existing data
                                       // Only update 'block_checkout' field, keep prices
@@ -1984,14 +2655,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         unitId: widget.unit.id,
                                         dates: _selectedDays.toList(),
                                         partialData: {
-                                          'block_checkout': true, // Block check-out
+                                          'block_checkout':
+                                              true, // Block check-out
                                         },
                                       );
 
                                       // Invalidate provider to trigger reload with fresh data
                                       ref.invalidate(
                                         monthlyPricesProvider(
-                                          MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+                                          MonthlyPricesParams(
+                                            unitId: widget.unit.id,
+                                            month: _selectedMonth,
+                                          ),
                                         ),
                                       );
 
@@ -2002,11 +2677,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                         _selectedDays.clear();
                                         // Trigger parent widget rebuild
                                         this.setState(() {});
-                                        ErrorDisplayUtils.showSuccessSnackBar(this.context, l10nDialog.priceCalendarCheckOutBlockedForDays);
+                                        ErrorDisplayUtils.showSuccessSnackBar(
+                                          this.context,
+                                          l10nDialog
+                                              .priceCalendarCheckOutBlockedForDays,
+                                        );
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                                        ErrorDisplayUtils.showErrorSnackBar(
+                                          this.context,
+                                          e,
+                                        );
                                       }
                                     } finally {
                                       // Only reset if dialog still open
@@ -2016,38 +2698,67 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                                     }
                                   },
                             backgroundColor: context.gradients.cardBackground,
-                            selectedColor: theme.colorScheme.primary,
-                            side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), width: 1.5),
+                            side: BorderSide(
+                              color: isDark
+                                  ? AppColors.sectionDividerDark
+                                  : AppColors.sectionDividerLight,
+                              width: 1.5,
+                            ),
                             labelStyle: TextStyle(
                               color: theme.colorScheme.onSurface,
                               fontWeight: FontWeight.w500,
                               fontSize: 14,
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          // Cancel button - same style as other buttons
+                          FilterChip(
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.close,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(l10nDialog.cancel),
+                                ),
+                              ],
+                            ),
+                            onSelected: isProcessing
+                                ? null
+                                : (_) => Navigator.of(context).pop(),
+                            backgroundColor: context.gradients.cardBackground,
+                            side: BorderSide(
+                              color: isDark
+                                  ? AppColors.sectionDividerDark
+                                  : AppColors.sectionDividerLight,
+                              width: 1.5,
+                            ),
+                            labelStyle: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                  ),
-
-                  // Footer with close button
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5F7),
-                      border: Border(top: BorderSide(color: theme.dividerColor)),
-                    ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text(l10nDialog.close),
                       ),
                     ),
                   ),

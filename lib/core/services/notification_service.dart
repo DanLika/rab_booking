@@ -32,7 +32,7 @@ class NotificationService {
   /// Create a new notification with localization support
   Future<void> createNotification({
     required String ownerId,
-    required String type,
+    required NotificationType type,
     required String title,
     required String message,
     String? bookingId,
@@ -54,7 +54,9 @@ class NotificationService {
         messageKey: messageKey,
       );
 
-      await _firestore.collection(_collectionName).add(notification.toFirestore());
+      await _firestore
+          .collection(_collectionName)
+          .add(notification.toFirestore());
     } catch (e) {
       throw NotificationException.creationFailed(e);
     }
@@ -86,7 +88,9 @@ class NotificationService {
   /// Mark notification as read
   Future<void> markAsRead(String notificationId) async {
     try {
-      await _firestore.collection(_collectionName).doc(notificationId).update({'isRead': true});
+      await _firestore.collection(_collectionName).doc(notificationId).update({
+        'isRead': true,
+      });
     } catch (e) {
       throw NotificationException.updateFailed(e);
     }
@@ -98,7 +102,9 @@ class NotificationService {
       final batch = _firestore.batch();
 
       for (final id in notificationIds) {
-        batch.update(_firestore.collection(_collectionName).doc(id), {'isRead': true});
+        batch.update(_firestore.collection(_collectionName).doc(id), {
+          'isRead': true,
+        });
       }
 
       await batch.commit();
@@ -124,7 +130,9 @@ class NotificationService {
       // Process in chunks to avoid batch limit
       for (var i = 0; i < docs.length; i += batchLimit) {
         final batch = _firestore.batch();
-        final end = (i + batchLimit < docs.length) ? i + batchLimit : docs.length;
+        final end = (i + batchLimit < docs.length)
+            ? i + batchLimit
+            : docs.length;
 
         for (var j = i; j < end; j++) {
           batch.update(docs[j].reference, {'isRead': true});
@@ -161,10 +169,14 @@ class NotificationService {
 
       for (var i = 0; i < notificationIds.length; i += batchLimit) {
         final batch = _firestore.batch();
-        final end = (i + batchLimit < notificationIds.length) ? i + batchLimit : notificationIds.length;
+        final end = (i + batchLimit < notificationIds.length)
+            ? i + batchLimit
+            : notificationIds.length;
 
         for (var j = i; j < end; j++) {
-          batch.delete(_firestore.collection(_collectionName).doc(notificationIds[j]));
+          batch.delete(
+            _firestore.collection(_collectionName).doc(notificationIds[j]),
+          );
         }
 
         await batch.commit();
@@ -182,7 +194,10 @@ class NotificationService {
   /// Note: Handles Firestore batch limit of 500 operations
   Future<void> deleteAllNotifications(String ownerId) async {
     try {
-      final snapshot = await _firestore.collection(_collectionName).where('ownerId', isEqualTo: ownerId).get();
+      final snapshot = await _firestore
+          .collection(_collectionName)
+          .where('ownerId', isEqualTo: ownerId)
+          .get();
 
       // Firestore batch limit is 500 operations
       const batchLimit = 500;
@@ -191,7 +206,9 @@ class NotificationService {
       // Process in chunks to avoid batch limit
       for (var i = 0; i < docs.length; i += batchLimit) {
         final batch = _firestore.batch();
-        final end = (i + batchLimit < docs.length) ? i + batchLimit : docs.length;
+        final end = (i + batchLimit < docs.length)
+            ? i + batchLimit
+            : docs.length;
 
         for (var j = i; j < end; j++) {
           batch.delete(docs[j].reference);
@@ -215,8 +232,20 @@ class NotificationService {
     required String guestName,
     required String action, // 'created', 'updated', 'cancelled'
   }) async {
+    // Map action string to NotificationType
+    final notificationType = switch (action) {
+      'created' => NotificationType.bookingCreated,
+      'updated' => NotificationType.bookingUpdated,
+      'cancelled' => NotificationType.bookingCancelled,
+      _ => NotificationType.bookingCreated,
+    };
+
     // Fallback titles (for backward compatibility)
-    final fallbackTitles = {'created': 'New Booking', 'updated': 'Booking Updated', 'cancelled': 'Booking Cancelled'};
+    final fallbackTitles = {
+      'created': 'New Booking',
+      'updated': 'Booking Updated',
+      'cancelled': 'Booking Cancelled',
+    };
 
     // Fallback messages (for backward compatibility)
     final fallbackMessages = {
@@ -240,7 +269,7 @@ class NotificationService {
 
     await createNotification(
       ownerId: ownerId,
-      type: 'booking_$action',
+      type: notificationType,
       title: fallbackTitles[action] ?? 'Notification',
       message: fallbackMessages[action] ?? 'New booking activity.',
       bookingId: bookingId,
@@ -259,9 +288,10 @@ class NotificationService {
   }) async {
     await createNotification(
       ownerId: ownerId,
-      type: 'payment_received',
+      type: NotificationType.paymentReceived,
       title: 'Payment Received',
-      message: 'Received payment from $guestName for €${amount.toStringAsFixed(2)}.',
+      message:
+          'Received payment from $guestName for €${amount.toStringAsFixed(2)}.',
       bookingId: bookingId,
       metadata: {'guestName': guestName, 'amount': amount},
       titleKey: 'notificationPaymentReceivedTitle',

@@ -18,16 +18,13 @@ class CalendarStateBuilders {
             color: Theme.of(context).disabledColor,
           ),
           const SizedBox(height: 16),
-          Text(
-            'No units found',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('No units found', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(
             'Add units to your properties to see them in the calendar',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -40,10 +37,7 @@ class CalendarStateBuilders {
     return Column(
       children: [
         // Header skeleton
-        const SkeletonLoader(
-          width: double.infinity,
-          height: 60,
-        ),
+        const SkeletonLoader(width: double.infinity, height: 60),
         const SizedBox(height: 8),
         // Grid skeleton
         Expanded(
@@ -52,10 +46,7 @@ class CalendarStateBuilders {
             itemBuilder: (context, index) {
               return const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: SkeletonLoader(
-                  width: double.infinity,
-                  height: 60,
-                ),
+                child: SkeletonLoader(width: double.infinity, height: 60),
               );
             },
           ),
@@ -88,8 +79,8 @@ class CalendarStateBuilders {
           Text(
             error.toString(),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),

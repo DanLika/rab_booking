@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
-import '../../presentation/utils/scroll_direction_tracker.dart';
+import 'scroll_direction.dart';
 
 /// Windowed bookings state for bidirectional virtual scrolling
 ///

@@ -12,7 +12,11 @@ class BookingCardPaymentInfo extends StatelessWidget {
   final BookingModel booking;
   final bool isMobile;
 
-  const BookingCardPaymentInfo({super.key, required this.booking, required this.isMobile});
+  const BookingCardPaymentInfo({
+    super.key,
+    required this.booking,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +51,9 @@ class BookingCardPaymentInfo extends StatelessWidget {
                         child: _PaymentInfoColumn(
                           label: l10n.ownerBookingCardPaid,
                           value: booking.formattedPaidAmount,
-                          valueStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                          valueStyle: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -60,7 +66,9 @@ class BookingCardPaymentInfo extends StatelessWidget {
                             // Suptilnija boja - ne crvena/narančasta
                             color: booking.isFullyPaid
                                 ? AppColors.success
-                                : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                                : theme.colorScheme.onSurface.withAlpha(
+                                    (0.7 * 255).toInt(),
+                                  ),
                           ),
                         ),
                       ),
@@ -87,7 +95,9 @@ class BookingCardPaymentInfo extends StatelessWidget {
                   child: _PaymentInfoColumn(
                     label: l10n.ownerBookingCardPaid,
                     value: booking.formattedPaidAmount,
-                    valueStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    valueStyle: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -99,7 +109,9 @@ class BookingCardPaymentInfo extends StatelessWidget {
                       // Suptilnija boja - ne crvena/narančasta
                       color: booking.isFullyPaid
                           ? AppColors.success
-                          : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                          : theme.colorScheme.onSurface.withAlpha(
+                              (0.7 * 255).toInt(),
+                            ),
                     ),
                   ),
                 ),
@@ -112,7 +124,9 @@ class BookingCardPaymentInfo extends StatelessWidget {
         SizedBox(height: isMobile ? 8 : 12),
         LinearProgressIndicator(
           value: booking.paymentPercentage / 100,
-          backgroundColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+          backgroundColor: theme.colorScheme.surfaceContainerHighest.withAlpha(
+            (0.3 * 255).toInt(),
+          ),
           valueColor: AlwaysStoppedAnimation<Color>(
             booking.isFullyPaid ? AppColors.success : theme.colorScheme.primary,
           ),
@@ -121,7 +135,9 @@ class BookingCardPaymentInfo extends StatelessWidget {
         Text(
           booking.isFullyPaid
               ? l10n.ownerBookingCardFullyPaid
-              : l10n.ownerBookingCardPercentPaid(booking.paymentPercentage.toStringAsFixed(0)),
+              : l10n.ownerBookingCardPercentPaid(
+                  booking.paymentPercentage.toStringAsFixed(0),
+                ),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
             fontWeight: FontWeight.w500,
@@ -134,7 +150,11 @@ class BookingCardPaymentInfo extends StatelessWidget {
 
 /// Helper widget for payment info column
 class _PaymentInfoColumn extends StatelessWidget {
-  const _PaymentInfoColumn({required this.label, required this.value, this.valueStyle});
+  const _PaymentInfoColumn({
+    required this.label,
+    required this.value,
+    this.valueStyle,
+  });
 
   final String label;
   final String value;

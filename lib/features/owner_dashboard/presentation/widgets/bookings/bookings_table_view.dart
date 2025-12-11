@@ -37,16 +37,23 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     // Check if all selected bookings are pending
-    final selectedBookings = widget.bookings.where((b) => _selectedBookingIds.contains(b.booking.id)).toList();
+    final selectedBookings = widget.bookings
+        .where((b) => _selectedBookingIds.contains(b.booking.id))
+        .toList();
     final allSelectedArePending =
-        selectedBookings.isNotEmpty && selectedBookings.every((b) => b.booking.status == BookingStatus.pending);
+        selectedBookings.isNotEmpty &&
+        selectedBookings.every(
+          (b) => b.booking.status == BookingStatus.pending,
+        );
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     // Use design system colors for consistency
     final cardBackground = context.gradients.cardBackground;
-    final borderColor = isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight;
+    final borderColor = isDark
+        ? AppColors.sectionDividerDark
+        : AppColors.sectionDividerLight;
 
     return Container(
       decoration: BoxDecoration(
@@ -74,7 +81,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                     // Selection count badge with gradient
                     Flexible(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(16),
@@ -82,13 +92,21 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.onPrimary),
+                            Icon(
+                              Icons.check_circle,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
                             const SizedBox(width: 6),
                             Flexible(
                               child: Text(
-                                l10n.ownerTableSelected(_selectedBookingIds.length),
+                                l10n.ownerTableSelected(
+                                  _selectedBookingIds.length,
+                                ),
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
                                 ),
@@ -108,9 +126,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                         setState(_selectedBookingIds.clear);
                       },
                       icon: const Icon(Icons.close, size: 18),
-                      label: Text(l10n.ownerTableClearSelection, overflow: TextOverflow.ellipsis),
+                      label: Text(
+                        l10n.ownerTableClearSelection,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimaryContainer,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
                     ),
@@ -131,8 +154,13 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                           icon: const Icon(Icons.edit_note),
                           tooltip: l10n.ownerTableBulkActions,
                           style: IconButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.15),
-                            foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer
+                                .withValues(alpha: 0.15),
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
                           ),
                         );
                       },
@@ -140,7 +168,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                         // Confirm action (only if all pending)
                         if (allSelectedArePending)
                           MenuItemButton(
-                            leadingIcon: const Icon(Icons.check_circle_outline, color: AppColors.success),
+                            leadingIcon: const Icon(
+                              Icons.check_circle_outline,
+                              color: AppColors.success,
+                            ),
                             onPressed: _confirmSelectedBookings,
                             child: Text(l10n.ownerTableConfirmSelected),
                           ),
@@ -148,14 +179,20 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                         // Reject action (only if all pending)
                         if (allSelectedArePending)
                           MenuItemButton(
-                            leadingIcon: const Icon(Icons.cancel_outlined, color: AppColors.error),
+                            leadingIcon: const Icon(
+                              Icons.cancel_outlined,
+                              color: AppColors.error,
+                            ),
                             onPressed: _rejectSelectedBookings,
                             child: Text(l10n.ownerTableRejectSelected),
                           ),
 
                         // Delete action (always available)
                         MenuItemButton(
-                          leadingIcon: const Icon(Icons.delete_outline, color: AppColors.error),
+                          leadingIcon: const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.error,
+                          ),
                           onPressed: _deleteSelectedBookings,
                           child: Text(l10n.ownerTableDeleteSelected),
                         ),
@@ -170,15 +207,21 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(bottom: 16),
               child: Container(
-                constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
+                constraints: BoxConstraints(
+                  minWidth: MediaQuery.of(context).size.width - 48,
+                ),
                 child: DataTable(
                   headingRowColor: WidgetStateProperty.resolveWith((states) {
-                    return theme.colorScheme.primary.withAlpha((0.12 * 255).toInt());
+                    return theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    );
                   }),
                   headingTextStyle: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
-                    color: isDark ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.87),
+                    color: isDark
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.87),
                   ),
                   columns: [
                     DataColumn(label: Text(l10n.ownerTableColumnGuest)),
@@ -192,7 +235,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                     DataColumn(label: Text(l10n.ownerTableColumnSource)),
                     DataColumn(label: Text(l10n.ownerTableColumnActions)),
                   ],
-                  rows: widget.bookings.map((b) => _buildTableRow(b, l10n)).toList(),
+                  rows: widget.bookings
+                      .map((b) => _buildTableRow(b, l10n))
+                      .toList(),
                 ),
               ),
             ),
@@ -233,7 +278,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               ),
               Text(
                 ownerBooking.guestEmail,
-                style: TextStyle(fontSize: 12, color: context.textColorSecondary),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.textColorSecondary,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -254,7 +302,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               ),
               Text(
                 unit.name,
-                style: TextStyle(fontSize: 12, color: context.textColorSecondary),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.textColorSecondary,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -284,7 +335,11 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             ),
             child: Text(
               booking.status.displayName,
-              style: TextStyle(color: booking.status.color, fontWeight: FontWeight.bold, fontSize: 12),
+              style: TextStyle(
+                color: booking.status.color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
           ),
         ),
@@ -364,7 +419,11 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           const SizedBox(width: 4),
           Text(
             displayName,
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -392,7 +451,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             value: 'confirm',
             child: Row(
               children: [
-                const Icon(Icons.check_circle_outline, color: AppColors.success),
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: AppColors.success,
+                ),
                 const SizedBox(width: 8),
                 Text(l10n.ownerTableActionConfirm),
               ],
@@ -402,13 +464,21 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           PopupMenuItem(
             value: 'complete',
             child: Row(
-              children: [const Icon(Icons.done_all), const SizedBox(width: 8), Text(l10n.ownerTableActionComplete)],
+              children: [
+                const Icon(Icons.done_all),
+                const SizedBox(width: 8),
+                Text(l10n.ownerTableActionComplete),
+              ],
             ),
           ),
         PopupMenuItem(
           value: 'edit',
           child: Row(
-            children: [const Icon(Icons.edit_outlined), const SizedBox(width: 8), Text(l10n.ownerTableActionEdit)],
+            children: [
+              const Icon(Icons.edit_outlined),
+              const SizedBox(width: 8),
+              Text(l10n.ownerTableActionEdit),
+            ],
           ),
         ),
         if (booking.canBeCancelled)
@@ -439,7 +509,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             children: [
               const Icon(Icons.delete_outline, color: AppColors.error),
               const SizedBox(width: 8),
-              Text(l10n.ownerTableActionDelete, style: const TextStyle(color: AppColors.error)),
+              Text(
+                l10n.ownerTableActionDelete,
+                style: const TextStyle(color: AppColors.error),
+              ),
             ],
           ),
         ),
@@ -482,7 +555,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
   void _showBookingDetailsById(String bookingId) {
     // Find booking in the list
-    final ownerBooking = widget.bookings.firstWhere((b) => b.booking.id == bookingId);
+    final ownerBooking = widget.bookings.firstWhere(
+      (b) => b.booking.id == bookingId,
+    );
     _showBookingDetails(ownerBooking);
   }
 
@@ -496,8 +571,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           title: Text(dialogL10n.ownerTableConfirmBooking),
           content: Text(dialogL10n.ownerTableConfirmBookingMessage),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
-            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(dialogL10n.confirm)),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(dialogL10n.confirm),
+            ),
           ],
         );
       },
@@ -509,18 +590,24 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.confirmBooking(bookingId);
 
         if (mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingConfirmed);
-          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
-            bookingId,
-            BookingStatus.confirmed,
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.ownerTableBookingConfirmed,
           );
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .updateBookingStatus(bookingId, BookingStatus.confirmed);
 
           // Auto-regenerate iCal if enabled
           _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.error,
+          );
         }
       }
     }
@@ -536,7 +623,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           title: Text(dialogL10n.ownerTableCompleteBooking),
           content: Text(dialogL10n.ownerTableCompleteBookingMessage),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(dialogL10n.ownerTableActionComplete),
@@ -552,18 +642,24 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.completeBooking(bookingId);
 
         if (mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingCompleted);
-          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
-            bookingId,
-            BookingStatus.completed,
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.ownerTableBookingCompleted,
           );
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .updateBookingStatus(bookingId, BookingStatus.completed);
 
           // Auto-regenerate iCal if enabled
           _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.error,
+          );
         }
       }
     }
@@ -616,7 +712,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: FilledButton.styleFrom(backgroundColor: AppColors.error),
@@ -632,30 +731,40 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         final repository = ref.read(ownerBookingsRepositoryProvider);
         await repository.cancelBooking(
           bookingId,
-          reasonController.text.isEmpty ? l10n.ownerTableCancelledByOwner : reasonController.text,
+          reasonController.text.isEmpty
+              ? l10n.ownerTableCancelledByOwner
+              : reasonController.text,
           sendEmail: sendEmailNotifier.value,
         );
 
         if (mounted) {
-          ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerTableBookingCancelled);
-          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
-            bookingId,
-            BookingStatus.cancelled,
+          ErrorDisplayUtils.showWarningSnackBar(
+            context,
+            l10n.ownerTableBookingCancelled,
           );
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .updateBookingStatus(bookingId, BookingStatus.cancelled);
 
           // Auto-regenerate iCal if enabled
           _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.error,
+          );
         }
       }
     }
   }
 
   void _editBooking(String bookingId) async {
-    final ownerBooking = widget.bookings.firstWhere((b) => b.booking.id == bookingId);
+    final ownerBooking = widget.bookings.firstWhere(
+      (b) => b.booking.id == bookingId,
+    );
     await showEditBookingDialog(context, ref, ownerBooking.booking);
   }
 
@@ -673,7 +782,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           title: Text(dialogL10n.ownerTableDeleteBooking),
           content: Text(dialogL10n.ownerTableDeleteBookingMessage),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: FilledButton.styleFrom(backgroundColor: AppColors.error),
@@ -690,12 +802,21 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         await repository.deleteBooking(bookingId);
 
         if (mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingDeleted);
-          ref.read(windowedBookingsNotifierProvider.notifier).removeBooking(bookingId);
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.ownerTableBookingDeleted,
+          );
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .removeBooking(bookingId);
         }
       } catch (e) {
         if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.error,
+          );
         }
       }
     }
@@ -712,9 +833,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         final dialogL10n = AppLocalizations.of(dialogContext);
         return AlertDialog(
           title: Text(dialogL10n.ownerTableConfirmSelectedTitle),
-          content: Text(dialogL10n.ownerTableConfirmSelectedMessage(count, label)),
+          content: Text(
+            dialogL10n.ownerTableConfirmSelectedMessage(count, label),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: FilledButton.styleFrom(backgroundColor: AppColors.success),
@@ -735,21 +861,27 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
 
         if (mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingsConfirmed(count, label));
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.ownerTableBookingsConfirmed(count, label),
+          );
 
           // Update each booking status in local state
           for (final bookingId in _selectedBookingIds) {
-            ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
-              bookingId,
-              BookingStatus.confirmed,
-            );
+            ref
+                .read(windowedBookingsNotifierProvider.notifier)
+                .updateBookingStatus(bookingId, BookingStatus.confirmed);
           }
 
           setState(_selectedBookingIds.clear);
         }
       } catch (e) {
         if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.error,
+          );
         }
       }
     }
@@ -789,7 +921,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: FilledButton.styleFrom(backgroundColor: AppColors.error),
@@ -803,7 +938,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     if (confirmed == true && mounted) {
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
-        final reason = reasonController.text.trim().isEmpty ? null : reasonController.text.trim();
+        final reason = reasonController.text.trim().isEmpty
+            ? null
+            : reasonController.text.trim();
 
         // Reject all selected bookings
         for (final bookingId in _selectedBookingIds) {
@@ -811,21 +948,27 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
 
         if (mounted) {
-          ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerTableBookingsRejected(count, label));
+          ErrorDisplayUtils.showWarningSnackBar(
+            context,
+            l10n.ownerTableBookingsRejected(count, label),
+          );
 
           // Update each booking status in local state (rejected = cancelled)
           for (final bookingId in _selectedBookingIds) {
-            ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(
-              bookingId,
-              BookingStatus.cancelled,
-            );
+            ref
+                .read(windowedBookingsNotifierProvider.notifier)
+                .updateBookingStatus(bookingId, BookingStatus.cancelled);
           }
 
           setState(_selectedBookingIds.clear);
         }
       } catch (e) {
         if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.error,
+          );
         }
       } finally {
         reasonController.dispose();
@@ -846,9 +989,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         final dialogL10n = AppLocalizations.of(dialogContext);
         return AlertDialog(
           title: Text(dialogL10n.ownerTableDeleteSelectedTitle),
-          content: Text(dialogL10n.ownerTableDeleteSelectedMessage(count, label)),
+          content: Text(
+            dialogL10n.ownerTableDeleteSelectedMessage(count, label),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(dialogL10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: FilledButton.styleFrom(backgroundColor: AppColors.error),
@@ -869,7 +1017,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
 
         if (mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerTableBookingsDeleted(count, label));
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.ownerTableBookingsDeleted(count, label),
+          );
 
           // Remove each deleted booking from local state
           _selectedBookingIds.forEach(
@@ -880,7 +1031,11 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       } catch (e) {
         if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.error);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.error,
+          );
         }
       }
     }
@@ -890,7 +1045,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   void _triggerIcalRegeneration(String bookingId) async {
     try {
       // Find booking in the list
-      final ownerBooking = widget.bookings.firstWhere((b) => b.booking.id == bookingId);
+      final ownerBooking = widget.bookings.firstWhere(
+        (b) => b.booking.id == bookingId,
+      );
 
       // Get iCal export service
       final icalService = ref.read(icalExportServiceProvider);

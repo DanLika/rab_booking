@@ -25,7 +25,13 @@ class SmartBookingTooltip {
   }) {
     if (PlatformUtils.supportsHover && position != null) {
       // Desktop/Web: Show hover tooltip overlay
-      _showHoverTooltip(context, booking, position, hasConflict, conflictingBookings);
+      _showHoverTooltip(
+        context,
+        booking,
+        position,
+        hasConflict,
+        conflictingBookings,
+      );
     } else {
       // Mobile: Show bottom sheet
       _showBottomSheet(context, booking, hasConflict, conflictingBookings);
@@ -118,7 +124,9 @@ class SmartBookingTooltip {
           color: Theme.of(context).scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -127,7 +135,10 @@ class SmartBookingTooltip {
               margin: const EdgeInsets.only(top: 12, bottom: 8),
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             _TooltipContent(
               booking: booking,
@@ -207,7 +218,9 @@ class _TooltipContent extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.orange.withAlpha((0.15 * 255).toInt()),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withAlpha((0.4 * 255).toInt())),
+                border: Border.all(
+                  color: Colors.orange.withAlpha((0.4 * 255).toInt()),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -243,13 +256,21 @@ class _TooltipContent extends StatelessWidget {
             isCompact: isCompact,
           ),
 
-          Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
+          Divider(
+            height: 16,
+            color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+          ),
 
           // Stats
           Row(
             children: [
               Expanded(
-                child: _InfoRow(icon: Icons.nightlight_round, label: 'Noći', value: '$nights', isCompact: isCompact),
+                child: _InfoRow(
+                  icon: Icons.nightlight_round,
+                  label: 'Noći',
+                  value: '$nights',
+                  isCompact: isCompact,
+                ),
               ),
               Expanded(
                 child: _InfoRow(
@@ -264,7 +285,10 @@ class _TooltipContent extends StatelessWidget {
 
           // Price (if available)
           if (booking.totalPrice > 0) ...[
-            Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
+            Divider(
+              height: 16,
+              color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+            ),
             _InfoRow(
               icon: Icons.payments,
               label: 'Cijena',
@@ -275,20 +299,43 @@ class _TooltipContent extends StatelessWidget {
           ],
 
           // Source - only for non-external bookings (external bookings show badge at top)
-          if (!booking.isExternalBooking && booking.source != null && booking.source != 'manual') ...[
-            Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
-            _InfoRow(icon: Icons.source, label: 'Izvor', value: booking.sourceDisplayName, isCompact: isCompact),
+          if (!booking.isExternalBooking &&
+              booking.source != null &&
+              booking.source != 'manual') ...[
+            Divider(
+              height: 16,
+              color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+            ),
+            _InfoRow(
+              icon: Icons.source,
+              label: 'Izvor',
+              value: booking.sourceDisplayName,
+              isCompact: isCompact,
+            ),
           ],
 
           // Notes (if available and not compact)
-          if (!isCompact && booking.notes != null && booking.notes!.isNotEmpty) ...[
-            Divider(height: 16, color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
+          if (!isCompact &&
+              booking.notes != null &&
+              booking.notes!.isNotEmpty) ...[
+            Divider(
+              height: 16,
+              color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+            ),
             Text(
               'Napomena:',
-              style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey[600], fontWeight: FontWeight.w600),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 4),
-            Text(booking.notes!, style: theme.textTheme.bodySmall, maxLines: 3, overflow: TextOverflow.ellipsis),
+            Text(
+              booking.notes!,
+              style: theme.textTheme.bodySmall,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ],
       ),
@@ -322,7 +369,11 @@ class _ConflictWarningBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.warning_rounded, color: Colors.red.shade700, size: isCompact ? 16 : 20),
+              Icon(
+                Icons.warning_rounded,
+                color: Colors.red.shade700,
+                size: isCompact ? 16 : 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -336,7 +387,8 @@ class _ConflictWarningBanner extends StatelessWidget {
               ),
             ],
           ),
-          if (conflictingBookings != null && conflictingBookings!.isNotEmpty) ...[
+          if (conflictingBookings != null &&
+              conflictingBookings!.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               'Konflikt sa:',
@@ -347,43 +399,54 @@ class _ConflictWarningBanner extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            ...conflictingBookings!.take(3).map((conflict) => Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Row(
-                children: [
-                  Icon(Icons.person, size: isCompact ? 10 : 12, color: Colors.red.shade600),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      '${conflict.guestName ?? "Gost"} (${dateFormat.format(conflict.checkIn)} - ${dateFormat.format(conflict.checkOut)})',
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: isCompact ? 9 : 10,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            ...conflictingBookings!
+                .take(3)
+                .map(
+                  (conflict) => Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.person,
+                          size: isCompact ? 10 : 12,
+                          color: Colors.red.shade600,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${conflict.guestName ?? "Gost"} (${dateFormat.format(conflict.checkIn)} - ${dateFormat.format(conflict.checkOut)})',
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontSize: isCompact ? 9 : 10,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (conflict.sourceDisplayName.isNotEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(left: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              conflict.sourceDisplayName,
+                              style: TextStyle(
+                                fontSize: isCompact ? 8 : 9,
+                                color: Colors.red.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  if (conflict.sourceDisplayName.isNotEmpty)
-                    Container(
-                      margin: const EdgeInsets.only(left: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade100,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        conflict.sourceDisplayName,
-                        style: TextStyle(
-                          fontSize: isCompact ? 8 : 9,
-                          color: Colors.red.shade800,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            )),
+                ),
             if (conflictingBookings!.length > 3)
               Text(
                 '+${conflictingBookings!.length - 3} više...',
@@ -424,7 +487,11 @@ class _InfoRow extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: isCompact ? 3 : 4),
       child: Row(
         children: [
-          Icon(icon, size: isCompact ? 14 : 16, color: isHighlight ? AppColors.success : Colors.grey[600]),
+          Icon(
+            icon,
+            size: isCompact ? 14 : 16,
+            color: isHighlight ? AppColors.success : Colors.grey[600],
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Row(
@@ -432,7 +499,10 @@ class _InfoRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: isCompact ? 11 : 13),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                    fontSize: isCompact ? 11 : 13,
+                  ),
                 ),
                 Text(
                   value,
@@ -468,7 +538,11 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         _getStatusText(status),
-        style: TextStyle(color: status.color, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: status.color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -505,7 +579,8 @@ class _SmartPositionedTooltip extends StatefulWidget {
   });
 
   @override
-  State<_SmartPositionedTooltip> createState() => _SmartPositionedTooltipState();
+  State<_SmartPositionedTooltip> createState() =>
+      _SmartPositionedTooltipState();
 }
 
 class _SmartPositionedTooltipState extends State<_SmartPositionedTooltip> {
@@ -518,18 +593,30 @@ class _SmartPositionedTooltipState extends State<_SmartPositionedTooltip> {
 
     // Calculate smart positioning
     // Horizontal: Show left if too close to right edge, otherwise right
-    final showLeft = (widget.position.dx + widget.tooltipWidth + widget.padding) > widget.screenSize.width;
+    final showLeft =
+        (widget.position.dx + widget.tooltipWidth + widget.padding) >
+        widget.screenSize.width;
     final left = showLeft
         ? widget.position.dx - widget.tooltipWidth - widget.padding
         : widget.position.dx + widget.padding;
 
     // Vertical: Show above if too close to bottom edge, otherwise below
-    final showAbove = (widget.position.dy + tooltipHeight + widget.padding) > widget.screenSize.height;
-    final top = showAbove ? widget.position.dy - tooltipHeight - widget.padding : widget.position.dy + widget.padding;
+    final showAbove =
+        (widget.position.dy + tooltipHeight + widget.padding) >
+        widget.screenSize.height;
+    final top = showAbove
+        ? widget.position.dy - tooltipHeight - widget.padding
+        : widget.position.dy + widget.padding;
 
     return Positioned(
-      left: left.clamp(widget.padding, widget.screenSize.width - widget.tooltipWidth - widget.padding),
-      top: top.clamp(widget.padding, widget.screenSize.height - tooltipHeight - widget.padding),
+      left: left.clamp(
+        widget.padding,
+        widget.screenSize.width - widget.tooltipWidth - widget.padding,
+      ),
+      top: top.clamp(
+        widget.padding,
+        widget.screenSize.height - tooltipHeight - widget.padding,
+      ),
       child: Container(key: _key, child: widget.child),
     );
   }

@@ -7,9 +7,9 @@ class InputDecorationHelper {
   InputDecorationHelper._();
 
   /// Get dropdown menu color based on theme
+  /// Uses inputFillColor from gradients for consistency with input fields
   static Color getDropdownColor(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFF252330) : Colors.white;
+    return context.gradients.inputFillColor;
   }
 
   /// Get dropdown border radius

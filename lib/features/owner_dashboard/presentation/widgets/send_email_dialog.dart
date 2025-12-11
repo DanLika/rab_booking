@@ -45,8 +45,10 @@ enum EmailTemplate {
 
   String getMessage(BookingModel booking) {
     final guestName = booking.guestName ?? 'Poštovani';
-    final checkIn = '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}';
-    final checkOut = '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}';
+    final checkIn =
+        '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}';
+    final checkOut =
+        '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}';
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
     switch (this) {
@@ -102,7 +104,11 @@ Srdačan pozdrav''';
 /// Send Custom Email Dialog - Phase 2 Feature
 ///
 /// Allows property owners to send custom emails to guests
-Future<void> showSendEmailDialog(BuildContext context, WidgetRef ref, BookingModel booking) async {
+Future<void> showSendEmailDialog(
+  BuildContext context,
+  WidgetRef ref,
+  BookingModel booking,
+) async {
   return showDialog(
     context: context,
     builder: (context) => _SendEmailDialog(booking: booking),
@@ -152,7 +158,10 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
-    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: 500);
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(
+      context,
+      maxWidth: 500,
+    );
     final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
     final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -163,11 +172,19 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
-        constraints: BoxConstraints(maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
+        constraints: BoxConstraints(
+          maxHeight:
+              screenHeight *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -178,7 +195,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
               padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
+                ),
               ),
               child: Row(
                 children: [
@@ -188,18 +207,28 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.email, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.email,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.sendEmailTitle,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
@@ -235,8 +264,12 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isDark
-                                ? const Color(0xFF334155).withAlpha((0.5 * 255).toInt()) // slate700
-                                : const Color(0xFF0EA5E9).withAlpha((0.25 * 255).toInt()), // sky500
+                                ? const Color(0xFF334155).withAlpha(
+                                    (0.5 * 255).toInt(),
+                                  ) // slate700
+                                : const Color(
+                                    0xFF0EA5E9,
+                                  ).withAlpha((0.25 * 255).toInt()), // sky500
                           ),
                         ),
                         child: Row(
@@ -245,8 +278,12 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color: isDark
-                                    ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
-                                    : const Color(0xFF0EA5E9).withAlpha((0.12 * 255).toInt()), // sky500
+                                    ? theme.colorScheme.primary.withAlpha(
+                                        (0.15 * 255).toInt(),
+                                      )
+                                    : const Color(0xFF0EA5E9).withAlpha(
+                                        (0.12 * 255).toInt(),
+                                      ), // sky500
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -278,7 +315,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: isDark
-                                          ? Colors.white.withAlpha((0.75 * 255).toInt())
+                                          ? Colors.white.withAlpha(
+                                              (0.75 * 255).toInt(),
+                                            )
                                           : const Color(0xFF0369A1), // sky700
                                     ),
                                   ),
@@ -291,14 +330,22 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                       const SizedBox(height: 16),
 
                       // Template selector - Modern design
-                      Text(l10n.sendEmailTemplate, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      Text(
+                        l10n.sendEmailTemplate,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: context.gradients.cardBackground,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: context.gradients.sectionBorder),
+                          border: Border.all(
+                            color: context.gradients.sectionBorder,
+                          ),
                         ),
                         child: Column(
                           children: EmailTemplate.values.map((template) {
@@ -311,28 +358,44 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                   onTap: () => _loadTemplate(template),
                                   borderRadius: BorderRadius.circular(10),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
                                     decoration: BoxDecoration(
-                                      gradient: isSelected ? context.gradients.brandPrimary : null,
-                                      color: isSelected ? null : Colors.transparent,
+                                      gradient: isSelected
+                                          ? context.gradients.brandPrimary
+                                          : null,
+                                      color: isSelected
+                                          ? null
+                                          : Colors.transparent,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Row(
                                       children: [
                                         Icon(
-                                          isSelected ? Icons.check_circle : Icons.circle_outlined,
+                                          isSelected
+                                              ? Icons.check_circle
+                                              : Icons.circle_outlined,
                                           size: 20,
                                           color: isSelected
                                               ? Colors.white
-                                              : theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                                              : theme.colorScheme.onSurface
+                                                    .withAlpha(
+                                                      (0.5 * 255).toInt(),
+                                                    ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Text(
                                             template.getDisplayName(l10n),
                                             style: TextStyle(
-                                              color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : theme.colorScheme.onSurface,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w500,
                                               fontSize: 14,
                                             ),
                                           ),
@@ -358,7 +421,8 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           context: context,
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) return l10n.sendEmailSubjectRequired;
+                          if (value == null || value.trim().isEmpty)
+                            return l10n.sendEmailSubjectRequired;
                           return null;
                         },
                       ),
@@ -374,8 +438,10 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           context: context,
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) return l10n.sendEmailMessageRequired;
-                          if (value.trim().length < 10) return l10n.sendEmailMessageTooShort;
+                          if (value == null || value.trim().isEmpty)
+                            return l10n.sendEmailMessageRequired;
+                          if (value.trim().length < 10)
+                            return l10n.sendEmailMessageTooShort;
                           return null;
                         },
                       ),
@@ -386,12 +452,16 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? const Color(0xFF1E293B).withAlpha((0.6 * 255).toInt()) // slate800
+                              ? const Color(0xFF1E293B).withAlpha(
+                                  (0.6 * 255).toInt(),
+                                ) // slate800
                               : const Color(0xFFF1F5F9), // slate100
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: isDark
-                                ? const Color(0xFF475569).withAlpha((0.4 * 255).toInt()) // slate600
+                                ? const Color(0xFF475569).withAlpha(
+                                    (0.4 * 255).toInt(),
+                                  ) // slate600
                                 : const Color(0xFFCBD5E1), // slate300
                           ),
                         ),
@@ -427,25 +497,51 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
 
             // Footer - Modern design
             Container(
-              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: contentPadding,
+                vertical: 16,
+              ),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
-                border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()))),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
+                color: isDark
+                    ? const Color(0xFF1E1E2A)
+                    : const Color(0xFFF8F8FA),
+                border: Border(
+                  top: BorderSide(
+                    color: context.gradients.sectionBorder.withAlpha(
+                      (0.5 * 255).toInt(),
+                    ),
+                  ),
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(11),
+                ),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        side: BorderSide(color: context.gradients.sectionBorder, width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        side: BorderSide(
+                          color: context.gradients.sectionBorder,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: Text(
                         l10n.sendEmailCancel,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -458,7 +554,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+                            color: theme.colorScheme.primary.withAlpha(
+                              (0.3 * 255).toInt(),
+                            ),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -470,19 +568,32 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           backgroundColor: Colors.transparent,
                           foregroundColor: Colors.white,
                           shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         icon: _isLoading
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Icon(Icons.send, size: 20),
                         label: Text(
-                          _isLoading ? l10n.sendEmailSending : l10n.sendEmailSend,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          _isLoading
+                              ? l10n.sendEmailSending
+                              : l10n.sendEmailSend,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -501,8 +612,12 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     // Validate guest email exists
-    if (widget.booking.guestEmail == null || widget.booking.guestEmail!.isEmpty) {
-      ErrorDisplayUtils.showWarningSnackBar(context, AppLocalizations.of(context).sendEmailNoGuestEmail);
+    if (widget.booking.guestEmail == null ||
+        widget.booking.guestEmail!.isEmpty) {
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        AppLocalizations.of(context).sendEmailNoGuestEmail,
+      );
       return;
     }
 
@@ -525,13 +640,19 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
         Navigator.of(context).pop();
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          AppLocalizations.of(context).sendEmailSuccess(widget.booking.guestName ?? ''),
+          AppLocalizations.of(
+            context,
+          ).sendEmailSuccess(widget.booking.guestName ?? ''),
         );
       }
     } catch (e) {
       // FIXED: Use ErrorDisplayUtils for user-friendly error messages
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).sendEmailError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: AppLocalizations.of(context).sendEmailError,
+        );
       }
     } finally {
       if (mounted) {

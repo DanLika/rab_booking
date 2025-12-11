@@ -22,8 +22,12 @@ class CalendarFilterChips extends ConsumerWidget {
       constraints: const BoxConstraints(maxHeight: 36),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt()),
-        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt()),
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).dividerColor),
+        ),
       ),
       child: Row(
         children: [
@@ -37,7 +41,11 @@ class CalendarFilterChips extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.filter_list, size: 12, color: Theme.of(context).colorScheme.onPrimary),
+                Icon(
+                  Icons.filter_list,
+                  size: 12,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${filters.activeFilterCount}',
@@ -55,8 +63,12 @@ class CalendarFilterChips extends ConsumerWidget {
             builder: (context) {
               final l10n = AppLocalizations.of(context);
               return Text(
-                filters.activeFilterCount == 1 ? l10n.ownerFilterActiveFilter : l10n.ownerFilterActiveFilters,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+                filters.activeFilterCount == 1
+                    ? l10n.ownerFilterActiveFilter
+                    : l10n.ownerFilterActiveFilters,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
               );
             },
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../owner_dashboard/domain/models/ical_feed.dart';
 
 /// Model for iCal sync status information
 class IcalSyncStatus {
@@ -72,7 +73,9 @@ final icalSyncStatusProvider = FutureProvider.family<IcalSyncStatus, String>((
   final feeds = await repository.getUnitIcalFeeds(unitId);
 
   // Filter only active feeds
-  final activeFeeds = feeds.where((feed) => feed.status == 'active').toList();
+  final activeFeeds = feeds
+      .where((feed) => feed.status == IcalStatus.active)
+      .toList();
 
   if (activeFeeds.isEmpty) {
     return IcalSyncStatus.noFeeds();

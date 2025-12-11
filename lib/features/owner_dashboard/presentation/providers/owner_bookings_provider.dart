@@ -13,6 +13,40 @@ part 'owner_bookings_provider.g.dart';
 
 // Note: OwnerBooking is defined in firebase_owner_bookings_repository.dart (already imported above)
 
+/// Updates a booking's status in a list and re-sorts by priority
+///
+/// Returns a new list with the updated booking and proper sorting
+List<OwnerBooking> _updateBookingStatusInList(
+  List<OwnerBooking> bookings,
+  String bookingId,
+  BookingStatus newStatus,
+) {
+  final updatedBookings = bookings.map((ownerBooking) {
+    if (ownerBooking.booking.id == bookingId) {
+      return OwnerBooking(
+        booking: ownerBooking.booking.copyWith(status: newStatus),
+        property: ownerBooking.property,
+        unit: ownerBooking.unit,
+        guestName: ownerBooking.guestName,
+        guestEmail: ownerBooking.guestEmail,
+        guestPhone: ownerBooking.guestPhone,
+      );
+    }
+    return ownerBooking;
+  }).toList();
+
+  // Re-sort by status priority, then by createdAt
+  updatedBookings.sort((a, b) {
+    final priorityCompare = b.booking.status.sortPriority.compareTo(
+      a.booking.status.sortPriority,
+    );
+    if (priorityCompare != 0) return priorityCompare;
+    return b.booking.createdAt.compareTo(a.booking.createdAt);
+  });
+
+  return updatedBookings;
+}
+
 /// Bookings filter state
 class BookingsFilters {
   final BookingStatus? status;
@@ -260,30 +294,13 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
 
   /// Update a booking in local state (after status change)
   void updateBookingStatus(String bookingId, BookingStatus newStatus) {
-    final updatedBookings = state.bookings.map((ownerBooking) {
-      if (ownerBooking.booking.id == bookingId) {
-        return OwnerBooking(
-          booking: ownerBooking.booking.copyWith(status: newStatus),
-          property: ownerBooking.property,
-          unit: ownerBooking.unit,
-          guestName: ownerBooking.guestName,
-          guestEmail: ownerBooking.guestEmail,
-          guestPhone: ownerBooking.guestPhone,
-        );
-      }
-      return ownerBooking;
-    }).toList();
-
-    // Re-sort by status priority
-    updatedBookings.sort((a, b) {
-      final priorityCompare = b.booking.status.sortPriority.compareTo(
-        a.booking.status.sortPriority,
-      );
-      if (priorityCompare != 0) return priorityCompare;
-      return b.booking.createdAt.compareTo(a.booking.createdAt);
-    });
-
-    state = state.copyWith(bookings: updatedBookings);
+    state = state.copyWith(
+      bookings: _updateBookingStatusInList(
+        state.bookings,
+        bookingId,
+        newStatus,
+      ),
+    );
   }
 }
 
@@ -533,30 +550,13 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
 
   /// Update booking status in visible list
   void updateBookingStatus(String bookingId, BookingStatus newStatus) {
-    final updatedBookings = state.visibleBookings.map((ownerBooking) {
-      if (ownerBooking.booking.id == bookingId) {
-        return OwnerBooking(
-          booking: ownerBooking.booking.copyWith(status: newStatus),
-          property: ownerBooking.property,
-          unit: ownerBooking.unit,
-          guestName: ownerBooking.guestName,
-          guestEmail: ownerBooking.guestEmail,
-          guestPhone: ownerBooking.guestPhone,
-        );
-      }
-      return ownerBooking;
-    }).toList();
-
-    // Re-sort by status priority
-    updatedBookings.sort((a, b) {
-      final priorityCompare = b.booking.status.sortPriority.compareTo(
-        a.booking.status.sortPriority,
-      );
-      if (priorityCompare != 0) return priorityCompare;
-      return b.booking.createdAt.compareTo(a.booking.createdAt);
-    });
-
-    state = state.copyWith(visibleBookings: updatedBookings);
+    state = state.copyWith(
+      visibleBookings: _updateBookingStatusInList(
+        state.visibleBookings,
+        bookingId,
+        newStatus,
+      ),
+    );
   }
 
   /// Get debug info for overlay

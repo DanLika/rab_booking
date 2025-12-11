@@ -9,7 +9,12 @@ class CalendarErrorState extends StatelessWidget {
   final VoidCallback? onRetry;
   final bool isCompact;
 
-  const CalendarErrorState({super.key, this.errorMessage, this.onRetry, this.isCompact = false});
+  const CalendarErrorState({
+    super.key,
+    this.errorMessage,
+    this.onRetry,
+    this.isCompact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +36,15 @@ class CalendarErrorState extends StatelessWidget {
               // Error icon
               Container(
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(color: Colors.red.withAlpha((0.1 * 255).toInt()), shape: BoxShape.circle),
-                child: Icon(Icons.error_outline, size: 64, color: Colors.red.withAlpha((0.7 * 255).toInt())),
+                decoration: BoxDecoration(
+                  color: Colors.red.withAlpha((0.1 * 255).toInt()),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red.withAlpha((0.7 * 255).toInt()),
+                ),
               ),
 
               const SizedBox(height: 24),
@@ -42,7 +54,9 @@ class CalendarErrorState extends StatelessWidget {
                 l10n.calendarErrorTitle,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.textTheme.bodyLarge?.color?.withAlpha((0.8 * 255).toInt()),
+                  color: theme.textTheme.bodyLarge?.color?.withAlpha(
+                    (0.8 * 255).toInt(),
+                  ),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -53,7 +67,9 @@ class CalendarErrorState extends StatelessWidget {
               Text(
                 errorMessage ?? l10n.calendarErrorDefault,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.textTheme.bodyLarge?.color?.withAlpha((0.6 * 255).toInt()),
+                  color: theme.textTheme.bodyLarge?.color?.withAlpha(
+                    (0.6 * 255).toInt(),
+                  ),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -73,7 +89,10 @@ class CalendarErrorState extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
                       ),
                     ),
 
@@ -86,7 +105,12 @@ class CalendarErrorState extends StatelessWidget {
                     },
                     icon: const Icon(Icons.help_outline, size: 20),
                     label: Text(l10n.calendarErrorHelp),
-                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -97,19 +121,29 @@ class CalendarErrorState extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactError(BuildContext context, ThemeData theme, AppLocalizations l10n) {
+  Widget _buildCompactError(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: Colors.red.withAlpha((0.6 * 255).toInt())),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Colors.red.withAlpha((0.6 * 255).toInt()),
+            ),
             const SizedBox(height: 12),
             Text(
               errorMessage ?? l10n.calendarErrorCompact,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.textTheme.bodyLarge?.color?.withAlpha((0.7 * 255).toInt()),
+                color: theme.textTheme.bodyLarge?.color?.withAlpha(
+                  (0.7 * 255).toInt(),
+                ),
               ),
               textAlign: TextAlign.center,
             ),
@@ -135,7 +169,12 @@ class CalendarErrorBanner extends StatelessWidget {
   final VoidCallback? onDismiss;
   final VoidCallback? onRetry;
 
-  const CalendarErrorBanner({super.key, required this.message, this.onDismiss, this.onRetry});
+  const CalendarErrorBanner({
+    super.key,
+    required this.message,
+    this.onDismiss,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +189,11 @@ class CalendarErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 24),
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.red.shade700,
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -159,10 +202,17 @@ class CalendarErrorBanner extends StatelessWidget {
               children: [
                 Text(
                   l10n.calendarErrorBannerTitle,
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red.shade900, fontSize: 13),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade900,
+                    fontSize: 13,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(message, style: TextStyle(color: Colors.red.shade800, fontSize: 12)),
+                Text(
+                  message,
+                  style: TextStyle(color: Colors.red.shade800, fontSize: 12),
+                ),
               ],
             ),
           ),

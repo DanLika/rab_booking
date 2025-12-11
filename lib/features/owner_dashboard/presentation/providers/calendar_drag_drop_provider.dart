@@ -14,9 +14,17 @@ class DragDropState {
   final bool isValidDrop;
   final String? errorMessage;
 
-  const DragDropState({this.draggingBooking, this.isValidDrop = false, this.errorMessage});
+  const DragDropState({
+    this.draggingBooking,
+    this.isValidDrop = false,
+    this.errorMessage,
+  });
 
-  DragDropState copyWith({BookingModel? draggingBooking, bool? isValidDrop, String? errorMessage}) {
+  DragDropState copyWith({
+    BookingModel? draggingBooking,
+    bool? isValidDrop,
+    String? errorMessage,
+  }) {
     return DragDropState(
       draggingBooking: draggingBooking ?? this.draggingBooking,
       isValidDrop: isValidDrop ?? this.isValidDrop,
@@ -26,17 +34,59 @@ class DragDropState {
 }
 
 /// Provider for drag-and-drop state and operations
-final dragDropProvider = StateNotifierProvider<DragDropNotifier, DragDropState>((ref) {
-  final bookingRepository = ref.watch(bookingRepositoryProvider);
-  return DragDropNotifier(bookingRepository, ref);
+final dragDropProvider = StateNotifierProvider<DragDropNotifier, DragDropState>(
+  (ref) {
+    final bookingRepository = ref.watch(bookingRepositoryProvider);
+    return DragDropNotifier(bookingRepository, ref);
+  },
+);
+
+/// Helper record for normalized booking dates
+typedef _NormalizedDates = ({
+  DateTime checkIn,
+  DateTime checkOut,
+  DateTime dropDate,
+  Duration duration,
+  DateTime newCheckIn,
+  DateTime newCheckOut,
 });
+
+/// Normalize dates to midnight and calculate new booking dates
+_NormalizedDates _normalizeBookingDates({
+  required DateTime checkIn,
+  required DateTime checkOut,
+  required DateTime dropDate,
+}) {
+  final normalizedCheckIn = DateTime(checkIn.year, checkIn.month, checkIn.day);
+  final normalizedCheckOut = DateTime(
+    checkOut.year,
+    checkOut.month,
+    checkOut.day,
+  );
+  final normalizedDropDate = DateTime(
+    dropDate.year,
+    dropDate.month,
+    dropDate.day,
+  );
+  final duration = normalizedCheckOut.difference(normalizedCheckIn);
+
+  return (
+    checkIn: normalizedCheckIn,
+    checkOut: normalizedCheckOut,
+    dropDate: normalizedDropDate,
+    duration: duration,
+    newCheckIn: normalizedDropDate,
+    newCheckOut: normalizedDropDate.add(duration),
+  );
+}
 
 /// Notifier for drag-and-drop operations
 class DragDropNotifier extends StateNotifier<DragDropState> {
   final BookingRepository _bookingRepository;
   final Ref _ref;
 
-  DragDropNotifier(this._bookingRepository, this._ref) : super(const DragDropState());
+  DragDropNotifier(this._bookingRepository, this._ref)
+    : super(const DragDropState());
 
   /// Start dragging a booking
   void startDragging(BookingModel booking) {
@@ -57,23 +107,19 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     final booking = state.draggingBooking;
     if (booking == null) return false;
 
-    // Normalize dates to midnight to avoid time-of-day issues
-    final normalizedCheckIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-    final normalizedCheckOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
-    final normalizedDropDate = DateTime(dropDate.year, dropDate.month, dropDate.day);
-
-    // Calculate new dates
-    final duration = normalizedCheckOut.difference(normalizedCheckIn);
-    final newCheckIn = normalizedDropDate;
-    final newCheckOut = newCheckIn.add(duration);
+    final dates = _normalizeBookingDates(
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      dropDate: dropDate,
+    );
 
     // Validate using overlap detector
     final validation = BookingOverlapDetector.validateBookingMove(
       bookingId: booking.id,
       currentUnitId: booking.unitId,
       targetUnitId: targetUnitId,
-      newCheckIn: newCheckIn,
-      newCheckOut: newCheckOut,
+      newCheckIn: dates.newCheckIn,
+      newCheckOut: dates.newCheckOut,
       allBookings: allBookings,
     );
 
@@ -96,21 +142,24 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     final booking = state.draggingBooking;
     if (booking == null) return false;
 
-    // Normalize dates to midnight to avoid time-of-day issues
-    final normalizedCheckIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-    final normalizedCheckOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
-    final normalizedDropDate = DateTime(dropDate.year, dropDate.month, dropDate.day);
-
-    // Calculate new dates
-    final duration = normalizedCheckOut.difference(normalizedCheckIn);
-    final newCheckIn = normalizedDropDate;
-    final newCheckOut = newCheckIn.add(duration);
+    final dates = _normalizeBookingDates(
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      dropDate: dropDate,
+    );
 
     // Final validation
-    if (!validateDrop(dropDate: dropDate, targetUnitId: targetUnit.id, allBookings: allBookings)) {
+    if (!validateDrop(
+      dropDate: dropDate,
+      targetUnitId: targetUnit.id,
+      allBookings: allBookings,
+    )) {
       // Show error snackbar
       if (context.mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, state.errorMessage ?? 'Cannot move booking here');
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          state.errorMessage ?? 'Cannot move booking here',
+        );
       }
       return false;
     }
@@ -124,8 +173,8 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       // Update booking in Firestore
       final updatedBooking = booking.copyWith(
         unitId: targetUnit.id,
-        checkIn: newCheckIn,
-        checkOut: newCheckOut,
+        checkIn: dates.newCheckIn,
+        checkOut: dates.newCheckOut,
         updatedAt: DateTime.now(),
       );
 
@@ -138,7 +187,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       if (context.mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          'Booking moved to ${targetUnit.name} (${newCheckIn.day}/${newCheckIn.month} - ${newCheckOut.day}/${newCheckOut.month})',
+          'Booking moved to ${targetUnit.name} (${dates.newCheckIn.day}/${dates.newCheckIn.month} - ${dates.newCheckOut.day}/${dates.newCheckOut.month})',
           actionLabel: 'Undo',
           onAction: () => _undoBookingMove(booking, context),
         );
@@ -155,7 +204,12 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
           e,
           userMessage: 'Greška pri premještanju rezervacije',
           onRetry: () {
-            executeDrop(dropDate: dropDate, targetUnit: targetUnit, allBookings: allBookings, context: context);
+            executeDrop(
+              dropDate: dropDate,
+              targetUnit: targetUnit,
+              allBookings: allBookings,
+              context: context,
+            );
           },
         );
       }
@@ -167,17 +221,27 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
   }
 
   /// Undo booking move (restore to original position)
-  Future<void> _undoBookingMove(BookingModel originalBooking, BuildContext context) async {
+  Future<void> _undoBookingMove(
+    BookingModel originalBooking,
+    BuildContext context,
+  ) async {
     try {
       await _bookingRepository.updateBooking(originalBooking);
       _ref.invalidate(calendarBookingsProvider);
 
       if (context.mounted) {
-        ErrorDisplayUtils.showSuccessSnackBar(context, 'Booking restored to original position');
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Booking restored to original position',
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: 'Failed to undo booking move');
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: 'Failed to undo booking move',
+        );
       }
     }
   }

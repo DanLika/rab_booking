@@ -195,9 +195,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
 
                       // Instructions
                       Card(
-                        color: AppColors.authSecondary.withAlpha(
-                          (0.1 * 255).toInt(),
-                        ),
+                        color: AppColors.authSecondary.withValues(alpha: 0.1),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -301,7 +299,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
     VoidCallback? onCopy,
   }) {
     return Card(
-      color: AppColors.authSecondary.withAlpha((0.08 * 255).toInt()),
+      color: AppColors.authSecondary.withValues(alpha: 0.08),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -330,9 +328,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.authSecondary.withAlpha(
-                      (0.15 * 255).toInt(),
-                    ),
+                    color: AppColors.authSecondary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text(

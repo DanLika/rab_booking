@@ -208,9 +208,7 @@ class OwnerAppDrawer extends ConsumerWidget {
         gradient: GradientTokens.brandPrimary,
         boxShadow: [
           BoxShadow(
-            color: GradientTokens.brandPrimaryStart.withAlpha(
-              (0.3 * 255).toInt(),
-            ),
+            color: GradientTokens.brandPrimaryStart.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -294,7 +292,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                       email,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

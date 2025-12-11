@@ -354,13 +354,9 @@ class _DrawerItemState extends State<_DrawerItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withAlpha(
-                    (selectedBgAlpha * 255).toInt(),
-                  )
+                ? theme.colorScheme.brandPurple.withValues(alpha: selectedBgAlpha)
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withAlpha(
-                    (hoverBgAlpha * 255).toInt(),
-                  )
+                ? theme.colorScheme.brandPurple.withValues(alpha: hoverBgAlpha)
                 : Colors.transparent,
           ),
           child: ListTile(
@@ -368,7 +364,7 @@ class _DrawerItemState extends State<_DrawerItem> {
               widget.icon,
               color: widget.isSelected
                   ? selectedTextColor
-                  : theme.colorScheme.onSurface.withAlpha((0.75 * 255).toInt()),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
               size: 24,
             ),
             title: Text(
@@ -448,13 +444,9 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withAlpha(
-                    (selectedBgAlpha * 255).toInt(),
-                  )
+                ? theme.colorScheme.brandPurple.withValues(alpha: selectedBgAlpha)
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withAlpha(
-                    (hoverBgAlpha * 255).toInt(),
-                  )
+                ? theme.colorScheme.brandPurple.withValues(alpha: hoverBgAlpha)
                 : Colors.transparent,
           ),
           child: ListTile(
@@ -462,7 +454,7 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
               widget.icon,
               color: widget.isSelected
                   ? selectedTextColor
-                  : theme.colorScheme.onSurface.withAlpha((0.75 * 255).toInt()),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
               size: 24,
             ),
             title: Row(
@@ -531,7 +523,7 @@ class _DrawerSectionHeader extends StatelessWidget {
             width: 3,
             height: 12,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.6 * 255).toInt()),
+              color: theme.colorScheme.primary.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -541,7 +533,7 @@ class _DrawerSectionHeader extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               letterSpacing: 0.3,
             ),
           ),
@@ -599,13 +591,9 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withAlpha(
-                    (selectedBgAlpha * 255).toInt(),
-                  )
+                ? theme.colorScheme.brandPurple.withValues(alpha: selectedBgAlpha)
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withAlpha(
-                    (hoverBgAlpha * 255).toInt(),
-                  )
+                ? theme.colorScheme.brandPurple.withValues(alpha: hoverBgAlpha)
                 : Colors.transparent,
           ),
           child: ListTile(
@@ -616,9 +604,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     size: 18,
                     color: widget.isSelected
                         ? selectedTextColor
-                        : theme.colorScheme.onSurface.withAlpha(
-                            (0.5 * 255).toInt(),
-                          ),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   )
                 : const SizedBox(width: 18),
             title: Text(
@@ -630,9 +616,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     : FontWeight.w500,
                 color: widget.isSelected
                     ? selectedTextColor
-                    : theme.colorScheme.onSurface.withAlpha(
-                        (0.85 * 255).toInt(),
-                      ),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.85),
               ),
             ),
             subtitle: widget.subtitle != null
@@ -640,9 +624,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     widget.subtitle!,
                     style: TextStyle(
                       fontSize: 11,
-                      color: theme.colorScheme.onSurface.withAlpha(
-                        (0.5 * 255).toInt(),
-                      ),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   )
                 : null,
@@ -683,19 +665,15 @@ class _PremiumExpansionTile extends StatelessWidget {
     final normalTextColor = theme.colorScheme.onSurface;
     final iconColor = isExpanded
         ? (isDark ? lightPurple : theme.colorScheme.brandPurple)
-        : theme.colorScheme.onSurface.withAlpha((0.75 * 255).toInt());
+        : theme.colorScheme.onSurface.withValues(alpha: 0.75);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent,
-          splashColor: theme.colorScheme.brandPurple.withAlpha(
-            (0.06 * 255).toInt(),
-          ),
-          highlightColor: theme.colorScheme.brandPurple.withAlpha(
-            (0.06 * 255).toInt(),
-          ),
+          splashColor: theme.colorScheme.brandPurple.withValues(alpha: 0.06),
+          highlightColor: theme.colorScheme.brandPurple.withValues(alpha: 0.06),
         ),
         child: ExpansionTile(
           leading: Icon(icon, color: iconColor, size: 24),

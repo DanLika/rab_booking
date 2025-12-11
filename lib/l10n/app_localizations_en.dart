@@ -2546,7 +2546,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationSettingsMasterSwitch =>
-      'Master switch for all notification types';
+      'Turn off to stop all email notifications to you. Guest emails are not affected.';
 
   @override
   String get notificationSettingsEnabled =>
@@ -2561,45 +2561,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationSettingsDisabledWarning =>
-      'Notifications are disabled. Enable the master switch to receive notifications.';
+      'All email notifications to you are paused. Guest confirmation emails will still be sent. Enable to receive booking alerts.';
 
   @override
-  String get notificationSettingsCategories => 'Notification Categories';
+  String get notificationSettingsCategories => 'Email Notifications';
 
   @override
   String get notificationSettingsBookings => 'Bookings';
 
   @override
   String get notificationSettingsBookingsDesc =>
-      'New bookings, cancellations, and booking updates';
+      'Emails when guests make instant bookings. Pending bookings requiring your approval are always sent.';
 
   @override
   String get notificationSettingsPayments => 'Payments';
 
   @override
   String get notificationSettingsPaymentsDesc =>
-      'Payment confirmations and transaction updates';
+      'Emails when you receive Stripe payments from guests.';
 
   @override
   String get notificationSettingsCalendar => 'Calendar';
 
   @override
   String get notificationSettingsCalendarDesc =>
-      'Availability changes, blocked dates, and price updates';
+      'iCal sync alerts and calendar conflict warnings.';
 
   @override
   String get notificationSettingsMarketing => 'Marketing';
 
   @override
   String get notificationSettingsMarketingDesc =>
-      'Promotional offers, tips, and platform news';
+      'Platform news, tips for property owners, and feature updates.';
 
   @override
-  String get notificationSettingsEmailChannel => 'Email';
+  String get notificationSettingsEmailChannel => 'Email Notifications';
 
   @override
   String get notificationSettingsEmailChannelDesc =>
-      'Receive notifications via email';
+      'Receive email alerts for this category';
 
   @override
   String get notificationSettingsPushChannel => 'Push Notifications';

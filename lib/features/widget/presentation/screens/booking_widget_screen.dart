@@ -26,6 +26,7 @@ import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
 import '../../domain/models/booking_submission_result.dart';
+import '../../domain/services/booking_url_state_service.dart';
 import '../../domain/services/booking_validation_service.dart';
 import '../../domain/services/price_lock_service.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -535,72 +536,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-  /// Clear booking-related URL params and reset to base URL
-  void _clearBookingUrlParams() {
-    if (!kIsWeb) return;
-
-    try {
-      final uri = Uri.base;
-      // Keep only property and unit params
-      final cleanParams = <String, String>{};
-      if (uri.queryParameters.containsKey('property')) {
-        cleanParams['property'] = uri.queryParameters['property']!;
-      }
-      if (uri.queryParameters.containsKey('unit')) {
-        cleanParams['unit'] = uri.queryParameters['unit']!;
-      }
-
-      final newUri = uri.replace(queryParameters: cleanParams);
-      replaceUrlState(newUri.toString());
-
-      LoggingService.log(
-        '[URL] Cleared booking params, new URL: ${newUri.toString()}',
-        tag: 'URL_PARAMS',
-      );
-    } catch (e) {
-      LoggingService.log(
-        '[URL] Failed to clear URL params: $e',
-        tag: 'URL_PARAMS',
-      );
-    }
-  }
-
-  /// Add booking confirmation params to URL (for browser history support)
-  void _addBookingUrlParams({
-    required String bookingRef,
-    required String email,
-    required String bookingId,
-    required String paymentMethod,
-  }) {
-    if (!kIsWeb) return;
-
-    try {
-      final uri = Uri.base;
-      final newParams = Map<String, String>.from(uri.queryParameters);
-
-      // Add booking confirmation params
-      newParams['booking_status'] = 'success';
-      newParams['confirmation'] = bookingRef;
-      newParams['email'] = email;
-      newParams['bookingId'] = bookingId;
-      newParams['payment'] = paymentMethod;
-
-      final newUri = uri.replace(queryParameters: newParams);
-      // Use pushState to add to browser history (back button works)
-      pushUrlState(newUri.toString());
-
-      LoggingService.log(
-        '[URL] Added booking params, new URL: ${newUri.toString()}',
-        tag: 'URL_PARAMS',
-      );
-    } catch (e) {
-      LoggingService.log(
-        '[URL] Failed to add URL params: $e',
-        tag: 'URL_PARAMS',
-      );
-    }
-  }
-
   /// Reset form state to initial values (clear all user input)
   void _resetFormState() {
     setState(_formState.resetState);
@@ -686,7 +621,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           await _showPaymentDelayedDialog();
 
           // Clear URL params and show calendar
-          _clearBookingUrlParams();
+          BookingUrlStateService.clearBookingParams();
           await _validateUnitAndProperty();
         }
         return;
@@ -729,7 +664,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // After Navigator.pop (user closed confirmation), reset form state
         if (mounted) {
           _resetFormState();
-          _clearBookingUrlParams();
+          BookingUrlStateService.clearBookingParams();
         }
       }
     } catch (e) {
@@ -750,7 +685,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         );
 
         // Show calendar anyway
-        _clearBookingUrlParams();
+        BookingUrlStateService.clearBookingParams();
         await _validateUnitAndProperty();
       }
     }
@@ -2275,7 +2210,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Add URL params for browser history support (back button works)
     final bookingRef = booking.id.substring(0, 8).toUpperCase();
-    _addBookingUrlParams(
+    BookingUrlStateService.addConfirmationParams(
       bookingRef: bookingRef,
       email: booking.guestEmail ?? '',
       bookingId: booking.id,
@@ -2309,7 +2244,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // After Navigator.pop (user closed confirmation), reset form state
     if (mounted) {
       _resetFormState();
-      _clearBookingUrlParams();
+      BookingUrlStateService.clearBookingParams();
     }
 
     LoggingService.log(
@@ -2527,7 +2462,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // After Navigator.pop (user closed confirmation), reset form state
         if (mounted) {
           _resetFormState();
-          _clearBookingUrlParams();
+          BookingUrlStateService.clearBookingParams();
         }
       }
     } catch (e) {

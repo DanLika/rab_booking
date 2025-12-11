@@ -2558,7 +2558,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get notificationSettingsMasterSwitch =>
-      'Glavni prekidač za sve vrste obavijesti';
+      'Isključite da zaustavite sve email obavijesti. Emailovi gostima nisu zahvaćeni.';
 
   @override
   String get notificationSettingsEnabled => 'Obavijesti uspješno omogućene';
@@ -2572,45 +2572,45 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get notificationSettingsDisabledWarning =>
-      'Obavijesti su onemogućene. Omogućite glavni prekidač za primanje obavijesti.';
+      'Sve email obavijesti su pauzirane. Potvrdni emailovi gostima i dalje se šalju. Omogućite za primanje upozorenja o rezervacijama.';
 
   @override
-  String get notificationSettingsCategories => 'Kategorije Obavijesti';
+  String get notificationSettingsCategories => 'Email Obavijesti';
 
   @override
   String get notificationSettingsBookings => 'Rezervacije';
 
   @override
   String get notificationSettingsBookingsDesc =>
-      'Nove rezervacije, otkazivanja i ažuriranja';
+      'Emailovi kada gosti naprave instant rezervacije. Rezervacije na čekanju koje zahtijevaju odobrenje uvijek se šalju.';
 
   @override
   String get notificationSettingsPayments => 'Plaćanja';
 
   @override
   String get notificationSettingsPaymentsDesc =>
-      'Potvrde plaćanja i ažuriranja transakcija';
+      'Emailovi kada primite Stripe uplatu od gostiju.';
 
   @override
   String get notificationSettingsCalendar => 'Kalendar';
 
   @override
   String get notificationSettingsCalendarDesc =>
-      'Promjene dostupnosti, blokirani datumi i ažuriranja cijena';
+      'Upozorenja iCal sinkronizacije i konflikti u kalendaru.';
 
   @override
   String get notificationSettingsMarketing => 'Marketing';
 
   @override
   String get notificationSettingsMarketingDesc =>
-      'Promotivne ponude, savjeti i novosti platforme';
+      'Novosti platforme, savjeti za vlasnike nekretnina i ažuriranja značajki.';
 
   @override
-  String get notificationSettingsEmailChannel => 'Email';
+  String get notificationSettingsEmailChannel => 'Email Obavijesti';
 
   @override
   String get notificationSettingsEmailChannelDesc =>
-      'Primajte obavijesti putem emaila';
+      'Primajte email upozorenja za ovu kategoriju';
 
   @override
   String get notificationSettingsPushChannel => 'Push Obavijesti';

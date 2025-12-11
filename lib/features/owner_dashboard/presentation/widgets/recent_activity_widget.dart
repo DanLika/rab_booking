@@ -35,43 +35,25 @@ class ActivityItem {
     this.bookingId,
   });
 
-  IconData get icon {
-    switch (type) {
-      case ActivityType.booking:
-        return Icons.notification_add_rounded; // New booking received
-      case ActivityType.confirmed:
-        return Icons.check_circle_outline_rounded; // Booking confirmed
-      case ActivityType.review:
-        return Icons.star_rounded;
-      case ActivityType.message:
-        return Icons.message_rounded;
-      case ActivityType.payment:
-        return Icons.payments_rounded;
-      case ActivityType.cancellation:
-        return Icons.cancel_outlined; // Booking cancelled
-      case ActivityType.completed:
-        return Icons.task_alt_rounded; // Booking completed
-    }
-  }
+  IconData get icon => switch (type) {
+    ActivityType.booking => Icons.notification_add_rounded,
+    ActivityType.confirmed => Icons.check_circle_outline_rounded,
+    ActivityType.review => Icons.star_rounded,
+    ActivityType.message => Icons.message_rounded,
+    ActivityType.payment => Icons.payments_rounded,
+    ActivityType.cancellation => Icons.cancel_outlined,
+    ActivityType.completed => Icons.task_alt_rounded,
+  };
 
-  Color get color {
-    switch (type) {
-      case ActivityType.booking:
-        return AppColors.activityBooking; // Purple - new booking
-      case ActivityType.confirmed:
-        return AppColors.activityConfirmed; // Green - confirmed
-      case ActivityType.review:
-        return AppColors.activityReview;
-      case ActivityType.message:
-        return AppColors.activityMessage;
-      case ActivityType.payment:
-        return AppColors.activityPayment;
-      case ActivityType.cancellation:
-        return AppColors.activityCancellation; // Red - cancelled
-      case ActivityType.completed:
-        return AppColors.activityCompleted; // Gray - completed
-    }
-  }
+  Color get color => switch (type) {
+    ActivityType.booking => AppColors.activityBooking,
+    ActivityType.confirmed => AppColors.activityConfirmed,
+    ActivityType.review => AppColors.activityReview,
+    ActivityType.message => AppColors.activityMessage,
+    ActivityType.payment => AppColors.activityPayment,
+    ActivityType.cancellation => AppColors.activityCancellation,
+    ActivityType.completed => AppColors.activityCompleted,
+  };
 }
 
 /// Recent activity widget
@@ -98,7 +80,7 @@ class RecentActivityWidget extends StatelessWidget {
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          color: context.gradients.sectionBorder.withValues(alpha: 0.5),
         ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
@@ -185,17 +167,13 @@ class RecentActivityWidget extends StatelessWidget {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.1 * 255).toInt(),
-                        ),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.notifications_none_rounded,
                         size: 32,
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.6 * 255).toInt(),
-                        ),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -269,7 +247,7 @@ class _ActivityTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: activity.color.withAlpha((0.12 * 255).toInt()),
+          color: activity.color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(activity.icon, color: activity.color, size: 20),

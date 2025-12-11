@@ -4875,7 +4875,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsMasterSwitch.
   ///
   /// In en, this message translates to:
-  /// **'Master switch for all notification types'**
+  /// **'Turn off to stop all email notifications to you. Guest emails are not affected.'**
   String get notificationSettingsMasterSwitch;
 
   /// No description provided for @notificationSettingsEnabled.
@@ -4899,13 +4899,13 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsDisabledWarning.
   ///
   /// In en, this message translates to:
-  /// **'Notifications are disabled. Enable the master switch to receive notifications.'**
+  /// **'All email notifications to you are paused. Guest confirmation emails will still be sent. Enable to receive booking alerts.'**
   String get notificationSettingsDisabledWarning;
 
   /// No description provided for @notificationSettingsCategories.
   ///
   /// In en, this message translates to:
-  /// **'Notification Categories'**
+  /// **'Email Notifications'**
   String get notificationSettingsCategories;
 
   /// No description provided for @notificationSettingsBookings.
@@ -4917,7 +4917,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsBookingsDesc.
   ///
   /// In en, this message translates to:
-  /// **'New bookings, cancellations, and booking updates'**
+  /// **'Emails when guests make instant bookings. Pending bookings requiring your approval are always sent.'**
   String get notificationSettingsBookingsDesc;
 
   /// No description provided for @notificationSettingsPayments.
@@ -4929,7 +4929,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsPaymentsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Payment confirmations and transaction updates'**
+  /// **'Emails when you receive Stripe payments from guests.'**
   String get notificationSettingsPaymentsDesc;
 
   /// No description provided for @notificationSettingsCalendar.
@@ -4941,7 +4941,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsCalendarDesc.
   ///
   /// In en, this message translates to:
-  /// **'Availability changes, blocked dates, and price updates'**
+  /// **'iCal sync alerts and calendar conflict warnings.'**
   String get notificationSettingsCalendarDesc;
 
   /// No description provided for @notificationSettingsMarketing.
@@ -4953,19 +4953,19 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsMarketingDesc.
   ///
   /// In en, this message translates to:
-  /// **'Promotional offers, tips, and platform news'**
+  /// **'Platform news, tips for property owners, and feature updates.'**
   String get notificationSettingsMarketingDesc;
 
   /// No description provided for @notificationSettingsEmailChannel.
   ///
   /// In en, this message translates to:
-  /// **'Email'**
+  /// **'Email Notifications'**
   String get notificationSettingsEmailChannel;
 
   /// No description provided for @notificationSettingsEmailChannelDesc.
   ///
   /// In en, this message translates to:
-  /// **'Receive notifications via email'**
+  /// **'Receive email alerts for this category'**
   String get notificationSettingsEmailChannelDesc;
 
   /// No description provided for @notificationSettingsPushChannel.

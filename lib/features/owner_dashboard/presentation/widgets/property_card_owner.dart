@@ -43,15 +43,15 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isHovered
-                ? theme.colorScheme.primary.withAlpha((0.5 * 255).toInt())
+                ? theme.colorScheme.primary.withValues(alpha: 0.5)
                 : theme.dividerColor,
             width: _isHovered ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: _isHovered
-                  ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
-                  : theme.colorScheme.shadow.withAlpha((0.06 * 255).toInt()),
+                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                  : theme.colorScheme.shadow.withValues(alpha: 0.06),
               blurRadius: _isHovered ? 20 : 8,
               offset: Offset(0, _isHovered ? 8 : 3),
             ),
@@ -159,12 +159,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        theme.colorScheme.primary.withAlpha(
-                          (0.15 * 255).toInt(),
-                        ),
-                        theme.colorScheme.secondary.withAlpha(
-                          (0.15 * 255).toInt(),
-                        ),
+                        theme.colorScheme.primary.withValues(alpha: 0.15),
+                        theme.colorScheme.secondary.withValues(alpha: 0.15),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -199,9 +195,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
               widget.property.location,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: isSmallMobile ? 13 : (isMobile ? 14 : null),
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
@@ -304,31 +298,19 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       gradient: LinearGradient(
                         colors: widget.property.isActive
                             ? [
-                                theme.colorScheme.tertiary.withAlpha(
-                                  (0.1 * 255).toInt(),
-                                ),
-                                theme.colorScheme.tertiary.withAlpha(
-                                  (0.05 * 255).toInt(),
-                                ),
+                                theme.colorScheme.tertiary.withValues(alpha: 0.1),
+                                theme.colorScheme.tertiary.withValues(alpha: 0.05),
                               ]
                             : [
-                                theme.colorScheme.error.withAlpha(
-                                  (0.1 * 255).toInt(),
-                                ),
-                                theme.colorScheme.error.withAlpha(
-                                  (0.05 * 255).toInt(),
-                                ),
+                                theme.colorScheme.error.withValues(alpha: 0.1),
+                                theme.colorScheme.error.withValues(alpha: 0.05),
                               ],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: widget.property.isActive
-                            ? theme.colorScheme.tertiary.withAlpha(
-                                (0.3 * 255).toInt(),
-                              )
-                            : theme.colorScheme.error.withAlpha(
-                                (0.3 * 255).toInt(),
-                              ),
+                            ? theme.colorScheme.tertiary.withValues(alpha: 0.3)
+                            : theme.colorScheme.error.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -401,31 +383,19 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       gradient: LinearGradient(
                         colors: widget.property.isActive
                             ? [
-                                theme.colorScheme.tertiary.withAlpha(
-                                  (0.1 * 255).toInt(),
-                                ),
-                                theme.colorScheme.tertiary.withAlpha(
-                                  (0.05 * 255).toInt(),
-                                ),
+                                theme.colorScheme.tertiary.withValues(alpha: 0.1),
+                                theme.colorScheme.tertiary.withValues(alpha: 0.05),
                               ]
                             : [
-                                theme.colorScheme.error.withAlpha(
-                                  (0.1 * 255).toInt(),
-                                ),
-                                theme.colorScheme.error.withAlpha(
-                                  (0.05 * 255).toInt(),
-                                ),
+                                theme.colorScheme.error.withValues(alpha: 0.1),
+                                theme.colorScheme.error.withValues(alpha: 0.05),
                               ],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: widget.property.isActive
-                            ? theme.colorScheme.tertiary.withAlpha(
-                                (0.3 * 255).toInt(),
-                              )
-                            : theme.colorScheme.error.withAlpha(
-                                (0.3 * 255).toInt(),
-                              ),
+                            ? theme.colorScheme.tertiary.withValues(alpha: 0.3)
+                            : theme.colorScheme.error.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -539,12 +509,10 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
         vertical: isSmallMobile ? 3 : (isMobile ? 4 : 6),
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-          (0.5 * 255).toInt(),
-        ),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(isSmallMobile ? 8 : 10),
         border: Border.all(
-          color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
+          color: theme.dividerColor.withValues(alpha: 0.5),
         ),
       ),
       child: Row(
@@ -563,9 +531,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: isSmallMobile ? 10 : (isMobile ? 11 : null),
                 fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.8 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -605,12 +571,12 @@ class _StyledIconButton extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  color.withAlpha((0.15 * 255).toInt()),
-                  color.withAlpha((0.08 * 255).toInt()),
+                  color.withValues(alpha: 0.15),
+                  color.withValues(alpha: 0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.withAlpha((0.3 * 255).toInt())),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
             child: Icon(icon, size: 20, color: color),
           ),

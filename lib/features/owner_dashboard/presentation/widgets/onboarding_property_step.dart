@@ -276,18 +276,12 @@ class _OnboardingPropertyStepState
     );
   }
 
-  String _getPropertyTypeLabel(PropertyType type, AppLocalizations l10n) {
-    switch (type) {
-      case PropertyType.villa:
-        return l10n.onboardingPropertyTypeVilla;
-      case PropertyType.apartment:
-        return l10n.onboardingPropertyTypeApartment;
-      case PropertyType.studio:
-        return l10n.onboardingPropertyTypeStudio;
-      case PropertyType.house:
-        return l10n.onboardingPropertyTypeHouse;
-      case PropertyType.room:
-        return l10n.onboardingPropertyTypeRoom;
-    }
-  }
+  String _getPropertyTypeLabel(PropertyType type, AppLocalizations l10n) =>
+      switch (type) {
+        PropertyType.villa => l10n.onboardingPropertyTypeVilla,
+        PropertyType.apartment => l10n.onboardingPropertyTypeApartment,
+        PropertyType.studio => l10n.onboardingPropertyTypeStudio,
+        PropertyType.house => l10n.onboardingPropertyTypeHouse,
+        PropertyType.room => l10n.onboardingPropertyTypeRoom,
+      };
 }

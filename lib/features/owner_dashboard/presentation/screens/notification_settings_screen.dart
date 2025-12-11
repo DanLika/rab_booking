@@ -341,35 +341,37 @@ class _NotificationSettingsScreenState
                       _updateCategory('payments', channels),
                 ),
 
-                // Calendar Category
-                _buildCategoryCard(
-                  context: context,
-                  theme: theme,
-                  isDark: isDark,
-                  title: l10n.notificationSettingsCalendar,
-                  description: l10n.notificationSettingsCalendarDesc,
-                  icon: Icons.calendar_today,
-                  iconColor: theme.colorScheme.tertiary,
-                  channels: categories.calendar,
-                  enabled: masterEnabled,
-                  onChanged: (channels) =>
-                      _updateCategory('calendar', channels),
-                ),
+                // Calendar Category - hidden until implemented
+                // Currently no calendar-related emails are sent
+                // _buildCategoryCard(
+                //   context: context,
+                //   theme: theme,
+                //   isDark: isDark,
+                //   title: l10n.notificationSettingsCalendar,
+                //   description: l10n.notificationSettingsCalendarDesc,
+                //   icon: Icons.calendar_today,
+                //   iconColor: theme.colorScheme.tertiary,
+                //   channels: categories.calendar,
+                //   enabled: masterEnabled,
+                //   onChanged: (channels) =>
+                //       _updateCategory('calendar', channels),
+                // ),
 
-                // Marketing Category
-                _buildCategoryCard(
-                  context: context,
-                  theme: theme,
-                  isDark: isDark,
-                  title: l10n.notificationSettingsMarketing,
-                  description: l10n.notificationSettingsMarketingDesc,
-                  icon: Icons.campaign,
-                  iconColor: theme.colorScheme.primary,
-                  channels: categories.marketing,
-                  enabled: masterEnabled,
-                  onChanged: (channels) =>
-                      _updateCategory('marketing', channels),
-                ),
+                // Marketing Category - hidden until implemented
+                // Currently no marketing emails are sent
+                // _buildCategoryCard(
+                //   context: context,
+                //   theme: theme,
+                //   isDark: isDark,
+                //   title: l10n.notificationSettingsMarketing,
+                //   description: l10n.notificationSettingsMarketingDesc,
+                //   icon: Icons.campaign,
+                //   iconColor: theme.colorScheme.primary,
+                //   channels: categories.marketing,
+                //   enabled: masterEnabled,
+                //   onChanged: (channels) =>
+                //       _updateCategory('marketing', channels),
+                // ),
 
                 const SizedBox(height: 24),
               ],

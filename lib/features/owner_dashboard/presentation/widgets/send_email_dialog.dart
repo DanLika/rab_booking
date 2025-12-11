@@ -181,9 +181,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha(
-              (0.5 * 255).toInt(),
-            ),
+            color: context.gradients.sectionBorder.withValues(alpha: 0.5),
           ),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
@@ -204,7 +202,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
@@ -264,12 +262,8 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isDark
-                                ? const Color(0xFF334155).withAlpha(
-                                    (0.5 * 255).toInt(),
-                                  ) // slate700
-                                : const Color(
-                                    0xFF0EA5E9,
-                                  ).withAlpha((0.25 * 255).toInt()), // sky500
+                                ? const Color(0xFF334155).withValues(alpha: 0.5)
+                                : const Color(0xFF0EA5E9).withValues(alpha: 0.25),
                           ),
                         ),
                         child: Row(
@@ -278,12 +272,8 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color: isDark
-                                    ? theme.colorScheme.primary.withAlpha(
-                                        (0.15 * 255).toInt(),
-                                      )
-                                    : const Color(0xFF0EA5E9).withAlpha(
-                                        (0.12 * 255).toInt(),
-                                      ), // sky500
+                                    ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                                    : const Color(0xFF0EA5E9).withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -315,9 +305,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: isDark
-                                          ? Colors.white.withAlpha(
-                                              (0.75 * 255).toInt(),
-                                            )
+                                          ? Colors.white.withValues(alpha: 0.75)
                                           : const Color(0xFF0369A1), // sky700
                                     ),
                                   ),
@@ -381,9 +369,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                           color: isSelected
                                               ? Colors.white
                                               : theme.colorScheme.onSurface
-                                                    .withAlpha(
-                                                      (0.5 * 255).toInt(),
-                                                    ),
+                                                    .withValues(alpha: 0.5),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
@@ -452,17 +438,13 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? const Color(0xFF1E293B).withAlpha(
-                                  (0.6 * 255).toInt(),
-                                ) // slate800
-                              : const Color(0xFFF1F5F9), // slate100
+                              ? const Color(0xFF1E293B).withValues(alpha: 0.6)
+                              : const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: isDark
-                                ? const Color(0xFF475569).withAlpha(
-                                    (0.4 * 255).toInt(),
-                                  ) // slate600
-                                : const Color(0xFFCBD5E1), // slate300
+                                ? const Color(0xFF475569).withValues(alpha: 0.4)
+                                : const Color(0xFFCBD5E1),
                           ),
                         ),
                         child: Row(
@@ -507,9 +489,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                     : const Color(0xFFF8F8FA),
                 border: Border(
                   top: BorderSide(
-                    color: context.gradients.sectionBorder.withAlpha(
-                      (0.5 * 255).toInt(),
-                    ),
+                    color: context.gradients.sectionBorder.withValues(alpha: 0.5),
                   ),
                 ),
                 borderRadius: const BorderRadius.vertical(
@@ -554,9 +534,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withAlpha(
-                              (0.3 * 255).toInt(),
-                            ),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),

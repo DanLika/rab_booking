@@ -503,7 +503,7 @@ class _PriceListCalendarWidgetState
 
     // Dropdown-style background for disabled state (matches surfaceContainerHighest)
     final disabledBgColor = isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5F5);
-    final disabledTextColor = theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt());
+    final disabledTextColor = theme.colorScheme.onSurface.withValues(alpha: 0.38);
 
     return Row(
       children: [
@@ -580,7 +580,7 @@ class _PriceListCalendarWidgetState
               disabledColor: disabledBgColor,
               side: BorderSide(
                 color: isDeselectDisabled
-                    ? theme.colorScheme.outline.withAlpha((0.3 * 255).toInt())
+                    ? theme.colorScheme.outline.withValues(alpha: 0.3)
                     : context.primaryColor,
                 width: 1.5,
               ),
@@ -1815,11 +1815,11 @@ class _PriceListCalendarWidgetState
                               color: Theme.of(context)
                                   .colorScheme
                                   .surfaceContainerHighest
-                                  .withAlpha((0.3 * 255).toInt()),
+                                  .withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: Theme.of(context).colorScheme.outline
-                                    .withAlpha((0.3 * 255).toInt()),
+                                    .withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(

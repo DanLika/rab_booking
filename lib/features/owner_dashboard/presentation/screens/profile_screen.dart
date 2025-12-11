@@ -81,14 +81,20 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       children: [
                         // Compact Profile header
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: context.gradients.brandPrimary,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: isDark
-                                ? AppShadows.elevation2Dark
-                                : AppShadows.elevation2,
-                          ),
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: isMobile ? double.infinity : 400,
+                            ),
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: context.gradients.brandPrimary,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: isDark
+                                    ? AppShadows.elevation2Dark
+                                    : AppShadows.elevation2,
+                              ),
                           child: Padding(
                             padding: EdgeInsets.all(isMobile ? 16 : 20),
                             child: Column(
@@ -242,6 +248,8 @@ class ProfileScreen extends ConsumerWidget {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
                             ),
                           ),
                         ),

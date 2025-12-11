@@ -134,7 +134,7 @@ class RecentActivityWidget extends StatelessWidget {
           ),
 
           // Divider
-          Divider(height: 1, color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
+          Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
 
           // Activities list
           if (activities.isEmpty)

@@ -21,12 +21,30 @@ class _GradientAuthButtonState extends State<GradientAuthButton> with SingleTick
   @override
   void initState() {
     super.initState();
-    _shimmerController = AnimationController(duration: const Duration(milliseconds: 1500), vsync: this)..repeat();
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
 
-    _shimmerAnimation = Tween<double>(
-      begin: -1,
-      end: 2,
-    ).animate(CurvedAnimation(parent: _shimmerController, curve: Curves.linear));
+    _shimmerAnimation = Tween<double>(begin: -1, end: 2).animate(
+      CurvedAnimation(parent: _shimmerController, curve: Curves.linear),
+    );
+
+    // Only start animation if initially loading
+    if (widget.isLoading) {
+      _shimmerController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(GradientAuthButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Start/stop animation based on loading state change
+    if (widget.isLoading && !oldWidget.isLoading) {
+      _shimmerController.repeat();
+    } else if (!widget.isLoading && oldWidget.isLoading) {
+      _shimmerController.stop();
+    }
   }
 
   @override

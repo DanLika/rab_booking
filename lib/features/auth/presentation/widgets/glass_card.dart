@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 
 /// Premium glass morphism card for auth screens
@@ -12,10 +14,7 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // Responsive padding based on screen width
-    final screenWidth = MediaQuery.of(context).size.width;
-    final responsivePadding = padding ?? EdgeInsets.all(screenWidth < 400 ? 16 : (screenWidth < 600 ? 24 : 32));
+    final responsivePadding = padding ?? _getResponsivePadding(context);
 
     return Container(
       constraints: BoxConstraints(maxWidth: maxWidth),
@@ -47,5 +46,11 @@ class GlassCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  EdgeInsets _getResponsivePadding(BuildContext context) {
+    if (Breakpoints.isCompactMobile(context)) return const EdgeInsets.all(16);
+    if (Breakpoints.isMobile(context)) return const EdgeInsets.all(24);
+    return const EdgeInsets.all(32);
   }
 }

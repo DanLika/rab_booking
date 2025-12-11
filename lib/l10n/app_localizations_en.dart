@@ -2798,7 +2798,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get unitHubTabBasicInfo => 'Basic Info';
+  String get unitHubTabBasicInfo => 'Basic';
 
   @override
   String get unitHubTabPricing => 'Pricing';
@@ -2807,7 +2807,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unitHubTabWidget => 'Widget';
 
   @override
-  String get unitHubTabAdvanced => 'Advanced Settings';
+  String get unitHubTabAdvanced => 'Advanced';
 
   @override
   String get unitHubSelectUnit => 'Select a unit';

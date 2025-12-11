@@ -243,3 +243,30 @@ final timelineCalendarBookingsProvider =
         units: units,
       );
     });
+
+/// Filtered units provider for timeline calendar
+/// Filters units based on property and unit filter selections
+/// This ensures the timeline only shows rows for filtered units
+final filteredUnitsProvider = FutureProvider<List<UnitModel>>((ref) async {
+  final allUnits = await ref.watch(allOwnerUnitsProvider.future);
+  final filters = ref.watch(calendarFiltersProvider);
+
+  // No property or unit filters active - return all units
+  if (filters.propertyIds.isEmpty && filters.unitIds.isEmpty) {
+    return allUnits;
+  }
+
+  return allUnits.where((unit) {
+    // Filter by specific unit IDs if selected
+    if (filters.unitIds.isNotEmpty) {
+      return filters.unitIds.contains(unit.id);
+    }
+
+    // Filter by property IDs if selected
+    if (filters.propertyIds.isNotEmpty) {
+      return filters.propertyIds.contains(unit.propertyId);
+    }
+
+    return true;
+  }).toList();
+});

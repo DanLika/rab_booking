@@ -25,8 +25,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo>
   final _descriptionController = TextEditingController();
 
   bool _isManualSlugEdit = false;
-  String?
-  _lastLoadedName; // Track last loaded name to detect duplicate data arriving
 
   @override
   void initState() {
@@ -51,29 +49,38 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo>
 
   void _loadData(dynamic draft) {
     final draftName = draft.name ?? '';
+    final draftSlug = draft.slug ?? '';
+    final draftDescription = draft.description ?? '';
 
-    // Skip if controllers already have this data (no change)
-    // This allows duplicate data to load when it arrives after initial empty state
-    if (_lastLoadedName == draftName && _nameController.text == draftName) {
+    // Skip if all controllers already have the correct values
+    // This prevents resetting text/cursor while user is actively typing
+    if (_nameController.text == draftName &&
+        _slugController.text == draftSlug &&
+        _descriptionController.text == draftDescription) {
       return;
     }
 
-    // Remove listeners temporarily to avoid triggering provider updates during build
-    _nameController.removeListener(_onNameChanged);
-    _slugController.removeListener(_onSlugChanged);
-    _descriptionController.removeListener(_onDescriptionChanged);
+    // Only update fields that actually differ from draft
+    // This preserves cursor position for fields user is typing in
+    if (_nameController.text != draftName) {
+      _nameController.removeListener(_onNameChanged);
+      _nameController.text = draftName;
+      _nameController.addListener(_onNameChanged);
+    }
 
-    // Set initial values
-    _nameController.text = draftName;
-    _slugController.text = draft.slug ?? '';
-    _descriptionController.text = draft.description ?? '';
-    _isManualSlugEdit = draft.slug != null && draft.slug!.isNotEmpty;
-    _lastLoadedName = draftName;
+    if (_slugController.text != draftSlug) {
+      _slugController.removeListener(_onSlugChanged);
+      _slugController.text = draftSlug;
+      _slugController.addListener(_onSlugChanged);
+    }
 
-    // Re-attach listeners after setting initial values
-    _nameController.addListener(_onNameChanged);
-    _slugController.addListener(_onSlugChanged);
-    _descriptionController.addListener(_onDescriptionChanged);
+    if (_descriptionController.text != draftDescription) {
+      _descriptionController.removeListener(_onDescriptionChanged);
+      _descriptionController.text = draftDescription;
+      _descriptionController.addListener(_onDescriptionChanged);
+    }
+
+    _isManualSlugEdit = draftSlug.isNotEmpty;
   }
 
   void _onNameChanged() {

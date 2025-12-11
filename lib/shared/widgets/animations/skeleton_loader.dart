@@ -59,6 +59,9 @@ class SkeletonLoader extends StatelessWidget {
   /// Bookings table skeleton (for table view loading state)
   static Widget bookingsTable({int rowCount = 5}) => BookingsTableSkeleton(rowCount: rowCount);
 
+  /// Notifications list skeleton (for notifications loading state)
+  static Widget notificationsList({int itemCount = 6}) => NotificationsListSkeleton(itemCount: itemCount);
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -512,6 +515,74 @@ class BookingCardSkeleton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Notification card skeleton loader
+class NotificationCardSkeleton extends StatelessWidget {
+  const NotificationCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final cardBackground = isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground;
+    final borderColor = isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor.withAlpha((0.5 * 255).toInt())),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon skeleton
+            SkeletonLoader(width: 40, height: 40, borderRadius: 20),
+            SizedBox(width: 12),
+            // Content skeleton
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title skeleton
+                  SkeletonLoader(width: double.infinity, height: 16),
+                  SizedBox(height: 8),
+                  // Message skeleton
+                  SkeletonLoader(width: double.infinity, height: 14),
+                  SizedBox(height: 4),
+                  SkeletonLoader(width: 200, height: 14),
+                  SizedBox(height: 8),
+                  // Time skeleton
+                  SkeletonLoader(width: 80, height: 12),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Notifications list skeleton loader
+class NotificationsListSkeleton extends StatelessWidget {
+  const NotificationsListSkeleton({this.itemCount = 6, super.key});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: itemCount,
+      itemBuilder: (context, index) => const NotificationCardSkeleton(),
     );
   }
 }

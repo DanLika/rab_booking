@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/utils/error_display_utils.dart';
@@ -134,6 +135,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                       : (isTablet ? 32.0 : 16.0);
 
                   return SingleChildScrollView(
+                    physics: PlatformScrollPhysics.adaptive,
                     padding: EdgeInsets.symmetric(
                       horizontal: horizontalPadding,
                       vertical: 20,

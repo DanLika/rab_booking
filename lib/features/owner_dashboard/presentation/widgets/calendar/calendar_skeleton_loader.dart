@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../../l10n/app_localizations.dart';
 
-/// Skeleton loader for calendar
-/// Simple static placeholders - no shimmer for snappier feel
+/// Skeleton loader for calendar with shimmer effect
+/// Shows placeholder rows to fill the page while loading
 class CalendarSkeletonLoader extends StatelessWidget {
   final int unitCount;
   final int dayCount;
 
   const CalendarSkeletonLoader({
     super.key,
-    this.unitCount = 5,
+    this.unitCount = 9, // Default to 9 rows to fill the page
     this.dayCount = 7,
   });
 
@@ -154,20 +155,27 @@ class _SkeletonBox extends StatelessWidget {
   });
 
   // Consistent skeleton colors (matching SkeletonColors design system)
-  static const Color _darkBackground = Color(0xFF2D2D3A);
-  static const Color _lightBackground = Color(0xFFE8E8F0);
+  static const Color _darkBase = Color(0xFF2D2D3A);
+  static const Color _darkHighlight = Color(0xFF3D3D4A);
+  static const Color _lightBase = Color(0xFFE8E8F0);
+  static const Color _lightHighlight = Color(0xFFF5F5FA);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: isDark ? _darkBackground : _lightBackground,
-        borderRadius: BorderRadius.circular(borderRadius),
+    return Shimmer.fromColors(
+      baseColor: isDark ? _darkBase : _lightBase,
+      highlightColor: isDark ? _darkHighlight : _lightHighlight,
+      period: const Duration(milliseconds: 1500),
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: isDark ? _darkBase : _lightBase,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
       ),
     );
   }

@@ -5301,7 +5301,7 @@ abstract class AppLocalizations {
   /// No description provided for @unitHubTabBasicInfo.
   ///
   /// In en, this message translates to:
-  /// **'Basic Info'**
+  /// **'Basic'**
   String get unitHubTabBasicInfo;
 
   /// No description provided for @unitHubTabPricing.
@@ -5319,7 +5319,7 @@ abstract class AppLocalizations {
   /// No description provided for @unitHubTabAdvanced.
   ///
   /// In en, this message translates to:
-  /// **'Advanced Settings'**
+  /// **'Advanced'**
   String get unitHubTabAdvanced;
 
   /// No description provided for @unitHubSelectUnit.

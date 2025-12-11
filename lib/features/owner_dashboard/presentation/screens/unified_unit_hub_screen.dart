@@ -9,6 +9,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../providers/owner_properties_provider.dart';
@@ -1452,6 +1453,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     }
 
     return ListView(
+      // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
+      physics: PlatformScrollPhysics.adaptive,
       padding: EdgeInsets.all(context.horizontalPadding),
       children: [
         // Header with Edit Button

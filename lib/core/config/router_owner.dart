@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../utils/page_transitions.dart';
 import '../../features/auth/presentation/screens/enhanced_login_screen.dart';
 import '../services/logging_service.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
@@ -328,10 +329,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Auth routes
+      // Auth routes - Fade transition for smooth auth flow
       GoRoute(
         path: OwnerRoutes.login,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           // Check if this is a Stripe return URL with widget params
           // URL: /?property=...&confirmation=...#/login
           // In this case, show the booking widget instead of login
@@ -348,37 +349,61 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
 
           if (hasWidgetParams) {
             // Show booking widget for Stripe return URLs
-            return const BookingWidgetScreen();
+            return PageTransitions.none(
+              key: state.pageKey,
+              child: const BookingWidgetScreen(),
+            );
           }
 
-          return const EnhancedLoginScreen();
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: const EnhancedLoginScreen(),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.register,
-        builder: (context, state) => const EnhancedRegisterScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EnhancedRegisterScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.forgotPassword,
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const ForgotPasswordScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.emailVerification,
-        builder: (context, state) => const EmailVerificationScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EmailVerificationScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.privacyPolicy,
-        builder: (context, state) => const PrivacyPolicyScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const PrivacyPolicyScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.termsConditions,
-        builder: (context, state) => const TermsConditionsScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const TermsConditionsScreen(),
+        ),
       ),
 
-      // Owner main screens
+      // Owner main screens - Fade transition for drawer navigation
       GoRoute(
         path: OwnerRoutes.overview,
-        builder: (context, state) => const OverviewScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const OverviewScreen(),
+        ),
       ),
       // Properties route redirects to unit-hub (property management is now in unit-hub)
       GoRoute(
@@ -388,168 +413,249 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Calendar route
       GoRoute(
         path: OwnerRoutes.calendarTimeline,
-        builder: (context, state) => const OwnerTimelineCalendarScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const OwnerTimelineCalendarScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.bookings,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final bookingId = state.uri.queryParameters['bookingId'];
-          return OwnerBookingsScreen(initialBookingId: bookingId);
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: OwnerBookingsScreen(initialBookingId: bookingId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.analytics,
-        builder: (context, state) => const AnalyticsScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const AnalyticsScreen(),
+        ),
       ),
 
-      // Property management routes
+      // Property management routes - SlideUp for new, SlideRight for edit
       GoRoute(
         path: OwnerRoutes.propertyNew,
-        builder: (context, state) => const PropertyFormScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideUp(
+          key: state.pageKey,
+          child: const PropertyFormScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.propertyEdit,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final propertyId = state.pathParameters['id'] ?? '';
-          return PropertyEditLoader(propertyId: propertyId);
+          return PageTransitions.slideRight(
+            key: state.pageKey,
+            child: PropertyEditLoader(propertyId: propertyId),
+          );
         },
       ),
 
       // Unit management routes
       GoRoute(
         path: OwnerRoutes.units,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final propertyId = state.uri.queryParameters['propertyId'];
-          return UnifiedUnitHubScreen(initialPropertyFilter: propertyId);
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: UnifiedUnitHubScreen(initialPropertyFilter: propertyId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitNew,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final propertyId = state.uri.queryParameters['propertyId'] ?? '';
-          return UnitFormScreen(propertyId: propertyId);
+          return PageTransitions.slideUp(
+            key: state.pageKey,
+            child: UnitFormScreen(propertyId: propertyId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitEdit,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final unitId = state.pathParameters['id'] ?? '';
-          return UnitEditLoader(unitId: unitId);
+          return PageTransitions.slideRight(
+            key: state.pageKey,
+            child: UnitEditLoader(unitId: unitId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitPricing,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final unitId = state.pathParameters['id'] ?? '';
-          return UnitPricingLoader(unitId: unitId);
+          return PageTransitions.slideRight(
+            key: state.pageKey,
+            child: UnitPricingLoader(unitId: unitId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitWidgetSettings,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final unitId = state.pathParameters['id'] ?? '';
-          return WidgetSettingsLoader(unitId: unitId);
+          return PageTransitions.slideRight(
+            key: state.pageKey,
+            child: WidgetSettingsLoader(unitId: unitId),
+          );
         },
       ),
 
-      // Unified Unit Hub route
+      // Unified Unit Hub route - Fade for drawer navigation
       GoRoute(
         path: OwnerRoutes.unitHub,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final propertyId = state.uri.queryParameters['propertyId'];
-          return UnifiedUnitHubScreen(initialPropertyFilter: propertyId);
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: UnifiedUnitHubScreen(initialPropertyFilter: propertyId),
+          );
         },
       ),
 
-      // Unit Wizard routes (new/edit)
+      // Unit Wizard routes - SlideUp for modal-like wizard experience
       GoRoute(
         path: OwnerRoutes.unitWizard,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final propertyId = state.uri.queryParameters['propertyId'];
           final duplicateFromId = state.uri.queryParameters['duplicateFromId'];
-          return UnitWizardScreen(
-            propertyId: propertyId,
-            duplicateFromId: duplicateFromId,
+          return PageTransitions.slideUp(
+            key: state.pageKey,
+            child: UnitWizardScreen(
+              propertyId: propertyId,
+              duplicateFromId: duplicateFromId,
+            ),
           );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitWizardEdit,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final unitId = state.pathParameters['id'];
-          return UnitWizardScreen(unitId: unitId);
+          return PageTransitions.slideUp(
+            key: state.pageKey,
+            child: UnitWizardScreen(unitId: unitId),
+          );
         },
       ),
 
-      // Notifications route
+      // Notifications route - ScaleFade for emphasis
       GoRoute(
         path: OwnerRoutes.notifications,
-        builder: (context, state) => const NotificationsScreen(),
+        pageBuilder: (context, state) => PageTransitions.scaleFade(
+          key: state.pageKey,
+          child: const NotificationsScreen(),
+        ),
       ),
 
-      // Profile routes
+      // Profile routes - Fade for main, SlideRight for sub-pages
       GoRoute(
         path: OwnerRoutes.profile,
-        builder: (context, state) => const ProfileScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const ProfileScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileEdit,
-        builder: (context, state) => const EditProfileScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const EditProfileScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileChangePassword,
-        builder: (context, state) => const ChangePasswordScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const ChangePasswordScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileNotifications,
-        builder: (context, state) => const NotificationSettingsScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const NotificationSettingsScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.about,
-        builder: (context, state) => const AboutScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const AboutScreen(),
+        ),
       ),
 
-      // Integrations routes
+      // Integrations routes - Fade for drawer navigation
       GoRoute(
         path: OwnerRoutes.stripeIntegration,
-        builder: (context, state) => const StripeConnectSetupScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const StripeConnectSetupScreen(),
+        ),
       ),
       // Bank Account (for bank transfer payments)
       GoRoute(
         path: OwnerRoutes.bankAccount,
-        builder: (context, state) => const BankAccountScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const BankAccountScreen(),
+        ),
       ),
-      // iCal Sync Settings (Import) - NEW
+      // iCal Sync Settings (Import)
       GoRoute(
         path: OwnerRoutes.icalImport,
-        builder: (context, state) => const IcalSyncSettingsScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const IcalSyncSettingsScreen(),
+        ),
       ),
       // iCal Export List (for owners to export all bookings)
       GoRoute(
         path: OwnerRoutes.icalExportList,
-        builder: (context, state) => const IcalExportListScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const IcalExportListScreen(),
+        ),
       ),
 
-      // Guide routes
+      // Guide routes - Fade for drawer navigation
       GoRoute(
         path: OwnerRoutes.guideEmbedWidget,
-        builder: (context, state) => const EmbedWidgetGuideScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EmbedWidgetGuideScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.guideFaq,
-        builder: (context, state) => const FAQScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const FAQScreen(),
+        ),
       ),
 
-      // Cookies Policy route
+      // Cookies Policy route - SlideRight (linked from auth screens)
       GoRoute(
         path: OwnerRoutes.cookiesPolicy,
-        builder: (context, state) => const CookiesPolicyScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const CookiesPolicyScreen(),
+        ),
       ),
 
-      // 404
+      // 404 - No transition
       GoRoute(
         path: OwnerRoutes.notFound,
-        builder: (context, state) => const NotFoundScreen(),
+        pageBuilder: (context, state) => PageTransitions.none(
+          key: state.pageKey,
+          child: const NotFoundScreen(),
+        ),
       ),
     ],
     errorBuilder: (context, state) => const NotFoundScreen(),

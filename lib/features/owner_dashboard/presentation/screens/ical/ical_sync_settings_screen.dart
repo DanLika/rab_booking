@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
@@ -52,7 +53,7 @@ class _IcalSyncSettingsScreenState
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical'),
+      drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical/import'),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: RefreshIndicator(
@@ -70,7 +71,7 @@ class _IcalSyncSettingsScreenState
                   : (isTablet ? 32.0 : 16.0);
 
               return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+                physics: PlatformScrollPhysics.adaptive,
                 padding: EdgeInsets.symmetric(
                   horizontal: horizontalPadding,
                   vertical: 20,
@@ -922,8 +923,9 @@ class _IcalSyncSettingsScreenState
     try {
       final repository = ref.read(icalRepositoryProvider);
       await repository.updateFeedStatus(feed.id, IcalStatus.paused);
-      if (mounted)
+      if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedPaused);
+      }
     } catch (e) {
       if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
@@ -940,8 +942,9 @@ class _IcalSyncSettingsScreenState
     try {
       final repository = ref.read(icalRepositoryProvider);
       await repository.updateFeedStatus(feed.id, IcalStatus.active);
-      if (mounted)
+      if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedResumed);
+      }
     } catch (e) {
       if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
@@ -1197,7 +1200,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<IcalPlatform>(
-                          value: _selectedPlatform,
+                          initialValue: _selectedPlatform,
                           isExpanded: true,
                           dropdownColor: InputDecorationHelper.getDropdownColor(
                             context,
@@ -1233,8 +1236,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                           ),
                           maxLines: 2,
                           validator: (value) {
-                            if (value == null || value.isEmpty)
+                            if (value == null || value.isEmpty) {
                               return l10n.icalUrlRequired;
+                            }
                             if (!value.startsWith('http://') &&
                                 !value.startsWith('https://')) {
                               return l10n.icalUrlInvalid;

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -241,7 +242,7 @@ class _StripeConnectSetupScreenState
                         : (isTablet ? 32.0 : 16.0);
 
                     return SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
+                      physics: PlatformScrollPhysics.adaptive,
                       padding: EdgeInsets.symmetric(
                         horizontal: horizontalPadding,
                         vertical: 20,

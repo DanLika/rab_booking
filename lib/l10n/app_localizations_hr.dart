@@ -2812,7 +2812,7 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
-  String get unitHubTabBasicInfo => 'Osnovni Podaci';
+  String get unitHubTabBasicInfo => 'Osnovno';
 
   @override
   String get unitHubTabPricing => 'Cjenovnik';
@@ -2821,7 +2821,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitHubTabWidget => 'Widget';
 
   @override
-  String get unitHubTabAdvanced => 'Napredne Postavke';
+  String get unitHubTabAdvanced => 'Napredno';
 
   @override
   String get unitHubSelectUnit => 'Odaberite jedinicu';

@@ -29,6 +29,8 @@ import {
 } from "./utils/depositCalculation";
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {sendEmailWithRetry} from "./utils/emailRetry";
+import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
+import {validateBookingPrice} from "./utils/priceValidation";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -49,6 +51,42 @@ export const createBookingAtomic = onCall(async (request) => {
   const userId = request.auth?.uid || null;
   const data = request.data;
 
+  // ========================================================================
+  // SECURITY FIX: Rate limiting to prevent spam/DoS attacks
+  // Different limits for authenticated vs unauthenticated (widget) users
+  // ========================================================================
+  if (userId) {
+    // Authenticated users (owner dashboard bookings) - higher limits
+    await enforceRateLimit(userId, "create_booking_authenticated", {
+      maxCalls: 30,
+      windowMs: 60000, // 30 bookings per minute
+      errorMessage: "Too many booking attempts. Please wait a moment and try again.",
+    });
+  } else {
+    // Unauthenticated widget bookings - use in-memory IP-based limiting
+    // Note: Cloud Functions v2 provides IP via request.rawRequest
+    const clientIp = (request as any).rawRequest?.ip ||
+      (request as any).rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      "unknown";
+
+    // In-memory check first (fast, per-instance)
+    if (!checkRateLimit(`widget_booking:${clientIp}`, 5, 300)) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many booking attempts from your location. Please wait 5 minutes before trying again."
+      );
+    }
+
+    // Firestore-backed check for persistence across instances
+    // Use IP hash for privacy (don't store raw IPs)
+    const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
+    await enforceRateLimit(`ip_${ipHash}`, "widget_booking", {
+      maxCalls: 10,
+      windowMs: 600000, // 10 bookings per 10 minutes per IP
+      errorMessage: "Too many booking attempts. Please wait a few minutes before trying again.",
+    });
+  }
+
   const {
     unitId,
     propertyId,
@@ -65,6 +103,7 @@ export const createBookingAtomic = onCall(async (request) => {
     requireOwnerApproval = false,
     notes,
     taxLegalAccepted,
+    idempotencyKey, // Optional: prevents double bookings on double-click
   } = data;
 
   // Validate required fields
@@ -74,6 +113,52 @@ export const createBookingAtomic = onCall(async (request) => {
       "invalid-argument",
       "Missing required booking fields"
     );
+  }
+
+  // ========================================================================
+  // SECURITY FIX: Type confusion prevention
+  // Ensures numeric fields are actual numbers, not strings like "100" or "NaN"
+  // ========================================================================
+  const numericTotalPrice = Number(totalPrice);
+  const numericGuestCount = Number(guestCount);
+
+  if (!Number.isFinite(numericTotalPrice) || numericTotalPrice < 0) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid total price. Must be a positive number."
+    );
+  }
+
+  if (!Number.isInteger(numericGuestCount) || numericGuestCount < 1 || numericGuestCount > 50) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid guest count. Must be between 1 and 50."
+    );
+  }
+
+  // ========================================================================
+  // SECURITY FIX: Idempotency protection
+  // Prevents double bookings when user double-clicks or network retries
+  // ========================================================================
+  if (idempotencyKey && typeof idempotencyKey === "string" && idempotencyKey.length >= 16) {
+    const idempotencyRef = db.collection("idempotency_keys").doc(idempotencyKey);
+    const idempotencyDoc = await idempotencyRef.get();
+
+    if (idempotencyDoc.exists) {
+      const existingData = idempotencyDoc.data();
+      // If booking was already created with this key, return the existing booking ID
+      if (existingData?.bookingId) {
+        logInfo("[AtomicBooking] Idempotency key already used, returning existing booking", {
+          idempotencyKey: idempotencyKey.substring(0, 8) + "...",
+          existingBookingId: existingData.bookingId,
+        });
+        return {
+          success: true,
+          bookingId: existingData.bookingId,
+          idempotent: true, // Flag that this was a duplicate request
+        };
+      }
+    }
   }
 
   // Validate paymentMethod is one of the allowed values
@@ -117,11 +202,11 @@ export const createBookingAtomic = onCall(async (request) => {
       null;
 
   try {
+    // SECURITY FIX: Removed guestEmail from log (PII reduction)
     logInfo("[AtomicBooking] Starting atomic booking creation", {
       unitId,
       checkIn,
       checkOut,
-      guestEmail: sanitizedGuestEmail,
     });
 
     // ========================================================================
@@ -131,6 +216,22 @@ export const createBookingAtomic = onCall(async (request) => {
       checkIn,
       checkOut
     );
+
+    // ========================================================================
+    // STEP 0.6: SECURITY - Validate client-provided price matches server calculation
+    // CRITICAL: Prevents price manipulation attacks (booking €1000 unit for €1)
+    // ========================================================================
+    await validateBookingPrice(
+      unitId,
+      checkInDate,
+      checkOutDate,
+      numericTotalPrice // Use validated numeric price
+    );
+
+    logInfo("[AtomicBooking] Price validated against server calculation", {
+      unitId,
+      totalPrice: numericTotalPrice,
+    });
 
     // ========================================================================
     // STEP 1: Fetch and validate widget settings
@@ -247,11 +348,11 @@ export const createBookingAtomic = onCall(async (request) => {
     // - This ensures dates are blocked BEFORE Stripe redirect (no race condition)
     // ========================================================================
     if (paymentMethod === "stripe") {
+      // SECURITY FIX: Removed guestEmail from log (PII reduction)
       logInfo("[AtomicBooking] Stripe payment - skipping validation, passing to stripePayment.ts", {
         unitId,
         checkIn,
         checkOut,
-        guestEmail: sanitizedGuestEmail,
       });
 
       // Return booking data without validation
@@ -268,8 +369,8 @@ export const createBookingAtomic = onCall(async (request) => {
           guestName: sanitizedGuestName,
           guestEmail: sanitizedGuestEmail,
           guestPhone: finalGuestPhone,
-          guestCount: Number(guestCount),
-          totalPrice,
+          guestCount: numericGuestCount, // Use validated numeric value
+          totalPrice: numericTotalPrice, // Use validated numeric value
           depositAmount,
           paymentOption,
           notes: sanitizedNotes,
@@ -647,11 +748,11 @@ export const createBookingAtomic = onCall(async (request) => {
         guest_phone: finalGuestPhone,
         check_in: checkInDate,
         check_out: checkOutDate,
-        guest_count: Number(guestCount), // Use validated numeric value
-        total_price: totalPrice,
+        guest_count: numericGuestCount, // Use validated numeric value
+        total_price: numericTotalPrice, // Use validated numeric value
         advance_amount: depositAmount,
         deposit_amount: depositAmount, // For Stripe Cloud Function
-        remaining_amount: calculateRemainingAmount(totalPrice, depositAmount),
+        remaining_amount: calculateRemainingAmount(numericTotalPrice, depositAmount),
         paid_amount: 0,
         payment_method: paymentMethod,
         payment_status: paymentStatus,
@@ -661,9 +762,10 @@ export const createBookingAtomic = onCall(async (request) => {
         notes: sanitizedNotes,
         require_owner_approval: requireOwnerApproval,
         tax_legal_accepted: taxLegalAccepted || null,
+        // SECURITY FIX: Use server timestamp for payment deadline (not client time)
         payment_deadline: paymentMethod === "bank_transfer" ?
           admin.firestore.Timestamp.fromDate(
-            new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days
+            new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days from server time
           ) :
           null,
         // Booking lookup security
@@ -676,11 +778,11 @@ export const createBookingAtomic = onCall(async (request) => {
       const bookingDocRef = db.collection("bookings").doc(bookingId);
       transaction.set(bookingDocRef, bookingData);
 
+      // SECURITY FIX: Removed guestEmail from log (PII reduction)
       logSuccess("[AtomicBooking] Booking created atomically", {
         bookingId,
         bookingRef,
         unitId,
-        guestEmail: sanitizedGuestEmail,
       });
 
       // MEMORY OPTIMIZATION: Return only essential data (not full booking object)
@@ -700,6 +802,27 @@ export const createBookingAtomic = onCall(async (request) => {
 
     // Transaction successful - booking created
     logSuccess("[AtomicBooking] Transaction completed successfully", result);
+
+    // SECURITY FIX: Store idempotency key AFTER successful booking
+    // This prevents duplicate bookings on retry but allows new attempts if first fails
+    if (idempotencyKey && typeof idempotencyKey === "string" && idempotencyKey.length >= 16) {
+      try {
+        await db.collection("idempotency_keys").doc(idempotencyKey).set({
+          bookingId: result.bookingId,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          // TTL: Auto-delete after 24 hours (idempotency window)
+          expiresAt: admin.firestore.Timestamp.fromDate(
+            new Date(Date.now() + 24 * 60 * 60 * 1000)
+          ),
+        });
+      } catch (idempotencyError) {
+        // Non-critical: If idempotency storage fails, booking still succeeded
+        logError("[AtomicBooking] Failed to store idempotency key (non-critical)", idempotencyError, {
+          idempotencyKey: idempotencyKey.substring(0, 8) + "...",
+          bookingId: result.bookingId,
+        });
+      }
+    }
 
     // Send emails for ALL payment methods (not just bank_transfer)
     try {

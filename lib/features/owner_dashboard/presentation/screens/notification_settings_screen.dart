@@ -298,9 +298,9 @@ class _NotificationSettingsScreenState
                   ),
                 const SizedBox(height: 12),
 
-                // Categories Header
+                // Categories Header - aligned with card content (16px padding)
                 Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 12),
+                  padding: const EdgeInsets.only(left: 16, bottom: 12),
                   child: Text(
                     l10n.notificationSettingsCategories,
                     style: TextStyle(
@@ -491,8 +491,6 @@ class _NotificationSettingsScreenState
                 fontSize: 13,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           children: [

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/platform_scroll_physics.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/booking_details_dialog.dart';
@@ -39,12 +40,27 @@ class DashboardOverviewTab extends ConsumerWidget {
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: propertiesAsync.when(
-          data: (properties) {
+        child: Builder(
+          builder: (context) {
+            // Show skeleton immediately while loading properties
+            if (propertiesAsync.isLoading) {
+              return _buildDashboardContent(
+                context,
+                ref,
+                l10n,
+                theme,
+                isMobile,
+                const AsyncValue.loading(), // Force stats to show loading too
+              );
+            }
+
+            final properties = propertiesAsync.value ?? [];
+
             // If no properties, show welcome screen for new users
-            if (properties.isEmpty) {
+            if (properties.isEmpty && !propertiesAsync.hasError) {
               return _buildWelcomeScreen(context, ref, l10n, theme, isMobile);
             }
+
             return _buildDashboardContent(
               context,
               ref,
@@ -54,15 +70,6 @@ class DashboardOverviewTab extends ConsumerWidget {
               statsAsync,
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => _buildDashboardContent(
-            context,
-            ref,
-            l10n,
-            theme,
-            isMobile,
-            statsAsync,
-          ),
         ),
       ),
     );
@@ -77,6 +84,8 @@ class DashboardOverviewTab extends ConsumerWidget {
   ) {
     return Center(
       child: SingleChildScrollView(
+        // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
+        physics: PlatformScrollPhysics.adaptive,
         padding: EdgeInsets.all(isMobile ? 20 : 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -164,6 +173,8 @@ class DashboardOverviewTab extends ConsumerWidget {
       },
       color: theme.colorScheme.primary,
       child: ListView(
+        // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
+        physics: PlatformScrollPhysics.adaptive,
         children: [
           // Stats cards section
           Padding(

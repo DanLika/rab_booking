@@ -392,6 +392,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false, // Prevent double-resize with keyboard
       appBar: AppBar(
         toolbarHeight: 56.0, // Standard AppBar height (matches CommonAppBar)
         title: Text(

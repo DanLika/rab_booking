@@ -329,7 +329,10 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
 
   @override
   WindowedBookingsState build() {
-    // Auto-load first page when provider is created
+    // Watch filters - when they change, the provider rebuilds and reloads
+    ref.watch(bookingsFiltersNotifierProvider);
+
+    // Auto-load first page when provider is created (or filters change)
     Future.microtask(loadFirstPage);
     return WindowedBookingsState.cardViewInitial;
   }

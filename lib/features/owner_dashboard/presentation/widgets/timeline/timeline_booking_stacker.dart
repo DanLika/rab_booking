@@ -1,4 +1,5 @@
 import '../../../../../shared/models/booking_model.dart';
+import '../../../utils/booking_overlap_detector.dart';
 
 /// Helper class for stacking overlapping bookings in timeline calendar
 ///
@@ -106,22 +107,17 @@ class TimelineBookingStacker {
 
   /// Check if two bookings overlap
   ///
-  /// Overlap occurs when:
-  /// - booking1.checkIn < booking2.checkOut AND
-  /// - booking2.checkIn < booking1.checkOut
+  /// Delegates to BookingOverlapDetector for consistent overlap logic.
+  /// Same-day turnover is NOT considered overlap.
   ///
-  /// IMPORTANT: Same-day turnover is NOT considered overlap
-  /// (checkOut = 15, checkIn = 15 → no overlap)
+  /// @deprecated Use BookingOverlapDetector.doBookingsOverlap directly
   static bool hasOverlap(BookingModel booking1, BookingModel booking2) {
-    // Normalize dates to midnight for comparison
-    final check1In = _normalizeDate(booking1.checkIn);
-    final check1Out = _normalizeDate(booking1.checkOut);
-    final check2In = _normalizeDate(booking2.checkIn);
-    final check2Out = _normalizeDate(booking2.checkOut);
-
-    // Overlap if: checkIn < otherCheckOut AND otherCheckIn < checkOut
-    // Same day turnover is OK: checkOut = checkIn (no overlap)
-    return check1In.isBefore(check2Out) && check2In.isBefore(check1Out);
+    return BookingOverlapDetector.doBookingsOverlap(
+      start1: booking1.checkIn,
+      end1: booking1.checkOut,
+      start2: booking2.checkIn,
+      end2: booking2.checkOut,
+    );
   }
 
   /// Normalize date to midnight (remove time component)

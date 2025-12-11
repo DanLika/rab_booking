@@ -13,6 +13,7 @@ import '../providers/notifications_provider.dart';
 import '../../domain/models/notification_model.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Notifications screen for owner dashboard
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -252,13 +253,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   ),
                 );
               },
-              loading: () => Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    theme.colorScheme.primary,
-                  ),
-                ),
-              ),
+              loading: () => SkeletonLoader.notificationsList(),
               error: (error, stack) {
                 return _buildErrorState(context, error, ref);
               },
@@ -324,6 +319,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         allNotifications.isNotEmpty;
 
     return AppBar(
+      toolbarHeight: 56, // Match CommonAppBar height
       backgroundColor: theme.colorScheme.primary,
       foregroundColor: Colors.white,
       leading: IconButton(

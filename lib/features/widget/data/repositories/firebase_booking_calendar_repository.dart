@@ -342,6 +342,259 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     });
   }
 
+  /// OPTIMIZED: Year calendar with minNights passed as parameter.
+  ///
+  /// This eliminates the widgetSettingsStream since minNights is already
+  /// available from widgetContextProvider (cached with keepAlive: true).
+  ///
+  /// Stream reduction: 4 → 3 streams (bookings, prices, iCal)
+  @override
+  Stream<Map<DateTime, CalendarDateInfo>> watchYearCalendarDataOptimized({
+    required String propertyId,
+    required String unitId,
+    required int year,
+    required int minNights,
+  }) {
+    // Bug #65 Fix: Use UTC for DST-safe date handling
+    final startDate = DateTime.utc(year);
+    final endDate = DateTime.utc(year, 12, 31, 23, 59, 59);
+
+    // Stream bookings (no widgetSettingsStream needed!)
+    final bookingsStream = _firestore
+        .collection('bookings')
+        .where('unit_id', isEqualTo: unitId)
+        .where('status', whereIn: ['pending', 'confirmed'])
+        .snapshots();
+
+    // Stream prices
+    final pricesStream = _firestore
+        .collection('daily_prices')
+        .where('unit_id', isEqualTo: unitId)
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+        .snapshots();
+
+    // Stream iCal events
+    final icalEventsStream = _firestore
+        .collection('ical_events')
+        .where('unit_id', isEqualTo: unitId)
+        .snapshots();
+
+    // Combine only 3 streams (instead of 4)
+    return Rx.combineLatest3(
+      bookingsStream,
+      pricesStream,
+      icalEventsStream,
+      (bookingsSnapshot, pricesSnapshot, icalEventsSnapshot) {
+        // Parse bookings
+        final bookings = bookingsSnapshot.docs
+            .map((doc) {
+              try {
+                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+              } catch (e) {
+                LoggingService.logError('Error parsing booking', e);
+                return null;
+              }
+            })
+            .where(
+              (booking) =>
+                  booking != null && booking.checkOut.isAfter(startDate),
+            )
+            .cast<BookingModel>()
+            .toList();
+
+        // Parse iCal events
+        final icalEvents = icalEventsSnapshot.docs
+            .map((doc) {
+              try {
+                final data = doc.data();
+                return {
+                  'id': doc.id,
+                  'start_date': (data['start_date'] as Timestamp).toDate(),
+                  'end_date': (data['end_date'] as Timestamp).toDate(),
+                  'source': data['source'] ?? 'ical',
+                  'guest_name': data['guest_name'] ?? 'External Booking',
+                };
+              } catch (e) {
+                LoggingService.logError('Error parsing iCal event', e);
+                return null;
+              }
+            })
+            .where(
+              (event) =>
+                  event != null &&
+                  event['end_date'].isAfter(startDate) &&
+                  event['start_date'].isBefore(endDate),
+            )
+            .cast<Map<String, dynamic>>()
+            .toList();
+
+        // Parse prices
+        final Map<String, DailyPriceModel> priceMap = {};
+        for (final doc in pricesSnapshot.docs) {
+          final data = doc.data();
+          if (data['date'] == null ||
+              data['date'] is! Timestamp ||
+              data['unit_id'] == null) {
+            continue;
+          }
+
+          try {
+            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
+            final key = DateKeyGenerator.fromDate(price.date);
+            priceMap[key] = price;
+          } catch (e) {
+            LoggingService.logError('Error parsing daily price', e);
+          }
+        }
+
+        // Build calendar using passed minNights (no fetch needed!)
+        return _buildYearCalendarMap(
+          bookings,
+          priceMap,
+          year,
+          minNights,
+          icalEvents,
+        );
+      },
+    ).onErrorReturnWith((error, stackTrace) {
+      LoggingService.logError(
+        '[CalendarRepo] Year calendar optimized stream error',
+        error,
+        stackTrace,
+      );
+      return <DateTime, CalendarDateInfo>{};
+    });
+  }
+
+  /// OPTIMIZED: Month calendar with minNights passed as parameter.
+  ///
+  /// This eliminates the widgetSettingsStream since minNights is already
+  /// available from widgetContextProvider (cached with keepAlive: true).
+  ///
+  /// Stream reduction: 4 → 3 streams (bookings, prices, iCal)
+  @override
+  Stream<Map<DateTime, CalendarDateInfo>> watchCalendarDataOptimized({
+    required String propertyId,
+    required String unitId,
+    required int year,
+    required int month,
+    required int minNights,
+  }) {
+    // Bug #65 Fix: Use UTC for DST-safe date handling
+    final startDate = DateTime.utc(year, month);
+    final endDate = DateTime.utc(year, month + 1, 0, 23, 59, 59);
+
+    // Stream bookings (no widgetSettingsStream needed!)
+    final bookingsStream = _firestore
+        .collection('bookings')
+        .where('unit_id', isEqualTo: unitId)
+        .where('status', whereIn: ['pending', 'confirmed'])
+        .snapshots();
+
+    // Stream prices
+    final pricesStream = _firestore
+        .collection('daily_prices')
+        .where('unit_id', isEqualTo: unitId)
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+        .snapshots();
+
+    // Stream iCal events
+    final icalEventsStream = _firestore
+        .collection('ical_events')
+        .where('unit_id', isEqualTo: unitId)
+        .where('start_date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+        .snapshots();
+
+    // Combine only 3 streams (instead of 4)
+    return Rx.combineLatest3(
+      bookingsStream,
+      pricesStream,
+      icalEventsStream,
+      (bookingsSnapshot, pricesSnapshot, icalEventsSnapshot) {
+        // Parse bookings
+        final bookings = bookingsSnapshot.docs
+            .map((doc) {
+              try {
+                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+              } catch (e) {
+                LoggingService.logError('Error parsing booking', e);
+                return null;
+              }
+            })
+            .where(
+              (booking) =>
+                  booking != null && booking.checkOut.isAfter(startDate),
+            )
+            .cast<BookingModel>()
+            .toList();
+
+        // Parse iCal events
+        final icalEvents = icalEventsSnapshot.docs
+            .map((doc) {
+              try {
+                final data = doc.data();
+                return {
+                  'id': doc.id,
+                  'start_date': (data['start_date'] as Timestamp).toDate(),
+                  'end_date': (data['end_date'] as Timestamp).toDate(),
+                  'source': data['source'] ?? 'ical',
+                  'guest_name': data['guest_name'] ?? 'External Booking',
+                };
+              } catch (e) {
+                LoggingService.logError('Error parsing iCal event', e);
+                return null;
+              }
+            })
+            .where(
+              (event) =>
+                  event != null &&
+                  event['end_date'].isAfter(startDate) &&
+                  event['start_date'].isBefore(endDate),
+            )
+            .cast<Map<String, dynamic>>()
+            .toList();
+
+        // Parse prices
+        final Map<String, DailyPriceModel> priceMap = {};
+        for (final doc in pricesSnapshot.docs) {
+          final data = doc.data();
+          if (data['date'] == null ||
+              data['date'] is! Timestamp ||
+              data['unit_id'] == null) {
+            continue;
+          }
+
+          try {
+            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
+            final key = DateKeyGenerator.fromDate(price.date);
+            priceMap[key] = price;
+          } catch (e) {
+            LoggingService.logError('Error parsing daily price', e);
+          }
+        }
+
+        // Build calendar using passed minNights (no fetch needed!)
+        return _buildCalendarMap(
+          bookings,
+          priceMap,
+          year,
+          month,
+          minNights,
+          icalEvents,
+        );
+      },
+    ).onErrorReturnWith((error, stackTrace) {
+      LoggingService.logError(
+        '[CalendarRepo] Month calendar optimized stream error',
+        error,
+        stackTrace,
+      );
+      return <DateTime, CalendarDateInfo>{};
+    });
+  }
+
   /// Build calendar map for a specific month
   /// UPDATED: Now includes iCal events
   Map<DateTime, CalendarDateInfo> _buildCalendarMap(

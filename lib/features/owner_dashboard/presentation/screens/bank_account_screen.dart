@@ -9,6 +9,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/message_box.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -223,58 +224,11 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
   }
 
   Widget _buildInfoCard(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
+    return MessageBox.info(
+      title: l10n.bankAccountInfoTitle,
+      message: l10n.bankAccountInfoDesc,
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: context.gradients.cardBackground,
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.info_outline,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.bankAccountInfoTitle,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.bankAccountInfoDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      (0.7 * 255).toInt(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

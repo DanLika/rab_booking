@@ -61,6 +61,8 @@ class BookingCardActions extends StatelessWidget {
               : (isNarrow ? 10.0 : (isActionMobile ? 11.0 : 13.0));
           final iconSize = isVeryNarrow ? 15.0 : 17.0;
           final fontSize = isVeryNarrow ? 12.0 : 14.0;
+          // Consistent button height for all buttons
+          final buttonHeight = isVeryNarrow ? 40.0 : 44.0;
 
           final isDark = theme.brightness == Brightness.dark;
 
@@ -87,6 +89,7 @@ class BookingCardActions extends StatelessWidget {
               backgroundColor: isDark
                   ? const Color(0xFF1E293B)
                   : const Color(0xFFF8FAFC), // slate800/slate50
+              minimumSize: Size(0, buttonHeight),
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
                 vertical: verticalPadding,
@@ -113,6 +116,7 @@ class BookingCardActions extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF4CAF50), // Softirana zelena
               foregroundColor: Colors.white,
+              minimumSize: Size(0, buttonHeight),
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
                 vertical: verticalPadding,
@@ -139,6 +143,7 @@ class BookingCardActions extends StatelessWidget {
                 0xFFE57373,
               ), // Softirana crvena (manje agresivna)
               foregroundColor: Colors.white,
+              minimumSize: Size(0, buttonHeight),
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
                 vertical: verticalPadding,
@@ -163,6 +168,7 @@ class BookingCardActions extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.white,
+              minimumSize: Size(0, buttonHeight),
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
                 vertical: verticalPadding,
@@ -201,6 +207,7 @@ class BookingCardActions extends StatelessWidget {
               backgroundColor: isDark
                   ? const Color(0xFF1E293B)
                   : const Color(0xFFF8FAFC), // slate800/slate50
+              minimumSize: Size(0, buttonHeight),
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
                 vertical: verticalPadding,

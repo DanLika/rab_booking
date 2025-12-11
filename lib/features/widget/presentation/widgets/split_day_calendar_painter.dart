@@ -4,6 +4,12 @@ import '../../domain/models/calendar_date_status.dart';
 import '../l10n/widget_translations.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
+// TODO: Future refactoring consideration - extract DateStatusRenderer classes
+// This file is 400+ lines with a 200+ line paint() method.
+// Potential improvement: Extract each DateStatus case into separate renderer classes.
+// Risk: HIGH - visual regression in calendar, requires comprehensive manual testing.
+// Priority: LOW - current implementation works correctly, refactoring is purely cosmetic.
+
 /// Custom painter for calendar cells with diagonal split for check-in/check-out days
 /// This creates the "half-booked" visual effect like in BedBooking
 class SplitDayCalendarPainter extends CustomPainter {

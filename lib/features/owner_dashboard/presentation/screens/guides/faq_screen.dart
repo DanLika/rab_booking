@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
@@ -275,6 +276,7 @@ class _FAQScreenState extends State<FAQScreen> {
               SizedBox(
                 height: 50,
                 child: ListView.builder(
+                  physics: PlatformScrollPhysics.adaptive,
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   itemCount: _categoryKeys.length,
@@ -326,6 +328,7 @@ class _FAQScreenState extends State<FAQScreen> {
                 child: filteredFAQs.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
+                        physics: PlatformScrollPhysics.adaptive,
                         padding: const EdgeInsets.all(16),
                         itemCount: filteredFAQs.length,
                         itemBuilder: (context, index) {

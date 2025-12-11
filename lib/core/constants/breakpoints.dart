@@ -146,4 +146,30 @@ class Breakpoints {
   }
 
   Breakpoints._();
+
+  // ============================================================================
+  // CALENDAR-SPECIFIC BREAKPOINTS
+  // Calendar uses tighter breakpoints for optimal day cell sizing
+  // ============================================================================
+
+  /// Calendar mobile breakpoint (same as general mobile)
+  static const double calendarMobile = 600;
+
+  /// Calendar tablet breakpoint (900px - tighter than general tablet)
+  /// This ensures optimal day cell width on tablet devices
+  static const double calendarTablet = 900;
+
+  /// Check if current screen is calendar-mobile
+  static bool isCalendarMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < calendarMobile;
+
+  /// Check if current screen is calendar-tablet
+  static bool isCalendarTablet(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return width >= calendarMobile && width < calendarTablet;
+  }
+
+  /// Check if current screen is calendar-desktop
+  static bool isCalendarDesktop(BuildContext context) =>
+      MediaQuery.of(context).size.width >= calendarTablet;
 }

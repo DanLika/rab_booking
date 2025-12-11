@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
+import '../../../../../core/theme/calendar_cell_colors.dart';
 import 'timeline_booking_block.dart';
 import 'timeline_booking_stacker.dart';
 import 'timeline_constants.dart';
@@ -182,16 +183,19 @@ class _TimelineUnitRow extends StatelessWidget {
         Positioned(
           left: left,
           top: topPosition,
-          child: TimelineBookingBlock(
-            booking: booking,
-            width: width,
-            unitRowHeight: dimensions.unitRowHeight,
-            dayWidth: dimensions.dayWidth,
-            allBookingsByUnit: allBookingsByUnit,
-            onTap: onBookingTap != null ? () => onBookingTap!(booking) : () {},
-            onLongPress: onBookingLongPress != null
-                ? () => onBookingLongPress!(booking)
-                : () {},
+          // RepaintBoundary isolates repaints for better web performance
+          child: RepaintBoundary(
+            child: TimelineBookingBlock(
+              booking: booking,
+              width: width,
+              unitRowHeight: dimensions.unitRowHeight,
+              dayWidth: dimensions.dayWidth,
+              allBookingsByUnit: allBookingsByUnit,
+              onTap: onBookingTap != null ? () => onBookingTap!(booking) : () {},
+              onLongPress: onBookingLongPress != null
+                  ? () => onBookingLongPress!(booking)
+                  : () {},
+            ),
           ),
         ),
       );
@@ -215,16 +219,15 @@ class _TimelineDayCell extends StatelessWidget {
     final isWeekend =
         date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       width: dimensions.dayWidth,
       decoration: BoxDecoration(
-        color: isToday
-            ? theme.colorScheme.primary.withAlpha((0.12 * 255).toInt())
-            : isWeekend
-            ? (isDark ? const Color(0xFF2A2535) : const Color(0xFFF8F5FC))
-            : Colors.transparent,
+        color: CalendarCellColors.getCellBackground(
+          context: context,
+          isToday: isToday,
+          isWeekend: isWeekend,
+        ),
         border: Border(
           left: BorderSide(
             color: isFirstDayOfMonth

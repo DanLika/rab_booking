@@ -131,8 +131,9 @@ class ProfileScreen extends ConsumerWidget {
                                             height: isMobile ? 72 : 88,
                                             fit: BoxFit.cover,
                                             loadingBuilder: (context, child, loadingProgress) {
-                                              if (loadingProgress == null)
+                                              if (loadingProgress == null) {
                                                 return child;
+                                              }
                                               return CircleAvatar(
                                                 radius: isMobile ? 36 : 44,
                                                 backgroundColor: isDark

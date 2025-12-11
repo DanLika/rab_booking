@@ -42,6 +42,10 @@ class _OwnerTimelineCalendarScreenState
   // during programmatic navigation (Today, Previous, Next, DatePicker)
   bool _isProgrammaticNavigation = false;
 
+  // Track vertical scroll position to preserve it during toolbar navigation
+  // When user clicks left/right arrows, widget rebuilds but we restore scroll position
+  double _verticalScrollOffset = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +75,10 @@ class _OwnerTimelineCalendarScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Activate real-time listener for calendar updates
+    // This ensures bookings created/modified anywhere are reflected immediately
+    ref.watch(ownerCalendarRealtimeManagerProvider);
+
     return Shortcuts(
       shortcuts: <ShortcutActivator, Intent>{
         LogicalKeySet(LogicalKeyboardKey.arrowLeft):
@@ -172,6 +180,13 @@ class _OwnerTimelineCalendarScreenState
                       initialScrollToDate:
                           _currentRange.startDate, // Scroll to selected date
                       showSummary: _showSummary,
+                      // FIXED: Preserve vertical scroll position during toolbar navigation
+                      // When user clicks left/right arrows, widget rebuilds but we restore scroll position
+                      initialVerticalOffset: _verticalScrollOffset,
+                      onVerticalOffsetChanged: (offset) {
+                        // Track vertical scroll position (don't call setState to avoid rebuild)
+                        _verticalScrollOffset = offset;
+                      },
                       onCellLongPress: (date, unit) => _showCreateBookingDialog(
                         initialCheckIn: date,
                         unitId: unit.id,

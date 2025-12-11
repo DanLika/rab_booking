@@ -140,10 +140,10 @@ class AppColors {
   static const Color errorLight = Color(0xFFF87171); // Red 400
   static const Color errorDark = Color(0xFFDC2626); // Red 600
 
-  /// Warning color - Orange
-  static const Color warning = Color(0xFFF97316); // Orange 500
-  static const Color warningLight = Color(0xFFFB923C); // Orange 400
-  static const Color warningDark = Color(0xFFEA580C); // Orange 600
+  /// Warning color - Amber (consistent with SnackBarColors and MessageBox)
+  static const Color warning = Color(0xFFF59E0B); // Amber 500
+  static const Color warningLight = Color(0xFFFBBF24); // Amber 400
+  static const Color warningDark = Color(0xFFD97706); // Amber 600
 
   /// Text color for warning backgrounds (dark for contrast on orange)
   static const Color textOnWarning = Color(0xFF1C1917); // Stone 900

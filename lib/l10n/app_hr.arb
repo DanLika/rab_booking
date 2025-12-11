@@ -1115,10 +1115,10 @@
       "name": {"type": "String"}
     }
   },
-  "unitHubTabBasicInfo": "Osnovni Podaci",
+  "unitHubTabBasicInfo": "Osnovno",
   "unitHubTabPricing": "Cjenovnik",
   "unitHubTabWidget": "Widget",
-  "unitHubTabAdvanced": "Napredne Postavke",
+  "unitHubTabAdvanced": "Napredno",
   "unitHubSelectUnit": "Odaberite jedinicu",
   "unitHubSelectUnitDesc": "Odaberite jedinicu s liste za pregled i uređivanje detalja",
   "unitHubAvailable": "Dostupno",

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/breakpoints.dart';
 
 /// Calendar grid dimension calculator
 /// Handles responsive sizing for Week and Month calendar grids
 class CalendarGridCalculator {
-  /// Breakpoints for responsive design
-  static const double mobileBreakpoint = 600;
-  static const double tabletBreakpoint = 900;
+  /// Breakpoints for responsive design - use centralized constants
+  static const double mobileBreakpoint = Breakpoints.calendarMobile;
+  static const double tabletBreakpoint = Breakpoints.calendarTablet;
 
   /// Row header width bounds (room name column)
   static const double minRowHeaderWidth = 100;

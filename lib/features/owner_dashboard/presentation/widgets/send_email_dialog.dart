@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
+import '../../../../shared/widgets/message_box.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -407,8 +408,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           context: context,
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty)
+                          if (value == null || value.trim().isEmpty) {
                             return l10n.sendEmailSubjectRequired;
+                          }
                           return null;
                         },
                       ),
@@ -424,52 +426,20 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           context: context,
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty)
+                          if (value == null || value.trim().isEmpty) {
                             return l10n.sendEmailMessageRequired;
-                          if (value.trim().length < 10)
+                          }
+                          if (value.trim().length < 10) {
                             return l10n.sendEmailMessageTooShort;
+                          }
                           return null;
                         },
                       ),
                       const SizedBox(height: 12),
 
-                      // Info box - Subtle informational style
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF1E293B).withValues(alpha: 0.6)
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isDark
-                                ? const Color(0xFF475569).withValues(alpha: 0.4)
-                                : const Color(0xFFCBD5E1),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              size: 20,
-                              color: isDark
-                                  ? const Color(0xFF94A3B8) // slate400
-                                  : const Color(0xFF64748B), // slate500
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                l10n.sendEmailInfo,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? const Color(0xFFCBD5E1) // slate300
-                                      : const Color(0xFF475569), // slate600
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      // Info box - Standardized info message
+                      MessageBox.warning(
+                        message: l10n.sendEmailInfo,
                       ),
                     ],
                   ),

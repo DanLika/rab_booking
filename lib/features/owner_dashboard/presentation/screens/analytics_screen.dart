@@ -6,6 +6,7 @@ import 'package:graphic/graphic.dart';
 import '../../domain/models/analytics_summary.dart';
 import '../providers/analytics_provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -97,7 +98,8 @@ class _DateRangeSelector extends ConsumerWidget {
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
+              // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
+              physics: PlatformScrollPhysics.adaptive,
               child: Row(
                 children: [
                   AppFilterChip(
@@ -205,6 +207,8 @@ class _AnalyticsContent extends StatelessWidget {
     final isDesktop = screenWidth > 900;
 
     return ListView(
+      // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
+      physics: PlatformScrollPhysics.adaptive,
       padding: EdgeInsets.symmetric(
         horizontal: context.horizontalPadding,
         vertical: isMobile ? 12 : 16,

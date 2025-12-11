@@ -13,8 +13,15 @@ import '../../providers/owner_calendar_provider.dart';
 /// Shown on short tap of a booking block
 class BookingActionBottomSheet extends ConsumerWidget {
   final BookingModel booking;
+  final bool hasConflict;
+  final List<BookingModel>? conflictingBookings;
 
-  const BookingActionBottomSheet({super.key, required this.booking});
+  const BookingActionBottomSheet({
+    super.key,
+    required this.booking,
+    this.hasConflict = false,
+    this.conflictingBookings,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,6 +50,12 @@ class BookingActionBottomSheet extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
+
+              // OVERBOOKING WARNING - shown at top if there's a conflict
+              if (hasConflict) ...[
+                _buildConflictWarningBanner(context, l10n),
+                const SizedBox(height: 8),
+              ],
 
               // Gradient header with booking info
               Container(
@@ -156,47 +169,54 @@ class BookingActionBottomSheet extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // Actions
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    // Edit action
-                    _buildActionTile(
-                      context,
-                      icon: Icons.edit_outlined,
-                      iconColor: AppColors.primary,
-                      title: l10n.bookingActionEditTitle,
-                      subtitle: l10n.bookingActionEditSubtitle,
-                      onTap: () => Navigator.pop(context, 'edit'),
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 8),
-                    // Change status action
-                    _buildActionTile(
-                      context,
-                      icon: Icons.sync_alt,
-                      iconColor: AppColors.info,
-                      title: l10n.bookingActionStatusTitle,
-                      subtitle: l10n.bookingActionStatusSubtitle,
-                      onTap: () => Navigator.pop(context, 'status'),
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 8),
-                    // Delete action
-                    _buildActionTile(
-                      context,
-                      icon: Icons.delete_outline,
-                      iconColor: AppColors.error,
-                      title: l10n.bookingActionDeleteTitle,
-                      subtitle: l10n.bookingActionDeleteSubtitle,
-                      onTap: () => Navigator.pop(context, 'delete'),
-                      isDark: isDark,
-                      isDestructive: true,
-                    ),
-                  ],
+              // EXTERNAL BOOKING INFO - iCal imports are read-only
+              if (booking.isExternalBooking) ...[
+                _buildExternalBookingBanner(context, isDark, l10n),
+                const SizedBox(height: 16),
+              ],
+
+              // Actions - HIDDEN for external bookings (read-only)
+              if (!booking.isExternalBooking)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      // Edit action
+                      _buildActionTile(
+                        context,
+                        icon: Icons.edit_outlined,
+                        iconColor: AppColors.primary,
+                        title: l10n.bookingActionEditTitle,
+                        subtitle: l10n.bookingActionEditSubtitle,
+                        onTap: () => Navigator.pop(context, 'edit'),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 8),
+                      // Change status action
+                      _buildActionTile(
+                        context,
+                        icon: Icons.sync_alt,
+                        iconColor: AppColors.info,
+                        title: l10n.bookingActionStatusTitle,
+                        subtitle: l10n.bookingActionStatusSubtitle,
+                        onTap: () => Navigator.pop(context, 'status'),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 8),
+                      // Delete action
+                      _buildActionTile(
+                        context,
+                        icon: Icons.delete_outline,
+                        iconColor: AppColors.error,
+                        title: l10n.bookingActionDeleteTitle,
+                        subtitle: l10n.bookingActionDeleteSubtitle,
+                        onTap: () => Navigator.pop(context, 'delete'),
+                        isDark: isDark,
+                        isDestructive: true,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
               const SizedBox(height: 20),
             ],
@@ -306,6 +326,175 @@ class BookingActionBottomSheet extends ConsumerWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day}.${date.month}.${date.year}';
+  }
+
+  /// Build conflict warning banner showing overbooking alert
+  Widget _buildConflictWarningBanner(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade300, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.warning_rounded,
+                color: Colors.red.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'OVERBOOKING!',
+                  style: TextStyle(
+                    color: Colors.red.shade800,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (conflictingBookings != null &&
+              conflictingBookings!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Konflikt sa:', // TODO: localize
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            ...conflictingBookings!.take(3).map(
+                  (conflict) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.person,
+                          size: 14,
+                          color: Colors.red.shade600,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            '${conflict.guestName ?? l10n.bookingActionUnknownGuest} (${_formatDate(conflict.checkIn)} - ${_formatDate(conflict.checkOut)})',
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (conflict.isExternalBooking)
+                          Container(
+                            margin: const EdgeInsets.only(left: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              conflict.sourceDisplayName,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.red.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+            if (conflictingBookings!.length > 3)
+              Text(
+                '+${conflictingBookings!.length - 3} više...', // TODO: localize
+                style: TextStyle(
+                  color: Colors.red.shade600,
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Build external booking info banner (iCal imports are read-only)
+  Widget _buildExternalBookingBanner(
+    BuildContext context,
+    bool isDark,
+    AppLocalizations l10n,
+  ) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.withAlpha((0.1 * 255).toInt()),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.orange.withAlpha((0.4 * 255).toInt()),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.orange.withAlpha((0.2 * 255).toInt()),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.link,
+              color: Colors.orange.shade700,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Uvezena rezervacija', // TODO: localize
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Upravljajte na ${booking.sourceDisplayName}', // TODO: localize
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

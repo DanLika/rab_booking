@@ -1,8 +1,11 @@
+import 'dart:async' show Timer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_bookings_view_preference_provider.dart';
@@ -48,15 +51,25 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   final ScrollController _scrollController = ScrollController();
   final ScrollDirectionTracker _scrollTracker = ScrollDirectionTracker();
   bool _hasHandledInitialBooking = false;
+  bool _isLoadingInitialBooking = false;
+
+  // Web performance: Debounce scroll listener to reduce scroll handler calls
+  Timer? _scrollDebounceTimer;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    // Start loading indicator immediately if we have an initialBookingId
+    if (widget.initialBookingId != null) {
+      _isLoadingInitialBooking = true;
+    }
   }
 
   @override
   void dispose() {
+    _scrollDebounceTimer?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -115,6 +128,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
+              setState(() => _isLoadingInitialBooking = false);
               showDialog(
                 context: context,
                 builder: (context) =>
@@ -130,16 +144,19 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               .read(windowedBookingsNotifierProvider.notifier)
               .fetchAndShowBooking(widget.initialBookingId!)
               .then((ownerBooking) {
-                if (ownerBooking != null && mounted) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      showDialog(
-                        context: this.context,
-                        builder: (ctx) =>
-                            BookingDetailsDialog(ownerBooking: ownerBooking),
-                      );
-                    }
-                  });
+                if (mounted) {
+                  setState(() => _isLoadingInitialBooking = false);
+                  if (ownerBooking != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        showDialog(
+                          context: this.context,
+                          builder: (ctx) =>
+                              BookingDetailsDialog(ownerBooking: ownerBooking),
+                        );
+                      }
+                    });
+                  }
                 }
               });
         }
@@ -165,9 +182,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'bookings'),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: RefreshIndicator(
+      body: Stack(
+        children: [
+          Container(
+            decoration:
+                BoxDecoration(gradient: context.gradients.pageBackground),
+            child: RefreshIndicator(
           onRefresh: () async {
             // Refresh bookings data using windowed notifier
             await ref.read(windowedBookingsNotifierProvider.notifier).refresh();
@@ -175,6 +195,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           color: theme.colorScheme.primary,
           child: CustomScrollView(
             controller: _scrollController,
+            // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
+            physics: PlatformScrollPhysics.adaptive,
             slivers: [
               // Filters section
               SliverToBoxAdapter(
@@ -321,6 +343,34 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           ),
         ),
       ),
+          // Loading overlay for notification deep-link
+          if (_isLoadingInitialBooking)
+            AnimatedOpacity(
+              opacity: _isLoadingInitialBooking ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Container(
+                color: theme.scaffoldBackgroundColor.withValues(alpha: 0.9),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.loading,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -334,8 +384,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     int activeFilterCount = 0;
     if (filters.status != null) activeFilterCount++;
     if (filters.propertyId != null) activeFilterCount++;
-    if (filters.startDate != null && filters.endDate != null)
+    if (filters.startDate != null && filters.endDate != null) {
       activeFilterCount++;
+    }
 
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
@@ -590,17 +641,23 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: _BookingCard(
-                      key: ValueKey(leftBooking.booking.id),
-                      ownerBooking: leftBooking,
+                    // Web performance: RepaintBoundary isolates card repaints
+                    child: RepaintBoundary(
+                      child: _BookingCard(
+                        key: ValueKey(leftBooking.booking.id),
+                        ownerBooking: leftBooking,
+                      ),
                     ),
                   ),
                   if (rightBooking != null) ...[
                     const SizedBox(width: 16),
                     Expanded(
-                      child: _BookingCard(
-                        key: ValueKey(rightBooking.booking.id),
-                        ownerBooking: rightBooking,
+                      // Web performance: RepaintBoundary isolates card repaints
+                      child: RepaintBoundary(
+                        child: _BookingCard(
+                          key: ValueKey(rightBooking.booking.id),
+                          ownerBooking: rightBooking,
+                        ),
                       ),
                     ),
                   ] else
@@ -620,9 +677,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             final ownerBooking = bookings[index];
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: _BookingCard(
-                key: ValueKey(ownerBooking.booking.id),
-                ownerBooking: ownerBooking,
+              // Web performance: RepaintBoundary isolates card repaints
+              child: RepaintBoundary(
+                child: _BookingCard(
+                  key: ValueKey(ownerBooking.booking.id),
+                  ownerBooking: ownerBooking,
+                ),
               ),
             );
           }, childCount: bookings.length),

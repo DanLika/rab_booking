@@ -1115,10 +1115,10 @@
       "name": {"type": "String"}
     }
   },
-  "unitHubTabBasicInfo": "Basic Info",
+  "unitHubTabBasicInfo": "Basic",
   "unitHubTabPricing": "Pricing",
   "unitHubTabWidget": "Widget",
-  "unitHubTabAdvanced": "Advanced Settings",
+  "unitHubTabAdvanced": "Advanced",
   "unitHubSelectUnit": "Select a unit",
   "unitHubSelectUnitDesc": "Select a unit from the list to view and edit details",
   "unitHubAvailable": "Available",

@@ -10,6 +10,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/message_box.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import 'edit_booking_dialog.dart';
@@ -492,39 +493,10 @@ class BookingDetailsDialog extends ConsumerWidget {
 
                         const SizedBox(height: 12),
 
-                        // Info note
-                        Container(
+                        // Info note - Standardized warning message
+                        MessageBox.warning(
+                          message: dialogL10n.ownerDetailsResendNote,
                           padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: dialogTheme.colorScheme.tertiaryContainer
-                                .withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: dialogTheme.colorScheme.tertiary.withValues(
-                                alpha: 0.3,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                size: 18,
-                                color: dialogTheme.colorScheme.tertiary,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  dialogL10n.ownerDetailsResendNote,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: dialogTheme.colorScheme.onSurface,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),

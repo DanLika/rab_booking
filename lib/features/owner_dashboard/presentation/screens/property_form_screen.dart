@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui' show PointerDeviceKind;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -253,16 +254,28 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: Stack(
             children: [
-              Form(
-                key: _formKey,
-                child: ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    isMobile ? 16 : 24,
-                    isMobile ? 16 : 24,
-                    isMobile ? 16 : 24,
-                    24,
-                  ),
-                  children: [
+              ScrollConfiguration(
+                // Enable mouse/trackpad drag scrolling for web
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                    PointerDeviceKind.trackpad,
+                  },
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    padding: EdgeInsets.fromLTRB(
+                      isMobile ? 16 : 24,
+                      isMobile ? 16 : 24,
+                      isMobile ? 16 : 24,
+                      24,
+                    ),
+                    children: [
                     // Basic Info Section
                     _buildSection(
                       context,
@@ -651,6 +664,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                     ),
                     const SizedBox(height: AppDimensions.spaceXL),
                   ],
+                  ),
                 ),
               ),
 

@@ -1,3 +1,7 @@
+import 'dart:async' show Timer;
+import 'dart:ui' show PointerDeviceKind;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/booking_model.dart';
@@ -21,6 +25,7 @@ import 'timeline/timeline_date_headers_widget.dart';
 import 'timeline/timeline_unit_column_widget.dart';
 import 'timeline/timeline_grid_widget.dart';
 import 'timeline/timeline_summary_bar_widget.dart';
+import 'timeline/timeline_booking_block.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// BedBooking-style Timeline Calendar
@@ -33,6 +38,14 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final Function(UnitModel unit)? onUnitNameTap;
   final Function(DateTime startDate)? onVisibleDateRangeChanged;
 
+  /// Initial vertical scroll offset to restore after rebuild
+  /// Used to preserve scroll position when navigating with toolbar arrows
+  final double? initialVerticalOffset;
+
+  /// Callback to report current vertical scroll offset
+  /// Used by parent to save position before navigation
+  final Function(double offset)? onVerticalOffsetChanged;
+
   const TimelineCalendarWidget({
     super.key,
     this.showSummary = false,
@@ -40,6 +53,8 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
     this.initialScrollToDate,
     this.onUnitNameTap,
     this.onVisibleDateRangeChanged,
+    this.initialVerticalOffset,
+    this.onVerticalOffsetChanged,
   });
 
   @override
@@ -72,6 +87,9 @@ class _TimelineCalendarWidgetState
   late DateTime _dynamicStartDate;
   late DateTime _dynamicEndDate;
   bool _isInitialScrolling = true;
+
+  // Debounce timer for visible range updates (improves web performance)
+  Timer? _visibleRangeDebounceTimer;
 
   @override
   void initState() {
@@ -137,6 +155,8 @@ class _TimelineCalendarWidgetState
             _unitNamesScrollController.jumpTo(clampedOffset);
           }
         }
+        // Report vertical offset changes to parent for preservation
+        widget.onVerticalOffsetChanged?.call(mainOffset);
       } finally {
         _isSyncingScroll = false;
       }
@@ -201,12 +221,27 @@ class _TimelineCalendarWidgetState
       _handleInfiniteScroll(scrollOffset, dayWidth);
     }
 
-    // Notify parent of visible date change
+    // Notify parent of visible date change (debounced on web for performance)
     if (widget.onVisibleDateRangeChanged != null && !_isInitialScrolling) {
       final visibleStartDate = _dynamicStartDate.add(
         Duration(days: firstVisibleDay),
       );
-      widget.onVisibleDateRangeChanged!(visibleStartDate);
+
+      if (kIsWeb) {
+        // Debounce on web to reduce setState calls in parent during scroll
+        _visibleRangeDebounceTimer?.cancel();
+        _visibleRangeDebounceTimer = Timer(
+          const Duration(milliseconds: 100),
+          () {
+            if (mounted) {
+              widget.onVisibleDateRangeChanged!(visibleStartDate);
+            }
+          },
+        );
+      } else {
+        // Instant feedback on native platforms
+        widget.onVisibleDateRangeChanged!(visibleStartDate);
+      }
     }
   }
 
@@ -279,8 +314,34 @@ class _TimelineCalendarWidgetState
           curve: Curves.easeInOut,
         )
         .then((_) {
-          if (mounted) setState(() => _isInitialScrolling = false);
+          if (mounted) {
+            setState(() => _isInitialScrolling = false);
+            // Restore vertical scroll position if provided (preserves position on toolbar navigation)
+            _restoreVerticalScrollPosition();
+          }
         });
+  }
+
+  /// Restore vertical scroll position from parent-provided offset
+  /// Called after initial horizontal scroll completes to preserve scroll position
+  /// when user navigates with toolbar arrows (which trigger widget rebuild)
+  void _restoreVerticalScrollPosition() {
+    if (widget.initialVerticalOffset == null) return;
+    if (!_verticalScrollController.hasClients) return;
+
+    final targetOffset = widget.initialVerticalOffset!;
+    final maxOffset = _verticalScrollController.position.maxScrollExtent;
+    final clampedOffset = targetOffset.clamp(0.0, maxOffset);
+
+    // Use jumpTo for instant restore (no animation needed)
+    _verticalScrollController.jumpTo(clampedOffset);
+
+    // Also sync unit names column
+    if (_unitNamesScrollController.hasClients) {
+      final unitMaxOffset = _unitNamesScrollController.position.maxScrollExtent;
+      final unitClampedOffset = clampedOffset.clamp(0.0, unitMaxOffset);
+      _unitNamesScrollController.jumpTo(unitClampedOffset);
+    }
   }
 
   List<DateTime> _getDateRange() {
@@ -298,6 +359,7 @@ class _TimelineCalendarWidgetState
 
   @override
   void dispose() {
+    _visibleRangeDebounceTimer?.cancel();
     _horizontalScrollController.removeListener(_scrollSyncListener);
     _horizontalScrollController.removeListener(_updateVisibleRange);
     _verticalScrollController.removeListener(_verticalScrollSyncListener);
@@ -322,30 +384,36 @@ class _TimelineCalendarWidgetState
         Expanded(
           child: Consumer(
             builder: (context, ref, child) {
-              final unitsAsync = ref.watch(allOwnerUnitsProvider);
+              // Use filteredUnitsProvider to respect property/unit filters
+              final unitsAsync = ref.watch(filteredUnitsProvider);
               final bookingsAsync = ref.watch(timelineCalendarBookingsProvider);
 
-              return unitsAsync.when(
-                data: (units) {
-                  if (units.isEmpty) return _buildEmptyUnitsState();
+              // Show skeleton immediately while ANY data is loading
+              // This prevents the UI freeze/blocking feeling
+              final isLoading = unitsAsync.isLoading || bookingsAsync.isLoading;
+              final hasError = unitsAsync.hasError || bookingsAsync.hasError;
 
-                  return bookingsAsync.when(
-                    data: (bookingsByUnit) =>
-                        _buildTimelineView(units, bookingsByUnit),
-                    loading: () => const CalendarSkeletonLoader(
-                      unitCount: 3,
-                      dayCount: 30,
-                    ),
-                    error: (error, _) => CalendarErrorState(
-                      errorMessage: error.toString(),
-                      onRetry: () =>
-                          ref.invalidate(filteredCalendarBookingsProvider),
-                    ),
-                  );
-                },
-                loading: _buildLoadingState,
-                error: (error, _) => _buildErrorState(),
-              );
+              if (isLoading) {
+                return const CalendarSkeletonLoader();
+              }
+
+              if (hasError) {
+                final error = unitsAsync.error ?? bookingsAsync.error;
+                return CalendarErrorState(
+                  errorMessage: error.toString(),
+                  onRetry: () {
+                    ref.invalidate(allOwnerUnitsProvider);
+                    ref.invalidate(calendarBookingsProvider);
+                  },
+                );
+              }
+
+              final units = unitsAsync.value ?? [];
+              final bookingsByUnit = bookingsAsync.value ?? {};
+
+              if (units.isEmpty) return _buildEmptyUnitsState();
+
+              return _buildTimelineView(units, bookingsByUnit);
             },
           ),
         ),
@@ -412,46 +480,6 @@ class _TimelineCalendarWidgetState
     );
   }
 
-  Widget _buildLoadingState() {
-    final l10n = AppLocalizations.of(context);
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: AppDimensions.spaceM),
-          Text(l10n.ownerCalendarLoadingUnits),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState() {
-    final l10n = AppLocalizations.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.spaceM),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-            const SizedBox(height: AppDimensions.spaceM),
-            Text(
-              l10n.ownerCalendarErrorLoadingUnits,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: AppDimensions.spaceS),
-            ElevatedButton.icon(
-              onPressed: () => ref.invalidate(allOwnerUnitsProvider),
-              icon: const Icon(Icons.refresh),
-              label: Text(l10n.ownerCalendarTryAgain),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildTimelineView(
     List<UnitModel> units,
     Map<String, List<BookingModel>> bookingsByUnit,
@@ -494,43 +522,69 @@ class _TimelineCalendarWidgetState
 
                 // Scrollable timeline grid
                 Expanded(
-                  child: InteractiveViewer(
-                    transformationController: _transformationController,
-                    minScale: kTimelineMinZoomScale,
-                    panEnabled: false,
-                    child: SingleChildScrollView(
-                      controller: _horizontalScrollController,
-                      scrollDirection: Axis.horizontal,
+                  child: ScrollConfiguration(
+                    // Enable mouse/trackpad drag scrolling for web
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      dragDevices: {
+                        PointerDeviceKind.touch,
+                        PointerDeviceKind.mouse,
+                        PointerDeviceKind.trackpad,
+                      },
+                    ),
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      minScale: kTimelineMinZoomScale,
+                      panEnabled: false,
                       child: SingleChildScrollView(
-                        controller: _verticalScrollController,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TimelineGridWidget(
-                              units: units,
-                              bookingsByUnit: bookingsByUnit,
-                              dates: dates,
-                              offsetWidth: offsetWidth,
-                              dimensions: dimensions,
-                              onBookingTap: _showBookingActionMenu,
-                              onBookingLongPress: _showMoveToUnitMenu,
-                              dropZoneBuilder: (unit, date, index) =>
-                                  _buildDropZone(
-                                    unit,
-                                    date,
-                                    offsetWidth,
-                                    index,
-                                    bookingsByUnit,
-                                  ),
-                            ),
-                            if (widget.showSummary)
-                              TimelineSummaryBarWidget(
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        // Use ClampingScrollPhysics on web for better performance
+                        // BouncingScrollPhysics causes extra rendering frames on web
+                        physics: kIsWeb
+                            ? const ClampingScrollPhysics(
+                                parent: AlwaysScrollableScrollPhysics(),
+                              )
+                            : const BouncingScrollPhysics(
+                                parent: AlwaysScrollableScrollPhysics(),
+                              ),
+                        child: SingleChildScrollView(
+                          controller: _verticalScrollController,
+                          physics: kIsWeb
+                              ? const ClampingScrollPhysics(
+                                  parent: AlwaysScrollableScrollPhysics(),
+                                )
+                              : const BouncingScrollPhysics(
+                                  parent: AlwaysScrollableScrollPhysics(),
+                                ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TimelineGridWidget(
+                                units: units,
                                 bookingsByUnit: bookingsByUnit,
                                 dates: dates,
                                 offsetWidth: offsetWidth,
                                 dimensions: dimensions,
+                                onBookingTap: _showBookingActionMenu,
+                                onBookingLongPress: _showMoveToUnitMenu,
+                                dropZoneBuilder: (unit, date, index) =>
+                                    _buildDropZone(
+                                      unit,
+                                      date,
+                                      offsetWidth,
+                                      index,
+                                      bookingsByUnit,
+                                    ),
                               ),
-                          ],
+                              if (widget.showSummary)
+                                TimelineSummaryBarWidget(
+                                  bookingsByUnit: bookingsByUnit,
+                                  dates: dates,
+                                  offsetWidth: offsetWidth,
+                                  dimensions: dimensions,
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -615,10 +669,25 @@ class _TimelineCalendarWidgetState
   }
 
   void _showBookingActionMenu(BookingModel booking) async {
+    // Get bookings data to detect conflicts
+    final bookingsAsync = ref.read(timelineCalendarBookingsProvider);
+    final bookingsByUnit = bookingsAsync.value ?? {};
+
+    // Detect conflicting bookings
+    final conflictingBookings = TimelineBookingBlock.getConflictingBookings(
+      booking,
+      bookingsByUnit,
+    );
+    final hasConflict = conflictingBookings.isNotEmpty;
+
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => BookingActionBottomSheet(booking: booking),
+      builder: (context) => BookingActionBottomSheet(
+        booking: booking,
+        hasConflict: hasConflict,
+        conflictingBookings: conflictingBookings,
+      ),
     );
 
     if (!mounted || action == null) return;

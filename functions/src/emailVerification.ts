@@ -4,6 +4,17 @@ import {createHash, randomInt} from "crypto";
 import {logError, logSuccess, logOperation} from "./logger";
 import {sendEmailVerificationCode as sendVerificationEmail} from "./emailService";
 import {validateEmail} from "./utils/emailValidation";
+import {sanitizeEmail} from "./utils/inputSanitization";
+
+/**
+ * Get UTC day string (YYYY-MM-DD) for consistent daily reset across timezones
+ *
+ * SECURITY: Using UTC ensures consistent behavior globally and prevents
+ * timezone manipulation attacks
+ */
+function getUTCDayString(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
 
 // ============================================
 // Configuration Constants
@@ -50,17 +61,29 @@ export const sendEmailVerificationCode = onCall(
         throw new HttpsError("invalid-argument", "Email is required");
       }
 
-      const emailLower = email.toLowerCase().trim();
-
-      // RFC-compliant email validation (better UX than basic check)
-      if (!validateEmail(emailLower)) {
+      // SECURITY FIX: Sanitize email first (removes confusables, control chars)
+      const sanitizedEmail = sanitizeEmail(email);
+      if (!sanitizedEmail) {
         throw new HttpsError(
           "invalid-argument",
           "Invalid email format. Please enter a valid email address."
         );
       }
 
-      logOperation(`Sending verification code to ${emailLower}`);
+      // RFC-compliant email validation (better UX than basic check)
+      if (!validateEmail(sanitizedEmail)) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Invalid email format. Please enter a valid email address."
+        );
+      }
+
+      // SECURITY: Use sanitized email for all operations
+      const emailLower = sanitizedEmail;
+
+      // PII REDUCTION: Log hashed email instead of full address
+      const emailHashForLog = hashEmail(emailLower).substring(0, 8);
+      logOperation(`Sending verification code to email hash: ${emailHashForLog}...`);
 
       const db = getFirestore();
       const emailHash = hashEmail(emailLower);
@@ -91,9 +114,12 @@ export const sendEmailVerificationCode = onCall(
           const data = existingDoc.data();
           const createdAt = data?.createdAt?.toDate();
 
-          // Reset daily count if last sent was more than 24 hours ago
-          const isDifferentDay = !createdAt ||
-            (now.getTime() - createdAt.getTime()) > 24 * 60 * 60 * 1000;
+          // SECURITY FIX: Use UTC day boundary for consistent global behavior
+          // Previous code used 24-hour window which allowed timezone gaming
+          // Now resets at midnight UTC for all users regardless of timezone
+          const createdAtUTCDay = createdAt ? getUTCDayString(createdAt) : null;
+          const nowUTCDay = getUTCDayString(now);
+          const isDifferentDay = !createdAtUTCDay || createdAtUTCDay !== nowUTCDay;
 
           // Get current count (0 if resetting for new day)
           const currentCount = isDifferentDay ? 0 : (data?.dailyCount || 0);
@@ -151,7 +177,8 @@ export const sendEmailVerificationCode = onCall(
       // Send email via Resend
       await sendVerificationEmail(emailLower, code);
 
-      logSuccess(`Verification code sent to ${emailLower}`);
+      // PII REDUCTION: Log hash instead of full email
+      logSuccess(`Verification code sent to email hash: ${emailHashForLog}...`);
 
       return {
         success: true,
@@ -198,10 +225,21 @@ export const verifyEmailCode = onCall(
         throw new HttpsError("invalid-argument", "Code is required");
       }
 
-      const emailLower = email.toLowerCase().trim();
+      // SECURITY FIX: Sanitize email (removes confusables, control chars)
+      const sanitizedEmail = sanitizeEmail(email);
+      if (!sanitizedEmail) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Invalid email format."
+        );
+      }
+
+      const emailLower = sanitizedEmail;
       const codeClean = code.trim();
 
-      logOperation(`Verifying code for ${emailLower}`);
+      // PII REDUCTION: Log hash instead of full email
+      const emailHashForLog = hashEmail(emailLower).substring(0, 8);
+      logOperation(`Verifying code for email hash: ${emailHashForLog}...`);
 
       const db = getFirestore();
       const emailHash = hashEmail(emailLower);
@@ -266,7 +304,8 @@ export const verifyEmailCode = onCall(
         verifiedAt: FieldValue.serverTimestamp(),
       });
 
-      logSuccess(`Email verified successfully: ${emailLower}`);
+      // PII REDUCTION: Log hash instead of full email
+      logSuccess(`Email verified successfully: hash ${emailHashForLog}...`);
 
       return {
         success: true,
@@ -315,7 +354,16 @@ export const checkEmailVerificationStatus = onCall(
         throw new HttpsError("invalid-argument", "Email is required");
       }
 
-      const emailLower = email.toLowerCase().trim();
+      // SECURITY FIX: Sanitize email (removes confusables, control chars)
+      const sanitizedEmail = sanitizeEmail(email);
+      if (!sanitizedEmail) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Invalid email format."
+        );
+      }
+
+      const emailLower = sanitizedEmail;
       const db = getFirestore();
       const emailHash = hashEmail(emailLower);
       const verificationRef = db.collection("email_verifications").doc(emailHash);

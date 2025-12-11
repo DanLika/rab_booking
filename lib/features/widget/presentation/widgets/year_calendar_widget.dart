@@ -65,11 +65,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     final minNights = widgetCtxAsync.valueOrNull?.unit.minStayNights ?? 1;
 
     // Use realtime stream provider for automatic updates when bookings change
+    // OPTIMIZED: Pass minNights to eliminate redundant widgetSettings stream fetch
     final calendarData = ref.watch(
       realtimeYearCalendarProvider(
         widget.propertyId,
         widget.unitId,
         _currentYear,
+        minNights,
       ),
     );
 

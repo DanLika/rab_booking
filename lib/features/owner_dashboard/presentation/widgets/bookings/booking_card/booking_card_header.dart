@@ -93,16 +93,10 @@ class BookingCardHeader extends StatelessWidget {
   }
 
   /// Get icon for booking status
-  static IconData _getStatusIcon(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return Icons.schedule;
-      case BookingStatus.confirmed:
-        return Icons.check_circle;
-      case BookingStatus.cancelled:
-        return Icons.cancel;
-      case BookingStatus.completed:
-        return Icons.task_alt;
-    }
-  }
+  static IconData _getStatusIcon(BookingStatus status) => switch (status) {
+    BookingStatus.pending => Icons.schedule,
+    BookingStatus.confirmed => Icons.check_circle,
+    BookingStatus.cancelled => Icons.cancel,
+    BookingStatus.completed => Icons.task_alt,
+  };
 }

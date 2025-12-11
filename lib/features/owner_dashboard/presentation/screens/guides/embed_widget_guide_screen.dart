@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
@@ -55,6 +56,7 @@ class _EmbedWidgetGuideScreenState
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: ListView(
+            physics: PlatformScrollPhysics.adaptive,
             padding: const EdgeInsets.all(16),
             children: [
               // Hero Section - Simplified

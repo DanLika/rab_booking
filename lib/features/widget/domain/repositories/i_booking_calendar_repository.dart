@@ -39,6 +39,33 @@ abstract class IBookingCalendarRepository {
     required int month,
   });
 
+  /// OPTIMIZED: Watch year calendar data with minNights passed as parameter.
+  ///
+  /// This eliminates the redundant widgetSettingsStream fetch since the caller
+  /// already has minNights from widgetContextProvider.
+  ///
+  /// Query reduction: 4 streams → 3 streams (25% reduction per provider)
+  Stream<Map<DateTime, CalendarDateInfo>> watchYearCalendarDataOptimized({
+    required String propertyId,
+    required String unitId,
+    required int year,
+    required int minNights,
+  });
+
+  /// OPTIMIZED: Watch month calendar data with minNights passed as parameter.
+  ///
+  /// This eliminates the redundant widgetSettingsStream fetch since the caller
+  /// already has minNights from widgetContextProvider.
+  ///
+  /// Query reduction: 4 streams → 3 streams (25% reduction per provider)
+  Stream<Map<DateTime, CalendarDateInfo>> watchCalendarDataOptimized({
+    required String propertyId,
+    required String unitId,
+    required int year,
+    required int month,
+    required int minNights,
+  });
+
   /// Check if date range is available for booking
   ///
   /// Returns true if all dates in the range are available,

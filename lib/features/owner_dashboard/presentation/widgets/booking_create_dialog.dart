@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
+import '../../../../shared/widgets/message_box.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -482,40 +483,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                       const SizedBox(height: 16),
 
-                      // Info card - default values
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer.withValues(
-                            alpha: 0.3,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.3,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              size: 18,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                AppLocalizations.of(
-                                  context,
-                                ).bookingCreateStatusInfo,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      // Info card - default values (standardized)
+                      MessageBox.info(
+                        message: AppLocalizations.of(
+                          context,
+                        ).bookingCreateStatusInfo,
                       ),
 
                       const SizedBox(height: 16),

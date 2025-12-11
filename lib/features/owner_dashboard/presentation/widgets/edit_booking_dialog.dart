@@ -144,7 +144,14 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(contentPadding),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.only(
+                  left: contentPadding,
+                  right: contentPadding,
+                  top: contentPadding,
+                  // Add keyboard height as bottom padding so content can scroll above keyboard
+                  bottom: contentPadding + MediaQuery.of(context).viewInsets.bottom,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,

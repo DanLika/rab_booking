@@ -15,13 +15,15 @@ class AuthBackground extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: isDarkMode
-            ? AppColors.authBackgroundGradientDark
-            : AppColors.authBackgroundGradient,
+    return SizedBox.expand(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: isDarkMode
+              ? AppColors.authBackgroundGradientDark
+              : AppColors.authBackgroundGradient,
+        ),
+        child: child,
       ),
-      child: child,
     );
   }
 }

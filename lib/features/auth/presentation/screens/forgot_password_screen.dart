@@ -71,36 +71,39 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
       key: ValueKey('forgot_password_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        body: AuthBackground(
-          child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Center(
-                  child: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isCompact ? 16 : 24,
-                                vertical: 24,
-                              ),
-                              child: GlassCard(
-                                child: _emailSent ? _buildSuccessView() : _buildFormView(),
-                              ),
+        body: Stack(
+          children: [
+            AuthBackground(
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isCompact ? 16 : 24,
+                            vertical: 24,
+                          ),
+                          child: Center(
+                            child: GlassCard(
+                              child: _emailSent
+                                  ? _buildSuccessView()
+                                  : _buildFormView(),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

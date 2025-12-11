@@ -137,6 +137,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isCompact = MediaQuery.of(context).size.width < 400;
+    // Get keyboard height for manual padding since resizeToAvoidBottomInset is false
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return KeyedSubtree(
       key: ValueKey('change_password_screen_$keyboardFixRebuildKey'),
@@ -144,21 +147,24 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
         resizeToAvoidBottomInset: false,
         body: AuthBackground(
           child: SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                  vertical: 24,
+            child: Center(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.only(
+                  left: isCompact ? 16 : 24,
+                  right: isCompact ? 16 : 24,
+                  top: 24,
+                  // Add keyboard height as bottom padding so content can scroll above keyboard
+                  bottom: 24 + keyboardHeight,
                 ),
-                child: Center(
-                  child: GlassCard(
-                    maxWidth: 500,
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                child: GlassCard(
+                  maxWidth: 500,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                           // Back Button
                           Align(
                             alignment: Alignment.centerLeft,
@@ -483,7 +489,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                         ],
                       ),
                     ),
-                  ),
                 ),
               ),
             ),

@@ -101,6 +101,9 @@ dependencies:
   connectivity_plus: ^7.0.0
   web: ^1.0.0
 
+  # Error Tracking (Web - Crashlytics doesn't support web)
+  sentry_flutter: ^8.12.0
+
   # Charts
   fl_chart: ^1.1.1
   graphic: ^2.6.0

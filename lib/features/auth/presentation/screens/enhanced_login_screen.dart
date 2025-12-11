@@ -154,49 +154,55 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           children: [
             AuthBackground(
               child: SafeArea(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom,
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 12 : 20,
-                        vertical: isCompact ? 16 : 20,
-                      ),
-                      child: GlassCard(
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _buildHeader(theme, l10n, isCompact),
-                              SizedBox(height: isCompact ? 24 : 32),
-                              _buildEmailField(l10n),
-                              SizedBox(height: isCompact ? 12 : 14),
-                              _buildPasswordField(theme, l10n),
-                              SizedBox(height: isCompact ? 12 : 14),
-                              _buildRememberMeRow(theme, l10n),
-                              SizedBox(height: isCompact ? 20 : 24),
-                              GradientAuthButton(
-                                text: l10n.login,
-                                onPressed: _handleLogin,
-                                isLoading: _isLoading,
-                                icon: Icons.login_rounded,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isCompact ? 12 : 20,
+                            vertical: isCompact ? 16 : 20,
+                          ),
+                          child: Center(
+                            child: GlassCard(
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    _buildHeader(theme, l10n, isCompact),
+                                    SizedBox(height: isCompact ? 24 : 32),
+                                    _buildEmailField(l10n),
+                                    SizedBox(height: isCompact ? 12 : 14),
+                                    _buildPasswordField(theme, l10n),
+                                    SizedBox(height: isCompact ? 12 : 14),
+                                    _buildRememberMeRow(theme, l10n),
+                                    SizedBox(height: isCompact ? 20 : 24),
+                                    GradientAuthButton(
+                                      text: l10n.login,
+                                      onPressed: _handleLogin,
+                                      isLoading: _isLoading,
+                                      icon: Icons.login_rounded,
+                                    ),
+                                    SizedBox(height: isCompact ? 16 : 20),
+                                    _buildDivider(theme, l10n),
+                                    SizedBox(height: isCompact ? 16 : 20),
+                                    _buildSocialButtons(),
+                                    SizedBox(height: isCompact ? 20 : 24),
+                                    _buildRegisterLink(theme, l10n),
+                                  ],
+                                ),
                               ),
-                              SizedBox(height: isCompact ? 16 : 20),
-                              _buildDivider(theme, l10n),
-                              SizedBox(height: isCompact ? 16 : 20),
-                              _buildSocialButtons(),
-                              SizedBox(height: isCompact ? 20 : 24),
-                              _buildRegisterLink(theme, l10n),
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
             ),

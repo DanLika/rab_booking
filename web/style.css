@@ -3,6 +3,9 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  /* Match app's dark theme gradient to prevent white gaps on Android Chrome keyboard */
+  background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
+  background-attachment: fixed;
 }
 
 /* Enable text selection globally */

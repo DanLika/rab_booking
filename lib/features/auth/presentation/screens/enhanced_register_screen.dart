@@ -165,58 +165,59 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       key: ValueKey('register_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        body: AuthBackground(
-          child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Center(
-                  child: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isCompact ? 12 : 20,
-                                vertical: isCompact ? 16 : 20,
-                              ),
-                              child: GlassCard(
-                                child: Form(
-                                  key: _formKey,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      _buildHeader(theme, l10n, isCompact),
-                                      SizedBox(height: isCompact ? 20 : 24),
-                                      _buildFormFields(theme, l10n, isCompact),
-                                      SizedBox(height: isCompact ? 12 : 14),
-                                      _buildCheckboxes(theme, l10n),
-                                      SizedBox(height: isCompact ? 20 : 24),
-                                      GradientAuthButton(
-                                        text: l10n.authCreateAccount,
-                                        onPressed: _handleRegister,
-                                        isLoading: _isLoading,
-                                        icon: Icons.person_add_rounded,
-                                      ),
-                                      SizedBox(height: isCompact ? 16 : 20),
-                                      _buildLoginLink(theme, l10n),
-                                    ],
-                                  ),
+        body: Stack(
+          children: [
+            AuthBackground(
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isCompact ? 12 : 20,
+                            vertical: isCompact ? 16 : 20,
+                          ),
+                          child: Center(
+                            child: GlassCard(
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    _buildHeader(theme, l10n, isCompact),
+                                    SizedBox(height: isCompact ? 20 : 24),
+                                    _buildFormFields(theme, l10n, isCompact),
+                                    SizedBox(height: isCompact ? 12 : 14),
+                                    _buildCheckboxes(theme, l10n),
+                                    SizedBox(height: isCompact ? 20 : 24),
+                                    GradientAuthButton(
+                                      text: l10n.authCreateAccount,
+                                      onPressed: _handleRegister,
+                                      isLoading: _isLoading,
+                                      icon: Icons.person_add_rounded,
+                                    ),
+                                    SizedBox(height: isCompact ? 16 : 20),
+                                    _buildLoginLink(theme, l10n),
+                                  ],
                                 ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

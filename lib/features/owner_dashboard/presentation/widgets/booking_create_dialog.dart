@@ -28,8 +28,7 @@ class BookingCreateDialog extends ConsumerStatefulWidget {
   const BookingCreateDialog({super.key, this.unitId, this.initialCheckIn});
 
   @override
-  ConsumerState<BookingCreateDialog> createState() =>
-      _BookingCreateDialogState();
+  ConsumerState<BookingCreateDialog> createState() => _BookingCreateDialogState();
 }
 
 class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
@@ -81,10 +80,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenHeight = MediaQuery.of(context).size.height;
-    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(
-      context,
-      maxWidth: 500,
-    );
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: 500);
     final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
     final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
@@ -95,16 +91,12 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       child: Container(
         width: dialogWidth,
         constraints: BoxConstraints(
-          maxHeight:
-              screenHeight *
-              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+          maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
         ),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withValues(alpha: 0.5),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withValues(alpha: 0.5)),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -115,9 +107,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
               padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(11),
-                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
@@ -127,28 +117,18 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.add_circle_outline,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       AppLocalizations.of(context).bookingCreateTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: _isSaving
-                        ? null
-                        : () => Navigator.of(context).pop(),
+                    onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
                     tooltip: AppLocalizations.of(context).bookingCreateClose,
                   ),
                 ],
@@ -166,42 +146,29 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Unit Selection
-                      _SectionHeader(
-                        icon: Icons.bed_outlined,
-                        title: AppLocalizations.of(context).bookingCreateUnit,
-                      ),
+                      _SectionHeader(icon: Icons.bed_outlined, title: AppLocalizations.of(context).bookingCreateUnit),
                       const SizedBox(height: 12),
 
                       unitsAsync.when(
                         data: (units) {
                           if (units.isEmpty) {
-                            return Text(
-                              AppLocalizations.of(context).bookingCreateNoUnits,
-                            );
+                            return Text(AppLocalizations.of(context).bookingCreateNoUnits);
                           }
 
                           return DropdownButtonFormField<String>(
                             initialValue: _selectedUnitId,
-                            dropdownColor:
-                                InputDecorationHelper.getDropdownColor(context),
-                            borderRadius:
-                                InputDecorationHelper.dropdownBorderRadius,
+                            dropdownColor: InputDecorationHelper.getDropdownColor(context),
+                            borderRadius: InputDecorationHelper.dropdownBorderRadius,
                             isExpanded: true,
                             decoration: InputDecorationHelper.buildDecoration(
-                              labelText: AppLocalizations.of(
-                                context,
-                              ).bookingCreateSelectUnit,
+                              labelText: AppLocalizations.of(context).bookingCreateSelectUnit,
                               prefixIcon: const Icon(Icons.bed_outlined),
                               context: context,
                             ),
                             items: units.map((unit) {
                               return DropdownMenuItem(
                                 value: unit.id,
-                                child: Text(
-                                  unit.name,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
+                                child: Text(unit.name, overflow: TextOverflow.ellipsis, maxLines: 1),
                               );
                             }).toList(),
                             onChanged: (value) {
@@ -211,20 +178,15 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                             },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return AppLocalizations.of(
-                                  context,
-                                ).bookingCreateSelectUnitError;
+                                return AppLocalizations.of(context).bookingCreateSelectUnitError;
                               }
                               return null;
                             },
                           );
                         },
                         loading: () => const CircularProgressIndicator(),
-                        error: (error, _) => Text(
-                          AppLocalizations.of(
-                            context,
-                          ).bookingCreateErrorGeneric(error.toString()),
-                        ),
+                        error: (error, _) =>
+                            Text(AppLocalizations.of(context).bookingCreateErrorGeneric(error.toString())),
                       ),
 
                       const SizedBox(height: 24),
@@ -241,17 +203,13 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                         Column(
                           children: [
                             _buildDateField(
-                              label: AppLocalizations.of(
-                                context,
-                              ).bookingCreateCheckIn,
+                              label: AppLocalizations.of(context).bookingCreateCheckIn,
                               date: _checkInDate,
                               onTap: _selectCheckInDate,
                             ),
                             const SizedBox(height: 12),
                             _buildDateField(
-                              label: AppLocalizations.of(
-                                context,
-                              ).bookingCreateCheckOut,
+                              label: AppLocalizations.of(context).bookingCreateCheckOut,
                               date: _checkOutDate,
                               onTap: _selectCheckOutDate,
                             ),
@@ -262,9 +220,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           children: [
                             Expanded(
                               child: _buildDateField(
-                                label: AppLocalizations.of(
-                                  context,
-                                ).bookingCreateCheckIn,
+                                label: AppLocalizations.of(context).bookingCreateCheckIn,
                                 date: _checkInDate,
                                 onTap: _selectCheckInDate,
                               ),
@@ -272,9 +228,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _buildDateField(
-                                label: AppLocalizations.of(
-                                  context,
-                                ).bookingCreateCheckOut,
+                                label: AppLocalizations.of(context).bookingCreateCheckOut,
                                 date: _checkOutDate,
                                 onTap: _selectCheckOutDate,
                               ),
@@ -288,31 +242,19 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.1,
-                          ),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.3,
-                            ),
-                          ),
+                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.nights_stay,
-                              size: 18,
-                              color: theme.colorScheme.primary,
-                            ),
+                            Icon(Icons.nights_stay, size: 18, color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
                             Text(
                               AppLocalizations.of(
                                 context,
-                              ).bookingCreateNightsCount(
-                                _checkOutDate.difference(_checkInDate).inDays,
-                              ),
+                              ).bookingCreateNightsCount(_checkOutDate.difference(_checkInDate).inDays),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -328,27 +270,21 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       // Guest Information
                       _SectionHeader(
                         icon: Icons.person_outline,
-                        title: AppLocalizations.of(
-                          context,
-                        ).bookingCreateGuestInfo,
+                        title: AppLocalizations.of(context).bookingCreateGuestInfo,
                       ),
                       const SizedBox(height: 12),
 
                       TextFormField(
                         controller: _guestNameController,
                         decoration: InputDecorationHelper.buildDecoration(
-                          labelText: AppLocalizations.of(
-                            context,
-                          ).bookingCreateGuestName,
+                          labelText: AppLocalizations.of(context).bookingCreateGuestName,
                           prefixIcon: const Icon(Icons.person),
                           context: context,
                         ),
                         textCapitalization: TextCapitalization.words,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateGuestNameError;
+                            return AppLocalizations.of(context).bookingCreateGuestNameError;
                           }
                           return null;
                         },
@@ -358,23 +294,17 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       TextFormField(
                         controller: _guestEmailController,
                         decoration: InputDecorationHelper.buildDecoration(
-                          labelText: AppLocalizations.of(
-                            context,
-                          ).bookingCreateEmail,
+                          labelText: AppLocalizations.of(context).bookingCreateEmail,
                           prefixIcon: const Icon(Icons.email),
                           context: context,
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateEmailError;
+                            return AppLocalizations.of(context).bookingCreateEmailError;
                           }
                           if (!_isValidEmail(value.trim())) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateEmailInvalid;
+                            return AppLocalizations.of(context).bookingCreateEmailInvalid;
                           }
                           return null;
                         },
@@ -384,18 +314,14 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       TextFormField(
                         controller: _guestPhoneController,
                         decoration: InputDecorationHelper.buildDecoration(
-                          labelText: AppLocalizations.of(
-                            context,
-                          ).bookingCreatePhone,
+                          labelText: AppLocalizations.of(context).bookingCreatePhone,
                           prefixIcon: const Icon(Icons.phone),
                           context: context,
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePhoneError;
+                            return AppLocalizations.of(context).bookingCreatePhoneError;
                           }
                           return null;
                         },
@@ -406,36 +332,26 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       // Booking Details
                       _SectionHeader(
                         icon: Icons.receipt_long_outlined,
-                        title: AppLocalizations.of(
-                          context,
-                        ).bookingCreateBookingDetails,
+                        title: AppLocalizations.of(context).bookingCreateBookingDetails,
                       ),
                       const SizedBox(height: 12),
 
                       TextFormField(
                         controller: _guestCountController,
                         decoration: InputDecorationHelper.buildDecoration(
-                          labelText: AppLocalizations.of(
-                            context,
-                          ).bookingCreateGuestCount,
+                          labelText: AppLocalizations.of(context).bookingCreateGuestCount,
                           prefixIcon: const Icon(Icons.people),
                           context: context,
                         ),
                         keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateGuestCountError;
+                            return AppLocalizations.of(context).bookingCreateGuestCountError;
                           }
                           final count = int.tryParse(value.trim());
                           if (count == null || count <= 0) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateGuestCountInvalid;
+                            return AppLocalizations.of(context).bookingCreateGuestCountInvalid;
                           }
                           return null;
                         },
@@ -446,36 +362,24 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       TextFormField(
                         controller: _totalPriceController,
                         decoration: InputDecorationHelper.buildDecoration(
-                          labelText: AppLocalizations.of(
-                            context,
-                          ).bookingCreateTotalPrice,
+                          labelText: AppLocalizations.of(context).bookingCreateTotalPrice,
                           prefixIcon: const Icon(Icons.euro),
                           context: context,
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePriceError;
+                            return AppLocalizations.of(context).bookingCreatePriceError;
                           }
                           final price = double.tryParse(value.trim());
                           if (price == null) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePriceInvalid;
+                            return AppLocalizations.of(context).bookingCreatePriceInvalid;
                           }
                           if (price < 0) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePriceNegative;
+                            return AppLocalizations.of(context).bookingCreatePriceNegative;
                           }
                           if (price == 0) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePriceZero;
+                            return AppLocalizations.of(context).bookingCreatePriceZero;
                           }
                           return null;
                         },
@@ -484,31 +388,20 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 16),
 
                       // Info card - default values (standardized)
-                      MessageBox.info(
-                        message: AppLocalizations.of(
-                          context,
-                        ).bookingCreateStatusInfo,
-                      ),
+                      MessageBox.info(message: AppLocalizations.of(context).bookingCreateStatusInfo),
 
                       const SizedBox(height: 16),
 
                       // Notes
-                      _SectionHeader(
-                        icon: Icons.note_outlined,
-                        title: AppLocalizations.of(context).bookingCreateNotes,
-                      ),
+                      _SectionHeader(icon: Icons.note_outlined, title: AppLocalizations.of(context).bookingCreateNotes),
                       const SizedBox(height: 12),
 
                       TextFormField(
                         controller: _notesController,
                         decoration: InputDecorationHelper.buildDecoration(
-                          labelText: AppLocalizations.of(
-                            context,
-                          ).bookingCreateInternalNotes,
+                          labelText: AppLocalizations.of(context).bookingCreateInternalNotes,
                           prefixIcon: const Icon(Icons.notes),
-                          hintText: AppLocalizations.of(
-                            context,
-                          ).bookingCreateNotesHint,
+                          hintText: AppLocalizations.of(context).bookingCreateNotesHint,
                           context: context,
                         ),
                         maxLines: 3,
@@ -522,44 +415,25 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
             // Footer buttons
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: contentPadding,
-                vertical: 12,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.dialogFooterDark
-                    : AppColors.dialogFooterLight,
+                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
                 border: Border(
-                  top: BorderSide(
-                    color: isDark
-                        ? AppColors.sectionDividerDark
-                        : AppColors.sectionDividerLight,
-                  ),
+                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
                 ),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(11),
-                ),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Flexible(
                     child: TextButton(
-                      onPressed: _isSaving
-                          ? null
-                          : () => Navigator.of(context).pop(),
+                      onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         minimumSize: Size.zero,
                       ),
-                      child: Text(
-                        AppLocalizations.of(context).bookingCreateCancel,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: Text(AppLocalizations.of(context).bookingCreateCancel, overflow: TextOverflow.ellipsis),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -567,9 +441,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: context.gradients.brandPrimary,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(8),
-                        ),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -577,27 +449,16 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           onTap: _isSaving ? null : _createBooking,
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             child: _isSaving
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                   )
                                 : Text(
-                                    AppLocalizations.of(
-                                      context,
-                                    ).bookingCreateSubmit,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    AppLocalizations.of(context).bookingCreateSubmit,
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                           ),
@@ -614,11 +475,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     );
   }
 
-  Widget _buildDateField({
-    required String label,
-    required DateTime date,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildDateField({required String label, required DateTime date, required VoidCallback onTap}) {
     return Builder(
       builder: (ctx) => InkWell(
         onTap: onTap,
@@ -628,10 +485,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
             prefixIcon: const Icon(Icons.calendar_today),
             context: ctx,
           ),
-          child: Text(
-            DateFormat('d.M.yyyy').format(date),
-            style: const TextStyle(fontSize: 16),
-          ),
+          child: Text(DateFormat('d.M.yyyy').format(date), style: const TextStyle(fontSize: 16)),
         ),
       ),
     );
@@ -652,8 +506,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       setState(() {
         _checkInDate = selectedDate;
         // Ensure check-out is after check-in
-        if (_checkOutDate.isBefore(_checkInDate) ||
-            _checkOutDate.isAtSameMomentAs(_checkInDate)) {
+        if (_checkOutDate.isBefore(_checkInDate) || _checkOutDate.isAtSameMomentAs(_checkInDate)) {
           _checkOutDate = _checkInDate.add(const Duration(days: 1));
         }
       });
@@ -730,9 +583,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         ownerId: authState.firebaseUser?.uid,
         guestName: _guestNameController.text.trim(),
         guestEmail: _guestEmailController.text.trim(),
-        guestPhone: _guestPhoneController.text.trim().isEmpty
-            ? null
-            : _guestPhoneController.text.trim(),
+        guestPhone: _guestPhoneController.text.trim().isEmpty ? null : _guestPhoneController.text.trim(),
         checkIn: _checkInDate,
         checkOut: _checkOutDate,
         guestCount: guestCount,
@@ -740,9 +591,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         paymentMethod: _paymentMethod,
         paymentStatus: 'pending',
         status: _status,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         source: 'admin',
         createdAt: DateTime.now(),
       );
@@ -751,19 +600,12 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          AppLocalizations.of(context).bookingCreateSuccess,
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, AppLocalizations.of(context).bookingCreateSuccess);
       }
     } catch (e) {
       // FIXED: Use ErrorDisplayUtils for user-friendly error messages
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: AppLocalizations.of(context).bookingCreateError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).bookingCreateError);
       }
     } finally {
       if (mounted) {
@@ -792,10 +634,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
             icon: const Icon(Icons.warning, color: Colors.red, size: 48),
             title: Text(
               l10n.bookingCreateOverlapWarning,
-              style: const TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
             content: SizedBox(
               width: double.maxFinite,
@@ -829,20 +668,12 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(
-                                      Icons.person,
-                                      size: 16,
-                                      color: Colors.red,
-                                    ),
+                                    const Icon(Icons.person, size: 16, color: Colors.red),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
-                                        conflict.guestName ??
-                                            l10n.bookingCreateUnknownGuest,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                        conflict.guestName ?? l10n.bookingCreateUnknownGuest,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
                                     ),
                                   ],
@@ -850,11 +681,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    const Icon(
-                                      Icons.calendar_today,
-                                      size: 14,
-                                      color: Colors.black54,
-                                    ),
+                                    const Icon(Icons.calendar_today, size: 14, color: Colors.black54),
                                     const SizedBox(width: 6),
                                     Text(
                                       '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}. - ${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}.',
@@ -868,10 +695,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                                     Container(
                                       width: 10,
                                       height: 10,
-                                      decoration: BoxDecoration(
-                                        color: conflict.status.color,
-                                        shape: BoxShape.circle,
-                                      ),
+                                      decoration: BoxDecoration(color: conflict.status.color, shape: BoxShape.circle),
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
@@ -895,16 +719,10 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(l10n.bookingCreateCancel),
-              ),
+              TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.bookingCreateCancel)),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
                 child: Text(l10n.bookingCreateContinueAnyway),
               ),
             ],
@@ -934,12 +752,7 @@ class _SectionHeader extends StatelessWidget {
           child: Icon(icon, color: Colors.white, size: 16),
         ),
         const SizedBox(width: 10),
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
+        Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
       ],
     );
   }

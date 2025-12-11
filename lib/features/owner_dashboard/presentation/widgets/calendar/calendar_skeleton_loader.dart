@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Skeleton loader for calendar with shimmer effect
 /// Shows placeholder rows to fill the page while loading
@@ -67,12 +68,7 @@ class CalendarSkeletonLoader extends StatelessWidget {
 
   Widget _buildGridSkeleton(BuildContext context) {
     return SingleChildScrollView(
-      child: Column(
-        children: List.generate(
-          unitCount,
-          (unitIndex) => _buildUnitRowSkeleton(context, unitIndex),
-        ),
-      ),
+      child: Column(children: List.generate(unitCount, (unitIndex) => _buildUnitRowSkeleton(context, unitIndex))),
     );
   }
 
@@ -87,11 +83,7 @@ class CalendarSkeletonLoader extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 1),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        border: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.3 * 255).toInt()))),
       ),
       child: Row(
         children: [
@@ -148,17 +140,7 @@ class _SkeletonBox extends StatelessWidget {
   final double height;
   final double borderRadius;
 
-  const _SkeletonBox({
-    required this.width,
-    required this.height,
-    this.borderRadius = 4,
-  });
-
-  // Consistent skeleton colors (matching SkeletonColors design system)
-  static const Color _darkBase = Color(0xFF2D2D3A);
-  static const Color _darkHighlight = Color(0xFF3D3D4A);
-  static const Color _lightBase = Color(0xFFE8E8F0);
-  static const Color _lightHighlight = Color(0xFFF5F5FA);
+  const _SkeletonBox({required this.width, required this.height, this.borderRadius = 4});
 
   @override
   Widget build(BuildContext context) {
@@ -166,14 +148,13 @@ class _SkeletonBox extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Shimmer.fromColors(
-      baseColor: isDark ? _darkBase : _lightBase,
-      highlightColor: isDark ? _darkHighlight : _lightHighlight,
-      period: const Duration(milliseconds: 1500),
+      baseColor: isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary,
+      highlightColor: isDark ? SkeletonColors.darkSecondary : SkeletonColors.lightSecondary,
       child: Container(
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: isDark ? _darkBase : _lightBase,
+          color: isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary,
           borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
@@ -201,9 +182,7 @@ class CalendarSkeletonCompact extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation(
-                isDark
-                    ? Colors.white.withAlpha((0.5 * 255).toInt())
-                    : Colors.grey.shade400,
+                isDark ? Colors.white.withAlpha((0.5 * 255).toInt()) : Colors.grey.shade400,
               ),
             ),
           ),
@@ -211,9 +190,7 @@ class CalendarSkeletonCompact extends StatelessWidget {
           Text(
             l10n.ownerCalendarLoading,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodyLarge?.color?.withAlpha(
-                (0.5 * 255).toInt(),
-              ),
+              color: theme.textTheme.bodyLarge?.color?.withAlpha((0.5 * 255).toInt()),
             ),
           ),
         ],

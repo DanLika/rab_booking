@@ -362,6 +362,8 @@ class _FAQScreenState extends State<FAQScreen> {
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          iconColor: theme.colorScheme.primary,
+          collapsedIconColor: theme.colorScheme.primary,
           leading: CircleAvatar(
             backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
             child: Icon(

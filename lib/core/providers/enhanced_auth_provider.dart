@@ -26,7 +26,7 @@ class EnhancedAuthState {
   const EnhancedAuthState({
     this.firebaseUser,
     this.userModel,
-    this.isLoading = false,
+    this.isLoading = true, // Start as loading to show splash immediately
     this.error,
     this.requiresEmailVerification = false,
     this.requiresOnboarding = false,
@@ -74,7 +74,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         _loadUserProfile(user);
       } else {
         LoggingService.log('User signed out, clearing state', tag: 'ENHANCED_AUTH');
-        state = const EnhancedAuthState();
+        // Set isLoading to false when no user (initial check complete)
+        state = const EnhancedAuthState(isLoading: false);
       }
     });
   }
@@ -137,9 +138,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // Check onboarding status
         final requiresOnboarding = userModel.needsOnboarding;
 
+        // Set isLoading to false when user profile is loaded (initial check complete)
         state = EnhancedAuthState(
           firebaseUser: firebaseUser,
           userModel: userModel,
+          isLoading: false,
           requiresEmailVerification: requiresVerification,
           requiresOnboarding: requiresOnboarding,
         );
@@ -158,7 +161,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
     } catch (e) {
       unawaited(LoggingService.logError('ERROR loading user profile', e));
-      state = EnhancedAuthState(firebaseUser: firebaseUser, error: 'Failed to load user profile: $e');
+      // Set isLoading to false even on error (initial check complete)
+      state = EnhancedAuthState(firebaseUser: firebaseUser, isLoading: false, error: 'Failed to load user profile: $e');
     }
   }
 
@@ -178,7 +182,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     );
 
     await _firestore.collection('users').doc(firebaseUser.uid).set(userModel.toJson());
-    state = EnhancedAuthState(firebaseUser: firebaseUser, userModel: userModel);
+    // Set isLoading to false when user profile is created (initial check complete)
+    state = EnhancedAuthState(firebaseUser: firebaseUser, userModel: userModel, isLoading: false);
   }
 
   /// Sign in with email and password (with rate limiting)
@@ -533,7 +538,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
 
     await _auth.signOut();
-    state = const EnhancedAuthState();
+    // Keep isLoading false after sign out (not an initial check)
+    state = const EnhancedAuthState(isLoading: false);
   }
 
   /// Reset password

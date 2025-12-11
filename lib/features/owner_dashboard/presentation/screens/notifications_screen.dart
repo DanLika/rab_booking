@@ -253,7 +253,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   ),
                 );
               },
-              loading: () => SkeletonLoader.notificationsList(),
+              loading: SkeletonLoader.notificationsList,
               error: (error, stack) {
                 return _buildErrorState(context, error, ref);
               },

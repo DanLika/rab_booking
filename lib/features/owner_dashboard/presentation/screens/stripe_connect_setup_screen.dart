@@ -816,9 +816,7 @@ class _StripeConnectSetupScreenState
                   ),
                   Icon(
                     _showFaq ? Icons.expand_less : Icons.expand_more,
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      (0.5 * 255).toInt(),
-                    ),
+                    color: theme.colorScheme.primary,
                   ),
                 ],
               ),

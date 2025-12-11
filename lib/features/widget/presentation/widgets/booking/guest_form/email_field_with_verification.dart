@@ -52,10 +52,7 @@ class EmailFieldWithVerification extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmailField(
-    MinimalistColorSchemeAdapter colors,
-    WidgetTranslations tr,
-  ) {
+  Widget _buildEmailField(MinimalistColorSchemeAdapter colors, WidgetTranslations tr) {
     return TextFormField(
       controller: controller,
       maxLength: _maxEmailLength,
@@ -75,10 +72,7 @@ class EmailFieldWithVerification extends ConsumerWidget {
     );
   }
 
-  Widget _buildVerificationStatus(
-    MinimalistColorSchemeAdapter colors,
-    WidgetTranslations tr,
-  ) {
+  Widget _buildVerificationStatus(MinimalistColorSchemeAdapter colors, WidgetTranslations tr) {
     if (emailVerified) {
       return Container(
         width: _verifyButtonHeight,
@@ -88,9 +82,7 @@ class EmailFieldWithVerification extends ConsumerWidget {
           borderRadius: BorderTokens.circularMedium,
           border: Border.all(color: colors.success, width: 1.5),
         ),
-        child: Center(
-          child: Icon(Icons.verified, color: colors.success, size: 24),
-        ),
+        child: Center(child: Icon(Icons.verified, color: colors.success, size: 24)),
       );
     }
 
@@ -103,11 +95,9 @@ class EmailFieldWithVerification extends ConsumerWidget {
           backgroundColor: colors.textPrimary,
           foregroundColor: colors.backgroundPrimary,
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderTokens.circularMedium,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
         ),
-        child: Text(tr.verifyEmail),
+        child: Center(child: Text(tr.verifyEmail, textAlign: TextAlign.center)),
       ),
     );
   }

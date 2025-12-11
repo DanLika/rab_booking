@@ -2,8 +2,10 @@ import 'dart:async' show Timer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -43,8 +45,7 @@ class OwnerBookingsScreen extends ConsumerStatefulWidget {
   const OwnerBookingsScreen({super.key, this.initialBookingId});
 
   @override
-  ConsumerState<OwnerBookingsScreen> createState() =>
-      _OwnerBookingsScreenState();
+  ConsumerState<OwnerBookingsScreen> createState() => _OwnerBookingsScreenState();
 }
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
@@ -52,6 +53,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   final ScrollDirectionTracker _scrollTracker = ScrollDirectionTracker();
   bool _hasHandledInitialBooking = false;
   bool _isLoadingInitialBooking = false;
+  bool _showSync = false;
+  bool _showFaq = false;
 
   // Web performance: Debounce scroll listener to reduce scroll handler calls
   Timer? _scrollDebounceTimer;
@@ -82,11 +85,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final state = ref.read(windowedBookingsNotifierProvider);
 
     // Load more at bottom - use 90% threshold to trigger earlier
-    if (_scrollTracker.shouldLoadMore(
-      _scrollController,
-      ScrollDirection.down,
-      bottomThreshold: 0.9,
-    )) {
+    if (_scrollTracker.shouldLoadMore(_scrollController, ScrollDirection.down, bottomThreshold: 0.9)) {
       if (state.canLoadBottom) {
         ref.read(windowedBookingsNotifierProvider.notifier).loadMoreBottom();
       }
@@ -115,53 +114,49 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final bookings = windowedState.visibleBookings;
 
     // Listen for data to handle initial booking (deep-link support)
-    ref.listen(windowedBookingsNotifierProvider, (previous, next) {
-      if (!_hasHandledInitialBooking &&
-          widget.initialBookingId != null &&
-          next.visibleBookings.isNotEmpty &&
-          !next.isLoading) {
-        try {
-          final booking = next.visibleBookings.firstWhere(
-            (b) => b.booking.id == widget.initialBookingId,
-          );
-          _hasHandledInitialBooking = true;
+    if (!_hasHandledInitialBooking && widget.initialBookingId != null) {
+      ref.listen(windowedBookingsNotifierProvider, (previous, next) {
+        if (!_hasHandledInitialBooking &&
+            widget.initialBookingId != null &&
+            next.visibleBookings.isNotEmpty &&
+            !next.isLoading) {
+          try {
+            final booking = next.visibleBookings.firstWhere((b) => b.booking.id == widget.initialBookingId);
+            _hasHandledInitialBooking = true;
 
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() => _isLoadingInitialBooking = false);
-              showDialog(
-                context: context,
-                builder: (context) =>
-                    BookingDetailsDialog(ownerBooking: booking),
-              );
-            }
-          });
-        } catch (_) {
-          // Booking not found in current window - this is expected with windowing
-          // Option A: fetch booking directly (implemented in notifier)
-          _hasHandledInitialBooking = true;
-          ref
-              .read(windowedBookingsNotifierProvider.notifier)
-              .fetchAndShowBooking(widget.initialBookingId!)
-              .then((ownerBooking) {
-                if (mounted) {
-                  setState(() => _isLoadingInitialBooking = false);
-                  if (ownerBooking != null) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) {
-                        showDialog(
-                          context: this.context,
-                          builder: (ctx) =>
-                              BookingDetailsDialog(ownerBooking: ownerBooking),
-                        );
-                      }
-                    });
-                  }
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() => _isLoadingInitialBooking = false);
+                showDialog(
+                  context: context,
+                  builder: (context) => BookingDetailsDialog(ownerBooking: booking),
+                );
+              }
+            });
+          } catch (_) {
+            // Booking not found in current window - this is expected with windowing
+            _hasHandledInitialBooking = true;
+            ref.read(windowedBookingsNotifierProvider.notifier).fetchAndShowBooking(widget.initialBookingId!).then((
+              ownerBooking,
+            ) {
+              if (mounted) {
+                setState(() => _isLoadingInitialBooking = false);
+                if (ownerBooking != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => BookingDetailsDialog(ownerBooking: ownerBooking),
+                      );
+                    }
+                  });
                 }
-              });
+              }
+            });
+          }
         }
-      }
-    });
+      });
+    }
 
     final filters = ref.watch(bookingsFiltersNotifierProvider);
     final viewMode = ref.watch(ownerBookingsViewProvider);
@@ -185,164 +180,155 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       body: Stack(
         children: [
           Container(
-            decoration:
-                BoxDecoration(gradient: context.gradients.pageBackground),
+            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
             child: RefreshIndicator(
-          onRefresh: () async {
-            // Refresh bookings data using windowed notifier
-            await ref.read(windowedBookingsNotifierProvider.notifier).refresh();
-          },
-          color: theme.colorScheme.primary,
-          child: CustomScrollView(
-            controller: _scrollController,
-            // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
-            physics: PlatformScrollPhysics.adaptive,
-            slivers: [
-              // Filters section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    context.horizontalPadding,
-                    isMobile ? 16 : 20,
-                    context.horizontalPadding,
-                    isMobile ? 8 : 12,
-                  ),
-                  child: _buildFiltersSection(
-                    filters,
-                    isMobile,
-                    theme,
-                    viewMode,
-                  ),
-                ),
-              ),
-
-              // Bookings content - using state-based approach
-              // Show loading skeleton during initial load
-              if (windowedState.isInitialLoad && bookings.isEmpty)
-                viewMode == BookingsViewMode.table
-                    ? SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: context.horizontalPadding,
-                          ),
-                          child: SkeletonLoader.bookingsTable(),
-                        ),
-                      )
-                    : SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              context.horizontalPadding,
-                              0,
-                              context.horizontalPadding,
-                              16,
-                            ),
-                            child: const BookingCardSkeleton(),
-                          ),
-                          childCount: 5,
-                        ),
-                      )
-              // Show error state
-              else if (windowedState.error != null && bookings.isEmpty)
-                SliverToBoxAdapter(
-                  child: Center(
+              onRefresh: () async {
+                // Refresh bookings data using windowed notifier
+                await ref.read(windowedBookingsNotifierProvider.notifier).refresh();
+              },
+              color: theme.colorScheme.primary,
+              child: CustomScrollView(
+                controller: _scrollController,
+                // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
+                physics: PlatformScrollPhysics.adaptive,
+                slivers: [
+                  // Filters section
+                  SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.all(context.horizontalPadding),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: AppDimensions.iconSizeXL,
-                            color: theme.colorScheme.error,
-                          ),
-                          const SizedBox(height: AppDimensions.spaceS),
-                          Text(
-                            l10n.ownerBookingsErrorLoading,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: AppDimensions.spaceXS),
-                          Text(
-                            windowedState.error!,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: context.textColorSecondary),
-                            textAlign: TextAlign.center,
-                            maxLines: 5,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        isMobile ? 16 : 20,
+                        context.horizontalPadding,
+                        isMobile ? 8 : 12,
                       ),
+                      child: _buildFiltersSection(filters, isMobile, theme, viewMode),
                     ),
                   ),
-                )
-              // Show empty state
-              else if (windowedState.isEmpty)
-                SliverToBoxAdapter(child: _buildEmptyState())
-              // Show bookings list
-              else if (viewMode == BookingsViewMode.card)
-                _buildBookingsSliverList(bookings, isMobile)
-              else
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.horizontalPadding,
-                    ),
-                    child: BookingsTableView(bookings: bookings),
-                  ),
-                ),
 
-              // Load more indicators (top and bottom)
-              SliverToBoxAdapter(
-                child: Builder(
-                  builder: (context) {
-                    final localTheme = Theme.of(context);
-                    final localL10n = AppLocalizations.of(context);
-
-                    // No more items to load
-                    if (!windowedState.hasMoreBottom || bookings.isEmpty) {
-                      return const SizedBox(height: 24);
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Center(
-                        child: windowedState.isLoadingBottom
-                            ? Column(
-                                children: [
-                                  CircularProgressIndicator(
-                                    color: localTheme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    localL10n.ownerBookingsLoadingMore,
-                                    style: localTheme.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: localTheme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                  ),
-                                ],
-                              )
-                            : Text(
-                                localL10n.ownerBookingsScrollToLoadMore,
-                                style: localTheme.textTheme.bodySmall?.copyWith(
-                                  color:
-                                      localTheme.colorScheme.onSurfaceVariant,
+                  // Bookings content - using state-based approach
+                  // Show loading skeleton during initial load
+                  if (windowedState.isInitialLoad && bookings.isEmpty)
+                    viewMode == BookingsViewMode.table
+                        ? SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+                              child: SkeletonLoader.bookingsTable(),
+                            ),
+                          )
+                        : SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  context.horizontalPadding,
+                                  0,
+                                  context.horizontalPadding,
+                                  16,
                                 ),
+                                child: const BookingCardSkeleton(),
                               ),
+                              childCount: 5,
+                            ),
+                          )
+                  // Show error state
+                  else if (windowedState.error != null && bookings.isEmpty)
+                    SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(context.horizontalPadding),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.error_outline, size: AppDimensions.iconSizeXL, color: theme.colorScheme.error),
+                              const SizedBox(height: AppDimensions.spaceS),
+                              Text(l10n.ownerBookingsErrorLoading, style: Theme.of(context).textTheme.titleLarge),
+                              const SizedBox(height: AppDimensions.spaceXS),
+                              Text(
+                                windowedState.error!,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(color: context.textColorSecondary),
+                                textAlign: TextAlign.center,
+                                maxLines: 5,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    );
-                  },
-                ),
-              ),
+                    )
+                  // Show empty state
+                  else if (windowedState.isEmpty)
+                    SliverToBoxAdapter(child: _buildEmptyState())
+                  // Show bookings list
+                  else if (viewMode == BookingsViewMode.card)
+                    _buildBookingsSliverList(bookings, isMobile)
+                  else
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+                        child: BookingsTableView(bookings: bookings),
+                      ),
+                    ),
 
-              // Bottom spacing
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            ],
+                  // Load more indicators (top and bottom)
+                  SliverToBoxAdapter(
+                    child: Builder(
+                      builder: (context) {
+                        final localTheme = Theme.of(context);
+                        final localL10n = AppLocalizations.of(context);
+
+                        // No more items to load
+                        if (!windowedState.hasMoreBottom || bookings.isEmpty) {
+                          return const SizedBox(height: 24);
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: windowedState.isLoadingBottom
+                                ? Column(
+                                    children: [
+                                      CircularProgressIndicator(color: localTheme.colorScheme.primary),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        localL10n.ownerBookingsLoadingMore,
+                                        style: localTheme.textTheme.bodySmall?.copyWith(
+                                          color: localTheme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Text(
+                                    localL10n.ownerBookingsScrollToLoadMore,
+                                    style: localTheme.textTheme.bodySmall?.copyWith(
+                                      color: localTheme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  // Sinkronizacija section
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(context.horizontalPadding, 16, context.horizontalPadding, 16),
+                      child: _buildSynchronizationSection(context, theme, isMobile, l10n),
+                    ),
+                  ),
+
+                  // Česta pitanja (FAQ) section
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(context.horizontalPadding, 0, context.horizontalPadding, 24),
+                      child: _buildFaqSection(context, theme, isMobile, l10n),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
           // Loading overlay for notification deep-link
           if (_isLoadingInitialBooking)
             AnimatedOpacity(
@@ -354,9 +340,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircularProgressIndicator(
-                        color: theme.colorScheme.primary,
-                      ),
+                      CircularProgressIndicator(color: theme.colorScheme.primary),
                       const SizedBox(height: 16),
                       Text(
                         l10n.loading,
@@ -374,12 +358,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Widget _buildFiltersSection(
-    BookingsFilters filters,
-    bool isMobile,
-    ThemeData theme,
-    BookingsViewMode viewMode,
-  ) {
+  Widget _buildFiltersSection(BookingsFilters filters, bool isMobile, ThemeData theme, BookingsViewMode viewMode) {
     // Count active filters for display
     int activeFilterCount = 0;
     if (filters.status != null) activeFilterCount++;
@@ -395,9 +374,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
+        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
@@ -416,27 +393,19 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     color: theme.colorScheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.filter_list,
-                    color: theme.colorScheme.primary,
-                    size: 18,
-                  ),
+                  child: Icon(Icons.filter_list, color: theme.colorScheme.primary, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   l10n.ownerBookingsFiltersAndView,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
 
                 // View mode toggle button
                 Container(
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.5,
-                    ),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -446,12 +415,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         icon: Icons.view_agenda_outlined,
                         isSelected: viewMode == BookingsViewMode.card,
                         onTap: () {
-                          ref
-                              .read(ownerBookingsViewProvider.notifier)
-                              .setView(BookingsViewMode.card);
-                          ref
-                              .read(windowedBookingsNotifierProvider.notifier)
-                              .setViewMode(isTableView: false);
+                          ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.card);
+                          ref.read(windowedBookingsNotifierProvider.notifier).setViewMode(isTableView: false);
                         },
                         tooltip: l10n.ownerBookingsCardView,
                       ),
@@ -459,12 +424,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         icon: Icons.table_rows_outlined,
                         isSelected: viewMode == BookingsViewMode.table,
                         onTap: () {
-                          ref
-                              .read(ownerBookingsViewProvider.notifier)
-                              .setView(BookingsViewMode.table);
-                          ref
-                              .read(windowedBookingsNotifierProvider.notifier)
-                              .setViewMode(isTableView: true);
+                          ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.table);
+                          ref.read(windowedBookingsNotifierProvider.notifier).setViewMode(isTableView: true);
                         },
                         tooltip: l10n.ownerBookingsTableView,
                       ),
@@ -488,32 +449,20 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                ),
+                border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => const BookingsFiltersDialog(),
-                    );
+                    showDialog(context: context, builder: (context) => const BookingsFiltersDialog());
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.tune,
-                          color: theme.colorScheme.primary,
-                          size: 24,
-                        ),
+                        Icon(Icons.tune, color: theme.colorScheme.primary, size: 24),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -535,9 +484,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                                   color: activeFilterCount > 0
                                       ? theme.colorScheme.primary
                                       : theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: activeFilterCount > 0
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
+                                  fontWeight: activeFilterCount > 0 ? FontWeight.w600 : FontWeight.normal,
                                 ),
                               ),
                             ],
@@ -546,14 +493,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         const SizedBox(width: 12),
                         if (activeFilterCount > 0) ...[
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.15,
-                              ),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -566,11 +508,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                           ),
                           const SizedBox(width: 8),
                         ],
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                        Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
                       ],
                     ),
                   ),
@@ -583,24 +521,15 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: () {
-                  ref
-                      .read(bookingsFiltersNotifierProvider.notifier)
-                      .clearFilters();
+                  ref.read(bookingsFiltersNotifierProvider.notifier).clearFilters();
                 },
                 icon: const Icon(Icons.clear_all, size: 18),
                 label: Text(l10n.ownerBookingsClearAllFilters),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  side: BorderSide(
-                    color: theme.colorScheme.error.withValues(alpha: 0.3),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.3)),
                   foregroundColor: theme.colorScheme.error,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ],
@@ -631,9 +560,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             final rightIndex = leftIndex + 1;
 
             final leftBooking = bookings[leftIndex];
-            final rightBooking = rightIndex < bookings.length
-                ? bookings[rightIndex]
-                : null;
+            final rightBooking = rightIndex < bookings.length ? bookings[rightIndex] : null;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -643,10 +570,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   Expanded(
                     // Web performance: RepaintBoundary isolates card repaints
                     child: RepaintBoundary(
-                      child: _BookingCard(
-                        key: ValueKey(leftBooking.booking.id),
-                        ownerBooking: leftBooking,
-                      ),
+                      child: _BookingCard(key: ValueKey(leftBooking.booking.id), ownerBooking: leftBooking),
                     ),
                   ),
                   if (rightBooking != null) ...[
@@ -654,10 +578,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     Expanded(
                       // Web performance: RepaintBoundary isolates card repaints
                       child: RepaintBoundary(
-                        child: _BookingCard(
-                          key: ValueKey(rightBooking.booking.id),
-                          ownerBooking: rightBooking,
-                        ),
+                        child: _BookingCard(key: ValueKey(rightBooking.booking.id), ownerBooking: rightBooking),
                       ),
                     ),
                   ] else
@@ -679,10 +600,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               padding: const EdgeInsets.only(bottom: 16),
               // Web performance: RepaintBoundary isolates card repaints
               child: RepaintBoundary(
-                child: _BookingCard(
-                  key: ValueKey(ownerBooking.booking.id),
-                  ownerBooking: ownerBooking,
-                ),
+                child: _BookingCard(key: ValueKey(ownerBooking.booking.id), ownerBooking: ownerBooking),
               ),
             );
           }, childCount: bookings.length),
@@ -707,38 +625,26 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 ),
-                child: Icon(
-                  Icons.event_available_outlined,
-                  size: 70,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                child: Icon(Icons.event_available_outlined, size: 70, color: Theme.of(context).colorScheme.primary),
               ),
               const SizedBox(height: AppDimensions.spaceL),
 
               // Main title
               Text(
                 l10n.ownerBookingsNoBookings,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: AppDimensions.spaceS),
 
               // Description
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.spaceL,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceL),
                 child: Text(
                   l10n.ownerBookingsNoBookingsDescription,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 3,
@@ -747,6 +653,153 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSynchronizationSection(BuildContext context, ThemeData theme, bool isMobile, AppLocalizations l10n) {
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _showSync = !_showSync),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              child: Row(
+                children: [
+                  Icon(Icons.sync_rounded, color: theme.colorScheme.primary, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.icalSyncTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Icon(_showSync ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.primary),
+                ],
+              ),
+            ),
+          ),
+          if (_showSync) ...[
+            Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+            Padding(
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.icalWhySync,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.icalSyncNoFeedsDesc,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: () => context.push(OwnerRoutes.icalImport),
+                    icon: const Icon(Icons.sync, size: 20),
+                    label: Text(l10n.icalSyncTitle),
+                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFaqSection(BuildContext context, ThemeData theme, bool isMobile, AppLocalizations l10n) {
+    final isDark = theme.brightness == Brightness.dark;
+
+    final faqs = [
+      (l10n.ownerFaqBookings1Q, l10n.ownerFaqBookings1A),
+      (l10n.ownerFaqBookings2Q, l10n.ownerFaqBookings2A),
+      (l10n.ownerFaqBookings3Q, l10n.ownerFaqBookings3A),
+      (l10n.ownerFaqBookings4Q, l10n.ownerFaqBookings4A),
+      (l10n.ownerFaqBookings5Q, l10n.ownerFaqBookings5A),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _showFaq = !_showFaq),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              child: Row(
+                children: [
+                  Icon(Icons.question_answer, color: theme.colorScheme.primary, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.ownerFaqCategoryBookings,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Icon(_showFaq ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.primary),
+                ],
+              ),
+            ),
+          ),
+          if (_showFaq) ...[
+            Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+            Padding(
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              child: Column(
+                children: faqs
+                    .map(
+                      (faq) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '❓ ${faq.$1}',
+                              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              faq.$2,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -774,9 +827,7 @@ class _BookingCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
+        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: ClipRRect(
@@ -794,24 +845,15 @@ class _BookingCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Guest info
-                  BookingCardGuestInfo(
-                    ownerBooking: ownerBooking,
-                    isMobile: isMobile,
-                  ),
+                  BookingCardGuestInfo(ownerBooking: ownerBooking, isMobile: isMobile),
 
                   Divider(
                     height: isMobile ? 16 : 24,
-                    color: isDark
-                        ? AppColors.sectionDividerDark
-                        : AppColors.sectionDividerLight,
+                    color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
                   ),
 
                   // Property and unit info
-                  BookingCardPropertyInfo(
-                    property: property,
-                    unit: unit,
-                    isMobile: isMobile,
-                  ),
+                  BookingCardPropertyInfo(property: property, unit: unit, isMobile: isMobile),
 
                   SizedBox(height: isMobile ? 8 : 12),
 
@@ -825,17 +867,13 @@ class _BookingCard extends ConsumerWidget {
                     icon: Icons.people_outline,
                     child: Text(
                       '${booking.guestCount} ${booking.guestCount == 1 ? l10n.ownerBookingsGuest : l10n.ownerBookingsGuests}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                     ),
                   ),
 
                   Divider(
                     height: isMobile ? 16 : 24,
-                    color: isDark
-                        ? AppColors.sectionDividerDark
-                        : AppColors.sectionDividerLight,
+                    color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
                   ),
 
                   // Payment info
@@ -853,21 +891,15 @@ class _BookingCard extends ConsumerWidget {
             BookingCardActions(
               booking: booking,
               isMobile: isMobile,
-              onShowDetails: () =>
-                  _showBookingDetails(context, ref, ownerBooking),
+              onShowDetails: () => _showBookingDetails(context, ref, ownerBooking),
               onApprove: booking.status == BookingStatus.pending
                   ? () => _approveBooking(context, ref, booking.id)
                   : null,
-              onReject: booking.status == BookingStatus.pending
-                  ? () => _rejectBooking(context, ref, booking.id)
-                  : null,
-              onComplete:
-                  booking.status == BookingStatus.confirmed && booking.isPast
+              onReject: booking.status == BookingStatus.pending ? () => _rejectBooking(context, ref, booking.id) : null,
+              onComplete: booking.status == BookingStatus.confirmed && booking.isPast
                   ? () => _completeBooking(context, ref, booking.id)
                   : null,
-              onCancel: booking.canBeCancelled
-                  ? () => _cancelBooking(context, ref, booking.id)
-                  : null,
+              onCancel: booking.canBeCancelled ? () => _cancelBooking(context, ref, booking.id) : null,
             ),
           ],
         ),
@@ -875,11 +907,7 @@ class _BookingCard extends ConsumerWidget {
     );
   }
 
-  void _showBookingDetails(
-    BuildContext context,
-    WidgetRef ref,
-    OwnerBooking ownerBooking,
-  ) {
+  void _showBookingDetails(BuildContext context, WidgetRef ref, OwnerBooking ownerBooking) {
     showDialog(
       context: context,
       builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
@@ -887,15 +915,8 @@ class _BookingCard extends ConsumerWidget {
   }
 
   /// Approve pending booking (requires owner approval workflow)
-  void _approveBooking(
-    BuildContext context,
-    WidgetRef ref,
-    String bookingId,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => const BookingApproveDialog(),
-    );
+  void _approveBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+    final confirmed = await showDialog<bool>(context: context, builder: (context) => const BookingApproveDialog());
 
     if (confirmed == true && context.mounted) {
       final l10n = AppLocalizations.of(context);
@@ -904,78 +925,43 @@ class _BookingCard extends ConsumerWidget {
         await repository.approveBooking(bookingId);
 
         if (context.mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            l10n.ownerBookingsApproved,
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerBookingsApproved);
           // Update local state immediately (optimistic update)
-          ref
-              .read(windowedBookingsNotifierProvider.notifier)
-              .updateBookingStatus(bookingId, BookingStatus.confirmed);
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.confirmed);
         }
       } catch (e) {
         if (context.mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            e,
-            userMessage: l10n.ownerBookingsApproveError,
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsApproveError);
         }
       }
     }
   }
 
   /// Reject pending booking
-  void _rejectBooking(
-    BuildContext context,
-    WidgetRef ref,
-    String bookingId,
-  ) async {
-    final reason = await showDialog<String?>(
-      context: context,
-      builder: (context) => const BookingRejectDialog(),
-    );
+  void _rejectBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+    final reason = await showDialog<String?>(context: context, builder: (context) => const BookingRejectDialog());
 
     if (reason != null && context.mounted) {
       final l10n = AppLocalizations.of(context);
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
-        await repository.rejectBooking(
-          bookingId,
-          reason: reason.isEmpty ? null : reason,
-        );
+        await repository.rejectBooking(bookingId, reason: reason.isEmpty ? null : reason);
 
         if (context.mounted) {
-          ErrorDisplayUtils.showWarningSnackBar(
-            context,
-            l10n.ownerBookingsRejected,
-          );
+          ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerBookingsRejected);
           // Update local state - rejection changes status to cancelled
-          ref
-              .read(windowedBookingsNotifierProvider.notifier)
-              .updateBookingStatus(bookingId, BookingStatus.cancelled);
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.cancelled);
         }
       } catch (e) {
         if (context.mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            e,
-            userMessage: l10n.ownerBookingsRejectError,
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsRejectError);
         }
       }
     }
   }
 
-  void _completeBooking(
-    BuildContext context,
-    WidgetRef ref,
-    String bookingId,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => const BookingCompleteDialog(),
-    );
+  void _completeBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+    final confirmed = await showDialog<bool>(context: context, builder: (context) => const BookingCompleteDialog());
 
     if (confirmed == true && context.mounted) {
       final l10n = AppLocalizations.of(context);
@@ -984,32 +970,19 @@ class _BookingCard extends ConsumerWidget {
         await repository.completeBooking(bookingId);
 
         if (context.mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            l10n.ownerBookingsCompleted,
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerBookingsCompleted);
           // Update local state
-          ref
-              .read(windowedBookingsNotifierProvider.notifier)
-              .updateBookingStatus(bookingId, BookingStatus.completed);
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.completed);
         }
       } catch (e) {
         if (context.mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            e,
-            userMessage: l10n.ownerBookingsCompleteError,
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsCompleteError);
         }
       }
     }
   }
 
-  void _cancelBooking(
-    BuildContext context,
-    WidgetRef ref,
-    String bookingId,
-  ) async {
+  void _cancelBooking(BuildContext context, WidgetRef ref, String bookingId) async {
     final result = await showDialog<Map<String, dynamic>?>(
       context: context,
       builder: (context) => const BookingCancelDialog(),
@@ -1019,29 +992,16 @@ class _BookingCard extends ConsumerWidget {
       final l10n = AppLocalizations.of(context);
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
-        await repository.cancelBooking(
-          bookingId,
-          result['reason'] as String,
-          sendEmail: result['sendEmail'] as bool,
-        );
+        await repository.cancelBooking(bookingId, result['reason'] as String, sendEmail: result['sendEmail'] as bool);
 
         if (context.mounted) {
-          ErrorDisplayUtils.showWarningSnackBar(
-            context,
-            l10n.ownerBookingsCancelled,
-          );
+          ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerBookingsCancelled);
           // Update local state
-          ref
-              .read(windowedBookingsNotifierProvider.notifier)
-              .updateBookingStatus(bookingId, BookingStatus.cancelled);
+          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.cancelled);
         }
       } catch (e) {
         if (context.mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            e,
-            userMessage: l10n.ownerBookingsCancelError,
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsCancelError);
         }
       }
     }
@@ -1079,12 +1039,7 @@ class _InfoRow extends StatelessWidget {
 
 /// View mode toggle button widget
 class _ViewModeButton extends StatelessWidget {
-  const _ViewModeButton({
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-    required this.tooltip,
-  });
+  const _ViewModeButton({required this.icon, required this.isSelected, required this.onTap, required this.tooltip});
 
   final IconData icon;
   final bool isSelected;
@@ -1103,17 +1058,13 @@ class _ViewModeButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isSelected
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : Colors.transparent,
+            color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.15) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
             size: 20,
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant,
+            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ),

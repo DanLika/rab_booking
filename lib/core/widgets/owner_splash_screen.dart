@@ -232,19 +232,14 @@ class _OwnerSplashScreenState extends State<OwnerSplashScreen> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: Center(
-        child: OwnerAppLoader(
-          progress: _progressController.progress,
-        ),
-      ),
+      body: Center(child: OwnerAppLoader(progress: _progressController.progress)),
     );
   }
 }
 
 /// Standalone splash screen widget for use when wrapping entire app.
 ///
-/// This version doesn't have a child - it's designed to be shown/hidden
-/// via state management.
+/// Can overlay a child widget (the app) while showing the splash screen.
 class OwnerSplashOverlay extends StatefulWidget {
   /// The future representing the actual initialization.
   final Future<void>? initializationFuture;
@@ -252,14 +247,18 @@ class OwnerSplashOverlay extends StatefulWidget {
   /// Callback when initialization AND progress animation are both complete.
   final VoidCallback onComplete;
 
-  /// Minimum display time in milliseconds
+  /// Minimum display time in milliseconds (0 = no minimum, show until ready)
   final int minimumDisplayTime;
+
+  /// Optional child widget to overlay (the app)
+  final Widget? child;
 
   const OwnerSplashOverlay({
     super.key,
     this.initializationFuture,
     required this.onComplete,
     this.minimumDisplayTime = 800,
+    this.child,
   });
 
   @override
@@ -271,9 +270,6 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
   bool _loadingDone = false;
   bool _minTimePassed = false;
 
-  // Safety timeout to prevent infinite splash (5 seconds max)
-  static const int _maxSplashDuration = 5000;
-
   @override
   void initState() {
     super.initState();
@@ -282,24 +278,22 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
 
     _progressController.start();
 
-    // Track minimum display time
-    Future.delayed(Duration(milliseconds: widget.minimumDisplayTime), () {
-      if (mounted) {
-        _minTimePassed = true;
-        _checkComplete();
-      }
-    });
-
-    // Safety timeout - force complete if stuck
-    Future.delayed(const Duration(milliseconds: _maxSplashDuration), () {
-      if (mounted && !_progressController.isCompleted) {
-        _loadingDone = true;
-        _minTimePassed = true;
-        _finishProgress();
-      }
-    });
+    // Track minimum display time (skip if 0)
+    if (widget.minimumDisplayTime > 0) {
+      Future.delayed(Duration(milliseconds: widget.minimumDisplayTime), () {
+        if (mounted) {
+          _minTimePassed = true;
+          _checkComplete();
+        }
+      });
+    } else {
+      // No minimum time - mark as passed immediately
+      _minTimePassed = true;
+    }
 
     // Wait for actual initialization to complete
+    // NO SAFETY TIMEOUT - let initialization take as long as it needs
+    // The native HTML splash has its own 15s safety timeout
     widget.initializationFuture
         ?.then((_) {
           if (mounted) {
@@ -314,9 +308,10 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
           }
         });
 
-    // If no future provided, complete immediately after min time
+    // If no future provided, complete immediately
     if (widget.initializationFuture == null) {
       _loadingDone = true;
+      _finishProgress();
     }
   }
 
@@ -327,16 +322,22 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
   }
 
   Future<void> _finishProgress() async {
-    if (!_minTimePassed) {
+    // Wait for minimum time only if it's set and not already passed
+    if (!_minTimePassed && widget.minimumDisplayTime > 0) {
       await Future.delayed(Duration(milliseconds: widget.minimumDisplayTime));
+      if (!mounted) return;
       _minTimePassed = true; // Ensure flag is set after waiting
     }
 
     if (!mounted) return;
 
+    // Complete progress animation
     await _progressController.complete();
+
+    // Small delay to show 100% before hiding
     await Future.delayed(const Duration(milliseconds: 200));
 
+    if (!mounted) return;
     _checkComplete();
   }
 
@@ -356,20 +357,45 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    // Try to get theme from context, fallback to light theme if not available
+    ThemeData? theme;
+    bool isDark = false;
+    try {
+      theme = Theme.of(context);
+      isDark = theme.brightness == Brightness.dark;
+    } catch (e) {
+      // No theme in context yet, use light theme as default
+      theme = ThemeData.light();
+      isDark = false;
+    }
 
-    final backgroundColor = isDark
-        ? const Color(0xFF000000)
-        : const Color(0xFFFAFAFA);
+    final backgroundColor = isDark ? const Color(0xFF000000) : const Color(0xFFFAFAFA);
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: Center(
-        child: OwnerAppLoader(
-          progress: _progressController.progress,
+    // Build the splash screen widget with theme context
+    final splashScreen = Theme(
+      data: theme,
+      child: Material(
+        color: backgroundColor,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(child: OwnerAppLoader(progress: _progressController.progress)),
         ),
       ),
     );
+
+    // If we have a child (the app), overlay the splash on top
+    if (widget.child != null) {
+      return Stack(
+        children: [
+          // App in background
+          widget.child!,
+          // Splash overlay on top
+          splashScreen,
+        ],
+      );
+    }
+
+    // No child - just show splash screen
+    return splashScreen;
   }
 }

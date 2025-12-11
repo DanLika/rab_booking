@@ -27,8 +27,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
-    with AndroidKeyboardDismissFix {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   bool _isDirty = false;
   bool _isSaving = false;
@@ -157,10 +156,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     // Validate form and show error if validation fails
     if (!_formKey.currentState!.validate()) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          l10n.editProfileValidationError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.editProfileValidationError);
       }
       return;
     }
@@ -186,9 +182,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         await FirebaseAuth.instance.currentUser?.updatePhotoURL(avatarUrl);
 
         // Update avatarUrl in Firestore users collection
-        await FirebaseFirestore.instance.collection('users').doc(userId).update(
-          {'avatar_url': avatarUrl},
-        );
+        await FirebaseFirestore.instance.collection('users').doc(userId).update({'avatar_url': avatarUrl});
       }
 
       // Create updated profile
@@ -203,10 +197,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           street: _streetController.text.trim(),
           postalCode: _postalCodeController.text.trim(),
         ),
-        social: SocialLinks(
-          website: _websiteController.text.trim(),
-          facebook: _facebookController.text.trim(),
-        ),
+        social: SocialLinks(website: _websiteController.text.trim(), facebook: _facebookController.text.trim()),
         propertyType: _propertyTypeController.text.trim(),
         logoUrl: _originalProfile?.logoUrl ?? '',
       );
@@ -231,14 +222,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       );
 
       // Save profile to Firestore
-      await ref
-          .read(userProfileNotifierProvider.notifier)
-          .updateProfile(updatedProfile);
+      await ref.read(userProfileNotifierProvider.notifier).updateProfile(updatedProfile);
 
       // Save company details to Firestore
-      await ref
-          .read(userProfileNotifierProvider.notifier)
-          .updateCompany(userId, updatedCompany);
+      await ref.read(userProfileNotifierProvider.notifier).updateCompany(userId, updatedCompany);
 
       if (mounted) {
         setState(() {
@@ -249,22 +236,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         // Refresh auth provider to update avatarUrl
         ref.invalidate(enhancedAuthProvider);
 
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          l10n.editProfileSaveSuccess,
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.editProfileSaveSuccess);
 
-        context.pop();
+        // Use canPop check - page may be accessed directly via URL
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/owner/profile');
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: l10n.editProfileSaveError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.editProfileSaveError);
       }
     }
   }
@@ -292,10 +277,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(
-          1,
-          isDark: theme.brightness == Brightness.dark,
-        ),
+        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -303,45 +285,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: theme.dividerColor.withAlpha((0.4 * 255).toInt()),
-              width: 1.5,
-            ),
+            border: Border.all(color: theme.dividerColor.withAlpha((0.4 * 255).toInt()), width: 1.5),
           ),
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               initiallyExpanded: initiallyExpanded,
-              tilePadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
+              iconColor: theme.colorScheme.primary,
+              collapsedIconColor: theme.colorScheme.primary,
+              tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.12 * 255).toInt(),
-                  ),
+                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: theme.colorScheme.primary, size: 18),
               ),
               title: Row(
                 children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   if (isOptional) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
@@ -365,9 +333,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               subtitle: subtitle != null
                   ? Text(
                       subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     )
                   : null,
               children: children,
@@ -387,10 +353,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           Container(
             width: 3,
             height: 16,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(width: 8),
           Text(
@@ -421,15 +384,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ],
+                      colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
                     )
                   : null,
-              color: (_isDirty && !_isSaving)
-                  ? null
-                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
+              color: (_isDirty && !_isSaving) ? null : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: ElevatedButton.icon(
@@ -440,28 +398,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                 shadowColor: Colors.transparent,
                 disabledBackgroundColor: Colors.transparent,
                 disabledForegroundColor: theme.disabledColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               icon: _isSaving
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.save_rounded),
               label: Builder(
                 builder: (context) {
                   final l10n = AppLocalizations.of(context);
-                  return Text(
-                    _isSaving
-                        ? l10n.editProfileSaving
-                        : l10n.editProfileSaveChanges,
-                  );
+                  return Text(_isSaving ? l10n.editProfileSaving : l10n.editProfileSaveChanges);
                 },
               ),
             ),
@@ -475,11 +424,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           width: double.infinity,
           height: 52,
           child: TextButton(
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/profile');
+              }
+            },
             style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface.withAlpha(
-                (0.7 * 255).toInt(),
-              ),
+              foregroundColor: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(color: theme.dividerColor),
@@ -513,10 +466,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               title: Text(l10n.editProfileDiscardTitle),
               content: Text(l10n.editProfileDiscardMessage),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, false),
-                  child: Text(l10n.cancel),
-                ),
+                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.cancel)),
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, true),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -526,7 +476,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             ),
           );
           if (shouldPop == true && context.mounted) {
-            context.pop();
+            // Use canPop check - page may be accessed directly via URL
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/owner/profile');
+            }
           }
         }
       },
@@ -556,9 +511,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                 return SingleChildScrollView(
                   child: Center(
                     child: Padding(
-                      padding: EdgeInsets.all(
-                        MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                      ),
+                      padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 24),
                       child: GlassCard(
                         maxWidth: 600,
                         child: Form(
@@ -572,7 +525,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: IconButton(
-                                  onPressed: () => context.pop(),
+                                  onPressed: () {
+                                    if (context.canPop()) {
+                                      context.pop();
+                                    } else {
+                                      context.go('/owner/profile');
+                                    }
+                                  },
                                   icon: const Icon(Icons.arrow_back),
                                   tooltip: l10n.back,
                                 ),
@@ -596,14 +555,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                               // Title
                               Text(
                                 l10n.editProfileTitle,
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 28,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                    ),
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 28,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
@@ -611,13 +567,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                               // Subtitle
                               Text(
                                 l10n.editProfileSubtitle,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                      fontSize: 15,
-                                    ),
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  fontSize: 15,
+                                ),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 32),
@@ -726,9 +679,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                   const SizedBox(height: 20),
 
                                   // Company Address
-                                  _buildSectionDivider(
-                                    l10n.editProfileCompanyAddress,
-                                  ),
+                                  _buildSectionDivider(l10n.editProfileCompanyAddress),
                                   PremiumInputField(
                                     controller: _companyCountryController,
                                     labelText: l10n.editProfileCountry,
@@ -753,8 +704,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: PremiumInputField(
-                                          controller:
-                                              _companyPostalCodeController,
+                                          controller: _companyPostalCodeController,
                                           labelText: l10n.editProfilePostalCode,
                                           prefixIcon: Icons.markunread_mailbox,
                                         ),
@@ -764,9 +714,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                   const SizedBox(height: 20),
 
                                   // Online Presence
-                                  _buildSectionDivider(
-                                    l10n.editProfileOnlinePresence,
-                                  ),
+                                  _buildSectionDivider(l10n.editProfileOnlinePresence),
                                   PremiumInputField(
                                     controller: _websiteController,
                                     labelText: l10n.editProfileWebsite,
@@ -804,9 +752,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) {
                 final l10n = AppLocalizations.of(context);
-                return Center(
-                  child: Text(l10n.errorWithMessage(error.toString())),
-                );
+                return Center(child: Text(l10n.errorWithMessage(error.toString())));
               },
             ),
           ),

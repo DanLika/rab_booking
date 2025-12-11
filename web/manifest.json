@@ -1,13 +1,17 @@
 {
     "name": "BooBed - Vacation Rental Management",
     "short_name": "BooBed",
-    "start_url": ".",
+    "start_url": "/",
+    "scope": "/",
+    "id": "/",
     "display": "standalone",
     "background_color": "#0066FF",
     "theme_color": "#0066FF",
     "description": "Modern booking management platform for property owners and vacation rentals.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "dir": "ltr",
+    "lang": "en",
     "categories": [
         "travel",
         "lifestyle"

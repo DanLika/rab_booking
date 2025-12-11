@@ -1119,6 +1119,8 @@ class _PriceListCalendarWidgetState
                                 dividerColor: Colors.transparent,
                               ),
                               child: ExpansionTile(
+                                iconColor: theme.colorScheme.primary,
+                                collapsedIconColor: theme.colorScheme.primary,
                                 tilePadding: EdgeInsets.zero,
                                 childrenPadding: EdgeInsets.only(
                                   top: isMobile ? 8 : 12,

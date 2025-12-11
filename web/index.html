@@ -18,6 +18,104 @@
       padding: 0;
       overflow: hidden;
     }
+
+    /* ========== NATIVE HTML SPLASH SCREEN ========== */
+    /* Shows IMMEDIATELY while Flutter engine loads */
+    #native-splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #FAFAFA; /* Light mode default */
+      z-index: 999999;
+      transition: opacity 0.3s ease-out;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      #native-splash {
+        background-color: #000000;
+      }
+      #native-splash .splash-logo-text {
+        color: #FFFFFF;
+      }
+      #native-splash .splash-progress-bg {
+        background-color: rgba(139, 92, 246, 0.2);
+      }
+      #native-splash .splash-progress-bar {
+        background-color: #8B5CF6;
+      }
+      #native-splash .splash-percentage {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+
+    /* Logo container */
+    .splash-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    /* BookBed icon (SVG bed) */
+    .splash-logo-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 8px;
+    }
+
+    /* BookBed text */
+    .splash-logo-text {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #1A1A1A;
+      letter-spacing: -0.5px;
+    }
+
+    /* Progress bar container */
+    .splash-progress-container {
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .splash-progress-bg {
+      width: 100%;
+      height: 4px;
+      background-color: rgba(139, 92, 246, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .splash-progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #8B5CF6;
+      border-radius: 2px;
+      transition: width 0.1s ease-out;
+    }
+
+    .splash-percentage {
+      margin-top: 12px;
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(26, 26, 26, 0.7);
+    }
+
+    /* Hidden state for fade-out */
+    #native-splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 
   <!-- SEO Meta Tags -->
@@ -60,6 +158,135 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- ========== NATIVE HTML SPLASH SCREEN ========== -->
+  <!-- Shows IMMEDIATELY while Flutter engine loads (before any JS executes) -->
+  <div id="native-splash">
+    <div class="splash-logo">
+      <!-- BookBed Logo SVG - Villa Roof + Waves (matches AuthLogoIcon) -->
+      <svg class="splash-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer circle badge -->
+        <circle cx="50" cy="50" r="40" stroke="#8B5CF6" stroke-width="3.5" fill="none"/>
+        
+        <!-- Villa roof triangle (top third) -->
+        <path d="M 50 28 L 70 42 L 30 42 Z" fill="rgba(139, 92, 246, 0.2)" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <!-- Villa structure lines -->
+        <line x1="40" y1="42" x2="40" y2="52" stroke="#8B5CF6" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="60" y1="42" x2="60" y2="52" stroke="#8B5CF6" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="30" y1="52" x2="70" y2="52" stroke="#8B5CF6" stroke-width="2.5" stroke-linecap="round"/>
+        
+        <!-- Wave 1 (bottom) -->
+        <path d="M 25 75 Q 37 70 50 75 T 75 75" stroke="#8B5CF6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        
+        <!-- Wave 2 (middle) -->
+        <path d="M 25 60 Q 37 55 50 60 T 75 60" stroke="#8B5CF6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        
+        <!-- Wave 3 (top) -->
+        <path d="M 25 45 Q 37 40 50 45 T 75 45" stroke="#8B5CF6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <span class="splash-logo-text">BookBed</span>
+    </div>
+    <div class="splash-progress-container">
+      <div class="splash-progress-bg">
+        <div class="splash-progress-bar" id="splash-progress"></div>
+      </div>
+      <span class="splash-percentage" id="splash-percentage">0%</span>
+    </div>
+  </div>
+
+  <!-- Native Splash Progress Animation -->
+  <script>
+    (function() {
+      var progress = 0;
+      var progressBar = document.getElementById('splash-progress');
+      var percentageText = document.getElementById('splash-percentage');
+      var targetProgress = 85; // Go to 85% quickly, then slow down
+      
+      // Animate progress bar
+      var interval = setInterval(function() {
+        if (progress < targetProgress) {
+          // Fast progress to 85%
+          var remaining = targetProgress - progress;
+          progress += remaining * 0.08;
+        } else if (progress < 95) {
+          // Slow crawl from 85% to 95%
+          progress += 0.1;
+        }
+        // Stop at 95%, Flutter will complete to 100%
+        
+        if (progressBar) {
+          progressBar.style.width = progress + '%';
+        }
+        if (percentageText) {
+          percentageText.textContent = Math.round(progress) + '%';
+        }
+      }, 50);
+      
+      // Store interval ID so Flutter can stop it
+      window._nativeSplashInterval = interval;
+      
+      // Function for Flutter to call when ready
+      window.hideNativeSplash = function(callback) {
+        clearInterval(window._nativeSplashInterval);
+        
+        // Complete to 100%
+        if (progressBar) progressBar.style.width = '100%';
+        if (percentageText) percentageText.textContent = '100%';
+        
+        // Fade out after showing 100%
+        setTimeout(function() {
+          var splash = document.getElementById('native-splash');
+          if (splash) {
+            splash.classList.add('hidden');
+            // Remove from DOM after transition
+            setTimeout(function() {
+              if (splash.parentNode) {
+                splash.parentNode.removeChild(splash);
+              }
+              if (callback) callback();
+            }, 300);
+          } else if (callback) {
+            callback();
+          }
+        }, 200);
+      };
+      
+      // Safety: auto-hide after 15 seconds if Flutter fails to load
+      setTimeout(function() {
+        var splash = document.getElementById('native-splash');
+        if (splash && !splash.classList.contains('hidden')) {
+          console.warn('[SPLASH] Safety timeout - hiding after 15s');
+          window.hideNativeSplash();
+        }
+      }, 15000);
+    })();
+  </script>
+
+  <!-- PWA Install Prompt Handler -->
+  <script>
+    // Handle PWA install prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+      console.log('[PWA] Install prompt available');
+      
+      // You can show a custom install button here if needed
+      // For now, we'll let the browser handle it automatically
+    });
+
+    // Track when app is installed
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('[PWA] App installed successfully');
+      deferredPrompt = null;
+    });
+
+    // Flutter automatically registers its service worker via flutter_bootstrap.js
+    // No need for manual registration
+  </script>
+
   <!-- AGGRESSIVE FIX for Flutter Issue #175074 - Android Chrome keyboard dismiss bug -->
   <!-- This workaround forces Flutter to recalculate physicalSize when keyboard closes -->
   <script>

@@ -466,6 +466,8 @@ class _NotificationSettingsScreenState
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          iconColor: Theme.of(context).colorScheme.primary,
+          collapsedIconColor: Theme.of(context).colorScheme.primary,
           tilePadding: const EdgeInsets.all(16),
           leading: Container(
             padding: const EdgeInsets.all(10),

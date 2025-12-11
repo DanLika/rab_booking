@@ -29,8 +29,7 @@ import 'widget_advanced_settings_screen.dart';
 const double _kMasterPanelWidth = 320.0;
 
 /// Breakpoint for desktop layout (consistent with CLAUDE.md: Desktop ≥1200px)
-const double _kDesktopBreakpoint =
-    900.0; // Using 900 for this screen per existing behavior
+const double _kDesktopBreakpoint = 900.0; // Using 900 for this screen per existing behavior
 
 /// Breakpoint for tablet layout (between mobile and desktop)
 const double _kTabletBreakpoint = 800.0;
@@ -63,12 +62,10 @@ class UnifiedUnitHubScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<UnifiedUnitHubScreen> createState() =>
-      _UnifiedUnitHubScreenState();
+  ConsumerState<UnifiedUnitHubScreen> createState() => _UnifiedUnitHubScreenState();
 }
 
-class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
-    with SingleTickerProviderStateMixin {
+class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> with SingleTickerProviderStateMixin {
   UnitModel? _selectedUnit;
   PropertyModel? _selectedProperty;
   late TabController _tabController;
@@ -122,18 +119,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Handle units data changes - auto-select first unit or sync selected unit
   /// OPTIMIZED: Accepts properties list to avoid N+1 query pattern
-  void _handleUnitsChanged(
-    List<UnitModel> units,
-    List<PropertyModel> properties,
-  ) {
+  void _handleUnitsChanged(List<UnitModel> units, List<PropertyModel> properties) {
     if (units.isNotEmpty && _selectedUnit == null) {
       // Auto-select first unit when none is selected
       final firstUnit = units.first;
       // OPTIMIZED: Find property from cached list instead of fetching
-      final property = properties.firstWhere(
-        (p) => p.id == firstUnit.propertyId,
-        orElse: () => properties.first,
-      );
+      final property = properties.firstWhere((p) => p.id == firstUnit.propertyId, orElse: () => properties.first);
       if (mounted) {
         setState(() {
           _selectedUnit = firstUnit;
@@ -142,10 +133,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       }
     } else if (_selectedUnit != null) {
       // Update selected unit with fresh data from stream
-      final updatedUnit = units.firstWhere(
-        (u) => u.id == _selectedUnit!.id,
-        orElse: () => _selectedUnit!,
-      );
+      final updatedUnit = units.firstWhere((u) => u.id == _selectedUnit!.id, orElse: () => _selectedUnit!);
       // Only update if data actually changed
       if (updatedUnit != _selectedUnit && mounted) {
         setState(() {
@@ -167,10 +155,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final properties = propertiesAsync.valueOrNull ?? [];
 
     // Listen for units changes and handle side effects (auto-selection, sync)
-    ref.listen<AsyncValue<List<UnitModel>>>(ownerUnitsProvider, (
-      previous,
-      next,
-    ) {
+    ref.listen<AsyncValue<List<UnitModel>>>(ownerUnitsProvider, (previous, next) {
       next.whenData((units) => _handleUnitsChanged(units, properties));
     });
 
@@ -185,10 +170,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               onLeadingIconTap: (_) => _scaffoldKey.currentState?.openDrawer(),
             )
           : AppBar(
-              title: Text(
-                _selectedUnit?.name ?? l10n.unitHubTitle,
-                style: const TextStyle(color: Colors.white),
-              ),
+              title: Text(_selectedUnit?.name ?? l10n.unitHubTitle, style: const TextStyle(color: Colors.white)),
               centerTitle: false,
               leading: IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
@@ -201,11 +183,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   tooltip: l10n.unitHubShowAllUnits,
                 ),
               ],
-              flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                  gradient: GradientTokens.brandPrimary,
-                ),
-              ),
+              flexibleSpace: Container(decoration: const BoxDecoration(gradient: GradientTokens.brandPrimary)),
             ),
       drawer: const OwnerAppDrawer(currentRoute: 'unit-hub'),
       // EndDrawer for mobile/tablet - shows master panel
@@ -213,9 +191,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ? Drawer(
               width: _kMasterPanelWidth,
               child: Container(
-                decoration: BoxDecoration(
-                  gradient: context.gradients.sectionBackground,
-                ),
+                decoration: BoxDecoration(gradient: context.gradients.sectionBackground),
                 child: SafeArea(
                   bottom: false, // List handles its own bottom padding (80px)
                   child: Builder(
@@ -237,9 +213,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           : null,
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: isDesktop
-            ? _buildDesktopLayout(theme, isDark, screenWidth)
-            : _buildMobileLayout(theme, isDark),
+        child: isDesktop ? _buildDesktopLayout(theme, isDark, screenWidth) : _buildMobileLayout(theme, isDark),
       ),
     );
   }
@@ -257,12 +231,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           width: _kMasterPanelWidth,
           decoration: BoxDecoration(
             gradient: context.gradients.sectionBackground,
-            border: Border(
-              left: BorderSide(
-                color: context.gradients.sectionBorder,
-                width: 1.5,
-              ),
-            ),
+            border: Border(left: BorderSide(color: context.gradients.sectionBorder, width: 1.5)),
           ),
           child: _buildMasterPanel(theme, isDark),
         ),
@@ -279,12 +248,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   /// Master panel - Properties and Units list (hierarchical view)
-  Widget _buildMasterPanel(
-    ThemeData theme,
-    bool isDark, {
-    VoidCallback? onUnitSelected,
-    bool isEndDrawer = false,
-  }) {
+  Widget _buildMasterPanel(ThemeData theme, bool isDark, {VoidCallback? onUnitSelected, bool isEndDrawer = false}) {
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final l10n = AppLocalizations.of(context);
 
@@ -293,41 +257,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         // Header
         Container(
           padding: isEndDrawer
-              ? const EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  16,
-                ) // SafeArea handles top padding for endDrawer
-              : const EdgeInsets.fromLTRB(
-                  16,
-                  36,
-                  16,
-                  16,
-                ), // Increased top padding for desktop sidebar
+              ? const EdgeInsets.fromLTRB(16, 16, 16, 16) // SafeArea handles top padding for endDrawer
+              : const EdgeInsets.fromLTRB(16, 36, 16, 16), // Increased top padding for desktop sidebar
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2),
-              ),
-            ),
+            border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2))),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.home_work_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(Icons.home_work_outlined, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.unitHubPropertiesAndUnits,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   // Add Property button
@@ -353,10 +298,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     ).copyWith(
                       hintText: l10n.unitHubSearch,
                       suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 20),
-                              onPressed: _searchController.clear,
-                            )
+                          ? IconButton(icon: const Icon(Icons.clear, size: 20), onPressed: _searchController.clear)
                           : null,
                       isDense: true,
                     ),
@@ -370,9 +312,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           child: propertiesAsync.when(
             loading: () => Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  isDark ? Colors.white : Colors.black,
-                ),
+                valueColor: AlwaysStoppedAnimation<Color>(isDark ? Colors.white : Colors.black),
               ),
             ),
             error: (error, stack) => Center(
@@ -381,17 +321,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: theme.colorScheme.error,
-                    ),
+                    Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
                     const SizedBox(height: 16),
-                    Text(
-                      l10n.unitHubLoadingError,
-                      style: theme.textTheme.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(l10n.unitHubLoadingError, style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
                   ],
                 ),
               ),
@@ -400,12 +332,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               if (properties.isEmpty) {
                 return _buildEmptyPropertiesState(theme, isDark);
               }
-              return _buildPropertiesWithUnits(
-                theme,
-                isDark,
-                properties,
-                onUnitSelected: onUnitSelected,
-              );
+              return _buildPropertiesWithUnits(theme, isDark, properties, onUnitSelected: onUnitSelected);
             },
           ),
         ),
@@ -424,27 +351,17 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.add_business,
-                size: 64,
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.3,
-                ),
-              ),
+              Icon(Icons.add_business, size: 64, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
               const SizedBox(height: 16),
               Text(
                 l10n.unitHubNoProperties,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.unitHubNoPropertiesDesc,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(
-                    alpha: 0.7,
-                  ),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -462,25 +379,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     },
                     borderRadius: BorderRadius.circular(12),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.add_business,
-                            size: 20,
-                            color: Colors.white,
-                          ),
+                          const Icon(Icons.add_business, size: 20, color: Colors.white),
                           const SizedBox(width: 8),
                           Text(
                             l10n.unitHubCreateProperty,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -507,9 +414,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return unitsAsync.when(
       loading: () => Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(
-            isDark ? Colors.white : Colors.black,
-          ),
+          valueColor: AlwaysStoppedAnimation<Color>(isDark ? Colors.white : Colors.black),
         ),
       ),
       error: (error, stack) {
@@ -536,8 +441,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           return propertyUnits.any(
             (unit) =>
                 unit.name.toLowerCase().contains(_searchQuery) ||
-                (unit.description?.toLowerCase().contains(_searchQuery) ??
-                    false),
+                (unit.description?.toLowerCase().contains(_searchQuery) ?? false),
           );
         }).toList();
 
@@ -551,19 +455,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.search_off,
-                      size: 64,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.3,
-                      ),
-                    ),
+                    Icon(Icons.search_off, size: 64, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
                     const SizedBox(height: 16),
                     Text(
                       l10n.unitHubNoResults,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -574,12 +470,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
         return ListView.builder(
           physics: const ClampingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
-            80,
-          ), // Increased bottom padding for last unit visibility
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // Increased bottom padding for last unit visibility
           itemCount: filteredProperties.length,
           itemBuilder: (context, index) {
             final property = filteredProperties[index];
@@ -592,10 +483,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       .where(
                         (unit) =>
                             unit.name.toLowerCase().contains(_searchQuery) ||
-                            (unit.description?.toLowerCase().contains(
-                                  _searchQuery,
-                                ) ??
-                                false),
+                            (unit.description?.toLowerCase().contains(_searchQuery) ?? false),
                       )
                       .toList();
 
@@ -633,10 +521,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: true,
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
-          ), // Consistent sidebar padding
+          iconColor: theme.colorScheme.primary,
+          collapsedIconColor: theme.colorScheme.primary,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4), // Consistent sidebar padding
           childrenPadding: const EdgeInsets.only(bottom: 8),
           leading: Container(
             padding: const EdgeInsets.all(8),
@@ -644,23 +531,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              Icons.apartment,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
+            child: Icon(Icons.apartment, color: theme.colorScheme.primary, size: 20),
           ),
-          title: Text(
-            property.name,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          title: Text(property.name, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           subtitle: Text(
             l10n.unitHubUnitsCount(units.length),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -679,12 +555,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                         child: IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 18),
                           onPressed: () {
-                            context.push(
-                              OwnerRoutes.propertyEdit.replaceAll(
-                                ':id',
-                                property.id,
-                              ),
-                            );
+                            context.push(OwnerRoutes.propertyEdit.replaceAll(':id', property.id));
                           },
                           tooltip: l10n.unitHubEditProperty,
                           padding: EdgeInsets.zero,
@@ -700,18 +571,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                             size: 18,
                             color: units.isEmpty
                                 ? theme.colorScheme.error
-                                : theme.colorScheme.onSurfaceVariant.withValues(
-                                    alpha: 0.5,
-                                  ),
+                                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                           ),
-                          onPressed: () => _confirmDeleteProperty(
-                            context,
-                            property,
-                            units.length,
-                          ),
-                          tooltip: units.isEmpty
-                              ? l10n.unitHubDeleteProperty
-                              : l10n.unitHubDeleteAllUnitsFirst,
+                          onPressed: () => _confirmDeleteProperty(context, property, units.length),
+                          tooltip: units.isEmpty ? l10n.unitHubDeleteProperty : l10n.unitHubDeleteAllUnitsFirst,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -728,20 +591,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                         child: IconButton(
                           icon: const Icon(Icons.add_circle_outline, size: 18),
                           onPressed: () {
-                            context.push(
-                              '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                            );
+                            context.push('${OwnerRoutes.unitWizard}?propertyId=${property.id}');
                           },
                           tooltip: l10n.unitHubAddUnit,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
                       ),
-                      const SizedBox(
-                        width: 36,
-                        height: 36,
-                        child: Icon(Icons.expand_more, size: 22),
-                      ),
+                      const SizedBox(width: 36, height: 36, child: Icon(Icons.expand_more, size: 22)),
                     ],
                   ),
                 ],
@@ -751,10 +608,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           children: [
             if (units.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -763,18 +617,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      Icon(Icons.info_outline, size: 20, color: theme.colorScheme.onSurfaceVariant),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           l10n.unitHubNoUnitsInProperty,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                         ),
                       ),
                       Container(
@@ -786,23 +634,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              context.push(
-                                '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                              );
+                              context.push('${OwnerRoutes.unitWizard}?propertyId=${property.id}');
                             },
                             borderRadius: BorderRadius.circular(8),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               child: Text(
                                 l10n.unitHubAdd,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                               ),
                             ),
                           ),
@@ -827,11 +666,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   /// Confirm and delete a property
-  Future<void> _confirmDeleteProperty(
-    BuildContext dialogContext,
-    PropertyModel property,
-    int unitCount,
-  ) async {
+  Future<void> _confirmDeleteProperty(BuildContext dialogContext, PropertyModel property, int unitCount) async {
     final theme = Theme.of(dialogContext);
     final l10n = AppLocalizations.of(dialogContext);
 
@@ -843,12 +678,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         builder: (ctx) => AlertDialog(
           title: Text(l10n.unitHubCannotDelete),
           content: Text(l10n.unitHubCannotDeleteDesc(property.name, unitCount)),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.unitHubUnderstand),
-            ),
-          ],
+          actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.unitHubUnderstand))],
         ),
       );
       return;
@@ -860,14 +690,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         title: Text(l10n.unitHubDeletePropertyTitle),
         content: Text(l10n.unitHubDeletePropertyConfirm(property.name)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.delete),
           ),
@@ -877,9 +702,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     if (confirmed == true && mounted) {
       try {
-        await ref
-            .read(ownerPropertiesRepositoryProvider)
-            .deleteProperty(property.id);
+        await ref.read(ownerPropertiesRepositoryProvider).deleteProperty(property.id);
 
         // Invalidate providers to refresh UI
         ref.invalidate(ownerPropertiesProvider);
@@ -896,29 +719,20 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         if (mounted) {
           final l10nCtx = AppLocalizations.of(context);
           // ignore: use_build_context_synchronously - State.context is safe after mounted check
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            l10nCtx.unitHubPropertyDeleted(property.name),
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10nCtx.unitHubPropertyDeleted(property.name));
         }
       } catch (e) {
         if (mounted) {
           final l10nCtx = AppLocalizations.of(context);
           // ignore: use_build_context_synchronously - State.context is safe after mounted check
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            l10nCtx.unitHubDeleteError(e.toString()),
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, l10nCtx.unitHubDeleteError(e.toString()));
         }
       }
     }
   }
 
   /// Confirm and delete a unit
-  Future<void> _confirmDeleteUnit(
-    BuildContext dialogContext,
-    UnitModel unit,
-  ) async {
+  Future<void> _confirmDeleteUnit(BuildContext dialogContext, UnitModel unit) async {
     final theme = Theme.of(dialogContext);
     final l10n = AppLocalizations.of(dialogContext);
 
@@ -928,14 +742,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         title: Text(l10n.unitHubDeleteUnitTitle),
         content: Text(l10n.unitHubDeleteUnitConfirm(unit.name)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.delete),
           ),
@@ -945,9 +754,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     if (confirmed == true && mounted) {
       try {
-        await ref
-            .read(ownerPropertiesRepositoryProvider)
-            .deleteUnit(unit.propertyId, unit.id);
+        await ref.read(ownerPropertiesRepositoryProvider).deleteUnit(unit.propertyId, unit.id);
 
         // Invalidate providers to refresh UI
         ref.invalidate(ownerUnitsProvider);
@@ -963,19 +770,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         if (mounted) {
           final l10nCtx = AppLocalizations.of(context);
           // ignore: use_build_context_synchronously - State.context is safe after mounted check
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            l10nCtx.unitHubUnitDeleted(unit.name),
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10nCtx.unitHubUnitDeleted(unit.name));
         }
       } catch (e) {
         if (mounted) {
           final l10nCtx = AppLocalizations.of(context);
           // ignore: use_build_context_synchronously - State.context is safe after mounted check
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            l10nCtx.unitHubDeleteError(e.toString()),
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, l10nCtx.unitHubDeleteError(e.toString()));
         }
       }
     }
@@ -990,8 +791,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     VoidCallback? onUnitSelected,
   }) {
     // Sort units by sortOrder
-    final sortedUnits = List<UnitModel>.from(units)
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final sortedUnits = List<UnitModel>.from(units)..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Column(
       children: sortedUnits.map((unit) {
@@ -1001,8 +801,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             theme,
             isDark,
             unit: unit,
-            property:
-                property, // OPTIMIZED: Pass full property to avoid N+1 query
+            property: property, // OPTIMIZED: Pass full property to avoid N+1 query
             isSelected: _selectedUnit?.id == unit.id,
             onUnitSelected: onUnitSelected,
           ),
@@ -1016,22 +815,17 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     ThemeData theme,
     bool isDark, {
     required UnitModel unit,
-    required PropertyModel
-    property, // OPTIMIZED: Accept full property instead of just name
+    required PropertyModel property, // OPTIMIZED: Accept full property instead of just name
     required bool isSelected,
     VoidCallback? onUnitSelected,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
-        color: isSelected
-            ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
-            : context.gradients.cardBackground,
+        color: isSelected ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()) : context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : context.gradients.sectionBorder,
+          color: isSelected ? theme.colorScheme.primary : context.gradients.sectionBorder,
           width: isSelected ? 2 : 1.5,
         ),
         boxShadow: AppShadows.getElevation(1, isDark: isDark),
@@ -1060,9 +854,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
+                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1070,10 +862,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   ),
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: unit.isAvailable
                           ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
@@ -1084,13 +873,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       builder: (context) {
                         final l10n = AppLocalizations.of(context);
                         return Text(
-                          unit.isAvailable
-                              ? l10n.unitHubAvailable
-                              : l10n.unitHubUnavailable,
+                          unit.isAvailable ? l10n.unitHubAvailable : l10n.unitHubUnavailable,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: unit.isAvailable
-                                ? _kAvailableColor
-                                : _kUnavailableColor,
+                            color: unit.isAvailable ? _kAvailableColor : _kUnavailableColor,
                             fontWeight: FontWeight.w600,
                             fontSize: 11,
                           ),
@@ -1117,9 +902,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                             size: 15,
                             color: isSelected
                                 ? theme.colorScheme.primary
-                                : theme.colorScheme.primary.withAlpha(
-                                    (0.7 * 255).toInt(),
-                                  ),
+                                : theme.colorScheme.primary.withAlpha((0.7 * 255).toInt()),
                           ),
                           tooltip: l10n.unitHubEditUnit,
                           padding: EdgeInsets.zero,
@@ -1141,9 +924,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           icon: Icon(
                             Icons.delete_outline,
                             size: 15,
-                            color: theme.colorScheme.error.withAlpha(
-                              (0.8 * 255).toInt(),
-                            ),
+                            color: theme.colorScheme.error.withAlpha((0.8 * 255).toInt()),
                           ),
                           tooltip: l10n.unitHubDeleteUnit,
                           padding: EdgeInsets.zero,
@@ -1160,9 +941,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 property.name,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: isSelected
-                      ? theme.colorScheme.onSurface.withAlpha(
-                          (0.7 * 255).toInt(),
-                        )
+                      ? theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt())
                       : theme.colorScheme.onSurfaceVariant,
                   fontSize: 12,
                 ),
@@ -1175,18 +954,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     Icons.people_rounded,
                     size: 18,
                     color: isSelected
-                        ? theme.colorScheme.primary.withAlpha(
-                            (0.8 * 255).toInt(),
-                          )
+                        ? theme.colorScheme.primary.withAlpha((0.8 * 255).toInt())
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${unit.maxGuests}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: isSelected
-                          ? theme.colorScheme.onSurface
-                          : theme.colorScheme.onSurfaceVariant,
+                      color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                       fontSize: 13,
                     ),
@@ -1196,9 +971,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     Icons.euro_rounded,
                     size: 18,
                     color: isSelected
-                        ? theme.colorScheme.primary.withAlpha(
-                            (0.8 * 255).toInt(),
-                          )
+                        ? theme.colorScheme.primary.withAlpha((0.8 * 255).toInt())
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
@@ -1208,9 +981,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       return Text(
                         '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: isSelected
-                              ? theme.colorScheme.onSurface
-                              : theme.colorScheme.onSurfaceVariant,
+                          color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -1238,11 +1009,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Container(
           decoration: BoxDecoration(
             color: Colors.transparent,
-            border: Border(
-              bottom: BorderSide(
-                color: context.borderColor.withValues(alpha: 0.5),
-              ),
-            ),
+            border: Border(bottom: BorderSide(color: context.borderColor.withValues(alpha: 0.5))),
           ),
           child: Builder(
             builder: (context) {
@@ -1251,41 +1018,20 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 controller: _tabController,
                 tabs: _buildTabs(l10n),
                 isScrollable: true,
-                tabAlignment: TabAlignment.start,
+                tabAlignment: TabAlignment.center,
                 labelColor: theme.colorScheme.primary,
                 unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
                 indicatorColor: theme.colorScheme.primary,
                 indicatorWeight: 3,
                 indicatorSize: TabBarIndicatorSize.label,
-                // Tab bar left padding: smaller for mobile
-                padding: EdgeInsets.only(
-                  left: screenWidth < _kMobileBreakpoint ? 4 : 16,
-                ),
                 // Responsive padding: smaller for mobile, larger for desktop
-                labelPadding: EdgeInsets.symmetric(
-                  horizontal: screenWidth < _kMobileBreakpoint ? 8 : 20,
-                ),
-                labelStyle: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.2,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 0.1,
-                ),
+                labelPadding: EdgeInsets.symmetric(horizontal: screenWidth < _kMobileBreakpoint ? 8 : 20),
+                labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.2),
+                unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, letterSpacing: 0.1),
                 // Theme-aware divider color (lighter for light theme, darker for dark theme)
-                dividerColor: isDark
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.black.withValues(alpha: 0.1),
+                dividerColor: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.1),
                 indicator: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: theme.colorScheme.primary,
-                      width: 3,
-                    ),
-                  ),
+                  border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 3)),
                 ),
               );
             },
@@ -1315,17 +1061,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.home_work_outlined,
-            size: 80,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-          ),
+          Icon(Icons.home_work_outlined, size: 80, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
           const SizedBox(height: 24),
           Text(
             l10n.unitHubSelectUnit,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Text(
@@ -1346,8 +1086,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= _kDesktopBreakpoint;
-    final isTablet =
-        screenWidth >= _kTabletBreakpoint && screenWidth < _kDesktopBreakpoint;
+    final isTablet = screenWidth >= _kTabletBreakpoint && screenWidth < _kDesktopBreakpoint;
     final isMobile = screenWidth < _kMobileBreakpoint;
 
     // Build individual cards as widgets for flex layout
@@ -1363,27 +1102,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       icon: Icons.people_outline,
       isMobile: isMobile,
       children: [
-        _buildDetailRow(
-          theme,
-          l10n.unitHubBedrooms,
-          '${_selectedUnit!.bedrooms}',
-        ),
-        _buildDetailRow(
-          theme,
-          l10n.unitHubBathrooms,
-          '${_selectedUnit!.bathrooms}',
-        ),
-        _buildDetailRow(
-          theme,
-          l10n.unitHubMaxGuests,
-          '${_selectedUnit!.maxGuests}',
-        ),
+        _buildDetailRow(theme, l10n.unitHubBedrooms, '${_selectedUnit!.bedrooms}'),
+        _buildDetailRow(theme, l10n.unitHubBathrooms, '${_selectedUnit!.bathrooms}'),
+        _buildDetailRow(theme, l10n.unitHubMaxGuests, '${_selectedUnit!.maxGuests}'),
         if (_selectedUnit!.areaSqm != null)
-          _buildDetailRow(
-            theme,
-            l10n.unitHubArea,
-            '${_selectedUnit!.areaSqm!.toStringAsFixed(0)} m²',
-          ),
+          _buildDetailRow(theme, l10n.unitHubArea, '${_selectedUnit!.areaSqm!.toStringAsFixed(0)} m²'),
       ],
     );
 
@@ -1400,11 +1123,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           '€${_selectedUnit!.pricePerNight.toStringAsFixed(0)}',
           valueColor: theme.colorScheme.primary,
         ),
-        _buildDetailRow(
-          theme,
-          l10n.unitHubMinNights,
-          '${_selectedUnit!.minStayNights}',
-        ),
+        _buildDetailRow(theme, l10n.unitHubMinNights, '${_selectedUnit!.minStayNights}'),
       ],
     );
 
@@ -1418,20 +1137,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         _buildDetailRow(theme, l10n.unitHubName, _selectedUnit!.name),
         _buildDetailRow(theme, l10n.unitHubSlug, _selectedUnit!.slug ?? 'N/A'),
         if (_selectedUnit!.description != null)
-          _buildDetailRow(
-            theme,
-            l10n.unitHubDescription,
-            _selectedUnit!.description!,
-          ),
+          _buildDetailRow(theme, l10n.unitHubDescription, _selectedUnit!.description!),
         _buildDetailRow(
           theme,
           l10n.unitHubStatus,
-          _selectedUnit!.isAvailable
-              ? l10n.unitHubStatusAvailable
-              : l10n.unitHubStatusUnavailable,
-          valueColor: _selectedUnit!.isAvailable
-              ? _kAvailableColor
-              : _kUnavailableColor,
+          _selectedUnit!.isAvailable ? l10n.unitHubStatusAvailable : l10n.unitHubStatusUnavailable,
+          valueColor: _selectedUnit!.isAvailable ? _kAvailableColor : _kUnavailableColor,
         ),
       ],
     );
@@ -1444,11 +1155,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         title: l10n.unitHubPhotosSection,
         icon: Icons.photo_library_outlined,
         isMobile: isMobile,
-        children: _buildImageGridContent(
-          theme,
-          imageSize: isDesktop ? 80 : 100,
-          l10n: l10n,
-        ),
+        children: _buildImageGridContent(theme, imageSize: isDesktop ? 80 : 100, l10n: l10n),
       );
     }
 
@@ -1463,34 +1170,20 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           children: [
             Text(
               l10n.unitHubBasicData,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
-              ),
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
             ),
             // Gradient button using brand gradient
             Container(
-              decoration: BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
-                borderRadius: BorderRadius.circular(10),
-              ),
+              decoration: BoxDecoration(gradient: GradientTokens.brandPrimary, borderRadius: BorderRadius.circular(10)),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    context.push(
-                      OwnerRoutes.unitWizardEdit.replaceAll(
-                        ':id',
-                        _selectedUnit!.id,
-                      ),
-                    );
+                    context.push(OwnerRoutes.unitWizardEdit.replaceAll(':id', _selectedUnit!.id));
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1498,10 +1191,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                         const SizedBox(width: 8),
                         Text(
                           l10n.unitHubEdit,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -1630,10 +1320,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             decoration: BoxDecoration(
               color: context.gradients.cardBackground,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: context.gradients.sectionBorder,
-                width: 1.5,
-              ),
+              border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
             ),
             padding: EdgeInsets.all(isMobile ? 14.0 : 18.0),
             child: Column(
@@ -1646,16 +1333,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.15 * 255).toInt(),
-                        ),
+                        color: theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        icon,
-                        color: theme.colorScheme.primary,
-                        size: 22,
-                      ),
+                      child: Icon(icon, color: theme.colorScheme.primary, size: 22),
                     ),
                     const SizedBox(width: 14),
                     // Title with accent border
@@ -1665,10 +1346,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                         children: [
                           Text(
                             title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           const SizedBox(height: 2),
                           Container(
@@ -1694,12 +1372,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  Widget _buildDetailRow(
-    ThemeData theme,
-    String label,
-    String value, {
-    Color? valueColor,
-  }) {
+  Widget _buildDetailRow(ThemeData theme, String label, String value, {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -1735,11 +1408,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Builds the image grid for unit photos
   /// [imageSize] - Size of each image thumbnail (desktop: 80, mobile: 100)
-  List<Widget> _buildImageGridContent(
-    ThemeData theme, {
-    required double imageSize,
-    required AppLocalizations l10n,
-  }) {
+  List<Widget> _buildImageGridContent(ThemeData theme, {required double imageSize, required AppLocalizations l10n}) {
     if (_selectedUnit == null) return [];
 
     final images = _selectedUnit!.images;
@@ -1753,17 +1422,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 Icon(
                   Icons.photo_library_outlined,
                   size: 32,
-                  color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                    (0.4 * 255).toInt(),
-                  ),
+                  color: theme.colorScheme.onSurfaceVariant.withAlpha((0.4 * 255).toInt()),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.unitHubNoPhotos,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                      (0.6 * 255).toInt(),
-                    ),
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha((0.6 * 255).toInt()),
                     fontSize: 13,
                   ),
                 ),
@@ -1791,10 +1456,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   width: imageSize,
                   height: imageSize,
                   color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  child: Icon(Icons.broken_image, color: theme.colorScheme.onSurfaceVariant),
                 );
               },
             ),
@@ -1806,9 +1468,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           padding: const EdgeInsets.only(top: 8),
           child: Text(
             l10n.unitHubMorePhotos(images.length - 6),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
         ),
     ];

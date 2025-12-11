@@ -676,6 +676,8 @@ class _PremiumExpansionTile extends StatelessWidget {
           highlightColor: theme.colorScheme.brandPurple.withValues(alpha: 0.06),
         ),
         child: ExpansionTile(
+          iconColor: iconColor,
+          collapsedIconColor: iconColor,
           leading: Icon(icon, color: iconColor, size: 24),
           title: Text(
             title,

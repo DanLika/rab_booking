@@ -86,10 +86,7 @@ class ResponsiveSpacingHelper {
   }
 
   /// Get page padding based on screen type and density
-  static EdgeInsets getPagePadding(
-    BuildContext context, {
-    PageDensity density = PageDensity.normal,
-  }) {
+  static EdgeInsets getPagePadding(BuildContext context, {PageDensity density = PageDensity.normal}) {
     final screenType = getScreenType(context);
 
     switch (density) {
@@ -277,6 +274,97 @@ class ResponsiveSpacingHelper {
       case ScreenType.tablet:
       case ScreenType.desktop:
         return const EdgeInsets.all(20);
+    }
+  }
+
+  /// Get dialog header height constraints
+  /// Returns (minHeight, maxHeight) - null means unconstrained
+  /// - Landscape mobile: compact (40-56px) - minimal space, single line
+  /// - Portrait mobile: flexible (48-80px) - allow 2 lines
+  /// - Tablet/Desktop: comfortable (56-80px)
+  static ({double? minHeight, double? maxHeight}) getDialogHeaderConstraints(BuildContext context) {
+    final screenType = getScreenType(context);
+
+    switch (screenType) {
+      case ScreenType.landscapeMobile:
+        return (minHeight: 40, maxHeight: 56);
+      case ScreenType.portraitMobile:
+        return (minHeight: 48, maxHeight: 80);
+      case ScreenType.tablet:
+      case ScreenType.desktop:
+        return (minHeight: 56, maxHeight: 80);
+    }
+  }
+
+  /// Get dialog footer height constraints
+  /// Returns (minHeight, maxHeight) - null means unconstrained
+  /// - Landscape mobile: compact (36-48px) - minimal space
+  /// - Portrait mobile: flexible (44-64px)
+  /// - Tablet/Desktop: comfortable (48-72px)
+  static ({double? minHeight, double? maxHeight}) getDialogFooterConstraints(BuildContext context) {
+    final screenType = getScreenType(context);
+
+    switch (screenType) {
+      case ScreenType.landscapeMobile:
+        return (minHeight: 36, maxHeight: 48);
+      case ScreenType.portraitMobile:
+        return (minHeight: 44, maxHeight: 64);
+      case ScreenType.tablet:
+      case ScreenType.desktop:
+        return (minHeight: 48, maxHeight: 72);
+    }
+  }
+
+  /// Get dialog icon size
+  /// - Landscape mobile: 18px - compact
+  /// - Portrait mobile: 20px
+  /// - Tablet/Desktop: 24px
+  static double getDialogIconSize(BuildContext context) {
+    final screenType = getScreenType(context);
+
+    switch (screenType) {
+      case ScreenType.landscapeMobile:
+        return 18;
+      case ScreenType.portraitMobile:
+        return 20;
+      case ScreenType.tablet:
+      case ScreenType.desktop:
+        return 24;
+    }
+  }
+
+  /// Get dialog title font size
+  /// - Landscape mobile: 14px - compact
+  /// - Portrait mobile: 16px
+  /// - Tablet/Desktop: 18px
+  static double getDialogTitleFontSize(BuildContext context) {
+    final screenType = getScreenType(context);
+
+    switch (screenType) {
+      case ScreenType.landscapeMobile:
+        return 14;
+      case ScreenType.portraitMobile:
+        return 16;
+      case ScreenType.tablet:
+      case ScreenType.desktop:
+        return 18;
+    }
+  }
+
+  /// Get max lines for dialog title
+  /// - Landscape mobile: 1 - must be single line
+  /// - Portrait mobile: 2 - can wrap
+  /// - Tablet/Desktop: 2
+  static int getDialogTitleMaxLines(BuildContext context) {
+    final screenType = getScreenType(context);
+
+    switch (screenType) {
+      case ScreenType.landscapeMobile:
+        return 1;
+      case ScreenType.portraitMobile:
+      case ScreenType.tablet:
+      case ScreenType.desktop:
+        return 2;
     }
   }
 }

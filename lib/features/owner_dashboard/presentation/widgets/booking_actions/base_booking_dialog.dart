@@ -62,10 +62,7 @@ class BaseBookingDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(
-      context,
-      maxWidth: maxWidth,
-    );
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: maxWidth);
     final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
     final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
@@ -78,9 +75,7 @@ class BaseBookingDialog extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha(128),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withAlpha(128)),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -88,10 +83,7 @@ class BaseBookingDialog extends StatelessWidget {
           children: [
             _buildHeader(context, headerPadding),
             Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(contentPadding),
-                child: content,
-              ),
+              child: SingleChildScrollView(padding: EdgeInsets.all(contentPadding), child: content),
             ),
             _buildFooter(context, contentPadding, isDark),
           ],
@@ -111,21 +103,14 @@ class BaseBookingDialog extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(51),
-              borderRadius: BorderRadius.circular(8),
-            ),
+            decoration: BoxDecoration(color: Colors.white.withAlpha(51), borderRadius: BorderRadius.circular(8)),
             child: Icon(icon, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
         ],
@@ -140,11 +125,7 @@ class BaseBookingDialog extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: padding, vertical: 12),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2A) : const Color(0xFFF8F8FA),
-        border: Border(
-          top: BorderSide(
-            color: context.gradients.sectionBorder.withAlpha(128),
-          ),
-        ),
+        border: Border(top: BorderSide(color: context.gradients.sectionBorder.withAlpha(128))),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
       ),
       child: Row(
@@ -157,9 +138,7 @@ class BaseBookingDialog extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: confirmButtonColor ?? theme.colorScheme.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
             child: Text(confirmLabel),

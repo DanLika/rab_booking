@@ -6,7 +6,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -30,7 +30,7 @@ class EnhancedLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
-    with AndroidKeyboardDismissFix {
+    with AndroidKeyboardDismissFixApproach1<EnhancedLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -146,10 +146,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     final theme = Theme.of(context);
     final isCompact = Breakpoints.isCompactMobile(context);
 
+    // PRISTUP 1: resizeToAvoidBottomInset: true - klasičan Flutter pristup
     return KeyedSubtree(
       key: ValueKey('login_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true, // PRISTUP 1: Omogući automatsko prilagođavanje
         body: Stack(
           children: [
             AuthBackground(
@@ -157,45 +158,45 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     return SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isCompact ? 12 : 20,
+                        vertical: isCompact ? 16 : 20,
+                      ),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
                           minHeight: constraints.maxHeight,
                         ),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isCompact ? 12 : 20,
-                            vertical: isCompact ? 16 : 20,
-                          ),
-                          child: Center(
-                            child: GlassCard(
-                              child: Form(
-                                key: _formKey,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    _buildHeader(theme, l10n, isCompact),
-                                    SizedBox(height: isCompact ? 24 : 32),
-                                    _buildEmailField(l10n),
-                                    SizedBox(height: isCompact ? 12 : 14),
-                                    _buildPasswordField(theme, l10n),
-                                    SizedBox(height: isCompact ? 12 : 14),
-                                    _buildRememberMeRow(theme, l10n),
-                                    SizedBox(height: isCompact ? 20 : 24),
-                                    GradientAuthButton(
-                                      text: l10n.login,
-                                      onPressed: _handleLogin,
-                                      isLoading: _isLoading,
-                                      icon: Icons.login_rounded,
-                                    ),
-                                    SizedBox(height: isCompact ? 16 : 20),
-                                    _buildDivider(theme, l10n),
-                                    SizedBox(height: isCompact ? 16 : 20),
-                                    _buildSocialButtons(),
-                                    SizedBox(height: isCompact ? 20 : 24),
-                                    _buildRegisterLink(theme, l10n),
-                                  ],
-                                ),
+                        child: Center(
+                          child: GlassCard(
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildHeader(theme, l10n, isCompact),
+                                  SizedBox(height: isCompact ? 24 : 32),
+                                  _buildEmailField(l10n),
+                                  SizedBox(height: isCompact ? 12 : 14),
+                                  _buildPasswordField(theme, l10n),
+                                  SizedBox(height: isCompact ? 12 : 14),
+                                  _buildRememberMeRow(theme, l10n),
+                                  SizedBox(height: isCompact ? 20 : 24),
+                                  GradientAuthButton(
+                                    text: l10n.login,
+                                    onPressed: _handleLogin,
+                                    isLoading: _isLoading,
+                                    icon: Icons.login_rounded,
+                                  ),
+                                  SizedBox(height: isCompact ? 16 : 20),
+                                  _buildDivider(theme, l10n),
+                                  SizedBox(height: isCompact ? 16 : 20),
+                                  _buildSocialButtons(),
+                                  SizedBox(height: isCompact ? 20 : 24),
+                                  _buildRegisterLink(theme, l10n),
+                                ],
                               ),
                             ),
                           ),

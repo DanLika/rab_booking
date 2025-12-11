@@ -9,7 +9,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -23,7 +23,7 @@ import 'terms_conditions_screen.dart';
 
 /// Enhanced Registration Screen with Premium Design
 ///
-/// Uses [AndroidKeyboardDismissFix] mixin to handle the Android Chrome
+/// Uses [AndroidKeyboardDismissFixApproach1] mixin to handle the Android Chrome
 /// keyboard dismiss bug (Flutter issue #175074).
 class EnhancedRegisterScreen extends ConsumerStatefulWidget {
   const EnhancedRegisterScreen({super.key});
@@ -33,7 +33,7 @@ class EnhancedRegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
-    with AndroidKeyboardDismissFix {
+    with AndroidKeyboardDismissFixApproach1<EnhancedRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -91,18 +91,20 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     try {
       final (firstName, lastName) = _parseFullName(_fullNameController.text);
 
-      await ref.read(enhancedAuthProvider.notifier).registerWithEmail(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        firstName: firstName,
-        lastName: lastName,
-        phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
-        acceptedTerms: _acceptedTerms,
-        acceptedPrivacy: _acceptedPrivacy,
-        newsletterOptIn: _newsletterOptIn,
-        profileImageBytes: _profileImageBytes,
-        profileImageName: _profileImageName,
-      );
+      await ref
+          .read(enhancedAuthProvider.notifier)
+          .registerWithEmail(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            firstName: firstName,
+            lastName: lastName,
+            phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+            acceptedTerms: _acceptedTerms,
+            acceptedPrivacy: _acceptedPrivacy,
+            newsletterOptIn: _newsletterOptIn,
+            profileImageBytes: _profileImageBytes,
+            profileImageName: _profileImageName,
+          );
 
       if (!mounted) return;
 
@@ -129,8 +131,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
       if (_isEmailError(errorMessage)) {
         setState(() {
-          _emailErrorFromServer = errorMessage.contains('already exists') ||
-                  errorMessage.contains('email-already-in-use')
+          _emailErrorFromServer =
+              errorMessage.contains('already exists') || errorMessage.contains('email-already-in-use')
               ? 'An account already exists with this email'
               : 'Invalid email address';
           _isLoading = false;
@@ -161,10 +163,11 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     final l10n = AppLocalizations.of(context);
     final isCompact = Breakpoints.isCompactMobile(context);
 
+    // Isti pristup kao Login: resizeToAvoidBottomInset: true
     return KeyedSubtree(
       key: ValueKey('register_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         body: Stack(
           children: [
             AuthBackground(
@@ -172,41 +175,33 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 20, vertical: isCompact ? 16 : 20),
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isCompact ? 12 : 20,
-                            vertical: isCompact ? 16 : 20,
-                          ),
-                          child: Center(
-                            child: GlassCard(
-                              child: Form(
-                                key: _formKey,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    _buildHeader(theme, l10n, isCompact),
-                                    SizedBox(height: isCompact ? 20 : 24),
-                                    _buildFormFields(theme, l10n, isCompact),
-                                    SizedBox(height: isCompact ? 12 : 14),
-                                    _buildCheckboxes(theme, l10n),
-                                    SizedBox(height: isCompact ? 20 : 24),
-                                    GradientAuthButton(
-                                      text: l10n.authCreateAccount,
-                                      onPressed: _handleRegister,
-                                      isLoading: _isLoading,
-                                      icon: Icons.person_add_rounded,
-                                    ),
-                                    SizedBox(height: isCompact ? 16 : 20),
-                                    _buildLoginLink(theme, l10n),
-                                  ],
-                                ),
+                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        child: Center(
+                          child: GlassCard(
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildHeader(theme, l10n, isCompact),
+                                  SizedBox(height: isCompact ? 20 : 24),
+                                  _buildFormFields(theme, l10n, isCompact),
+                                  SizedBox(height: isCompact ? 12 : 14),
+                                  _buildCheckboxes(theme, l10n),
+                                  SizedBox(height: isCompact ? 20 : 24),
+                                  GradientAuthButton(
+                                    text: l10n.authCreateAccount,
+                                    onPressed: _handleRegister,
+                                    isLoading: _isLoading,
+                                    icon: Icons.person_add_rounded,
+                                  ),
+                                  SizedBox(height: isCompact ? 16 : 20),
+                                  _buildLoginLink(theme, l10n),
+                                ],
                               ),
                             ),
                           ),
@@ -336,10 +331,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             ),
             onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
           ),
-          validator: (value) => PasswordValidator.validateConfirmPassword(
-            _passwordController.text,
-            value,
-          ),
+          validator: (value) => PasswordValidator.validateConfirmPassword(_passwordController.text, value),
         ),
       ],
     );
@@ -353,9 +345,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           onChanged: (value) => setState(() => _acceptedTerms = value!),
           linkText: l10n.authTermsConditions,
           prefixText: l10n.authAcceptTerms,
-          onLinkTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
-          ),
+          onLinkTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TermsConditionsScreen())),
           theme: theme,
         ),
         const SizedBox(height: 6),
@@ -364,9 +354,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           onChanged: (value) => setState(() => _acceptedPrivacy = value!),
           linkText: l10n.authPrivacyPolicy,
           prefixText: l10n.authAcceptTerms,
-          onLinkTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
-          ),
+          onLinkTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())),
           theme: theme,
         ),
         const SizedBox(height: 6),
@@ -452,23 +440,15 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     return Center(
       child: TextButton(
         onPressed: () => context.go(OwnerRoutes.login),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        ),
+        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
         child: RichText(
           text: TextSpan(
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
             children: [
               TextSpan(text: '${l10n.authHaveAccount} '),
               TextSpan(
                 text: l10n.login,
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
               ),
             ],
           ),

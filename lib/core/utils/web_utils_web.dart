@@ -80,11 +80,7 @@ void sendIframeHeight(double height) {
     }
 
     // Create message object
-    final message = <String, dynamic>{
-      'type': 'resize',
-      'height': height.ceil(),
-      'source': 'bookbed-widget',
-    };
+    final message = <String, dynamic>{'type': 'resize', 'height': height.ceil(), 'source': 'bookbed-widget'};
 
     // Debug log
     web.console.log('[IFRAME_RESIZE] Sending height: ${height.ceil()}px'.toJS);
@@ -113,11 +109,7 @@ void setupIframeScrollCapture() {
 
     // Add wheel event listener to prevent scroll propagation to parent
     // This is critical for desktop where wheel scrolling is common
-    web.document.addEventListener(
-      'wheel',
-      _handleWheelEvent.toJS,
-      web.AddEventListenerOptions(passive: false),
-    );
+    web.document.addEventListener('wheel', _handleWheelEvent.toJS, web.AddEventListenerOptions(passive: false));
 
     web.console.log('[IFRAME] Scroll capture configured with wheel handler'.toJS);
   } catch (e) {
@@ -171,10 +163,7 @@ web.Element? _findScrollableParent(web.Element element) {
     final overflowY = style.getPropertyValue('overflow-y');
     final overflow = style.getPropertyValue('overflow');
 
-    final isScrollable = overflowY == 'auto' ||
-        overflowY == 'scroll' ||
-        overflow == 'auto' ||
-        overflow == 'scroll';
+    final isScrollable = overflowY == 'auto' || overflowY == 'scroll' || overflow == 'auto' || overflow == 'scroll';
 
     if (isScrollable) {
       // Verify it actually has scrollable content
@@ -258,6 +247,27 @@ double? getVisualViewportHeight() {
 /// Get window.innerHeight (full window height including keyboard area)
 double getWindowInnerHeight() {
   return web.window.innerHeight.toDouble();
+}
+
+/// Get physical screen width (not iframe dimensions)
+/// Uses window.screen API which returns actual device screen dimensions
+double getScreenWidth() {
+  return web.window.screen.width.toDouble();
+}
+
+/// Get physical screen height (not iframe dimensions)
+/// Uses window.screen API which returns actual device screen dimensions
+double getScreenHeight() {
+  return web.window.screen.height.toDouble();
+}
+
+/// Check if physical device is in landscape mode
+/// Uses window.screen API to detect actual device orientation,
+/// not iframe dimensions which may differ in embedded contexts
+bool isDeviceLandscape() {
+  final screenWidth = web.window.screen.width;
+  final screenHeight = web.window.screen.height;
+  return screenWidth > screenHeight;
 }
 
 /// Calculate keyboard height by comparing window height to visual viewport
@@ -382,5 +392,26 @@ void blurActiveElement() {
     }
   } catch (e) {
     web.console.log('[BLUR] Error: $e'.toJS);
+  }
+}
+
+/// JS interop for window.hideNativeSplash
+@JS('window.hideNativeSplash')
+external void _jsHideNativeSplash([JSFunction? callback]);
+
+/// Hide the native HTML splash screen (defined in index.html)
+/// This calls window.hideNativeSplash() which fades out and removes the splash
+void hideNativeSplash([void Function()? callback]) {
+  try {
+    if (callback != null) {
+      _jsHideNativeSplash(callback.toJS);
+    } else {
+      _jsHideNativeSplash();
+    }
+    web.console.log('[SPLASH] Native splash hide requested'.toJS);
+  } catch (e) {
+    web.console.log('[SPLASH] Error hiding native splash: $e'.toJS);
+    // Call callback anyway so app continues
+    callback?.call();
   }
 }

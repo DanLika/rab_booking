@@ -31,12 +31,10 @@ class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
   const IcalSyncSettingsScreen({super.key});
 
   @override
-  ConsumerState<IcalSyncSettingsScreen> createState() =>
-      _IcalSyncSettingsScreenState();
+  ConsumerState<IcalSyncSettingsScreen> createState() => _IcalSyncSettingsScreenState();
 }
 
-class _IcalSyncSettingsScreenState
-    extends ConsumerState<IcalSyncSettingsScreen> {
+class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen> {
   bool _showFaq = false;
   int? _expandedPlatform;
 
@@ -66,29 +64,20 @@ class _IcalSyncSettingsScreenState
             builder: (context, constraints) {
               final isDesktop = constraints.maxWidth > 900;
               final isTablet = constraints.maxWidth > 600;
-              final horizontalPadding = isDesktop
-                  ? 48.0
-                  : (isTablet ? 32.0 : 16.0);
+              final horizontalPadding = isDesktop ? 48.0 : (isTablet ? 32.0 : 16.0);
 
               return SingleChildScrollView(
                 physics: PlatformScrollPhysics.adaptive,
-                padding: EdgeInsets.symmetric(
-                  horizontal: horizontalPadding,
-                  vertical: 20,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: isDesktop ? 1200.0 : double.infinity,
-                    ),
+                    constraints: BoxConstraints(maxWidth: isDesktop ? 1200.0 : double.infinity),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Hero Status Card
                         ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: isDesktop ? 800.0 : double.infinity,
-                          ),
+                          constraints: BoxConstraints(maxWidth: isDesktop ? 800.0 : double.infinity),
                           child: statsAsync.when(
                             data: (stats) => _buildHeroCard(context, stats),
                             loading: () => _buildHeroCard(context, null),
@@ -106,8 +95,7 @@ class _IcalSyncSettingsScreenState
                               const SizedBox(width: 24),
                               Expanded(
                                 child: feedsAsync.when(
-                                  data: (feeds) =>
-                                      _buildFeedsSection(context, feeds),
+                                  data: (feeds) => _buildFeedsSection(context, feeds),
                                   loading: () => _buildFeedsLoading(context),
                                   error: (_, _) => _buildFeedsError(context),
                                 ),
@@ -118,9 +106,7 @@ class _IcalSyncSettingsScreenState
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: _buildPlatformInstructions(context),
-                              ),
+                              Expanded(child: _buildPlatformInstructions(context)),
                               const SizedBox(width: 24),
                               Expanded(child: _buildFaqSection(context)),
                             ],
@@ -214,31 +200,18 @@ class _IcalSyncSettingsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         statusTitle,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      statusDescription,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 14,
-                      ),
-                    ),
+                    Text(statusDescription, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14)),
                   ],
                 ),
               ),
@@ -250,17 +223,12 @@ class _IcalSyncSettingsScreenState
             child: FilledButton.icon(
               onPressed: () => _showAddFeedDialog(context),
               icon: const Icon(Icons.add, size: 20),
-              label: Text(
-                l10n.icalAddFeedButton,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              label: Text(l10n.icalAddFeedButton, style: const TextStyle(fontWeight: FontWeight.bold)),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: theme.colorScheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
@@ -276,16 +244,8 @@ class _IcalSyncSettingsScreenState
 
     final benefits = [
       (Icons.sync_rounded, l10n.icalAutoSync, l10n.icalAutoSyncDesc),
-      (
-        Icons.calendar_today_rounded,
-        l10n.icalPreventDoubleBooking,
-        l10n.icalPreventDoubleBookingDesc,
-      ),
-      (
-        Icons.check_circle_outline_rounded,
-        l10n.icalCompatibility,
-        l10n.icalCompatibilityDesc,
-      ),
+      (Icons.calendar_today_rounded, l10n.icalPreventDoubleBooking, l10n.icalPreventDoubleBookingDesc),
+      (Icons.check_circle_outline_rounded, l10n.icalCompatibility, l10n.icalCompatibilityDesc),
       (Icons.security_rounded, l10n.icalSecure, l10n.icalSecureDesc),
     ];
 
@@ -304,12 +264,7 @@ class _IcalSyncSettingsScreenState
             children: [
               Icon(Icons.star, color: theme.colorScheme.primary, size: 22),
               const SizedBox(width: 8),
-              Text(
-                l10n.icalWhySync,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text(l10n.icalWhySync, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 16),
@@ -319,12 +274,7 @@ class _IcalSyncSettingsScreenState
     );
   }
 
-  Widget _buildBenefitItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String description,
-  ) {
+  Widget _buildBenefitItem(BuildContext context, IconData icon, String title, String description) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -345,18 +295,11 @@ class _IcalSyncSettingsScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
                 ),
               ],
             ),
@@ -384,18 +327,12 @@ class _IcalSyncSettingsScreenState
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Icon(
-                  Icons.rss_feed,
-                  color: theme.colorScheme.primary,
-                  size: 22,
-                ),
+                Icon(Icons.rss_feed, color: theme.colorScheme.primary, size: 22),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.icalYourFeeds,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
                 Text(
@@ -419,22 +356,13 @@ class _IcalSyncSettingsScreenState
                 ),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.sync_disabled,
-                      size: 48,
-                      color: theme.colorScheme.outline,
-                    ),
+                    Icon(Icons.sync_disabled, size: 48, color: theme.colorScheme.outline),
                     const SizedBox(height: 12),
-                    Text(
-                      l10n.icalNoFeedsTitle,
-                      style: theme.textTheme.titleSmall,
-                    ),
+                    Text(l10n.icalNoFeedsTitle, style: theme.textTheme.titleSmall),
                     const SizedBox(height: 4),
                     Text(
                       l10n.icalNoFeedsSubtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.outline,
-                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -442,12 +370,7 @@ class _IcalSyncSettingsScreenState
               ),
             )
           else ...[
-            Divider(
-              height: 1,
-              color: isDark
-                  ? AppColors.sectionDividerDark
-                  : AppColors.sectionDividerLight,
-            ),
+            Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
             ...feeds.map((feed) => _buildFeedItem(context, feed)),
           ],
         ],
@@ -463,40 +386,25 @@ class _IcalSyncSettingsScreenState
     return Column(
       children: [
         ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 8,
-          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              _getStatusIcon(feed.status),
-              color: statusColor,
-              size: 20,
-            ),
+            child: Icon(_getStatusIcon(feed.status), color: statusColor, size: 20),
           ),
-          title: Text(
-            feed.platform.displayName,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
+          title: Text(feed.platform.displayName, style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 4),
-              Text(
-                l10n.icalLastSynced(feed.getTimeSinceLastSync()),
-                style: theme.textTheme.bodySmall,
-              ),
+              Text(l10n.icalLastSynced(feed.getTimeSinceLastSync()), style: theme.textTheme.bodySmall),
               if (feed.hasError && feed.lastError != null)
                 Text(
                   l10n.icalErrorPrefix(feed.lastError!),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: _kStatusErrorColor,
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: _kStatusErrorColor),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -508,21 +416,14 @@ class _IcalSyncSettingsScreenState
               PopupMenuItem(
                 value: 'sync',
                 child: Row(
-                  children: [
-                    const Icon(Icons.sync, size: 18),
-                    const SizedBox(width: 8),
-                    Text(l10n.icalSyncNow),
-                  ],
+                  children: [const Icon(Icons.sync, size: 18), const SizedBox(width: 8), Text(l10n.icalSyncNow)],
                 ),
               ),
               PopupMenuItem(
                 value: feed.isActive ? 'pause' : 'resume',
                 child: Row(
                   children: [
-                    Icon(
-                      feed.isActive ? Icons.pause : Icons.play_arrow,
-                      size: 18,
-                    ),
+                    Icon(feed.isActive ? Icons.pause : Icons.play_arrow, size: 18),
                     const SizedBox(width: 8),
                     Text(feed.isActive ? l10n.icalPause : l10n.icalResume),
                   ],
@@ -530,13 +431,7 @@ class _IcalSyncSettingsScreenState
               ),
               PopupMenuItem(
                 value: 'edit',
-                child: Row(
-                  children: [
-                    const Icon(Icons.edit, size: 18),
-                    const SizedBox(width: 8),
-                    Text(l10n.edit),
-                  ],
-                ),
+                child: Row(children: [const Icon(Icons.edit, size: 18), const SizedBox(width: 8), Text(l10n.edit)]),
               ),
               const PopupMenuDivider(),
               PopupMenuItem(
@@ -545,10 +440,7 @@ class _IcalSyncSettingsScreenState
                   children: [
                     const Icon(Icons.delete, size: 18, color: AppColors.error),
                     const SizedBox(width: 8),
-                    Text(
-                      l10n.delete,
-                      style: const TextStyle(color: AppColors.error),
-                    ),
+                    Text(l10n.delete, style: const TextStyle(color: AppColors.error)),
                   ],
                 ),
               ),
@@ -559,9 +451,7 @@ class _IcalSyncSettingsScreenState
           height: 1,
           indent: 20,
           endIndent: 20,
-          color: theme.brightness == Brightness.dark
-              ? AppColors.sectionDividerDark
-              : AppColors.sectionDividerLight,
+          color: theme.brightness == Brightness.dark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
         ),
       ],
     );
@@ -571,13 +461,8 @@ class _IcalSyncSettingsScreenState
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Center(
-        child: CircularProgressIndicator(color: theme.colorScheme.primary),
-      ),
+      decoration: BoxDecoration(color: context.gradients.cardBackground, borderRadius: BorderRadius.circular(16)),
+      child: Center(child: CircularProgressIndicator(color: theme.colorScheme.primary)),
     );
   }
 
@@ -586,15 +471,9 @@ class _IcalSyncSettingsScreenState
     final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(color: context.gradients.cardBackground, borderRadius: BorderRadius.circular(16)),
       child: Center(
-        child: Text(
-          l10n.icalErrorLoadingFeeds,
-          style: TextStyle(color: theme.colorScheme.error),
-        ),
+        child: Text(l10n.icalErrorLoadingFeeds, style: TextStyle(color: theme.colorScheme.error)),
       ),
     );
   }
@@ -617,29 +496,18 @@ class _IcalSyncSettingsScreenState
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Icon(
-                  Icons.help_outline,
-                  color: theme.colorScheme.primary,
-                  size: 22,
-                ),
+                Icon(Icons.help_outline, color: theme.colorScheme.primary, size: 22),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.icalGuideHeaderTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
           ),
-          Divider(
-            height: 1,
-            color: isDark
-                ? AppColors.sectionDividerDark
-                : AppColors.sectionDividerLight,
-          ),
+          Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
           _buildPlatformItem(context, 0, 'Booking.com', Icons.hotel, [
             l10n.icalGuideBookingCom1,
             l10n.icalGuideBookingCom2,
@@ -650,9 +518,7 @@ class _IcalSyncSettingsScreenState
             height: 1,
             indent: 20,
             endIndent: 20,
-            color: isDark
-                ? AppColors.sectionDividerDark
-                : AppColors.sectionDividerLight,
+            color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
           ),
           _buildPlatformItem(context, 1, 'Airbnb', Icons.home, [
             l10n.icalGuideAirbnb1,
@@ -666,21 +532,14 @@ class _IcalSyncSettingsScreenState
     );
   }
 
-  Widget _buildPlatformItem(
-    BuildContext context,
-    int index,
-    String name,
-    IconData icon,
-    List<String> steps,
-  ) {
+  Widget _buildPlatformItem(BuildContext context, int index, String name, IconData icon, List<String> steps) {
     final theme = Theme.of(context);
     final isExpanded = _expandedPlatform == index;
 
     return Column(
       children: [
         InkWell(
-          onTap: () =>
-              setState(() => _expandedPlatform = isExpanded ? null : index),
+          onTap: () => setState(() => _expandedPlatform = isExpanded ? null : index),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
@@ -688,17 +547,9 @@ class _IcalSyncSettingsScreenState
                 Icon(icon, size: 20, color: theme.colorScheme.primary),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                 ),
-                Icon(
-                  isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: theme.colorScheme.outline,
-                ),
+                Icon(isExpanded ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.primary),
               ],
             ),
           ),
@@ -722,22 +573,11 @@ class _IcalSyncSettingsScreenState
                             backgroundColor: theme.colorScheme.primary,
                             child: Text(
                               '${e.key + 1}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              e.value,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
+                          Expanded(child: Text(e.value, style: theme.textTheme.bodySmall?.copyWith(height: 1.4))),
                         ],
                       ),
                     ),
@@ -776,35 +616,21 @@ class _IcalSyncSettingsScreenState
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.question_answer,
-                    color: theme.colorScheme.primary,
-                    size: 22,
-                  ),
+                  Icon(Icons.question_answer, color: theme.colorScheme.primary, size: 22),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l10n.icalGuideFaqTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  Icon(
-                    _showFaq ? Icons.expand_less : Icons.expand_more,
-                    color: theme.colorScheme.outline,
-                  ),
+                  Icon(_showFaq ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.primary),
                 ],
               ),
             ),
           ),
           if (_showFaq) ...[
-            Divider(
-              height: 1,
-              color: isDark
-                  ? AppColors.sectionDividerDark
-                  : AppColors.sectionDividerLight,
-            ),
+            Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -817,17 +643,13 @@ class _IcalSyncSettingsScreenState
                           children: [
                             Text(
                               '❓ ${faq.$1}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               faq.$2,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.7,
-                                ),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                 height: 1.5,
                               ),
                             ),
@@ -878,10 +700,7 @@ class _IcalSyncSettingsScreenState
 
   void _syncFeedNow(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
-    ErrorDisplayUtils.showInfoSnackBar(
-      context,
-      l10n.icalSyncStarted(feed.platform.displayName),
-    );
+    ErrorDisplayUtils.showInfoSnackBar(context, l10n.icalSyncStarted(feed.platform.displayName));
 
     try {
       final functions = FirebaseFunctions.instance;
@@ -895,10 +714,7 @@ class _IcalSyncSettingsScreenState
         final bookingsCreated = data?['bookingsCreated'] as int? ?? 0;
 
         if (success) {
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            l10n.icalSyncSuccess(bookingsCreated),
-          );
+          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalSyncSuccess(bookingsCreated));
         } else {
           ErrorDisplayUtils.showErrorSnackBar(
             context,
@@ -909,11 +725,7 @@ class _IcalSyncSettingsScreenState
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: AppLocalizations.of(context).icalSyncErrorMessage,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).icalSyncErrorMessage);
       }
     }
   }
@@ -928,11 +740,7 @@ class _IcalSyncSettingsScreenState
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: AppLocalizations.of(context).icalFeedPauseError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).icalFeedPauseError);
       }
     }
   }
@@ -947,11 +755,7 @@ class _IcalSyncSettingsScreenState
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: AppLocalizations.of(context).icalFeedResumeError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).icalFeedResumeError);
       }
     }
   }
@@ -962,17 +766,9 @@ class _IcalSyncSettingsScreenState
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.icalDeleteFeedTitle),
-        content: Text(
-          l10n.icalDeleteFeedMessage(
-            feed.platform.displayName,
-            feed.eventCount,
-          ),
-        ),
+        content: Text(l10n.icalDeleteFeedMessage(feed.platform.displayName, feed.eventCount)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () async {
               final navigator = Navigator.of(dialogContext);
@@ -983,24 +779,15 @@ class _IcalSyncSettingsScreenState
                 ref.invalidate(icalFeedsStreamProvider);
                 ref.invalidate(icalStatisticsProvider);
                 if (mounted) {
-                  ErrorDisplayUtils.showSuccessSnackBar(
-                    this.context,
-                    l10n.icalFeedDeleted,
-                  );
+                  ErrorDisplayUtils.showSuccessSnackBar(this.context, l10n.icalFeedDeleted);
                 }
               } catch (e) {
                 if (mounted) {
-                  ErrorDisplayUtils.showErrorSnackBar(
-                    this.context,
-                    e,
-                    userMessage: l10n.icalFeedDeleteError,
-                  );
+                  ErrorDisplayUtils.showErrorSnackBar(this.context, e, userMessage: l10n.icalFeedDeleteError);
                 }
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(dialogContext).colorScheme.error),
             child: Text(l10n.delete),
           ),
         ],
@@ -1009,10 +796,7 @@ class _IcalSyncSettingsScreenState
   }
 
   void _showAddFeedDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const AddIcalFeedDialog(),
-    );
+    showDialog(context: context, builder: (context) => const AddIcalFeedDialog());
   }
 
   void _showEditFeedDialog(BuildContext context, IcalFeed feed) {
@@ -1036,17 +820,14 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _icalUrlController;
   String? _selectedUnitId;
-  String?
-  _selectedPropertyId; // OPTIMIZED: Store property ID to avoid re-reading provider
+  String? _selectedPropertyId; // OPTIMIZED: Store property ID to avoid re-reading provider
   IcalPlatform _selectedPlatform = IcalPlatform.bookingCom;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _icalUrlController = TextEditingController(
-      text: widget.existingFeed?.icalUrl ?? '',
-    );
+    _icalUrlController = TextEditingController(text: widget.existingFeed?.icalUrl ?? '');
     if (widget.existingFeed != null) {
       _selectedUnitId = widget.existingFeed!.unitId;
       _selectedPropertyId = widget.existingFeed!.propertyId;
@@ -1065,9 +846,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     final unitsAsync = ref.watch(ownerUnitsProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final dialogWidth = screenWidth > _kDialogMaxWidth
-        ? _kDialogMaxWidth
-        : screenWidth * _kDialogWidthFactor;
+    final dialogWidth = screenWidth > _kDialogMaxWidth ? _kDialogMaxWidth : screenWidth * _kDialogWidthFactor;
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -1085,9 +864,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: dialogWidth,
-            maxHeight:
-                screenHeight *
-                ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+            maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1103,21 +880,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        Icons.sync,
-                        color: theme.colorScheme.primary,
-                        size: 24,
-                      ),
+                      child: Icon(Icons.sync, color: theme.colorScheme.primary, size: 24),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        widget.existingFeed == null
-                            ? l10n.icalAddFeedTitle
-                            : l10n.icalEditFeedTitle,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        widget.existingFeed == null ? l10n.icalAddFeedTitle : l10n.icalEditFeedTitle,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -1130,12 +899,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                   ],
                 ),
               ),
-              Divider(
-                height: 1,
-                color: isDark
-                    ? AppColors.sectionDividerDark
-                    : AppColors.sectionDividerLight,
-              ),
+              Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
               // Content
               Flexible(
                 child: SingleChildScrollView(
@@ -1149,22 +913,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         unitsAsync.when(
                           data: (units) {
                             if (units.isEmpty) {
-                              return Text(
-                                l10n.icalNoUnitsCreated,
-                                style: const TextStyle(color: AppColors.error),
-                              );
+                              return Text(l10n.icalNoUnitsCreated, style: const TextStyle(color: AppColors.error));
                             }
-                            final validUnitId =
-                                units.any((u) => u.id == _selectedUnitId)
-                                ? _selectedUnitId
-                                : null;
+                            final validUnitId = units.any((u) => u.id == _selectedUnitId) ? _selectedUnitId : null;
                             return DropdownButtonFormField<String>(
                               initialValue: validUnitId,
                               isExpanded: true,
-                              dropdownColor:
-                                  InputDecorationHelper.getDropdownColor(
-                                    context,
-                                  ),
+                              dropdownColor: InputDecorationHelper.getDropdownColor(context),
                               decoration: InputDecorationHelper.buildDecoration(
                                 labelText: l10n.icalSelectUnit,
                                 context: context,
@@ -1173,26 +928,19 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                                   .map(
                                     (unit) => DropdownMenuItem(
                                       value: unit.id,
-                                      child: Text(
-                                        unit.name,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                      child: Text(unit.name, overflow: TextOverflow.ellipsis),
                                     ),
                                   )
                                   .toList(),
                               onChanged: (value) {
-                                final unit = units.firstWhere(
-                                  (u) => u.id == value,
-                                );
+                                final unit = units.firstWhere((u) => u.id == value);
                                 setState(() {
                                   _selectedUnitId = value;
                                   _selectedPropertyId = unit.propertyId;
                                 });
                               },
                               validator: (value) =>
-                                  (value == null || value.isEmpty)
-                                  ? l10n.icalSelectUnitRequired
-                                  : null,
+                                  (value == null || value.isEmpty) ? l10n.icalSelectUnitRequired : null,
                             );
                           },
                           loading: () => const CircularProgressIndicator(),
@@ -1202,29 +950,17 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         DropdownButtonFormField<IcalPlatform>(
                           initialValue: _selectedPlatform,
                           isExpanded: true,
-                          dropdownColor: InputDecorationHelper.getDropdownColor(
-                            context,
-                          ),
+                          dropdownColor: InputDecorationHelper.getDropdownColor(context),
                           decoration: InputDecorationHelper.buildDecoration(
                             labelText: l10n.icalPlatform,
                             context: context,
                           ),
                           items: [
-                            DropdownMenuItem(
-                              value: IcalPlatform.bookingCom,
-                              child: Text(l10n.icalPlatformBookingCom),
-                            ),
-                            DropdownMenuItem(
-                              value: IcalPlatform.airbnb,
-                              child: Text(l10n.icalPlatformAirbnb),
-                            ),
-                            DropdownMenuItem(
-                              value: IcalPlatform.other,
-                              child: Text(l10n.icalPlatformOther),
-                            ),
+                            DropdownMenuItem(value: IcalPlatform.bookingCom, child: Text(l10n.icalPlatformBookingCom)),
+                            DropdownMenuItem(value: IcalPlatform.airbnb, child: Text(l10n.icalPlatformAirbnb)),
+                            DropdownMenuItem(value: IcalPlatform.other, child: Text(l10n.icalPlatformOther)),
                           ],
-                          onChanged: (value) =>
-                              setState(() => _selectedPlatform = value!),
+                          onChanged: (value) => setState(() => _selectedPlatform = value!),
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -1239,8 +975,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             if (value == null || value.isEmpty) {
                               return l10n.icalUrlRequired;
                             }
-                            if (!value.startsWith('http://') &&
-                                !value.startsWith('https://')) {
+                            if (!value.startsWith('http://') && !value.startsWith('https://')) {
                               return l10n.icalUrlInvalid;
                             }
                             return null;
@@ -1253,24 +988,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
               ),
               // Footer
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.dialogFooterDark
-                      : AppColors.dialogFooterLight,
+                  color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
                   border: Border(
-                    top: BorderSide(
-                      color: isDark
-                          ? AppColors.sectionDividerDark
-                          : AppColors.sectionDividerLight,
-                    ),
+                    top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
                   ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(19),
-                  ),
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(19)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -1278,18 +1002,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                     OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        side: BorderSide(
-                          color: isDark
-                              ? AppColors.sectionDividerDark
-                              : AppColors.sectionDividerLight,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        side: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       child: Text(l10n.cancel),
                     ),
@@ -1302,38 +1017,16 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                       child: ElevatedButton.icon(
                         onPressed: _isSaving ? null : _saveFeed,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isSaving
-                              ? theme.colorScheme.surfaceContainerHighest
-                              : Colors.transparent,
-                          foregroundColor: _isSaving
-                              ? theme.colorScheme.onSurface
-                              : Colors.white,
+                          backgroundColor: _isSaving ? theme.colorScheme.surfaceContainerHighest : Colors.transparent,
+                          foregroundColor: _isSaving ? theme.colorScheme.onSurface : Colors.white,
                           shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         icon: _isSaving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Icon(
-                                widget.existingFeed == null
-                                    ? Icons.add
-                                    : Icons.save,
-                                size: 18,
-                              ),
-                        label: Text(
-                          widget.existingFeed == null
-                              ? l10n.icalAddFeedButton
-                              : l10n.save,
-                        ),
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : Icon(widget.existingFeed == null ? Icons.add : Icons.save, size: 18),
+                        label: Text(widget.existingFeed == null ? l10n.icalAddFeedButton : l10n.save),
                       ),
                     ),
                   ],
@@ -1349,10 +1042,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   void _saveFeed() async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showWarningSnackBar(
-        context,
-        l10n.widgetPleaseCheckFormErrors,
-      );
+      ErrorDisplayUtils.showWarningSnackBar(context, l10n.widgetPleaseCheckFormErrors);
       return;
     }
     setState(() => _isSaving = true);
@@ -1391,19 +1081,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         Navigator.pop(context);
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          widget.existingFeed == null
-              ? l10n.icalAddFeedTitle
-              : l10n.icalFeedUpdated,
+          widget.existingFeed == null ? l10n.icalAddFeedTitle : l10n.icalFeedUpdated,
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: l10n.icalFeedSaveError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.icalFeedSaveError);
       }
     }
   }

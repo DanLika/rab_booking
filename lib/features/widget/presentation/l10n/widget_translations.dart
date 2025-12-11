@@ -125,46 +125,14 @@ class WidgetTranslations {
   List<String> get weekdaysFull {
     switch (locale.languageCode) {
       case 'hr':
-        return [
-          'Ponedjeljak',
-          'Utorak',
-          'Srijeda',
-          'Četvrtak',
-          'Petak',
-          'Subota',
-          'Nedjelja',
-        ];
+        return ['Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota', 'Nedjelja'];
       case 'de':
-        return [
-          'Montag',
-          'Dienstag',
-          'Mittwoch',
-          'Donnerstag',
-          'Freitag',
-          'Samstag',
-          'Sonntag',
-        ];
+        return ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
       case 'it':
-        return [
-          'Lunedì',
-          'Martedì',
-          'Mercoledì',
-          'Giovedì',
-          'Venerdì',
-          'Sabato',
-          'Domenica',
-        ];
+        return ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
       case 'en':
       default:
-        return [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ];
+        return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     }
   }
 
@@ -3954,6 +3922,20 @@ class WidgetTranslations {
       case 'en':
       default:
         return 'Verification code sent! Check your inbox.';
+    }
+  }
+
+  String get verificationCodeExpiresInfo {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kod istječe za 30 minuta. Provjerite spam folder ako ga niste primili.';
+      case 'de':
+        return 'Code läuft in 30 Minuten ab. Überprüfen Sie den Spam-Ordner, falls Sie ihn nicht erhalten haben.';
+      case 'it':
+        return 'Il codice scade tra 30 minuti. Controlla la cartella spam se non l\'hai ricevuto.';
+      case 'en':
+      default:
+        return 'Code expires in 30 minutes. Check spam folder if not received.';
     }
   }
 

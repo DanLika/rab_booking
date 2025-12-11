@@ -19,11 +19,7 @@ import '../../../../core/utils/error_display_utils.dart';
 /// - Guest count
 /// - Notes
 /// - Status (if needed)
-Future<void> showEditBookingDialog(
-  BuildContext context,
-  WidgetRef ref,
-  BookingModel booking,
-) async {
+Future<void> showEditBookingDialog(BuildContext context, WidgetRef ref, BookingModel booking) async {
   return showDialog(
     context: context,
     builder: (context) => _EditBookingDialog(booking: booking),
@@ -67,10 +63,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     final theme = Theme.of(context);
     final nights = _checkOut.difference(_checkIn).inDays;
     final screenHeight = MediaQuery.of(context).size.height;
-    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(
-      context,
-      maxWidth: 500,
-    );
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(context, maxWidth: 500);
     final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
     final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -82,16 +75,12 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
       child: Container(
         width: dialogWidth,
         constraints: BoxConstraints(
-          maxHeight:
-              screenHeight *
-              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+          maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
         ),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withValues(alpha: 0.5),
-          ),
+          border: Border.all(color: context.gradients.sectionBorder.withValues(alpha: 0.5)),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -102,9 +91,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
               padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(11),
-                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
@@ -114,28 +101,18 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.edit, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.editBookingTitle,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
+                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
@@ -159,17 +136,11 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                     // Booking Info
                     Text(
                       l10n.editBookingBookingId(widget.booking.id),
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                     ),
                     Text(
                       l10n.editBookingGuest(widget.booking.guestName ?? ''),
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 16),
 
@@ -177,9 +148,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                     ListTile(
                       leading: const Icon(Icons.login),
                       title: Text(l10n.editBookingCheckIn),
-                      subtitle: Text(
-                        DateFormat('MMM dd, yyyy').format(_checkIn),
-                      ),
+                      subtitle: Text(DateFormat('MMM dd, yyyy').format(_checkIn)),
                       trailing: IconButton(
                         icon: const Icon(Icons.edit_calendar),
                         onPressed: () => _selectDate(isCheckIn: true),
@@ -191,9 +160,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                     ListTile(
                       leading: const Icon(Icons.logout),
                       title: Text(l10n.editBookingCheckOut),
-                      subtitle: Text(
-                        DateFormat('MMM dd, yyyy').format(_checkOut),
-                      ),
+                      subtitle: Text(DateFormat('MMM dd, yyyy').format(_checkOut)),
                       trailing: IconButton(
                         icon: const Icon(Icons.edit_calendar),
                         onPressed: () => _selectDate(isCheckIn: false),
@@ -206,20 +173,12 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.3,
-                          ),
-                        ),
+                        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.nights_stay,
-                            size: 18,
-                            color: theme.colorScheme.primary,
-                          ),
+                          Icon(Icons.nights_stay, size: 18, color: theme.colorScheme.primary),
                           const SizedBox(width: 8),
                           Text(
                             l10n.editBookingNights(nights),
@@ -242,9 +201,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                         Expanded(
                           child: Text(
                             l10n.editBookingGuests,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
                           ),
                         ),
                         Container(
@@ -253,9 +210,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                           decoration: BoxDecoration(
                             color: _guestCount > 1
                                 ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.12,
-                                  ),
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
@@ -265,13 +220,9 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                               size: 16,
                               color: _guestCount > 1
                                   ? theme.colorScheme.onPrimary
-                                  : theme.colorScheme.onSurface.withValues(
-                                      alpha: 0.38,
-                                    ),
+                                  : theme.colorScheme.onSurface.withValues(alpha: 0.38),
                             ),
-                            onPressed: _guestCount > 1
-                                ? () => setState(() => _guestCount--)
-                                : null,
+                            onPressed: _guestCount > 1 ? () => setState(() => _guestCount--) : null,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -279,10 +230,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                           width: 32,
                           child: Text(
                             _guestCount.toString(),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -290,17 +238,10 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                         Container(
                           width: 32,
                           height: 32,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
+                          decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
                           child: IconButton(
                             padding: EdgeInsets.zero,
-                            icon: Icon(
-                              Icons.add,
-                              size: 16,
-                              color: theme.colorScheme.onPrimary,
-                            ),
+                            icon: Icon(Icons.add, size: 16, color: theme.colorScheme.onPrimary),
                             onPressed: () => setState(() => _guestCount++),
                           ),
                         ),
@@ -325,38 +266,22 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
 
             // Footer
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: contentPadding,
-                vertical: 12,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.dialogFooterDark
-                    : AppColors.dialogFooterLight,
+                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
                 border: Border(
-                  top: BorderSide(
-                    color: isDark
-                        ? AppColors.sectionDividerDark
-                        : AppColors.sectionDividerLight,
-                  ),
+                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
                 ),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(11),
-                ),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Flexible(
                     child: TextButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         minimumSize: Size.zero,
                       ),
                       child: Text(l10n.cancel, overflow: TextOverflow.ellipsis),
@@ -375,27 +300,16 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                           backgroundColor: Colors.transparent,
                           foregroundColor: Colors.white,
                           shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         ),
                         child: _isLoading
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
-                            : Text(
-                                l10n.editBookingSaveChanges,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            : Text(l10n.editBookingSaveChanges, overflow: TextOverflow.ellipsis),
                       ),
                     ),
                   ),
@@ -420,8 +334,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
       setState(() {
         if (isCheckIn) {
           _checkIn = picked;
-          if (_checkOut.isBefore(_checkIn) ||
-              _checkOut.isAtSameMomentAs(_checkIn)) {
+          if (_checkOut.isBefore(_checkIn) || _checkOut.isAtSameMomentAs(_checkIn)) {
             _checkOut = _checkIn.add(const Duration(days: 1));
           }
         } else {
@@ -443,27 +356,18 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
         'check_in': _checkIn.toUtc().toIso8601String(),
         'check_out': _checkOut.toUtc().toIso8601String(),
         'guest_count': _guestCount,
-        'notes': _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+        'notes': _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
 
       if (mounted) {
         Navigator.of(context).pop();
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          AppLocalizations.of(context).editBookingSuccess,
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, AppLocalizations.of(context).editBookingSuccess);
       }
     } catch (e) {
       // FIXED: Use ErrorDisplayUtils for user-friendly error messages
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: AppLocalizations.of(context).editBookingError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: AppLocalizations.of(context).editBookingError);
       }
     } finally {
       if (mounted) {

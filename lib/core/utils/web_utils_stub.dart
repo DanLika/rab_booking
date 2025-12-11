@@ -66,6 +66,24 @@ double getWindowInnerHeight() {
   return 0;
 }
 
+/// Get physical screen width (not iframe dimensions)
+/// Returns 0 on non-web platforms
+double getScreenWidth() {
+  return 0;
+}
+
+/// Get physical screen height (not iframe dimensions)
+/// Returns 0 on non-web platforms
+double getScreenHeight() {
+  return 0;
+}
+
+/// Check if physical device is in landscape mode
+/// Returns false on non-web platforms (mobile uses MediaQuery)
+bool isDeviceLandscape() {
+  return false;
+}
+
 /// Calculate keyboard height by comparing window height to visual viewport
 /// Returns 0 on non-web platforms
 double getKeyboardHeight() {
@@ -95,4 +113,11 @@ void forceLayoutReset() {
 void Function() setupAndroidKeyboardFix() {
   // No-op on non-web platforms
   return () {};
+}
+
+/// Hide the native HTML splash screen
+/// No-op on non-web platforms (no HTML splash exists)
+void hideNativeSplash([void Function()? callback]) {
+  // No-op on non-web platforms - just call callback
+  callback?.call();
 }

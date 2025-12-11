@@ -669,7 +669,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                   ),
                   Icon(
                     _showFaq ? Icons.expand_less : Icons.expand_more,
-                    color: theme.colorScheme.outline,
+                    color: theme.colorScheme.primary,
                   ),
                 ],
               ),

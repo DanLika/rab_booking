@@ -65,6 +65,8 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               initiallyExpanded: taxLegalEnabled,
+              iconColor: theme.colorScheme.primary,
+              collapsedIconColor: theme.colorScheme.primary,
               tilePadding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 14 : 18,
                 vertical: 8,

@@ -22,8 +22,7 @@ class BankAccountScreen extends ConsumerStatefulWidget {
   ConsumerState<BankAccountScreen> createState() => _BankAccountScreenState();
 }
 
-class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
-    with AndroidKeyboardDismissFix {
+class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   bool _isDirty = false;
   bool _isSaving = false;
@@ -77,10 +76,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          l10n.bankAccountFillFieldsError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.bankAccountFillFieldsError);
       }
       return;
     }
@@ -104,9 +100,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
       );
 
       // Save company details to Firestore
-      await ref
-          .read(userProfileNotifierProvider.notifier)
-          .updateCompany(userId, updatedCompany);
+      await ref.read(userProfileNotifierProvider.notifier).updateCompany(userId, updatedCompany);
 
       // Invalidate provider to refresh UI with new data
       ref.invalidate(companyDetailsProvider);
@@ -117,10 +111,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
           _isSaving = false;
         });
 
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          l10n.bankAccountSaveSuccess,
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.bankAccountSaveSuccess);
 
         // Use go instead of pop - this page is accessed directly via URL
         context.go('/owner/integrations/payments');
@@ -129,11 +120,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: l10n.bankAccountSaveError,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.bankAccountSaveError);
       }
     }
   }
@@ -160,36 +147,25 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               initiallyExpanded: true,
-              tilePadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
+              iconColor: theme.colorScheme.primary,
+              collapsedIconColor: theme.colorScheme.primary,
+              tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.12 * 255).toInt(),
-                  ),
+                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.account_balance_outlined,
-                  color: theme.colorScheme.primary,
-                  size: 18,
-                ),
+                child: Icon(Icons.account_balance_outlined, color: theme.colorScheme.primary, size: 18),
               ),
               title: Text(
                 l10n.bankAccountBankDetails,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
                 l10n.bankAccountBankDetailsSubtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
               children: [
                 PremiumInputField(
@@ -247,15 +223,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ],
+                      colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
                     )
                   : null,
-              color: (_isDirty && !_isSaving)
-                  ? null
-                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
+              color: (_isDirty && !_isSaving) ? null : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: ElevatedButton.icon(
@@ -266,25 +237,16 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                 shadowColor: Colors.transparent,
                 disabledBackgroundColor: Colors.transparent,
                 disabledForegroundColor: theme.disabledColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               icon: _isSaving
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.save_rounded),
-              label: Text(
-                _isSaving
-                    ? l10n.bankAccountSaving
-                    : l10n.bankAccountSaveChanges,
-              ),
+              label: Text(_isSaving ? l10n.bankAccountSaving : l10n.bankAccountSaveChanges),
             ),
           ),
         ),
@@ -296,11 +258,17 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
           width: double.infinity,
           height: 52,
           child: TextButton(
-            onPressed: () => context.pop(),
+            onPressed: () {
+              // Use go instead of pop - this page is accessed directly via URL
+              // and may not have a previous route in the navigation stack
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/integrations/payments');
+              }
+            },
             style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface.withAlpha(
-                (0.7 * 255).toInt(),
-              ),
+              foregroundColor: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(color: theme.dividerColor),
@@ -330,10 +298,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
               title: Text(l10n.bankAccountDiscardTitle),
               content: Text(l10n.bankAccountDiscardDesc),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(l10n.cancel),
-                ),
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -352,56 +317,42 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
         key: ValueKey('bank_account_$keyboardFixRebuildKey'),
         child: Scaffold(
           resizeToAvoidBottomInset: false,
-          drawer: const OwnerAppDrawer(
-            currentRoute: 'integrations/payments/bank-account',
-          ),
+          drawer: const OwnerAppDrawer(currentRoute: 'integrations/payments/bank-account'),
           appBar: CommonAppBar(
             title: l10n.bankAccountTitle,
             leadingIcon: Icons.menu,
             onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
           ),
           body: Container(
-            decoration: BoxDecoration(
-              gradient: context.gradients.pageBackground,
-            ),
+            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
             child: companyDetailsAsync.when(
               data: (companyDetails) {
                 // Create default company if null
-                final effectiveCompany =
-                    companyDetails ?? const CompanyDetails();
+                final effectiveCompany = companyDetails ?? const CompanyDetails();
 
                 _loadData(effectiveCompany);
 
                 return LayoutBuilder(
                   builder: (context, constraints) {
                     return SingleChildScrollView(
-                      padding: EdgeInsets.all(
-                        MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                      ),
+                      padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 24),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
-                          minHeight:
-                              constraints.maxHeight -
-                              (MediaQuery.of(context).size.width < 400
-                                  ? 32
-                                  : 48),
+                          minHeight: constraints.maxHeight - (MediaQuery.of(context).size.width < 400 ? 32 : 48),
                         ),
                         child: Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 600),
                             child: Form(
                               key: _formKey,
-                              autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
+                              autovalidateMode: AutovalidateMode.onUserInteraction,
                               child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   // Top content
                                   Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       // Info Card
                                       _buildInfoCard(l10n),
@@ -424,8 +375,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) =>
-                  Center(child: Text('${l10n.error}: $error')),
+              error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
             ),
           ),
         ),

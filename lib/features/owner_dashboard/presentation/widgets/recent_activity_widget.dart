@@ -186,7 +186,7 @@ class RecentActivityWidget extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: activities.length > 5 ? 5 : activities.length,
               separatorBuilder: (context, index) =>
-                  Divider(height: 1, color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
+                  Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
               itemBuilder: (context, index) {
                 final activity = activities[index];
                 return _ActivityTile(

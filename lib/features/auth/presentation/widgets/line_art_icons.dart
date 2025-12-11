@@ -65,14 +65,22 @@ class _LineArtPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     switch (type) {
-      case LineArtIconType.house => _drawHouse(canvas, size, paint),
-      case LineArtIconType.villa => _drawVilla(canvas, size, paint),
-      case LineArtIconType.hotel => _drawHotel(canvas, size, paint),
-      case LineArtIconType.apartment => _drawApartment(canvas, size, paint),
-      case LineArtIconType.building => _drawBuilding(canvas, size, paint),
-      case LineArtIconType.key => _drawKey(canvas, size, paint),
-      case LineArtIconType.keyCard => _drawKeyCard(canvas, size, paint),
-      case LineArtIconType.doorKey => _drawDoorKey(canvas, size, paint),
+      case LineArtIconType.house:
+        _drawHouse(canvas, size, paint);
+      case LineArtIconType.villa:
+        _drawVilla(canvas, size, paint);
+      case LineArtIconType.hotel:
+        _drawHotel(canvas, size, paint);
+      case LineArtIconType.apartment:
+        _drawApartment(canvas, size, paint);
+      case LineArtIconType.building:
+        _drawBuilding(canvas, size, paint);
+      case LineArtIconType.key:
+        _drawKey(canvas, size, paint);
+      case LineArtIconType.keyCard:
+        _drawKeyCard(canvas, size, paint);
+      case LineArtIconType.doorKey:
+        _drawDoorKey(canvas, size, paint);
     }
   }
 

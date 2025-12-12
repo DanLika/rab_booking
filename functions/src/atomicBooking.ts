@@ -255,12 +255,14 @@ export const createBookingAtomic = onCall(async (request) => {
     // ========================================================================
     // STEP 0.6: SECURITY - Validate client-provided price matches server calculation
     // CRITICAL: Prevents price manipulation attacks (booking €1000 unit for €1)
+    // Now includes fallback to unit base price if daily_prices don't exist
     // ========================================================================
     await validateBookingPrice(
       unitId,
       checkInDate,
       checkOutDate,
-      numericTotalPrice // Use validated numeric price
+      numericTotalPrice, // Use validated numeric price
+      propertyId // Pass propertyId for fallback to unit base price
     );
 
     logInfo("[AtomicBooking] Price validated against server calculation", {

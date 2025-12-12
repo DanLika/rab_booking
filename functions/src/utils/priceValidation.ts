@@ -33,9 +33,14 @@ interface PriceCalculationResult {
  * SECURITY: This is the ONLY source of truth for booking prices.
  * Client-provided prices MUST be validated against this calculation.
  *
+ * FALLBACK: If daily_prices don't exist for some dates, falls back to
+ * unit's base price (price_per_night / weekend_base_price), matching
+ * the client-side calculation in price_calculator_provider.dart.
+ *
  * @param unitId - The unit ID to calculate price for
  * @param checkInDate - Check-in date (Firestore Timestamp)
  * @param checkOutDate - Check-out date (Firestore Timestamp)
+ * @param propertyId - The property ID (needed to fetch unit data for fallback)
  * @param transaction - Optional Firestore transaction for atomic reads
  * @returns Price calculation result with total and breakdown
  * @throws HttpsError if pricing not configured or invalid
@@ -44,6 +49,7 @@ export async function calculateBookingPrice(
   unitId: string,
   checkInDate: admin.firestore.Timestamp,
   checkOutDate: admin.firestore.Timestamp,
+  propertyId?: string,
   transaction?: admin.firestore.Transaction
 ): Promise<PriceCalculationResult> {
   // Calculate expected number of nights
@@ -74,32 +80,101 @@ export async function calculateBookingPrice(
     await transaction.get(dailyPricesQuery) :
     await dailyPricesQuery.get();
 
-  // Build price breakdown
-  const breakdown: Array<{date: string; price: number}> = [];
-  let totalPrice = 0;
-
+  // Create a map of existing daily prices (date string -> price data)
+  const dailyPricesMap = new Map<string, admin.firestore.DocumentData>();
   for (const doc of snapshot.docs) {
     const priceData = doc.data();
     const dateTimestamp = priceData.date as admin.firestore.Timestamp;
     const dateStr = dateTimestamp.toDate().toISOString().split("T")[0];
+    dailyPricesMap.set(dateStr, priceData);
+  }
 
-    // Get effective price for this date
-    // Priority: weekend_price (if weekend) > price
-    let nightPrice = priceData.price;
+  // Fetch unit data for fallback pricing (if we don't have all daily_prices)
+  let fallbackPrice = 100.0; // Default fallback
+  let weekendBasePrice: number | null = null;
+  let weekendDays: number[] = [5, 6]; // Default: Friday (5), Saturday (6) - JS uses 0=Sun
 
-    // Check if it's a weekend and weekend_price is set
-    if (priceData.weekend_price != null) {
-      const dayOfWeek = dateTimestamp.toDate().getDay();
-      // Default weekend: Friday (5) and Saturday (6)
-      const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
-      if (isWeekend) {
-        nightPrice = priceData.weekend_price;
+  if (dailyPricesMap.size < expectedNights && propertyId) {
+    // Need fallback - fetch unit data
+    const unitRef = db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("units")
+      .doc(unitId);
+
+    const unitDoc = transaction ?
+      await transaction.get(unitRef) :
+      await unitRef.get();
+
+    if (unitDoc.exists) {
+      const unitData = unitDoc.data();
+      fallbackPrice = unitData?.price_per_night ?? 100.0;
+      weekendBasePrice = unitData?.weekend_base_price ?? null;
+      // Convert weekend_days from [6, 7] (Mon=1 format) to JS format [5, 6] (Sun=0 format)
+      if (unitData?.weekend_days && Array.isArray(unitData.weekend_days)) {
+        weekendDays = unitData.weekend_days.map((d: number) => {
+          // Convert from Mon=1,Sun=7 to Sun=0,Mon=1 format
+          return d === 7 ? 0 : d;
+        });
       }
+
+      logInfo("[PriceValidation] Using unit base price as fallback", {
+        unitId,
+        fallbackPrice,
+        weekendBasePrice,
+        weekendDays,
+      });
+    }
+  }
+
+  // Build price breakdown for ALL nights (using daily_prices or fallback)
+  const breakdown: Array<{date: string; price: number}> = [];
+  let totalPrice = 0;
+
+  // Iterate through each night in the booking range
+  let currentDate = new Date(checkInDate.toDate());
+  currentDate.setUTCHours(0, 0, 0, 0);
+
+  for (let i = 0; i < expectedNights; i++) {
+    const dateStr = currentDate.toISOString().split("T")[0];
+    const dayOfWeek = currentDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+    let nightPrice: number;
+
+    // Check if we have a daily_price for this date
+    const dailyPriceData = dailyPricesMap.get(dateStr);
+
+    if (dailyPriceData) {
+      // Use daily_price
+      nightPrice = dailyPriceData.price;
+
+      // Check if it's a weekend and weekend_price is set in daily_prices
+      if (dailyPriceData.weekend_price != null) {
+        const isWeekendDay = weekendDays.includes(dayOfWeek);
+        if (isWeekendDay) {
+          nightPrice = dailyPriceData.weekend_price;
+        }
+      }
+    } else {
+      // FALLBACK: Use unit's base price
+      const isWeekendDay = weekendDays.includes(dayOfWeek);
+      if (isWeekendDay && weekendBasePrice != null) {
+        nightPrice = weekendBasePrice;
+      } else {
+        nightPrice = fallbackPrice;
+      }
+
+      logInfo("[PriceValidation] Using fallback price for date", {
+        unitId,
+        date: dateStr,
+        fallbackPrice: nightPrice,
+        isWeekend: isWeekendDay,
+      });
     }
 
     // Validate price is a positive number
     if (typeof nightPrice !== "number" || nightPrice < 0 || !Number.isFinite(nightPrice)) {
-      logError("[PriceValidation] Invalid price in daily_prices", null, {
+      logError("[PriceValidation] Invalid price calculated", null, {
         unitId,
         date: dateStr,
         price: nightPrice,
@@ -113,23 +188,9 @@ export async function calculateBookingPrice(
 
     totalPrice += nightPrice;
     breakdown.push({date: dateStr, price: nightPrice});
-  }
 
-  // Validate: Must have price for EVERY night
-  if (breakdown.length !== expectedNights) {
-    logError("[PriceValidation] Missing prices for some dates", null, {
-      unitId,
-      expectedNights,
-      foundNights: breakdown.length,
-      checkIn: checkInDate.toDate().toISOString(),
-      checkOut: checkOutDate.toDate().toISOString(),
-    });
-
-    throw new HttpsError(
-      "failed-precondition",
-      `Pricing not configured for all dates. Expected ${expectedNights} nights, found ${breakdown.length}. ` +
-      `Please contact property owner or select different dates.`
-    );
+    // Move to next day
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   // Round to 2 decimal places to avoid floating point issues
@@ -139,6 +200,7 @@ export async function calculateBookingPrice(
     unitId,
     nights: expectedNights,
     totalPrice,
+    usedFallback: dailyPricesMap.size < expectedNights,
   });
 
   return {
@@ -158,6 +220,7 @@ export async function calculateBookingPrice(
  * @param checkInDate - Check-in date (Firestore Timestamp)
  * @param checkOutDate - Check-out date (Firestore Timestamp)
  * @param clientTotalPrice - Price provided by client
+ * @param propertyId - The property ID (needed to fetch unit data for fallback pricing)
  * @param transaction - Optional Firestore transaction for atomic validation
  * @throws HttpsError if price mismatch detected
  */
@@ -166,6 +229,7 @@ export async function validateBookingPrice(
   checkInDate: admin.firestore.Timestamp,
   checkOutDate: admin.firestore.Timestamp,
   clientTotalPrice: number,
+  propertyId?: string,
   transaction?: admin.firestore.Transaction
 ): Promise<void> {
   // Validate clientTotalPrice is a valid number
@@ -180,11 +244,12 @@ export async function validateBookingPrice(
     );
   }
 
-  // Calculate server-side price
+  // Calculate server-side price (with fallback support)
   const {totalPrice: serverTotalPrice} = await calculateBookingPrice(
     unitId,
     checkInDate,
     checkOutDate,
+    propertyId,
     transaction
   );
 

@@ -674,6 +674,7 @@
   "ownerBookingsCompleteError": "Error completing booking",
   "ownerBookingsCancelled": "Booking cancelled",
   "ownerBookingsCancelError": "Error cancelling booking",
+  "ownerBookingsNotFound": "Booking not found",
 
   "ownerBookingCardNight": "night",
   "ownerBookingCardNights": "nights",

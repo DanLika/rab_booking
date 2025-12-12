@@ -674,6 +674,7 @@
   "ownerBookingsCompleteError": "Greška pri završavanju rezervacije",
   "ownerBookingsCancelled": "Rezervacija je otkazana",
   "ownerBookingsCancelError": "Greška pri otkazivanju rezervacije",
+  "ownerBookingsNotFound": "Rezervacija nije pronađena",
 
   "ownerBookingCardNight": "noć",
   "ownerBookingCardNights": "noći",

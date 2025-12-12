@@ -3,6 +3,20 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/gradient_extensions.dart';
 
+/// Safely convert exception to string, handling null and edge cases
+/// Prevents "Null check operator used on a null value" errors
+String _safeExceptionToString(dynamic exception) {
+  if (exception == null) {
+    return 'Unknown error';
+  }
+  try {
+    return exception.toString();
+  } catch (e) {
+    // If toString() itself throws, return a safe fallback
+    return 'Error: Unable to display error details';
+  }
+}
+
 /// Error Boundary Widget - Catches errors in widget tree and shows fallback UI
 ///
 /// Usage:
@@ -190,7 +204,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
                           ),
                         ),
                         child: Text(
-                          widget.errorDetails.exception.toString(),
+                          _safeExceptionToString(widget.errorDetails.exception),
                           style: TextStyle(
                             fontSize: 11,
                             fontFamily: 'monospace',
@@ -340,27 +354,42 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
   void _navigateToHome(BuildContext context) {
     // Direct navigation to dashboard - always works
     try {
-      context.go('/owner/dashboard');
+      // Defensive check: ensure GoRouter is available before navigation
+      // Use GoRouter.maybeOf to safely check if router is available
+      final router = GoRouter.maybeOf(context);
+      if (router != null) {
+        context.go('/owner/dashboard');
+      } else {
+        // GoRouter not available, use Navigator as fallback
+        throw Exception('GoRouter not found in context');
+      }
     } catch (e) {
-      debugPrint('Error navigating to home: $e');
+      debugPrint('Error navigating to home: ${_safeExceptionToString(e)}');
       // If go_router fails completely, use Navigator
-      Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
-        '/owner/dashboard',
-        (_) => false,
-      );
+      try {
+        Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
+          '/owner/dashboard',
+          (_) => false,
+        );
+      } catch (navError) {
+        // If Navigator also fails, just log the error
+        debugPrint('Navigator fallback also failed: ${_safeExceptionToString(navError)}');
+      }
     }
   }
 
   void _tryAgain(BuildContext context) {
     try {
-      if (context.canPop()) {
+      // Defensive check: ensure GoRouter is available before navigation
+      final router = GoRouter.maybeOf(context);
+      if (router != null && context.canPop()) {
         context.pop();
       } else {
-        // Can't go back, go home instead
+        // Can't go back or router not available, go home instead
         _navigateToHome(context);
       }
     } catch (e) {
-      debugPrint('Error trying again: $e');
+      debugPrint('Error trying again: ${_safeExceptionToString(e)}');
       _navigateToHome(context);
     }
   }

@@ -49,10 +49,25 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
   // This allows UI to reflect cancelled state without refetching from Firestore
   late String _currentStatus;
 
+  /// Safely convert error to string, handling null and edge cases
+  /// Prevents "Null check operator used on a null value" errors
+  static String _safeErrorToString(dynamic error) {
+    if (error == null) {
+      return 'Unknown error';
+    }
+    try {
+      return error.toString();
+    } catch (e) {
+      // If toString() itself throws, return a safe fallback
+      return 'Error: Unable to display error details';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     // Initialize local status from widget (allows UI update after cancellation)
+    // Note: status is already a String in BookingDetailsModel
     _currentStatus = widget.booking.status;
 
     _animationController = AnimationController(
@@ -203,9 +218,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
       if (mounted) {
         final tr = WidgetTranslations.of(context, ref);
         setState(() => _isCancelling = false);
+        // Safely convert error to string
+        final errorMessage = _safeErrorToString(e);
         SnackBarHelper.showError(
           context: context,
-          message: tr.failedToCancelBooking(e.toString()),
+          message: tr.failedToCancelBooking(errorMessage),
           duration: const Duration(seconds: 5),
         );
       }
@@ -363,12 +380,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           ),
         ],
         // Cancellation policy
-        if (widget.widgetSettings != null &&
-            widget.widgetSettings!.allowGuestCancellation) ...[
+        if (widget.widgetSettings?.allowGuestCancellation == true) ...[
           const SizedBox(height: SpacingTokens.l),
           CancellationPolicyCard(
             deadlineHours:
-                widget.widgetSettings!.cancellationDeadlineHours ?? 48,
+                widget.widgetSettings?.cancellationDeadlineHours ?? 48,
             checkIn: widget.booking.checkIn,
             colors: colors,
           ),

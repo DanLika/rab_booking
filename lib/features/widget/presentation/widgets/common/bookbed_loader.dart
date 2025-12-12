@@ -35,12 +35,7 @@ class BookBedLoader extends StatelessWidget {
   /// Logo size
   final double logoSize;
 
-  const BookBedLoader({
-    super.key,
-    required this.isDarkMode,
-    this.progress,
-    this.logoSize = _defaultLogoSize,
-  });
+  const BookBedLoader({super.key, required this.isDarkMode, this.progress, this.logoSize = _defaultLogoSize});
 
   @override
   Widget build(BuildContext context) {
@@ -72,17 +67,15 @@ class BookBedLoader extends StatelessWidget {
         height: _progressBarHeight,
         child: Stack(
           children: [
-            Container(
-              color: colors.primary.withValues(alpha: _backgroundOpacity),
-            ),
+            Container(color: Colors.black.withValues(alpha: _backgroundOpacity)),
             if (progress != null)
               FractionallySizedBox(
                 widthFactor: progress!.clamp(0.0, 1.0),
                 alignment: Alignment.centerLeft,
-                child: Container(color: colors.primary),
+                child: Container(color: Colors.black),
               )
             else
-              _IndeterminateProgress(color: colors.primary),
+              const _IndeterminateProgress(color: Colors.black),
           ],
         ),
       ),
@@ -115,18 +108,14 @@ class _IndeterminateProgress extends StatefulWidget {
   State<_IndeterminateProgress> createState() => _IndeterminateProgressState();
 }
 
-class _IndeterminateProgressState extends State<_IndeterminateProgress>
-    with SingleTickerProviderStateMixin {
+class _IndeterminateProgressState extends State<_IndeterminateProgress> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: _IndeterminateProgress._animationDuration,
-      vsync: this,
-    )..repeat();
+    _controller = AnimationController(duration: _IndeterminateProgress._animationDuration, vsync: this)..repeat();
 
     _animation = Tween<double>(
       begin: -1.0,

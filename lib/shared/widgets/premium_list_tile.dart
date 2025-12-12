@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/design_tokens/border_tokens.dart';
 
 /// Reusable premium-styled list tile with hover effects
 /// Used in profile screens and settings pages
@@ -49,7 +50,7 @@ class _PremiumListTileState extends State<PremiumListTile> {
         decoration: BoxDecoration(
           color: _isHovered && !isDisabled ? AppColors.primary.withValues(alpha: 0.04) : Colors.transparent,
           borderRadius: widget.isLast
-              ? const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12))
+              ? BorderTokens.onlyBottom(12.0)
               : BorderRadius.zero,
         ),
         child: Opacity(

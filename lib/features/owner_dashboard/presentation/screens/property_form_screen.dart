@@ -22,6 +22,7 @@ import '../../../../shared/widgets/app_filter_chip.dart';
 import '../providers/owner_properties_provider.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/services/logging_service.dart';
 
 /// Modern Property form screen for add/edit with enhanced UI
 class PropertyFormScreen extends ConsumerStatefulWidget {
@@ -33,8 +34,7 @@ class PropertyFormScreen extends ConsumerStatefulWidget {
   ConsumerState<PropertyFormScreen> createState() => _PropertyFormScreenState();
 }
 
-class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
-    with AndroidKeyboardDismissFix {
+class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with AndroidKeyboardDismissFix {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _slugController = TextEditingController();
@@ -82,8 +82,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
     _existingImages = property.images.toList();
     _isPublished = property.isActive;
     _isManualSlugEdit = property.slug != null;
-    _isManualSubdomainEdit =
-        property.subdomain != null && property.subdomain!.isNotEmpty;
+    _isManualSubdomainEdit = property.subdomain != null && property.subdomain!.isNotEmpty;
 
     // Check existing subdomain availability (should be valid, but good UX feedback)
     if (_subdomainController.text.isNotEmpty) {
@@ -152,7 +151,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         setState(() {
           _isCheckingSubdomain = false;
           _subdomainError = l10n.propertyFormGeneratingError(
-            e.toString().replaceFirst('Exception: ', ''),
+            LoggingService.safeErrorToString(e).replaceFirst('Exception: ', ''),
           );
         });
       }
@@ -214,7 +213,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           _isCheckingSubdomain = false;
           _isSubdomainAvailable = false;
           _subdomainError = l10n.propertyFormCheckingError(
-            e.toString().replaceFirst('Exception: ', ''),
+            LoggingService.safeErrorToString(e).replaceFirst('Exception: ', ''),
           );
         });
       }
@@ -243,9 +242,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: CommonAppBar(
-          title: _isEditing
-              ? l10n.propertyFormTitleEdit
-              : l10n.propertyFormTitleAdd,
+          title: _isEditing ? l10n.propertyFormTitleEdit : l10n.propertyFormTitleAdd,
           leadingIcon: Icons.arrow_back,
           onLeadingIconTap: (context) => Navigator.of(context).pop(),
         ),
@@ -253,417 +250,352 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           // Page background gradient (topLeft → bottomRight)
           decoration: BoxDecoration(gradient: context.gradients.pageBackground),
           child: Stack(
+            alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
             children: [
               ScrollConfiguration(
                 // Enable mouse/trackpad drag scrolling for web
-                behavior: ScrollConfiguration.of(context).copyWith(
-                  dragDevices: {
-                    PointerDeviceKind.touch,
-                    PointerDeviceKind.mouse,
-                    PointerDeviceKind.trackpad,
-                  },
-                ),
+                behavior: ScrollConfiguration.of(
+                  context,
+                ).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad}),
                 child: Form(
                   key: _formKey,
                   child: ListView(
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    padding: EdgeInsets.fromLTRB(
-                      isMobile ? 16 : 24,
-                      isMobile ? 16 : 24,
-                      isMobile ? 16 : 24,
-                      24,
-                    ),
+                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                    padding: EdgeInsets.fromLTRB(isMobile ? 16 : 24, isMobile ? 16 : 24, isMobile ? 16 : 24, 24),
                     children: [
-                    // Basic Info Section
-                    _buildSection(
-                      context,
-                      title: l10n.propertyFormBasicInfo,
-                      icon: Icons.info_outline,
-                      children: [
-                        // Property Name + URL Slug - Responsive layout
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final isVerySmall = constraints.maxWidth < 500;
+                      // Basic Info Section
+                      _buildSection(
+                        context,
+                        title: l10n.propertyFormBasicInfo,
+                        icon: Icons.info_outline,
+                        children: [
+                          // Property Name + URL Slug - Responsive layout
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isVerySmall = constraints.maxWidth < 500;
 
-                            if (isVerySmall) {
-                              // Column layout for small screens
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                              if (isVerySmall) {
+                                // Column layout for small screens
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    // Property Name
+                                    TextFormField(
+                                      controller: _nameController,
+                                      decoration: InputDecorationHelper.buildDecoration(
+                                        labelText: l10n.propertyFormPropertyName,
+                                        hintText: l10n.propertyFormPropertyNameHint,
+                                        isMobile: isMobile,
+                                        context: context,
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return l10n.propertyFormPropertyNameRequired;
+                                        }
+                                        return null;
+                                      },
+                                      onChanged: (value) {
+                                        _autoGenerateSlug();
+                                        _autoGenerateSubdomain();
+                                      },
+                                    ),
+                                    const SizedBox(height: AppDimensions.spaceM),
+                                    // URL Slug
+                                    TextFormField(
+                                      controller: _slugController,
+                                      decoration: InputDecorationHelper.buildDecoration(
+                                        labelText: l10n.propertyFormUrlSlug,
+                                        hintText: l10n.propertyFormUrlSlugHint,
+                                        helperText: l10n.propertyFormUrlSlugHelper,
+                                        isMobile: isMobile,
+                                        suffixIcon: IconButton(
+                                          icon: const Icon(Icons.refresh),
+                                          tooltip: l10n.propertyFormRegenerateSlug,
+                                          onPressed: () {
+                                            setState(() {
+                                              _isManualSlugEdit = false;
+                                              _autoGenerateSlug();
+                                            });
+                                          },
+                                        ),
+                                        context: context,
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return l10n.propertyFormSlugRequired;
+                                        }
+                                        if (!isValidSlug(value)) {
+                                          return l10n.propertyFormSlugInvalid;
+                                        }
+                                        return null;
+                                      },
+                                      onChanged: (value) {
+                                        if (value.isNotEmpty) {
+                                          setState(() => _isManualSlugEdit = true);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              // Row layout for larger screens
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   // Property Name
-                                  TextFormField(
-                                    controller: _nameController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText:
-                                              l10n.propertyFormPropertyName,
-                                          hintText:
-                                              l10n.propertyFormPropertyNameHint,
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return l10n
-                                            .propertyFormPropertyNameRequired;
-                                      }
-                                      return null;
-                                    },
-                                    onChanged: (value) {
-                                      _autoGenerateSlug();
-                                      _autoGenerateSubdomain();
-                                    },
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _nameController,
+                                      decoration: InputDecorationHelper.buildDecoration(
+                                        labelText: l10n.propertyFormPropertyName,
+                                        hintText: l10n.propertyFormPropertyNameHint,
+                                        isMobile: isMobile,
+                                        context: context,
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return l10n.propertyFormPropertyNameRequired;
+                                        }
+                                        return null;
+                                      },
+                                      onChanged: (value) {
+                                        _autoGenerateSlug();
+                                        _autoGenerateSubdomain();
+                                      },
+                                    ),
                                   ),
-                                  const SizedBox(height: AppDimensions.spaceM),
+                                  const SizedBox(width: 16),
                                   // URL Slug
-                                  TextFormField(
-                                    controller: _slugController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText: l10n.propertyFormUrlSlug,
-                                          hintText:
-                                              l10n.propertyFormUrlSlugHint,
-                                          helperText:
-                                              l10n.propertyFormUrlSlugHelper,
-                                          isMobile: isMobile,
-                                          suffixIcon: IconButton(
-                                            icon: const Icon(Icons.refresh),
-                                            tooltip:
-                                                l10n.propertyFormRegenerateSlug,
-                                            onPressed: () {
-                                              setState(() {
-                                                _isManualSlugEdit = false;
-                                                _autoGenerateSlug();
-                                              });
-                                            },
-                                          ),
-                                          context: context,
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _slugController,
+                                      decoration: InputDecorationHelper.buildDecoration(
+                                        labelText: l10n.propertyFormUrlSlug,
+                                        hintText: l10n.propertyFormUrlSlugHint,
+                                        helperText: l10n.propertyFormUrlSlugHelper,
+                                        isMobile: isMobile,
+                                        suffixIcon: IconButton(
+                                          icon: const Icon(Icons.refresh),
+                                          tooltip: l10n.propertyFormRegenerateSlug,
+                                          onPressed: () {
+                                            setState(() {
+                                              _isManualSlugEdit = false;
+                                              _autoGenerateSlug();
+                                            });
+                                          },
                                         ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return l10n.propertyFormSlugRequired;
-                                      }
-                                      if (!isValidSlug(value)) {
-                                        return l10n.propertyFormSlugInvalid;
-                                      }
-                                      return null;
-                                    },
-                                    onChanged: (value) {
-                                      if (value.isNotEmpty) {
-                                        setState(
-                                          () => _isManualSlugEdit = true,
-                                        );
-                                      }
-                                    },
+                                        context: context,
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return l10n.propertyFormSlugRequired;
+                                        }
+                                        if (!isValidSlug(value)) {
+                                          return l10n.propertyFormSlugInvalid;
+                                        }
+                                        return null;
+                                      },
+                                      onChanged: (value) {
+                                        if (value.isNotEmpty) {
+                                          setState(() => _isManualSlugEdit = true);
+                                        }
+                                      },
+                                    ),
                                   ),
                                 ],
                               );
-                            }
-
-                            // Row layout for larger screens
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Property Name
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _nameController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText:
-                                              l10n.propertyFormPropertyName,
-                                          hintText:
-                                              l10n.propertyFormPropertyNameHint,
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return l10n
-                                            .propertyFormPropertyNameRequired;
-                                      }
-                                      return null;
-                                    },
-                                    onChanged: (value) {
-                                      _autoGenerateSlug();
-                                      _autoGenerateSubdomain();
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                // URL Slug
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _slugController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText: l10n.propertyFormUrlSlug,
-                                          hintText:
-                                              l10n.propertyFormUrlSlugHint,
-                                          helperText:
-                                              l10n.propertyFormUrlSlugHelper,
-                                          isMobile: isMobile,
-                                          suffixIcon: IconButton(
-                                            icon: const Icon(Icons.refresh),
-                                            tooltip:
-                                                l10n.propertyFormRegenerateSlug,
-                                            onPressed: () {
-                                              setState(() {
-                                                _isManualSlugEdit = false;
-                                                _autoGenerateSlug();
-                                              });
-                                            },
-                                          ),
-                                          context: context,
-                                        ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return l10n.propertyFormSlugRequired;
-                                      }
-                                      if (!isValidSlug(value)) {
-                                        return l10n.propertyFormSlugInvalid;
-                                      }
-                                      return null;
-                                    },
-                                    onChanged: (value) {
-                                      if (value.isNotEmpty) {
-                                        setState(
-                                          () => _isManualSlugEdit = true,
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: AppDimensions.spaceM),
-                        // Subdomain field (full width)
-                        _buildSubdomainField(isMobile),
-                        const SizedBox(height: AppDimensions.spaceM),
-                        // Property Type
-                        DropdownButtonFormField<PropertyType>(
-                          initialValue: _selectedType,
-                          dropdownColor: InputDecorationHelper.getDropdownColor(
-                            context,
+                            },
                           ),
-                          borderRadius:
-                              InputDecorationHelper.dropdownBorderRadius,
-                          decoration: InputDecorationHelper.buildDecoration(
-                            labelText: l10n.propertyFormPropertyType,
-                            isMobile: isMobile,
-                            context: context,
+                          const SizedBox(height: AppDimensions.spaceM),
+                          // Subdomain field (full width)
+                          _buildSubdomainField(isMobile),
+                          const SizedBox(height: AppDimensions.spaceM),
+                          // Property Type
+                          DropdownButtonFormField<PropertyType>(
+                            initialValue: _selectedType,
+                            dropdownColor: InputDecorationHelper.getDropdownColor(context),
+                            borderRadius: InputDecorationHelper.dropdownBorderRadius,
+                            decoration: InputDecorationHelper.buildDecoration(
+                              labelText: l10n.propertyFormPropertyType,
+                              isMobile: isMobile,
+                              context: context,
+                            ),
+                            items: PropertyType.values.map((type) {
+                              return DropdownMenuItem(value: type, child: Text(type.displayNameHR));
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _selectedType = value);
+                              }
+                            },
                           ),
-                          items: PropertyType.values.map((type) {
-                            return DropdownMenuItem(
-                              value: type,
-                              child: Text(type.displayNameHR),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => _selectedType = value);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: AppDimensions.spaceM),
-                        // Description
-                        TextFormField(
-                          controller: _descriptionController,
-                          decoration: InputDecorationHelper.buildDecoration(
-                            labelText: l10n.propertyFormDescription,
-                            hintText: l10n.propertyFormDescriptionHint,
-                            isMobile: isMobile,
-                            context: context,
+                          const SizedBox(height: AppDimensions.spaceM),
+                          // Description
+                          TextFormField(
+                            controller: _descriptionController,
+                            decoration: InputDecorationHelper.buildDecoration(
+                              labelText: l10n.propertyFormDescription,
+                              hintText: l10n.propertyFormDescriptionHint,
+                              isMobile: isMobile,
+                              context: context,
+                            ),
+                            maxLines: 5,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return l10n.propertyFormDescriptionRequired;
+                              }
+                              if (value.length < 100) {
+                                return l10n.propertyFormDescriptionTooShort(value.length);
+                              }
+                              return null;
+                            },
                           ),
-                          maxLines: 5,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return l10n.propertyFormDescriptionRequired;
-                            }
-                            if (value.length < 100) {
-                              return l10n.propertyFormDescriptionTooShort(
-                                value.length,
-                              );
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppDimensions.spaceL),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.spaceL),
 
-                    // Location Section
-                    _buildSection(
-                      context,
-                      title: l10n.propertyFormLocation,
-                      icon: Icons.location_on,
-                      children: [
-                        // Location + Address - Responsive layout
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final isVerySmall = constraints.maxWidth < 500;
+                      // Location Section
+                      _buildSection(
+                        context,
+                        title: l10n.propertyFormLocation,
+                        icon: Icons.location_on,
+                        children: [
+                          // Location + Address - Responsive layout
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isVerySmall = constraints.maxWidth < 500;
 
-                            if (isVerySmall) {
-                              // Column layout for small screens
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                              if (isVerySmall) {
+                                // Column layout for small screens
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    TextFormField(
+                                      controller: _locationController,
+                                      decoration: InputDecorationHelper.buildDecoration(
+                                        labelText: l10n.propertyFormLocationLabel,
+                                        hintText: l10n.propertyFormLocationHint,
+                                        prefixIcon: const Icon(Icons.location_on),
+                                        isMobile: isMobile,
+                                        context: context,
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return l10n.propertyFormLocationRequired;
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: AppDimensions.spaceM),
+                                    TextFormField(
+                                      controller: _addressController,
+                                      decoration: InputDecorationHelper.buildDecoration(
+                                        labelText: l10n.propertyFormAddress,
+                                        hintText: l10n.propertyFormAddressHint,
+                                        prefixIcon: const Icon(Icons.home),
+                                        isMobile: isMobile,
+                                        context: context,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              // Row layout for larger screens
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  TextFormField(
-                                    controller: _locationController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText:
-                                              l10n.propertyFormLocationLabel,
-                                          hintText:
-                                              l10n.propertyFormLocationHint,
-                                          prefixIcon: const Icon(
-                                            Icons.location_on,
-                                          ),
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return l10n
-                                            .propertyFormLocationRequired;
-                                      }
-                                      return null;
-                                    },
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _locationController,
+                                      decoration: InputDecorationHelper.buildDecoration(
+                                        labelText: l10n.propertyFormLocationLabel,
+                                        hintText: l10n.propertyFormLocationHint,
+                                        prefixIcon: const Icon(Icons.location_on),
+                                        isMobile: isMobile,
+                                        context: context,
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return l10n.propertyFormLocationRequired;
+                                        }
+                                        return null;
+                                      },
+                                    ),
                                   ),
-                                  const SizedBox(height: AppDimensions.spaceM),
-                                  TextFormField(
-                                    controller: _addressController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText: l10n.propertyFormAddress,
-                                          hintText:
-                                              l10n.propertyFormAddressHint,
-                                          prefixIcon: const Icon(Icons.home),
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _addressController,
+                                      decoration: InputDecorationHelper.buildDecoration(
+                                        labelText: l10n.propertyFormAddress,
+                                        hintText: l10n.propertyFormAddressHint,
+                                        prefixIcon: const Icon(Icons.home),
+                                        isMobile: isMobile,
+                                        context: context,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               );
-                            }
-
-                            // Row layout for larger screens
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _locationController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText:
-                                              l10n.propertyFormLocationLabel,
-                                          hintText:
-                                              l10n.propertyFormLocationHint,
-                                          prefixIcon: const Icon(
-                                            Icons.location_on,
-                                          ),
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return l10n
-                                            .propertyFormLocationRequired;
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _addressController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText: l10n.propertyFormAddress,
-                                          hintText:
-                                              l10n.propertyFormAddressHint,
-                                          prefixIcon: const Icon(Icons.home),
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppDimensions.spaceL),
-
-                    // Amenities Section
-                    _buildSection(
-                      context,
-                      title: l10n.propertyFormAmenities,
-                      icon: Icons.local_offer,
-                      children: [_buildAmenitiesGrid()],
-                    ),
-                    const SizedBox(height: AppDimensions.spaceL),
-
-                    // Images Section
-                    _buildSection(
-                      context,
-                      title: _isEditing
-                          ? l10n.propertyFormPhotos
-                          : l10n.propertyFormPhotosMin,
-                      icon: Icons.photo_library,
-                      children: [_buildImagesSection()],
-                    ),
-                    const SizedBox(height: AppDimensions.spaceL),
-
-                    // Settings Section
-                    _buildSection(
-                      context,
-                      title: l10n.propertyFormSettings,
-                      icon: Icons.settings,
-                      children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.propertyFormPublishNow),
-                          subtitle: Text(
-                            _isPublished
-                                ? l10n.propertyFormPublishNowActive
-                                : l10n.propertyFormPublishNowInactive,
+                            },
                           ),
-                          trailing: Switch(
-                            value: _isPublished,
-                            onChanged: (value) =>
-                                setState(() => _isPublished = value),
-                            activeThumbColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                            activeTrackColor: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppDimensions.spaceL),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.spaceL),
 
-                    // Modern Gradient Save Button - uses brand gradient (GradientTokens.brandPrimary)
-                    GradientButton(
-                      text: _isEditing
-                          ? l10n.propertyFormSaveChanges
-                          : l10n.propertyFormAddProperty,
-                      onPressed: _handleSave,
-                      isLoading: _isLoading,
-                      icon: _isEditing ? Icons.save : Icons.add,
-                      width: double.infinity,
-                    ),
-                    const SizedBox(height: AppDimensions.spaceXL),
-                  ],
+                      // Amenities Section
+                      _buildSection(
+                        context,
+                        title: l10n.propertyFormAmenities,
+                        icon: Icons.local_offer,
+                        children: [_buildAmenitiesGrid()],
+                      ),
+                      const SizedBox(height: AppDimensions.spaceL),
+
+                      // Images Section
+                      _buildSection(
+                        context,
+                        title: _isEditing ? l10n.propertyFormPhotos : l10n.propertyFormPhotosMin,
+                        icon: Icons.photo_library,
+                        children: [_buildImagesSection()],
+                      ),
+                      const SizedBox(height: AppDimensions.spaceL),
+
+                      // Settings Section
+                      _buildSection(
+                        context,
+                        title: l10n.propertyFormSettings,
+                        icon: Icons.settings,
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(l10n.propertyFormPublishNow),
+                            subtitle: Text(
+                              _isPublished ? l10n.propertyFormPublishNowActive : l10n.propertyFormPublishNowInactive,
+                            ),
+                            trailing: Switch(
+                              value: _isPublished,
+                              onChanged: (value) => setState(() => _isPublished = value),
+                              activeThumbColor: Theme.of(context).colorScheme.primary,
+                              activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.spaceL),
+
+                      // Modern Gradient Save Button - uses brand gradient (GradientTokens.brandPrimary)
+                      GradientButton(
+                        text: _isEditing ? l10n.propertyFormSaveChanges : l10n.propertyFormAddProperty,
+                        onPressed: _handleSave,
+                        isLoading: _isLoading,
+                        icon: _isEditing ? Icons.save : Icons.add,
+                        width: double.infinity,
+                      ),
+                      const SizedBox(height: AppDimensions.spaceXL),
+                    ],
                   ),
                 ),
               ),
@@ -675,9 +607,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                   child: Center(
                     child: Card(
                       elevation: 8,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       child: Padding(
                         padding: const EdgeInsets.all(32),
                         child: Column(
@@ -691,18 +621,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                               ),
                               child: const CircularProgressIndicator(
                                 strokeWidth: 3,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             ),
                             const SizedBox(height: 20),
                             Text(
                               l10n.propertyFormSaving,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -749,10 +674,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
             // Section cards: topRight → bottomLeft gradient
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
+            border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
           ),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -765,25 +687,14 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.12 * 255).toInt(),
-                        ),
+                        color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
-                        icon,
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
+                      child: Icon(icon, color: theme.colorScheme.primary, size: 18),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -791,9 +702,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                   const SizedBox(height: 8),
                   Text(
                     subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -820,10 +729,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
       suffixIcon = const SizedBox(
         width: 20,
         height: 20,
-        child: Padding(
-          padding: EdgeInsets.all(2),
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        child: Padding(padding: EdgeInsets.all(2), child: CircularProgressIndicator(strokeWidth: 2)),
       );
     } else if (_isSubdomainAvailable == true) {
       suffixIcon = Icon(Icons.check_circle, color: theme.colorScheme.primary);
@@ -870,29 +776,17 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
             decoration: BoxDecoration(
               color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: theme.colorScheme.error.withValues(alpha: 0.5),
-              ),
+              border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.5)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      color: theme.colorScheme.error,
-                      size: 16,
-                    ),
+                    Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        _subdomainError!,
-                        style: TextStyle(
-                          color: theme.colorScheme.error,
-                          fontSize: 12,
-                        ),
-                      ),
+                      child: Text(_subdomainError!, style: TextStyle(color: theme.colorScheme.error, fontSize: 12)),
                     ),
                   ],
                 ),
@@ -902,23 +796,15 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                     children: [
                       Text(
                         l10n.propertyFormSubdomainSuggestion,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                       ),
                       InkWell(
                         onTap: _applySuggestion,
                         borderRadius: BorderRadius.circular(4),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.1,
-                            ),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -949,24 +835,15 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           ),
         ],
         // Show success message when available
-        if (_isSubdomainAvailable == true &&
-            !_isCheckingSubdomain &&
-            _subdomainController.text.isNotEmpty) ...[
+        if (_isSubdomainAvailable == true && !_isCheckingSubdomain && _subdomainController.text.isNotEmpty) ...[
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(
-                Icons.check_circle_outline,
-                color: theme.colorScheme.primary,
-                size: 14,
-              ),
+              Icon(Icons.check_circle_outline, color: theme.colorScheme.primary, size: 14),
               const SizedBox(width: 4),
               Text(
                 l10n.propertyFormSubdomainAvailable,
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: theme.colorScheme.primary, fontSize: 12),
               ),
             ],
           ),
@@ -989,8 +866,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
             setState(() {
               // Force create new Set to trigger rebuild
               if (isSelected) {
-                _selectedAmenities = Set.from(_selectedAmenities)
-                  ..remove(amenity);
+                _selectedAmenities = Set.from(_selectedAmenities)..remove(amenity);
               } else {
                 _selectedAmenities = {..._selectedAmenities, amenity};
               }
@@ -1017,16 +893,12 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
               Icon(
                 Icons.photo_library_outlined,
                 size: 48,
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.5,
-                ),
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 12),
               Text(
                 l10n.propertyFormNoPhotos,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -1065,18 +937,11 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
               return ElevatedButton.icon(
                 onPressed: _pickImages,
                 icon: const Icon(Icons.add_photo_alternate, size: 20),
-                label: Text(
-                  totalImages == 0
-                      ? l10n.propertyFormAddPhotos
-                      : l10n.propertyFormAddMore,
-                ),
+                label: Text(totalImages == 0 ? l10n.propertyFormAddPhotos : l10n.propertyFormAddMore),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 ),
               );
             },
@@ -1088,14 +953,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
             builder: (context) {
               final l10n = AppLocalizations.of(context);
               return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(
-                    alpha: 0.3,
-                  ),
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -1116,11 +976,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
       // Mobile: Vertical layout
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildLeftControls(),
-          const SizedBox(height: 16),
-          buildImagesGrid(),
-        ],
+        children: [buildLeftControls(), const SizedBox(height: 16), buildImagesGrid()],
       );
     }
 
@@ -1145,9 +1001,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
@@ -1157,12 +1011,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      (0.3 * 255).toInt(),
-                    ),
-                  ),
+                  child: Icon(Icons.broken_image, color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt())),
                 );
               },
             ),
@@ -1197,9 +1046,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
             color: theme.colorScheme.surfaceContainerHighest,
           ),
           child: ClipRRect(
@@ -1212,10 +1059,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                     child: SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: theme.colorScheme.primary,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: theme.colorScheme.primary),
                     ),
                   );
                 }
@@ -1223,9 +1067,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                   return Icon(
                     Icons.broken_image,
                     size: 40,
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      (0.3 * 255).toInt(),
-                    ),
+                    color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                   );
                 }
                 return Image.memory(
@@ -1235,9 +1077,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                     return Icon(
                       Icons.broken_image,
                       size: 40,
-                      color: theme.colorScheme.onSurface.withAlpha(
-                        (0.3 * 255).toInt(),
-                      ),
+                      color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                     );
                   },
                 );
@@ -1284,10 +1124,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
     if (!_isEditing && totalImages < 3) {
       // Soft warning - allow save without blocking
       final l10nSnack = AppLocalizations.of(context);
-      ErrorDisplayUtils.showWarningSnackBar(
-        context,
-        l10nSnack.propertyFormPhotoRecommendation,
-      );
+      ErrorDisplayUtils.showWarningSnackBar(context, l10nSnack.propertyFormPhotoRecommendation);
       // Continue with save (no return)
     }
 
@@ -1299,10 +1136,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
 
       if (ownerId == null) {
         final l10nAuth = AppLocalizations.of(context);
-        throw AuthException(
-          l10nAuth.propertyFormUserNotLoggedIn,
-          code: 'auth/not-authenticated',
-        );
+        throw AuthException(l10nAuth.propertyFormUserNotLoggedIn, code: 'auth/not-authenticated');
       }
 
       final repository = ref.read(ownerPropertiesRepositoryProvider);
@@ -1311,9 +1145,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
       final List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
         try {
-          final propertyId = _isEditing
-              ? widget.property!.id
-              : 'temp-${DateTime.now().millisecondsSinceEpoch}';
+          final propertyId = _isEditing ? widget.property!.id : 'temp-${DateTime.now().millisecondsSinceEpoch}';
 
           for (int i = 0; i < _selectedImages.length; i++) {
             final image = _selectedImages[i];
@@ -1332,10 +1164,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
               final l10nUpload = AppLocalizations.of(context);
               ErrorDisplayUtils.showInfoSnackBar(
                 context,
-                l10nUpload.propertyFormUploadProgress(
-                  i + 1,
-                  _selectedImages.length,
-                ),
+                l10nUpload.propertyFormUploadProgress(i + 1, _selectedImages.length),
                 duration: const Duration(milliseconds: 500),
               );
             }
@@ -1343,11 +1172,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         } catch (e) {
           if (mounted) {
             final l10nErr = AppLocalizations.of(context);
-            ErrorDisplayUtils.showErrorSnackBar(
-              context,
-              e,
-              userMessage: l10nErr.propertyFormUploadErrorGeneric,
-            );
+            ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10nErr.propertyFormUploadErrorGeneric);
           }
           setState(() => _isLoading = false);
           return;
@@ -1371,8 +1196,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
             ErrorDisplayUtils.showErrorSnackBar(
               context,
               Exception('Subdomain not available'),
-              userMessage:
-                  _subdomainError ?? l10nSub.propertyFormSubdomainError,
+              userMessage: _subdomainError ?? l10nSub.propertyFormSubdomainError,
             );
           }
           setState(() => _isLoading = false);
@@ -1385,25 +1209,16 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         final oldSubdomain = widget.property!.subdomain;
         final subdomainChanged = subdomainValue != oldSubdomain;
 
-        if (subdomainChanged &&
-            subdomainValue != null &&
-            subdomainValue.isNotEmpty) {
+        if (subdomainChanged && subdomainValue != null && subdomainValue.isNotEmpty) {
           // Use Cloud Function for server-side validation
           try {
             final functions = FirebaseFunctions.instance;
             final callable = functions.httpsCallable('setPropertySubdomain');
-            await callable.call<Map<String, dynamic>>({
-              'propertyId': widget.property!.id,
-              'subdomain': subdomainValue,
-            });
+            await callable.call<Map<String, dynamic>>({'propertyId': widget.property!.id, 'subdomain': subdomainValue});
           } catch (e) {
             if (mounted) {
               final l10nSubErr = AppLocalizations.of(context);
-              ErrorDisplayUtils.showErrorSnackBar(
-                context,
-                e,
-                userMessage: l10nSubErr.propertyFormSubdomainSetError,
-              );
+              ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10nSubErr.propertyFormSubdomainSetError);
             }
             setState(() => _isLoading = false);
             return;
@@ -1415,15 +1230,11 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           propertyId: widget.property!.id,
           name: _nameController.text,
           slug: _slugController.text,
-          subdomain: subdomainChanged
-              ? null
-              : subdomainValue, // Skip if already set by Cloud Function
+          subdomain: subdomainChanged ? null : subdomainValue, // Skip if already set by Cloud Function
           description: _descriptionController.text,
           propertyType: _selectedType.value,
           location: _locationController.text,
-          address: _addressController.text.isEmpty
-              ? null
-              : _addressController.text,
+          address: _addressController.text.isEmpty ? null : _addressController.text,
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           images: allImages,
           coverImage: allImages.isNotEmpty ? allImages.first : null,
@@ -1439,9 +1250,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           description: _descriptionController.text,
           propertyType: _selectedType.value,
           location: _locationController.text,
-          address: _addressController.text.isEmpty
-              ? null
-              : _addressController.text,
+          address: _addressController.text.isEmpty ? null : _addressController.text,
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           images: allImages,
           coverImage: allImages.isNotEmpty ? allImages.first : null,
@@ -1456,9 +1265,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         Navigator.of(context).pop();
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          _isEditing
-              ? l10nSuccess.propertyFormSuccessUpdate
-              : l10nSuccess.propertyFormSuccessAdd,
+          _isEditing ? l10nSuccess.propertyFormSuccessUpdate : l10nSuccess.propertyFormSuccessAdd,
         );
       }
     } catch (e) {
@@ -1467,9 +1274,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: _isEditing
-              ? l10nFail.propertyFormErrorUpdate
-              : l10nFail.propertyFormErrorAdd,
+          userMessage: _isEditing ? l10nFail.propertyFormErrorUpdate : l10nFail.propertyFormErrorAdd,
         );
       }
     } finally {

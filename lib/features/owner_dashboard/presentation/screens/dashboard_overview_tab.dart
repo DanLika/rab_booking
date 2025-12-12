@@ -16,6 +16,7 @@ import '../providers/dashboard_stats_provider.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/services/logging_service.dart';
 
 /// Dashboard overview tab
 /// Shows basic overview information and recent activity
@@ -191,7 +192,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        e.toString(),
+                        LoggingService.safeErrorToString(e),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                         ),

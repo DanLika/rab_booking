@@ -108,6 +108,9 @@ class BookingFormState {
   /// Whether a booking operation is in progress
   bool isProcessing = false;
 
+  /// Whether email verification is in progress (loading state for verify button)
+  bool isVerifyingEmail = false;
+
   /// Whether user dismissed the pill bar with X button (Bug Fix: Auto-open)
   bool pillBarDismissed = false;
 
@@ -173,6 +176,7 @@ class BookingFormState {
     // Reset UI state
     lockedPriceCalculation = null;
     isProcessing = false;
+    isVerifyingEmail = false;
   }
 
   /// Calculate number of nights from selected dates

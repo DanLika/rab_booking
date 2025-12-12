@@ -48,6 +48,12 @@ class _CheckInDiagonalPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Defensive check: ensure size is valid before painting
+    if (!size.width.isFinite || !size.height.isFinite || 
+        size.width <= 0 || size.height <= 0) {
+      return; // Skip painting if size is invalid
+    }
+
     final paint = Paint()
       ..color = color
       ..strokeWidth = 2.5
@@ -73,6 +79,12 @@ class _CheckOutDiagonalPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Defensive check: ensure size is valid before painting
+    if (!size.width.isFinite || !size.height.isFinite || 
+        size.width <= 0 || size.height <= 0) {
+      return; // Skip painting if size is invalid
+    }
+
     final paint = Paint()
       ..color = color
       ..strokeWidth = 2.5

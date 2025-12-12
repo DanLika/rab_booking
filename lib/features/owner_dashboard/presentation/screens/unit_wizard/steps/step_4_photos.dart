@@ -178,6 +178,7 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
           width: 100,
           height: 100,
           child: Stack(
+            alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
             children: [
               // Image
               Container(

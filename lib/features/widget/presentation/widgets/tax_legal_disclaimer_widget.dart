@@ -21,12 +21,10 @@ class TaxLegalDisclaimerWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TaxLegalDisclaimerWidget> createState() =>
-      _TaxLegalDisclaimerWidgetState();
+  ConsumerState<TaxLegalDisclaimerWidget> createState() => _TaxLegalDisclaimerWidgetState();
 }
 
-class _TaxLegalDisclaimerWidgetState
-    extends ConsumerState<TaxLegalDisclaimerWidget> {
+class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWidget> {
   bool _isExpanded = false;
   bool _isAccepted = false;
 
@@ -36,9 +34,7 @@ class _TaxLegalDisclaimerWidgetState
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Get tax/legal config from Firestore (Sync Point 1 integration)
-    final widgetSettingsAsync = ref.watch(
-      widgetSettingsProvider((widget.propertyId, widget.unitId)),
-    );
+    final widgetSettingsAsync = ref.watch(widgetSettingsProvider((widget.propertyId, widget.unitId)));
 
     return widgetSettingsAsync.when(
       data: (widgetSettings) {
@@ -52,8 +48,7 @@ class _TaxLegalDisclaimerWidgetState
         return _buildDisclaimerUI(context, taxConfig, isDarkMode, colors);
       },
       loading: () => const SizedBox.shrink(), // Don't show while loading
-      error: (error, stackTrace) =>
-          const SizedBox.shrink(), // Don't show on error
+      error: (error, stackTrace) => const SizedBox.shrink(), // Don't show on error
     );
   }
 
@@ -64,49 +59,40 @@ class _TaxLegalDisclaimerWidgetState
     MinimalistColorSchemeAdapter colors,
   ) {
     return Container(
-      margin: const EdgeInsets.only(
-        left: SpacingTokens.m,
-        right: SpacingTokens.m,
-        top: SpacingTokens.m,
-      ),
+      padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         // Pure white (light) / pure black (dark) for form containers
         color: colors.backgroundPrimary,
         border: Border.all(color: colors.borderDefault),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        boxShadow: isDarkMode
-            ? MinimalistShadows.medium
-            : MinimalistShadows.light,
+        boxShadow: isDarkMode ? MinimalistShadows.medium : MinimalistShadows.light,
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Collapsible header
           InkWell(
             onTap: () => setState(() => _isExpanded = !_isExpanded),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(BorderTokens.radiusMedium),
-            ),
+            borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
             child: Padding(
-              padding: const EdgeInsets.all(SpacingTokens.m),
+              padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xs),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: colors.textSecondary),
+                  Icon(Icons.info_outline, color: colors.textSecondary, size: 24),
                   const SizedBox(width: SpacingTokens.m),
                   Expanded(
                     child: Text(
                       'Tax & Legal Information',
                       style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeL,
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: colors.textPrimary,
                         fontFamily: 'Manrope',
                       ),
                     ),
                   ),
-                  Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: colors.textSecondary,
-                  ),
+                  Icon(_isExpanded ? Icons.expand_less : Icons.expand_more, color: colors.textSecondary, size: 24),
                 ],
               ),
             ),
@@ -114,11 +100,12 @@ class _TaxLegalDisclaimerWidgetState
 
           // Expandable content
           if (_isExpanded) ...[
+            const SizedBox(height: SpacingTokens.s),
             Divider(height: 1, color: colors.borderDefault),
+            const SizedBox(height: SpacingTokens.s),
             Container(
               constraints: const BoxConstraints(maxHeight: 200),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(SpacingTokens.m),
                 child: Text(
                   taxConfig.disclaimerText,
                   style: TextStyle(
@@ -130,9 +117,10 @@ class _TaxLegalDisclaimerWidgetState
                 ),
               ),
             ),
+            const SizedBox(height: SpacingTokens.s),
+            Divider(height: 1, color: colors.borderDefault),
+            const SizedBox(height: SpacingTokens.s),
           ],
-
-          Divider(height: 1, color: colors.borderDefault),
 
           // Accept checkbox
           CheckboxListTile(
@@ -141,11 +129,11 @@ class _TaxLegalDisclaimerWidgetState
               setState(() => _isAccepted = val ?? false);
               widget.onAcceptedChanged(_isAccepted);
             },
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            contentPadding: EdgeInsets.zero,
             title: Text(
               'I understand and accept the tax and legal obligations',
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeS,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: colors.textPrimary,
                 fontFamily: 'Manrope',

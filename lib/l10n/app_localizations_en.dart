@@ -1787,6 +1787,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerBookingsCancelError => 'Error cancelling booking';
 
   @override
+  String get ownerBookingsNotFound => 'Booking not found';
+
+  @override
   String get ownerBookingCardNight => 'night';
 
   @override

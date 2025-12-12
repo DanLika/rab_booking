@@ -4,6 +4,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/design_tokens/border_tokens.dart';
 
 /// Dialog that generates and displays embed code for widget
 ///
@@ -98,7 +99,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor,
-                borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+                borderRadius: BorderTokens.onlyTop(4.0),
               ),
               child: Builder(
                 builder: (context) {

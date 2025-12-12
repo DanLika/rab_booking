@@ -170,6 +170,7 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
             duration: const Duration(milliseconds: 150),
             opacity: _isHovered ? 1.0 : 0.92,
             child: Stack(
+              alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
               children: [
                 // Background layer with skewed parallelogram
                 // dayWidth is used to calculate skewOffset for turnover day alignment

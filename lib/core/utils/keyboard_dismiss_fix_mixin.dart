@@ -61,16 +61,20 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     
-    if (_isAndroidWeb) {
+    if (_isAndroidWeb && mounted) {
       // Detect orientation changes and reset baseline
-      final currentOrientation = MediaQuery.of(context).orientation;
-      if (_lastOrientation != null && _lastOrientation != currentOrientation) {
-        // Orientation changed - reset full viewport height
-        // This will be updated on next viewport resize event
-        _fullViewportHeight = 0;
-        _isKeyboardOpen = false;
+      try {
+        final currentOrientation = MediaQuery.of(context).orientation;
+        if (_lastOrientation != null && _lastOrientation != currentOrientation) {
+          // Orientation changed - reset full viewport height
+          // This will be updated on next viewport resize event
+          _fullViewportHeight = 0;
+          _isKeyboardOpen = false;
+        }
+        _lastOrientation = currentOrientation;
+      } catch (e) {
+        // Ignore errors if context is no longer valid
       }
-      _lastOrientation = currentOrientation;
     }
   }
 
@@ -103,90 +107,98 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
     final heightDiff = currentHeight - _lastViewportHeight;
     final absHeightDiff = heightDiff.abs();
 
+    // Defensive check: ensure mounted before accessing context
+    if (!mounted) return;
+    
     // Get current orientation to adjust thresholds
-    final orientation = MediaQuery.of(context).orientation;
-    final isLandscape = orientation == Orientation.landscape;
-    
-    // Use relative thresholds based on orientation
-    // Landscape has smaller viewport, so use percentage-based thresholds
-    final viewportSize = MediaQuery.of(context).size;
-    final viewportHeight = isLandscape ? viewportSize.width : viewportSize.height;
-    final relativeThreshold = viewportHeight * 0.15; // 15% of viewport height
-    final absoluteThreshold = isLandscape ? 80.0 : 100.0; // Lower threshold for landscape
-    final threshold = relativeThreshold > absoluteThreshold ? relativeThreshold : absoluteThreshold;
-
-    // Detect orientation change: very large height change (>40% of viewport) without keyboard
-    // This happens when device rotates
-    final orientationChangeThreshold = viewportHeight * 0.4;
-    final isLikelyOrientationChange = absHeightDiff > orientationChangeThreshold && 
-                                      absHeightDiff > 200; // Also require absolute minimum
-    
-    if (isLikelyOrientationChange) {
-      // Reset baseline on orientation change
-      _fullViewportHeight = currentHeight;
-      _currentViewportHeight = currentHeight;
-      _lastViewportHeight = currentHeight;
-      _isKeyboardOpen = false;
+    try {
+      final orientation = MediaQuery.of(context).orientation;
+      final isLandscape = orientation == Orientation.landscape;
       
-      // Force rebuild to adjust layout
-      if (mounted) {
-        setState(() {
-          _rebuildKey++;
-        });
+      // Use relative thresholds based on orientation
+      // Landscape has smaller viewport, so use percentage-based thresholds
+      final viewportSize = MediaQuery.of(context).size;
+      final viewportHeight = isLandscape ? viewportSize.width : viewportSize.height;
+      final relativeThreshold = viewportHeight * 0.15; // 15% of viewport height
+      final absoluteThreshold = isLandscape ? 80.0 : 100.0; // Lower threshold for landscape
+      final threshold = relativeThreshold > absoluteThreshold ? relativeThreshold : absoluteThreshold;
+
+      // Detect orientation change: very large height change (>40% of viewport) without keyboard
+      // This happens when device rotates
+      final orientationChangeThreshold = viewportHeight * 0.4;
+      final isLikelyOrientationChange = absHeightDiff > orientationChangeThreshold && 
+                                        absHeightDiff > 200; // Also require absolute minimum
+      
+      if (isLikelyOrientationChange) {
+        // Reset baseline on orientation change
+        _fullViewportHeight = currentHeight;
+        _currentViewportHeight = currentHeight;
+        _lastViewportHeight = currentHeight;
+        _isKeyboardOpen = false;
+        
+        // Force rebuild to adjust layout
+        if (mounted) {
+          setState(() {
+            _rebuildKey++;
+          });
+        }
+        return;
       }
+
+      // Update full height if we see a larger value (keyboard closed)
+      // But only if the increase is reasonable (not an orientation change)
+      if (currentHeight > _fullViewportHeight && absHeightDiff < orientationChangeThreshold) {
+        _fullViewportHeight = currentHeight;
+      }
+
+      // Update current viewport height
+      _currentViewportHeight = currentHeight;
+
+      // Detect keyboard state: significant height decrease means keyboard opened
+      // Use relative threshold based on viewport size
+      final keyboardHeight = _fullViewportHeight > 0 
+          ? (_fullViewportHeight - currentHeight) 
+          : 0;
+      final wasKeyboardOpen = _isKeyboardOpen;
+      
+      // Keyboard is open if height difference exceeds threshold
+      // Use both absolute and relative checks
+      final relativeKeyboardHeight = _fullViewportHeight > 0 
+          ? (keyboardHeight / _fullViewportHeight) 
+          : 0;
+      _isKeyboardOpen = keyboardHeight > threshold || relativeKeyboardHeight > 0.15;
+
+      // Detect keyboard dismiss: viewport height increased significantly
+      // Use relative threshold - at least 15% increase or absolute threshold
+      final heightIncreasePercent = _lastViewportHeight > 0 
+          ? (heightDiff / _lastViewportHeight) 
+          : 0;
+      final isSignificantIncrease = heightDiff > threshold || heightIncreasePercent > 0.15;
+      
+      // Check if we're near full viewport height (within 5% or 30px, whichever is smaller)
+      final nearFullHeightThreshold = (_fullViewportHeight * 0.05).clamp(0.0, 30.0);
+      final isNearFullHeight = _fullViewportHeight > 0 && 
+          currentHeight >= (_fullViewportHeight - nearFullHeightThreshold);
+
+      // Keyboard dismiss: significant height increase AND near full height
+      final isKeyboardDismiss = isSignificantIncrease && isNearFullHeight && wasKeyboardOpen;
+
+      if (isKeyboardDismiss) {
+        _forceFullRebuild();
+      } else if (_isKeyboardOpen != wasKeyboardOpen) {
+        // Keyboard state changed - trigger rebuild to update layout
+        if (mounted) {
+          setState(() {
+            // Trigger rebuild to update layout
+          });
+        }
+      }
+
+      _lastViewportHeight = currentHeight;
+    } catch (e) {
+      // Ignore errors if context is no longer valid
       return;
     }
-
-    // Update full height if we see a larger value (keyboard closed)
-    // But only if the increase is reasonable (not an orientation change)
-    if (currentHeight > _fullViewportHeight && absHeightDiff < orientationChangeThreshold) {
-      _fullViewportHeight = currentHeight;
-    }
-
-    // Update current viewport height
-    _currentViewportHeight = currentHeight;
-
-    // Detect keyboard state: significant height decrease means keyboard opened
-    // Use relative threshold based on viewport size
-    final keyboardHeight = _fullViewportHeight > 0 
-        ? (_fullViewportHeight - currentHeight) 
-        : 0;
-    final wasKeyboardOpen = _isKeyboardOpen;
-    
-    // Keyboard is open if height difference exceeds threshold
-    // Use both absolute and relative checks
-    final relativeKeyboardHeight = _fullViewportHeight > 0 
-        ? (keyboardHeight / _fullViewportHeight) 
-        : 0;
-    _isKeyboardOpen = keyboardHeight > threshold || relativeKeyboardHeight > 0.15;
-
-    // Detect keyboard dismiss: viewport height increased significantly
-    // Use relative threshold - at least 15% increase or absolute threshold
-    final heightIncreasePercent = _lastViewportHeight > 0 
-        ? (heightDiff / _lastViewportHeight) 
-        : 0;
-    final isSignificantIncrease = heightDiff > threshold || heightIncreasePercent > 0.15;
-    
-    // Check if we're near full viewport height (within 5% or 30px, whichever is smaller)
-    final nearFullHeightThreshold = (_fullViewportHeight * 0.05).clamp(0.0, 30.0);
-    final isNearFullHeight = _fullViewportHeight > 0 && 
-        currentHeight >= (_fullViewportHeight - nearFullHeightThreshold);
-
-    // Keyboard dismiss: significant height increase AND near full height
-    final isKeyboardDismiss = isSignificantIncrease && isNearFullHeight && wasKeyboardOpen;
-
-    if (isKeyboardDismiss) {
-      _forceFullRebuild();
-    } else if (_isKeyboardOpen != wasKeyboardOpen) {
-      // Keyboard state changed - trigger rebuild to update layout
-      if (mounted) {
-        setState(() {
-          // Trigger rebuild to update layout
-        });
-      }
-    }
-
-    _lastViewportHeight = currentHeight;
   }
 
   /// Force a complete widget tree rebuild
@@ -216,11 +228,17 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
 
         // Also schedule a frame callback to ensure rendering completes
         SchedulerBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
+          if (!mounted) return;
+          try {
             // Force another layout pass
-            (context as Element).markNeedsBuild();
+            final element = context as Element?;
+            if (element != null) {
+              element.markNeedsBuild();
+            }
             // Dispatch resize again after frame
             forceWindowResizeImpl();
+          } catch (e) {
+            // Ignore errors if context is no longer valid
           }
         });
       });
@@ -246,7 +264,13 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
   double get keyboardHeight {
     if (!_isAndroidWeb) {
       // On non-Android Web, use MediaQuery as fallback
-      return MediaQuery.of(context).viewInsets.bottom;
+      // Defensive check: ensure mounted before accessing context
+      if (!mounted) return 0.0;
+      try {
+        return MediaQuery.of(context).viewInsets.bottom;
+      } catch (e) {
+        return 0.0;
+      }
     }
     return _fullViewportHeight > 0
         ? (_fullViewportHeight - _currentViewportHeight).clamp(0.0, double.infinity)
@@ -257,22 +281,43 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
   bool get isKeyboardOpen => _isKeyboardOpen;
 
   /// Get current viewport height (excluding keyboard)
-  double get currentViewportHeight => _currentViewportHeight > 0
-      ? _currentViewportHeight
-      : (_fullViewportHeight > 0 ? _fullViewportHeight : MediaQuery.of(context).size.height);
+  double get currentViewportHeight {
+    if (_currentViewportHeight > 0) return _currentViewportHeight;
+    if (_fullViewportHeight > 0) return _fullViewportHeight;
+    // Defensive check: ensure mounted before accessing context
+    if (!mounted) return 0.0;
+    try {
+      return MediaQuery.of(context).size.height;
+    } catch (e) {
+      return 0.0;
+    }
+  }
 
   /// Get full viewport height (without keyboard)
-  double get fullViewportHeight => _fullViewportHeight > 0
-      ? _fullViewportHeight
-      : MediaQuery.of(context).size.height;
+  double get fullViewportHeight {
+    if (_fullViewportHeight > 0) return _fullViewportHeight;
+    // Defensive check: ensure mounted before accessing context
+    if (!mounted) return 0.0;
+    try {
+      return MediaQuery.of(context).size.height;
+    } catch (e) {
+      return 0.0;
+    }
+  }
 
   /// Get dynamic min height that adjusts based on keyboard state
   /// This should be used in ConstrainedBox minHeight to prevent white space
   double getDynamicMinHeight(double baseHeight) {
     if (!_isAndroidWeb) {
       // On non-Android Web, use MediaQuery
-      final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-      return (baseHeight - viewInsets).clamp(0.0, double.infinity);
+      // Defensive check: ensure mounted before accessing context
+      if (!mounted) return baseHeight;
+      try {
+        final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+        return (baseHeight - viewInsets).clamp(0.0, double.infinity);
+      } catch (e) {
+        return baseHeight;
+      }
     }
 
     // On Android Web, use visualViewport height

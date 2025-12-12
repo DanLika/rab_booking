@@ -23,10 +23,8 @@ class AnalyticsService {
   final FirebaseAnalyticsObserver _observer;
 
   AnalyticsService._()
-      : _analytics = FirebaseAnalytics.instance,
-        _observer = FirebaseAnalyticsObserver(
-          analytics: FirebaseAnalytics.instance,
-        );
+    : _analytics = FirebaseAnalytics.instance,
+      _observer = FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance);
 
   static final AnalyticsService _instance = AnalyticsService._();
   static AnalyticsService get instance => _instance;
@@ -79,18 +77,12 @@ class AnalyticsService {
     }
   }
 
-  Future<void> logBookingConfirmed({
-    required String bookingId,
-    required double amount,
-  }) async {
+  Future<void> logBookingConfirmed({required String bookingId, required double amount}) async {
     try {
       await _analytics.logPurchase(
         value: amount,
         currency: 'EUR',
-        parameters: {
-          'booking_id': bookingId,
-          'transaction_id': bookingId,
-        },
+        parameters: {'booking_id': bookingId, 'transaction_id': bookingId},
       );
       if (kDebugMode) print('[Analytics] Booking confirmed: $bookingId');
     } catch (e) {
@@ -98,18 +90,9 @@ class AnalyticsService {
     }
   }
 
-  Future<void> logBookingCancelled({
-    required String bookingId,
-    required String reason,
-  }) async {
+  Future<void> logBookingCancelled({required String bookingId, required String reason}) async {
     try {
-      await _analytics.logEvent(
-        name: 'booking_cancelled',
-        parameters: {
-          'booking_id': bookingId,
-          'reason': reason,
-        },
-      );
+      await _analytics.logEvent(name: 'booking_cancelled', parameters: {'booking_id': bookingId, 'reason': reason});
       if (kDebugMode) print('[Analytics] Booking cancelled: $bookingId');
     } catch (e) {
       if (kDebugMode) print('[Analytics] Error logging booking_cancelled: $e');
@@ -117,19 +100,10 @@ class AnalyticsService {
   }
 
   /// Property Events
-  Future<void> logPropertyViewed({
-    required String propertyId,
-    required String propertyName,
-  }) async {
+  Future<void> logPropertyViewed({required String propertyId, required String propertyName}) async {
     try {
       await _analytics.logViewItem(
-        items: [
-          AnalyticsEventItem(
-            itemId: propertyId,
-            itemName: propertyName,
-            itemCategory: 'property',
-          ),
-        ],
+        items: [AnalyticsEventItem(itemId: propertyId, itemName: propertyName, itemCategory: 'property')],
       );
       if (kDebugMode) print('[Analytics] Property viewed: $propertyName');
     } catch (e) {
@@ -137,21 +111,10 @@ class AnalyticsService {
     }
   }
 
-  Future<void> logUnitViewed({
-    required String unitId,
-    required String unitName,
-    double? price,
-  }) async {
+  Future<void> logUnitViewed({required String unitId, required String unitName, double? price}) async {
     try {
       await _analytics.logViewItem(
-        items: [
-          AnalyticsEventItem(
-            itemId: unitId,
-            itemName: unitName,
-            itemCategory: 'unit',
-            price: price,
-          ),
-        ],
+        items: [AnalyticsEventItem(itemId: unitId, itemName: unitName, itemCategory: 'unit', price: price)],
       );
       if (kDebugMode) print('[Analytics] Unit viewed: $unitName');
     } catch (e) {
@@ -179,17 +142,11 @@ class AnalyticsService {
   }
 
   /// Widget Events
-  Future<void> logWidgetLoaded({
-    required String unitId,
-    String? referrer,
-  }) async {
+  Future<void> logWidgetLoaded({required String unitId, String? referrer}) async {
     try {
       await _analytics.logEvent(
         name: 'widget_loaded',
-        parameters: {
-          'unit_id': unitId,
-          'referrer': referrer ?? 'direct',
-        },
+        parameters: {'unit_id': unitId, 'referrer': referrer ?? 'direct'},
       );
       if (kDebugMode) print('[Analytics] Widget loaded: $unitId');
     } catch (e) {
@@ -215,6 +172,60 @@ class AnalyticsService {
     }
   }
 
+  /// Stripe Payment Events
+  Future<void> logStripePaymentInitiated({
+    required String method, // 'popup', 'redirect', 'blocked'
+    required String browser,
+    required String deviceType, // 'desktop', 'mobile', 'tablet'
+    bool isInIframe = false,
+  }) async {
+    try {
+      await _analytics.logEvent(
+        name: 'stripe_payment_initiated',
+        parameters: {'method': method, 'browser': browser, 'device_type': deviceType, 'is_in_iframe': isInIframe},
+      );
+      if (kDebugMode) print('[Analytics] Stripe payment initiated: $method ($browser, $deviceType)');
+    } catch (e) {
+      if (kDebugMode) print('[Analytics] Error logging stripe_payment_initiated: $e');
+    }
+  }
+
+  Future<void> logStripePopupBlocked({required String browser, required String deviceType}) async {
+    try {
+      await _analytics.logEvent(
+        name: 'stripe_popup_blocked',
+        parameters: {'browser': browser, 'device_type': deviceType},
+      );
+      if (kDebugMode) print('[Analytics] Stripe popup blocked: $browser, $deviceType');
+    } catch (e) {
+      if (kDebugMode) print('[Analytics] Error logging stripe_popup_blocked: $e');
+    }
+  }
+
+  Future<void> logStripePaymentCompleted({
+    required String sessionId,
+    required String method, // 'popup', 'redirect'
+    required String browser,
+    required String deviceType,
+    required int timeToCompleteSeconds,
+  }) async {
+    try {
+      await _analytics.logEvent(
+        name: 'stripe_payment_completed',
+        parameters: {
+          'session_id': sessionId,
+          'method': method,
+          'browser': browser,
+          'device_type': deviceType,
+          'time_to_complete_seconds': timeToCompleteSeconds,
+        },
+      );
+      if (kDebugMode) print('[Analytics] Stripe payment completed: $sessionId ($method, ${timeToCompleteSeconds}s)');
+    } catch (e) {
+      if (kDebugMode) print('[Analytics] Error logging stripe_payment_completed: $e');
+    }
+  }
+
   /// Search Events
   Future<void> logSearch(String searchTerm) async {
     try {
@@ -228,10 +239,7 @@ class AnalyticsService {
   /// Custom Events
   Future<void> logCustomEvent(String eventName, Map<String, Object>? parameters) async {
     try {
-      await _analytics.logEvent(
-        name: eventName,
-        parameters: parameters,
-      );
+      await _analytics.logEvent(name: eventName, parameters: parameters);
       if (kDebugMode) print('[Analytics] Custom event: $eventName');
     } catch (e) {
       if (kDebugMode) print('[Analytics] Error logging custom event: $e');

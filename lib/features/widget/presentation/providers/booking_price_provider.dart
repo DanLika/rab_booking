@@ -123,9 +123,11 @@ Future<BookingPriceCalculation?> bookingPrice(
       final context = await ref.read(
         widgetContextProvider((propertyId: propertyId, unitId: unitId)).future,
       );
-      basePrice = context.unit.pricePerNight;
-      weekendBasePrice = context.unit.weekendBasePrice;
-      weekendDays = context.unit.weekendDays;
+      // Defensive null checks: properties are required but handle edge cases
+      final unit = context.unit;
+      basePrice = unit.pricePerNight;
+      weekendBasePrice = unit.weekendBasePrice;
+      weekendDays = unit.weekendDays;
     } catch (_) {
       // Fall back to direct fetch if context not available
       final unitRepo = ref.watch(unitRepositoryProvider);

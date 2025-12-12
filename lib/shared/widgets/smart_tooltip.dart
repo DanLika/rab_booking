@@ -125,36 +125,72 @@ class _SmartTooltipOverlayState extends State<_SmartTooltipOverlay> {
 
   void _showOverlay() {
     if (_overlayEntry != null) return;
+    
+    // Defensive check: ensure widget is still mounted before accessing context
+    if (!mounted) return;
 
-    final overlay = Overlay.of(context);
-    final renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
+    try {
+      final overlay = Overlay.maybeOf(context);
+      if (overlay == null) return;
 
-    final position = renderBox.localToGlobal(Offset.zero);
-    final size = renderBox.size;
-    final screenSize = MediaQuery.of(context).size;
+      final renderBox = context.findRenderObject() as RenderBox?;
+      if (renderBox == null || !renderBox.hasSize) return;
 
-    _overlayEntry = OverlayEntry(
-      builder: (context) => _TooltipPositioner(
-        message: widget.message,
-        targetPosition: position,
-        targetSize: size,
-        screenSize: screenSize,
-        textStyle: widget.textStyle,
-        decoration: widget.decoration,
-        padding: widget.padding,
-        margin: widget.margin,
-        height: widget.height,
-        onDismiss: _removeOverlay,
-      ),
-    );
+      // Defensive check: ensure size is valid and finite
+      final size = renderBox.size;
+      if (!size.width.isFinite || !size.height.isFinite || size.width <= 0 || size.height <= 0) {
+        return;
+      }
 
-    overlay.insert(_overlayEntry!);
+      final position = renderBox.localToGlobal(Offset.zero);
+      
+      // Defensive check: ensure position is valid
+      if (!position.dx.isFinite || !position.dy.isFinite) {
+        return;
+      }
+
+      final mediaQuery = MediaQuery.maybeOf(context);
+      if (mediaQuery == null) return;
+      
+      final screenSize = mediaQuery.size;
+      
+      // Defensive check: ensure screen size is valid
+      if (!screenSize.width.isFinite || !screenSize.height.isFinite || 
+          screenSize.width <= 0 || screenSize.height <= 0) {
+        return;
+      }
+
+      _overlayEntry = OverlayEntry(
+        builder: (context) => _TooltipPositioner(
+          message: widget.message,
+          targetPosition: position,
+          targetSize: size,
+          screenSize: screenSize,
+          textStyle: widget.textStyle,
+          decoration: widget.decoration,
+          padding: widget.padding,
+          margin: widget.margin,
+          height: widget.height,
+          onDismiss: _removeOverlay,
+        ),
+      );
+
+      overlay.insert(_overlayEntry!);
+    } catch (e) {
+      // Ignore errors if context is no longer valid or RenderBox is disposed
+      // This can happen if widget is disposed while overlay is being shown
+      return;
+    }
   }
 
   void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    try {
+      _overlayEntry?.remove();
+    } catch (e) {
+      // Ignore errors if overlay is already removed or context is invalid
+    } finally {
+      _overlayEntry = null;
+    }
   }
 
   @override
@@ -174,7 +210,7 @@ class _SmartTooltipOverlayState extends State<_SmartTooltipOverlay> {
       },
       child: GestureDetector(
         onLongPress: () {
-          if (!_isHovering) {
+          if (!_isHovering && mounted) {
             _showOverlay();
             Future.delayed(widget.showDuration ?? const Duration(seconds: 2), () {
               if (mounted) {

@@ -99,6 +99,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: Stack(
+            alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
             children: [
               Center(
                 child: ConstrainedBox(

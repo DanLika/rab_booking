@@ -71,9 +71,27 @@ class PillBarContent extends StatelessWidget {
 
   Widget _buildWideScreenLayout(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
-    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final maxHeight = (screenHeight - viewInsets) * _maxHeightFactor;
+    // Defensive null check: MediaQuery might not be available during initial layout
+    final mediaQuery = MediaQuery.maybeOf(context);
+    if (mediaQuery == null) {
+      // Fallback to compact layout if MediaQuery not available
+      return _buildCompactLayout();
+    }
+    
+    // Defensive check: ensure size values are valid and finite
+    final size = mediaQuery.size;
+    if (!size.height.isFinite || size.height <= 0) {
+      return _buildCompactLayout();
+    }
+    
+    final viewInsets = mediaQuery.viewInsets.bottom;
+    final screenHeight = size.height;
+    final calculatedHeight = (screenHeight - viewInsets) * _maxHeightFactor;
+    
+    // Ensure calculated height is valid
+    final maxHeight = calculatedHeight.isFinite && calculatedHeight > 0
+        ? calculatedHeight
+        : 600.0; // Fallback to reasonable default
 
     return Column(
       mainAxisSize: MainAxisSize.min,

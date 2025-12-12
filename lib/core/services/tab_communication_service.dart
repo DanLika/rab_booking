@@ -18,11 +18,7 @@ class TabMessage {
   final Map<String, String> params;
   final DateTime timestamp;
 
-  TabMessage({
-    required this.type,
-    required this.params,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  TabMessage({required this.type, required this.params, DateTime? timestamp}) : timestamp = timestamp ?? DateTime.now();
 
   /// Parse message string into TabMessage
   /// Format: "type:key1=value1&key2=value2"
@@ -118,45 +114,21 @@ abstract class TabCommunicationService {
   void send(String message);
 
   /// Send payment complete message to other tabs
-  void sendPaymentComplete({
-    required String bookingId,
-    required String ref,
-    required String email,
-  }) {
-    final message = TabMessage(
-      type: TabMessageType.paymentComplete,
-      params: {
-        'bookingId': bookingId,
-        'ref': ref,
-        'email': email,
-      },
-    );
+  /// NOTE: Email is NOT included - booking is fetched by bookingId
+  void sendPaymentComplete({required String bookingId, required String ref}) {
+    final message = TabMessage(type: TabMessageType.paymentComplete, params: {'bookingId': bookingId, 'ref': ref});
     send(message.serialize());
   }
 
   /// Send booking cancelled message to other tabs
-  void sendBookingCancelled({
-    required String bookingId,
-  }) {
-    final message = TabMessage(
-      type: TabMessageType.bookingCancelled,
-      params: {
-        'bookingId': bookingId,
-      },
-    );
+  void sendBookingCancelled({required String bookingId}) {
+    final message = TabMessage(type: TabMessageType.bookingCancelled, params: {'bookingId': bookingId});
     send(message.serialize());
   }
 
   /// Send calendar refresh message to other tabs
-  void sendCalendarRefresh({
-    String? unitId,
-  }) {
-    final message = TabMessage(
-      type: TabMessageType.calendarRefresh,
-      params: {
-        if (unitId != null) 'unitId': unitId,
-      },
-    );
+  void sendCalendarRefresh({String? unitId}) {
+    final message = TabMessage(type: TabMessageType.calendarRefresh, params: {if (unitId != null) 'unitId': unitId});
     send(message.serialize());
   }
 
@@ -178,11 +150,7 @@ class TabCommunicationServiceStub implements TabCommunicationService {
   }
 
   @override
-  void sendPaymentComplete({
-    required String bookingId,
-    required String ref,
-    required String email,
-  }) {
+  void sendPaymentComplete({required String bookingId, required String ref}) {
     // No-op
   }
 

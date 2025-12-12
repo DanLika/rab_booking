@@ -91,6 +91,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: Stack(
+            alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
             children: [
               Center(
                 child: ConstrainedBox(

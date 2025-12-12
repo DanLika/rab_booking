@@ -28,6 +28,20 @@ import 'timeline/timeline_summary_bar_widget.dart';
 import 'timeline/timeline_booking_block.dart';
 import '../../../../l10n/app_localizations.dart';
 
+/// Safely convert error to string, handling null and edge cases
+/// Prevents "Null check operator used on a null value" errors
+String _safeErrorToString(dynamic error) {
+  if (error == null) {
+    return 'Unknown error';
+  }
+  try {
+    return error.toString();
+  } catch (e) {
+    // If toString() itself throws, return a safe fallback
+    return 'Error: Unable to display error details';
+  }
+}
+
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
 /// Starts from today, horizontal scroll, pinch-to-zoom support
@@ -58,12 +72,10 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TimelineCalendarWidget> createState() =>
-      _TimelineCalendarWidgetState();
+  ConsumerState<TimelineCalendarWidget> createState() => _TimelineCalendarWidgetState();
 }
 
-class _TimelineCalendarWidgetState
-    extends ConsumerState<TimelineCalendarWidget> {
+class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget> {
   // Scroll controllers
   late ScrollController _horizontalScrollController;
   late ScrollController _verticalScrollController;
@@ -91,6 +103,14 @@ class _TimelineCalendarWidgetState
   // Debounce timer for visible range updates (improves web performance)
   Timer? _visibleRangeDebounceTimer;
 
+  // Throttle timer for vertical scroll sync (improves Android web performance)
+  Timer? _verticalScrollThrottleTimer;
+  double _lastVerticalScrollOffset = 0.0;
+
+  // Throttle timer for horizontal scroll sync (improves Android web performance)
+  Timer? _horizontalScrollThrottleTimer;
+  double _lastHorizontalScrollOffset = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -110,55 +130,62 @@ class _TimelineCalendarWidgetState
 
   void _initializeDateRange() {
     final initialDate = widget.initialScrollToDate ?? DateTime.now();
-    _dynamicStartDate = initialDate.subtract(
-      const Duration(days: kTimelineInitialDaysOffset),
-    );
-    _dynamicEndDate = initialDate.add(
-      const Duration(days: kTimelineInitialDaysOffset),
-    );
+    _dynamicStartDate = initialDate.subtract(const Duration(days: kTimelineInitialDaysOffset));
+    _dynamicEndDate = initialDate.add(const Duration(days: kTimelineInitialDaysOffset));
 
     final initialDateIndex = initialDate.difference(_dynamicStartDate).inDays;
-    _visibleStartIndex = (initialDateIndex - kTimelineInitialWindowDaysBefore)
-        .clamp(0, double.infinity)
-        .toInt();
+    _visibleStartIndex = (initialDateIndex - kTimelineInitialWindowDaysBefore).clamp(0, double.infinity).toInt();
     _visibleDayCount = kTimelineInitialWindowDaysTotal;
   }
 
   void _setupScrollListeners() {
     // Horizontal scroll sync (main -> header)
+    // OPTIMIZED: Throttled on web for better Android web performance
     _scrollSyncListener = () {
       if (_isSyncingScroll || !_horizontalScrollController.hasClients) return;
 
-      _isSyncingScroll = true;
-      try {
-        final mainOffset = _horizontalScrollController.offset;
-        if (_headerScrollController.hasClients) {
-          _headerScrollController.jumpTo(mainOffset);
-        }
-      } finally {
-        _isSyncingScroll = false;
+      final mainOffset = _horizontalScrollController.offset;
+
+      if (kIsWeb) {
+        // Throttle horizontal scroll sync on web (Android web performance fix)
+        _horizontalScrollThrottleTimer?.cancel();
+        _horizontalScrollThrottleTimer = Timer(
+          const Duration(milliseconds: 16), // ~60fps throttling
+          () {
+            if (!mounted || _isSyncingScroll) return;
+            _performHorizontalScrollSync(mainOffset);
+          },
+        );
+      } else {
+        // Native platforms: immediate sync for smooth feel
+        _performHorizontalScrollSync(mainOffset);
       }
     };
     _horizontalScrollController.addListener(_scrollSyncListener);
 
     // Vertical scroll sync (main -> unit names)
+    // OPTIMIZED: Throttled on web for better Android web performance
     _verticalScrollSyncListener = () {
       if (_isSyncingScroll || !_verticalScrollController.hasClients) return;
 
-      _isSyncingScroll = true;
-      try {
-        final mainOffset = _verticalScrollController.offset;
-        if (_unitNamesScrollController.hasClients) {
-          final maxExtent = _unitNamesScrollController.position.maxScrollExtent;
-          final clampedOffset = mainOffset.clamp(0.0, maxExtent);
-          if ((_unitNamesScrollController.offset - clampedOffset).abs() > 0.5) {
-            _unitNamesScrollController.jumpTo(clampedOffset);
-          }
-        }
-        // Report vertical offset changes to parent for preservation
+      final mainOffset = _verticalScrollController.offset;
+
+      if (kIsWeb) {
+        // Throttle vertical scroll sync on web (Android web performance fix)
+        _verticalScrollThrottleTimer?.cancel();
+        _verticalScrollThrottleTimer = Timer(
+          const Duration(milliseconds: 16), // ~60fps throttling
+          () {
+            if (!mounted || _isSyncingScroll) return;
+            _performVerticalScrollSync(mainOffset);
+          },
+        );
+        // Always report offset changes (no throttling for parent callback)
         widget.onVerticalOffsetChanged?.call(mainOffset);
-      } finally {
-        _isSyncingScroll = false;
+      } else {
+        // Native platforms: immediate sync for smooth feel
+        _performVerticalScrollSync(mainOffset);
+        widget.onVerticalOffsetChanged?.call(mainOffset);
       }
     };
     _verticalScrollController.addListener(_verticalScrollSyncListener);
@@ -176,16 +203,53 @@ class _TimelineCalendarWidgetState
     });
   }
 
+  /// Perform horizontal scroll sync (extracted for throttling)
+  void _performHorizontalScrollSync(double mainOffset) {
+    if (_isSyncingScroll || !_horizontalScrollController.hasClients) return;
+
+    // Skip if offset hasn't changed significantly (reduces unnecessary work)
+    if ((mainOffset - _lastHorizontalScrollOffset).abs() < 0.5) return;
+    _lastHorizontalScrollOffset = mainOffset;
+
+    _isSyncingScroll = true;
+    try {
+      if (_headerScrollController.hasClients) {
+        _headerScrollController.jumpTo(mainOffset);
+      }
+    } finally {
+      _isSyncingScroll = false;
+    }
+  }
+
+  /// Perform vertical scroll sync (extracted for throttling)
+  void _performVerticalScrollSync(double mainOffset) {
+    if (_isSyncingScroll || !_verticalScrollController.hasClients) return;
+
+    // Skip if offset hasn't changed significantly (reduces unnecessary work)
+    if ((mainOffset - _lastVerticalScrollOffset).abs() < 0.5) return;
+    _lastVerticalScrollOffset = mainOffset;
+
+    _isSyncingScroll = true;
+    try {
+      if (_unitNamesScrollController.hasClients) {
+        final maxExtent = _unitNamesScrollController.position.maxScrollExtent;
+        final clampedOffset = mainOffset.clamp(0.0, maxExtent);
+        if ((_unitNamesScrollController.offset - clampedOffset).abs() > 0.5) {
+          _unitNamesScrollController.jumpTo(clampedOffset);
+        }
+      }
+    } finally {
+      _isSyncingScroll = false;
+    }
+  }
+
   void _onTransformChanged() {
     final matrix = _transformationController.value;
     final newScale = matrix.getMaxScaleOnAxis();
 
     if ((newScale - _zoomScale).abs() > 0.01) {
       setState(() {
-        _zoomScale = newScale.clamp(
-          kTimelineMinZoomScale,
-          kTimelineMaxZoomScale,
-        );
+        _zoomScale = newScale.clamp(kTimelineMinZoomScale, kTimelineMaxZoomScale);
       });
     }
   }
@@ -200,16 +264,12 @@ class _TimelineCalendarWidgetState
     final firstVisibleDay = (scrollOffset / dayWidth).floor();
     final daysInViewport = dimensions.daysInViewport;
 
-    final newStartIndex = (firstVisibleDay - kTimelineBufferDays)
-        .clamp(0, double.infinity)
-        .toInt();
+    final newStartIndex = (firstVisibleDay - kTimelineBufferDays).clamp(0, double.infinity).toInt();
     final newDayCount = daysInViewport + (2 * kTimelineBufferDays);
 
     // Only update if range changed significantly
-    if ((newStartIndex - _visibleStartIndex).abs() >
-            kTimelineVisibleRangeUpdateThreshold ||
-        (newDayCount - _visibleDayCount).abs() >
-            kTimelineVisibleRangeUpdateThreshold) {
+    if ((newStartIndex - _visibleStartIndex).abs() > kTimelineVisibleRangeUpdateThreshold ||
+        (newDayCount - _visibleDayCount).abs() > kTimelineVisibleRangeUpdateThreshold) {
       setState(() {
         _visibleStartIndex = newStartIndex;
         _visibleDayCount = newDayCount;
@@ -223,21 +283,16 @@ class _TimelineCalendarWidgetState
 
     // Notify parent of visible date change (debounced on web for performance)
     if (widget.onVisibleDateRangeChanged != null && !_isInitialScrolling) {
-      final visibleStartDate = _dynamicStartDate.add(
-        Duration(days: firstVisibleDay),
-      );
+      final visibleStartDate = _dynamicStartDate.add(Duration(days: firstVisibleDay));
 
       if (kIsWeb) {
         // Debounce on web to reduce setState calls in parent during scroll
         _visibleRangeDebounceTimer?.cancel();
-        _visibleRangeDebounceTimer = Timer(
-          const Duration(milliseconds: 100),
-          () {
-            if (mounted) {
-              widget.onVisibleDateRangeChanged!(visibleStartDate);
-            }
-          },
-        );
+        _visibleRangeDebounceTimer = Timer(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            widget.onVisibleDateRangeChanged!(visibleStartDate);
+          }
+        });
       } else {
         // Instant feedback on native platforms
         widget.onVisibleDateRangeChanged!(visibleStartDate);
@@ -251,25 +306,17 @@ class _TimelineCalendarWidgetState
 
     // Near start edge? Prepend days
     if (scrollOffset < edgeThreshold &&
-        _dynamicStartDate.isAfter(
-          DateTime.now().subtract(const Duration(days: kTimelineMaxDaysLimit)),
-        )) {
+        _dynamicStartDate.isAfter(DateTime.now().subtract(const Duration(days: kTimelineMaxDaysLimit)))) {
       setState(() {
-        _dynamicStartDate = _dynamicStartDate.subtract(
-          const Duration(days: kTimelineDaysToExtend),
-        );
+        _dynamicStartDate = _dynamicStartDate.subtract(const Duration(days: kTimelineDaysToExtend));
       });
     }
 
     // Near end edge? Append days
     if (scrollOffset > maxScroll - edgeThreshold &&
-        _dynamicEndDate.isBefore(
-          DateTime.now().add(const Duration(days: kTimelineMaxDaysLimit)),
-        )) {
+        _dynamicEndDate.isBefore(DateTime.now().add(const Duration(days: kTimelineMaxDaysLimit)))) {
       setState(() {
-        _dynamicEndDate = _dynamicEndDate.add(
-          const Duration(days: kTimelineDaysToExtend),
-        );
+        _dynamicEndDate = _dynamicEndDate.add(const Duration(days: kTimelineDaysToExtend));
       });
     }
   }
@@ -278,12 +325,9 @@ class _TimelineCalendarWidgetState
     if (retryCount >= kTimelineMaxScrollRetryAttempts) return;
 
     if (!_horizontalScrollController.hasClients) {
-      Future.delayed(
-        const Duration(milliseconds: kTimelineScrollRetryDelayMs),
-        () {
-          if (mounted) _scrollToTodayWithRetry(retryCount: retryCount + 1);
-        },
-      );
+      Future.delayed(const Duration(milliseconds: kTimelineScrollRetryDelayMs), () {
+        if (mounted) _scrollToTodayWithRetry(retryCount: retryCount + 1);
+      });
       return;
     }
 
@@ -301,18 +345,10 @@ class _TimelineCalendarWidgetState
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
     final visibleWidth = dimensions.visibleContentWidth;
 
-    final targetScroll =
-        (scrollPosition - (visibleWidth / 2) + (dimensions.dayWidth / 2)).clamp(
-          0.0,
-          maxScroll,
-        );
+    final targetScroll = (scrollPosition - (visibleWidth / 2) + (dimensions.dayWidth / 2)).clamp(0.0, maxScroll);
 
     _horizontalScrollController
-        .animateTo(
-          targetScroll,
-          duration: AppDimensions.animationSlow,
-          curve: Curves.easeInOut,
-        )
+        .animateTo(targetScroll, duration: AppDimensions.animationSlow, curve: Curves.easeInOut)
         .then((_) {
           if (mounted) {
             setState(() => _isInitialScrolling = false);
@@ -345,21 +381,56 @@ class _TimelineCalendarWidgetState
   }
 
   List<DateTime> _getDateRange() {
+    // Ensure dates are valid
+    if (_dynamicStartDate.isAfter(_dynamicEndDate)) {
+      // Invalid range, reinitialize
+      _initializeDateRange();
+    }
     final days = _dynamicEndDate.difference(_dynamicStartDate).inDays;
+    // Ensure we have at least 1 day
+    if (days <= 0) {
+      // Invalid range, reinitialize
+      _initializeDateRange();
+      final retryDays = _dynamicEndDate.difference(_dynamicStartDate).inDays;
+      if (retryDays <= 0) {
+        // Still invalid, return a default range
+        final now = DateTime.now();
+        return List.generate(60, (i) => now.add(Duration(days: i - 30)));
+      }
+      return List.generate(retryDays, (i) => _dynamicStartDate.add(Duration(days: i)));
+    }
     return List.generate(days, (i) => _dynamicStartDate.add(Duration(days: i)));
   }
 
   List<DateTime> _getVisibleDateRange() {
     final fullRange = _getDateRange();
     final totalDays = fullRange.length;
+    
+    // Ensure we have dates
+    if (totalDays == 0) {
+      // Return a default range if empty
+      final now = DateTime.now();
+      return List.generate(30, (i) => now.add(Duration(days: i)));
+    }
+    
+    // Ensure indices are valid
     final startIndex = _visibleStartIndex.clamp(0, totalDays - 1);
-    final endIndex = (startIndex + _visibleDayCount).clamp(0, totalDays);
+    final endIndex = (startIndex + _visibleDayCount).clamp(startIndex + 1, totalDays);
+    
+    // Ensure endIndex > startIndex
+    if (endIndex <= startIndex) {
+      final defaultEndIndex = (startIndex + 30).clamp(startIndex + 1, totalDays);
+      return fullRange.sublist(startIndex, defaultEndIndex);
+    }
+    
     return fullRange.sublist(startIndex, endIndex);
   }
 
   @override
   void dispose() {
     _visibleRangeDebounceTimer?.cancel();
+    _verticalScrollThrottleTimer?.cancel();
+    _horizontalScrollThrottleTimer?.cancel();
     _horizontalScrollController.removeListener(_scrollSyncListener);
     _horizontalScrollController.removeListener(_updateVisibleRange);
     _verticalScrollController.removeListener(_verticalScrollSyncListener);
@@ -400,7 +471,7 @@ class _TimelineCalendarWidgetState
               if (hasError) {
                 final error = unitsAsync.error ?? bookingsAsync.error;
                 return CalendarErrorState(
-                  errorMessage: error.toString(),
+                  errorMessage: _safeErrorToString(error),
                   onRetry: () {
                     ref.invalidate(allOwnerUnitsProvider);
                     ref.invalidate(calendarBookingsProvider);
@@ -424,27 +495,16 @@ class _TimelineCalendarWidgetState
   Widget _buildZoomBanner() {
     final l10n = AppLocalizations.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.spaceS,
-        vertical: AppDimensions.spaceXXS,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceS, vertical: AppDimensions.spaceXXS),
       color: AppColors.primary.withValues(alpha: 0.1),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            _zoomScale > 1.0 ? Icons.zoom_in : Icons.zoom_out,
-            size: AppDimensions.iconS,
-            color: AppColors.primary,
-          ),
+          Icon(_zoomScale > 1.0 ? Icons.zoom_in : Icons.zoom_out, size: AppDimensions.iconS, color: AppColors.primary),
           const SizedBox(width: AppDimensions.spaceXXS),
           Text(
             l10n.ownerCalendarZoom((_zoomScale * 100).toInt()),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-            ),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
           ),
           const SizedBox(width: AppDimensions.spaceXS),
           TextButton(
@@ -455,15 +515,10 @@ class _TimelineCalendarWidgetState
               });
             },
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.spaceXS,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
               minimumSize: const Size(0, 28),
             ),
-            child: Text(
-              l10n.ownerCalendarReset,
-              style: const TextStyle(fontSize: 11),
-            ),
+            child: Text(l10n.ownerCalendarReset, style: const TextStyle(fontSize: 11)),
           ),
         ],
       ),
@@ -473,20 +528,63 @@ class _TimelineCalendarWidgetState
   Widget _buildEmptyUnitsState() {
     final l10n = AppLocalizations.of(context);
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.spaceM),
-        child: Text(l10n.ownerCalendarNoUnits),
-      ),
+      child: Padding(padding: const EdgeInsets.all(AppDimensions.spaceM), child: Text(l10n.ownerCalendarNoUnits)),
     );
   }
 
-  Widget _buildTimelineView(
-    List<UnitModel> units,
-    Map<String, List<BookingModel>> bookingsByUnit,
-  ) {
+  Widget _buildTimelineView(List<UnitModel> units, Map<String, List<BookingModel>> bookingsByUnit) {
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
     final dates = _getVisibleDateRange();
+    
+    // Defensive check: ensure dates list is not empty
+    if (dates.isEmpty) {
+      // If dates are empty, try to regenerate the date range
+      _initializeDateRange();
+      final retryDates = _getVisibleDateRange();
+      if (retryDates.isEmpty) {
+        // Still empty, return error widget
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Unable to generate date range for timeline. Please refresh the page.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+        );
+      }
+      // Use retry dates
+      final offsetWidth = dimensions.getOffsetWidth(_visibleStartIndex);
+      return _buildTimelineContent(units, bookingsByUnit, retryDates, offsetWidth, dimensions);
+    }
+    
     final offsetWidth = dimensions.getOffsetWidth(_visibleStartIndex);
+    
+    // Ensure offsetWidth and dayWidth are valid
+    if (!offsetWidth.isFinite || !dimensions.dayWidth.isFinite || dimensions.dayWidth <= 0) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Invalid timeline dimensions. Please refresh the page.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+      );
+    }
+    
+    return _buildTimelineContent(units, bookingsByUnit, dates, offsetWidth, dimensions);
+  }
+
+  Widget _buildTimelineContent(
+    List<UnitModel> units,
+    Map<String, List<BookingModel>> bookingsByUnit,
+    List<DateTime> dates,
+    double offsetWidth,
+    TimelineDimensions dimensions,
+  ) {
 
     return Card(
       margin: EdgeInsets.zero,
@@ -525,65 +623,60 @@ class _TimelineCalendarWidgetState
                   child: ScrollConfiguration(
                     // Enable mouse/trackpad drag scrolling for web
                     behavior: ScrollConfiguration.of(context).copyWith(
-                      dragDevices: {
-                        PointerDeviceKind.touch,
-                        PointerDeviceKind.mouse,
-                        PointerDeviceKind.trackpad,
-                      },
+                      dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad},
                     ),
                     child: InteractiveViewer(
                       transformationController: _transformationController,
                       minScale: kTimelineMinZoomScale,
                       panEnabled: false,
-                      child: SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        // Use ClampingScrollPhysics on web for better performance
-                        // BouncingScrollPhysics causes extra rendering frames on web
-                        physics: kIsWeb
-                            ? const ClampingScrollPhysics(
-                                parent: AlwaysScrollableScrollPhysics(),
-                              )
-                            : const BouncingScrollPhysics(
-                                parent: AlwaysScrollableScrollPhysics(),
-                              ),
+                      // OPTIMIZED: RepaintBoundary for InteractiveViewer to isolate zoom repaints
+                      child: RepaintBoundary(
                         child: SingleChildScrollView(
-                          controller: _verticalScrollController,
+                          controller: _horizontalScrollController,
+                          scrollDirection: Axis.horizontal,
+                          // Use ClampingScrollPhysics on web for better performance
+                          // BouncingScrollPhysics causes extra rendering frames on web
                           physics: kIsWeb
-                              ? const ClampingScrollPhysics(
-                                  parent: AlwaysScrollableScrollPhysics(),
-                                )
-                              : const BouncingScrollPhysics(
-                                  parent: AlwaysScrollableScrollPhysics(),
-                                ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              TimelineGridWidget(
-                                units: units,
-                                bookingsByUnit: bookingsByUnit,
-                                dates: dates,
-                                offsetWidth: offsetWidth,
-                                dimensions: dimensions,
-                                onBookingTap: _showBookingActionMenu,
-                                onBookingLongPress: _showMoveToUnitMenu,
-                                dropZoneBuilder: (unit, date, index) =>
-                                    _buildDropZone(
-                                      unit,
-                                      date,
-                                      offsetWidth,
-                                      index,
-                                      bookingsByUnit,
+                              ? const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+                              : const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                          // OPTIMIZED: RepaintBoundary for horizontal scroll container
+                          child: RepaintBoundary(
+                            child: SingleChildScrollView(
+                              controller: _verticalScrollController,
+                              // OPTIMIZED: Android web performance - use ClampingScrollPhysics
+                              // and reduce scroll friction for smoother scrolling
+                              physics: kIsWeb
+                                  ? const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+                                  : const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // OPTIMIZED: RepaintBoundary for grid widget
+                                  RepaintBoundary(
+                                    child: TimelineGridWidget(
+                                      units: units,
+                                      bookingsByUnit: bookingsByUnit,
+                                      dates: dates,
+                                      offsetWidth: offsetWidth,
+                                      dimensions: dimensions,
+                                      onBookingTap: _showBookingActionMenu,
+                                      onBookingLongPress: _showMoveToUnitMenu,
+                                      dropZoneBuilder: (unit, date, index) =>
+                                          _buildDropZone(unit, date, offsetWidth, index, bookingsByUnit),
                                     ),
+                                  ),
+                                  if (widget.showSummary)
+                                    RepaintBoundary(
+                                      child: TimelineSummaryBarWidget(
+                                        bookingsByUnit: bookingsByUnit,
+                                        dates: dates,
+                                        offsetWidth: offsetWidth,
+                                        dimensions: dimensions,
+                                      ),
+                                    ),
+                                ],
                               ),
-                              if (widget.showSummary)
-                                TimelineSummaryBarWidget(
-                                  bookingsByUnit: bookingsByUnit,
-                                  dates: dates,
-                                  offsetWidth: offsetWidth,
-                                  dimensions: dimensions,
-                                ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -604,10 +697,7 @@ class _TimelineCalendarWidgetState
       try {
         if (_verticalScrollController.hasClients) {
           final maxExtent = _verticalScrollController.position.maxScrollExtent;
-          final clampedOffset = _unitNamesScrollController.offset.clamp(
-            0.0,
-            maxExtent,
-          );
+          final clampedOffset = _unitNamesScrollController.offset.clamp(0.0, maxExtent);
           if ((_verticalScrollController.offset - clampedOffset).abs() > 0.5) {
             _verticalScrollController.jumpTo(clampedOffset);
           }
@@ -640,11 +730,8 @@ class _TimelineCalendarWidgetState
         height: dimensions.unitRowHeight,
         isPast: isPast,
         isToday: isToday,
-        onLongPress: widget.onCellLongPress != null
-            ? () => widget.onCellLongPress!(date, unit)
-            : null,
-        onBookingDropped: (booking) =>
-            _handleBookingDrop(booking, date, unit, allBookings),
+        onLongPress: widget.onCellLongPress != null ? () => widget.onCellLongPress!(date, unit) : null,
+        onBookingDropped: (booking) => _handleBookingDrop(booking, date, unit, allBookings),
       ),
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
@@ -659,12 +746,7 @@ class _TimelineCalendarWidgetState
   ) async {
     await ref
         .read(dragDropProvider.notifier)
-        .executeDrop(
-          dropDate: dropDate,
-          targetUnit: targetUnit,
-          allBookings: allBookings,
-          context: context,
-        );
+        .executeDrop(dropDate: dropDate, targetUnit: targetUnit, allBookings: allBookings, context: context);
     ref.read(dragDropProvider.notifier).stopDragging();
   }
 
@@ -674,10 +756,7 @@ class _TimelineCalendarWidgetState
     final bookingsByUnit = bookingsAsync.value ?? {};
 
     // Detect conflicting bookings
-    final conflictingBookings = TimelineBookingBlock.getConflictingBookings(
-      booking,
-      bookingsByUnit,
-    );
+    final conflictingBookings = TimelineBookingBlock.getConflictingBookings(booking, bookingsByUnit);
     final hasConflict = conflictingBookings.isNotEmpty;
 
     final action = await showModalBottomSheet<String>(
@@ -704,12 +783,7 @@ class _TimelineCalendarWidgetState
           builder: (context) => BookingStatusChangeDialog(booking: booking),
         );
         if (newStatus != null && mounted) {
-          await CalendarBookingActions.changeBookingStatus(
-            context,
-            ref,
-            booking,
-            newStatus,
-          );
+          await CalendarBookingActions.changeBookingStatus(context, ref, booking, newStatus);
         }
       case 'delete':
         await CalendarBookingActions.deleteBooking(context, ref, booking);

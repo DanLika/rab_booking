@@ -91,7 +91,7 @@ sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 
 ```
 1. User klikne "Pay with Stripe"
-2. PLACEHOLDER booking kreira se sa status="stripe_pending" (blokira datume)
+2. PLACEHOLDER booking kreira se sa status="pending" (blokira datume)
 3. Same-tab redirect na Stripe Checkout
 4. Webhook UPDATE-a placeholder na status="confirmed"
 5. Return URL: ?stripe_status=success&session_id=cs_xxx

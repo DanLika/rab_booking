@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 /// Gradient design tokens for consistent gradients across the app
 ///
@@ -152,11 +152,7 @@ class GradientTokens {
     AlignmentGeometry begin = Alignment.topLeft,
     AlignmentGeometry end = Alignment.bottomRight,
   }) {
-    return LinearGradient(
-      begin: begin,
-      end: end,
-      colors: [startColor, endColor],
-    );
+    return LinearGradient(begin: begin, end: end, colors: [startColor, endColor]);
   }
 
   /// Create a three-color linear gradient
@@ -183,10 +179,6 @@ class GradientTokens {
     AlignmentGeometry center = Alignment.center,
     double radius = 1.0,
   }) {
-    return RadialGradient(
-      center: center,
-      radius: radius,
-      colors: [centerColor, edgeColor],
-    );
+    return RadialGradient(center: center, radius: radius, colors: [centerColor, edgeColor]);
   }
 }

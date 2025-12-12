@@ -100,6 +100,7 @@ class BookingDropZone extends ConsumerWidget {
               isValid: isValid,
             ),
             child: Stack(
+              alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
               children: [
                 // Base child
                 if (child != null) child!,

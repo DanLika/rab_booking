@@ -163,6 +163,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: Stack(
+          alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
           children: [
             notificationsAsync.when(
               data: (notifications) {

@@ -16,6 +16,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
+import '../../../../core/services/logging_service.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
@@ -185,8 +186,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           );
                         },
                         loading: () => const CircularProgressIndicator(),
-                        error: (error, _) =>
-                            Text(AppLocalizations.of(context).bookingCreateErrorGeneric(error.toString())),
+                        error: (error, _) => Text(
+                          AppLocalizations.of(
+                            context,
+                          ).bookingCreateErrorGeneric(LoggingService.safeErrorToString(error)),
+                        ),
                       ),
 
                       const SizedBox(height: 24),

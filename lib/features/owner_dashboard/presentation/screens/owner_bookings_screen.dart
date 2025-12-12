@@ -59,6 +59,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   // Web performance: Debounce scroll listener to reduce scroll handler calls
   Timer? _scrollDebounceTimer;
 
+  // Flag to ensure listener is only set up once
+  bool _listenerSetup = false;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +71,193 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     if (widget.initialBookingId != null) {
       _isLoadingInitialBooking = true;
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Setup listener for initial booking (deep-link support)
+    // Do this in didChangeDependencies to ensure ref is available
+    if (widget.initialBookingId != null && !_listenerSetup && !_hasHandledInitialBooking) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_hasHandledInitialBooking) {
+          _setupInitialBookingListener();
+          // Also try to show booking immediately if data is already loaded
+          _tryShowBookingIfReady();
+        }
+      });
+    }
+  }
+
+  /// Try to show booking dialog if data is already loaded
+  void _tryShowBookingIfReady() {
+    if (_hasHandledInitialBooking || widget.initialBookingId == null) return;
+    
+    final windowedState = ref.read(windowedBookingsNotifierProvider);
+    
+    // If data is already loaded, try to find and show booking
+    if (!windowedState.isLoading && windowedState.visibleBookings.isNotEmpty) {
+      try {
+        final booking = windowedState.visibleBookings.firstWhere(
+          (b) => b.booking.id == widget.initialBookingId,
+        );
+        _hasHandledInitialBooking = true;
+        
+        if (mounted) {
+          setState(() {
+            _isLoadingInitialBooking = false;
+          });
+        }
+        
+        // Show dialog after a short delay
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !context.mounted) return;
+          
+          Future.delayed(const Duration(milliseconds: 200), () {
+            if (!mounted || !context.mounted) return;
+            
+            try {
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (context) => BookingDetailsDialog(ownerBooking: booking),
+              );
+            } catch (e) {
+              debugPrint('Error showing booking details dialog: $e');
+            }
+          });
+        });
+      } catch (_) {
+        // Booking not in current window, will be handled by listener
+      }
+    }
+  }
+
+  /// Setup listener for initial booking (deep-link support)
+  /// Called once in initState to avoid multiple listeners
+  void _setupInitialBookingListener() {
+    if (_hasHandledInitialBooking || widget.initialBookingId == null || _listenerSetup) return;
+    _listenerSetup = true;
+
+    // Use ref.listen - it automatically manages lifecycle
+    // The listener will be automatically disposed when widget is disposed
+    ref.listen(windowedBookingsNotifierProvider, (previous, next) {
+      // Skip if already handled or no booking ID
+      if (_hasHandledInitialBooking || widget.initialBookingId == null) return;
+      
+      // Wait for data to be loaded
+      if (next.isLoading) return;
+      
+      // Try to find booking in visible bookings
+      if (next.visibleBookings.isNotEmpty) {
+        try {
+          final booking = next.visibleBookings.firstWhere(
+            (b) => b.booking.id == widget.initialBookingId,
+          );
+          
+          // Mark as handled immediately to prevent duplicate dialogs
+          _hasHandledInitialBooking = true;
+          
+          // Hide loading overlay first
+          if (mounted) {
+            setState(() {
+              _isLoadingInitialBooking = false;
+            });
+          }
+          
+          // Wait for next frame and then show dialog
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || !context.mounted) return;
+            
+            // Additional delay to ensure UI is fully stable
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (!mounted || !context.mounted) return;
+              
+              try {
+                showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (context) => BookingDetailsDialog(ownerBooking: booking),
+                );
+              } catch (e) {
+                debugPrint('Error showing booking details dialog: $e');
+              }
+            });
+          });
+          
+          return; // Successfully found and handled
+        } catch (_) {
+          // Booking not found in current window - will fetch separately
+        }
+      }
+      
+      // If we reach here, booking is not in visible window
+      // Only fetch if we haven't already tried and data is fully loaded
+      if (!_hasHandledInitialBooking && !next.isLoading) {
+        // Mark as handled ONLY after we set up the fetch (prevents duplicate fetches)
+        // But we'll reset it if the fetch fails
+        _hasHandledInitialBooking = true;
+
+        // Fetch booking directly
+        ref.read(windowedBookingsNotifierProvider.notifier).fetchAndShowBooking(
+          widget.initialBookingId!,
+        ).then((ownerBooking) {
+          if (!mounted) return;
+
+          // Hide loading overlay
+          setState(() {
+            _isLoadingInitialBooking = false;
+          });
+
+          if (ownerBooking != null) {
+            // Wait for next frame and then show dialog
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || !context.mounted) return;
+
+              // Additional delay to ensure UI is fully stable
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (!mounted || !context.mounted) return;
+
+                try {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (ctx) => BookingDetailsDialog(ownerBooking: ownerBooking),
+                  );
+                } catch (e) {
+                  debugPrint('Error showing booking details dialog: $e');
+                }
+              });
+            });
+          } else {
+            // Booking not found - show error message to user
+            debugPrint('Booking not found: ${widget.initialBookingId}');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || !context.mounted) return;
+              final l10n = AppLocalizations.of(context);
+              ErrorDisplayUtils.showErrorSnackBar(
+                context,
+                l10n.ownerBookingsNotFound,
+              );
+            });
+          }
+        }).catchError((error) {
+          // Handle error when fetching booking
+          if (mounted) {
+            setState(() {
+              _isLoadingInitialBooking = false;
+            });
+            debugPrint('Error fetching booking: $error');
+            // Show error to user
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || !context.mounted) return;
+              ErrorDisplayUtils.showErrorSnackBar(context, error);
+            });
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -112,51 +302,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   Widget build(BuildContext context) {
     final windowedState = ref.watch(windowedBookingsNotifierProvider);
     final bookings = windowedState.visibleBookings;
-
-    // Listen for data to handle initial booking (deep-link support)
-    if (!_hasHandledInitialBooking && widget.initialBookingId != null) {
-      ref.listen(windowedBookingsNotifierProvider, (previous, next) {
-        if (!_hasHandledInitialBooking &&
-            widget.initialBookingId != null &&
-            next.visibleBookings.isNotEmpty &&
-            !next.isLoading) {
-          try {
-            final booking = next.visibleBookings.firstWhere((b) => b.booking.id == widget.initialBookingId);
-            _hasHandledInitialBooking = true;
-
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                setState(() => _isLoadingInitialBooking = false);
-                showDialog(
-                  context: context,
-                  builder: (context) => BookingDetailsDialog(ownerBooking: booking),
-                );
-              }
-            });
-          } catch (_) {
-            // Booking not found in current window - this is expected with windowing
-            _hasHandledInitialBooking = true;
-            ref.read(windowedBookingsNotifierProvider.notifier).fetchAndShowBooking(widget.initialBookingId!).then((
-              ownerBooking,
-            ) {
-              if (mounted) {
-                setState(() => _isLoadingInitialBooking = false);
-                if (ownerBooking != null) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => BookingDetailsDialog(ownerBooking: ownerBooking),
-                      );
-                    }
-                  });
-                }
-              }
-            });
-          }
-        }
-      });
-    }
 
     final filters = ref.watch(bookingsFiltersNotifierProvider);
     final viewMode = ref.watch(ownerBookingsViewProvider);

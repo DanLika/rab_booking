@@ -49,8 +49,11 @@ final firebaseStorageProvider = Provider<FirebaseStorage>((ref) {
 
 /// SharedPreferences instance provider
 /// Must be overridden in main.dart with the actual instance
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('SharedPreferences must be overridden in main.dart');
+/// Returns null if not yet initialized (during splash screen phase)
+final sharedPreferencesProvider = Provider<SharedPreferences?>((ref) {
+  // Return null instead of throwing error - allows app to work during initialization
+  // The provider will be overridden in main.dart once SharedPreferences is ready
+  return null;
 });
 
 /// Property repository provider
@@ -141,10 +144,7 @@ final stripeServiceProvider = Provider<StripeService>((ref) {
 final icalExportServiceProvider = Provider<IcalExportService>((ref) {
   final bookingRepository = ref.watch(bookingRepositoryProvider);
   final storage = ref.watch(firebaseStorageProvider);
-  return IcalExportService(
-    bookingRepository: bookingRepository,
-    storage: storage,
-  );
+  return IcalExportService(bookingRepository: bookingRepository, storage: storage);
 });
 
 // ========== iCal Repository ==========

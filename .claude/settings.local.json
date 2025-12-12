@@ -12,7 +12,8 @@
       "mcp__github",
       "mcp__stripe",
       "mcp__context7",
-      "mcp__flutter-inspector"
+      "mcp__flutter-inspector",
+      "mcp__sentry"
     ],
     "deny": []
   }

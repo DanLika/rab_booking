@@ -3450,6 +3450,12 @@ abstract class AppLocalizations {
   /// **'Error cancelling booking'**
   String get ownerBookingsCancelError;
 
+  /// No description provided for @ownerBookingsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking not found'**
+  String get ownerBookingsNotFound;
+
   /// No description provided for @ownerBookingCardNight.
   ///
   /// In en, this message translates to:

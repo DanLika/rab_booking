@@ -213,7 +213,19 @@ class _PremiumButtonState extends State<PremiumButton> {
                         widget.onPressed?.call();
                       },
                 borderRadius: BorderRadius.circular(
-                  isIconOnly ? buttonConfig.height / 2 : AppDimensions.radiusL,
+                  () {
+                    if (isIconOnly) {
+                      // For icon-only buttons, use half of height (pill shape)
+                      // Ensure height is valid and finite
+                      final height = buttonConfig.height;
+                      if (height.isFinite && height > 0) {
+                        return height / 2;
+                      }
+                      // Fallback to default radius if height is invalid
+                      return AppDimensions.radiusL;
+                    }
+                    return AppDimensions.radiusL;
+                  }(),
                 ),
                 child: Container(
                   padding: _getPadding(isIconOnly, buttonConfig),
@@ -228,12 +240,31 @@ class _PremiumButtonState extends State<PremiumButton> {
   }
 
   BoxDecoration _buildDecoration(_ButtonConfig config) {
+    // Defensive check: ensure height is valid before calculating borderRadius
+    double borderRadius;
+    if (widget.label == null) {
+      // For icon-only buttons, use half of height (pill shape)
+      // Ensure height is valid and finite
+      final height = config.height;
+      if (height.isFinite && height > 0) {
+        borderRadius = height / 2;
+      } else {
+        // Fallback to default radius if height is invalid
+        borderRadius = AppDimensions.radiusL;
+      }
+    } else {
+      borderRadius = AppDimensions.radiusL;
+    }
+
+    // Ensure borderRadius is valid (finite and non-negative)
+    if (!borderRadius.isFinite || borderRadius < 0) {
+      borderRadius = AppDimensions.radiusL;
+    }
+
     if (_isDisabled) {
       return BoxDecoration(
         color: AppColors.disabled,
-        borderRadius: BorderRadius.circular(
-          widget.label == null ? config.height / 2 : AppDimensions.radiusL,
-        ),
+        borderRadius: BorderRadius.circular(borderRadius),
         border: widget.variant == ButtonVariant.outline
             ? Border.all(color: AppColors.borderLight, width: 1.5)
             : null,
@@ -243,9 +274,7 @@ class _PremiumButtonState extends State<PremiumButton> {
     return BoxDecoration(
       gradient: config.gradient,
       color: config.backgroundColor,
-      borderRadius: BorderRadius.circular(
-        widget.label == null ? config.height / 2 : AppDimensions.radiusL,
-      ),
+      borderRadius: BorderRadius.circular(borderRadius),
       border: config.borderColor != null
           ? Border.all(color: config.borderColor!, width: 1.5)
           : null,

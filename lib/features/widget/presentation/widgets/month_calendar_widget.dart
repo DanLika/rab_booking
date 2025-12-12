@@ -53,7 +53,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         unitId: widget.unitId,
       )),
     );
-    final minNights = widgetCtxAsync.valueOrNull?.unit.minStayNights ?? 1;
+    // Defensive null check: handle loading/error states gracefully
+    final widgetCtx = widgetCtxAsync.valueOrNull;
+    final minNights = widgetCtx?.unit.minStayNights ?? 1;
 
     // Use realtime stream provider for automatic updates when bookings change
     // OPTIMIZED: Pass minNights to eliminate redundant widgetSettings stream fetch
@@ -154,18 +156,23 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 // Hover tooltip overlay (desktop) - highest z-index
                 if (_hoveredDate != null)
                   calendarData.when(
-                    data: (data) => CalendarTooltipBuilder.build(
-                      context: context,
-                      hoveredDate: _hoveredDate,
-                      mousePosition: _mousePosition,
-                      data: data,
-                      colors: colors,
-                      tooltipHeight: 120.0,
-                      ignorePointer: true,
-                      // Use unit's base price as fallback when no daily_price exists
-                      fallbackPrice:
-                          widgetCtxAsync.valueOrNull?.unit.pricePerNight,
-                    ),
+                    data: (data) {
+                      // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
+                      // Re-read from async value to ensure we have the latest state
+                      final currentWidgetCtx = widgetCtxAsync.valueOrNull;
+                      final fallbackPrice = currentWidgetCtx?.unit.pricePerNight;
+                      return CalendarTooltipBuilder.build(
+                        context: context,
+                        hoveredDate: _hoveredDate,
+                        mousePosition: _mousePosition,
+                        data: data,
+                        colors: colors,
+                        tooltipHeight: 120.0,
+                        ignorePointer: true,
+                        // Use unit's base price as fallback when no daily_price exists
+                        fallbackPrice: fallbackPrice,
+                      );
+                    },
                     loading: () => const SizedBox.shrink(),
                     error: (_, stackTrace) => const SizedBox.shrink(),
                   ),

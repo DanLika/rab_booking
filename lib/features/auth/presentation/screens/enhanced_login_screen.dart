@@ -68,11 +68,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(enhancedAuthProvider.notifier).signInWithEmail(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        rememberMe: _rememberMe,
-      );
+      await ref
+          .read(enhancedAuthProvider.notifier)
+          .signInWithEmail(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            rememberMe: _rememberMe,
+          );
 
       if (!mounted) return;
 
@@ -90,11 +92,17 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         return;
       }
 
+      // User is authenticated - redirect immediately to dashboard
+      // Router will handle the redirect, but explicit navigation is faster
       setState(() => _isLoading = false);
-      ErrorDisplayUtils.showSuccessSnackBar(
-        context,
-        'Welcome back, ${authState.userModel?.firstName ?? "User"}!',
-      );
+
+      // Show brief success message (non-blocking) and redirect immediately
+      ErrorDisplayUtils.showSuccessSnackBar(context, 'Welcome back, ${authState.userModel?.firstName ?? "User"}!');
+
+      // Redirect immediately - router will also redirect, but this is faster
+      if (mounted) {
+        context.go(OwnerRoutes.overview);
+      }
     } catch (e) {
       if (!mounted) return;
 
@@ -115,12 +123,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   }
 
   bool _isPasswordError(String message) {
-    const passwordErrorPatterns = [
-      'Incorrect password',
-      'Invalid password',
-      'wrong-password',
-      'invalid-credential',
-    ];
+    const passwordErrorPatterns = ['Incorrect password', 'Invalid password', 'wrong-password', 'invalid-credential'];
     return passwordErrorPatterns.any(message.contains);
   }
 
@@ -152,22 +155,38 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       child: Scaffold(
         resizeToAvoidBottomInset: true, // PRISTUP 1: Omogući automatsko prilagođavanje
         body: Stack(
+          alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
             AuthBackground(
               child: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    // Get keyboard height to adjust padding dynamically (with null safety)
+                    final mediaQuery = MediaQuery.maybeOf(context);
+                    final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
+                    final isKeyboardOpen = keyboardHeight > 0;
+
+                    // Calculate minHeight safely - ensure it's always finite and valid
+                    double minHeight;
+                    if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
+                      final calculated = constraints.maxHeight - keyboardHeight;
+                      minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                    } else {
+                      minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
+                    }
+                    // Ensure minHeight is always finite (never infinity)
+                    minHeight = minHeight.isFinite ? minHeight : 0.0;
+
                     return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 12 : 20,
-                        vertical: isCompact ? 16 : 20,
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.only(
+                        left: isCompact ? 12 : 20,
+                        right: isCompact ? 12 : 20,
+                        top: isCompact ? 16 : 20,
+                        bottom: isCompact ? 16 : 20,
                       ),
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
+                        constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(
                           child: GlassCard(
                             child: Form(
@@ -218,18 +237,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     return Column(
       children: [
         Center(
-          child: AuthLogoIcon(
-            size: isCompact ? 70 : 80,
-            isWhite: theme.brightness == Brightness.dark,
-          ),
+          child: AuthLogoIcon(size: isCompact ? 70 : 80, isWhite: theme.brightness == Brightness.dark),
         ),
         SizedBox(height: isCompact ? 16 : 20),
         Text(
           l10n.authOwnerLogin,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: isCompact ? 22 : 26,
-          ),
+          style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: isCompact ? 22 : 26),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
@@ -292,18 +305,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                   child: Checkbox(
                     value: _rememberMe,
                     onChanged: (value) => setState(() => _rememberMe = value!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                     activeColor: theme.colorScheme.primary,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  l10n.authRememberMe,
-                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
-                ),
+                Text(l10n.authRememberMe, style: theme.textTheme.bodySmall?.copyWith(fontSize: 13)),
               ],
             ),
           ),
@@ -336,10 +344,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             l10n.authOrContinueWith,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 12,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
           ),
         ),
         Expanded(child: Divider(color: theme.colorScheme.outline)),
@@ -375,9 +380,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     return Center(
       child: TextButton(
         onPressed: () => context.go(OwnerRoutes.register),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        ),
+        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
         child: RichText(
           text: TextSpan(
             style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
@@ -385,10 +388,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
               TextSpan(text: '${l10n.authNoAccount} '),
               TextSpan(
                 text: l10n.authCreateAccount,
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
               ),
             ],
           ),

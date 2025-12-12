@@ -61,10 +61,7 @@ class BookingUrlStateService {
       final newUri = uri.replace(queryParameters: cleanParams);
       replaceUrlState(newUri.toString());
 
-      LoggingService.log(
-        '[URL] Cleared booking params, new URL: ${newUri.toString()}',
-        tag: _tag,
-      );
+      LoggingService.log('[URL] Cleared booking params, new URL: ${newUri.toString()}', tag: _tag);
     } catch (e) {
       LoggingService.log('[URL] Failed to clear URL params: $e', tag: _tag);
     }
@@ -75,10 +72,12 @@ class BookingUrlStateService {
   /// This enables the back button to navigate away from confirmation
   /// and forward button to return to it.
   ///
+  /// NOTE: Email is NOT included in URL for security/privacy reasons.
+  /// Email is already verified in the booking form, so no need to include it.
+  ///
   /// No-op on non-web platforms.
   static void addConfirmationParams({
     required String bookingRef,
-    required String email,
     required String bookingId,
     required String paymentMethod,
   }) {
@@ -88,10 +87,9 @@ class BookingUrlStateService {
       final uri = Uri.base;
       final newParams = Map<String, String>.from(uri.queryParameters);
 
-      // Add booking confirmation params
+      // Add booking confirmation params (email NOT included for security/privacy)
       newParams['booking_status'] = 'success';
       newParams['confirmation'] = bookingRef;
-      newParams['email'] = email;
       newParams['bookingId'] = bookingId;
       newParams['payment'] = paymentMethod;
 
@@ -99,10 +97,7 @@ class BookingUrlStateService {
       // Use pushState to add to browser history (back button works)
       pushUrlState(newUri.toString());
 
-      LoggingService.log(
-        '[URL] Added booking params, new URL: ${newUri.toString()}',
-        tag: _tag,
-      );
+      LoggingService.log('[URL] Added booking params, new URL: ${newUri.toString()}', tag: _tag);
     } catch (e) {
       LoggingService.log('[URL] Failed to add URL params: $e', tag: _tag);
     }
@@ -131,10 +126,7 @@ class BookingUrlStateService {
         bookingId: uri.queryParameters['bookingId'],
       );
     } catch (e) {
-      LoggingService.log(
-        '[URL] Failed to parse Stripe return params: $e',
-        tag: _tag,
-      );
+      LoggingService.log('[URL] Failed to parse Stripe return params: $e', tag: _tag);
       return null;
     }
   }
@@ -157,6 +149,8 @@ class BookingUrlStateService {
   ///
   /// Returns [ConfirmationParams] if URL contains valid confirmation,
   /// otherwise returns null.
+  ///
+  /// NOTE: Email is NOT required - booking is fetched by bookingId.
   static ConfirmationParams? parseConfirmationParams() {
     if (!kIsWeb) return null;
 
@@ -167,21 +161,18 @@ class BookingUrlStateService {
       if (bookingStatus != 'success') return null;
 
       final confirmation = uri.queryParameters['confirmation'];
-      final email = uri.queryParameters['email'];
+      final bookingId = uri.queryParameters['bookingId'];
 
-      if (confirmation == null || email == null) return null;
+      // Only bookingRef and bookingId are required (email not needed)
+      if (confirmation == null || bookingId == null) return null;
 
       return ConfirmationParams(
         bookingRef: confirmation,
-        email: email,
-        bookingId: uri.queryParameters['bookingId'],
+        bookingId: bookingId,
         paymentMethod: uri.queryParameters['payment'],
       );
     } catch (e) {
-      LoggingService.log(
-        '[URL] Failed to parse confirmation params: $e',
-        tag: _tag,
-      );
+      LoggingService.log('[URL] Failed to parse confirmation params: $e', tag: _tag);
       return null;
     }
   }
@@ -198,11 +189,7 @@ class StripeReturnParams {
   /// Booking ID if created before redirect
   final String? bookingId;
 
-  const StripeReturnParams({
-    required this.status,
-    this.sessionId,
-    this.bookingId,
-  });
+  const StripeReturnParams({required this.status, this.sessionId, this.bookingId});
 
   /// Whether the payment was successful
   bool get isSuccess => status == 'success';
@@ -216,19 +203,11 @@ class ConfirmationParams {
   /// Booking reference code (e.g., 'ABC123')
   final String bookingRef;
 
-  /// Guest email address
-  final String email;
-
   /// Firestore booking document ID
   final String? bookingId;
 
   /// Payment method used (e.g., 'stripe', 'bank_transfer')
   final String? paymentMethod;
 
-  const ConfirmationParams({
-    required this.bookingRef,
-    required this.email,
-    this.bookingId,
-    this.paymentMethod,
-  });
+  const ConfirmationParams({required this.bookingRef, this.bookingId, this.paymentMethod});
 }

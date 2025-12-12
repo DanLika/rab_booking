@@ -38,6 +38,20 @@ class AppInitState {
   static bool get isAllReady => allReady.isCompleted;
 }
 
+/// Safely convert error to string, handling null and edge cases
+/// Prevents "Null check operator used on a null value" errors
+String _safeErrorToString(dynamic error) {
+  if (error == null) {
+    return 'Unknown error';
+  }
+  try {
+    return error.toString();
+  } catch (e) {
+    // If toString() itself throws, return a safe fallback
+    return 'Error: Unable to display error details';
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -62,6 +76,47 @@ void _runAppWithDeferredInit() {
           FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
         }
         return true;
+      };
+    } else {
+      // Web: Handle errors gracefully, including WebGL/CanvasKit errors
+      FlutterError.onError = (details) {
+        // Log WebGL/CanvasKit errors but don't crash the app
+        final exception = details.exception;
+        final errorString = _safeErrorToString(exception);
+        if (errorString.contains('getParameter') ||
+            errorString.contains('WebGL') ||
+            errorString.contains('CanvasKit')) {
+          LoggingService.log(
+            'WebGL/CanvasKit error (non-fatal): ${_safeErrorToString(exception)}',
+            tag: 'WEBGL_ERROR',
+          );
+          // Don't rethrow - allow app to continue
+          return;
+        }
+        // For other errors, log and continue
+        LoggingService.log(
+          'Flutter error: ${_safeErrorToString(exception)}',
+          tag: 'FLUTTER_ERROR',
+        );
+      };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        // Handle WebGL/CanvasKit errors gracefully
+        final errorString = _safeErrorToString(error);
+        if (errorString.contains('getParameter') ||
+            errorString.contains('WebGL') ||
+            errorString.contains('CanvasKit')) {
+          LoggingService.log(
+            'WebGL/CanvasKit error (non-fatal): $error',
+            tag: 'WEBGL_ERROR',
+          );
+          return true; // Mark as handled, don't crash
+        }
+        // Log other errors
+        LoggingService.log(
+          'Platform error: $error',
+          tag: 'PLATFORM_ERROR',
+        );
+        return true; // Mark as handled
       };
     }
   } else {
@@ -90,9 +145,19 @@ Future<void> _initializeInBackground() async {
 
     // Initialize SharedPreferences
     LoggingService.log('Initializing SharedPreferences...', tag: 'INIT');
-    final prefs = await SharedPreferences.getInstance();
-    AppInitState.prefsReady.complete(prefs);
-    LoggingService.log('SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      AppInitState.prefsReady.complete(prefs);
+      LoggingService.log('SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+    } catch (e, stack) {
+      LoggingService.log('SharedPreferences init failed: $e', tag: 'INIT_ERROR');
+      // Complete with error so app can handle it gracefully
+      if (!AppInitState.prefsReady.isCompleted) {
+        AppInitState.prefsReady.completeError(e, stack);
+      }
+      // Re-throw to be caught by outer catch block
+      rethrow;
+    }
 
     // Initialize Sentry for web (non-blocking)
     if (kReleaseMode && kIsWeb && _sentryDsn.isNotEmpty) {
@@ -153,35 +218,39 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
 
     try {
       // Wait for SharedPreferences (needed for theme/locale)
+      // If SharedPreferences fails to initialize, providers will handle it gracefully
       _prefs = await AppInitState.prefsReady.future;
       LoggingService.log('Prefs ready, updating state...', tag: 'APP');
-
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
-      }
     } catch (e) {
-      LoggingService.log('Init error: $e', tag: 'APP_ERROR');
-      // Still mark as initialized so app can show error state
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
-      }
+      LoggingService.log('SharedPreferences init error: $e - continuing without persistence', tag: 'APP_ERROR');
+      // Continue without SharedPreferences - providers will use fallbacks
+      _prefs = null;
+    }
+
+    // Mark as initialized regardless of SharedPreferences status
+    // Providers will handle missing SharedPreferences gracefully
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     // Phase 1: Before initialization - show Flutter splash (matches HTML splash)
-    if (!_isInitialized || _prefs == null) {
+    if (!_isInitialized) {
       return const _InitializingSplash();
     }
 
     // Phase 2: Initialized - show app with auth-aware splash overlay
+    // Override SharedPreferences provider if available (null is acceptable - providers handle it)
+    final overrides = _prefs != null
+        ? [sharedPreferencesProvider.overrideWithValue(_prefs)]
+        : <Override>[];
+
     return ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(_prefs!)],
+      overrides: overrides,
       child: _InitializedApp(
         showSplash: _showFlutterSplash,
         onSplashComplete: () {

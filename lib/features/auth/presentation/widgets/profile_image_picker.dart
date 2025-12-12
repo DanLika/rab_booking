@@ -123,6 +123,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: Stack(
+          alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
             // Main Image Container with Border
             Container(

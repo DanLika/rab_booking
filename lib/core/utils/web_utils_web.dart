@@ -45,6 +45,294 @@ void navigateToUrl(String url) {
   web.window.location.href = url;
 }
 
+/// Redirect top-level window (breaks out of iframe)
+/// CRITICAL: Use this when in iframe and need to redirect for Stripe Checkout
+/// This is necessary because Stripe Checkout cannot run inside nested iframes
+///
+/// Strategy:
+/// 1. Try to redirect window.top (works if same-origin)
+/// 2. Fallback to window.open with '_top' target (opens in new tab if cross-origin)
+void redirectTopLevelWindow(String url) {
+  try {
+    // Try to redirect parent window (works if same-origin)
+    if (web.window.top != null && web.window.top != web.window.self) {
+      // Cast to Window to access location property
+      final topWindow = web.window.top as web.Window;
+      topWindow.location.href = url; // location.href accepts String directly
+      web.console.log('[REDIRECT] Redirecting top-level window (same-origin)'.toJS);
+      return;
+    }
+  } catch (e) {
+    // Cross-origin iframe - cannot access window.top.location
+    web.console.log('[REDIRECT] Cross-origin iframe detected, using window.open fallback'.toJS);
+  }
+
+  // Fallback: Use window.open with '_top' target
+  // This will open in new tab/window if cross-origin
+  try {
+    final urlJs = url.toJS;
+    final targetJs = '_top'.toJS;
+    final featuresJs = ''.toJS;
+    // window.open with '_top' target will redirect current window if same-origin,
+    // or open in new tab if cross-origin
+    _windowOpen(urlJs, targetJs, featuresJs);
+    web.console.log('[REDIRECT] Opened URL in new tab/window'.toJS);
+  } catch (e) {
+    web.console.log('[REDIRECT] Failed to redirect: $e'.toJS);
+    // Last resort: redirect current window (will fail for Stripe but better than nothing)
+    web.window.location.href = url; // location.href accepts String directly
+  }
+}
+
+/// Open URL in new window (for Stripe Checkout when in iframe)
+/// Returns the window reference for monitoring
+@JS('window.open')
+external web.Window? _windowOpen(JSString url, JSString target, JSString features);
+
+/// Pre-open payment popup with placeholder (CRITICAL: call synchronously on user click)
+/// Returns: 'popup', 'redirect', or 'blocked'
+@JS('PaymentBridge.preOpenPaymentPopup')
+external JSString _paymentBridgePreOpenPopup();
+
+/// Update popup URL after async checkout session creation
+@JS('PaymentBridge.updatePaymentPopupUrl')
+external bool _paymentBridgeUpdatePopupUrl(JSString url);
+
+/// Open Stripe Checkout using PaymentBridge (popup or redirect based on device)
+/// CRITICAL: Must be called synchronously on user click to avoid popup blocking
+/// Returns: 'popup', 'redirect', 'blocked', or 'error'
+@JS('PaymentBridge.openPayment')
+external JSString _paymentBridgeOpenPayment(JSString url);
+
+/// Save booking state before payment redirect/popup
+@JS('PaymentBridge.saveBookingState')
+external void _paymentBridgeSaveBookingState(JSString bookingDataJson);
+
+/// Register callback for payment completion
+@JS('PaymentBridge.onPaymentResult')
+external void _paymentBridgeOnPaymentResult(JSFunction callback);
+
+/// Notify payment completion (called from payment success page)
+@JS('PaymentBridge.notifyComplete')
+external void _paymentBridgeNotifyComplete(JSString sessionId, JSString status);
+
+/// Check if PaymentBridge is available
+@JS('PaymentBridge')
+external JSAny? get _paymentBridge;
+
+/// Pre-open payment popup with placeholder (CRITICAL: call synchronously on user click)
+/// Returns: 'popup', 'redirect', or 'blocked'
+String preOpenPaymentPopup() {
+  try {
+    if (_paymentBridge == null) {
+      web.console.log('[STRIPE] PaymentBridge not available'.toJS);
+      return 'error';
+    }
+
+    final result = _paymentBridgePreOpenPopup();
+    final resultStr = result.toDart;
+    web.console.log('[STRIPE] PaymentBridge.preOpenPaymentPopup result: $resultStr'.toJS);
+    return resultStr;
+  } catch (e) {
+    web.console.log('[STRIPE] Error pre-opening popup: $e'.toJS);
+    return 'error';
+  }
+}
+
+/// Update popup URL after async checkout session creation
+bool updatePaymentPopupUrl(String checkoutUrl) {
+  try {
+    if (_paymentBridge == null) {
+      web.console.log('[STRIPE] PaymentBridge not available'.toJS);
+      return false;
+    }
+
+    final success = _paymentBridgeUpdatePopupUrl(checkoutUrl.toJS);
+    web.console.log('[STRIPE] PaymentBridge.updatePaymentPopupUrl result: $success'.toJS);
+    return success;
+  } catch (e) {
+    web.console.log('[STRIPE] Error updating popup URL: $e'.toJS);
+    return false;
+  }
+}
+
+/// Open Stripe Checkout using PaymentBridge
+/// Returns: 'popup', 'redirect', 'blocked', or 'error'
+String openStripeCheckoutWithBridge(String checkoutUrl) {
+  try {
+    // Check if PaymentBridge is available
+    if (_paymentBridge == null) {
+      web.console.log('[STRIPE] PaymentBridge not available, falling back to direct redirect'.toJS);
+      return 'error';
+    }
+
+    final result = _paymentBridgeOpenPayment(checkoutUrl.toJS);
+    final resultStr = result.toDart;
+    web.console.log('[STRIPE] PaymentBridge.openPayment result: $resultStr'.toJS);
+    return resultStr;
+  } catch (e) {
+    web.console.log('[STRIPE] Error using PaymentBridge: $e'.toJS);
+    return 'error';
+  }
+}
+
+/// Save booking state before payment
+void saveBookingStateForPayment(String bookingDataJson) {
+  try {
+    if (_paymentBridge != null) {
+      _paymentBridgeSaveBookingState(bookingDataJson.toJS);
+      web.console.log('[STRIPE] Booking state saved'.toJS);
+    }
+  } catch (e) {
+    web.console.log('[STRIPE] Error saving booking state: $e'.toJS);
+  }
+}
+
+/// Setup payment result listener
+/// Callback receives JSON string with payment result
+void setupPaymentResultListener(JSFunction callback) {
+  try {
+    if (_paymentBridge != null) {
+      _paymentBridgeOnPaymentResult(callback);
+      web.console.log('[STRIPE] Payment result listener registered'.toJS);
+    }
+  } catch (e) {
+    web.console.log('[STRIPE] Error setting up payment listener: $e'.toJS);
+  }
+}
+
+/// Notify payment completion via PaymentBridge
+/// Called from payment success page to notify original tab/iframe
+void notifyPaymentComplete(String sessionId, String status) {
+  try {
+    if (_paymentBridge != null) {
+      _paymentBridgeNotifyComplete(sessionId.toJS, status.toJS);
+      web.console.log('[STRIPE] Payment completion notified via PaymentBridge'.toJS);
+    }
+  } catch (e) {
+    web.console.log('[STRIPE] Error notifying payment completion: $e'.toJS);
+  }
+}
+
+/// Open Stripe Checkout in new window when in iframe (legacy method - kept for compatibility)
+/// Returns window reference or null if failed
+web.Window? openStripeCheckoutInNewWindow(String checkoutUrl) {
+  try {
+    // Try PaymentBridge first
+    final bridgeResult = openStripeCheckoutWithBridge(checkoutUrl);
+    if (bridgeResult == 'popup') {
+      // Bridge handled it - return a dummy window reference
+      // The bridge manages the popup internally
+      return web.window; // Dummy return
+    } else if (bridgeResult == 'redirect') {
+      // Bridge handled redirect - return null
+      return null;
+    }
+
+    // Fallback to direct window.open
+    final width = 600;
+    final height = 700;
+    final left = (web.window.screen.width.toDouble() / 2 - width / 2).round();
+    final top = (web.window.screen.height.toDouble() / 2 - height / 2).round();
+
+    final features =
+        'width=$width,height=$height,left=$left,top=$top,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes';
+
+    final window = _windowOpen(checkoutUrl.toJS, '_blank'.toJS, features.toJS);
+
+    if (window != null) {
+      web.console.log('[STRIPE] Opened checkout in new window'.toJS);
+      return window;
+    } else {
+      web.console.log('[STRIPE] Failed to open new window (popup blocked?)'.toJS);
+      return null;
+    }
+  } catch (e) {
+    web.console.log('[STRIPE] Error opening new window: $e'.toJS);
+    return null;
+  }
+}
+
+/// Check if current window is a popup (opened via window.open)
+bool get isPopupWindow {
+  try {
+    // If window.opener exists, we're in a popup
+    return web.window.opener != null;
+  } catch (e) {
+    return false;
+  }
+}
+
+/// Close current window (only works if opened by same script)
+/// Returns true if close was attempted, false if not in popup
+bool closePopupWindow() {
+  try {
+    if (isPopupWindow) {
+      web.window.close();
+      return true;
+    }
+    return false;
+  } catch (e) {
+    web.console.log('[CLOSE_POPUP] Error closing window: $e'.toJS);
+    return false;
+  }
+}
+
+/// Send postMessage to parent window (for iframe or popup communication)
+void sendMessageToParent(Map<String, dynamic> message) {
+  try {
+    if (isInIframe) {
+      // Send to iframe parent
+      web.window.parent?.postMessage(_dartMapToJs(message), '*'.toJS);
+      web.console.log('[POSTMESSAGE] Sent to iframe parent: ${message['type']}'.toJS);
+    } else if (isPopupWindow && web.window.opener != null) {
+      // Send to popup opener (cast to Window for postMessage)
+      final opener = web.window.opener as web.Window?;
+      opener?.postMessage(_dartMapToJs(message), '*'.toJS);
+      web.console.log('[POSTMESSAGE] Sent to popup opener: ${message['type']}'.toJS);
+    }
+  } catch (e) {
+    web.console.log('[POSTMESSAGE] Error sending message: $e'.toJS);
+  }
+}
+
+/// JS interop for JSON.stringify
+@JS('JSON.stringify')
+external JSString _jsonStringify(JSAny value);
+
+/// Listen for postMessage from parent/opener window
+/// Returns cleanup function
+void Function() listenToParentMessages(void Function(Map<String, dynamic>) onMessage) {
+  void handler(web.MessageEvent event) {
+    try {
+      // Verify origin (allow all for iframe embedding flexibility)
+      // In production, you might want to restrict this
+
+      final data = event.data;
+      if (data == null) return;
+
+      // Convert JS object to Dart Map
+      // event.data is JSAny, so we can stringify it directly
+      final jsonString = _jsonStringify(data).toDart;
+      final map = jsonDecode(jsonString) as Map<String, dynamic>;
+
+      onMessage(map);
+    } catch (e) {
+      web.console.log('[POSTMESSAGE] Error handling message: $e'.toJS);
+    }
+  }
+
+  final jsHandler = handler.toJS;
+  web.window.addEventListener('message', jsHandler);
+
+  web.console.log('[POSTMESSAGE] Listening for parent messages'.toJS);
+
+  return () {
+    web.window.removeEventListener('message', jsHandler);
+    web.console.log('[POSTMESSAGE] Stopped listening for parent messages'.toJS);
+  };
+}
+
 /// Check if running on web platform
 bool get isWebPlatform => true;
 

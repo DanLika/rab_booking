@@ -101,20 +101,38 @@ class _LogoPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Defensive check: ensure size is valid before painting
+    if (!size.width.isFinite || !size.height.isFinite || 
+        size.width <= 0 || size.height <= 0) {
+      return; // Skip painting if size is invalid
+    }
+
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width * 0.4;
 
     // Gradient or white shader (theme-aware purple-fade)
-    final shader = isWhite
-        ? null
-        : LinearGradient(
+    // Defensive check: ensure size is valid before creating shader
+    Shader? shader;
+    if (!isWhite) {
+      try {
+        final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+        // Ensure rect is valid (width and height are positive and finite)
+        if (rect.width > 0 && rect.height > 0 && 
+            rect.width.isFinite && rect.height.isFinite) {
+          shader = LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
               primaryColor,
               primaryColor.withValues(alpha: 0.7),
             ],
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+          ).createShader(rect);
+        }
+      } catch (e) {
+        // If shader creation fails, continue without shader
+        shader = null;
+      }
+    }
 
     // Outer circle badge
     final circlePaint = Paint()

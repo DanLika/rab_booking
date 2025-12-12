@@ -215,35 +215,43 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       // Explicitly load user profile immediately
       // (Don't rely solely on auth state listener which may not trigger)
+      // _loadUserProfile will set isLoading=false when profile is loaded
       LoggingService.log('Explicitly loading user profile...', tag: 'ENHANCED_AUTH');
       await _loadUserProfile(credential.user!);
+      LoggingService.log('User profile loaded, isLoading should be false now', tag: 'ENHANCED_AUTH');
 
-      // Reset rate limit on success
-      await _rateLimit.resetAttempts(email);
+      // Reset rate limit on success (non-blocking)
+      unawaited(
+        _rateLimit.resetAttempts(email).catchError((e) {
+          LoggingService.log('Rate limit reset failed: $e', tag: 'AUTH_WARNING');
+        }),
+      );
 
-      // Get geolocation (with timeout to avoid blocking login)
-      String? location;
-      try {
-        final geoResult = await _geolocation.getCurrentLocation().timeout(
-          const Duration(seconds: 3),
-          onTimeout: () => null,
-        );
-        location = geoResult?.locationString;
-      } catch (e) {
-        // Ignore geolocation errors, don't block login
-        location = null;
-      }
+      // Get geolocation and log security event (completely non-blocking)
+      unawaited(() async {
+        String? location;
+        try {
+          final geoResult = await _geolocation.getCurrentLocation().timeout(
+            const Duration(seconds: 3),
+            onTimeout: () => null,
+          );
+          location = geoResult?.locationString;
+        } catch (e) {
+          // Ignore geolocation errors
+          location = null;
+        }
 
-      // Log security event with location (non-blocking)
-      try {
-        await _security.logLogin(credential.user!, location: location);
-      } catch (e) {
-        // Don't block login if security logging fails
-        LoggingService.log('Security event logging failed: $e', tag: 'AUTH_WARNING');
-      }
+        // Log security event with location (non-blocking)
+        try {
+          await _security.logLogin(credential.user!, location: location);
+        } catch (e) {
+          // Don't block login if security logging fails
+          LoggingService.log('Security event logging failed: $e', tag: 'AUTH_WARNING');
+        }
+      }());
 
       // Auth state listener will handle the rest
-      LoggingService.log('Sign in completed, auth state listener will load profile', tag: 'ENHANCED_AUTH');
+      LoggingService.log('Sign in completed, redirecting to dashboard...', tag: 'ENHANCED_AUTH');
     } on FirebaseAuthException catch (e) {
       unawaited(LoggingService.logError('Firebase sign in FAILED: ${e.code} - ${e.message}', e));
 
@@ -317,13 +325,19 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       final credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
 
+      // credential.user is guaranteed non-null after successful registration
+      final user = credential.user;
+      if (user == null) {
+        throw Exception('User creation succeeded but user is null');
+      }
+
       // Upload profile image if provided
       String? finalAvatarUrl = avatarUrl;
       if (profileImageBytes != null && profileImageName != null) {
         try {
           final storageService = StorageService();
           finalAvatarUrl = await storageService.uploadProfileImage(
-            userId: credential.user!.uid,
+            userId: user.uid,
             imageBytes: profileImageBytes,
             fileName: profileImageName,
           );
@@ -335,7 +349,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       // Create user profile
       final userModel = UserModel(
-        id: credential.user!.uid,
+        id: user.uid,
         email: email,
         firstName: firstName,
         lastName: lastName,
@@ -347,20 +361,20 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         createdAt: DateTime.now(),
       );
 
-      await _firestore.collection('users').doc(credential.user!.uid).set({
+      await _firestore.collection('users').doc(user.uid).set({
         ...userModel.toJson(),
         'newsletterOptIn': newsletterOptIn,
       });
 
       // Update display name in Firebase Auth
-      await credential.user!.updateDisplayName('$firstName $lastName');
+      await user.updateDisplayName('$firstName $lastName');
 
       // Reset rate limit on success
       await _rateLimit.resetAttempts(email);
 
       // Send email verification (non-blocking - user can resend from verification screen)
       try {
-        await credential.user!.sendEmailVerification();
+        await user.sendEmailVerification();
       } catch (e) {
         // Don't block registration if email verification fails
         LoggingService.log('Failed to send verification email: $e', tag: 'AUTH_WARNING');
@@ -382,7 +396,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // Log registration with location (non-blocking)
       try {
         await _security.logEvent(
-          userId: credential.user!.uid,
+          userId: user.uid,
           type: SecurityEventType.registration,
           location: location,
           metadata: {'email': email, 'accountType': AccountType.trial.name},
@@ -390,7 +404,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
         // Log email verification sent
         await _security.logEvent(
-          userId: credential.user!.uid,
+          userId: user.uid,
           type: SecurityEventType.emailVerification,
           location: location,
           metadata: {'action': 'sent'},
@@ -480,7 +494,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       final UserCredential userCredential = await _auth.signInAnonymously();
 
-      if (userCredential.user == null) {
+      final user = userCredential.user;
+      if (user == null) {
         throw AuthException.noUserReturned('Anonymous');
       }
 
@@ -490,7 +505,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       if (isNewUser) {
         // Create anonymous user profile
         final userModel = UserModel(
-          id: userCredential.user!.uid,
+          id: user.uid,
           email: 'anonymous@demo.com',
           firstName: 'Demo',
           lastName: 'User',
@@ -499,10 +514,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           createdAt: DateTime.now(),
         );
 
-        await _firestore.collection('users').doc(userCredential.user!.uid).set(userModel.toJson());
+        await _firestore.collection('users').doc(user.uid).set(userModel.toJson());
       } else {
         // Update last login for existing users
-        await _updateLastLogin(userCredential.user!.uid);
+        await _updateLastLogin(user.uid);
       }
 
       // Log security event (non-blocking)

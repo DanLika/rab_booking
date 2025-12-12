@@ -34,11 +34,7 @@ class LoggingService {
   }
 
   /// Log an error message with optional error object and stack trace
-  static Future<void> logError(
-    String message, [
-    dynamic error,
-    StackTrace? stackTrace,
-  ]) async {
+  static Future<void> logError(String message, [dynamic error, StackTrace? stackTrace]) async {
     log(message, tag: 'ERROR');
     if (error != null) {
       debugPrint('Error details: $error');
@@ -68,23 +64,14 @@ class LoggingService {
   }
 
   /// Log a network request
-  static void logNetworkRequest(
-    String method,
-    String url, {
-    Map<String, dynamic>? params,
-  }) {
+  static void logNetworkRequest(String method, String url, {Map<String, dynamic>? params}) {
     if (kDebugMode) {
-      log('$method $url${params != null ? ' - Params: $params' : ''}',
-          tag: 'NETWORK');
+      log('$method $url${params != null ? ' - Params: $params' : ''}', tag: 'NETWORK');
     }
   }
 
   /// Log a network response
-  static void logNetworkResponse(
-    String url,
-    int statusCode, {
-    dynamic response,
-  }) {
+  static void logNetworkResponse(String url, int statusCode, {dynamic response}) {
     if (kDebugMode) {
       log('Response from $url - Status: $statusCode', tag: 'NETWORK');
       if (response != null) {
@@ -95,8 +82,7 @@ class LoggingService {
 
   /// Log user action/event
   static void logUserAction(String action, {Map<String, dynamic>? data}) {
-    log('User action: $action${data != null ? ' - Data: $data' : ''}',
-        tag: 'USER_ACTION');
+    log('User action: $action${data != null ? ' - Data: $data' : ''}', tag: 'USER_ACTION');
   }
 
   /// Log navigation event
@@ -132,6 +118,20 @@ class LoggingService {
   static void logSEO(String message) {
     if (kDebugMode) {
       log(message, tag: 'SEO');
+    }
+  }
+
+  /// Safely convert an error object to string, handling null and edge cases
+  /// Prevents "Null check operator used on a null value" errors
+  static String safeErrorToString(dynamic error) {
+    if (error == null) {
+      return 'Unknown error';
+    }
+    try {
+      return error.toString();
+    } catch (e) {
+      // If toString() itself throws, return a safe fallback
+      return 'Error occurred (unable to convert to string)';
     }
   }
 }

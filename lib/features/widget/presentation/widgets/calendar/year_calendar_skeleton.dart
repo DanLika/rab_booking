@@ -58,8 +58,12 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
           opacity: _animation.value,
           child: LayoutBuilder(
             builder: (context, constraints) {
+              // Defensive check: ensure constraints are bounded and finite
+              final maxWidth = constraints.maxWidth.isFinite && constraints.maxWidth != double.infinity
+                  ? constraints.maxWidth
+                  : 1200.0; // Fallback to reasonable default
               // Calculate cell size same as real calendar
-              final availableWidth = constraints.maxWidth - (padding * 2);
+              final availableWidth = (maxWidth - (padding * 2)).clamp(300.0, maxWidth);
               final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
                 availableWidth,
               );
@@ -116,9 +120,7 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
                   : SkeletonColors.lightBorder,
               width: 0.5,
             ),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(BorderTokens.radiusSubtle),
-            ),
+            borderRadius: BorderTokens.onlyTopLeft(BorderTokens.radiusSubtle),
           ),
           child: Center(
             child: Container(
@@ -149,9 +151,7 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
                 width: 0.5,
               ),
               borderRadius: dayIndex == 30
-                  ? const BorderRadius.only(
-                      topRight: Radius.circular(BorderTokens.radiusSubtle),
-                    )
+                  ? BorderTokens.onlyTopRight(BorderTokens.radiusSubtle)
                   : BorderRadius.zero,
             ),
             child: Center(
@@ -190,9 +190,7 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
               width: 0.5,
             ),
             borderRadius: monthIndex == 11
-                ? const BorderRadius.only(
-                    bottomLeft: Radius.circular(BorderTokens.radiusSubtle),
-                  )
+                ? BorderTokens.onlyBottomLeft(BorderTokens.radiusSubtle)
                 : BorderRadius.zero,
           ),
           child: Center(
@@ -231,9 +229,7 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
                 width: 0.5,
               ),
               borderRadius: (monthIndex == 11 && dayIndex == 30)
-                  ? const BorderRadius.only(
-                      bottomRight: Radius.circular(BorderTokens.radiusSubtle),
-                    )
+                  ? BorderTokens.onlyBottomRight(BorderTokens.radiusSubtle)
                   : BorderRadius.zero,
             ),
           );

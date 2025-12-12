@@ -149,6 +149,7 @@ class FormPersistenceService {
       );
     } catch (e) {
       // Silent fail - persistence is not critical
+      // This can happen if SharedPreferences is not initialized (e.g., on web)
       LoggingService.log(
         'Failed to save form data: $e',
         tag: 'FORM_PERSISTENCE',
@@ -203,6 +204,7 @@ class FormPersistenceService {
       return formData;
     } catch (e) {
       // Silent fail - just log
+      // This can happen if SharedPreferences is not initialized (e.g., on web)
       LoggingService.log(
         'Failed to load form data: $e',
         tag: 'FORM_PERSISTENCE',
@@ -222,7 +224,7 @@ class FormPersistenceService {
       await prefs.remove('${_formDataKey}_$unitId');
       LoggingService.log('🗑️ Form data cleared', tag: 'FORM_PERSISTENCE');
     } catch (e) {
-      // Silent fail
+      // Silent fail - this can happen if SharedPreferences is not initialized
       LoggingService.log(
         'Failed to clear form data: $e',
         tag: 'FORM_PERSISTENCE',

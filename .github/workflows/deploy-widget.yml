@@ -29,13 +29,18 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build Flutter web
+      - name: Build Flutter web (with source maps for Sentry)
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           flutter build web \
             --release \
             --web-renderer html \
-            --no-source-maps \
+            --source-maps \
             --base-href /
+          
+          # Source maps are automatically uploaded by sentry_dart_plugin during build
+          # If upload fails, build continues (non-blocking)
 
       - name: Copy embed.js to build
         run: |

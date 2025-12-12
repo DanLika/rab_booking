@@ -5,6 +5,7 @@ import '../../../../../core/constants/enums.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/utils/platform_utils.dart';
+import '../../../../../core/design_tokens/border_tokens.dart';
 import 'enhanced_booking_drag_feedback.dart';
 import 'skewed_booking_painter.dart';
 import 'smart_booking_tooltip.dart';
@@ -123,6 +124,7 @@ class BookingBlockWidget extends StatelessWidget {
             width: width,
             height: height,
             child: Stack(
+              alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
               children: [
                 // Background layer with skewed parallelogram shape
                 // Calculate dayWidth for turnover day alignment
@@ -145,6 +147,7 @@ class BookingBlockWidget extends StatelessWidget {
                         dayWidth ?? (width / (booking.numberOfNights + 1)),
                   ),
                   child: Stack(
+                    alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
                     children: [
                       // Check-in diagonal indicator (left edge)
                       Positioned(
@@ -209,7 +212,7 @@ class BookingBlockWidget extends StatelessWidget {
                             width: 4,
                             decoration: BoxDecoration(
                               color: sourceBorderColor,
-                              borderRadius: const BorderRadius.only(
+                              borderRadius: BorderTokens.only(
                                 topLeft: Radius.circular(4),
                                 bottomLeft: Radius.circular(4),
                               ),

@@ -86,6 +86,7 @@ class _GradientAuthButtonState extends State<GradientAuthButton> with SingleTick
               onTap: widget.isLoading ? null : widget.onPressed,
               borderRadius: BorderRadius.circular(12),
               child: Stack(
+                alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
                 children: [
                   // Shimmer effect when loading
                   if (widget.isLoading)

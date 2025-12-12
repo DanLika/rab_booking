@@ -1,9 +1,5 @@
 /// Password strength levels
-enum PasswordStrength {
-  weak,
-  medium,
-  strong,
-}
+enum PasswordStrength { weak, medium, strong }
 
 /// Password validation result
 class PasswordValidationResult {
@@ -20,16 +16,10 @@ class PasswordValidationResult {
   });
 
   factory PasswordValidationResult.valid(PasswordStrength strength) {
-    return PasswordValidationResult(
-      isValid: true,
-      strength: strength,
-    );
+    return PasswordValidationResult(isValid: true, strength: strength);
   }
 
-  factory PasswordValidationResult.invalid(
-    String message, {
-    List<String> missing = const [],
-  }) {
+  factory PasswordValidationResult.invalid(String message, {List<String> missing = const []}) {
     return PasswordValidationResult(
       isValid: false,
       errorMessage: message,
@@ -58,10 +48,7 @@ class PasswordValidator {
   /// Validate password and return detailed result
   static PasswordValidationResult validate(String? password) {
     if (password == null || password.isEmpty) {
-      return PasswordValidationResult.invalid(
-        'Password is required',
-        missing: ['Enter a password'],
-      );
+      return PasswordValidationResult.invalid('Password is required', missing: ['Enter a password']);
     }
 
     final missing = <String>[];
@@ -72,9 +59,7 @@ class PasswordValidator {
     }
 
     if (password.length > maxLength) {
-      return PasswordValidationResult.invalid(
-        'Password must be less than $maxLength characters',
-      );
+      return PasswordValidationResult.invalid('Password must be less than $maxLength characters');
     }
 
     // Check for uppercase letter
@@ -99,10 +84,7 @@ class PasswordValidator {
 
     // If any requirements are missing, return invalid
     if (missing.isNotEmpty) {
-      return PasswordValidationResult.invalid(
-        'Password must contain: ${missing.join(', ')}',
-        missing: missing,
-      );
+      return PasswordValidationResult.invalid('Password must contain: ${missing.join(', ')}', missing: missing);
     }
 
     // Calculate strength
@@ -147,7 +129,7 @@ class PasswordValidator {
   }
 
   /// Minimum length validation (8+ characters only) - for login and register
-  /// No complexity requirements - user can enter any password they want
+  /// Includes minimal validation to prevent weak passwords like "12345678" or "11111111"
   static String? validateMinimumLength(String? password) {
     if (password == null || password.isEmpty) {
       return 'Please enter your password';
@@ -161,7 +143,62 @@ class PasswordValidator {
       return 'Password must be less than $maxLength characters';
     }
 
+    // Minimal validation: Prevent obvious weak passwords
+    // Check for sequential numbers (12345678, 87654321)
+    if (_isSequentialNumbers(password)) {
+      return 'Password cannot be sequential numbers (e.g., 12345678)';
+    }
+
+    // Check for repeating characters (11111111, aaaaaaaa)
+    if (_isRepeatingCharacters(password)) {
+      return 'Password cannot be repeating characters (e.g., 11111111)';
+    }
+
     return null;
+  }
+
+  /// Check if password is sequential numbers (12345678, 87654321, etc.)
+  static bool _isSequentialNumbers(String password) {
+    if (password.length < 3) return false;
+
+    // Check if all characters are digits
+    if (!_digitRegex.hasMatch(password) ||
+        password.length != password.split('').where(_digitRegex.hasMatch).length) {
+      return false;
+    }
+
+    // Check ascending sequence (12345678)
+    bool isAscending = true;
+    for (int i = 1; i < password.length; i++) {
+      final prev = int.tryParse(password[i - 1]);
+      final curr = int.tryParse(password[i]);
+      if (prev == null || curr == null || curr != prev + 1) {
+        isAscending = false;
+        break;
+      }
+    }
+
+    // Check descending sequence (87654321)
+    bool isDescending = true;
+    for (int i = 1; i < password.length; i++) {
+      final prev = int.tryParse(password[i - 1]);
+      final curr = int.tryParse(password[i]);
+      if (prev == null || curr == null || curr != prev - 1) {
+        isDescending = false;
+        break;
+      }
+    }
+
+    return isAscending || isDescending;
+  }
+
+  /// Check if password is repeating characters (11111111, aaaaaaaa, etc.)
+  static bool _isRepeatingCharacters(String password) {
+    if (password.length < 3) return false;
+
+    final firstChar = password[0];
+    // Check if all characters are the same
+    return password.split('').every((char) => char == firstChar);
   }
 
   /// Check if two passwords match

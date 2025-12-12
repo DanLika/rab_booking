@@ -24,20 +24,27 @@ class DailyStats {
     int checkIns = 0;
     int checkOuts = 0;
 
+    // Normalize date to midnight for accurate comparison
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+
     for (final bookings in bookingsByUnit.values) {
       for (final booking in bookings) {
+        // Normalize booking dates to midnight for accurate comparison
+        final normalizedCheckIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
+        final normalizedCheckOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
+
         // Count guests currently in property (checkIn <= date < checkOut)
-        if (!booking.checkIn.isAfter(date) && booking.checkOut.isAfter(date)) {
+        if (!normalizedCheckIn.isAfter(normalizedDate) && normalizedCheckOut.isAfter(normalizedDate)) {
           totalGuests += booking.guestCount;
         }
 
         // Count check-ins (checkIn == date)
-        if (DateUtils.isSameDay(booking.checkIn, date)) {
+        if (normalizedCheckIn.isAtSameMomentAs(normalizedDate)) {
           checkIns++;
         }
 
         // Count check-outs (checkOut == date)
-        if (DateUtils.isSameDay(booking.checkOut, date)) {
+        if (normalizedCheckOut.isAtSameMomentAs(normalizedDate)) {
           checkOuts++;
         }
       }

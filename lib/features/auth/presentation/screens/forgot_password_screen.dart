@@ -73,16 +73,38 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: Stack(
+          alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
             AuthBackground(
               child: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    // Get keyboard height to adjust padding dynamically (with null safety)
+                    final mediaQuery = MediaQuery.maybeOf(context);
+                    final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
+                    final isKeyboardOpen = keyboardHeight > 0;
+
+                    // Calculate minHeight safely - ensure it's always finite and valid
+                    double minHeight;
+                    if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
+                      final calculated = constraints.maxHeight - keyboardHeight;
+                      minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                    } else {
+                      minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
+                    }
+                    // Ensure minHeight is always finite (never infinity)
+                    minHeight = minHeight.isFinite ? minHeight : 0.0;
+
                     return SingleChildScrollView(
                       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.symmetric(horizontal: isCompact ? 16 : 24, vertical: 24),
+                      padding: EdgeInsets.only(
+                        left: isCompact ? 16 : 24,
+                        right: isCompact ? 16 : 24,
+                        top: 24,
+                        bottom: 24,
+                      ),
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(child: GlassCard(child: _emailSent ? _buildSuccessView() : _buildFormView())),
                       ),
                     );

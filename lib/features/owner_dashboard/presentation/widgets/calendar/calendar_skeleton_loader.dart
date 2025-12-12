@@ -33,14 +33,19 @@ class CalendarSkeletonLoader extends StatelessWidget {
 
   Widget _buildHeaderSkeleton(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+
+    // Use consistent skeleton colors for light and dark themes
+    final cardBackground = isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground;
+    final borderColor = isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder;
 
     return Container(
       padding: EdgeInsets.all(isMobile ? 8 : 16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        border: Border(bottom: BorderSide(color: theme.dividerColor)),
+        color: cardBackground,
+        border: Border(bottom: BorderSide(color: borderColor.withAlpha((0.5 * 255).toInt()))),
       ),
       child: Row(
         children: [
@@ -74,16 +79,21 @@ class CalendarSkeletonLoader extends StatelessWidget {
 
   Widget _buildUnitRowSkeleton(BuildContext context, int unitIndex) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final unitColumnWidth = isMobile ? 100.0 : 120.0;
+
+    // Use consistent skeleton colors for light and dark themes
+    final cardBackground = isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground;
+    final borderColor = isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder;
 
     return Container(
       height: isMobile ? 60 : 80,
       margin: const EdgeInsets.only(bottom: 1),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.3 * 255).toInt()))),
+        color: cardBackground,
+        border: Border(bottom: BorderSide(color: borderColor.withAlpha((0.3 * 255).toInt()))),
       ),
       child: Row(
         children: [
@@ -172,6 +182,9 @@ class CalendarSkeletonCompact extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
+    // Use consistent skeleton colors for loading indicator
+    final primaryColor = isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -179,12 +192,7 @@ class CalendarSkeletonCompact extends StatelessWidget {
           SizedBox(
             width: 40,
             height: 40,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation(
-                isDark ? Colors.white.withAlpha((0.5 * 255).toInt()) : Colors.grey.shade400,
-              ),
-            ),
+            child: CircularProgressIndicator(strokeWidth: 3, valueColor: AlwaysStoppedAnimation(primaryColor)),
           ),
           const SizedBox(height: 16),
           Text(

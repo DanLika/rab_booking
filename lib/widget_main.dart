@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_widget.dart';
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
@@ -40,11 +41,30 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Initialize SharedPreferences for widget entry point
+  // This is needed for providers that use SharedPreferences (e.g., form persistence)
+  SharedPreferences? prefs;
+  try {
+    prefs = await SharedPreferences.getInstance();
+  } catch (e) {
+    // If SharedPreferences fails to initialize, continue without it
+    // Providers will handle missing SharedPreferences gracefully
+    prefs = null;
+  }
+
   // Initialize date formatting for all locales (required by intl package)
   // Supports: hr, en, de, it based on URL ?language= parameter
   await initializeDateFormatting();
 
-  runApp(const ProviderScope(child: BookingWidgetApp()));
+  // Override SharedPreferences provider if initialization succeeded
+  final overrides = prefs != null
+      ? [sharedPreferencesProvider.overrideWithValue(prefs)]
+      : <Override>[];
+
+  runApp(ProviderScope(
+    overrides: overrides,
+    child: const BookingWidgetApp(),
+  ));
 }
 
 /// Booking Widget App - Minimalna aplikacija samo za widget

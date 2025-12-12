@@ -154,6 +154,9 @@
   <!-- Custom Styles -->
   <link rel="stylesheet" href="style.css">
 
+  <!-- Payment Bridge for Stripe Checkout in iframes -->
+  <script src="payment_bridge.js"></script>
+
   <title>RAB Booking - Luxury Vacation Rentals on Island Rab, Croatia</title>
   <link rel="manifest" href="manifest.json">
 </head>
@@ -229,26 +232,55 @@
       window.hideNativeSplash = function(callback) {
         clearInterval(window._nativeSplashInterval);
         
-        // Complete to 100%
-        if (progressBar) progressBar.style.width = '100%';
-        if (percentageText) percentageText.textContent = '100%';
+        // Animate progress from current value (85-95%) to 100%
+        var currentProgress = progress;
+        var targetProgress = 100;
+        var startTime = Date.now();
+        var animationDuration = 300; // 300ms smooth animation
         
-        // Fade out after showing 100%
-        setTimeout(function() {
-          var splash = document.getElementById('native-splash');
-          if (splash) {
-            splash.classList.add('hidden');
-            // Remove from DOM after transition
-            setTimeout(function() {
-              if (splash.parentNode) {
-                splash.parentNode.removeChild(splash);
-              }
-              if (callback) callback();
-            }, 300);
-          } else if (callback) {
-            callback();
+        function animateTo100() {
+          var elapsed = Date.now() - startTime;
+          var t = Math.min(elapsed / animationDuration, 1);
+          
+          // Ease-out animation
+          var eased = 1 - Math.pow(1 - t, 3);
+          var newProgress = currentProgress + (targetProgress - currentProgress) * eased;
+          
+          if (progressBar) {
+            progressBar.style.width = newProgress + '%';
           }
-        }, 200);
+          if (percentageText) {
+            percentageText.textContent = Math.round(newProgress) + '%';
+          }
+          
+          if (t < 1) {
+            requestAnimationFrame(animateTo100);
+          } else {
+            // Ensure we're exactly at 100%
+            if (progressBar) progressBar.style.width = '100%';
+            if (percentageText) percentageText.textContent = '100%';
+            
+            // Small delay to show 100% before fade-out
+            setTimeout(function() {
+              var splash = document.getElementById('native-splash');
+              if (splash) {
+                splash.classList.add('hidden');
+                // Remove from DOM after transition
+                setTimeout(function() {
+                  if (splash.parentNode) {
+                    splash.parentNode.removeChild(splash);
+                  }
+                  if (callback) callback();
+                }, 300);
+              } else if (callback) {
+                callback();
+              }
+            }, 150);
+          }
+        }
+        
+        // Start animation
+        animateTo100();
       };
       
       // Safety: auto-hide after 15 seconds if Flutter fails to load
@@ -288,9 +320,19 @@
   </script>
 
   <!-- AGGRESSIVE FIX for Flutter Issue #175074 - Android Chrome keyboard dismiss bug -->
-  <!-- This workaround forces Flutter to recalculate physicalSize when keyboard closes -->
+  <!-- Landscape-aware implementation with adaptive thresholds -->
   <script>
     (function() {
+      // Configuration
+      var CONFIG = {
+        portraitMinThreshold: 100,
+        landscapeMinThreshold: 50,   // Lower for landscape (50-80px typical change)
+        percentageThreshold: 0.12,    // 12% of viewport height
+        debounceMs: 100,
+        jiggleDelayLandscape: 100,
+        jiggleDelayPortrait: 50
+      };
+
       // Only run on Android
       var isAndroid = /Android/i.test(navigator.userAgent);
       if (!isAndroid) return;
@@ -298,113 +340,202 @@
       var viewport = window.visualViewport;
       if (!viewport) return;
 
+      // State tracking
+      var lastVisualHeight = 0;
+      var lastWidth = 0;
+      var debounceTimer = null;
       var fullHeight = viewport.height;
-      var lastHeight = viewport.height;
-      var wasKeyboardOpen = false;
 
-      // Track the full screen height (when keyboard is closed)
-      function updateFullHeight() {
-        if (viewport.height > fullHeight) {
-          fullHeight = viewport.height;
-        }
+      function isLandscape() {
+        return window.innerWidth > window.innerHeight;
       }
 
-      // Force Flutter to recalculate by "jiggling" the container
-      function forceFlutterRecalc() {
+      function getThreshold() {
+        var landscape = isLandscape();
+        var viewportHeight = viewport.height || window.innerHeight;
+        var percentageThreshold = viewportHeight * CONFIG.percentageThreshold;
+        var minThreshold = landscape ? CONFIG.landscapeMinThreshold : CONFIG.portraitMinThreshold;
+        return Math.max(percentageThreshold, minThreshold);
+      }
+
+      // Improved jiggle using transform (no visual flicker)
+      function jiggleFlutterView() {
         var glassPane = document.querySelector('flt-glass-pane');
         if (!glassPane) return;
 
-        // Get the shadow root where Flutter's canvas lives
-        var shadowRoot = glassPane.shadowRoot;
-        if (!shadowRoot) return;
+        var delay = isLandscape() ? CONFIG.jiggleDelayLandscape : CONFIG.jiggleDelayPortrait;
 
-        // Method 1: Temporarily change glass-pane dimensions
-        var originalWidth = glassPane.style.width;
-        var originalHeight = glassPane.style.height;
+        // Apply transform jiggle (most reliable, no flicker)
+        glassPane.style.transform = 'translateX(1px)';
 
-        // Jiggle: change size slightly, then restore
-        glassPane.style.width = 'calc(100% - 1px)';
-        glassPane.style.height = 'calc(100% - 1px)';
-
-        // Force reflow
-        void glassPane.offsetHeight;
-
-        // Dispatch resize event
-        window.dispatchEvent(new Event('resize'));
-
-        // Restore after a frame
-        requestAnimationFrame(function() {
-          glassPane.style.width = originalWidth || '100%';
-          glassPane.style.height = originalHeight || '100%';
-
-          // Force another reflow and resize
-          void glassPane.offsetHeight;
-          window.dispatchEvent(new Event('resize'));
-
-          // Schedule more resize events with delays
-          [50, 100, 200, 300].forEach(function(delay) {
-            setTimeout(function() {
-              window.dispatchEvent(new Event('resize'));
-              // Also scroll to top
-              window.scrollTo(0, 0);
-            }, delay);
+        setTimeout(function() {
+          glassPane.style.transform = '';
+          requestAnimationFrame(function() {
+            window.dispatchEvent(new Event('resize'));
+            // Also trigger visualViewport resize if available
+            if (viewport) {
+              try {
+                viewport.dispatchEvent(new Event('resize'));
+              } catch (e) {
+                // Some browsers don't allow dispatching to visualViewport
+              }
+            }
           });
-        });
+        }, delay);
       }
 
-      // Listen to viewport resize
-      viewport.addEventListener('resize', function() {
-        var currentHeight = viewport.height;
-        var heightDiff = currentHeight - lastHeight;
+      function handleViewportResize() {
+        // Debounce to avoid excessive calls
+        if (debounceTimer) return;
 
-        updateFullHeight();
+        debounceTimer = setTimeout(function() {
+          debounceTimer = null;
 
-        // Detect keyboard dismiss: height increased significantly AND we're near full height
-        var keyboardDismissed = heightDiff > 100 && currentHeight >= fullHeight - 50;
+          var currentHeight = viewport.height || window.innerHeight;
+          var currentWidth = window.innerWidth;
 
-        // Also track if keyboard was previously open
-        var keyboardWasOpen = lastHeight < fullHeight - 100;
-
-        if (keyboardDismissed || (keyboardWasOpen && currentHeight >= fullHeight - 50)) {
-          // Keyboard just closed - force Flutter to recalculate
-          console.log('[KB-FIX] Keyboard dismissed, forcing Flutter recalc');
-
-          // Blur active element first
-          if (document.activeElement) {
-            document.activeElement.blur();
+          // Skip if this is an orientation change (width changed significantly)
+          if (Math.abs(currentWidth - lastWidth) > 50) {
+            lastVisualHeight = currentHeight;
+            lastWidth = currentWidth;
+            fullHeight = currentHeight; // Reset full height on orientation change
+            return;
           }
 
-          // Force recalc with multiple attempts
-          forceFlutterRecalc();
+          // Update full height if we see a larger value
+          if (currentHeight > fullHeight) {
+            fullHeight = currentHeight;
+          }
 
-          // Additional attempts with delays
-          setTimeout(forceFlutterRecalc, 100);
-          setTimeout(forceFlutterRecalc, 250);
-          setTimeout(forceFlutterRecalc, 500);
+          var heightDiff = currentHeight - lastVisualHeight;
+          var threshold = getThreshold();
+          var landscape = isLandscape();
 
-          wasKeyboardOpen = false;
-        } else if (heightDiff < -100) {
-          // Keyboard opened
-          wasKeyboardOpen = true;
+          // Keyboard dismissed: viewport height INCREASED significantly
+          if (heightDiff > threshold) {
+            console.log('[KB-FIX] ✅ Keyboard dismissed: +' + heightDiff.toFixed(0) + 'px (threshold: ' + threshold.toFixed(0) + 'px, landscape: ' + landscape + ')');
+
+            // Blur active element first
+            if (document.activeElement) {
+              document.activeElement.blur();
+            }
+
+            // Jiggle Flutter view
+            jiggleFlutterView();
+
+            // Additional attempts with delays (more for landscape)
+            var delays = landscape ? [100, 200, 400] : [50, 100, 250];
+            delays.forEach(function(delay) {
+              setTimeout(jiggleFlutterView, delay);
+            });
+          }
+
+          lastVisualHeight = currentHeight;
+          lastWidth = currentWidth;
+        }, CONFIG.debounceMs);
+      }
+
+      // Initialize after Flutter loads
+      function initialize() {
+        lastVisualHeight = viewport.height || window.innerHeight;
+        lastWidth = window.innerWidth;
+        fullHeight = lastVisualHeight;
+
+        // Primary: visualViewport API (resize + scroll events)
+        if (viewport) {
+          viewport.addEventListener('resize', handleViewportResize);
+          viewport.addEventListener('scroll', handleViewportResize);
         }
 
-        lastHeight = currentHeight;
-      });
+        // Fallback: window resize
+        window.addEventListener('resize', handleViewportResize);
 
-      // Also listen to focusout as backup
-      window.addEventListener('focusout', function() {
-        setTimeout(function() {
-          window.scrollTo(0, 0);
-          // Check if we should trigger recalc
-          if (viewport.height >= fullHeight - 50 && wasKeyboardOpen) {
-            console.log('[KB-FIX] Focusout detected, forcing Flutter recalc');
-            forceFlutterRecalc();
-            wasKeyboardOpen = false;
+        // Additional: focusout for keyboard dismiss detection
+        document.addEventListener('focusout', function(e) {
+          if (e.target && (e.target.matches('input') || e.target.matches('textarea') || e.target.matches('[contenteditable]'))) {
+            setTimeout(function() {
+              var activeElement = document.activeElement;
+              if (!activeElement || (!activeElement.matches('input') && !activeElement.matches('textarea') && !activeElement.matches('[contenteditable]'))) {
+                // No input is focused - keyboard likely dismissed
+                console.log('[KB-FIX] Focusout detected, forcing Flutter recalc');
+                jiggleFlutterView();
+              }
+            }, 150);
           }
-        }, 150);
-      });
+        });
 
-      console.log('[KB-FIX] Android keyboard fix initialized');
+        console.log('[KB-FIX] Android keyboard fix initialized (landscape-aware)');
+      }
+
+      // Wait for Flutter to load
+      if (document.readyState === 'loading') {
+        window.addEventListener('load', initialize);
+      } else {
+        // Already loaded, initialize immediately
+        setTimeout(initialize, 100);
+      }
+    })();
+  </script>
+
+  <!-- WebGL Error Handling - Catch CanvasKit initialization errors -->
+  <script>
+    (function() {
+      // Check WebGL support before Flutter loads
+      function checkWebGLSupport() {
+        try {
+          var canvas = document.createElement('canvas');
+          var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+          if (!gl) {
+            console.warn('[WEBGL] WebGL not supported - Flutter may fall back to HTML renderer');
+            return false;
+          }
+          // Test getParameter to ensure it's available
+          try {
+            gl.getParameter(gl.VERSION);
+            console.log('[WEBGL] WebGL support confirmed');
+            return true;
+          } catch (e) {
+            console.warn('[WEBGL] WebGL context exists but getParameter failed:', e);
+            return false;
+          }
+        } catch (e) {
+          console.warn('[WEBGL] WebGL check failed:', e);
+          return false;
+        }
+      }
+
+      // Check WebGL support early
+      var hasWebGL = checkWebGLSupport();
+
+      // Global error handler for WebGL/CanvasKit errors
+      window.addEventListener('error', function(event) {
+        var error = event.error || event.message || '';
+        var errorString = String(error);
+        
+        // Catch WebGL/CanvasKit errors and prevent them from crashing the app
+        if (errorString.includes('getParameter') ||
+            errorString.includes('WebGL') ||
+            errorString.includes('CanvasKit') ||
+            errorString.includes('MakeGrContext')) {
+          console.warn('[WEBGL] Caught WebGL/CanvasKit error (non-fatal):', error);
+          event.preventDefault(); // Prevent default error handling
+          return false; // Don't propagate
+        }
+      }, true); // Use capture phase to catch early
+
+      // Also catch unhandled promise rejections
+      window.addEventListener('unhandledrejection', function(event) {
+        var error = event.reason || '';
+        var errorString = String(error);
+        
+        if (errorString.includes('getParameter') ||
+            errorString.includes('WebGL') ||
+            errorString.includes('CanvasKit') ||
+            errorString.includes('MakeGrContext')) {
+          console.warn('[WEBGL] Caught WebGL/CanvasKit promise rejection (non-fatal):', error);
+          event.preventDefault(); // Prevent default error handling
+        }
+      });
     })();
   </script>
 

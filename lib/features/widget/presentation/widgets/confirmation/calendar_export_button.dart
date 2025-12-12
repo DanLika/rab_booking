@@ -7,6 +7,20 @@ import '../../../utils/ics_download.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../l10n/widget_translations.dart';
 
+/// Safely convert error to string, handling null and edge cases
+/// Prevents "Null check operator used on a null value" errors
+String _safeErrorToString(dynamic error) {
+  if (error == null) {
+    return 'Unknown error';
+  }
+  try {
+    return error.toString();
+  } catch (e) {
+    // If toString() itself throws, return a safe fallback
+    return 'Error: Unable to display error details';
+  }
+}
+
 /// Button for adding booking to calendar via .ics file download.
 ///
 /// Generates an iCal file and triggers download when pressed.
@@ -76,7 +90,7 @@ class _CalendarExportButtonState extends ConsumerState<CalendarExportButton> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: tr.calendarGenerationFailed(e.toString()),
+          message: tr.calendarGenerationFailed(_safeErrorToString(e)),
           duration: const Duration(seconds: 5),
         );
       }

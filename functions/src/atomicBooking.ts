@@ -51,6 +51,13 @@ export const createBookingAtomic = onCall(async (request) => {
   const userId = request.auth?.uid || null;
   const data = request.data;
 
+  // Log incoming request data for debugging (before validation)
+  logInfo("[AtomicBooking] Received request", {
+    hasData: !!data,
+    dataKeys: data ? Object.keys(data) : [],
+    userId: userId || "anonymous",
+  });
+
   // ========================================================================
   // SECURITY FIX: Rate limiting to prevent spam/DoS attacks
   // Different limits for authenticated vs unauthenticated (widget) users
@@ -106,12 +113,40 @@ export const createBookingAtomic = onCall(async (request) => {
     idempotencyKey, // Optional: prevents double bookings on double-click
   } = data;
 
-  // Validate required fields
-  if (!unitId || !propertyId || !ownerId || !checkIn || !checkOut ||
-    !guestName || !guestEmail || !totalPrice || !guestCount || !paymentMethod) {
+  // Validate required fields with detailed error logging
+  // Check for null, undefined, or empty string
+  const missingFields: string[] = [];
+  if (!unitId || (typeof unitId === 'string' && unitId.trim() === '')) missingFields.push('unitId');
+  if (!propertyId || (typeof propertyId === 'string' && propertyId.trim() === '')) missingFields.push('propertyId');
+  if (!ownerId || (typeof ownerId === 'string' && ownerId.trim() === '')) missingFields.push('ownerId');
+  if (!checkIn || (typeof checkIn === 'string' && checkIn.trim() === '')) missingFields.push('checkIn');
+  if (!checkOut || (typeof checkOut === 'string' && checkOut.trim() === '')) missingFields.push('checkOut');
+  if (!guestName || (typeof guestName === 'string' && guestName.trim() === '')) missingFields.push('guestName');
+  if (!guestEmail || (typeof guestEmail === 'string' && guestEmail.trim() === '')) missingFields.push('guestEmail');
+  if (totalPrice === null || totalPrice === undefined || (typeof totalPrice === 'string' && totalPrice.trim() === '')) missingFields.push('totalPrice');
+  if (guestCount === null || guestCount === undefined || (typeof guestCount === 'string' && guestCount.trim() === '')) missingFields.push('guestCount');
+  if (!paymentMethod || (typeof paymentMethod === 'string' && paymentMethod.trim() === '')) missingFields.push('paymentMethod');
+
+  if (missingFields.length > 0) {
+    logError("Missing required booking fields", null, {
+      missingFields,
+      receivedData: {
+        unitId: !!unitId,
+        propertyId: !!propertyId,
+        ownerId: !!ownerId,
+        checkIn: !!checkIn,
+        checkOut: !!checkOut,
+        guestName: !!guestName,
+        guestEmail: !!guestEmail,
+        totalPrice: totalPrice,
+        guestCount: guestCount,
+        paymentMethod: paymentMethod,
+        paymentOption: paymentOption,
+      },
+    });
     throw new HttpsError(
       "invalid-argument",
-      "Missing required booking fields"
+      `Missing required booking fields: ${missingFields.join(', ')}`
     );
   }
 
@@ -424,13 +459,12 @@ export const createBookingAtomic = onCall(async (request) => {
       // Bug #77 Fix: Changed "check_out" >= to > to allow same-day turnover
       // (checkout = 15 should allow new checkin = 15, no conflict)
       //
-      // NOTE: pending bookings BLOCK calendar dates (awaiting owner approval)
-      // CRITICAL: Include "stripe_pending" to prevent race condition with Stripe checkout
-      // Without this, a bank transfer booking could overlap with an in-progress Stripe payment
+      // NOTE: pending bookings BLOCK calendar dates (awaiting owner approval or payment)
+      // This includes both regular pending bookings and Stripe checkout placeholders
       const conflictingBookingsQuery = db
         .collection("bookings")
         .where("unit_id", "==", unitId)
-        .where("status", "in", ["pending", "confirmed", "stripe_pending"])
+        .where("status", "in", ["pending", "confirmed"])
         .where("check_in", "<", checkOutDate)
         .where("check_out", ">", checkInDate);
 

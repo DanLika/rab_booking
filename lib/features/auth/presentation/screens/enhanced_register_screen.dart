@@ -12,6 +12,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
@@ -91,14 +92,22 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     try {
       final (firstName, lastName) = _parseFullName(_fullNameController.text);
 
+      // SECURITY: Sanitize all inputs before sending to backend
+      final sanitizedEmail = InputSanitizer.sanitizeEmail(_emailController.text.trim()) ?? _emailController.text.trim();
+      final sanitizedFirstName = InputSanitizer.sanitizeName(firstName) ?? firstName;
+      final sanitizedLastName = InputSanitizer.sanitizeName(lastName) ?? lastName;
+      final sanitizedPhone = _phoneController.text.trim().isNotEmpty
+          ? (InputSanitizer.sanitizePhone(_phoneController.text.trim()) ?? _phoneController.text.trim())
+          : null;
+
       await ref
           .read(enhancedAuthProvider.notifier)
           .registerWithEmail(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            firstName: firstName,
-            lastName: lastName,
-            phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+            email: sanitizedEmail,
+            password: _passwordController.text, // Password doesn't need sanitization (Firebase Auth handles it)
+            firstName: sanitizedFirstName,
+            lastName: sanitizedLastName,
+            phone: sanitizedPhone,
             acceptedTerms: _acceptedTerms,
             acceptedPrivacy: _acceptedPrivacy,
             newsletterOptIn: _newsletterOptIn,
@@ -169,16 +178,38 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: Stack(
+          alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
             AuthBackground(
               child: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    // Get keyboard height to adjust padding dynamically (with null safety)
+                    final mediaQuery = MediaQuery.maybeOf(context);
+                    final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
+                    final isKeyboardOpen = keyboardHeight > 0;
+
+                    // Calculate minHeight safely - ensure it's always finite and valid
+                    double minHeight;
+                    if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
+                      final calculated = constraints.maxHeight - keyboardHeight;
+                      minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                    } else {
+                      minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
+                    }
+                    // Ensure minHeight is always finite (never infinity)
+                    minHeight = minHeight.isFinite ? minHeight : 0.0;
+
                     return SingleChildScrollView(
                       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 20, vertical: isCompact ? 16 : 20),
+                      padding: EdgeInsets.only(
+                        left: isCompact ? 12 : 20,
+                        right: isCompact ? 12 : 20,
+                        top: isCompact ? 16 : 20,
+                        bottom: isCompact ? 16 : 20,
+                      ),
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(
                           child: GlassCard(
                             child: Form(

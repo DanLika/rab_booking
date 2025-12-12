@@ -4494,4 +4494,20 @@ class WidgetTranslations {
         return 'View only';
     }
   }
+
+  /// Message shown when booking is confirmed in new tab (not popup)
+  /// Instructs user to close the tab manually
+  String get bookingConfirmedCloseTab {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Rezervacija je potvrđena! Možete zatvoriti ovaj tab.';
+      case 'de':
+        return 'Buchung bestätigt! Sie können diesen Tab schließen.';
+      case 'it':
+        return 'Prenotazione confermata! Puoi chiudere questa scheda.';
+      case 'en':
+      default:
+        return 'Booking confirmed! You can close this tab.';
+    }
+  }
 }

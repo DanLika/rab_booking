@@ -34,6 +34,11 @@ class EmailNotificationHelper {
       return;
     }
 
+    // Defensive check: ensure widgetSettings is not null before accessing properties
+    if (widgetSettings == null || emailConfig == null) {
+      return;
+    }
+
     final emailService = EmailNotificationService();
     final bookingReference = booking.id.substring(0, 8).toUpperCase();
     final propertyName = unit?.name ?? 'Vacation Rental';
@@ -42,7 +47,7 @@ class EmailNotificationHelper {
     unawaited(
       emailService.sendBookingConfirmationEmail(
         booking: booking,
-        emailConfig: widgetSettings!.emailConfig,
+        emailConfig: emailConfig,
         propertyName: propertyName,
         bookingReference: bookingReference,
         paymentDeadline: paymentDeadline,

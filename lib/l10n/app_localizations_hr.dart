@@ -1794,6 +1794,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerBookingsCancelError => 'Greška pri otkazivanju rezervacije';
 
   @override
+  String get ownerBookingsNotFound => 'Rezervacija nije pronađena';
+
+  @override
   String get ownerBookingCardNight => 'noć';
 
   @override

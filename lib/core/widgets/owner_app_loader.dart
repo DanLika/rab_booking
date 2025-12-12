@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../features/auth/presentation/widgets/auth_logo_icon.dart';
 
-/// Custom BookBed loader for owner dashboard app with colorized theme.
+/// Custom BookBed loader for owner dashboard app with minimalistic design.
 ///
 /// Displays animated BookBed logo with progress indication using
-/// the owner app's primary color (purple) theme.
+/// minimalistic black and white colors.
 ///
 /// Usage:
 /// ```dart
@@ -30,16 +30,11 @@ class OwnerAppLoader extends StatelessWidget {
   /// Logo size
   final double logoSize;
 
-  const OwnerAppLoader({
-    super.key,
-    this.progress,
-    this.logoSize = _defaultLogoSize,
-  });
+  const OwnerAppLoader({super.key, this.progress, this.logoSize = _defaultLogoSize});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
     final textColor = theme.textTheme.bodyMedium?.color ?? Colors.grey;
 
     return Column(
@@ -52,7 +47,7 @@ class OwnerAppLoader extends StatelessWidget {
           width: _progressBarWidth,
           child: Column(
             children: [
-              _buildProgressBar(primaryColor),
+              _buildProgressBar(),
               const SizedBox(height: _barToTextSpacing),
               if (progress != null) _buildPercentageText(textColor),
             ],
@@ -62,24 +57,22 @@ class OwnerAppLoader extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressBar(Color primaryColor) {
+  Widget _buildProgressBar() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(_progressBarRadius),
       child: SizedBox(
         height: _progressBarHeight,
         child: Stack(
           children: [
-            Container(
-              color: primaryColor.withValues(alpha: _backgroundOpacity),
-            ),
+            Container(color: Colors.black.withValues(alpha: _backgroundOpacity)),
             if (progress != null)
               FractionallySizedBox(
                 widthFactor: progress!.clamp(0.0, 1.0),
                 alignment: Alignment.centerLeft,
-                child: Container(color: primaryColor),
+                child: Container(color: Colors.black),
               )
             else
-              _IndeterminateProgress(color: primaryColor),
+              const _IndeterminateProgress(color: Colors.black),
           ],
         ),
       ),
@@ -112,18 +105,14 @@ class _IndeterminateProgress extends StatefulWidget {
   State<_IndeterminateProgress> createState() => _IndeterminateProgressState();
 }
 
-class _IndeterminateProgressState extends State<_IndeterminateProgress>
-    with SingleTickerProviderStateMixin {
+class _IndeterminateProgressState extends State<_IndeterminateProgress> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: _IndeterminateProgress._animationDuration,
-      vsync: this,
-    )..repeat();
+    _controller = AnimationController(duration: _IndeterminateProgress._animationDuration, vsync: this)..repeat();
 
     _animation = Tween<double>(
       begin: -1.0,

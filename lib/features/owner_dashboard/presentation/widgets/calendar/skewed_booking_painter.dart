@@ -48,6 +48,12 @@ class SkewedBookingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Defensive check: ensure size is valid before painting
+    if (!size.width.isFinite || !size.height.isFinite || 
+        size.width <= 0 || size.height <= 0) {
+      return; // Skip painting if size is invalid
+    }
+
     final path = _createSkewedPath(size);
 
     // Draw filled background

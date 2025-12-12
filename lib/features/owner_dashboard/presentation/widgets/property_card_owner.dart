@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../../core/theme/theme_extensions.dart';
+import '../../../../../core/design_tokens/border_tokens.dart';
 
 /// Property card for owner dashboard
 class PropertyCardOwner extends StatefulWidget {
@@ -460,10 +461,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     final aspectRatio = isSmallMobile ? 2.2 : (isMobile ? 2.0 : 1.95);
 
     return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(16),
-        topRight: Radius.circular(16),
-      ),
+      borderRadius: BorderTokens.onlyTop(16.0),
       child: AspectRatio(
         aspectRatio: aspectRatio,
         child: widget.property.primaryImage != null

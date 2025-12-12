@@ -131,7 +131,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     //
     // FLOW:
     // 1. Transaction checks availability (fails if dates booked)
-    // 2. Create placeholder booking with `stripe_pending` status (expires 15 min)
+    // 2. Create placeholder booking with `pending` status (expires 15 min)
     // 3. Create Stripe session with placeholder booking ID in metadata
     // 4. Webhook updates placeholder to `confirmed` after successful payment
     // 5. Cleanup job deletes expired placeholders (if user abandons payment)
@@ -171,11 +171,11 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     // ATOMIC TRANSACTION: Create placeholder booking with availability check
     // ========================================================================
     const placeholderResult = await db.runTransaction(async (transaction) => {
-      // Check for conflicting bookings (including stripe_pending placeholders)
+      // Check for conflicting bookings (including pending placeholders from Stripe checkout)
       const conflictingBookingsQuery = db
         .collection("bookings")
         .where("unit_id", "==", unitId)
-        .where("status", "in", ["pending", "confirmed", "stripe_pending"])
+        .where("status", "in", ["pending", "confirmed"])
         .where("check_in", "<", checkOutDate)
         .where("check_out", ">", checkInDate);
 
@@ -222,7 +222,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
         payment_method: "stripe",
         payment_option: paymentOption,
         payment_status: "pending",
-        status: "stripe_pending", // NEW STATUS: Blocks dates until payment
+        status: "pending", // Use standard pending status (blocks dates until payment)
         booking_reference: bookingRef,
         source: "widget",
         notes: sanitizedNotes,
@@ -231,7 +231,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
         // Booking lookup security
         access_token: hashedToken,
         token_expires_at: tokenExpiration,
-        // Placeholder expiration
+        // Placeholder expiration (for cleanup of expired Stripe checkout attempts)
         stripe_pending_expires_at: expiresAt,
         created_at: admin.firestore.FieldValue.serverTimestamp(),
         updated_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -461,8 +461,8 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
         return;
       }
 
-      // Validate placeholder is actually stripe_pending status
-      if (placeholderData?.status !== "stripe_pending") {
+      // Validate placeholder is actually pending status (created before Stripe checkout)
+      if (placeholderData?.status !== "pending") {
         logError(`Placeholder booking has invalid status: ${placeholderData?.status}`);
         res.status(400).send(`Invalid placeholder status: ${placeholderData?.status}`);
         return;

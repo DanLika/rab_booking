@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
 import '../mixins/theme_detection_mixin.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/utils/web_utils.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/models/widget_settings.dart';
 import '../widgets/common/info_card_widget.dart';
@@ -68,12 +71,10 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<BookingConfirmationScreen> createState() =>
-      _BookingConfirmationScreenState();
+  ConsumerState<BookingConfirmationScreen> createState() => _BookingConfirmationScreenState();
 }
 
-class _BookingConfirmationScreenState
-    extends ConsumerState<BookingConfirmationScreen>
+class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationScreen>
     with SingleTickerProviderStateMixin, ThemeDetectionMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -82,20 +83,106 @@ class _BookingConfirmationScreenState
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
+    _animationController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
 
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.elasticOut));
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
 
     _animationController.forward();
+
+    // If in popup window (opened from iframe), send message to parent
+    if (kIsWeb && isPopupWindow && widget.booking != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _notifyParentOfPaymentComplete();
+      });
+    }
+  }
+
+  /// Notify parent window (iframe) that payment is complete
+  /// Uses multiple methods for reliability:
+  /// 1. BroadcastChannel (works for same-origin tabs/windows - most reliable)
+  /// 2. postMessage (works for iframe/popup communication)
+  /// 3. Auto-close popup (only if opened as popup)
+  void _notifyParentOfPaymentComplete() {
+    final booking = widget.booking;
+    if (booking == null) return;
+
+    final bookingId = booking.id;
+    final bookingRef = widget.bookingReference;
+
+    final message = {
+      'type': 'stripe-payment-complete',
+      'source': 'bookbed-widget',
+      'bookingId': bookingId,
+      'bookingRef': bookingRef,
+    };
+
+    // Method 1: PaymentBridge.notifyComplete (most reliable for popup scenarios)
+    // This handles BroadcastChannel, postMessage, and localStorage fallbacks
+    if (kIsWeb) {
+      try {
+        // Extract session ID from URL if available
+        final uri = Uri.base;
+        final sessionId = uri.queryParameters['session_id'] ?? uri.queryParameters['stripe_session_id'] ?? '';
+
+        if (sessionId.isNotEmpty) {
+          notifyPaymentComplete(sessionId, 'success');
+          LoggingService.log('[PaymentComplete] Sent via PaymentBridge', tag: 'STRIPE');
+        }
+      } catch (e) {
+        LoggingService.log('[PaymentComplete] PaymentBridge failed: $e', tag: 'STRIPE');
+      }
+    }
+
+    // Method 2: BroadcastChannel (works for same-origin tabs/windows)
+    // This is the most reliable method when popup is blocked and opens in new tab
+    if (kIsWeb) {
+      try {
+        final tabService = createTabCommunicationService();
+        tabService.sendPaymentComplete(bookingId: bookingId, ref: bookingRef);
+        LoggingService.log('[PaymentComplete] Sent via BroadcastChannel', tag: 'STRIPE');
+        // Dispose after sending (one-time use) - delay to ensure message is sent
+        Future.delayed(const Duration(seconds: 2), () {
+          try {
+            tabService.dispose();
+          } catch (_) {
+            // Ignore disposal errors
+          }
+        });
+      } catch (e) {
+        LoggingService.log('[PaymentComplete] BroadcastChannel failed: $e', tag: 'STRIPE');
+      }
+    }
+
+    // Method 3: postMessage (works for iframe/popup communication)
+    // Only works if opened as popup (window.opener exists)
+    if (kIsWeb && isPopupWindow) {
+      sendMessageToParent(message);
+      LoggingService.log('[PaymentComplete] Sent via postMessage', tag: 'STRIPE');
+    }
+
+    // Method 3: Close popup after short delay (allows message to be received)
+    // Only close if we're in a popup window (opened from iframe)
+    if (kIsWeb && isPopupWindow) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        final closed = closePopupWindow();
+        if (closed) {
+          LoggingService.log('[PaymentComplete] Popup window closed', tag: 'STRIPE');
+        } else {
+          LoggingService.log(
+            '[PaymentComplete] Popup could not be auto-closed (user can close manually)',
+            tag: 'STRIPE',
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -117,6 +204,26 @@ class _BookingConfirmationScreenState
   /// - Stripe returns - also pushed via Navigator
   /// The parent widget handles form reset and URL cleanup after pop
   void _navigateToCleanCalendar() {
+    // If in popup window (opened from iframe), close the popup
+    if (kIsWeb && isPopupWindow) {
+      sendMessageToParent({'type': 'stripe-popup-close', 'source': 'bookbed-widget'});
+      // Try to close popup window
+      Future.delayed(const Duration(milliseconds: 100), closePopupWindow);
+      return;
+    }
+
+    // If in new tab (not popup), don't navigate - just show message
+    // User should manually close the tab
+    if (kIsWeb && !isPopupWindow && widget.paymentMethod == 'stripe') {
+      // In new tab, we can't navigate back to iframe
+      // Just show a message or do nothing
+      LoggingService.log(
+        '[NavigateBack] Cannot navigate back from new tab - user should close tab manually',
+        tag: 'STRIPE',
+      );
+      return;
+    }
+
     // Priority 1: Custom close callback (if provided)
     if (widget.onClose != null) {
       widget.onClose!();
@@ -124,7 +231,23 @@ class _BookingConfirmationScreenState
     }
 
     // Priority 2: Navigator.pop() - works for all Navigator.push scenarios
-    Navigator.of(context).pop();
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  /// Check if we should show navigation buttons
+  /// Hide them if we're in a new tab (not popup) after Stripe payment
+  bool get _shouldShowNavigationButtons {
+    if (!kIsWeb) return true;
+
+    // If in new tab (not popup) and this is a Stripe payment, hide buttons
+    // User should manually close the tab
+    if (!isPopupWindow && widget.paymentMethod == 'stripe') {
+      return false;
+    }
+
+    return true;
   }
 
   @override
@@ -133,10 +256,15 @@ class _BookingConfirmationScreenState
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final tr = WidgetTranslations.of(context, ref);
 
+    // Extract widget settings values safely to avoid null check operator errors
+    final widgetSettings = widget.widgetSettings;
+    final bankConfig = widgetSettings?.bankTransferConfig;
+    final hasBankTransferDetails = bankConfig?.hasCompleteDetails == true;
+    final cancellationDeadlineHours = widgetSettings?.cancellationDeadlineHours;
+    final allowGuestCancellation = widgetSettings?.allowGuestCancellation == true;
+
     // Use pure black background for dark theme in widget
-    final backgroundColor = isDarkMode
-        ? ColorTokens.pureBlack
-        : colors.backgroundPrimary;
+    final backgroundColor = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -164,10 +292,7 @@ class _BookingConfirmationScreenState
                             paymentMethod: widget.paymentMethod,
                             colors: colors,
                             scaleAnimation: _scaleAnimation,
-                            customLogoUrl: widget
-                                .widgetSettings
-                                ?.themeOptions
-                                ?.customLogoUrl,
+                            customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
                           ),
 
                           const SizedBox(height: SpacingTokens.m),
@@ -175,9 +300,7 @@ class _BookingConfirmationScreenState
                           // Payment verification warning (Stripe pending)
                           if (_shouldShowPaymentVerificationWarning)
                             Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: SpacingTokens.m,
-                              ),
+                              padding: const EdgeInsets.only(bottom: SpacingTokens.m),
                               child: InfoCardWidget(
                                 title: tr.paymentVerificationInProgress,
                                 message: tr.paymentVerificationMessage,
@@ -186,10 +309,7 @@ class _BookingConfirmationScreenState
                             ),
 
                           // Booking reference card
-                          BookingReferenceCard(
-                            bookingReference: widget.bookingReference,
-                            colors: colors,
-                          ),
+                          BookingReferenceCard(bookingReference: widget.bookingReference, colors: colors),
 
                           const SizedBox(height: SpacingTokens.m),
 
@@ -225,15 +345,9 @@ class _BookingConfirmationScreenState
                             ),
 
                           // Bank transfer instructions
-                          if (widget.paymentMethod == 'bank_transfer' &&
-                              widget
-                                      .widgetSettings
-                                      ?.bankTransferConfig
-                                      ?.hasCompleteDetails ==
-                                  true)
+                          if (widget.paymentMethod == 'bank_transfer' && hasBankTransferDetails && bankConfig != null)
                             BankTransferInstructionsCard(
-                              bankConfig:
-                                  widget.widgetSettings!.bankTransferConfig!,
+                              bankConfig: bankConfig,
                               bookingReference: widget.bookingReference,
                               colors: colors,
                             ),
@@ -250,44 +364,47 @@ class _BookingConfirmationScreenState
                           ),
 
                           // Cancellation policy
-                          if (widget.widgetSettings?.allowGuestCancellation ==
-                                  true &&
-                              widget
-                                      .widgetSettings
-                                      ?.cancellationDeadlineHours !=
-                                  null)
+                          if (allowGuestCancellation && cancellationDeadlineHours != null)
                             CancellationPolicySection(
                               isDarkMode: isDarkMode,
-                              deadlineHours: widget
-                                  .widgetSettings!
-                                  .cancellationDeadlineHours!,
+                              deadlineHours: cancellationDeadlineHours,
                               bookingReference: widget.bookingReference,
                               fromEmail: widget.emailConfig?.fromEmail,
                             ),
 
                           // Next steps section
-                          NextStepsSection(
-                            isDarkMode: isDarkMode,
-                            paymentMethod: widget.paymentMethod,
-                          ),
+                          NextStepsSection(isDarkMode: isDarkMode, paymentMethod: widget.paymentMethod),
 
                           const SizedBox(height: SpacingTokens.xl),
 
                           const SizedBox(height: SpacingTokens.m),
 
-                          // Close button with extra bottom padding
-                          _buildCloseButton(colors, isDark: isDarkMode),
-
-                          const SizedBox(height: SpacingTokens.xl),
+                          // Close button with extra bottom padding (only show if navigation is allowed)
+                          if (_shouldShowNavigationButtons) ...[
+                            _buildCloseButton(colors, isDark: isDarkMode),
+                            const SizedBox(height: SpacingTokens.xl),
+                          ] else ...[
+                            // Show message for new tab scenario
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+                              child: Text(
+                                tr.bookingConfirmedCloseTab,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: TypographyTokens.fontSizeM,
+                                  color: colors.textSecondary,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: SpacingTokens.xl),
+                          ],
 
                           // Helpful info
                           Text(
                             tr.saveBookingReference,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: TypographyTokens.fontSizeS,
-                              color: colors.textSecondary,
-                            ),
+                            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                           ),
                         ],
                       ),
@@ -303,28 +420,32 @@ class _BookingConfirmationScreenState
   }
 
   bool get _shouldShowPaymentVerificationWarning {
-    if (widget.paymentMethod != 'stripe' || widget.booking == null) {
+    final booking = widget.booking;
+    if (widget.paymentMethod != 'stripe' || booking == null) {
       return false;
     }
     // Defensive null checks for payment status and booking status
-    final paymentStatus = widget.booking!.paymentStatus;
-    final bookingStatus = widget.booking!.status.value;
+    final paymentStatus = booking.paymentStatus;
+    // Note: status.value is non-nullable String, but add defensive check for paymentStatus
+    final bookingStatus = booking.status.value;
     return paymentStatus == 'pending' || bookingStatus == 'pending';
   }
 
   Widget _buildHeader(WidgetColorScheme colors) {
     final tr = WidgetTranslations.of(context, ref);
+    final showNavButtons = _shouldShowNavigationButtons;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.m,
-        vertical: SpacingTokens.s,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
       child: Row(
         children: [
-          IconButton(
-            icon: Icon(Icons.arrow_back, color: colors.textPrimary),
-            onPressed: _navigateToCleanCalendar,
-          ),
+          if (showNavButtons)
+            IconButton(
+              icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+              onPressed: _navigateToCleanCalendar,
+            )
+          else
+            const SizedBox(width: 48), // Spacer when button is hidden
           Expanded(
             child: Center(
               child: Text(
@@ -347,9 +468,7 @@ class _BookingConfirmationScreenState
     final tr = WidgetTranslations.of(context, ref);
     // Use white button with black text for dark theme
     final buttonBg = isDark ? ColorTokens.pureWhite : colors.buttonPrimary;
-    final buttonText = isDark
-        ? ColorTokens.pureBlack
-        : colors.buttonPrimaryText;
+    final buttonText = isDark ? ColorTokens.pureBlack : colors.buttonPrimaryText;
 
     return SizedBox(
       width: double.infinity,
@@ -359,16 +478,11 @@ class _BookingConfirmationScreenState
           backgroundColor: buttonBg,
           foregroundColor: buttonText,
           padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderTokens.circularRounded,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularRounded),
         ),
         child: Text(
           tr.close,
-          style: const TextStyle(
-            fontSize: TypographyTokens.fontSizeL,
-            fontWeight: TypographyTokens.bold,
-          ),
+          style: const TextStyle(fontSize: TypographyTokens.fontSizeL, fontWeight: TypographyTokens.bold),
         ),
       ),
     );

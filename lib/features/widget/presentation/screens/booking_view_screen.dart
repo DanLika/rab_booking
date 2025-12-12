@@ -11,6 +11,20 @@ import '../../domain/services/subdomain_service.dart' show SubdomainContext;
 import '../l10n/widget_translations.dart';
 import 'subdomain_not_found_screen.dart';
 
+/// Safely convert error to string, handling null and edge cases
+/// Prevents "Null check operator used on a null value" errors
+String _safeErrorToString(dynamic error) {
+  if (error == null) {
+    return 'Unknown error';
+  }
+  try {
+    return error.toString();
+  } catch (e) {
+    // If toString() itself throws, return a safe fallback
+    return 'Error: Unable to display error details';
+  }
+}
+
 /// Booking View Screen (Auto-lookup from URL params)
 /// Automatically fetches booking using ref, email, token from query params
 /// URL: /view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
@@ -120,27 +134,52 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
-          // Navigate to booking details screen with both booking and settings
-          context.go(
-            '/view/details',
-            extra: {'booking': booking, 'widgetSettings': widgetSettings},
-          );
+          // Defensive check: ensure GoRouter is available before navigation
+          try {
+            // Navigate to booking details screen with both booking and settings
+            context.go(
+              '/view/details',
+              extra: {'booking': booking, 'widgetSettings': widgetSettings},
+            );
+          } catch (navError) {
+            // If navigation fails, show error instead of crashing
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+                _errorMessage = 'Navigation error: ${_safeErrorToString(navError)}';
+              });
+            }
+          }
         } catch (e) {
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
           // If widget settings fail to load, still show booking details
-          context.go(
-            '/view/details',
-            extra: {'booking': booking, 'widgetSettings': null},
-          );
+          // Defensive check: ensure GoRouter is available before navigation
+          try {
+            context.go(
+              '/view/details',
+              extra: {'booking': booking, 'widgetSettings': null},
+            );
+          } catch (navError) {
+            // If navigation fails, show error instead of crashing
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+                _errorMessage = 'Navigation error: ${_safeErrorToString(navError)}';
+              });
+            }
+          }
         }
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          final errorString = _safeErrorToString(e);
+          _errorMessage = errorString.replaceFirst('Exception: ', '');
+        });
+      }
     }
   }
 
@@ -214,7 +253,17 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: () => context.go('/'),
+                      onPressed: () {
+                        // Defensive check: ensure GoRouter is available before navigation
+                        try {
+                          context.go('/');
+                        } catch (e) {
+                          // If navigation fails, try Navigator.pop as fallback
+                          if (Navigator.of(context).canPop()) {
+                            Navigator.of(context).pop();
+                          }
+                        }
+                      },
                       icon: const Icon(Icons.home),
                       label: Text(tr.goToHome),
                       style: ElevatedButton.styleFrom(

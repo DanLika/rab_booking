@@ -1,16 +1,16 @@
 /**
  * Scheduled Cloud Function: Cleanup Expired Stripe Pending Bookings
  *
- * Runs periodically to delete expired `stripe_pending` placeholder bookings.
+ * Runs periodically to delete expired placeholder bookings from abandoned Stripe checkout.
  *
  * WHY THIS IS NEEDED:
- * - When user initiates Stripe checkout, we create placeholder booking with `stripe_pending` status
+ * - When user initiates Stripe checkout, we create placeholder booking with `pending` status
  * - Placeholder BLOCKS dates for 15 minutes (prevents race condition)
  * - If user abandons payment (closes Stripe tab), placeholder expires
  * - This cleanup job deletes expired placeholders to free up dates
  *
  * FLOW:
- * 1. Query all bookings with status = `stripe_pending`
+ * 1. Query all bookings with status = `pending` AND `stripe_pending_expires_at` field exists
  * 2. Filter where `stripe_pending_expires_at` < now
  * 3. Delete expired bookings in batches with error recovery
  * 4. Log deletion count for monitoring
@@ -81,7 +81,7 @@ const CONFIG = {
 // ==========================================
 
 /**
- * Cleanup expired stripe_pending bookings
+ * Cleanup expired Stripe pending bookings (placeholders from abandoned checkout)
  *
  * Uses batched deletes with error recovery to handle partial failures gracefully.
  */
@@ -91,7 +91,7 @@ export const cleanupExpiredStripePendingBookings = onSchedule({
   retryCount: CONFIG.retryCount,
 }, async () => {
   const startTime = Date.now();
-  logInfo("[Cleanup] Starting expired stripe_pending bookings cleanup", {
+  logInfo("[Cleanup] Starting expired Stripe pending bookings cleanup", {
     config: {
       schedule: CONFIG.schedule,
       batchSize: CONFIG.batchSize,
@@ -102,23 +102,24 @@ export const cleanupExpiredStripePendingBookings = onSchedule({
   const now = admin.firestore.Timestamp.now();
 
   try {
-    // Query all stripe_pending bookings that have expired
+    // Query all pending bookings with stripe_pending_expires_at field that have expired
+    // This identifies Stripe checkout placeholders (not regular pending bookings)
     // Limit query to prevent memory issues with large datasets
     const expiredBookingsQuery = db
       .collection("bookings")
-      .where("status", "==", "stripe_pending")
+      .where("status", "==", "pending")
       .where("stripe_pending_expires_at", "<", now)
       .limit(CONFIG.maxDocsPerRun);
 
     const expiredBookingsSnapshot = await expiredBookingsQuery.get();
 
     if (expiredBookingsSnapshot.empty) {
-      logInfo("[Cleanup] No expired stripe_pending bookings found");
+      logInfo("[Cleanup] No expired Stripe pending bookings found");
       return;
     }
 
     const totalToDelete = expiredBookingsSnapshot.size;
-    logInfo(`[Cleanup] Found ${totalToDelete} expired stripe_pending bookings`);
+    logInfo(`[Cleanup] Found ${totalToDelete} expired Stripe pending bookings`);
 
     // Process deletions in batches with error recovery
     const results = await deleteInBatches(expiredBookingsSnapshot.docs);

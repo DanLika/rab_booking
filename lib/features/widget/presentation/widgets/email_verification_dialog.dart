@@ -345,7 +345,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
                 // Verify button
                 SizedBox(
-                  height: 42, // Reduced by 3px from 45px
+                  height: 44, // Increased by 2px (was 42)
                   child: ElevatedButton(
                     onPressed: _isVerifying ? null : _verifyCode,
                     style: ElevatedButton.styleFrom(
@@ -357,7 +357,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                       ), // Increased horizontal padding for wider button
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
-                      minimumSize: const Size(double.infinity, 42),
+                      minimumSize: const Size(double.infinity, 44),
                     ),
                     child: _isVerifying
                         ? const SizedBox(

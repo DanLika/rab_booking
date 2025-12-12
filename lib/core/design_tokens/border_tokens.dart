@@ -75,4 +75,62 @@ class BorderTokens {
   static final BorderRadius card = BorderRadius.circular(cardRadius);
   static final BorderRadius button = BorderRadius.circular(buttonRadius);
   static final BorderRadius input = BorderRadius.circular(inputRadius);
+
+  // ============================================================
+  // SAFE BORDER RADIUS HELPERS (prevents null check errors)
+  // ============================================================
+
+  /// Safely create BorderRadius.only with explicit zero values for unspecified corners
+  /// This prevents null check operator errors in Flutter's internal code
+  static BorderRadius only({
+    Radius? topLeft,
+    Radius? topRight,
+    Radius? bottomLeft,
+    Radius? bottomRight,
+  }) {
+    // Ensure all corners are explicitly set (use Radius.zero if not specified)
+    // This prevents Flutter from accessing null values internally
+    return BorderRadius.only(
+      topLeft: topLeft ?? Radius.zero,
+      topRight: topRight ?? Radius.zero,
+      bottomLeft: bottomLeft ?? Radius.zero,
+      bottomRight: bottomRight ?? Radius.zero,
+    );
+  }
+
+  /// Safely create BorderRadius.only with a single corner specified
+  static BorderRadius onlyTopLeft(double radius) {
+    return only(topLeft: Radius.circular(radius));
+  }
+
+  /// Safely create BorderRadius.only with top-right corner specified
+  static BorderRadius onlyTopRight(double radius) {
+    return only(topRight: Radius.circular(radius));
+  }
+
+  /// Safely create BorderRadius.only with bottom-left corner specified
+  static BorderRadius onlyBottomLeft(double radius) {
+    return only(bottomLeft: Radius.circular(radius));
+  }
+
+  /// Safely create BorderRadius.only with bottom-right corner specified
+  static BorderRadius onlyBottomRight(double radius) {
+    return only(bottomRight: Radius.circular(radius));
+  }
+
+  /// Safely create BorderRadius.only with top corners specified
+  static BorderRadius onlyTop(double radius) {
+    return only(
+      topLeft: Radius.circular(radius),
+      topRight: Radius.circular(radius),
+    );
+  }
+
+  /// Safely create BorderRadius.only with bottom corners specified
+  static BorderRadius onlyBottom(double radius) {
+    return only(
+      bottomLeft: Radius.circular(radius),
+      bottomRight: Radius.circular(radius),
+    );
+  }
 }

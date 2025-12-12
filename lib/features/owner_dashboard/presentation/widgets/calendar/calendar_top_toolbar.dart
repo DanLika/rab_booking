@@ -477,6 +477,7 @@ class CalendarTopToolbar extends StatelessWidget {
                 ),
               ),
               child: Stack(
+                alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
                 clipBehavior: Clip.none,
                 children: [
                   Icon(

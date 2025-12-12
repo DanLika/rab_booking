@@ -62,7 +62,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         unitId: widget.unitId,
       )),
     );
-    final minNights = widgetCtxAsync.valueOrNull?.unit.minStayNights ?? 1;
+    // Defensive null check: handle loading/error states gracefully
+    final widgetCtx = widgetCtxAsync.valueOrNull;
+    final minNights = widgetCtx?.unit.minStayNights ?? 1;
 
     // Use realtime stream provider for automatic updates when bookings change
     // OPTIMIZED: Pass minNights to eliminate redundant widgetSettings stream fetch
@@ -129,15 +131,21 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         // Hover tooltip overlay (desktop) - highest z-index
         if (_hoveredDate != null)
           calendarData.when(
-            data: (data) => CalendarTooltipBuilder.build(
-              context: context,
-              hoveredDate: _hoveredDate,
-              mousePosition: _mousePosition,
-              data: data,
-              colors: colors,
-              // Use unit's base price as fallback when no daily_price exists
-              fallbackPrice: widgetCtxAsync.valueOrNull?.unit.pricePerNight,
-            ),
+            data: (data) {
+              // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
+              // Re-read from async value to ensure we have the latest state
+              final currentWidgetCtx = widgetCtxAsync.valueOrNull;
+              final fallbackPrice = currentWidgetCtx?.unit.pricePerNight;
+              return CalendarTooltipBuilder.build(
+                context: context,
+                hoveredDate: _hoveredDate,
+                mousePosition: _mousePosition,
+                data: data,
+                colors: colors,
+                // Use unit's base price as fallback when no daily_price exists
+                fallbackPrice: fallbackPrice,
+              );
+            },
             loading: () => const SizedBox.shrink(),
             error: (error, stack) => const SizedBox.shrink(),
           ),
@@ -255,8 +263,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     // Use LayoutBuilder to get actual available width for accurate cell sizing
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Defensive check: ensure constraints are bounded and finite
+        final maxWidth = constraints.maxWidth.isFinite && constraints.maxWidth != double.infinity
+            ? constraints.maxWidth
+            : 1200.0; // Fallback to reasonable default
         // Calculate available width after padding
-        final availableWidth = constraints.maxWidth - (padding * 2);
+        final availableWidth = (maxWidth - (padding * 2)).clamp(300.0, maxWidth);
         // Get cell size that fits within available width
         final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
           availableWidth,
@@ -320,9 +332,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           decoration: BoxDecoration(
             color: colors.backgroundTertiary,
             border: Border.all(color: colors.borderLight),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(BorderTokens.radiusSubtle),
-            ),
+            borderRadius: BorderTokens.onlyTopLeft(BorderTokens.radiusSubtle),
           ),
           child: Text(
             WidgetTranslations.of(context, ref).monthView,
@@ -343,9 +353,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               color: colors.backgroundTertiary,
               border: Border.all(color: colors.borderLight),
               borderRadius: dayIndex == 30
-                  ? const BorderRadius.only(
-                      topRight: Radius.circular(BorderTokens.radiusSubtle),
-                    )
+                  ? BorderTokens.onlyTopRight(BorderTokens.radiusSubtle)
                   : BorderRadius.zero,
             ),
             child: Text(
@@ -382,9 +390,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             color: colors.backgroundTertiary,
             border: Border.all(color: colors.borderLight),
             borderRadius: month == 12
-                ? const BorderRadius.only(
-                    bottomLeft: Radius.circular(BorderTokens.radiusSubtle),
-                  )
+                ? BorderTokens.onlyBottomLeft(BorderTokens.radiusSubtle)
                 : BorderRadius.zero,
           ),
           child: Text(

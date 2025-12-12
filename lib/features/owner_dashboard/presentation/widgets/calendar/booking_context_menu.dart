@@ -3,6 +3,7 @@ import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/design_tokens/border_tokens.dart';
 
 /// Context menu for booking blocks (right-click menu)
 class BookingContextMenu extends StatelessWidget {
@@ -61,10 +62,7 @@ class BookingContextMenu extends StatelessWidget {
                           : AppColors.authPrimary.withAlpha(
                               (0.1 * 255).toInt(),
                             ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
+                      borderRadius: BorderTokens.onlyTop(8.0),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

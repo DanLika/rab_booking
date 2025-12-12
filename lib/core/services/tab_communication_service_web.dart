@@ -24,8 +24,7 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   web.BroadcastChannel? _channel;
 
   /// Stream controller for parsed messages
-  final StreamController<TabMessage> _messageController =
-      StreamController<TabMessage>.broadcast();
+  final StreamController<TabMessage> _messageController = StreamController<TabMessage>.broadcast();
 
   /// Whether BroadcastChannel is supported
   bool _usesBroadcastChannel = false;
@@ -47,16 +46,16 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
       _usesBroadcastChannel = true;
 
       // Listen for messages from other tabs
-      _channel!.addEventListener('message', ((web.Event event) {
-        final messageEvent = event as web.MessageEvent;
-        final data = messageEvent.data;
-        _handleRawMessage(data.toString());
-      }).toJS);
-
-      LoggingService.log(
-        '[TabCommunication] Initialized with BroadcastChannel',
-        tag: 'TAB_COMM',
+      _channel!.addEventListener(
+        'message',
+        ((web.Event event) {
+          final messageEvent = event as web.MessageEvent;
+          final data = messageEvent.data;
+          _handleRawMessage(data.toString());
+        }).toJS,
       );
+
+      LoggingService.log('[TabCommunication] Initialized with BroadcastChannel', tag: 'TAB_COMM');
     } catch (e) {
       // BroadcastChannel not supported - use localStorage fallback
       _usesBroadcastChannel = false;
@@ -75,10 +74,13 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
     // Convert web.Event to Stream using StreamController
     final storageController = StreamController<web.StorageEvent>.broadcast();
 
-    web.window.addEventListener('storage', ((web.Event event) {
-      // Storage event listener only fires for StorageEvent, safe to cast
-      storageController.add(event as web.StorageEvent);
-    }).toJS);
+    web.window.addEventListener(
+      'storage',
+      ((web.Event event) {
+        // Storage event listener only fires for StorageEvent, safe to cast
+        storageController.add(event as web.StorageEvent);
+      }).toJS,
+    );
 
     _storageSubscription = storageController.stream.listen((event) {
       if (event.key == _localStorageKey && event.newValue != null) {
@@ -98,10 +100,7 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
       final message = TabMessage.parse(rawMessage);
       if (message != null) {
         _messageController.add(message);
-        LoggingService.log(
-          '[TabCommunication] Received: ${message.type}',
-          tag: 'TAB_COMM',
-        );
+        LoggingService.log('[TabCommunication] Received: ${message.type}', tag: 'TAB_COMM');
       }
       return;
     }
@@ -140,15 +139,9 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
         // Convert String to JSString for BroadcastChannel API
         final JSString jsMessage = messageWithTimestamp.toJS;
         _channel!.postMessage(jsMessage);
-        LoggingService.log(
-          '[TabCommunication] Sent via BroadcastChannel: $message',
-          tag: 'TAB_COMM',
-        );
+        LoggingService.log('[TabCommunication] Sent via BroadcastChannel: $message', tag: 'TAB_COMM');
       } catch (e) {
-        LoggingService.log(
-          '[TabCommunication] Error sending via BroadcastChannel: $e',
-          tag: 'TAB_COMM_ERROR',
-        );
+        LoggingService.log('[TabCommunication] Error sending via BroadcastChannel: $e', tag: 'TAB_COMM_ERROR');
         // Try localStorage fallback
         _sendViaLocalStorage(messageWithTimestamp);
       }
@@ -169,54 +162,27 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
         web.window.localStorage.removeItem(_localStorageKey);
       });
 
-      LoggingService.log(
-        '[TabCommunication] Sent via localStorage: $message',
-        tag: 'TAB_COMM',
-      );
+      LoggingService.log('[TabCommunication] Sent via localStorage: $message', tag: 'TAB_COMM');
     } catch (e) {
-      LoggingService.log(
-        '[TabCommunication] Error sending via localStorage: $e',
-        tag: 'TAB_COMM_ERROR',
-      );
+      LoggingService.log('[TabCommunication] Error sending via localStorage: $e', tag: 'TAB_COMM_ERROR');
     }
   }
 
   @override
-  void sendPaymentComplete({
-    required String bookingId,
-    required String ref,
-    required String email,
-  }) {
-    final message = TabMessage(
-      type: TabMessageType.paymentComplete,
-      params: {
-        'bookingId': bookingId,
-        'ref': ref,
-        'email': email,
-      },
-    );
+  void sendPaymentComplete({required String bookingId, required String ref}) {
+    final message = TabMessage(type: TabMessageType.paymentComplete, params: {'bookingId': bookingId, 'ref': ref});
     send(message.serialize());
   }
 
   @override
   void sendBookingCancelled({required String bookingId}) {
-    final message = TabMessage(
-      type: TabMessageType.bookingCancelled,
-      params: {
-        'bookingId': bookingId,
-      },
-    );
+    final message = TabMessage(type: TabMessageType.bookingCancelled, params: {'bookingId': bookingId});
     send(message.serialize());
   }
 
   @override
   void sendCalendarRefresh({String? unitId}) {
-    final message = TabMessage(
-      type: TabMessageType.calendarRefresh,
-      params: {
-        if (unitId != null) 'unitId': unitId,
-      },
-    );
+    final message = TabMessage(type: TabMessageType.calendarRefresh, params: {if (unitId != null) 'unitId': unitId});
     send(message.serialize());
   }
 
@@ -230,9 +196,6 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
     _storageSubscription?.cancel();
     _messageController.close();
 
-    LoggingService.log(
-      '[TabCommunication] Disposed',
-      tag: 'TAB_COMM',
-    );
+    LoggingService.log('[TabCommunication] Disposed', tag: 'TAB_COMM');
   }
 }

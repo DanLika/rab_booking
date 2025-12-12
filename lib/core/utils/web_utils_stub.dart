@@ -22,6 +22,12 @@ void navigateToUrl(String url) {
   // Use url_launcher for mobile navigation
 }
 
+/// Redirect top-level window (breaks out of iframe)
+/// Stub implementation for non-web platforms
+void redirectTopLevelWindow(String url) {
+  // No-op for non-web platforms
+}
+
 /// Check if running on web platform
 bool get isWebPlatform => false;
 
@@ -39,6 +45,65 @@ TabCommunicationService createTabCommunicationService() {
 /// Used for dynamic iframe resizing when embedded in external websites
 void sendIframeHeight(double height) {
   // No-op on non-web platforms
+}
+
+/// Pre-open payment popup with placeholder (no-op on mobile)
+String preOpenPaymentPopup() {
+  // No-op on non-web platforms
+  return 'error';
+}
+
+/// Update popup URL after async checkout session creation (no-op on mobile)
+bool updatePaymentPopupUrl(String checkoutUrl) {
+  // No-op on non-web platforms
+  return false;
+}
+
+/// Open Stripe Checkout using PaymentBridge (no-op on mobile)
+String openStripeCheckoutWithBridge(String checkoutUrl) {
+  // No-op on non-web platforms
+  return 'error';
+}
+
+/// Save booking state before payment (no-op on mobile)
+void saveBookingStateForPayment(String bookingDataJson) {
+  // No-op on non-web platforms
+}
+
+/// Setup payment result listener (no-op on mobile)
+void setupPaymentResultListener(dynamic callback) {
+  // No-op on non-web platforms
+}
+
+/// Notify payment completion via PaymentBridge (no-op on mobile)
+void notifyPaymentComplete(String sessionId, String status) {
+  // No-op on non-web platforms
+}
+
+/// Open Stripe Checkout in new window (no-op on mobile)
+dynamic openStripeCheckoutInNewWindow(String checkoutUrl) {
+  // No-op on non-web platforms
+  return null;
+}
+
+/// Check if current window is a popup (no-op on mobile)
+bool get isPopupWindow => false;
+
+/// Send postMessage to parent window (no-op on mobile)
+void sendMessageToParent(Map<String, dynamic> message) {
+  // No-op on non-web platforms
+}
+
+/// Listen for postMessage from parent window (no-op on mobile)
+void Function() listenToParentMessages(void Function(Map<String, dynamic>) onMessage) {
+  // No-op on non-web platforms
+  return () {};
+}
+
+/// Close current window (no-op on mobile)
+bool closePopupWindow() {
+  // No-op on non-web platforms
+  return false;
 }
 
 /// Capture scroll events in iframe to prevent parent page scrolling (no-op on mobile)

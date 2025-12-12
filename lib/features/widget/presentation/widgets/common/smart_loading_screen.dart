@@ -4,6 +4,20 @@ import '../../theme/minimalist_colors.dart';
 import 'bookbed_loader.dart';
 import 'smart_progress_controller.dart';
 
+/// Safely convert error to string, handling null and edge cases
+/// Prevents "Null check operator used on a null value" errors
+String _safeErrorToString(dynamic error) {
+  if (error == null) {
+    return 'Unknown error';
+  }
+  try {
+    return error.toString();
+  } catch (e) {
+    // If toString() itself throws, return a safe fallback
+    return 'Error: Unable to display error details';
+  }
+}
+
 /// Smart loading screen that shows adaptive progress animation.
 ///
 /// Unlike [WidgetLoadingScreen] which shows indeterminate progress,
@@ -213,7 +227,9 @@ class _SmartLoadingScreenWithProviderState<T>
 
   Future<void> _finishProgress() async {
     // Calculate remaining time to meet minimum display
-    final elapsed = DateTime.now().difference(_startTime!).inMilliseconds;
+    // Defensive check: ensure _startTime is initialized
+    final startTime = _startTime ?? DateTime.now();
+    final elapsed = DateTime.now().difference(startTime).inMilliseconds;
     final remaining = widget.minimumDisplayTime - elapsed;
 
     if (remaining > 0) {
@@ -289,7 +305,7 @@ class _SmartLoadingScreenWithProviderState<T>
             Icon(Icons.error_outline, size: 64, color: colors.error),
             const SizedBox(height: 24),
             Text(
-              error.toString(),
+              _safeErrorToString(error),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: colors.textPrimary),
             ),

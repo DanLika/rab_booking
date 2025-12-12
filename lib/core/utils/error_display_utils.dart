@@ -237,13 +237,27 @@ class ErrorDisplayUtils {
       return userMessage;
     }
 
+    // Handle null error case
+    if (error == null) {
+      return 'Došlo je do greške. Pokušajte ponovo ili kontaktirajte podršku.';
+    }
+
     // In debug mode, show full error for developers
     if (kDebugMode) {
-      return error.toString();
+      try {
+        return error.toString();
+      } catch (e) {
+        return 'Error: Unable to display error details';
+      }
     }
 
     // In release mode, provide user-friendly messages
-    final errorString = error.toString().toLowerCase();
+    String errorString;
+    try {
+      errorString = error.toString().toLowerCase();
+    } catch (e) {
+      return 'Došlo je do greške. Pokušajte ponovo ili kontaktirajte podršku.';
+    }
 
     // Firebase errors
     if (errorString.contains('permission-denied') || errorString.contains('permission denied')) {

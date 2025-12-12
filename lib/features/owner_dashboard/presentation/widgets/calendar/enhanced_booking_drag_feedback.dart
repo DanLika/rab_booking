@@ -49,6 +49,7 @@ class EnhancedBookingDragFeedback extends StatelessWidget {
           ],
         ),
         child: Stack(
+          alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
           children: [
             // Drag indicator icon (top-left)
             Positioned(

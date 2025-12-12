@@ -18,28 +18,15 @@ class FirebaseWidgetSettingsRepository {
   FirebaseWidgetSettingsRepository(this._firestore);
 
   /// Get document reference for widget settings
-  DocumentReference<Map<String, dynamic>> _settingsDocRef(
-    String propertyId,
-    String unitId,
-  ) => _firestore
-      .collection(_propertiesCollection)
-      .doc(propertyId)
-      .collection(_widgetSettingsSubcollection)
-      .doc(unitId);
+  DocumentReference<Map<String, dynamic>> _settingsDocRef(String propertyId, String unitId) =>
+      _firestore.collection(_propertiesCollection).doc(propertyId).collection(_widgetSettingsSubcollection).doc(unitId);
 
   /// Get collection reference for all widget settings in a property
-  CollectionReference<Map<String, dynamic>> _settingsCollectionRef(
-    String propertyId,
-  ) => _firestore
-      .collection(_propertiesCollection)
-      .doc(propertyId)
-      .collection(_widgetSettingsSubcollection);
+  CollectionReference<Map<String, dynamic>> _settingsCollectionRef(String propertyId) =>
+      _firestore.collection(_propertiesCollection).doc(propertyId).collection(_widgetSettingsSubcollection);
 
   /// Get widget settings for a specific unit
-  Future<WidgetSettings?> getWidgetSettings({
-    required String propertyId,
-    required String unitId,
-  }) async {
+  Future<WidgetSettings?> getWidgetSettings({required String propertyId, required String unitId}) async {
     try {
       final doc = await _settingsDocRef(propertyId, unitId).get();
 
@@ -53,10 +40,7 @@ class FirebaseWidgetSettingsRepository {
   }
 
   /// Watch widget settings for real-time updates
-  Stream<WidgetSettings?> watchWidgetSettings({
-    required String propertyId,
-    required String unitId,
-  }) {
+  Stream<WidgetSettings?> watchWidgetSettings({required String propertyId, required String unitId}) {
     return _settingsDocRef(propertyId, unitId).snapshots().map((doc) {
       if (!doc.exists) return null;
       return WidgetSettings.fromFirestore(doc);
@@ -76,8 +60,7 @@ class FirebaseWidgetSettingsRepository {
         id: unitId,
         propertyId: propertyId,
         ownerId: ownerId, // Required for Firestore security rules
-        widgetMode:
-            WidgetMode.calendarOnly, // Default: show availability + contact
+        widgetMode: WidgetMode.calendarOnly, // Default: show availability + contact
         contactOptions: ContactOptions(
           emailAddress: ownerEmail,
           phoneNumber: ownerPhone,
@@ -92,10 +75,7 @@ class FirebaseWidgetSettingsRepository {
 
       await _settingsDocRef(propertyId, unitId).set(settings.toFirestore());
 
-      LoggingService.log(
-        'Default settings created for unit: $unitId',
-        tag: _logTag,
-      );
+      LoggingService.log('Default settings created for unit: $unitId', tag: _logTag);
     } catch (e) {
       LoggingService.log('Error creating default settings: $e', tag: _logTag);
       rethrow;
@@ -112,10 +92,7 @@ class FirebaseWidgetSettingsRepository {
         settings.id,
       ).set(updatedSettings.toFirestore(), SetOptions(merge: true));
 
-      LoggingService.log(
-        'Settings updated for unit: ${settings.id}',
-        tag: _logTag,
-      );
+      LoggingService.log('Settings updated for unit: ${settings.id}', tag: _logTag);
     } catch (e) {
       LoggingService.log('Error updating settings: $e', tag: _logTag);
       rethrow;
@@ -129,15 +106,12 @@ class FirebaseWidgetSettingsRepository {
     required WidgetMode widgetMode,
   }) async {
     try {
-      await _settingsDocRef(propertyId, unitId).update({
-        'widget_mode': widgetMode.toStringValue(),
-        'updated_at': Timestamp.now(),
-      });
+      await _settingsDocRef(
+        propertyId,
+        unitId,
+      ).update({'widget_mode': widgetMode.toStringValue(), 'updated_at': Timestamp.now()});
 
-      LoggingService.log(
-        'Widget mode updated to: ${widgetMode.toStringValue()}',
-        tag: _logTag,
-      );
+      LoggingService.log('Widget mode updated to: ${widgetMode.toStringValue()}', tag: _logTag);
     } catch (e) {
       LoggingService.log('Error updating widget mode: $e', tag: _logTag);
       rethrow;
@@ -151,10 +125,10 @@ class FirebaseWidgetSettingsRepository {
     required StripePaymentConfig config,
   }) async {
     try {
-      await _settingsDocRef(propertyId, unitId).update({
-        'stripe_config': config.toMap(),
-        'updated_at': Timestamp.now(),
-      });
+      await _settingsDocRef(
+        propertyId,
+        unitId,
+      ).update({'stripe_config': config.toMap(), 'updated_at': Timestamp.now()});
 
       LoggingService.log('Stripe config updated', tag: _logTag);
     } catch (e) {
@@ -170,17 +144,14 @@ class FirebaseWidgetSettingsRepository {
     required BankTransferConfig config,
   }) async {
     try {
-      await _settingsDocRef(propertyId, unitId).update({
-        'bank_transfer_config': config.toMap(),
-        'updated_at': Timestamp.now(),
-      });
+      await _settingsDocRef(
+        propertyId,
+        unitId,
+      ).update({'bank_transfer_config': config.toMap(), 'updated_at': Timestamp.now()});
 
       LoggingService.log('Bank transfer config updated', tag: _logTag);
     } catch (e) {
-      LoggingService.log(
-        'Error updating bank transfer config: $e',
-        tag: _logTag,
-      );
+      LoggingService.log('Error updating bank transfer config: $e', tag: _logTag);
       rethrow;
     }
   }
@@ -192,10 +163,10 @@ class FirebaseWidgetSettingsRepository {
     required ContactOptions contactOptions,
   }) async {
     try {
-      await _settingsDocRef(propertyId, unitId).update({
-        'contact_options': contactOptions.toMap(),
-        'updated_at': Timestamp.now(),
-      });
+      await _settingsDocRef(
+        propertyId,
+        unitId,
+      ).update({'contact_options': contactOptions.toMap(), 'updated_at': Timestamp.now()});
 
       LoggingService.log('Contact options updated', tag: _logTag);
     } catch (e) {
@@ -205,10 +176,7 @@ class FirebaseWidgetSettingsRepository {
   }
 
   /// Delete widget settings (when unit is deleted)
-  Future<void> deleteWidgetSettings({
-    required String propertyId,
-    required String unitId,
-  }) async {
+  Future<void> deleteWidgetSettings({required String propertyId, required String unitId}) async {
     try {
       await _settingsDocRef(propertyId, unitId).delete();
 
@@ -226,25 +194,56 @@ class FirebaseWidgetSettingsRepository {
 
       return snapshot.docs.map(WidgetSettings.fromFirestore).toList();
     } catch (e) {
-      LoggingService.log(
-        'Error getting all property settings: $e',
-        tag: _logTag,
-      );
+      LoggingService.log('Error getting all property settings: $e', tag: _logTag);
       return [];
     }
   }
 
   /// Check if settings exist for a unit
-  Future<bool> settingsExist({
-    required String propertyId,
-    required String unitId,
-  }) async {
+  Future<bool> settingsExist({required String propertyId, required String unitId}) async {
     try {
       final doc = await _settingsDocRef(propertyId, unitId).get();
       return doc.exists;
     } catch (e) {
       LoggingService.log('Error checking if settings exist: $e', tag: _logTag);
       return false;
+    }
+  }
+
+  /// Update email verification requirement for all units in a property
+  ///
+  /// This is a property-wide setting that should apply to all units.
+  /// When email verification is enabled/disabled, it affects all units.
+  Future<void> updateEmailVerificationForAllUnits({
+    required String propertyId,
+    required bool requireEmailVerification,
+  }) async {
+    try {
+      final snapshot = await _settingsCollectionRef(propertyId).get();
+
+      if (snapshot.docs.isEmpty) {
+        LoggingService.log('No widget settings found for property: $propertyId', tag: _logTag);
+        return;
+      }
+
+      final batch = _firestore.batch();
+      int updateCount = 0;
+
+      for (final doc in snapshot.docs) {
+        // Update email_config with new require_email_verification value
+        batch.update(doc.reference, {
+          'email_config.require_email_verification': requireEmailVerification,
+          'updated_at': Timestamp.now(),
+        });
+        updateCount++;
+      }
+
+      await batch.commit();
+
+      LoggingService.log('Email verification updated for $updateCount units in property: $propertyId', tag: _logTag);
+    } catch (e) {
+      LoggingService.log('Error updating email verification for all units: $e', tag: _logTag);
+      rethrow;
     }
   }
 }

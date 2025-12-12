@@ -57,19 +57,26 @@ class CalendarTooltipBuilder {
 
     if (dateInfo == null) return const SizedBox.shrink();
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    // Defensive check: ensure MediaQuery is available
+    final mediaQuery = MediaQuery.maybeOf(context);
+    if (mediaQuery == null) return const SizedBox.shrink();
+    
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
 
     // Position tooltip near mouse cursor, offset to avoid cursor overlap
-    double xPosition = mousePosition.dx + _cursorOffset;
-    double yPosition = mousePosition.dy - tooltipHeight - _cursorOffset;
+    // Defensive check: ensure mousePosition has valid values
+    final dx = mousePosition.dx.isFinite ? mousePosition.dx : 0.0;
+    final dy = mousePosition.dy.isFinite ? mousePosition.dy : 0.0;
+    double xPosition = dx + _cursorOffset;
+    double yPosition = dy - tooltipHeight - _cursorOffset;
 
     // Adjust if tooltip goes off screen
     if (xPosition + _tooltipWidth > screenWidth) {
-      xPosition = mousePosition.dx - _tooltipWidth - _cursorOffset;
+      xPosition = dx - _tooltipWidth - _cursorOffset;
     }
     if (yPosition < _screenPadding) {
-      yPosition = mousePosition.dy + _screenPadding;
+      yPosition = dy + _screenPadding;
     }
 
     // Clamp to screen bounds with padding

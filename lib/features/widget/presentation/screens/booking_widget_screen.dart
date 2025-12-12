@@ -1,9 +1,12 @@
 import 'dart:async';
-
+import 'dart:convert';
+import 'dart:js_interop' if (dart.library.html) 'dart:js_interop';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/web_utils.dart';
+import '../../../../core/utils/browser_detection.dart';
+import '../../../../core/services/analytics_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 // Cross-tab communication service (uses conditional import via web_utils)
@@ -57,6 +60,7 @@ import '../widgets/booking/payment/payment_method_card.dart';
 import '../widgets/booking/pill_bar_content.dart';
 import '../widgets/booking/booking_pill_bar.dart';
 import '../widgets/booking/contact_pill_card_widget.dart';
+import '../widgets/popup_blocked_dialog.dart';
 // MinimalistColorSchemeAdapter is already imported via minimalist_colors.dart
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
@@ -95,6 +99,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return id.substring(0, slashIndex);
     }
     return id;
+  }
+
+  /// Safely convert error to string, handling null and edge cases
+  /// Prevents "Null check operator used on a null value" errors
+  static String _safeErrorToString(dynamic error) {
+    if (error == null) {
+      return 'Unknown error';
+    }
+    try {
+      return error.toString();
+    } catch (e) {
+      // If toString() itself throws, return a safe fallback
+      return 'Error: Unable to display error details';
+    }
   }
 
   // ============================================
@@ -141,6 +159,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   String get _selectedPaymentOption => _formState.selectedPaymentOption;
   bool get _isProcessing => _formState.isProcessing;
   set _isProcessing(bool value) => _formState.isProcessing = value;
+  bool get _isVerifyingEmail => _formState.isVerifyingEmail;
+  set _isVerifyingEmail(bool value) => _formState.isVerifyingEmail = value;
   bool get _emailVerified => _formState.emailVerified;
   set _emailVerified(bool value) => _formState.emailVerified = value;
   bool get _taxLegalAccepted => _formState.taxLegalAccepted;
@@ -171,6 +191,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // When payment completes in one tab, other tabs are notified to update UI
   TabCommunicationService? _tabCommunicationService;
   StreamSubscription<TabMessage>? _tabMessageSubscription;
+
+  // PostMessage listener for popup window communication (iframe context)
+  void Function()? _postMessageListenerCleanup;
 
   // ============================================
   // IFRAME HEIGHT AUTO-RESIZE
@@ -213,8 +236,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     setupIframeScrollCapture();
 
     // Check for booking confirmation parameters (all payment types)
+    // NOTE: Email is NOT in URL - booking is fetched by bookingId
     final confirmationRef = uri.queryParameters['confirmation'];
-    final confirmationEmail = uri.queryParameters['email'];
     final bookingId = uri.queryParameters['bookingId'];
     final paymentType = uri.queryParameters['payment'];
     final stripeStatus = uri.queryParameters['stripe_status'];
@@ -228,10 +251,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Legacy Stripe return (old flow - booking created before checkout)
     final hasLegacyStripeParams =
-        confirmationRef != null &&
-        confirmationEmail != null &&
-        bookingId != null &&
-        (paymentType == 'stripe' || stripeStatus == 'success');
+        confirmationRef != null && bookingId != null && (paymentType == 'stripe' || stripeStatus == 'success');
 
     // Check if this is a direct booking return (same tab - Pay on Arrival, Bank Transfer)
     final isDirectBookingReturn = bookingStatus == 'success' && confirmationRef != null && bookingId != null;
@@ -252,19 +272,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (hasLegacyStripeParams) {
         await _clearFormData();
 
-        await _showConfirmationFromUrl(confirmationRef, confirmationEmail, bookingId);
+        await _showConfirmationFromUrl(confirmationRef, bookingId);
         return; // Don't continue with normal initialization
       }
 
       // If this is a direct booking return (same tab), show confirmation
       if (isDirectBookingReturn) {
-        await _showConfirmationFromUrl(
-          confirmationRef,
-          confirmationEmail ?? '',
-          bookingId,
-          paymentMethod: paymentType,
-          isDirectBooking: true,
-        );
+        await _showConfirmationFromUrl(confirmationRef, bookingId, paymentMethod: paymentType, isDirectBooking: true);
         return; // Don't continue with normal initialization
       }
 
@@ -303,6 +317,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // (safety measure in case this method is called multiple times)
       _tabMessageSubscription?.cancel();
       _tabCommunicationService?.dispose();
+      _postMessageListenerCleanup?.call();
 
       // Create platform-appropriate service instance
       // (createTabCommunicationService uses conditional import)
@@ -311,11 +326,121 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Listen for messages from other tabs
       _tabMessageSubscription = _tabCommunicationService!.messageStream.listen(_handleTabMessage);
 
+      // If in iframe, also listen for postMessage from popup windows
+      if (isInIframe) {
+        _postMessageListenerCleanup = listenToParentMessages(_handlePostMessage);
+        LoggingService.log('[PostMessage] Initialized listener for popup communication', tag: 'POSTMESSAGE');
+
+        // Also setup PaymentBridge listener for payment completion
+        if (kIsWeb) {
+          _setupPaymentBridgeListener();
+        }
+      }
+
       LoggingService.log('[CrossTab] Initialized cross-tab communication listener', tag: 'TAB_COMM');
     } catch (e) {
       LoggingService.log('[CrossTab] Failed to initialize: $e', tag: 'TAB_COMM_ERROR');
     }
   }
+
+  /// Setup PaymentBridge listener for payment completion
+  void _setupPaymentBridgeListener() {
+    if (!kIsWeb) return;
+
+    try {
+      // Setup listener using JS interop
+      // PaymentBridge will call this callback when payment completes
+      // Wrap Dart function in JS interop
+      final callback = ((String resultJson) {
+        try {
+          final result = jsonDecode(resultJson) as Map<String, dynamic>;
+          final type = result['type'] as String?;
+
+          if (type == 'PAYMENT_COMPLETE') {
+            final sessionId = result['sessionId'] as String?;
+            final status = result['status'] as String?;
+
+            if (sessionId != null && status == 'success') {
+              LoggingService.log('[PaymentBridge] Payment complete received, sessionId: $sessionId', tag: 'STRIPE');
+
+              // Handle payment completion by polling for booking
+              // This is called when payment completes in popup and sends message to iframe
+              if (mounted) {
+                // Reset processing state first
+                setState(() {
+                  _isProcessing = false;
+                });
+
+                // Handle Stripe return with session ID (same as URL-based flow)
+                _handleStripeReturnWithSessionId(sessionId);
+              }
+            }
+          }
+        } catch (e) {
+          LoggingService.log('[PaymentBridge] Error handling payment result: $e', tag: 'STRIPE');
+        }
+      }).toJS;
+
+      setupPaymentResultListener(callback);
+
+      LoggingService.log('[PaymentBridge] Listener setup complete', tag: 'STRIPE');
+    } catch (e) {
+      LoggingService.log('[PaymentBridge] Failed to setup listener: $e', tag: 'STRIPE');
+    }
+  }
+
+  /// Handle postMessage from popup window (Stripe checkout return)
+  /// This is called when payment completes in popup and sends message to iframe parent
+  /// Also handles BroadcastChannel messages from new tabs (when popup is blocked)
+  void _handlePostMessage(Map<String, dynamic> message) {
+    if (!mounted) return;
+
+    final type = message['type'] as String?;
+    final source = message['source'] as String?;
+
+    // Only handle messages from our widget
+    if (source != 'bookbed-widget' || type == null) return;
+
+    LoggingService.log('[PostMessage] Received: $type', tag: 'POSTMESSAGE');
+
+    switch (type) {
+      case 'stripe-payment-complete':
+        final bookingId = message['bookingId'] as String?;
+        final bookingRef = message['bookingRef'] as String?;
+
+        // NOTE: Email is NOT required - booking is fetched by bookingId
+        if (bookingId != null && bookingRef != null) {
+          LoggingService.log('[PostMessage] Payment complete, showing confirmation', tag: 'POSTMESSAGE');
+
+          // Reset processing state first
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+            });
+          }
+
+          // Clear form and show confirmation
+          _clearFormData().then((_) {
+            if (mounted) {
+              _showConfirmationFromUrl(bookingRef, bookingId, fromOtherTab: true);
+            }
+          });
+        }
+        break;
+      case 'stripe-popup-close':
+        // User wants to close popup - reset processing state
+        LoggingService.log('[PostMessage] Popup close requested', tag: 'POSTMESSAGE');
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+        }
+        break;
+    }
+  }
+
+  // REMOVED: _monitorStripePopup - no longer needed since Stripe redirects in same tab
+  // (consistent with other payment methods: Bank Transfer, Pay on Arrival, etc.)
 
   /// Send iframe height to parent window for auto-resize
   /// Only sends if height changed significantly (>10px) to avoid spam
@@ -326,18 +451,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      final renderBox = _contentKey.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox == null) return;
+      try {
+        final renderBox = _contentKey.currentContext?.findRenderObject() as RenderBox?;
+        if (renderBox == null || !renderBox.hasSize) return;
 
-      final height = renderBox.size.height;
+        // Defensive check: ensure size is valid and finite
+        final size = renderBox.size;
+        if (!size.height.isFinite || !size.width.isFinite || 
+            size.height <= 0 || size.width <= 0) {
+          return;
+        }
 
-      // Add padding for visual breathing room
-      final totalHeight = height + 32;
+        final height = size.height;
 
-      // Only send if height changed significantly (avoid spam)
-      if ((totalHeight - _lastSentHeight).abs() > 10) {
-        _lastSentHeight = totalHeight;
-        sendIframeHeight(totalHeight);
+        // Add padding for visual breathing room
+        final totalHeight = height + 32;
+
+        // Ensure totalHeight is valid before sending
+        if (!totalHeight.isFinite || totalHeight <= 0) return;
+
+        // Only send if height changed significantly (avoid spam)
+        if ((totalHeight - _lastSentHeight).abs() > 10) {
+          _lastSentHeight = totalHeight;
+          sendIframeHeight(totalHeight);
+        }
+      } catch (e) {
+        // Ignore errors if RenderBox is disposed or context is invalid
+        // This can happen if widget is disposed while callback is pending
+        return;
       }
     });
   }
@@ -370,17 +511,38 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   /// Handle payment completion notification from another tab
   /// This is called when Tab B (Stripe return) broadcasts that payment is complete
+  /// This handles the case when popup is blocked and Stripe opens in new tab
+  /// NOTE: Email is NOT required - booking is fetched by bookingId
   Future<void> _handlePaymentCompleteFromOtherTab(TabMessage message) async {
     final bookingId = message.bookingId;
     final bookingRef = message.bookingRef;
-    final email = message.email;
 
-    if (bookingId == null || bookingRef == null || email == null) {
+    if (bookingId == null || bookingRef == null) {
       LoggingService.log('[CrossTab] Invalid payment complete message - missing params', tag: 'TAB_COMM_ERROR');
       return;
     }
 
     LoggingService.log('[CrossTab] Payment complete received for booking: $bookingRef', tag: 'TAB_COMM');
+
+    // Track payment completion with analytics (from other tab/popup)
+    final browser = BrowserDetection.getBrowserName();
+    final deviceType = BrowserDetection.getDeviceType();
+    unawaited(
+      AnalyticsService.instance.logStripePaymentCompleted(
+        sessionId: bookingId, // Use bookingId as session identifier
+        method: 'popup', // This came from popup/new tab
+        browser: browser,
+        deviceType: deviceType,
+        timeToCompleteSeconds: 0, // Time tracking not available for cross-tab messages
+      ),
+    );
+
+    // Reset processing state first (important for iframe loading state)
+    if (mounted) {
+      setState(() {
+        _isProcessing = false;
+      });
+    }
 
     // CRITICAL: Clear form data and reset state BEFORE showing confirmation
     // This prevents the bug where pressing "back" shows old form data
@@ -391,7 +553,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Use the same method as URL-based confirmation
     // Pass fromOtherTab: true to prevent circular broadcasting
     if (mounted) {
-      await _showConfirmationFromUrl(bookingRef, email, bookingId, fromOtherTab: true);
+      await _showConfirmationFromUrl(bookingRef, bookingId, fromOtherTab: true);
     }
   }
 
@@ -503,6 +665,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Future<void> _handleStripeReturnWithSessionId(String sessionId) async {
     LoggingService.log('[STRIPE_RETURN] Handling Stripe return with session_id: $sessionId', tag: 'STRIPE_SESSION');
 
+    // Track payment completion start time for analytics
+    final paymentStartTime = DateTime.now();
+
     // Show loading state while we wait for webhook
     setState(() {
       _isValidating = true;
@@ -532,6 +697,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             '[STRIPE_RETURN] ✅ Found booking: ${booking.id} (ref: ${booking.bookingReference})',
             tag: 'STRIPE_SESSION',
           );
+
+          // Track payment completion with analytics
+          final timeToComplete = DateTime.now().difference(paymentStartTime).inSeconds;
+          final browser = BrowserDetection.getBrowserName();
+          final deviceType = BrowserDetection.getDeviceType();
+          unawaited(
+            AnalyticsService.instance.logStripePaymentCompleted(
+              sessionId: sessionId,
+              method: 'redirect', // This is a redirect return
+              browser: browser,
+              deviceType: deviceType,
+              timeToCompleteSeconds: timeToComplete,
+            ),
+          );
+
           break;
         }
 
@@ -551,14 +731,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
 
       if (booking == null) {
-        // Webhook didn't create booking in time - show prominent dialog
+        // Webhook didn't create booking in time - show prominent dialog with poll + message
         LoggingService.log(
           '[STRIPE_RETURN] ❌ Booking not found after ${maxAttempts * pollInterval.inSeconds} seconds',
           tag: 'STRIPE_SESSION',
         );
 
         if (mounted) {
-          // Show dialog with clear instructions instead of snackbar
+          // Show dialog with clear instructions (poll + message approach)
+          // Dialog explains that payment was successful but confirmation is delayed
+          // User can wait or check email for confirmation
           await _showPaymentDelayedDialog();
 
           // Clear URL params and show calendar
@@ -578,22 +760,24 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       ref.invalidate(realtimeMonthCalendarProvider);
 
       // Navigate to confirmation screen using Navigator.push
+      // booking is guaranteed non-null here due to null check above
+      final confirmedBooking = booking;
       if (mounted) {
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => BookingConfirmationScreen(
-              bookingReference: booking!.bookingReference ?? booking.id,
-              guestEmail: booking.guestEmail ?? '',
-              guestName: booking.guestName ?? 'Guest',
-              checkIn: booking.checkIn,
-              checkOut: booking.checkOut,
-              totalPrice: booking.totalPrice,
-              nights: booking.checkOut.difference(booking.checkIn).inDays,
-              guests: booking.guestCount,
+              bookingReference: confirmedBooking.bookingReference ?? confirmedBooking.id,
+              guestEmail: confirmedBooking.guestEmail ?? '',
+              guestName: confirmedBooking.guestName ?? 'Guest',
+              checkIn: confirmedBooking.checkIn,
+              checkOut: confirmedBooking.checkOut,
+              totalPrice: confirmedBooking.totalPrice,
+              nights: confirmedBooking.checkOut.difference(confirmedBooking.checkIn).inDays,
+              guests: confirmedBooking.guestCount,
               propertyName: _unit?.name ?? 'Property',
               unitName: _unit?.name,
               paymentMethod: 'stripe',
-              booking: booking,
+              booking: confirmedBooking,
               emailConfig: _widgetSettings?.emailConfig,
               widgetSettings: _widgetSettings,
               propertyId: _propertyId,
@@ -618,7 +802,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context, ref).errorLoadingBooking(e.toString()),
+          message: WidgetTranslations.of(context, ref).errorLoadingBooking(_safeErrorToString(e)),
           duration: const Duration(seconds: 5),
         );
 
@@ -668,7 +852,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
 
         // Unit not found for slug
-        if (!slugContext.unitFound || slugContext.unitId == null) {
+        if (!slugContext.unitFound || slugContext.unitId == null || slugContext.unitId!.isEmpty) {
           setState(() {
             _validationError = 'Unit not found.\n\nSlug: ${widget.urlSlug}\nProperty: ${slugContext.displayName}';
             _isValidating = false;
@@ -677,8 +861,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
 
         // Successfully resolved both property and unit from slug URL
+        // Defensive: Double-check unitId is not null before assignment
+        final resolvedUnitId = slugContext.unitId;
+        if (resolvedUnitId == null || resolvedUnitId.isEmpty) {
+          setState(() {
+            _validationError = 'Unit ID is invalid.\n\nSlug: ${widget.urlSlug}';
+            _isValidating = false;
+          });
+          return;
+        }
         _propertyId = slugContext.propertyId;
-        _unitId = slugContext.unitId!;
+        _unitId = resolvedUnitId;
 
         // Continue with normal validation flow below...
       }
@@ -715,11 +908,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         _widgetSettings = widgetCtx.settings;
 
         // Adjust default guest count to respect property capacity
-        final totalGuests = _adults + _children;
-        if (totalGuests > widgetCtx.unit.maxGuests) {
-          // If default exceeds capacity, set to max allowed
-          _adults = widgetCtx.unit.maxGuests.clamp(1, widgetCtx.unit.maxGuests);
-          _children = 0;
+        // Defensive null check: maxGuests is required but handle edge cases
+        final maxGuests = widgetCtx.unit.maxGuests;
+        if (maxGuests > 0) {
+          final totalGuests = _adults + _children;
+          if (totalGuests > maxGuests) {
+            // If default exceeds capacity, set to max allowed
+            _adults = maxGuests.clamp(1, maxGuests);
+            _children = 0;
+          }
         }
 
         // Set default payment method based on what's enabled
@@ -864,18 +1061,58 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _saveDebounce?.cancel();
 
     // Bug #53: Remove listeners before disposing
-    _firstNameController.removeListener(_saveFormDataDebounced);
-    _lastNameController.removeListener(_saveFormDataDebounced);
-    _emailController.removeListener(_saveFormDataDebounced);
-    _phoneController.removeListener(_saveFormDataDebounced);
-    _notesController.removeListener(_saveFormDataDebounced);
+    // Defensive: Wrap in try-catch to handle cases where listener might not be added
+    // or controller might already be disposed
+    try {
+      _firstNameController.removeListener(_saveFormDataDebounced);
+    } catch (e) {
+      // Ignore - listener might not be added or controller already disposed
+    }
+    try {
+      _lastNameController.removeListener(_saveFormDataDebounced);
+    } catch (e) {
+      // Ignore - listener might not be added or controller already disposed
+    }
+    try {
+      _emailController.removeListener(_saveFormDataDebounced);
+    } catch (e) {
+      // Ignore - listener might not be added or controller already disposed
+    }
+    try {
+      _phoneController.removeListener(_saveFormDataDebounced);
+    } catch (e) {
+      // Ignore - listener might not be added or controller already disposed
+    }
+    try {
+      _notesController.removeListener(_saveFormDataDebounced);
+    } catch (e) {
+      // Ignore - listener might not be added or controller already disposed
+    }
 
     // Dispose all form controllers via centralized state
-    _formState.dispose();
+    // Defensive: Wrap in try-catch to handle edge cases
+    try {
+      _formState.dispose();
+    } catch (e) {
+      // Ignore - formState might already be disposed
+    }
 
     // Dispose cross-tab communication resources
-    _tabMessageSubscription?.cancel();
-    _tabCommunicationService?.dispose();
+    try {
+      _tabMessageSubscription?.cancel();
+    } catch (e) {
+      // Ignore - subscription might already be cancelled
+    }
+    try {
+      _tabCommunicationService?.dispose();
+    } catch (e) {
+      // Ignore - service might already be disposed
+    }
+    try {
+      _postMessageListenerCleanup?.call();
+    } catch (e) {
+      // Ignore - cleanup might already be called or throw
+    }
 
     super.dispose();
   }
@@ -898,28 +1135,58 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           depositPercentage: _widgetSettings?.globalDepositPercentage ?? 20,
         ),
         (previous, next) {
-          next.whenOrNull(
-            error: (error, stack) {
-              // Check if error is DatesNotAvailableException
-              if (error is DatesNotAvailableException) {
-                // Clear selected dates
-                setState(() {
-                  _checkIn = null;
-                  _checkOut = null;
-                  _showGuestForm = false;
-                });
+          // Defensive check: ensure widget is still mounted
+          if (!mounted) return;
+          
+          try {
+            next.whenOrNull(
+              error: (error, stack) {
+                // Defensive check: ensure widget is still mounted
+                if (!mounted) return;
+                
+                // Check if error is DatesNotAvailableException
+                if (error is DatesNotAvailableException) {
+                  // Defensive check: ensure widget is still mounted before setState
+                  if (!mounted) return;
+                  
+                  try {
+                    // Clear selected dates
+                    setState(() {
+                      _checkIn = null;
+                      _checkOut = null;
+                      _showGuestForm = false;
+                    });
 
-                // Show user-friendly error message
-                if (mounted) {
-                  SnackBarHelper.showError(
-                    context: context,
-                    message: error.getUserMessage(),
-                    duration: const Duration(seconds: 5),
-                  );
+                    // Show user-friendly error message
+                    if (mounted) {
+                      // Safely get error message
+                      String errorMessage;
+                      try {
+                        errorMessage = error.getUserMessage();
+                      } catch (e) {
+                        errorMessage = 'Selected dates are no longer available';
+                      }
+                      
+                      // Defensive check: ensure context is still valid
+                      try {
+                        SnackBarHelper.showError(
+                          context: context,
+                          message: errorMessage,
+                          duration: const Duration(seconds: 5),
+                        );
+                      } catch (e) {
+                        // Ignore errors if context is no longer valid
+                      }
+                    }
+                  } catch (e) {
+                    // Ignore errors if widget is disposed during setState
+                  }
                 }
-              }
-            },
-          );
+              },
+            );
+          } catch (e) {
+            // Ignore errors if provider value is invalid or widget is disposed
+          }
         },
       );
     }
@@ -980,9 +1247,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       backgroundColor: minimalistColors.backgroundPrimary,
       body: SafeArea(
         bottom: false, // No bottom padding - widget embedded in iframe, host handles safe area
-        child: LayoutBuilder(
+          child: LayoutBuilder(
           builder: (context, constraints) {
-            final screenWidth = constraints.maxWidth;
+            // Defensive check: ensure constraints are bounded and finite
+            final screenWidth = constraints.maxWidth.isFinite && constraints.maxWidth != double.infinity
+                ? constraints.maxWidth
+                : 1200.0; // Fallback to reasonable default
             final forceMonthView = screenWidth < 1024; // Year view only on desktop
 
             // Watch calendar view to determine max content width for centering
@@ -1013,7 +1283,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       // Always use full viewport height to enable vertical centering
-                      minHeight: constraints.maxHeight,
+                      // Defensive check: ensure maxHeight is finite
+                      minHeight: constraints.maxHeight.isFinite && constraints.maxHeight != double.infinity
+                          ? constraints.maxHeight
+                          : 800.0, // Fallback to reasonable default
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center, // Vertically center content
@@ -1030,23 +1303,29 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   // Custom title header (if configured)
-                                  if (_widgetSettings?.themeOptions?.customTitle != null &&
-                                      _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 16),
-                                      child: Text(
-                                        _widgetSettings!.themeOptions!.customTitle!,
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: minimalistColors.textPrimary,
-                                          fontFamily: 'Manrope',
+                                  ...() {
+                                    final customTitle = _widgetSettings?.themeOptions?.customTitle;
+                                    if (customTitle != null && customTitle.isNotEmpty) {
+                                      return [
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 16),
+                                          child: Text(
+                                            customTitle,
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: minimalistColors.textPrimary,
+                                              fontFamily: 'Manrope',
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
+                                      ];
+                                    }
+                                    return <Widget>[];
+                                  }(),
 
                                   // NOTE: iCal sync warning banner removed from guest widget
                                   // This is owner-only information - guests don't need to see sync status
@@ -1195,13 +1474,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   /// Build floating pill bar that overlays the calendar
   Widget _buildFloatingDraggablePillBar(String unitId, BoxConstraints constraints, bool isDarkMode) {
+    // _checkIn and _checkOut are guaranteed non-null here due to null check before calling this method
+    final checkIn = _checkIn;
+    final checkOut = _checkOut;
+    if (checkIn == null || checkOut == null) {
+      return const SizedBox.shrink();
+    }
+
     // Watch price calculation with global deposit percentage (applies to all payment methods)
     final depositPercentage = _widgetSettings?.globalDepositPercentage ?? 20;
     final priceCalc = ref.watch(
       bookingPriceProvider(
         unitId: unitId,
-        checkIn: _checkIn,
-        checkOut: _checkOut,
+        checkIn: checkIn,
+        checkOut: checkOut,
         propertyId: _propertyId, // OPTIMIZED: enables cache reuse
         depositPercentage: depositPercentage,
       ),
@@ -1209,7 +1495,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     return priceCalc.when(
       data: (calculationBase) {
+        // Defensive check: ensure calculationBase is not null
         if (calculationBase == null) {
+          return const SizedBox.shrink();
+        }
+
+        // Defensive check: ensure widget is still mounted before accessing providers
+        if (!mounted) {
           return const SizedBox.shrink();
         }
 
@@ -1217,27 +1509,51 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         final servicesAsync = ref.watch(unitAdditionalServicesProvider(unitId));
         final selectedServices = ref.watch(selectedAdditionalServicesProvider);
 
-        // Calculate additional services total
+        // Calculate additional services total synchronously from current provider state
+        // Defensive check: ensure dates are valid before calculating difference
         double servicesTotal = 0.0;
-        servicesAsync.whenData((services) {
-          if (services.isNotEmpty && selectedServices.isNotEmpty) {
-            servicesTotal = ref.read(
-              additionalServicesTotalProvider((
-                services,
-                selectedServices,
-                _checkOut!.difference(_checkIn!).inDays,
-                _adults + _children,
-              )),
-            );
+        if (checkOut.isAfter(checkIn)) {
+          final nights = checkOut.difference(checkIn).inDays;
+          
+          // If servicesAsync has data, calculate total synchronously
+          // Otherwise, servicesTotal remains 0.0 (default)
+          if (servicesAsync.hasValue) {
+            try {
+              final services = servicesAsync.value;
+              if (services != null && services.isNotEmpty && selectedServices.isNotEmpty) {
+                // Defensive check: ensure widget is still mounted before reading provider
+                if (mounted) {
+                  servicesTotal = ref.read(
+                    additionalServicesTotalProvider((services, selectedServices, nights, _adults + _children)),
+                  );
+                }
+              }
+            } catch (e) {
+              // Ignore errors if provider value is invalid or widget is disposed
+              servicesTotal = 0.0;
+            }
           }
-        });
+        }
 
         // Update calculation with additional services
-        final calculation = calculationBase.copyWithServices(servicesTotal, depositPercentage);
+        // Defensive check: ensure calculationBase is valid before calling copyWithServices
+        BookingPriceCalculation calculation;
+        try {
+          calculation = calculationBase.copyWithServices(servicesTotal, depositPercentage);
+        } catch (e) {
+          // If copyWithServices fails, return empty widget
+          return const SizedBox.shrink();
+        }
 
         // Calculate responsive width and height based on screen size
-        final screenWidth = constraints.maxWidth;
-        final screenHeight = constraints.maxHeight;
+        // Defensive check: ensure constraints are bounded and finite
+        final screenWidth = constraints.maxWidth.isFinite && constraints.maxWidth != double.infinity
+            ? constraints.maxWidth
+            : 1200.0; // Fallback to reasonable default
+        final screenHeight = constraints.maxHeight.isFinite && constraints.maxHeight != double.infinity
+            ? constraints.maxHeight
+            : 800.0; // Fallback to reasonable default
+        
         double pillBarWidth;
         double maxHeight;
 
@@ -1246,16 +1562,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // Step 2: Full form - responsive based on device
           if (screenWidth < 600) {
             // Mobile
-            pillBarWidth = screenWidth * 0.95; // 95% width
-            maxHeight = screenHeight * 0.9; // 90% height
+            pillBarWidth = (screenWidth * 0.95).clamp(300.0, screenWidth);
+            maxHeight = (screenHeight * 0.9).clamp(400.0, screenHeight);
           } else if (screenWidth < 1024) {
             // Tablet
-            pillBarWidth = screenWidth * 0.8; // 80% width
-            maxHeight = screenHeight * 0.8; // 80% height
+            pillBarWidth = (screenWidth * 0.8).clamp(400.0, screenWidth);
+            maxHeight = (screenHeight * 0.8).clamp(500.0, screenHeight);
           } else {
             // Desktop
-            pillBarWidth = screenWidth * 0.7; // 70% width
-            maxHeight = screenHeight * 0.7; // 70% height
+            pillBarWidth = (screenWidth * 0.7).clamp(500.0, screenWidth);
+            maxHeight = (screenHeight * 0.7).clamp(600.0, screenHeight);
           }
         } else {
           // Step 1: Compact pill bar
@@ -1266,16 +1582,37 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           }
           maxHeight = 282.0; // Fixed height for compact view (increased by 12px)
         }
+        
+        // Ensure final values are finite and valid
+        pillBarWidth = pillBarWidth.isFinite ? pillBarWidth.clamp(300.0, screenWidth) : 400.0;
+        maxHeight = maxHeight.isFinite ? maxHeight.clamp(282.0, screenHeight) : 600.0;
+
+        // Defensive check: safely get keyboard inset
+        double keyboardInset = 0.0;
+        try {
+          final mediaQuery = MediaQuery.maybeOf(context);
+          if (mediaQuery != null) {
+            final viewInsets = mediaQuery.viewInsets;
+            keyboardInset = viewInsets.bottom.isFinite && viewInsets.bottom >= 0
+                ? viewInsets.bottom
+                : 0.0;
+          }
+        } catch (e) {
+          // If MediaQuery access fails, use 0.0 as fallback
+          keyboardInset = 0.0;
+        }
 
         return BookingPillBar(
           width: pillBarWidth,
           maxHeight: maxHeight,
           isDarkMode: isDarkMode,
-          keyboardInset: MediaQuery.of(context).viewInsets.bottom,
+          keyboardInset: keyboardInset,
           child: PillBarContent(
-            checkIn: _checkIn!,
-            checkOut: _checkOut!,
-            nights: _checkOut!.difference(_checkIn!).inDays,
+            checkIn: checkIn,
+            checkOut: checkOut,
+            nights: checkOut.isAfter(checkIn)
+                ? checkOut.difference(checkIn).inDays
+                : 1, // Fallback to 1 night if dates are invalid
             formattedRoomPrice: calculation.formattedRoomPrice,
             additionalServicesTotal: calculation.additionalServicesTotal,
             formattedAdditionalServices: calculation.formattedAdditionalServices,
@@ -1286,7 +1623,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 : 20,
             isDarkMode: isDarkMode,
             showGuestForm: _showGuestForm,
-            isWideScreen: MediaQuery.of(context).size.width >= 768,
+            isWideScreen: () {
+              final mediaQuery = MediaQuery.maybeOf(context);
+              if (mediaQuery == null) return false;
+              final width = mediaQuery.size.width;
+              return width.isFinite && width >= 768;
+            }(),
             onClose: () {
               // Bug Fix: Set dismissed flag instead of clearing dates
               setState(() {
@@ -1308,25 +1650,44 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             paymentSectionBuilder: () => _buildPaymentSection(calculation),
             additionalServicesBuilder: () => Consumer(
               builder: (context, ref, _) {
-                final servicesAsync = ref.watch(unitAdditionalServicesProvider(_unitId));
-                return servicesAsync.when(
-                  data: (services) {
-                    if (services.isEmpty) return const SizedBox.shrink();
-                    return Column(
-                      children: [
-                        const SizedBox(height: SpacingTokens.m),
-                        AdditionalServicesWidget(
-                          unitId: _unitId,
-                          nights: _checkOut!.difference(_checkIn!).inDays,
-                          guests: _adults + _children,
-                        ),
-                        const SizedBox(height: SpacingTokens.m),
-                      ],
-                    );
-                  },
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, _) => const SizedBox.shrink(),
-                );
+                try {
+                  final servicesAsync = ref.watch(unitAdditionalServicesProvider(_unitId));
+                  return servicesAsync.when(
+                    data: (services) {
+                      // Defensive check: ensure services is not empty
+                      if (services.isEmpty) return const SizedBox.shrink();
+                      
+                      // _checkIn and _checkOut are guaranteed non-null here (checked before showing pill bar)
+                      final checkIn = _checkIn;
+                      final checkOut = _checkOut;
+                      if (checkIn == null || checkOut == null) {
+                        return const SizedBox.shrink();
+                      }
+                      
+                      // Defensive check: ensure dates are valid before calculating difference
+                      try {
+                        final nights = checkOut.isAfter(checkIn)
+                            ? checkOut.difference(checkIn).inDays
+                            : 1; // Fallback to 1 night if dates are invalid
+                        return Column(
+                          children: [
+                            const SizedBox(height: SpacingTokens.m),
+                            AdditionalServicesWidget(unitId: _unitId, nights: nights, guests: _adults + _children),
+                            const SizedBox(height: SpacingTokens.m),
+                          ],
+                        );
+                      } catch (e) {
+                        // Ignore errors if dates are invalid
+                        return const SizedBox.shrink();
+                      }
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  );
+                } catch (e) {
+                  // Ignore errors if provider is invalid or widget is disposed
+                  return const SizedBox.shrink();
+                }
               },
             ),
             taxLegalBuilder: () => TaxLegalDisclaimerWidget(
@@ -1577,7 +1938,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Confirm button
         SizedBox(
           width: double.infinity,
-          height: 44,
+          height: 54, // Increased by 10px (was 44)
           child: ElevatedButton(
             onPressed: _isProcessing ? () {} : () => _handleConfirmBooking(calculation),
             style: ElevatedButton.styleFrom(
@@ -1665,6 +2026,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             isDarkMode: isDarkMode,
             requireVerification: _widgetSettings?.emailConfig.requireEmailVerification ?? false,
             emailVerified: _emailVerified,
+            isLoading: _isVerifyingEmail,
             onEmailChanged: (value) {
               // Reset verification when email changes
               if (_emailVerified) {
@@ -1735,7 +2097,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           if (showButton)
             SizedBox(
               width: double.infinity,
-              height: 44,
+              height: 54, // Increased by 10px (was 44)
               child: ElevatedButton(
                 onPressed: _isProcessing ? () {} : () => _handleConfirmBooking(calculation),
                 style: ElevatedButton.styleFrom(
@@ -1795,8 +2157,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Calculate nights if dates are selected
     final tr = WidgetTranslations.of(context, ref);
     String nightsText = '';
-    if (_checkIn != null && _checkOut != null) {
-      final nights = _checkOut!.difference(_checkIn!).inDays;
+    final checkIn = _checkIn;
+    final checkOut = _checkOut;
+    if (checkIn != null && checkOut != null) {
+      final nights = checkOut.difference(checkIn).inDays;
       nightsText = tr.nightsTextFormat(nights);
     }
 
@@ -1887,6 +2251,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return; // Block booking - verification expired or check failed
     }
 
+    // Defensive null checks before submitting booking
+    if (_propertyId == null || _propertyId!.isEmpty) {
+      if (mounted) {
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Property ID is missing. Please refresh the page.',
+        );
+      }
+      return;
+    }
+
+    if (_ownerId == null || _ownerId!.isEmpty) {
+      if (mounted) {
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Owner ID is missing. Please refresh the page.',
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
     });
@@ -1913,8 +2298,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         adults: _adults,
         children: _children,
         totalPrice: calculation.totalPrice,
-        paymentMethod: widgetMode == WidgetMode.bookingPending ? 'none' : _selectedPaymentMethod,
-        paymentOption: widgetMode == WidgetMode.bookingPending ? 'none' : _selectedPaymentOption,
+        paymentMethod: widgetMode == WidgetMode.bookingPending
+            ? 'none'
+            : (_selectedPaymentMethod.isEmpty ? 'stripe' : _selectedPaymentMethod), // Fallback to 'stripe' if empty
+        paymentOption: widgetMode == WidgetMode.bookingPending
+            ? 'none'
+            : (_selectedPaymentOption.isEmpty ? 'deposit' : _selectedPaymentOption), // Fallback to 'deposit' if empty
         taxLegalAccepted: _taxLegalAccepted,
       );
 
@@ -1954,7 +2343,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context, ref).errorCreatingBooking(e.toString()),
+          message: WidgetTranslations.of(context, ref).errorCreatingBooking(_safeErrorToString(e)),
         );
       }
     } finally {
@@ -1984,10 +2373,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     if (!mounted) return;
 
     // Add URL params for browser history support (back button works)
+    // NOTE: Email is NOT included in URL for security/privacy
     final bookingRef = booking.id.substring(0, 8).toUpperCase();
     BookingUrlStateService.addConfirmationParams(
       bookingRef: bookingRef,
-      email: booking.guestEmail ?? '',
       bookingId: booking.id,
       paymentMethod: paymentMethod,
     );
@@ -2031,23 +2420,74 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// - No booking created yet - only validation passed
   /// - Pass all booking data to Stripe checkout session
   /// - Booking will be created by webhook after payment succeeds
+  ///
+  /// Uses PaymentBridge for popup handling in iframe context:
+  /// 1. Pre-open popup synchronously on user click (avoids popup blocking)
+  /// 2. Create checkout session (async)
+  /// 3. Update popup URL with checkout URL
   Future<void> _handleStripePayment({required Map<String, dynamic> bookingData, required String guestEmail}) async {
+    String? popupResult;
+
     try {
       final stripeService = ref.read(stripeServiceProvider);
 
       // Build return URL for Stripe redirect
       // IMPORTANT: Flutter Web uses hash routing (e.g., /#/calendar)
+      // NOTE: Email is NOT included in URL for security/privacy
       final baseUrl = Uri.base;
       final returnUrlWithoutHash = Uri(
         scheme: baseUrl.scheme,
         host: baseUrl.host,
         port: baseUrl.port,
-        queryParameters: {...baseUrl.queryParameters, 'email': guestEmail, 'payment': 'stripe'},
+        queryParameters: {...baseUrl.queryParameters, 'payment': 'stripe'},
       ).toString();
       // Append hash fragment for Flutter's hash-based routing
       final returnUrl = '$returnUrlWithoutHash#/calendar';
 
-      // Create Stripe checkout session with ALL booking data
+      // CRITICAL: Pre-open popup SYNCHRONOUSLY on user click (before async operations)
+      // This prevents popup blockers from blocking the window
+      if (kIsWeb && isInIframe) {
+        // Save booking state before opening popup
+        saveBookingStateForPayment(jsonEncode(bookingData));
+
+        // Pre-open popup with placeholder URL (synchronous - must be on user gesture)
+        popupResult = preOpenPaymentPopup();
+        LoggingService.log('[Stripe] Pre-opened popup, result: $popupResult', tag: 'STRIPE');
+
+        // Track payment initiation with analytics
+        final browser = BrowserDetection.getBrowserName();
+        final deviceType = BrowserDetection.getDeviceType();
+        unawaited(
+          AnalyticsService.instance.logStripePaymentInitiated(
+            method: popupResult,
+            browser: browser,
+            deviceType: deviceType,
+            isInIframe: true,
+          ),
+        );
+
+        if (popupResult == 'blocked') {
+          // Popup blocked - track and show fallback UI
+          unawaited(AnalyticsService.instance.logStripePopupBlocked(browser: browser, deviceType: deviceType));
+
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+            });
+
+            // Store checkout URL for dialog (will be set after session creation)
+            // For now, show dialog placeholder - will be updated after checkout session is created
+            // We need to wait for checkout URL before showing dialog
+          }
+          // Don't return here - continue to create checkout session
+          // Dialog will be shown after checkout URL is available
+        } else if (popupResult == 'redirect') {
+          // Mobile Safari or mobile device - will redirect after session creation
+          LoggingService.log('[Stripe] Will redirect (mobile device)', tag: 'STRIPE');
+        }
+      }
+
+      // Create Stripe checkout session with ALL booking data (async operation)
       // Booking will be created by webhook after successful payment
       LoggingService.logOperation('[Stripe] Creating checkout session...');
       final checkoutResult = await stripeService.createCheckoutSession(bookingData: bookingData, returnUrl: returnUrl);
@@ -2056,18 +2496,102 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         throw Exception('Stripe checkout URL is empty');
       }
 
-      LoggingService.logSuccess('[Stripe] Checkout session created, redirecting to: ${checkoutResult.checkoutUrl}');
+      LoggingService.logSuccess('[Stripe] Checkout session created: ${checkoutResult.checkoutUrl}');
 
-      // CRITICAL: Clear form data BEFORE redirect
+      // CRITICAL: Clear form data BEFORE redirect/popup
       // This prevents the bug where cached form data loads on return
       // with dates that are now booked, causing false "conflict" error
       await _clearFormData();
 
-      // Redirect to Stripe Checkout in SAME TAB
-      // This keeps everything in one tab - no cross-tab communication needed
+      // Handle Stripe Checkout based on context
       if (kIsWeb) {
-        // Web: Use window.location.href for same-tab redirect
-        navigateToUrl(checkoutResult.checkoutUrl);
+        if (isInIframe) {
+          // CRITICAL: In iframe, NEVER use navigateToUrl() - Stripe blocks nested iframes
+          if (popupResult == 'popup') {
+            // Iframe + popup opened: update popup URL
+            final updated = updatePaymentPopupUrl(checkoutResult.checkoutUrl);
+            if (!updated) {
+              // Failed to update popup - redirect top-level window (not iframe)
+              LoggingService.log('[Stripe] Failed to update popup, redirecting top-level window', tag: 'STRIPE');
+              redirectTopLevelWindow(checkoutResult.checkoutUrl);
+
+              // Refresh widget: close loading/shimmer and show calendar
+              if (mounted) {
+                setState(() {
+                  _isProcessing = false;
+                  _showGuestForm = false;
+                });
+                _resetFormState();
+              }
+            } else {
+              LoggingService.log('[Stripe] Popup URL updated successfully', tag: 'STRIPE');
+
+              // Refresh widget: close loading/shimmer and show calendar (popup is open in separate window)
+              if (mounted) {
+                setState(() {
+                  _isProcessing = false;
+                  _showGuestForm = false;
+                });
+                _resetFormState();
+              }
+            }
+          } else if (popupResult == 'redirect') {
+            // Iframe + mobile: redirect top-level window (not iframe)
+            LoggingService.log('[Stripe] Redirecting top-level window (mobile/iframe)', tag: 'STRIPE');
+            redirectTopLevelWindow(checkoutResult.checkoutUrl);
+
+            // Refresh widget: close loading/shimmer and show calendar
+            if (mounted) {
+              setState(() {
+                _isProcessing = false;
+                _showGuestForm = false;
+              });
+              _resetFormState();
+            }
+          } else if (popupResult == 'blocked') {
+            // Popup was blocked - show dialog with options
+            LoggingService.log('[Stripe] Popup blocked - showing dialog with options', tag: 'STRIPE');
+
+            if (mounted) {
+              setState(() {
+                _isProcessing = false;
+              });
+
+              // Show popup blocked dialog with checkout URL
+              await showDialog<void>(
+                context: context,
+                builder: (context) => PopupBlockedDialog(
+                  checkoutUrl: checkoutResult.checkoutUrl,
+                  onRetry: () {
+                    // User wants to retry - they need to click "Pay" button again
+                    // (popup can only be opened on user gesture)
+                  },
+                ),
+              );
+            }
+            return; // Don't proceed with redirect
+          } else {
+            // Unexpected popupResult value (null, 'error', etc.) - fallback to redirect
+            LoggingService.log(
+              '[Stripe] Unexpected popupResult: $popupResult, falling back to redirect',
+              tag: 'STRIPE',
+            );
+            redirectTopLevelWindow(checkoutResult.checkoutUrl);
+
+            // Refresh widget: close loading/shimmer and show calendar
+            if (mounted) {
+              setState(() {
+                _isProcessing = false;
+                _showGuestForm = false;
+              });
+              _resetFormState();
+            }
+          }
+        } else {
+          // Standalone page (not in iframe): safe to use same-tab redirect
+          LoggingService.log('[Stripe] Redirecting in same tab (standalone page)', tag: 'STRIPE');
+          navigateToUrl(checkoutResult.checkoutUrl);
+        }
       } else {
         // Mobile: Use url_launcher (will open in browser)
         final uri = Uri.parse(checkoutResult.checkoutUrl);
@@ -2088,7 +2612,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         });
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context, ref).errorLaunchingStripe(e.toString()),
+          message: WidgetTranslations.of(context, ref).errorLaunchingStripe(_safeErrorToString(e)),
         );
       }
     }
@@ -2100,9 +2624,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// [fromOtherTab] - if true, this was triggered by cross-tab message, don't broadcast back
   /// [paymentMethod] - payment method used (stripe, pay_on_arrival, bank_transfer)
   /// [isDirectBooking] - if true, this is same-tab return (direct booking), show inline
+  ///
+  /// NOTE: Email is NOT required - booking is fetched by bookingId and email is already verified in form
   Future<void> _showConfirmationFromUrl(
     String bookingReference,
-    String guestEmail,
     String bookingId, {
     bool fromOtherTab = false,
     String? paymentMethod,
@@ -2173,7 +2698,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Broadcast to other tabs (in case user has multiple tabs open)
       // This is optional now since we redirect in same tab, but useful for edge cases
       if (!fromOtherTab && _tabCommunicationService != null) {
-        _tabCommunicationService!.sendPaymentComplete(bookingId: bookingId, ref: bookingReference, email: guestEmail);
+        _tabCommunicationService!.sendPaymentComplete(bookingId: bookingId, ref: bookingReference);
         LoggingService.log('[CrossTab] Broadcasted payment complete to other tabs', tag: 'TAB_COMM');
       }
 
@@ -2195,7 +2720,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           MaterialPageRoute(
             builder: (context) => BookingConfirmationScreen(
               bookingReference: bookingReference,
-              guestEmail: confirmedBooking.guestEmail ?? guestEmail,
+              guestEmail: confirmedBooking.guestEmail ?? '',
               guestName: confirmedBooking.guestName ?? 'Guest',
               checkIn: confirmedBooking.checkIn,
               checkOut: confirmedBooking.checkOut,
@@ -2224,7 +2749,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(context, ref).errorLoadingBooking(e.toString()),
+          message: WidgetTranslations.of(context, ref).errorLoadingBooking(_safeErrorToString(e)),
           duration: const Duration(seconds: 5),
         );
       }
@@ -2237,7 +2762,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final currentView = ref.watch(calendarViewProvider);
     if (currentView != CalendarViewType.year) return false;
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    // Defensive check: ensure MediaQuery is available
+    final mediaQuery = MediaQuery.maybeOf(context);
+    if (mediaQuery == null) return false;
+
+    final screenWidth = mediaQuery.size.width;
+    // Defensive check: ensure width is valid
+    if (!screenWidth.isFinite || screenWidth <= 0) return false;
 
     // On wide screens (tablet/desktop), year view works fine
     if (screenWidth >= 768) return false;
@@ -2250,8 +2781,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
 
     // Fallback for non-iframe: use MediaQuery
-    final screenHeight = MediaQuery.of(context).size.height;
-    final orientation = MediaQuery.of(context).orientation;
+    final screenHeight = mediaQuery.size.height;
+    // Defensive check: ensure height is valid
+    if (!screenHeight.isFinite || screenHeight <= 0) return false;
+    
+    final orientation = mediaQuery.orientation;
     final isPortrait = orientation == Orientation.portrait || screenHeight > screenWidth;
 
     return isPortrait;
@@ -2353,57 +2887,83 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final email = _emailController.text.trim();
     final isDarkMode = ref.read(themeProvider);
 
-    // ✨ PRE-CHECK: Da li je email već verifikovan?
+    // Set loading state
+    if (mounted) {
+      setState(() {
+        _isVerifyingEmail = true;
+      });
+    }
+
     try {
-      LoggingService.logOperation('[BookingWidget] Pre-checking email verification status');
+      // ✨ PRE-CHECK: Da li je email već verifikovan?
+      try {
+        LoggingService.logOperation('[BookingWidget] Pre-checking email verification status');
 
-      final status = await EmailVerificationService.checkStatus(email);
+        final status = await EmailVerificationService.checkStatus(email);
 
-      // Email is already verified and NOT expired
-      if (status.isValid) {
-        LoggingService.logSuccess('[BookingWidget] Email already verified (expires in ${status.remainingMinutes}min)');
+        // Email is already verified and NOT expired
+        if (status.isValid) {
+          LoggingService.logSuccess(
+            '[BookingWidget] Email already verified (expires in ${status.remainingMinutes}min)',
+          );
 
-        if (mounted) {
+          if (mounted) {
+            setState(() {
+              _emailVerified = true;
+              _isVerifyingEmail = false;
+            });
+
+            SnackBarHelper.showSuccess(
+              context: context,
+              message: WidgetTranslations.of(context, ref).emailAlreadyVerified(status.remainingMinutes),
+            );
+          }
+
+          return; // ✅ Skip dialog - email already verified
+        }
+
+        // Email exists but expired
+        if (status.exists && status.expired) {
+          LoggingService.logWarning('[BookingWidget] Verification expired, sending new code');
+        }
+
+        // Email not verified or expired - show dialog normally
+      } catch (e) {
+        // Pre-check failed (network issue, etc.) - fallback to normal flow
+        LoggingService.logWarning('[BookingWidget] Pre-check failed, showing dialog anyway: $e');
+      }
+
+      // Show verification dialog (either new verification or pre-check failed)
+      if (!mounted) return;
+
+      final verified = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => EmailVerificationDialog(
+          email: email,
+          colors: MinimalistColorSchemeAdapter(dark: isDarkMode),
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _isVerifyingEmail = false;
+        });
+
+        if (verified == true) {
           setState(() {
             _emailVerified = true;
           });
-
-          SnackBarHelper.showSuccess(
-            context: context,
-            message: WidgetTranslations.of(context, ref).emailAlreadyVerified(status.remainingMinutes),
-          );
         }
-
-        return; // ✅ Skip dialog - email already verified
       }
-
-      // Email exists but expired
-      if (status.exists && status.expired) {
-        LoggingService.logWarning('[BookingWidget] Verification expired, sending new code');
-      }
-
-      // Email not verified or expired - show dialog normally
     } catch (e) {
-      // Pre-check failed (network issue, etc.) - fallback to normal flow
-      LoggingService.logWarning('[BookingWidget] Pre-check failed, showing dialog anyway: $e');
-    }
-
-    // Show verification dialog (either new verification or pre-check failed)
-    if (!mounted) return;
-
-    final verified = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => EmailVerificationDialog(
-        email: email,
-        colors: MinimalistColorSchemeAdapter(dark: isDarkMode),
-      ),
-    );
-
-    if (verified == true && mounted) {
-      setState(() {
-        _emailVerified = true;
-      });
+      // Reset loading state on error
+      if (mounted) {
+        setState(() {
+          _isVerifyingEmail = false;
+        });
+      }
+      rethrow;
     }
   }
 }

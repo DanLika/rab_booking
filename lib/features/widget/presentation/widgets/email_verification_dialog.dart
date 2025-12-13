@@ -7,7 +7,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../core/services/logging_service.dart';
-import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../l10n/widget_translations.dart';
 
 /// Email Verification Dialog
@@ -33,6 +32,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
   int _resendCooldown = 0;
   Timer? _cooldownTimer;
   String? _errorMessage;
+  String? _successMessage;
 
   @override
   void initState() {
@@ -65,11 +65,20 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
       LoggingService.logSuccess('[EmailVerification] Code sent successfully');
 
       if (mounted) {
-        SnackBarHelper.showSuccess(context: context, message: WidgetTranslations.of(context, ref).verificationCodeSent);
-
-        // Start 60-second cooldown
+        // Show success message inside dialog instead of Snackbar to avoid z-index issues
+        final successText = WidgetTranslations.of(context, ref).verificationCodeSent;
         setState(() {
+          _successMessage = successText;
           _resendCooldown = 60;
+        });
+
+        // Clear success message after 3 seconds
+        Timer(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _successMessage = null;
+            });
+          }
         });
 
         _cooldownTimer?.cancel();
@@ -317,6 +326,31 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                   },
                 ),
                 const SizedBox(height: 16),
+
+                // Success message
+                if (_successMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: widget.colors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: widget.colors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: widget.colors.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _successMessage!,
+                            style: GoogleFonts.inter(fontSize: 14, color: widget.colors.primary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (_successMessage != null) const SizedBox(height: 16),
 
                 // Error message
                 if (_errorMessage != null)

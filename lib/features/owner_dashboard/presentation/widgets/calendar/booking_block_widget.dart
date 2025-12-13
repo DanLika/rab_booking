@@ -213,8 +213,8 @@ class BookingBlockWidget extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: sourceBorderColor,
                               borderRadius: BorderTokens.only(
-                                topLeft: Radius.circular(4),
-                                bottomLeft: Radius.circular(4),
+                                topLeft: const Radius.circular(4),
+                                bottomLeft: const Radius.circular(4),
                               ),
                             ),
                           ),

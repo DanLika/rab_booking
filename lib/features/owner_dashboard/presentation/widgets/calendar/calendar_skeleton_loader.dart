@@ -182,8 +182,8 @@ class CalendarSkeletonCompact extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
-    // Use consistent skeleton colors for loading indicator
-    final primaryColor = isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary;
+    // Minimalistic: Use black in light mode, white in dark mode
+    final loaderColor = isDark ? Colors.white : Colors.black;
 
     return Center(
       child: Column(
@@ -192,7 +192,7 @@ class CalendarSkeletonCompact extends StatelessWidget {
           SizedBox(
             width: 40,
             height: 40,
-            child: CircularProgressIndicator(strokeWidth: 3, valueColor: AlwaysStoppedAnimation(primaryColor)),
+            child: CircularProgressIndicator(strokeWidth: 3, valueColor: AlwaysStoppedAnimation(loaderColor)),
           ),
           const SizedBox(height: 16),
           Text(

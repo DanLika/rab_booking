@@ -1,6 +1,10 @@
-import 'dart:async' show Timer;
+import 'dart:async' show Timer, TimeoutException, Completer;
+import 'dart:io' show File, FileMode;
+import 'dart:convert' show jsonEncode;
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/enums.dart';
@@ -43,6 +47,19 @@ import '../widgets/booking_actions/booking_complete_dialog.dart';
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
   final String? initialBookingId;
   const OwnerBookingsScreen({super.key, this.initialBookingId});
+  
+  // FIXED: Also read bookingId from GoRouter query parameters as fallback
+  // This avoids issues with widget parameter passing during navigation
+  static String? getBookingIdFromRoute(BuildContext context) {
+    try {
+      final router = GoRouter.of(context);
+      final state = router.routerDelegate.currentConfiguration;
+      final uri = state.uri;
+      return uri.queryParameters['bookingId'];
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   ConsumerState<OwnerBookingsScreen> createState() => _OwnerBookingsScreenState();
@@ -58,9 +75,44 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
   // Web performance: Debounce scroll listener to reduce scroll handler calls
   Timer? _scrollDebounceTimer;
+  
+  // Timer for checking initial booking (avoid multiple timers)
+  Timer? _initialBookingCheckTimer;
 
-  // Flag to ensure listener is only set up once
-  bool _listenerSetup = false;
+  // Store booking to show in dialog (set from listener, shown in build)
+  OwnerBooking? _pendingBookingToShow;
+  
+  // Flag to prevent showing the same booking dialog multiple times
+  bool _dialogShownForBooking = false;
+  
+  // Flag to track if we've already scheduled a post-frame callback for booking check
+  bool _bookingCheckScheduled = false;
+  
+  // Store the bookingId that we've already handled to prevent re-processing
+  String? _handledBookingId;
+  
+  // Helper to get current bookingId (from widget or route)
+  String? get _currentBookingId {
+    return widget.initialBookingId ?? OwnerBookingsScreen.getBookingIdFromRoute(context);
+  }
+
+  // #region agent log
+  void _log(String location, String message, Map<String, dynamic> data, String hypothesisId) {
+    try {
+      final logEntry = {
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'location': location,
+        'message': message,
+        'data': data,
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': hypothesisId,
+      };
+      final file = File('/Users/duskolicanin/git/bookbed/.cursor/debug.log');
+      file.writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
+    } catch (_) {}
+  }
+  // #endregion
 
   @override
   void initState() {
@@ -70,199 +122,129 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // Start loading indicator immediately if we have an initialBookingId
     if (widget.initialBookingId != null) {
       _isLoadingInitialBooking = true;
+      // #region agent log
+      _log('owner_bookings_screen.dart:initState', 'Initial booking ID set', {'initialBookingId': widget.initialBookingId}, 'A');
+      // #endregion
     }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
-    // Setup listener for initial booking (deep-link support)
-    // Do this in didChangeDependencies to ensure ref is available
-    if (widget.initialBookingId != null && !_listenerSetup && !_hasHandledInitialBooking) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_hasHandledInitialBooking) {
-          _setupInitialBookingListener();
-          // Also try to show booking immediately if data is already loaded
-          _tryShowBookingIfReady();
-        }
-      });
-    }
+    // Listener setup is now done in build() method using ref.watch() only
   }
 
-  /// Try to show booking dialog if data is already loaded
-  void _tryShowBookingIfReady() {
-    if (_hasHandledInitialBooking || widget.initialBookingId == null) return;
+  /// Fetch booking directly when it's not in the current window and show dialog
+  /// FIXED: Use Future.delayed to ensure provider is fully initialized before accessing
+  /// CRITICAL: This method is called from Timer callback, so ref.read() is safe here
+  Future<void> _fetchAndShowInitialBooking([String? bookingId]) async {
+    final currentBookingId = bookingId ?? _currentBookingId;
+    if (_hasHandledInitialBooking || currentBookingId == null) {
+      // #region agent log
+      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Skipping fetch', {'_hasHandledInitialBooking': _hasHandledInitialBooking, 'bookingId': currentBookingId}, 'B');
+      // #endregion
+      return;
+    }
+    _hasHandledInitialBooking = true;
+
+    // #region agent log
+    _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Entry', {'initialBookingId': currentBookingId}, 'B');
+    // #endregion
     
-    final windowedState = ref.read(windowedBookingsNotifierProvider);
-    
-    // If data is already loaded, try to find and show booking
-    if (!windowedState.isLoading && windowedState.visibleBookings.isNotEmpty) {
-      try {
-        final booking = windowedState.visibleBookings.firstWhere(
-          (b) => b.booking.id == widget.initialBookingId,
-        );
-        _hasHandledInitialBooking = true;
-        
+    // Clear pending booking ID
+    ref.read(pendingBookingIdProvider.notifier).state = null;
+
+    // FIXED BUG #8: Use Timer instead of Future.delayed to allow cancellation on dispose
+    // Wait to ensure provider is completely ready and we're outside any build phase
+    _initialBookingCheckTimer?.cancel();
+    final completer = Completer<void>();
+    _initialBookingCheckTimer = Timer(const Duration(milliseconds: 1500), completer.complete);
+    await completer.future;
+
+    if (!mounted) return;
+
+    try {
+      // #region agent log
+      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Before ref.read repository', {}, 'B');
+      // #endregion
+      
+      // FIXED: Access repository directly instead of through notifier to avoid dependency issues
+      // This is safe because we're in a Timer callback, completely outside build phase
+      final repository = ref.read(ownerBookingsRepositoryProvider);
+      final auth = FirebaseAuth.instance;
+      final userId = auth.currentUser?.uid;
+
+      if (userId == null) {
         if (mounted) {
           setState(() {
             _isLoadingInitialBooking = false;
           });
         }
-        
-        // Show dialog after a short delay
+        return;
+      }
+
+      // #region agent log
+      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Before repository.getOwnerBookingById', {}, 'B');
+      // #endregion
+
+      // FIXED BUG #1: Add timeout to prevent infinite loading loop
+      final ownerBooking = await repository.getOwnerBookingById(currentBookingId).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw TimeoutException('Failed to load booking - request timed out after 10 seconds');
+        },
+      );
+      // #region agent log
+      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'After fetch', {'ownerBooking': ownerBooking != null ? ownerBooking.booking.id : 'null'}, 'B');
+      // #endregion
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingInitialBooking = false;
+      });
+
+      if (ownerBooking != null) {
+        // FIXED: Store booking in state variable instead of showing dialog directly
+        // The build() method will watch this and show the dialog
+        if (mounted) {
+          setState(() {
+            _pendingBookingToShow = ownerBooking;
+          });
+        }
+      } else {
+        // Booking not found - show error message to user
+        debugPrint('Booking not found: $currentBookingId');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !context.mounted) return;
-          
-          Future.delayed(const Duration(milliseconds: 200), () {
-            if (!mounted || !context.mounted) return;
-            
-            try {
-              showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (context) => BookingDetailsDialog(ownerBooking: booking),
-              );
-            } catch (e) {
-              debugPrint('Error showing booking details dialog: $e');
-            }
-          });
-        });
-      } catch (_) {
-        // Booking not in current window, will be handled by listener
-      }
-    }
-  }
-
-  /// Setup listener for initial booking (deep-link support)
-  /// Called once in initState to avoid multiple listeners
-  void _setupInitialBookingListener() {
-    if (_hasHandledInitialBooking || widget.initialBookingId == null || _listenerSetup) return;
-    _listenerSetup = true;
-
-    // Use ref.listen - it automatically manages lifecycle
-    // The listener will be automatically disposed when widget is disposed
-    ref.listen(windowedBookingsNotifierProvider, (previous, next) {
-      // Skip if already handled or no booking ID
-      if (_hasHandledInitialBooking || widget.initialBookingId == null) return;
-      
-      // Wait for data to be loaded
-      if (next.isLoading) return;
-      
-      // Try to find booking in visible bookings
-      if (next.visibleBookings.isNotEmpty) {
-        try {
-          final booking = next.visibleBookings.firstWhere(
-            (b) => b.booking.id == widget.initialBookingId,
+          final l10n = AppLocalizations.of(context);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            l10n.ownerBookingsNotFound,
           );
-          
-          // Mark as handled immediately to prevent duplicate dialogs
-          _hasHandledInitialBooking = true;
-          
-          // Hide loading overlay first
-          if (mounted) {
-            setState(() {
-              _isLoadingInitialBooking = false;
-            });
-          }
-          
-          // Wait for next frame and then show dialog
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted || !context.mounted) return;
-            
-            // Additional delay to ensure UI is fully stable
-            Future.delayed(const Duration(milliseconds: 300), () {
-              if (!mounted || !context.mounted) return;
-              
-              try {
-                showDialog(
-                  context: context,
-                  barrierDismissible: true,
-                  builder: (context) => BookingDetailsDialog(ownerBooking: booking),
-                );
-              } catch (e) {
-                debugPrint('Error showing booking details dialog: $e');
-              }
-            });
-          });
-          
-          return; // Successfully found and handled
-        } catch (_) {
-          // Booking not found in current window - will fetch separately
-        }
-      }
-      
-      // If we reach here, booking is not in visible window
-      // Only fetch if we haven't already tried and data is fully loaded
-      if (!_hasHandledInitialBooking && !next.isLoading) {
-        // Mark as handled ONLY after we set up the fetch (prevents duplicate fetches)
-        // But we'll reset it if the fetch fails
-        _hasHandledInitialBooking = true;
-
-        // Fetch booking directly
-        ref.read(windowedBookingsNotifierProvider.notifier).fetchAndShowBooking(
-          widget.initialBookingId!,
-        ).then((ownerBooking) {
-          if (!mounted) return;
-
-          // Hide loading overlay
-          setState(() {
-            _isLoadingInitialBooking = false;
-          });
-
-          if (ownerBooking != null) {
-            // Wait for next frame and then show dialog
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted || !context.mounted) return;
-
-              // Additional delay to ensure UI is fully stable
-              Future.delayed(const Duration(milliseconds: 300), () {
-                if (!mounted || !context.mounted) return;
-
-                try {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: true,
-                    builder: (ctx) => BookingDetailsDialog(ownerBooking: ownerBooking),
-                  );
-                } catch (e) {
-                  debugPrint('Error showing booking details dialog: $e');
-                }
-              });
-            });
-          } else {
-            // Booking not found - show error message to user
-            debugPrint('Booking not found: ${widget.initialBookingId}');
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted || !context.mounted) return;
-              final l10n = AppLocalizations.of(context);
-              ErrorDisplayUtils.showErrorSnackBar(
-                context,
-                l10n.ownerBookingsNotFound,
-              );
-            });
-          }
-        }).catchError((error) {
-          // Handle error when fetching booking
-          if (mounted) {
-            setState(() {
-              _isLoadingInitialBooking = false;
-            });
-            debugPrint('Error fetching booking: $error');
-            // Show error to user
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted || !context.mounted) return;
-              ErrorDisplayUtils.showErrorSnackBar(context, error);
-            });
-          }
         });
       }
-    });
+    } catch (error) {
+      // #region agent log
+      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Error fetching booking', {'error': error.toString()}, 'B');
+      // #endregion
+      // Handle error when fetching booking
+      if (!mounted) return;
+      setState(() {
+        _isLoadingInitialBooking = false;
+      });
+      debugPrint('Error fetching booking: $error');
+      // Show error to user
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !context.mounted) return;
+        ErrorDisplayUtils.showErrorSnackBar(context, error);
+      });
+    }
   }
 
   @override
   void dispose() {
     _scrollDebounceTimer?.cancel();
+    _initialBookingCheckTimer?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -306,6 +288,194 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final filters = ref.watch(bookingsFiltersNotifierProvider);
     final viewMode = ref.watch(ownerBookingsViewProvider);
     final theme = Theme.of(context);
+    
+    // FIXED: Watch pendingBookingIdProvider to detect when booking should be shown
+    // This avoids issues with widget parameter passing during navigation
+    final pendingBookingId = ref.watch(pendingBookingIdProvider);
+    
+    // Set pending booking ID from route if not already set
+    // FIXED: Also check _handledBookingId to prevent re-triggering after dialog close
+    final routeBookingId = _currentBookingId;
+
+    // Reset _handledBookingId when URL no longer has bookingId
+    // This allows re-opening the same booking from notifications later
+    if (routeBookingId == null && _handledBookingId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _handledBookingId = null;
+          });
+        }
+      });
+    }
+
+    if (pendingBookingId == null) {
+      if (routeBookingId != null && routeBookingId != _handledBookingId) {
+        // Use addPostFrameCallback to set provider value after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && ref.read(pendingBookingIdProvider) == null && routeBookingId != _handledBookingId) {
+            ref.read(pendingBookingIdProvider.notifier).state = routeBookingId;
+            if (!_isLoadingInitialBooking) {
+              setState(() {
+                _isLoadingInitialBooking = true;
+              });
+            }
+          }
+        });
+      }
+    }
+    
+    // FIXED: Watch windowedBookingsNotifierProvider and check for booking when data is ready
+    // This avoids ref.listen() which can cause dependency tracking issues
+    final bookingId = pendingBookingId ?? _currentBookingId;
+    
+    // Check if we need to show booking dialog
+    // Only check once per bookingId to avoid infinite loops
+    // Also check that dialog is not already shown and that we haven't already handled this bookingId
+    // FIXED BUG #9: Added !_isLoadingInitialBooking check to prevent race condition
+    if (bookingId != null &&
+        bookingId != _handledBookingId &&
+        !_hasHandledInitialBooking &&
+        !_bookingCheckScheduled &&
+        !_dialogShownForBooking &&
+        !_isLoadingInitialBooking &&
+        !windowedState.isInitialLoad &&
+        !windowedState.isLoadingBottom) {
+      _bookingCheckScheduled = true;
+      
+      // Use addPostFrameCallback to check for booking after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _hasHandledInitialBooking) {
+          _bookingCheckScheduled = false;
+          return;
+        }
+        
+        // Try to find booking in visible bookings
+        if (windowedState.visibleBookings.isNotEmpty) {
+          try {
+            final booking = windowedState.visibleBookings.firstWhere(
+              (b) => b.booking.id == bookingId,
+            );
+            
+            // #region agent log
+            _log('owner_bookings_screen.dart:build', 'Booking found in visible list', {'bookingId': booking.booking.id}, 'A');
+            // #endregion
+            
+            // Mark as handled immediately to prevent duplicate dialogs
+            _hasHandledInitialBooking = true;
+            _bookingCheckScheduled = false;
+            _handledBookingId = bookingId; // Store the bookingId we've handled
+            
+            // Clear pending booking ID
+            ref.read(pendingBookingIdProvider.notifier).state = null;
+            
+            if (mounted) {
+              setState(() {
+                _isLoadingInitialBooking = false;
+                _pendingBookingToShow = booking;
+              });
+            }
+            return; // Successfully found and handled
+          } catch (_) {
+            // Booking not found in current window - will fetch separately
+            // #region agent log
+            _log('owner_bookings_screen.dart:build', 'Booking not found in visible list, fetching', {}, 'B');
+            // #endregion
+          }
+        }
+        
+        // If we reach here, booking is not in visible window - fetch directly
+        // Only fetch once when data is fully loaded
+        if (!_hasHandledInitialBooking) {
+          _fetchAndShowInitialBooking(bookingId);
+        } else {
+          _bookingCheckScheduled = false;
+        }
+      });
+    }
+    
+    // FIXED: Show dialog when _pendingBookingToShow is set
+    // This is done in build() method, not from ref.listen() callback
+    // Use a flag to ensure we only show the dialog once per booking
+    if (_pendingBookingToShow != null && !_dialogShownForBooking) {
+      final bookingToShow = _pendingBookingToShow!;
+      _dialogShownForBooking = true;
+      
+      // Show dialog after frame is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !context.mounted) return;
+        
+        // Small delay to ensure UI is stable
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (!mounted || !context.mounted) return;
+          
+          try {
+            // #region agent log
+            _log('owner_bookings_screen.dart:build', 'Showing dialog from build', {'bookingId': bookingToShow.booking.id}, 'C');
+            // #endregion
+            showDialog(
+              context: context,
+              builder: (context) => BookingDetailsDialog(ownerBooking: bookingToShow),
+            ).then((_) {
+              // FIXED: Simplified cleanup logic to prevent infinite loading loop
+              // Reset dialog-related flags immediately when dialog closes
+              if (!mounted) return;
+
+              setState(() {
+                _pendingBookingToShow = null;
+                _dialogShownForBooking = false;
+                _hasHandledInitialBooking = false;
+                _bookingCheckScheduled = false;
+                _isLoadingInitialBooking = false;
+                // FIXED BUG #3: Reset _handledBookingId to allow reopening same notification
+                _handledBookingId = null;
+              });
+
+              // Clear pending booking ID provider
+              ref.read(pendingBookingIdProvider.notifier).state = null;
+
+              // Clear bookingId from route query parameters
+              // Use post-frame callback to ensure UI is stable
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+
+                try {
+                  final router = GoRouter.of(this.context);
+                  final currentUri = router.routerDelegate.currentConfiguration.uri;
+                  if (currentUri.queryParameters.containsKey('bookingId')) {
+                    final newQueryParams = Map<String, String>.from(currentUri.queryParameters);
+                    newQueryParams.remove('bookingId');
+                    final newUri = currentUri.replace(queryParameters: newQueryParams);
+                    // Use replace instead of go to not add to history
+                    router.go(newUri.toString());
+                  }
+                } catch (e) {
+                  debugPrint('Error clearing bookingId from route: $e');
+                }
+              });
+            });
+          } catch (e) {
+            // #region agent log
+            _log('owner_bookings_screen.dart:build', 'Error showing dialog from build', {'error': e.toString()}, 'C');
+            // #endregion
+            debugPrint('Error showing booking details dialog: $e');
+            // Reset flags on error
+            if (mounted) {
+              setState(() {
+                _pendingBookingToShow = null;
+                _dialogShownForBooking = false;
+                _bookingCheckScheduled = false;
+                // Reset _hasHandledInitialBooking only if bookingId is no longer in route
+                final currentBookingId = _currentBookingId;
+                if (currentBookingId == null) {
+                  _hasHandledInitialBooking = false;
+                }
+              });
+            }
+          }
+        });
+      });
+    }
 
     // Cache MediaQuery values for performance
     final mediaQuery = MediaQuery.of(context);
@@ -433,7 +603,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                             child: windowedState.isLoadingBottom
                                 ? Column(
                                     children: [
-                                      CircularProgressIndicator(color: localTheme.colorScheme.primary),
+                                      // Minimalistic: Use black in light mode, white in dark mode
+                                      CircularProgressIndicator(
+                                        color: localTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                      ),
                                       const SizedBox(height: 12),
                                       Text(
                                         localL10n.ownerBookingsLoadingMore,
@@ -485,7 +658,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircularProgressIndicator(color: theme.colorScheme.primary),
+                      // Minimalistic: Use black in light mode, white in dark mode
+                      CircularProgressIndicator(
+                        color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         l10n.loading,

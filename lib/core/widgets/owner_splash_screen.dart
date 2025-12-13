@@ -385,13 +385,18 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
 
     // If we have a child (the app), overlay the splash on top
     if (widget.child != null) {
-      return Stack(
-        children: [
-          // App in background
-          widget.child!,
-          // Splash overlay on top
-          splashScreen,
-        ],
+      // Wrap Stack with Directionality since this widget is above MaterialApp
+      // and Stack needs directionality for its default alignment
+      return Directionality(
+        textDirection: TextDirection.ltr,
+        child: Stack(
+          children: [
+            // App in background
+            widget.child!,
+            // Splash overlay on top
+            splashScreen,
+          ],
+        ),
       );
     }
 

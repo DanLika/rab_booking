@@ -157,19 +157,23 @@ class BookingService {
       // Validate required fields before sending
       final missingFields = <String>[];
       if (requestData['unitId'] == null || (requestData['unitId'] as String).isEmpty) missingFields.add('unitId');
-      if (requestData['propertyId'] == null || (requestData['propertyId'] as String).isEmpty)
+      if (requestData['propertyId'] == null || (requestData['propertyId'] as String).isEmpty) {
         missingFields.add('propertyId');
+      }
       if (requestData['ownerId'] == null || (requestData['ownerId'] as String).isEmpty) missingFields.add('ownerId');
       if (requestData['checkIn'] == null || (requestData['checkIn'] as String).isEmpty) missingFields.add('checkIn');
       if (requestData['checkOut'] == null || (requestData['checkOut'] as String).isEmpty) missingFields.add('checkOut');
-      if (requestData['guestName'] == null || (requestData['guestName'] as String).isEmpty)
+      if (requestData['guestName'] == null || (requestData['guestName'] as String).isEmpty) {
         missingFields.add('guestName');
-      if (requestData['guestEmail'] == null || (requestData['guestEmail'] as String).isEmpty)
+      }
+      if (requestData['guestEmail'] == null || (requestData['guestEmail'] as String).isEmpty) {
         missingFields.add('guestEmail');
+      }
       if (requestData['totalPrice'] == null) missingFields.add('totalPrice');
       if (requestData['guestCount'] == null) missingFields.add('guestCount');
-      if (requestData['paymentMethod'] == null || (requestData['paymentMethod'] as String).isEmpty)
+      if (requestData['paymentMethod'] == null || (requestData['paymentMethod'] as String).isEmpty) {
         missingFields.add('paymentMethod');
+      }
 
       if (missingFields.isNotEmpty) {
         LoggingService.logError('Missing required fields before API call: ${missingFields.join(', ')}');

@@ -1,3 +1,6 @@
+import 'dart:io' show File, FileMode;
+import 'dart:convert' show jsonEncode;
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +27,21 @@ class BookingDetailsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // #region agent log
+    try {
+      final logEntry = {
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'location': 'booking_details_dialog.dart:build',
+        'message': 'Dialog build entry',
+        'data': {'bookingId': ownerBooking.booking.id},
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'C',
+      };
+      File('/Users/duskolicanin/git/bookbed/.cursor/debug.log').writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
+    } catch (_) {}
+    // #endregion
+    
     final l10n = AppLocalizations.of(context);
     final booking = ownerBooking.booking;
     final property = ownerBooking.property;
@@ -37,12 +55,17 @@ class BookingDetailsDialog extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Constrain height for small screens to prevent overflow
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight = screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
+        constraints: BoxConstraints(maxHeight: maxHeight),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
@@ -74,6 +97,8 @@ class BookingDetailsDialog extends ConsumerWidget {
                     child: Text(
                       l10n.ownerDetailsTitle,
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                   IconButton(
@@ -197,6 +222,7 @@ class BookingDetailsDialog extends ConsumerWidget {
             ),
 
             // Actions - modern layout (Close button moved to header)
+            // Use Wrap on small screens to prevent overflow
             Container(
               padding: EdgeInsets.symmetric(horizontal: contentPadding, vertical: 12),
               decoration: BoxDecoration(
@@ -206,42 +232,102 @@ class BookingDetailsDialog extends ConsumerWidget {
                 ),
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
               ),
-              child: Row(
-                children: [
-                  if (booking.status != BookingStatus.cancelled) ...[
-                    Expanded(
-                      child: _ModernActionButton(
-                        icon: Icons.edit_outlined,
-                        label: l10n.ownerDetailsEdit,
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          showEditBookingDialog(context, ref, booking);
-                        },
-                        gradient: context.gradients.brandPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  Expanded(
-                    child: _ModernActionButton(
-                      icon: Icons.email_outlined,
-                      label: l10n.ownerDetailsEmail,
-                      onPressed: () => showSendEmailDialog(context, ref, booking),
-                      gradient: context.gradients.brandPrimary,
-                    ),
-                  ),
-                  if (booking.status != BookingStatus.cancelled) ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _ModernActionButton(
-                        icon: Icons.replay_outlined,
-                        label: l10n.ownerDetailsResend,
-                        onPressed: () => _resendConfirmationEmail(context, ref, l10n),
-                        gradient: context.gradients.brandPrimary,
-                      ),
-                    ),
-                  ],
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isNarrow = constraints.maxWidth < 400;
+                  
+                  if (isNarrow) {
+                    // Stack buttons vertically on narrow screens
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (booking.status != BookingStatus.cancelled) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: _ModernActionButton(
+                              icon: Icons.edit_outlined,
+                              label: l10n.ownerDetailsEdit,
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                showEditBookingDialog(context, ref, booking);
+                              },
+                              gradient: context.gradients.brandPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        SizedBox(
+                          width: double.infinity,
+                          child: _ModernActionButton(
+                            icon: Icons.email_outlined,
+                            label: l10n.ownerDetailsEmail,
+                            onPressed: () {
+                              // FIXED BUG #6: Close parent dialog before opening send email dialog
+                              Navigator.of(context).pop();
+                              showSendEmailDialog(context, ref, booking);
+                            },
+                            gradient: context.gradients.brandPrimary,
+                          ),
+                        ),
+                        if (booking.status != BookingStatus.cancelled) ...[
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _ModernActionButton(
+                              icon: Icons.replay_outlined,
+                              label: l10n.ownerDetailsResend,
+                              onPressed: () => _resendConfirmationEmail(context, ref, l10n),
+                              gradient: context.gradients.brandPrimary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  } else {
+                    // Use Row on wider screens
+                    return Row(
+                      children: [
+                        if (booking.status != BookingStatus.cancelled) ...[
+                          Expanded(
+                            child: _ModernActionButton(
+                              icon: Icons.edit_outlined,
+                              label: l10n.ownerDetailsEdit,
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                showEditBookingDialog(context, ref, booking);
+                              },
+                              gradient: context.gradients.brandPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: _ModernActionButton(
+                            icon: Icons.email_outlined,
+                            label: l10n.ownerDetailsEmail,
+                            onPressed: () {
+                              // FIXED BUG #6 (wide screen): Close parent dialog before opening send email dialog
+                              Navigator.of(context).pop();
+                              showSendEmailDialog(context, ref, booking);
+                            },
+                            gradient: context.gradients.brandPrimary,
+                          ),
+                        ),
+                        if (booking.status != BookingStatus.cancelled) ...[
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _ModernActionButton(
+                              icon: Icons.replay_outlined,
+                              label: l10n.ownerDetailsResend,
+                              onPressed: () => _resendConfirmationEmail(context, ref, l10n),
+                              gradient: context.gradients.brandPrimary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  }
+                },
               ),
             ),
           ],
@@ -420,8 +506,38 @@ class BookingDetailsDialog extends ConsumerWidget {
       // Show loading
       ErrorDisplayUtils.showLoadingSnackBar(context, l10n.ownerDetailsSending);
 
+      // #region agent log
+      try {
+        final logEntry = {
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+          'location': 'booking_details_dialog.dart:_resendConfirmationEmail',
+          'message': 'Before ref.read firebaseFunctionsProvider',
+          'data': {'bookingId': ownerBooking.booking.id},
+          'sessionId': 'debug-session',
+          'runId': 'run1',
+          'hypothesisId': 'C',
+        };
+        File('/Users/duskolicanin/git/bookbed/.cursor/debug.log').writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
+      } catch (_) {}
+      // #endregion
+
       // Call Cloud Function
       final functions = ref.read(firebaseFunctionsProvider);
+      
+      // #region agent log
+      try {
+        final logEntry = {
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+          'location': 'booking_details_dialog.dart:_resendConfirmationEmail',
+          'message': 'After ref.read firebaseFunctionsProvider',
+          'data': {'bookingId': ownerBooking.booking.id},
+          'sessionId': 'debug-session',
+          'runId': 'run1',
+          'hypothesisId': 'C',
+        };
+        File('/Users/duskolicanin/git/bookbed/.cursor/debug.log').writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
+      } catch (_) {}
+      // #endregion
       final callable = functions.httpsCallable('resendBookingEmail');
 
       await callable.call({'bookingId': ownerBooking.booking.id});
@@ -517,6 +633,8 @@ class _DetailRow extends StatelessWidget {
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: valueColor, fontSize: fontSize),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 3,
                 ),
               ),
             ],

@@ -1055,11 +1055,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
               future: image.readAsBytes(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
+                  // Minimalistic: Use black in light mode, white in dark mode
+                  final loaderColor = theme.brightness == Brightness.dark ? Colors.white : Colors.black;
                   return Center(
                     child: SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: theme.colorScheme.primary),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: loaderColor),
                     ),
                   );
                 }

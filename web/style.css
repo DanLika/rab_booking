@@ -28,3 +28,10 @@ input[type="reset"] {
   -ms-user-select: none !important;
   user-select: none !important;
 }
+
+/* Flutter view positioning adjustments */
+/* Override Flutter's inline styles to adjust viewport positioning */
+/* This only affects web builds - iOS/Android do not use web/style.css */
+flutter-view {
+  inset: -1px 0px 0px -11px !important;
+}

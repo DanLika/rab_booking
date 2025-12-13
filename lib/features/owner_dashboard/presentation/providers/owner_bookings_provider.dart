@@ -1,3 +1,6 @@
+import 'dart:io' show File, FileMode;
+import 'dart:convert' show jsonEncode;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -11,6 +14,11 @@ import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
 
 part 'owner_bookings_provider.g.dart';
+
+/// Provider for pending booking ID to show in dialog (from deep-link navigation)
+/// This avoids issues with widget parameter passing during navigation
+/// FIXED BUG #4: Added autoDispose to prevent state persistence across navigations
+final pendingBookingIdProvider = StateProvider.autoDispose<String?>((ref) => null);
 
 // Note: OwnerBooking is defined in firebase_owner_bookings_repository.dart (already imported above)
 
@@ -296,8 +304,38 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
 
   @override
   WindowedBookingsState build() {
+    // #region agent log
+    try {
+      final logEntry = {
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'location': 'owner_bookings_provider.dart:build',
+        'message': 'Provider build entry',
+        'data': {},
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'E',
+      };
+      File('/Users/duskolicanin/git/bookbed/.cursor/debug.log').writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
+    } catch (_) {}
+    // #endregion
+    
     // Watch filters - when they change, the provider rebuilds and reloads
     ref.watch(bookingsFiltersNotifierProvider);
+    
+    // #region agent log
+    try {
+      final logEntry = {
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'location': 'owner_bookings_provider.dart:build',
+        'message': 'After ref.watch bookingsFiltersNotifierProvider',
+        'data': {},
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'E',
+      };
+      File('/Users/duskolicanin/git/bookbed/.cursor/debug.log').writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
+    } catch (_) {}
+    // #endregion
 
     // Auto-load first page when provider is created (or filters change)
     Future.microtask(loadFirstPage);

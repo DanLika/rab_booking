@@ -46,6 +46,16 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
+            // Analytics
+            _DrawerItem(
+              icon: Icons.bar_chart_rounded,
+              title: l10n.ownerDrawerAnalytics,
+              isSelected: currentRoute == 'analytics',
+              onTap: () => context.go(OwnerRoutes.analytics),
+            ),
+
+            const SizedBox(height: 4),
+
             // Kalendar
             _DrawerItem(
               icon: Icons.calendar_month_rounded,
@@ -62,16 +72,6 @@ class OwnerAppDrawer extends ConsumerWidget {
               title: l10n.ownerDrawerBookings,
               isSelected: currentRoute == 'bookings',
               onTap: () => context.go(OwnerRoutes.bookings),
-            ),
-
-            const SizedBox(height: 4),
-
-            // Analytics
-            _DrawerItem(
-              icon: Icons.bar_chart_rounded,
-              title: l10n.ownerDrawerAnalytics,
-              isSelected: currentRoute == 'analytics',
-              onTap: () => context.go(OwnerRoutes.analytics),
             ),
 
             const SizedBox(height: 4),

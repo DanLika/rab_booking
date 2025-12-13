@@ -109,7 +109,7 @@ class PopupBlockedDialog extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(SpacingTokens.m),
         decoration: BoxDecoration(
-          border: Border.all(color: colors.borderDefault, width: 1),
+          border: Border.all(color: colors.borderDefault),
           borderRadius: BorderTokens.circularMedium,
         ),
         child: Row(
@@ -162,7 +162,6 @@ class PopupBlockedDialog extends ConsumerWidget {
     SnackBarHelper.showSuccess(
       context: context,
       message: 'Payment link copied to clipboard',
-      duration: const Duration(seconds: 3),
     );
   }
 

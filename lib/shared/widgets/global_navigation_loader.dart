@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_colors.dart';
 
 /// Loading state provider for global navigation overlay
 /// Tracks whether a navigation/async operation is in progress
@@ -43,12 +42,12 @@ final loadingStateProvider = StateNotifierProvider<LoadingStateNotifier, bool>((
   return LoadingStateNotifier();
 });
 
-/// Global Navigation Overlay - Minimalist Design (Opcija A)
+/// Global Navigation Overlay - Minimalist Design
 ///
 /// Features:
 /// - Semi-transparent dark overlay (0.3 opacity)
 /// - Circular spinner (40px) - centered
-/// - Purple color (AppColors.primary)
+/// - Black spinner (minimalistic style)
 /// - No text
 /// - 300ms delay before showing (prevents flicker)
 ///
@@ -103,7 +102,7 @@ class _LoadingOverlay extends StatelessWidget {
               child: CircularProgressIndicator(
                 strokeWidth: 3,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  AppColors.primary, // Purple spinner
+                  Colors.black, // Minimalistic black spinner
                 ),
               ),
             ),

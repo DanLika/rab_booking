@@ -11,6 +11,7 @@ import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../providers/owner_bookings_provider.dart';
 
 /// Edit Booking Dialog - Phase 2 Feature
 ///
@@ -350,17 +351,29 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     setState(() => _isLoading = true);
 
     try {
-      // Update booking in Firestore
+      // FIXED BUG #2: Use transaction with existence check to prevent creating new document
       final firestore = ref.read(firestoreProvider);
-      await firestore.collection('bookings').doc(widget.booking.id).update({
-        'check_in': _checkIn.toUtc().toIso8601String(),
-        'check_out': _checkOut.toUtc().toIso8601String(),
-        'guest_count': _guestCount,
-        'notes': _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      await firestore.runTransaction((transaction) async {
+        final docRef = firestore.collection('bookings').doc(widget.booking.id);
+        final docSnapshot = await transaction.get(docRef);
+
+        if (!docSnapshot.exists) {
+          throw Exception('Booking no longer exists. It may have been deleted.');
+        }
+
+        transaction.update(docRef, {
+          'check_in': _checkIn.toUtc().toIso8601String(),
+          'check_out': _checkOut.toUtc().toIso8601String(),
+          'guest_count': _guestCount,
+          'notes': _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        });
       });
 
       if (mounted) {
+        // FIXED BUG #5: Invalidate provider to refresh booking list in parent screen
+        ref.invalidate(windowedBookingsNotifierProvider);
+
         Navigator.of(context).pop();
         ErrorDisplayUtils.showSuccessSnackBar(context, AppLocalizations.of(context).editBookingSuccess);
       }

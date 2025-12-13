@@ -10,6 +10,7 @@ import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/localization/error_messages.dart';
+import '../../../../core/utils/web_utils.dart';
 import 'calendar/calendar_date_utils.dart';
 import 'calendar/calendar_compact_legend.dart';
 import 'calendar/calendar_combined_header_widget.dart';
@@ -51,8 +52,27 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
     // Year calendar needs minimum width to be usable - show rotate message on very narrow screens
     const minWidthForYearCalendar = 350.0;
-    if (screenWidth < minWidthForYearCalendar) {
-      return _buildRotateDeviceOverlay(colors, tr);
+    
+    // Check if overlay should be shown based on screen width and orientation
+    final shouldShowOverlay = screenWidth < minWidthForYearCalendar;
+    
+    if (shouldShowOverlay) {
+      // In iframe context, use physical screen orientation instead of iframe dimensions
+      // MediaQuery returns iframe dimensions which may differ from device orientation
+      bool isLandscape;
+      if (isWebPlatform && isInIframe) {
+        // Physical device is landscape = don't show overlay
+        isLandscape = isDeviceLandscape();
+      } else {
+        // Fallback for non-iframe: use MediaQuery
+        final orientation = MediaQuery.of(context).orientation;
+        isLandscape = orientation == Orientation.landscape;
+      }
+      
+      // Ne prikazuj overlay ako je landscape (čak i ako je širina < 350px)
+      if (!isLandscape) {
+        return _buildRotateDeviceOverlay(colors, tr);
+      }
     }
 
     // OPTIMIZED: Get minNights from cached widgetContext (eliminates duplicate unit fetch)

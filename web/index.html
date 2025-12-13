@@ -330,7 +330,8 @@
         percentageThreshold: 0.12,    // 12% of viewport height
         debounceMs: 100,
         jiggleDelayLandscape: 100,
-        jiggleDelayPortrait: 50
+        jiggleDelayPortrait: 50,
+        postJiggleMuteMs: 180 // Ignore rapid-fire resizes right after jiggle to avoid layout races
       };
 
       // Only run on Android
@@ -345,6 +346,7 @@
       var lastWidth = 0;
       var debounceTimer = null;
       var fullHeight = viewport.height;
+      var lastJiggleAt = 0;
 
       function isLandscape() {
         return window.innerWidth > window.innerHeight;
@@ -380,6 +382,7 @@
                 // Some browsers don't allow dispatching to visualViewport
               }
             }
+            lastJiggleAt = Date.now();
           });
         }, delay);
       }
@@ -393,6 +396,11 @@
 
           var currentHeight = viewport.height || window.innerHeight;
           var currentWidth = window.innerWidth;
+
+          // Throttle immediately after jiggle to avoid re-entrancy during layout
+          if (Date.now() - lastJiggleAt < CONFIG.postJiggleMuteMs) {
+            return;
+          }
 
           // Skip if this is an orientation change (width changed significantly)
           if (Math.abs(currentWidth - lastWidth) > 50) {
@@ -410,6 +418,18 @@
           var heightDiff = currentHeight - lastVisualHeight;
           var threshold = getThreshold();
           var landscape = isLandscape();
+
+          // Debug log to trace when the jiggle triggers; remove if noisy
+          try {
+            console.debug('[KB-FIX] resize', {
+              heightDiff: Math.round(heightDiff),
+              threshold: Math.round(threshold),
+              landscape: landscape,
+              currentHeight: Math.round(currentHeight),
+              fullHeight: Math.round(fullHeight),
+              lastWidth: lastWidth
+            });
+          } catch (_) {}
 
           // Keyboard dismissed: viewport height INCREASED significantly
           if (heightDiff > threshold) {

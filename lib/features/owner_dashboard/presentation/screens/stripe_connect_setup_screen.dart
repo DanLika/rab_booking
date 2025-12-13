@@ -226,7 +226,10 @@ class _StripeConnectSetupScreenState
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/stripe'),
+      backgroundColor: Colors.transparent,
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: _isLoading
             ? const Center(child: _MoneyLoadingAnimation())
@@ -251,6 +254,7 @@ class _StripeConnectSetupScreenState
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
                             maxWidth: isDesktop ? 1200.0 : double.infinity,
+                            minHeight: constraints.maxHeight - 40,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,

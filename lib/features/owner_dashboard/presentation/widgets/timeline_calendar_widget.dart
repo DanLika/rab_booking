@@ -482,7 +482,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
               final units = unitsAsync.value ?? [];
               final bookingsByUnit = bookingsAsync.value ?? {};
 
-              if (units.isEmpty) return _buildEmptyUnitsState();
+              if (units.isEmpty) return _buildEmptyUnitsState(ref);
 
               return _buildTimelineView(units, bookingsByUnit);
             },
@@ -525,14 +525,48 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     );
   }
 
-  Widget _buildEmptyUnitsState() {
+  Widget _buildEmptyUnitsState(WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return Center(
-      child: Padding(padding: const EdgeInsets.all(AppDimensions.spaceM), child: Text(l10n.ownerCalendarNoUnits)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.spaceM),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.ownerCalendarNoUnits, textAlign: TextAlign.center),
+            const SizedBox(height: AppDimensions.spaceS),
+            Wrap(
+              spacing: AppDimensions.spaceS,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    ref.read(calendarFiltersProvider.notifier).clearFilters();
+                    ref.invalidate(allOwnerUnitsProvider);
+                    ref.invalidate(calendarBookingsProvider);
+                  },
+                  icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                  label: Text(l10n.calendarFiltersClear),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    ref.invalidate(allOwnerUnitsProvider);
+                    ref.invalidate(calendarBookingsProvider);
+                  },
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: Text(l10n.calendarErrorRetry),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildTimelineView(List<UnitModel> units, Map<String, List<BookingModel>> bookingsByUnit) {
+  Widget _buildTimelineView(
+    List<UnitModel> units,
+    Map<String, List<BookingModel>> bookingsByUnit,
+  ) {
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
     final dates = _getVisibleDateRange();
     
@@ -574,7 +608,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         ),
       );
     }
-    
+
+    // NOTE: Grid should ALWAYS render when units exist, even if bookingsByUnit is empty
+    // Empty bookings is a valid state (e.g., new property with no reservations)
+    // User needs the grid to navigate dates, see unit rows, and add new bookings
     return _buildTimelineContent(units, bookingsByUnit, dates, offsetWidth, dimensions);
   }
 
@@ -585,7 +622,6 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     double offsetWidth,
     TimelineDimensions dimensions,
   ) {
-
     return Card(
       margin: EdgeInsets.zero,
       color: Colors.transparent,
@@ -629,54 +665,45 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                       transformationController: _transformationController,
                       minScale: kTimelineMinZoomScale,
                       panEnabled: false,
-                      // OPTIMIZED: RepaintBoundary for InteractiveViewer to isolate zoom repaints
-                      child: RepaintBoundary(
+                      child: SingleChildScrollView(
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        // Use ClampingScrollPhysics on web for better performance
+                        // BouncingScrollPhysics causes extra rendering frames on web
+                        physics: kIsWeb
+                            ? const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+                            : const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                         child: SingleChildScrollView(
-                          controller: _horizontalScrollController,
-                          scrollDirection: Axis.horizontal,
-                          // Use ClampingScrollPhysics on web for better performance
-                          // BouncingScrollPhysics causes extra rendering frames on web
+                          controller: _verticalScrollController,
+                          // OPTIMIZED: Android web performance - use ClampingScrollPhysics
+                          // and reduce scroll friction for smoother scrolling
                           physics: kIsWeb
                               ? const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
                               : const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                          // OPTIMIZED: RepaintBoundary for horizontal scroll container
-                          child: RepaintBoundary(
-                            child: SingleChildScrollView(
-                              controller: _verticalScrollController,
-                              // OPTIMIZED: Android web performance - use ClampingScrollPhysics
-                              // and reduce scroll friction for smoother scrolling
-                              physics: kIsWeb
-                                  ? const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
-                                  : const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // OPTIMIZED: RepaintBoundary for grid widget
-                                  RepaintBoundary(
-                                    child: TimelineGridWidget(
-                                      units: units,
-                                      bookingsByUnit: bookingsByUnit,
-                                      dates: dates,
-                                      offsetWidth: offsetWidth,
-                                      dimensions: dimensions,
-                                      onBookingTap: _showBookingActionMenu,
-                                      onBookingLongPress: _showMoveToUnitMenu,
-                                      dropZoneBuilder: (unit, date, index) =>
-                                          _buildDropZone(unit, date, offsetWidth, index, bookingsByUnit),
-                                    ),
-                                  ),
-                                  if (widget.showSummary)
-                                    RepaintBoundary(
-                                      child: TimelineSummaryBarWidget(
-                                        bookingsByUnit: bookingsByUnit,
-                                        dates: dates,
-                                        offsetWidth: offsetWidth,
-                                        dimensions: dimensions,
-                                      ),
-                                    ),
-                                ],
+                          child: Column(
+                            // FIXED: Restored mainAxisSize.min from working version
+                            // This was removed during performance optimization, causing grid to disappear
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TimelineGridWidget(
+                                units: units,
+                                bookingsByUnit: bookingsByUnit,
+                                dates: dates,
+                                offsetWidth: offsetWidth,
+                                dimensions: dimensions,
+                                onBookingTap: _showBookingActionMenu,
+                                onBookingLongPress: _showMoveToUnitMenu,
+                                dropZoneBuilder: (unit, date, index) =>
+                                    _buildDropZone(unit, date, offsetWidth, index, bookingsByUnit),
                               ),
-                            ),
+                              if (widget.showSummary)
+                                TimelineSummaryBarWidget(
+                                  bookingsByUnit: bookingsByUnit,
+                                  dates: dates,
+                                  offsetWidth: offsetWidth,
+                                  dimensions: dimensions,
+                                ),
+                            ],
                           ),
                         ),
                       ),

@@ -10,9 +10,13 @@ class LoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     // Use system colors for overlay background
     final bgColor = backgroundColor ?? theme.colorScheme.surface.withValues(alpha: 0.95);
+
+    // Minimalistic: Use black in light mode, white in dark mode
+    final loaderColor = isDarkMode ? Colors.white : Colors.black;
 
     return Container(
       color: bgColor,
@@ -20,7 +24,7 @@ class LoadingOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary)),
+            CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(loaderColor)),
             if (message != null) ...[
               const SizedBox(height: 16),
               Text(

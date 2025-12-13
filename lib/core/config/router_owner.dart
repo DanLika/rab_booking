@@ -13,8 +13,8 @@ import '../../features/auth/presentation/screens/email_verification_screen.dart'
 import '../../features/auth/presentation/screens/privacy_policy_screen.dart';
 import '../../features/auth/presentation/screens/terms_conditions_screen.dart';
 import '../../features/owner_dashboard/presentation/providers/owner_properties_provider.dart';
+import '../../features/owner_dashboard/presentation/screens/dashboard_overview_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/analytics_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/overview_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
@@ -351,7 +351,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Owner main screens - Fade transition for drawer navigation
       GoRoute(
         path: OwnerRoutes.overview,
-        pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const OverviewScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const DashboardOverviewScreen()),
       ),
       // Properties route redirects to unit-hub (property management is now in unit-hub)
       GoRoute(path: OwnerRoutes.properties, redirect: (context, state) => OwnerRoutes.unitHub),
@@ -365,12 +365,14 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.bookings,
         pageBuilder: (context, state) {
           final bookingId = state.uri.queryParameters['bookingId'];
+          // FIXED BUG #7: Use unique key based on bookingId to prevent widget state reuse
           return PageTransitions.fade(
-            key: state.pageKey,
+            key: ValueKey('bookings_${bookingId ?? "none"}'),
             child: OwnerBookingsScreen(initialBookingId: bookingId),
           );
         },
       ),
+      // Analytics route - separate page for detailed analytics
       GoRoute(
         path: OwnerRoutes.analytics,
         pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const AnalyticsScreen()),

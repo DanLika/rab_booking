@@ -104,6 +104,12 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
     final currentHeight = getVisualViewportHeightImpl() ?? 0;
     if (currentHeight <= 0) return; // Invalid height, skip
 
+    // Defensive: skip tiny/noise deltas to avoid spurious layout work (especially in landscape)
+    if ((_fullViewportHeight == 0 && currentHeight < 80) ||
+        (_fullViewportHeight > 0 && (currentHeight - _lastViewportHeight).abs() < 20)) {
+      return;
+    }
+
     final heightDiff = currentHeight - _lastViewportHeight;
     final absHeightDiff = heightDiff.abs();
 

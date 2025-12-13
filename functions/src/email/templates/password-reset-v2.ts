@@ -1,31 +1,31 @@
 /**
- * Email Verification Code Template V2
+ * Password Reset Email Template V2
  * Modern Premium Design - 2025 Redesign
  *
  * Design Specs:
  * - Card padding: 20-24px (mobile-friendly)
- * - Border radius: 12px (cards), 8px (code box)
- * - Typography: 22px/700 (heading), 14px/400 (body), 32px/700 (code)
- * - Code display: 32px with 6px letter-spacing (mobile-optimized)
- * - Shadows: 0 2px 8px rgba(0,0,0,0.08) (elevated cards)
+ * - Border radius: 12px (cards), 8px (buttons)
+ * - Typography: 22px/700 (heading), 14px/400 (body)
+ * - Shadows: 0 4px 16px rgba(0,0,0,0.1) (elevated cards)
  * - Colors: Modern gradient theme with blue accent
  * - Premium spacing and visual hierarchy
  */
 
 import {Resend} from "resend";
 
-export interface EmailVerificationParams {
+export interface PasswordResetParams {
   email: string;
-  code: string;
+  resetLink: string;
+  expiresInMinutes?: number;
 }
 
 /**
- * Generate Modern Premium email verification code email
+ * Generate Modern Premium password reset email
  */
-export function generateEmailVerificationEmailV2(
-  params: EmailVerificationParams
+export function generatePasswordResetEmailV2(
+  params: PasswordResetParams
 ): string {
-  const {code} = params;
+  const {resetLink, expiresInMinutes = 60} = params;
 
   return `
 <!DOCTYPE html>
@@ -35,7 +35,7 @@ export function generateEmailVerificationEmailV2(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
-  <title>Verifikacijski kod - BookBed</title>
+  <title>Resetiranje lozinke - BookBed</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); line-height: 1.6; min-height: 100vh;">
 
@@ -44,38 +44,43 @@ export function generateEmailVerificationEmailV2(
 
     <!-- Premium Header Card with Gradient -->
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 32px 24px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); margin-bottom: 24px; text-align: center;">
-      <!-- Shield Icon -->
+      <!-- Lock Icon -->
       <div style="margin-bottom: 16px; font-size: 56px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
-        🔐
+        🔑
       </div>
 
       <!-- Title -->
       <h1 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700; line-height: 1.3; color: #FFFFFF; letter-spacing: -0.5px;">
-        Verifikacijski kod
+        Resetiranje lozinke
       </h1>
 
       <!-- Subtitle -->
       <p style="margin: 0; font-size: 15px; font-weight: 400; line-height: 1.5; color: rgba(255, 255, 255, 0.95);">
-        Koristite kod ispod za verifikaciju vaše email adrese
+        Zatražili ste resetiranje lozinke za vaš BookBed nalog
       </p>
     </div>
 
-    <!-- Verification Code Card - Premium Design -->
-    <div style="background-color: #FFFFFF; border-radius: 16px; padding: 32px 24px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); margin-bottom: 20px; text-align: center;">
-      <p style="margin: 0 0 20px 0; font-size: 15px; font-weight: 500; line-height: 1.5; color: #374151;">
-        Vaš verifikacijski kod je:
+    <!-- Main Content Card -->
+    <div style="background-color: #FFFFFF; border-radius: 16px; padding: 32px 24px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
+      <p style="margin: 0 0 20px 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #374151;">
+        Kliknite na dugme ispod da biste resetirali vašu lozinku. Link će biti aktivan <strong>${expiresInMinutes} minuta</strong>.
       </p>
 
-      <!-- Large Code Display - Enhanced -->
-      <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 3px solid #3B82F6; border-radius: 12px; padding: 24px 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);">
-        <div style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #1E40AF; font-family: 'Courier New', Courier, monospace; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-          ${code}
-        </div>
+      <!-- Reset Button -->
+      <div style="text-align: center; margin: 28px 0;">
+        <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #FFFFFF; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transition: transform 0.2s;">
+          Resetiraj lozinku
+        </a>
       </div>
 
-      <div style="display: inline-flex; align-items: center; gap: 6px; background-color: #F3F4F6; padding: 8px 14px; border-radius: 20px; margin-top: 8px;">
-        <span style="font-size: 13px; font-weight: 500; color: #6B7280;">⏱️ Kod vrijedi</span>
-        <strong style="font-size: 13px; font-weight: 700; color: #1F2937;">10 minuta</strong>
+      <!-- Alternative Link -->
+      <div style="background-color: #F9FAFB; border-radius: 8px; padding: 16px; margin-top: 24px; border: 1px solid #E5E7EB;">
+        <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 500; color: #6B7280;">
+          Dugme ne radi? Kopirajte i zalijepite link ispod u vaš browser:
+        </p>
+        <p style="margin: 0; font-size: 12px; font-weight: 400; color: #3B82F6; word-break: break-all; font-family: 'Courier New', Courier, monospace; line-height: 1.5;">
+          ${resetLink}
+        </p>
       </div>
     </div>
 
@@ -88,22 +93,22 @@ export function generateEmailVerificationEmailV2(
             Sigurnosna napomena
           </p>
           <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.6; color: #78350F;">
-            Nikada ne dijelite ovaj kod sa drugima. Naš tim nikada neće tražiti vaš verifikacijski kod putem telefona ili emaila.
+            Ako niste zatražili resetiranje lozinke, možete sigurno ignorisati ovaj email. Vaša lozinka se neće promijeniti dok ne kliknete na link i kreirajte novu lozinku.
           </p>
         </div>
       </div>
     </div>
 
-    <!-- Help Info Card -->
+    <!-- Expiry Info Card -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 20px; border: 1px solid #E5E7EB;">
       <div style="display: flex; align-items: flex-start; gap: 12px;">
-        <div style="font-size: 20px; line-height: 1;">❓</div>
+        <div style="font-size: 20px; line-height: 1;">⏱️</div>
         <div>
           <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: 600; color: #1F2937;">
-            Niste zatražili ovaj kod?
+            Link ističe za ${expiresInMinutes} minuta
           </p>
           <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.6; color: #6B7280;">
-            Ako niste zatražili verifikaciju, možete sigurno ignorisati ovaj email. Vaš nalog je siguran.
+            Za sigurnost, link za resetiranje lozinke je ograničen na ${expiresInMinutes} minuta. Ako link istekne, zatražite novi.
           </p>
         </div>
       </div>
@@ -132,16 +137,16 @@ export function generateEmailVerificationEmailV2(
 }
 
 /**
- * Send Refined Premium email verification code via Resend
+ * Send Modern Premium password reset email via Resend
  */
-export async function sendEmailVerificationEmailV2(
+export async function sendPasswordResetEmailV2(
   resendClient: Resend,
-  params: EmailVerificationParams,
+  params: PasswordResetParams,
   fromEmail: string,
   fromName: string
 ): Promise<void> {
-  const html = generateEmailVerificationEmailV2(params);
-  const subject = "Verifikacijski kod";
+  const html = generatePasswordResetEmailV2(params);
+  const subject = "Resetiranje lozinke - BookBed";
 
   await resendClient.emails.send({
     from: `${fromName} <${fromEmail}>`,
@@ -150,3 +155,5 @@ export async function sendEmailVerificationEmailV2(
     html: html,
   });
 }
+
+

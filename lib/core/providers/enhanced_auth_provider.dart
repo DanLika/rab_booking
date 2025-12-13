@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -557,12 +558,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = const EnhancedAuthState(isLoading: false);
   }
 
-  /// Reset password
+  /// Reset password using custom email template
   Future<void> resetPassword(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
+      // Use Cloud Function for custom email template instead of default Firebase Auth email
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('sendPasswordResetEmail');
+      
+      await callable.call({'email': email});
+    } on FirebaseFunctionsException catch (e) {
+      // Handle Cloud Function errors
+      throw e.message ?? 'Failed to send password reset email';
     } on FirebaseAuthException catch (e) {
+      // Fallback to Firebase Auth if Cloud Function fails
       throw _getAuthErrorMessage(e);
+    } catch (e) {
+      throw 'Failed to send password reset email: $e';
     }
   }
 

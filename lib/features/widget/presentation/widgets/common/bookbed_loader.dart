@@ -61,21 +61,27 @@ class BookBedLoader extends StatelessWidget {
   }
 
   Widget _buildProgressBar(MinimalistColorSchemeAdapter colors) {
+    // Minimalistic: Use black in light mode, white in dark mode
+    final progressColor = isDarkMode ? Colors.white : Colors.black;
+    final backgroundColor = isDarkMode 
+        ? Colors.white.withValues(alpha: _backgroundOpacity)
+        : Colors.black.withValues(alpha: _backgroundOpacity);
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(_progressBarRadius),
       child: SizedBox(
         height: _progressBarHeight,
         child: Stack(
           children: [
-            Container(color: Colors.black.withValues(alpha: _backgroundOpacity)),
+            Container(color: backgroundColor),
             if (progress != null)
               FractionallySizedBox(
                 widthFactor: progress!.clamp(0.0, 1.0),
                 alignment: Alignment.centerLeft,
-                child: Container(color: Colors.black),
+                child: Container(color: progressColor),
               )
             else
-              const _IndeterminateProgress(color: Colors.black),
+              _IndeterminateProgress(color: progressColor),
           ],
         ),
       ),
@@ -83,12 +89,15 @@ class BookBedLoader extends StatelessWidget {
   }
 
   Widget _buildPercentageText(MinimalistColorSchemeAdapter colors) {
+    // Minimalistic: Pure black in light mode, pure white in dark mode
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    
     return Text(
       '${(progress! * 100).toInt()}%',
       style: TextStyle(
         fontSize: _percentageFontSize,
         fontWeight: FontWeight.w500,
-        color: colors.textSecondary,
+        color: textColor,
         fontFamily: 'Manrope',
       ),
     );

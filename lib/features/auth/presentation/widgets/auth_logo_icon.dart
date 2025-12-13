@@ -56,6 +56,9 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    // Minimalistic: Use black in light mode, white in dark mode
+    final logoColor = widget.isWhite ? Colors.white : (isDarkMode ? Colors.white : Colors.black);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -69,9 +72,7 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: widget.isWhite
-                      ? Colors.white.withAlpha(((_glowAnimation.value * 255 * 0.3).toInt()))
-                      : theme.colorScheme.primary.withAlpha(((_glowAnimation.value * 255 * 0.25).toInt())),
+                  color: logoColor.withAlpha(((_glowAnimation.value * 255 * 0.25).toInt())),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -80,7 +81,7 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
             child: CustomPaint(
               painter: _LogoPainter(
                 isWhite: widget.isWhite,
-                primaryColor: theme.colorScheme.primary,
+                isDarkMode: isDarkMode,
               ),
             ),
           ),
@@ -92,17 +93,17 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
 
 class _LogoPainter extends CustomPainter {
   final bool isWhite;
-  final Color primaryColor;
+  final bool isDarkMode;
 
   _LogoPainter({
     this.isWhite = false,
-    required this.primaryColor,
+    required this.isDarkMode,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     // Defensive check: ensure size is valid before painting
-    if (!size.width.isFinite || !size.height.isFinite || 
+    if (!size.width.isFinite || !size.height.isFinite ||
         size.width <= 0 || size.height <= 0) {
       return; // Skip painting if size is invalid
     }
@@ -110,61 +111,30 @@ class _LogoPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width * 0.4;
 
-    // Gradient or white shader (theme-aware purple-fade)
-    // Defensive check: ensure size is valid before creating shader
-    Shader? shader;
-    if (!isWhite) {
-      try {
-        final rect = Rect.fromLTWH(0, 0, size.width, size.height);
-        // Ensure rect is valid (width and height are positive and finite)
-        if (rect.width > 0 && rect.height > 0 && 
-            rect.width.isFinite && rect.height.isFinite) {
-          shader = LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primaryColor,
-              primaryColor.withValues(alpha: 0.7),
-            ],
-          ).createShader(rect);
-        }
-      } catch (e) {
-        // If shader creation fails, continue without shader
-        shader = null;
-      }
-    }
+    // Minimalistic: Use black in light mode, white in dark mode
+    final logoColor = isWhite ? Colors.white : (isDarkMode ? Colors.white : Colors.black);
 
     // Outer circle badge
     final circlePaint = Paint()
-      ..color = isWhite ? Colors.white : primaryColor
+      ..color = logoColor
       ..strokeWidth = 3.5
       ..style = PaintingStyle.stroke;
-
-    // If not white, add gradient shader
-    if (!isWhite && shader != null) {
-      circlePaint.shader = shader;
-    }
 
     canvas.drawCircle(center, radius, circlePaint);
 
     // Wave elements (representing sea/destination)
-    _drawWaves(canvas, size, shader);
+    _drawWaves(canvas, size, logoColor);
 
     // Villa roof silhouette (representing accommodation)
-    _drawVillaRoof(canvas, size, shader);
+    _drawVillaRoof(canvas, size, logoColor);
   }
 
-  void _drawWaves(Canvas canvas, Size size, Shader? shader) {
+  void _drawWaves(Canvas canvas, Size size, Color logoColor) {
     final wavePaint = Paint()
-      ..color = isWhite ? Colors.white : primaryColor
+      ..color = logoColor
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-
-    // Apply gradient shader if not white
-    if (!isWhite && shader != null) {
-      wavePaint.shader = shader;
-    }
 
     // Three flowing wave lines (bottom third of badge)
     final baseY = size.height * 0.65;
@@ -209,29 +179,17 @@ class _LogoPainter extends CustomPainter {
     canvas.drawPath(wave3, wavePaint);
   }
 
-  void _drawVillaRoof(Canvas canvas, Size size, Shader? shader) {
+  void _drawVillaRoof(Canvas canvas, Size size, Color logoColor) {
     final roofPaint = Paint()
-      ..color = isWhite ? Colors.white : primaryColor
+      ..color = logoColor
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // Apply gradient shader if not white
-    if (!isWhite && shader != null) {
-      roofPaint.shader = shader;
-    }
-
     final fillPaint = Paint()
-      ..color = isWhite
-          ? Colors.white.withValues(alpha: 0.2)
-          : primaryColor.withValues(alpha: 0.2)
+      ..color = logoColor.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
-
-    // Apply gradient shader for fill if not white
-    if (!isWhite && shader != null) {
-      fillPaint.shader = shader;
-    }
 
     // Modern geometric villa roof (top third of badge)
     final roofPath = Path();
@@ -248,15 +206,10 @@ class _LogoPainter extends CustomPainter {
 
     // Simple villa structure lines
     final structurePaint = Paint()
-      ..color = isWhite ? Colors.white : primaryColor
+      ..color = logoColor
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-
-    // Apply gradient shader if not white
-    if (!isWhite && shader != null) {
-      structurePaint.shader = shader;
-    }
 
     // Two vertical lines suggesting building
     canvas.drawLine(

@@ -49,28 +49,50 @@ class AnalyticsScreen extends ConsumerWidget {
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: Column(
-          children: [
-            _DateRangeSelector(dateRange: dateRange),
-            Expanded(
-              child: analyticsAsync.when(
-                data: (analytics) => _AnalyticsContent(
-                  analytics: analytics,
-                  dateRange: dateRange,
-                ),
-                loading: SkeletonLoader.analytics,
-                error: (error, stack) => ErrorStateWidget(
-                  message: l10n.ownerAnalyticsLoadError,
-                  onRetry: () {
-                    ref.invalidate(analyticsNotifierProvider);
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
+      body: AnalyticsScreenBody(
+        dateRange: dateRange,
+        analyticsAsync: analyticsAsync,
+      ),
+    );
+  }
+}
+
+/// Analytics Screen Body
+class AnalyticsScreenBody extends ConsumerWidget {
+  final DateRangeFilter dateRange;
+  final AsyncValue<AnalyticsSummary> analyticsAsync;
+
+  const AnalyticsScreenBody({
+    super.key,
+    required this.dateRange,
+    required this.analyticsAsync,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
+    final content = analyticsAsync.when(
+      data: (analytics) => _AnalyticsContent(
+        analytics: analytics,
+        dateRange: dateRange,
+      ),
+      loading: SkeletonLoader.analytics,
+      error: (error, stack) => ErrorStateWidget(
+        message: l10n.ownerAnalyticsLoadError,
+        onRetry: () {
+          ref.invalidate(analyticsNotifierProvider);
+        },
+      ),
+    );
+
+    return Container(
+      decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+      child: Column(
+        children: [
+          _DateRangeSelector(dateRange: dateRange),
+          Expanded(child: content),
+        ],
       ),
     );
   }
@@ -197,7 +219,10 @@ class _AnalyticsContent extends StatelessWidget {
   final AnalyticsSummary analytics;
   final DateRangeFilter dateRange;
 
-  const _AnalyticsContent({required this.analytics, required this.dateRange});
+  const _AnalyticsContent({
+    required this.analytics,
+    required this.dateRange,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +232,6 @@ class _AnalyticsContent extends StatelessWidget {
     final isDesktop = screenWidth > 900;
 
     return ListView(
-      // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
       physics: PlatformScrollPhysics.adaptive,
       padding: EdgeInsets.symmetric(
         horizontal: context.horizontalPadding,

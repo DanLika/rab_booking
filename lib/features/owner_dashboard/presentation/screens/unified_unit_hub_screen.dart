@@ -540,69 +540,54 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 2x2 grid of action buttons
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // First row: Edit + Delete
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 36,
-                        height: 36,
-                        child: IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          onPressed: () {
-                            context.push(OwnerRoutes.propertyEdit.replaceAll(':id', property.id));
-                          },
-                          tooltip: l10n.unitHubEditProperty,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 36,
-                        height: 36,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.delete_outline,
-                            size: 18,
-                            color: units.isEmpty
-                                ? theme.colorScheme.error
-                                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                          ),
-                          onPressed: () => _confirmDeleteProperty(context, property, units.length),
-                          tooltip: units.isEmpty ? l10n.unitHubDeleteProperty : l10n.unitHubDeleteAllUnitsFirst,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Second row: Add + Expand
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 36,
-                        height: 36,
-                        child: IconButton(
-                          icon: const Icon(Icons.add_circle_outline, size: 18),
-                          onPressed: () {
-                            context.push('${OwnerRoutes.unitWizard}?propertyId=${property.id}');
-                          },
-                          tooltip: l10n.unitHubAddUnit,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ),
-                      const SizedBox(width: 36, height: 36, child: Icon(Icons.expand_more, size: 22)),
-                    ],
-                  ),
-                ],
+              // Horizontal row of action buttons (more compact)
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  onPressed: () {
+                    context.push(OwnerRoutes.propertyEdit.replaceAll(':id', property.id));
+                  },
+                  tooltip: l10n.unitHubEditProperty,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
               ),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 16,
+                    color: units.isEmpty
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
+                  onPressed: () => _confirmDeleteProperty(context, property, units.length),
+                  tooltip: units.isEmpty ? l10n.unitHubDeleteProperty : l10n.unitHubDeleteAllUnitsFirst,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: const Icon(Icons.add_circle_outline, size: 16),
+                  onPressed: () {
+                    context.push('${OwnerRoutes.unitWizard}?propertyId=${property.id}');
+                  },
+                  tooltip: l10n.unitHubAddUnit,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.expand_more, size: 20),
             ],
           ),
           children: [
@@ -844,6 +829,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
           padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Unit name + status + actions
               Row(
@@ -1058,24 +1044,26 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
   Widget _buildEmptyState(ThemeData theme, bool isDark) {
     final l10n = AppLocalizations.of(context);
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.home_work_outlined, size: 80, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
-          const SizedBox(height: 24),
-          Text(
-            l10n.unitHubSelectUnit,
-            style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.unitHubSelectUnitDesc,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.home_work_outlined, size: 80, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+            const SizedBox(height: 24),
+            Text(
+              l10n.unitHubSelectUnit,
+              style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              l10n.unitHubSelectUnitDesc,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1168,9 +1156,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n.unitHubBasicData,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
+            Expanded(
+              child: Text(
+                l10n.unitHubBasicData,
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
             // Gradient button using brand gradient
             Container(
@@ -1325,6 +1317,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
             padding: EdgeInsets.all(isMobile ? 14.0 : 18.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Header with accent border
                 Row(
@@ -1343,10 +1336,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             title,
                             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                           const SizedBox(height: 2),
                           Container(
@@ -1387,6 +1383,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
             ),
           ),
           Expanded(
@@ -1399,6 +1397,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                 color: valueColor ?? theme.colorScheme.onSurface,
                 letterSpacing: -0.2,
               ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 3,
             ),
           ),
         ],

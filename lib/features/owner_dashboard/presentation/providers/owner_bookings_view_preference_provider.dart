@@ -7,15 +7,20 @@ import '../../../../shared/providers/repository_providers.dart';
 /// Provider for current bookings view mode (card/table)
 /// Automatically defaults to card on mobile, table on desktop
 /// Persists user's preference
-final ownerBookingsViewProvider = StateNotifierProvider<OwnerBookingsViewNotifier, BookingsViewMode>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  // If SharedPreferences is not yet initialized, use default view mode
-  // This can happen during app initialization before main.dart overrides the provider
-  if (prefs == null) {
-    return OwnerBookingsViewNotifier.withDefault();
-  }
-  return OwnerBookingsViewNotifier(prefs);
-});
+/// FIXED: Use ref.read() instead of ref.watch() to avoid dependency tracking issues when provider is overridden
+final ownerBookingsViewProvider = StateNotifierProvider<OwnerBookingsViewNotifier, BookingsViewMode>(
+  (ref) {
+    // Use ref.read() instead of ref.watch() to avoid dependency tracking issues
+    // This is safe because SharedPreferences is a singleton and doesn't change
+    final prefs = ref.read(sharedPreferencesProvider);
+    // If SharedPreferences is not yet initialized, use default view mode
+    // This can happen during app initialization before main.dart overrides the provider
+    if (prefs == null) {
+      return OwnerBookingsViewNotifier.withDefault();
+    }
+    return OwnerBookingsViewNotifier(prefs);
+  },
+);
 
 /// State notifier for bookings view mode with persistence
 class OwnerBookingsViewNotifier extends StateNotifier<BookingsViewMode> {

@@ -41,6 +41,9 @@ export * from "./verifyBookingAccess";
 // Export email verification functions (OTP for guest bookings)
 export * from "./emailVerification";
 
+// Export password reset function (Custom email template)
+export * from "./passwordReset";
+
 // Export notification preferences functions (Owner email opt-out)
 export * from "./notificationPreferences";
 

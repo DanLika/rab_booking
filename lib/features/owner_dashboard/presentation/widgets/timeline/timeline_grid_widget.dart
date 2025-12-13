@@ -49,18 +49,15 @@ class TimelineGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // OPTIMIZED: Use ListView.builder instead of Column for better scrolling performance
-    // This only renders visible rows, significantly improving Android web performance
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(), // Parent handles scrolling
-      itemCount: units.length,
-      itemBuilder: (context, index) {
-        final unit = units[index];
-        final bookings = bookingsByUnit[unit.id] ?? [];
-        return RepaintBoundary(
-          // Isolate repaints for each unit row to improve scrolling performance
-          child: _TimelineUnitRow(
+    // Container with transparent color wrapping Column
+    // Column uses mainAxisSize.min to size to its children
+    return Container(
+      color: Colors.transparent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: units.map((unit) {
+          final bookings = bookingsByUnit[unit.id] ?? [];
+          return _TimelineUnitRow(
             unit: unit,
             bookings: bookings,
             dates: dates,
@@ -70,9 +67,9 @@ class TimelineGridWidget extends StatelessWidget {
             onBookingTap: onBookingTap,
             onBookingLongPress: onBookingLongPress,
             dropZoneBuilder: dropZoneBuilder,
-          ),
-        );
-      },
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -112,52 +109,51 @@ class _TimelineUnitRow extends StatelessWidget {
     // Dynamic height based on stack count
     final unitRowHeight = dimensions.getStackedRowHeight(maxStackCount);
 
-    return Container(
+    // FIXED: Container needs explicit width when inside Column that's inside horizontal ScrollView
+    // The width should match the content width (offsetWidth + dates.length * dayWidth)
+    final contentWidth = offsetWidth + (dates.length * dimensions.dayWidth);
+    return SizedBox(
+      width: contentWidth,
       height: unitRowHeight,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()))),
-      ),
-      child: Stack(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()))),
+        ),
+        child: Stack(
         alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
         children: [
           // Day cells (background)
-          // OPTIMIZED: RepaintBoundary for day cells to isolate repaints
-          RepaintBoundary(
-            child: Row(
-              children: [
-                if (offsetWidth > 0) SizedBox(width: offsetWidth),
-                ...dates.map((date) => _TimelineDayCell(date: date, dimensions: dimensions)),
-              ],
-            ),
+          Row(
+            children: [
+              if (offsetWidth > 0) SizedBox(width: offsetWidth),
+              ...dates.map((date) => _TimelineDayCell(date: date, dimensions: dimensions)),
+            ],
           ),
 
           // Drop zones layer (if provided)
-          // OPTIMIZED: RepaintBoundary for drop zones
           if (dropZoneBuilder != null)
-            RepaintBoundary(
-              child: Stack(
-                alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
-                children: dates.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final date = entry.value;
-                  final left = offsetWidth + (index * dimensions.dayWidth);
+            Stack(
+              alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+              children: dates.asMap().entries.map((entry) {
+                final index = entry.key;
+                final date = entry.value;
+                final left = offsetWidth + (index * dimensions.dayWidth);
 
-                  return Positioned(
-                    left: left,
-                    top: 0,
-                    width: dimensions.dayWidth,
-                    height: dimensions.unitRowHeight,
-                    child: dropZoneBuilder!(unit, date, index),
-                  );
-                }).toList(),
-              ),
+                return Positioned(
+                  left: left,
+                  top: 0,
+                  width: dimensions.dayWidth,
+                  height: dimensions.unitRowHeight,
+                  child: dropZoneBuilder!(unit, date, index),
+                );
+              }).toList(),
             ),
 
           // Reservation blocks (foreground)
-          // OPTIMIZED: RepaintBoundary for booking blocks layer
-          RepaintBoundary(child: Stack(alignment: Alignment.topLeft, children: _buildReservationBlocks(stackLevels))),
+          Stack(alignment: Alignment.topLeft, children: _buildReservationBlocks(stackLevels)),
         ],
+      ),
       ),
     );
   }
@@ -179,7 +175,7 @@ class _TimelineUnitRow extends StatelessWidget {
         final normalizedDate = DateTime(d.year, d.month, d.day);
         return normalizedDate.isAtSameMomentAs(checkIn);
       });
-      
+
       if (startIndex == -1) continue;
 
       final dayWidth = dimensions.dayWidth;

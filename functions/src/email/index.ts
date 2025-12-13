@@ -127,6 +127,12 @@ export {
   type SuspiciousActivityParams,
 } from "./templates/suspicious-activity-v2";
 
+export {
+  sendPasswordResetEmailV2,
+  generatePasswordResetEmailV2,
+  type PasswordResetParams,
+} from "./templates/password-reset-v2";
+
 // Base template
 export {
   generateEmailHtml,

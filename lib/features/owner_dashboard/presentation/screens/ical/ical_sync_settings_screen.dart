@@ -459,10 +459,12 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
   Widget _buildFeedsLoading(BuildContext context) {
     final theme = Theme.of(context);
+    // Minimalistic: Use black in light mode, white in dark mode
+    final loaderColor = theme.brightness == Brightness.dark ? Colors.white : Colors.black;
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(color: context.gradients.cardBackground, borderRadius: BorderRadius.circular(16)),
-      child: Center(child: CircularProgressIndicator(color: theme.colorScheme.primary)),
+      child: Center(child: CircularProgressIndicator(color: loaderColor)),
     );
   }
 

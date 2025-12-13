@@ -491,6 +491,8 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
       });
 
       if (mounted) {
+        // FIXED BUG #5: Note - Provider invalidation NOT needed here because
+        // sending email doesn't modify booking data in Firestore
         Navigator.of(context).pop();
         ErrorDisplayUtils.showSuccessSnackBar(
           context,

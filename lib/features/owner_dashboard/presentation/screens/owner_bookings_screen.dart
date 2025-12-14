@@ -15,7 +15,9 @@ import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_bookings_view_preference_provider.dart';
+import '../providers/overbooking_detection_provider.dart';
 import '../../domain/models/bookings_view_mode.dart';
+import '../../domain/models/overbooking_conflict.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
@@ -288,6 +290,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final filters = ref.watch(bookingsFiltersNotifierProvider);
     final viewMode = ref.watch(ownerBookingsViewProvider);
     final theme = Theme.of(context);
+
+    // Activate auto-resolution of overbooking conflicts
+    // Automatically rejects pending bookings when they conflict with confirmed bookings
+    ref.watch(overbookingAutoResolverProvider);
     
     // FIXED: Watch pendingBookingIdProvider to detect when booking should be shown
     // This avoids issues with widget parameter passing during navigation
@@ -345,7 +351,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       
       // Use addPostFrameCallback to check for booking after build
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _hasHandledInitialBooking) {
+        // FIXED BUG #13: Add _dialogShownForBooking check to prevent race condition
+        if (!mounted || _hasHandledInitialBooking || _dialogShownForBooking) {
           _bookingCheckScheduled = false;
           return;
         }
@@ -679,6 +686,106 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
+  /// Handle overbooking badge tap on Bookings Page
+  /// Shows snackbar with conflict details and scrolls to first conflicted booking
+  void _handleOverbookingBadgeTap(WidgetRef ref) {
+    final conflictsAsync = ref.read(overbookingConflictsProvider);
+    final conflicts = conflictsAsync.valueOrNull ?? [];
+    
+    if (conflicts.isEmpty) return;
+    
+    final firstConflict = conflicts.first;
+    
+    // Find the first conflicted booking in the current list
+    final windowedState = ref.read(windowedBookingsNotifierProvider);
+    final bookings = windowedState.visibleBookings;
+    
+    // Find booking that matches conflict
+    OwnerBooking? conflictedBooking;
+    for (final booking in bookings) {
+      if (booking.booking.id == firstConflict.booking1.id || 
+          booking.booking.id == firstConflict.booking2.id) {
+        conflictedBooking = booking;
+        break;
+      }
+    }
+    
+    // Show snackbar with conflict details
+    final guest1 = firstConflict.booking1.guestName ?? 'Unknown';
+    final guest2 = firstConflict.booking2.guestName ?? 'Unknown';
+    
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Conflict: $guest1 vs $guest2'),
+        backgroundColor: Colors.red,
+        action: SnackBarAction(
+          label: 'View',
+          textColor: Colors.white,
+          onPressed: () {
+            // Use helper method to show booking details (works from any context)
+            _showBookingDetailsFromConflict(ref, firstConflict);
+          },
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+    
+    // Scroll to conflicted booking if found
+    if (conflictedBooking != null && _scrollController.hasClients) {
+      // Find index of booking in list
+      final index = bookings.indexOf(conflictedBooking);
+      if (index >= 0) {
+        // Calculate approximate scroll position (each card is ~300px tall)
+        const estimatedCardHeight = 300.0;
+        final scrollPosition = index * estimatedCardHeight;
+        
+        // Scroll to position
+        _scrollController.animateTo(
+          scrollPosition.clamp(0.0, _scrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
+
+  /// Show booking details dialog for a conflict (works from any context)
+  void _showBookingDetailsFromConflict(WidgetRef ref, OverbookingConflict conflict) async {
+    // Try to get booking from repository (more reliable than local state)
+    try {
+      final repository = ref.read(ownerBookingsRepositoryProvider);
+      final ownerBooking = await repository.getOwnerBookingById(conflict.booking1.id);
+
+      if (ownerBooking != null && mounted) {
+        showDialog(
+          context: context,
+          builder: (dialogContext) => BookingDetailsDialog(ownerBooking: ownerBooking),
+        );
+      } else {
+        // Fallback: try booking2 if booking1 not found
+        final ownerBooking2 = await repository.getOwnerBookingById(conflict.booking2.id);
+        if (ownerBooking2 != null && mounted) {
+          showDialog(
+            context: context,
+            builder: (dialogContext) => BookingDetailsDialog(ownerBooking: ownerBooking2),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error showing booking details from conflict: $e');
+      // Show error snackbar if dialog fails
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading booking details'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildFiltersSection(BookingsFilters filters, bool isMobile, ThemeData theme, BookingsViewMode viewMode) {
     // Count active filters for display
     int activeFilterCount = 0;
@@ -690,6 +797,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
+    
+    // Get overbooking conflict count
+    final conflictCount = ref.watch(overbookingConflictCountProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -722,6 +832,41 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
+
+                // Overbooking conflict badge
+                if (conflictCount > 0) ...[
+                  GestureDetector(
+                    onTap: () => _handleOverbookingBadgeTap(ref),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.shade300),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.red.shade700,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            conflictCount == 1 ? '1 conflict' : '$conflictCount conflicts',
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
 
                 // View mode toggle button
                 Container(
@@ -1143,21 +1288,31 @@ class _BookingCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
 
     final isDark = theme.brightness == Brightness.dark;
+    
+    // Check if booking is in conflict
+    final hasConflict = ref.watch(isBookingInConflictProvider(booking.id));
 
     return Container(
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+        border: Border.all(
+          color: hasConflict 
+              ? Colors.red 
+              : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          width: hasConflict ? 2 : 1,
+        ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Section
-            BookingCardHeader(booking: booking, isMobile: isMobile),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Section
+                BookingCardHeader(booking: booking, isMobile: isMobile),
 
             // Card Body
             Padding(
@@ -1212,7 +1367,12 @@ class _BookingCard extends ConsumerWidget {
             BookingCardActions(
               booking: booking,
               isMobile: isMobile,
-              onShowDetails: () => _showBookingDetails(context, ref, ownerBooking),
+              onShowDetails: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+                );
+              },
               onApprove: booking.status == BookingStatus.pending
                   ? () => _approveBooking(context, ref, booking.id)
                   : null,
@@ -1222,8 +1382,29 @@ class _BookingCard extends ConsumerWidget {
                   : null,
               onCancel: booking.canBeCancelled ? () => _cancelBooking(context, ref, booking.id) : null,
             ),
-          ],
-        ),
+              ],
+            ),
+          ),
+          // Warning icon overlay for conflicts
+          if (hasConflict)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.red.shade300, width: 2),
+                ),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red.shade700,
+                  size: 20,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

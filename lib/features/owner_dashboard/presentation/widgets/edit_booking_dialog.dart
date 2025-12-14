@@ -11,7 +11,10 @@ import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/services/logging_service.dart';
 import '../providers/owner_bookings_provider.dart';
+import '../providers/owner_calendar_provider.dart';
+import '../../utils/booking_overlap_detector.dart';
 
 /// Edit Booking Dialog - Phase 2 Feature
 ///
@@ -69,10 +72,23 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
-      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
+    // FIXED BUG #14: Prevent accidental dismiss during loading operations
+    return PopScope(
+      canPop: !_isLoading,
+      onPopInvokedWithResult: (didPop, result) {
+        if (_isLoading) {
+          // Show a brief message if user tries to dismiss during loading
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            'Please wait for the operation to complete',
+            duration: const Duration(seconds: 2),
+          );
+        }
+      },
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
         constraints: BoxConstraints(
@@ -320,7 +336,8 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           ],
         ),
       ),
-    );
+      ), // Close Dialog
+    ); // Close PopScope
   }
 
   Future<void> _selectDate({required bool isCheckIn}) async {
@@ -351,6 +368,42 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     setState(() => _isLoading = true);
 
     try {
+      // FIXED BUG #12: Validate for overlaps before saving
+      final allBookingsMap = await ref.read(calendarBookingsProvider.future);
+
+      // Check if new dates would overlap with existing bookings
+      final conflicts = BookingOverlapDetector.getConflictingBookings(
+        unitId: widget.booking.unitId,
+        newCheckIn: _checkIn,
+        newCheckOut: _checkOut,
+        bookingIdToExclude: widget.booking.id,
+        allBookings: allBookingsMap,
+      );
+
+      if (conflicts.isNotEmpty) {
+        setState(() => _isLoading = false);
+
+        if (mounted) {
+          // Show detailed error with conflicting booking info
+          final conflict = conflicts.first;
+          final conflictGuestName = conflict.guestName ?? 'Unknown';
+          final conflictCheckIn = DateFormat('dd.MM.yyyy').format(conflict.checkIn);
+          final conflictCheckOut = DateFormat('dd.MM.yyyy').format(conflict.checkOut);
+
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            conflicts.length == 1
+                ? 'Overlap detected with booking for $conflictGuestName ($conflictCheckIn - $conflictCheckOut)'
+                : 'Overlap detected with ${conflicts.length} existing bookings',
+            duration: const Duration(seconds: 5),
+          );
+        }
+        return;
+      }
+
+      // Check if check-out date changed
+      final checkOutChanged = _checkOut != widget.booking.checkOut;
+
       // FIXED BUG #2: Use transaction with existence check to prevent creating new document
       final firestore = ref.read(firestoreProvider);
       await firestore.runTransaction((transaction) async {
@@ -369,6 +422,20 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         });
       });
+
+      // If check-out date changed, update token expiration
+      if (checkOutChanged) {
+        try {
+          final functions = ref.read(firebaseFunctionsProvider);
+          final callable = functions.httpsCallable('updateBookingTokenExpiration');
+          await callable.call({
+            'bookingId': widget.booking.id,
+          });
+        } catch (e) {
+          // Log error but don't block booking update
+          LoggingService.logWarning('Failed to update token expiration: $e');
+        }
+      }
 
       if (mounted) {
         // FIXED BUG #5: Invalidate provider to refresh booking list in parent screen

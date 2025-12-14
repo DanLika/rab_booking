@@ -20,19 +20,74 @@ import {
 } from "./utils/dateValidation";
 import { sanitizeText, sanitizeEmail, sanitizePhone } from "./utils/inputSanitization";
 import { logInfo, logError, logWarn } from "./logger";
+import { validateBookingPrice, calculateBookingPrice } from "./utils/priceValidation";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 // Allowed domains for return URL (security whitelist)
 const ALLOWED_RETURN_DOMAINS = [
-  "https://bookbed.io",
-  "https://app.bookbed.io",
+  "https://bookbed.io",           // Main widget domain
+  "https://app.bookbed.io",       // Owner dashboard
+  "https://view.bookbed.io",      // Booking details page (from emails)
   "https://rab-booking-248fc.web.app",  // Legacy fallback
-  "https://bookbed.io", // Legacy fallback
-  "http://localhost",
-  "http://127.0.0.1",
+  "http://localhost",             // Local development
+  "http://127.0.0.1",             // Local development
 ];
+
+// Allowed wildcard domains (e.g., *.bookbed.io for custom client subdomains like jasko-rab.bookbed.io)
+const ALLOWED_WILDCARD_DOMAINS = [
+  ".bookbed.io", // Matches any subdomain of bookbed.io (e.g., jasko-rab.bookbed.io, villa-marija.bookbed.io)
+];
+
+/**
+ * Validates if a return URL is allowed based on whitelist and wildcard rules
+ * @param returnUrl - The full return URL to validate
+ * @returns true if URL is allowed, false otherwise
+ *
+ * SECURITY: Uses split-based validation to prevent attacks like "evil-bookbed.io"
+ * which would pass endsWith() check but should be blocked
+ */
+function isAllowedReturnUrl(returnUrl: string): boolean {
+  // Check exact domain matches first
+  const exactMatch = ALLOWED_RETURN_DOMAINS.some((domain) =>
+    returnUrl.startsWith(domain)
+  );
+
+  if (exactMatch) return true;
+
+  // Check wildcard domain matches (e.g., *.bookbed.io)
+  try {
+    const url = new URL(returnUrl);
+    const hostname = url.hostname; // e.g., "jasko-rab.bookbed.io"
+
+    return ALLOWED_WILDCARD_DOMAINS.some((wildcardDomain) => {
+      // FIXED BUG #17: Secure wildcard validation using domain split
+      // wildcardDomain = ".bookbed.io" → domainWithoutDot = "bookbed.io"
+      const domainWithoutDot = wildcardDomain.slice(1); // Remove leading dot
+
+      // Split both into parts
+      const hostnameParts = hostname.split("."); // ["jasko-rab", "bookbed", "io"]
+      const wildcardParts = domainWithoutDot.split("."); // ["bookbed", "io"]
+
+      // SECURITY: Hostname must have MORE parts than wildcard domain
+      // This blocks: "evil-bookbed.io" (2 parts) vs "bookbed.io" (2 parts)
+      // This allows: "jasko-rab.bookbed.io" (3 parts) vs "bookbed.io" (2 parts)
+      if (hostnameParts.length <= wildcardParts.length) {
+        return false;
+      }
+
+      // Check if last N parts of hostname match wildcard domain
+      // ["jasko-rab", "bookbed", "io"] → last 2 parts: ["bookbed", "io"]
+      const lastParts = hostnameParts.slice(-wildcardParts.length);
+      const matches = lastParts.join(".") === domainWithoutDot;
+
+      return matches;
+    });
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Cloud Function: Create Stripe Checkout Session
@@ -60,10 +115,11 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
   });
 
   if (!bookingData) {
+    logError("createStripeCheckoutSession: Booking data is missing");
     throw new HttpsError("invalid-argument", "Booking data is required");
   }
 
-  const {
+  let {
     unitId,
     propertyId,
     ownerId,
@@ -80,21 +136,58 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     taxLegalAccepted,
   } = bookingData;
 
-  // Validate required fields
-  if (!unitId || !propertyId || !ownerId || !checkIn || !checkOut ||
-    !guestName || !guestEmail || !totalPrice) {
-    throw new HttpsError("invalid-argument", "Missing required booking fields");
+  // Validate required fields with detailed logging
+  const missingFields: string[] = [];
+  if (!unitId) missingFields.push("unitId");
+  if (!propertyId) missingFields.push("propertyId");
+  if (!ownerId) missingFields.push("ownerId");
+  if (!checkIn) missingFields.push("checkIn");
+  if (!checkOut) missingFields.push("checkOut");
+  if (!guestName) missingFields.push("guestName");
+  if (!guestEmail) missingFields.push("guestEmail");
+  if (!totalPrice) missingFields.push("totalPrice");
+
+  if (missingFields.length > 0) {
+    logError(`createStripeCheckoutSession: Missing required booking fields: ${missingFields.join(", ")}`, null, {
+      bookingDataKeys: Object.keys(bookingData),
+      missingFields: missingFields,
+    });
+    throw new HttpsError(
+      "invalid-argument",
+      `Missing required booking fields: ${missingFields.join(", ")}`
+    );
   }
 
-  // SECURITY: Validate return URL against whitelist
+  // SECURITY: Validate return URL format and against whitelist
   if (returnUrl) {
-    const isAllowedDomain = ALLOWED_RETURN_DOMAINS.some((domain) =>
-      returnUrl.startsWith(domain)
-    );
-    if (!isAllowedDomain) {
-      logError(`Invalid return URL attempted: ${returnUrl}`);
-      throw new HttpsError("invalid-argument", "Invalid return URL");
+    // Validate URL format first
+    try {
+      const url = new URL(returnUrl);
+      logInfo("createStripeCheckoutSession: Return URL parsed", {
+        origin: url.origin,
+        pathname: url.pathname,
+        hash: url.hash,
+        search: url.search,
+      });
+    } catch (urlError) {
+      logError(`createStripeCheckoutSession: Invalid return URL format: ${returnUrl}`, urlError);
+      throw new HttpsError("invalid-argument", `Invalid return URL format: ${returnUrl}`);
     }
+
+    // FIXED BUG #15: Check against whitelist with wildcard subdomain support
+    if (!isAllowedReturnUrl(returnUrl)) {
+      logError(`createStripeCheckoutSession: Invalid return URL (not in whitelist): ${returnUrl}`, null, {
+        returnUrl: returnUrl,
+        allowedDomains: ALLOWED_RETURN_DOMAINS,
+        allowedWildcards: ALLOWED_WILDCARD_DOMAINS,
+      });
+      throw new HttpsError(
+        "invalid-argument",
+        `Invalid return URL. Must be from allowed domain (bookbed.io, *.bookbed.io, localhost, etc.)`
+      );
+    }
+  } else {
+    logWarn("createStripeCheckoutSession: No return URL provided, will use default");
   }
 
   try {
@@ -115,11 +208,20 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     const ownerStripeAccountId = ownerDoc.data()?.stripe_account_id;
 
     if (!ownerStripeAccountId) {
+      logError(`createStripeCheckoutSession: Owner ${ownerId} has not connected Stripe account`, null, {
+        ownerId: ownerId,
+        propertyId: propertyId,
+      });
       throw new HttpsError(
         "failed-precondition",
         "Owner has not connected their Stripe account. Please contact the property owner."
       );
     }
+
+    logInfo("createStripeCheckoutSession: Owner Stripe account found", {
+      ownerId: ownerId,
+      stripeAccountId: ownerStripeAccountId,
+    });
 
     const depositAmountInCents = Math.round(depositAmount * 100);
 
@@ -143,6 +245,12 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     const sanitizedNotes = notes ? sanitizeText(notes) : null;
 
     if (!sanitizedGuestName || !sanitizedGuestEmail) {
+      logError("createStripeCheckoutSession: Invalid guest name or email after sanitization", null, {
+        originalGuestName: guestName,
+        originalGuestEmail: guestEmail,
+        sanitizedGuestName: sanitizedGuestName,
+        sanitizedGuestEmail: sanitizedGuestEmail,
+      });
       throw new HttpsError(
         "invalid-argument",
         "Invalid guest name or email after sanitization"
@@ -168,6 +276,61 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     }
 
     // ========================================================================
+    // SECURITY: Validate price BEFORE creating placeholder booking
+    // ========================================================================
+    // CRITICAL: Client may send locked price (€102.00) but server calculates
+    // current price (€200.00). We must validate to prevent price manipulation.
+    // However, if price changed, we should use server-calculated price, not client's locked price.
+    try {
+      await validateBookingPrice(
+        unitId,
+        checkInDate,
+        checkOutDate,
+        Number(totalPrice),
+        propertyId
+      );
+      logInfo("createStripeCheckoutSession: Price validated successfully", {
+        unitId,
+        clientPrice: totalPrice,
+      });
+    } catch (priceError: any) {
+      // If price mismatch, use server-calculated price instead of client's locked price
+      if (priceError.code === "invalid-argument" && priceError.message?.includes("Price mismatch")) {
+        logWarn("createStripeCheckoutSession: Price mismatch - using server-calculated price", {
+          unitId,
+          clientPrice: totalPrice,
+          error: priceError.message,
+        });
+        
+        // Calculate server-side price and use it instead
+        const { totalPrice: serverPrice } = await calculateBookingPrice(
+          unitId,
+          checkInDate,
+          checkOutDate,
+          propertyId
+        );
+        
+        logInfo("createStripeCheckoutSession: Using server-calculated price", {
+          unitId,
+          oldPrice: totalPrice,
+          newPrice: serverPrice,
+        });
+        
+        // Update totalPrice and depositAmount to use server-calculated price
+        totalPrice = serverPrice;
+        if (paymentOption === "deposit") {
+          const depositPercentage = 20; // Default, should match config
+          depositAmount = Math.round(serverPrice * (depositPercentage / 100) * 100) / 100;
+        } else {
+          depositAmount = serverPrice;
+        }
+      } else {
+        // Other validation errors - rethrow
+        throw priceError;
+      }
+    }
+
+    // ========================================================================
     // ATOMIC TRANSACTION: Create placeholder booking with availability check
     // ========================================================================
     const placeholderResult = await db.runTransaction(async (transaction) => {
@@ -183,6 +346,18 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
         await transaction.get(conflictingBookingsQuery);
 
       if (!conflictingBookings.empty) {
+        const conflicts = conflictingBookings.docs.map((doc) => ({
+          id: doc.id,
+          status: doc.data().status,
+          checkIn: doc.data().check_in,
+          checkOut: doc.data().check_out,
+        }));
+        logError("createStripeCheckoutSession: Date conflict detected", null, {
+          unitId: unitId,
+          checkIn: checkIn,
+          checkOut: checkOut,
+          conflicts: conflicts,
+        });
         throw new HttpsError(
           "already-exists",
           "Dates no longer available. Another booking is in progress or confirmed."
@@ -356,10 +531,24 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       bookingReference: bookingRef, // Return for UI display
     };
   } catch (error: any) {
-    logError("Error creating Stripe checkout session", error);
+    // If it's already an HttpsError, re-throw it (preserves status code and message)
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    // Log detailed error information
+    logError("Error creating Stripe checkout session", error, {
+      errorName: error?.name,
+      errorMessage: error?.message,
+      errorStack: error?.stack,
+      hasBookingData: !!bookingData,
+      returnUrl: returnUrl,
+    });
+
+    // Return user-friendly error message
     throw new HttpsError(
       "internal",
-      error.message || "Failed to create checkout session"
+      error.message || "Failed to create checkout session. Please try again."
     );
   }
 });

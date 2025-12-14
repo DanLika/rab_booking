@@ -6,7 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/message_box.dart';
@@ -22,7 +22,7 @@ class BankAccountScreen extends ConsumerStatefulWidget {
   ConsumerState<BankAccountScreen> createState() => _BankAccountScreenState();
 }
 
-class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with AndroidKeyboardDismissFix {
+class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with AndroidKeyboardDismissFixApproach1<BankAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isDirty = false;
   bool _isSaving = false;
@@ -316,7 +316,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
       child: KeyedSubtree(
         key: ValueKey('bank_account_$keyboardFixRebuildKey'),
         child: Scaffold(
-          resizeToAvoidBottomInset: false,
+          resizeToAvoidBottomInset: true,
           drawer: const OwnerAppDrawer(currentRoute: 'integrations/payments/bank-account'),
           appBar: CommonAppBar(
             title: l10n.bankAccountTitle,
@@ -332,14 +332,31 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
 
                 _loadData(effectiveCompany);
 
+                final isCompact = MediaQuery.of(context).size.width < 400;
+
                 return LayoutBuilder(
                   builder: (context, constraints) {
+                    // Get keyboard height to adjust padding dynamically (with null safety)
+                    final mediaQuery = MediaQuery.maybeOf(context);
+                    final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
+                    final isKeyboardOpen = keyboardHeight > 0;
+
+                    // Calculate minHeight safely - ensure it's always finite and valid
+                    double minHeight;
+                    if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
+                      final calculated = constraints.maxHeight - keyboardHeight;
+                      minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                    } else {
+                      minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
+                    }
+                    // Ensure minHeight is always finite (never infinity)
+                    minHeight = minHeight.isFinite ? minHeight : 0.0;
+
                     return SingleChildScrollView(
-                      padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 24),
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.all(isCompact ? 16 : 24),
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight - (MediaQuery.of(context).size.width < 400 ? 32 : 48),
-                        ),
+                        constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 600),

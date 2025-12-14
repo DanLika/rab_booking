@@ -51,41 +51,30 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
 
     // Use custom colors or brand gradient (Purple 100% → 70%)
-    final effectiveColors = gradientColors ??
-        [
-          GradientTokens.brandPrimaryStart,
-          GradientTokens.brandPrimaryEnd,
-        ];
+    final effectiveColors = gradientColors ?? [GradientTokens.brandPrimaryStart, GradientTokens.brandPrimaryEnd];
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: effectiveColors,
-        ),
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: effectiveColors),
       ),
       child: AppBar(
         title: Text(
           title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: titleColor,
-            letterSpacing: 0,
-          ),
+          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: titleColor, letterSpacing: 0),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
+        leadingWidth: 72, // Increased from default 56 to add more left padding
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(
-              leadingIcon,
-              color: iconColor,
+          builder: (context) => Padding(
+            padding: const EdgeInsets.only(left: 8.0), // Additional left padding
+            child: IconButton(
+              icon: Icon(leadingIcon, color: iconColor),
+              onPressed: () => onLeadingIconTap(context),
+              tooltip: 'Menu',
             ),
-            onPressed: () => onLeadingIconTap(context),
-            tooltip: 'Menu',
           ),
         ),
         systemOverlayStyle: const SystemUiOverlayStyle(

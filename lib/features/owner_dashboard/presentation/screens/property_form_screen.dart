@@ -4,6 +4,7 @@ import 'dart:ui' show PointerDeviceKind;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -11,7 +12,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -34,7 +35,7 @@ class PropertyFormScreen extends ConsumerStatefulWidget {
   ConsumerState<PropertyFormScreen> createState() => _PropertyFormScreenState();
 }
 
-class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with AndroidKeyboardDismissFix {
+class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with AndroidKeyboardDismissFixApproach1<PropertyFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _slugController = TextEditingController();
@@ -237,31 +238,61 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
     final isMobile = screenWidth < 600;
     final l10n = AppLocalizations.of(context);
 
-    return KeyedSubtree(
-      key: ValueKey('property_form_$keyboardFixRebuildKey'),
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: CommonAppBar(
-          title: _isEditing ? l10n.propertyFormTitleEdit : l10n.propertyFormTitleAdd,
-          leadingIcon: Icons.arrow_back,
-          onLeadingIconTap: (context) => Navigator.of(context).pop(),
-        ),
-        body: Container(
-          // Page background gradient (topLeft → bottomRight)
-          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-          child: Stack(
-            alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
-            children: [
-              ScrollConfiguration(
-                // Enable mouse/trackpad drag scrolling for web
-                behavior: ScrollConfiguration.of(
-                  context,
-                ).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad}),
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
-                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                    padding: EdgeInsets.fromLTRB(isMobile ? 16 : 24, isMobile ? 16 : 24, isMobile ? 16 : 24, 24),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          // Handle browser back button on Chrome Android
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        }
+      },
+      child: KeyedSubtree(
+        key: ValueKey('property_form_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: CommonAppBar(
+            title: _isEditing ? l10n.propertyFormTitleEdit : l10n.propertyFormTitleAdd,
+            leadingIcon: Icons.arrow_back,
+            onLeadingIconTap: (context) {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/properties');
+              }
+            },
+          ),
+          body: Container(
+            // Page background gradient (topLeft → bottomRight)
+            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Get keyboard height to adjust padding dynamically (with null safety)
+                  // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
+
+                  return Stack(
+                    alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+                    children: [
+                      ScrollConfiguration(
+                        // Enable mouse/trackpad drag scrolling for web
+                        behavior: ScrollConfiguration.of(
+                          context,
+                        ).copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad}),
+                        child: Form(
+                          key: _formKey,
+                          child: ListView(
+                            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                            padding: EdgeInsets.fromLTRB(
+                              isMobile ? 16 : 24,
+                              isMobile ? 16 : 24,
+                              isMobile ? 16 : 24,
+                              24,
+                            ),
                     children: [
                       // Basic Info Section
                       _buildSection(
@@ -635,7 +666,11 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
                     ),
                   ),
                 ),
-            ],
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),

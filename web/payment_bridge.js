@@ -264,11 +264,15 @@
 
       console.log('[PaymentBridge] Notifying payment complete:', message);
 
+      let successCount = 0;
+      const totalMethods = 4;
+
       // Method 1: BroadcastChannel (same-origin)
       if (this.channel) {
         try {
           this.channel.postMessage(message);
           console.log('[PaymentBridge] Sent via BroadcastChannel');
+          successCount++;
         } catch (e) {
           console.error('[PaymentBridge] BroadcastChannel error:', e);
         }
@@ -279,8 +283,9 @@
         try {
           window.opener.postMessage(message, '*');
           console.log('[PaymentBridge] Sent via postMessage to opener');
+          successCount++;
         } catch (e) {
-          console.error('[PaymentBridge] postMessage error:', e);
+          console.error('[PaymentBridge] postMessage to opener error:', e);
         }
       }
 
@@ -289,6 +294,7 @@
         try {
           window.parent.postMessage(message, '*');
           console.log('[PaymentBridge] Sent via postMessage to parent');
+          successCount++;
         } catch (e) {
           console.error('[PaymentBridge] postMessage to parent error:', e);
         }
@@ -302,8 +308,43 @@
           localStorage.removeItem('payment_complete');
         }, 100);
         console.log('[PaymentBridge] Sent via localStorage');
+        successCount++;
       } catch (e) {
         console.error('[PaymentBridge] localStorage error:', e);
+      }
+
+      // Retry mechanism: if no methods succeeded, retry after short delay
+      if (successCount === 0) {
+        console.warn('[PaymentBridge] No methods succeeded, retrying after 500ms...');
+        setTimeout(function() {
+          // Retry BroadcastChannel
+          if (this.channel) {
+            try {
+              this.channel.postMessage(message);
+              console.log('[PaymentBridge] Retry sent via BroadcastChannel');
+            } catch (e) {
+              console.error('[PaymentBridge] BroadcastChannel retry error:', e);
+            }
+          }
+          // Retry postMessage to opener
+          if (window.opener && !window.opener.closed) {
+            try {
+              window.opener.postMessage(message, '*');
+              console.log('[PaymentBridge] Retry sent via postMessage to opener');
+            } catch (e) {
+              console.error('[PaymentBridge] postMessage retry error:', e);
+            }
+          }
+          // Retry postMessage to parent
+          if (window.parent && window.parent !== window) {
+            try {
+              window.parent.postMessage(message, '*');
+              console.log('[PaymentBridge] Retry sent via postMessage to parent');
+            } catch (e) {
+              console.error('[PaymentBridge] postMessage to parent retry error:', e);
+            }
+          }
+        }.bind(this), 500);
       }
 
       // Close popup after delay (if we're in a popup)

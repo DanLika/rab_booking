@@ -33,20 +33,17 @@ class ExternalCalendarSyncService {
   final FirebaseFirestore _firestore;
   final http.Client _httpClient;
 
-  ExternalCalendarSyncService({
-    FirebaseFirestore? firestore,
-    http.Client? httpClient,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _httpClient = httpClient ?? http.Client();
+  ExternalCalendarSyncService({FirebaseFirestore? firestore, http.Client? httpClient})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _httpClient = httpClient ?? http.Client();
 
   /// Check if sync is needed based on sync interval
   bool isSyncNeeded(ExternalCalendarConfig config) {
     if (!config.enabled) return false;
     if (config.lastSyncedAt == null) return true;
 
-    final nextSync = config.lastSyncedAt!
-        .add(Duration(minutes: config.syncIntervalMinutes));
-    return DateTime.now().isAfter(nextSync);
+    final nextSync = config.lastSyncedAt!.add(Duration(minutes: config.syncIntervalMinutes));
+    return DateTime.now().toUtc().isAfter(nextSync);
   }
 
   /// Sync all external calendars for a property
@@ -58,15 +55,12 @@ class ExternalCalendarSyncService {
     required ExternalCalendarConfig config,
   }) async {
     try {
-      LoggingService.logOperation(
-          '[ExternalCalendarSync] Starting sync for property $propertyId');
+      LoggingService.logOperation('[ExternalCalendarSync] Starting sync for property $propertyId');
 
       final bookings = <BookingModel>[];
 
       // Sync Booking.com
-      if (config.syncBookingCom &&
-          config.bookingComAccountId != null &&
-          config.bookingComAccessToken != null) {
+      if (config.syncBookingCom && config.bookingComAccountId != null && config.bookingComAccessToken != null) {
         LoggingService.logDebug('[ExternalCalendarSync] Syncing Booking.com...');
         final bookingComBookings = await _syncBookingCom(
           propertyId: propertyId,
@@ -76,13 +70,12 @@ class ExternalCalendarSyncService {
         );
         bookings.addAll(bookingComBookings);
         LoggingService.logSuccess(
-            '[ExternalCalendarSync] Booking.com sync complete: ${bookingComBookings.length} bookings');
+          '[ExternalCalendarSync] Booking.com sync complete: ${bookingComBookings.length} bookings',
+        );
       }
 
       // Sync Airbnb
-      if (config.syncAirbnb &&
-          config.airbnbAccountId != null &&
-          config.airbnbAccessToken != null) {
+      if (config.syncAirbnb && config.airbnbAccountId != null && config.airbnbAccessToken != null) {
         LoggingService.logDebug('[ExternalCalendarSync] Syncing Airbnb...');
         final airbnbBookings = await _syncAirbnb(
           propertyId: propertyId,
@@ -91,25 +84,21 @@ class ExternalCalendarSyncService {
           accessToken: config.airbnbAccessToken!,
         );
         bookings.addAll(airbnbBookings);
-        LoggingService.logSuccess(
-            '[ExternalCalendarSync] Airbnb sync complete: ${airbnbBookings.length} bookings');
+        LoggingService.logSuccess('[ExternalCalendarSync] Airbnb sync complete: ${airbnbBookings.length} bookings');
       }
 
       // Import bookings to Firestore
       if (bookings.isNotEmpty) {
         await _importExternalBookings(bookings, propertyId);
-        LoggingService.logSuccess(
-            '[ExternalCalendarSync] Imported ${bookings.length} external bookings');
+        LoggingService.logSuccess('[ExternalCalendarSync] Imported ${bookings.length} external bookings');
       }
 
       // Update last synced timestamp in widget settings
       await _updateLastSyncedTimestamp(propertyId);
 
-      LoggingService.logSuccess(
-          '[ExternalCalendarSync] Sync complete for property $propertyId');
+      LoggingService.logSuccess('[ExternalCalendarSync] Sync complete for property $propertyId');
     } catch (e) {
-      await LoggingService.logError(
-          '[ExternalCalendarSync] Sync failed for property $propertyId', e);
+      await LoggingService.logError('[ExternalCalendarSync] Sync failed for property $propertyId', e);
       throw ExternalCalendarSyncException('External calendar sync failed: $e');
     }
   }
@@ -134,8 +123,7 @@ class ExternalCalendarSyncService {
       // Booking.com Connectivity API endpoint (example)
       // https://connect.booking.com/v1/reservations
 
-      LoggingService.logWarning(
-          '[ExternalCalendarSync] Booking.com API not yet implemented - using placeholder');
+      LoggingService.logWarning('[ExternalCalendarSync] Booking.com API not yet implemented - using placeholder');
 
       // In production, you would:
       // 1. Make authenticated request to Booking.com API
@@ -192,8 +180,7 @@ class ExternalCalendarSyncService {
 
       return []; // Placeholder return
     } catch (e) {
-      await LoggingService.logError(
-          '[ExternalCalendarSync] Booking.com sync error', e);
+      await LoggingService.logError('[ExternalCalendarSync] Booking.com sync error', e);
       return [];
     }
   }
@@ -218,8 +205,7 @@ class ExternalCalendarSyncService {
       // Airbnb API endpoint (example)
       // https://api.airbnb.com/v2/reservations
 
-      LoggingService.logWarning(
-          '[ExternalCalendarSync] Airbnb API not yet implemented - using placeholder');
+      LoggingService.logWarning('[ExternalCalendarSync] Airbnb API not yet implemented - using placeholder');
 
       // In production, you would:
       // 1. Make authenticated request to Airbnb API
@@ -285,21 +271,17 @@ class ExternalCalendarSyncService {
   /// Import external bookings to Firestore
   ///
   /// This prevents double-booking by marking dates as unavailable
-  Future<void> _importExternalBookings(
-    List<BookingModel> bookings,
-    String propertyId,
-  ) async {
+  Future<void> _importExternalBookings(List<BookingModel> bookings, String propertyId) async {
     final batch = _firestore.batch();
 
     for (final booking in bookings) {
-      // Only import future bookings
-      if (booking.checkOut.isBefore(DateTime.now())) {
+      // Only import future bookings (use isPast which handles timezone correctly)
+      if (booking.isPast) {
         continue;
       }
 
       // Check if booking already exists
-      final existingDoc =
-          await _firestore.collection('bookings').doc(booking.id).get();
+      final existingDoc = await _firestore.collection('bookings').doc(booking.id).get();
 
       if (existingDoc.exists) {
         // Update existing booking
@@ -310,14 +292,11 @@ class ExternalCalendarSyncService {
         });
       } else {
         // Create new booking
-        batch.set(
-          _firestore.collection('bookings').doc(booking.id),
-          {
-            ...booking.toJson(),
-            'created_at': FieldValue.serverTimestamp(),
-            'external_sync': true,
-          },
-        );
+        batch.set(_firestore.collection('bookings').doc(booking.id), {
+          ...booking.toJson(),
+          'created_at': FieldValue.serverTimestamp(),
+          'external_sync': true,
+        });
       }
     }
 
@@ -342,11 +321,7 @@ class ExternalCalendarSyncService {
   /// Get OAuth authorization URL for Booking.com
   ///
   /// This URL should be opened in a browser for the user to authorize
-  String getBookingComAuthUrl({
-    required String clientId,
-    required String redirectUri,
-    String? state,
-  }) {
+  String getBookingComAuthUrl({required String clientId, required String redirectUri, String? state}) {
     // TODO: Replace with actual Booking.com OAuth endpoint
     // This is a placeholder structure
 
@@ -358,8 +333,7 @@ class ExternalCalendarSyncService {
       if (state != null) 'state': state,
     };
 
-    final queryString =
-        params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+    final queryString = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
 
     return 'https://account.booking.com/oauth2/authorize?$queryString';
   }
@@ -367,11 +341,7 @@ class ExternalCalendarSyncService {
   /// Get OAuth authorization URL for Airbnb
   ///
   /// This URL should be opened in a browser for the user to authorize
-  String getAirbnbAuthUrl({
-    required String clientId,
-    required String redirectUri,
-    String? state,
-  }) {
+  String getAirbnbAuthUrl({required String clientId, required String redirectUri, String? state}) {
     // TODO: Replace with actual Airbnb OAuth endpoint
     // This is a placeholder structure
 
@@ -383,8 +353,7 @@ class ExternalCalendarSyncService {
       if (state != null) 'state': state,
     };
 
-    final queryString =
-        params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+    final queryString = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
 
     return 'https://www.airbnb.com/oauth2/auth?$queryString';
   }
@@ -415,14 +384,16 @@ class ExternalCalendarSyncService {
       );
 
       if (response.statusCode != 200) {
-        throw IntegrationException('Token exchange failed: ${response.body}', code: 'integration/token-exchange-failed');
+        throw IntegrationException(
+          'Token exchange failed: ${response.body}',
+          code: 'integration/token-exchange-failed',
+        );
       }
 
       final data = json.decode(response.body);
       return data['access_token'];
     } catch (e) {
-      await LoggingService.logError(
-          '[ExternalCalendarSync] Booking.com token exchange failed', e);
+      await LoggingService.logError('[ExternalCalendarSync] Booking.com token exchange failed', e);
       throw ExternalCalendarSyncException('Token exchange failed: $e');
     }
   }
@@ -453,14 +424,16 @@ class ExternalCalendarSyncService {
       );
 
       if (response.statusCode != 200) {
-        throw IntegrationException('Token exchange failed: ${response.body}', code: 'integration/token-exchange-failed');
+        throw IntegrationException(
+          'Token exchange failed: ${response.body}',
+          code: 'integration/token-exchange-failed',
+        );
       }
 
       final data = json.decode(response.body);
       return data['access_token'];
     } catch (e) {
-      await LoggingService.logError(
-          '[ExternalCalendarSync] Airbnb token exchange failed', e);
+      await LoggingService.logError('[ExternalCalendarSync] Airbnb token exchange failed', e);
       throw ExternalCalendarSyncException('Token exchange failed: $e');
     }
   }

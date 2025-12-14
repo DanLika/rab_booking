@@ -8,6 +8,7 @@ import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/user_profile_model.dart';
@@ -37,7 +38,8 @@ class WidgetSettingsScreen extends ConsumerStatefulWidget {
       _WidgetSettingsScreenState();
 }
 
-class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
+class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
+    with AndroidKeyboardDismissFixApproach1<WidgetSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Widget Mode
@@ -617,6 +619,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         : Form(
             key: _formKey,
             child: ListView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.all(contentPadding),
               children: [
                 _buildWidgetModeSection(),
@@ -712,13 +715,42 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       return bodyContent;
     }
 
-    return Scaffold(
-      appBar: CommonAppBar(
-        title: l10n.widgetSettingsTitle,
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          // Handle browser back button on Chrome Android
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        }
+      },
+      child: KeyedSubtree(
+        key: ValueKey('widget_settings_screen_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: CommonAppBar(
+            title: l10n.widgetSettingsTitle,
+            leadingIcon: Icons.arrow_back,
+            onLeadingIconTap: (context) {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/properties');
+              }
+            },
+          ),
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
+                return bodyContent;
+              },
+            ),
+          ),
+        ),
       ),
-      body: bodyContent,
     );
   }
 

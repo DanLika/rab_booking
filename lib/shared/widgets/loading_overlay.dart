@@ -12,11 +12,12 @@ class LoadingOverlay extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    // Use system colors for overlay background
-    final bgColor = backgroundColor ?? theme.colorScheme.surface.withValues(alpha: 0.95);
+    // Minimalistic: Use only black and white
+    final bgColor = backgroundColor ?? (isDarkMode ? Colors.black.withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95));
 
     // Minimalistic: Use black in light mode, white in dark mode
     final loaderColor = isDarkMode ? Colors.white : Colors.black;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
 
     return Container(
       color: bgColor,
@@ -29,7 +30,7 @@ class LoadingOverlay extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 message!,
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.87)),
+                style: theme.textTheme.bodyMedium?.copyWith(color: textColor),
               ),
             ],
           ],

@@ -93,7 +93,7 @@ class CancellationPolicyCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: SpacingTokens.xs),
                 Text(
-                  tr.canCancelUpToHours(deadlineHours),
+                  _formatCancellationDeadline(deadlineHours, tr),
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeS,
                     color: colors.textSecondary,
@@ -116,5 +116,17 @@ class CancellationPolicyCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Format cancellation deadline - show in days if >= 24 hours, otherwise in hours
+  String _formatCancellationDeadline(int hours, WidgetTranslations tr) {
+    // If deadline is 24 hours or more, show in days
+    if (hours >= 24) {
+      final days = (hours / 24).round();
+      return tr.canCancelUpToDays(days);
+    }
+    
+    // Otherwise show in hours
+    return tr.canCancelUpToHours(hours);
   }
 }

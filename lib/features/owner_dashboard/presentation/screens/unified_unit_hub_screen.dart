@@ -172,9 +172,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
           : AppBar(
               title: Text(_selectedUnit?.name ?? l10n.unitHubTitle, style: const TextStyle(color: Colors.white)),
               centerTitle: false,
-              leading: IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              leadingWidth: 72, // Increased from default 56 to add more left padding
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 8.0), // Additional left padding
+                child: IconButton(
+                  icon: const Icon(Icons.menu, color: Colors.white),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
               ),
               actions: [
                 IconButton(

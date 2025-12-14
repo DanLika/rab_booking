@@ -61,6 +61,11 @@ class ContactItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Bug #44: Defensive check - don't render widget if value is empty
+    if (value.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return InkWell(
@@ -78,11 +83,7 @@ class ContactItemWidget extends StatelessWidget {
               child: AutoSizeText(
                 value,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: _fontSize,
-                  color: colors.textPrimary,
-                  decoration: TextDecoration.underline,
-                ),
+                style: TextStyle(fontSize: _fontSize, color: colors.textPrimary, decoration: TextDecoration.underline),
                 minFontSize: _minFontSize,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

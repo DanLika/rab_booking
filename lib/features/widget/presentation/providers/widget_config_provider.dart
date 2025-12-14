@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/models/widget_config.dart';
+import '../../domain/models/embed_url_params.dart';
 import '../theme/minimalist_theme.dart';
 
 /// Provider for widget configuration
@@ -8,12 +8,12 @@ import '../theme/minimalist_theme.dart';
 /// Initialize this with URL parameters at app startup:
 /// ```dart
 /// final uri = Uri.parse(window.location.href);
-/// final config = WidgetConfig.fromUrlParameters(uri);
+/// final config = EmbedUrlParams.fromUrlParameters(uri);
 /// ref.read(widgetConfigProvider.notifier).state = config;
 /// ```
-final widgetConfigProvider = StateProvider<WidgetConfig>((ref) {
+final widgetConfigProvider = StateProvider<EmbedUrlParams>((ref) {
   // Default configuration
-  return const WidgetConfig();
+  return const EmbedUrlParams();
 });
 
 /// Provider for theme mode based on widget configuration
@@ -47,9 +47,7 @@ final widgetLightThemeProvider = Provider<ThemeData>((ref) {
   }
 
   if (config.accentColor != null) {
-    theme = theme.copyWith(
-      colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor),
-    );
+    theme = theme.copyWith(colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor));
   }
 
   if (config.backgroundColor != null) {
@@ -58,10 +56,7 @@ final widgetLightThemeProvider = Provider<ThemeData>((ref) {
 
   if (config.textColor != null) {
     theme = theme.copyWith(
-      textTheme: theme.textTheme.apply(
-        bodyColor: config.textColor,
-        displayColor: config.textColor,
-      ),
+      textTheme: theme.textTheme.apply(bodyColor: config.textColor, displayColor: config.textColor),
     );
   }
 
@@ -84,9 +79,7 @@ final widgetDarkThemeProvider = Provider<ThemeData>((ref) {
   }
 
   if (config.accentColor != null) {
-    theme = theme.copyWith(
-      colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor),
-    );
+    theme = theme.copyWith(colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor));
   }
 
   if (config.backgroundColor != null) {
@@ -95,10 +88,7 @@ final widgetDarkThemeProvider = Provider<ThemeData>((ref) {
 
   if (config.textColor != null) {
     theme = theme.copyWith(
-      textTheme: theme.textTheme.apply(
-        bodyColor: config.textColor,
-        displayColor: config.textColor,
-      ),
+      textTheme: theme.textTheme.apply(bodyColor: config.textColor, displayColor: config.textColor),
     );
   }
 

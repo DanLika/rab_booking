@@ -144,7 +144,7 @@ service cloud.firestore {
     // ========================================================================
     // BOOKINGS COLLECTION
     // ========================================================================
-    // Bookings - top-level collection with owner_id field
+    // OLD: Top-level bookings collection (DEPRECATED - keeping for backward compatibility during migration)
     match /bookings/{bookingId} {
       // READ: Multiple scenarios need read access
       // 1. Owner dashboard: authenticated owner reads their own bookings
@@ -163,6 +163,23 @@ service cloud.firestore {
       allow create: if canCreateAsOwner();
       allow update: if isResourceOwnerOrLegacy();
       allow delete: if isResourceOwnerOrLegacy();
+    }
+
+    // NEW: Bookings as subcollection of units (properties/{propertyId}/units/{unitId}/bookings/{bookingId})
+    // This is the NEW STRUCTURE for improved scalability and tenant isolation
+    match /properties/{propertyId}/units/{unitId}/bookings/{bookingId} {
+      allow read: if true; // Widget needs public read for calendar availability
+      // CREATE: Owner can create bookings (verified via parent property ownership)
+      allow create: if isPropertyOwnerOrLegacy(propertyId);
+      // UPDATE/DELETE: Owner can manage their property's bookings
+      allow update, delete: if isPropertyOwnerOrLegacy(propertyId);
+    }
+
+    // Collection group query support for bookings (enables cross-property queries)
+    // Used by: Owner dashboard (all bookings), Guest bookings (by user_id), Stripe webhooks (by session_id)
+    match /{path=**}/bookings/{bookingId} {
+      allow read: if true; // Collection group queries need public read
+      // Writes still go through the specific path above (properties/{pId}/units/{uId}/bookings/{id})
     }
 
     // Daily prices - owners manage, anyone can read
@@ -223,7 +240,7 @@ service cloud.firestore {
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
-    // iCal events - Widget needs to read for availability calendar
+    // OLD: Top-level iCal events (DEPRECATED - keeping for backward compatibility during migration)
     // iCal events use property_id and unit_id (not owner_id) - we verify ownership via parent property
     match /ical_events/{eventId} {
       allow read: if true; // Widget needs to read events for availability
@@ -235,6 +252,14 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() &&
         ('property_id' in resource.data) &&
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+    }
+
+    // NEW: iCal events as subcollection of properties (properties/{propertyId}/ical_events/{eventId})
+    // This is the NEW STRUCTURE for improved scalability and tenant isolation
+    match /properties/{propertyId}/ical_events/{eventId} {
+      allow read: if true; // Widget needs to read events for calendar availability
+      // CREATE/UPDATE/DELETE: Owner can manage their property's iCal events
+      allow create, update, delete: if isPropertyOwnerOrLegacy(propertyId);
     }
 
     // ========================================================================

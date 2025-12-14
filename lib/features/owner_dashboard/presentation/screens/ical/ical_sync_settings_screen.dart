@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
@@ -8,6 +9,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
+import '../../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
@@ -34,7 +36,8 @@ class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<IcalSyncSettingsScreen> createState() => _IcalSyncSettingsScreenState();
 }
 
-class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen> {
+class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
+    with AndroidKeyboardDismissFixApproach1<IcalSyncSettingsScreen> {
   bool _showFaq = false;
   int? _expandedPlatform;
 
@@ -45,93 +48,112 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: CommonAppBar(
-        title: l10n.icalSyncTitle,
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-      ),
-      drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical/import'),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(icalFeedsStreamProvider);
-            ref.invalidate(icalStatisticsProvider);
-          },
-          color: theme.colorScheme.primary,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isDesktop = constraints.maxWidth > 900;
-              final isTablet = constraints.maxWidth > 600;
-              final horizontalPadding = isDesktop ? 48.0 : (isTablet ? 32.0 : 16.0);
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          // Handle browser back button on Chrome Android
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/integrations');
+          }
+        }
+      },
+      child: KeyedSubtree(
+        key: ValueKey('ical_sync_settings_screen_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: CommonAppBar(
+            title: l10n.icalSyncTitle,
+            leadingIcon: Icons.menu,
+            onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+          ),
+          drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical/import'),
+          body: Container(
+            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+            child: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(icalFeedsStreamProvider);
+                  ref.invalidate(icalStatisticsProvider);
+                },
+                color: theme.colorScheme.primary,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isDesktop = constraints.maxWidth > 900;
+                    final isTablet = constraints.maxWidth > 600;
+                    final horizontalPadding = isDesktop ? 48.0 : (isTablet ? 32.0 : 16.0);
 
-              return SingleChildScrollView(
-                physics: PlatformScrollPhysics.adaptive,
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: isDesktop ? 1200.0 : double.infinity),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Hero Status Card
-                        ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: isDesktop ? 800.0 : double.infinity),
-                          child: statsAsync.when(
-                            data: (stats) => _buildHeroCard(context, stats),
-                            loading: () => _buildHeroCard(context, null),
-                            error: (_, _) => _buildHeroCard(context, null),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Desktop: Benefits + Feeds side by side
-                        if (isDesktop) ...[
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    return SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      physics: PlatformScrollPhysics.adaptive,
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: isDesktop ? 1200.0 : double.infinity),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Expanded(child: _buildBenefitsSection(context)),
-                              const SizedBox(width: 24),
-                              Expanded(
-                                child: feedsAsync.when(
+                              // Hero Status Card
+                              ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: isDesktop ? 800.0 : double.infinity),
+                                child: statsAsync.when(
+                                  data: (stats) => _buildHeroCard(context, stats),
+                                  loading: () => _buildHeroCard(context, null),
+                                  error: (_, _) => _buildHeroCard(context, null),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Desktop: Benefits + Feeds side by side
+                              if (isDesktop) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildBenefitsSection(context)),
+                                    const SizedBox(width: 24),
+                                    Expanded(
+                                      child: feedsAsync.when(
+                                        data: (feeds) => _buildFeedsSection(context, feeds),
+                                        loading: () => _buildFeedsLoading(context),
+                                        error: (_, _) => _buildFeedsError(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildPlatformInstructions(context)),
+                                    const SizedBox(width: 24),
+                                    Expanded(child: _buildFaqSection(context)),
+                                  ],
+                                ),
+                              ] else ...[
+                                // Mobile/Tablet: Stack vertically
+                                _buildBenefitsSection(context),
+                                const SizedBox(height: 24),
+                                feedsAsync.when(
                                   data: (feeds) => _buildFeedsSection(context, feeds),
                                   loading: () => _buildFeedsLoading(context),
                                   error: (_, _) => _buildFeedsError(context),
                                 ),
-                              ),
+                                const SizedBox(height: 24),
+                                _buildPlatformInstructions(context),
+                                const SizedBox(height: 24),
+                                _buildFaqSection(context),
+                              ],
+                              const SizedBox(height: 32),
                             ],
                           ),
-                          const SizedBox(height: 24),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: _buildPlatformInstructions(context)),
-                              const SizedBox(width: 24),
-                              Expanded(child: _buildFaqSection(context)),
-                            ],
-                          ),
-                        ] else ...[
-                          // Mobile/Tablet: Stack vertically
-                          _buildBenefitsSection(context),
-                          const SizedBox(height: 24),
-                          feedsAsync.when(
-                            data: (feeds) => _buildFeedsSection(context, feeds),
-                            loading: () => _buildFeedsLoading(context),
-                            error: (_, _) => _buildFeedsError(context),
-                          ),
-                          const SizedBox(height: 24),
-                          _buildPlatformInstructions(context),
-                          const SizedBox(height: 24),
-                          _buildFaqSection(context),
-                        ],
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ),
       ),
@@ -709,6 +731,10 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       final callable = functions.httpsCallable('syncIcalFeedNow');
       final result = await callable.call({'feedId': feed.id});
 
+      // Invalidate providers to refresh UI after sync
+      ref.invalidate(icalFeedsStreamProvider);
+      ref.invalidate(icalStatisticsProvider);
+
       if (mounted) {
         final data = result.data as Map<String, dynamic>?;
         final success = data?['success'] ?? false;
@@ -737,6 +763,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     try {
       final repository = ref.read(icalRepositoryProvider);
       await repository.updateFeedStatus(feed.id, IcalStatus.paused);
+      // Invalidate providers to refresh UI immediately
+      ref.invalidate(icalFeedsStreamProvider);
+      ref.invalidate(icalStatisticsProvider);
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedPaused);
       }
@@ -752,6 +781,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     try {
       final repository = ref.read(icalRepositoryProvider);
       await repository.updateFeedStatus(feed.id, IcalStatus.active);
+      // Invalidate providers to refresh UI immediately
+      ref.invalidate(icalFeedsStreamProvider);
+      ref.invalidate(icalStatisticsProvider);
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedResumed);
       }
@@ -777,7 +809,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               navigator.pop();
               try {
                 final repository = ref.read(icalRepositoryProvider);
+                // Delete feed and all associated events
                 await repository.deleteIcalFeed(feed.id);
+                // Invalidate providers to refresh UI immediately
                 ref.invalidate(icalFeedsStreamProvider);
                 ref.invalidate(icalStatisticsProvider);
                 if (mounted) {

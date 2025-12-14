@@ -6,7 +6,11 @@ import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/date_range_selection.dart';
 import '../providers/notifications_provider.dart';
 import '../providers/owner_calendar_provider.dart';
+import '../providers/overbooking_detection_provider.dart';
+import '../../domain/models/overbooking_conflict.dart';
 import '../widgets/timeline_calendar_widget.dart';
+import '../widgets/booking_details_dialog.dart';
+import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/calendar/calendar_top_toolbar.dart';
 import '../widgets/calendar/calendar_filter_chips.dart';
 import '../widgets/calendar/multi_select_action_bar.dart';
@@ -25,17 +29,17 @@ class OwnerTimelineCalendarScreen extends ConsumerStatefulWidget {
   const OwnerTimelineCalendarScreen({super.key});
 
   @override
-  ConsumerState<OwnerTimelineCalendarScreen> createState() =>
-      _OwnerTimelineCalendarScreenState();
+  ConsumerState<OwnerTimelineCalendarScreen> createState() => _OwnerTimelineCalendarScreenState();
 }
 
-class _OwnerTimelineCalendarScreenState
-    extends ConsumerState<OwnerTimelineCalendarScreen>
+class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalendarScreen>
     with CalendarCommonMethodsMixin {
   late DateRangeSelection _currentRange;
+
+  // GlobalKey for accessing TimelineCalendarWidget's scroll methods
+  final GlobalKey timelineKey = GlobalKey();
   bool _showSummary = false;
-  int _visibleDays =
-      30; // Default to 30 days, will be updated based on screen size
+  int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
   int _calendarRebuildCounter = 0; // Force rebuild counter for Today button
 
   // FIXED: Flag to prevent onVisibleDateRangeChanged from overwriting _currentRange
@@ -58,17 +62,12 @@ class _OwnerTimelineCalendarScreenState
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Update visible days based on screen width
-    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(
-      context,
-    );
+    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(context);
     if (newVisibleDays != _visibleDays) {
       setState(() {
         _visibleDays = newVisibleDays;
         // Recreate range with new day count
-        _currentRange = DateRangeSelection.days(
-          _currentRange.startDate,
-          _visibleDays,
-        );
+        _currentRange = DateRangeSelection.days(_currentRange.startDate, _visibleDays);
       });
     }
   }
@@ -79,49 +78,50 @@ class _OwnerTimelineCalendarScreenState
     // This ensures bookings created/modified anywhere are reflected immediately
     ref.watch(ownerCalendarRealtimeManagerProvider);
 
+    // Activate auto-resolution of overbooking conflicts
+    // Automatically rejects pending bookings when they conflict with confirmed bookings
+    ref.watch(overbookingAutoResolverProvider);
+
+    // Safely get localizations - use try-catch to prevent errors if context is not ready
+    String calendarTitle;
+    try {
+      calendarTitle = AppLocalizations.of(context).ownerCalendar;
+    } catch (e) {
+      calendarTitle = 'Calendar'; // Fallback title
+    }
+
     return Shortcuts(
       shortcuts: <ShortcutActivator, Intent>{
-        LogicalKeySet(LogicalKeyboardKey.arrowLeft):
-            const _PreviousPeriodIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _PreviousPeriodIntent(),
         LogicalKeySet(LogicalKeyboardKey.arrowRight): const _NextPeriodIntent(),
         LogicalKeySet(LogicalKeyboardKey.keyT): const _TodayIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
-          _PreviousPeriodIntent: CallbackAction<_PreviousPeriodIntent>(
-            onInvoke: (_) => _goToPreviousPeriod(),
-          ),
-          _NextPeriodIntent: CallbackAction<_NextPeriodIntent>(
-            onInvoke: (_) => _goToNextPeriod(),
-          ),
-          _TodayIntent: CallbackAction<_TodayIntent>(
-            onInvoke: (_) => _goToToday(),
-          ),
+          _PreviousPeriodIntent: CallbackAction<_PreviousPeriodIntent>(onInvoke: (_) => _goToPreviousPeriod()),
+          _NextPeriodIntent: CallbackAction<_NextPeriodIntent>(onInvoke: (_) => _goToNextPeriod()),
+          _TodayIntent: CallbackAction<_TodayIntent>(onInvoke: (_) => _goToToday()),
         },
         child: Focus(
           autofocus: true,
           child: Scaffold(
-            backgroundColor:
-                Colors.transparent, // Transparent to show gradient background
+            backgroundColor: Colors.transparent, // Transparent to show gradient background
             appBar: CommonAppBar(
-              title: AppLocalizations.of(context).ownerCalendar,
+              title: calendarTitle,
               leadingIcon: Icons.menu,
               onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
             ),
             drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
             body: Container(
-              decoration: BoxDecoration(
-                gradient: context.gradients.pageBackground,
-              ),
+              decoration: BoxDecoration(gradient: context.gradients.pageBackground),
               child: Column(
                 children: [
                   // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
                   Consumer(
                     builder: (context, ref, child) {
-                      final unreadCountAsync = ref.watch(
-                        unreadNotificationsCountProvider,
-                      );
+                      final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
                       final multiSelectState = ref.watch(multiSelectProvider);
+                      final conflictCount = ref.watch(overbookingConflictCountProvider);
 
                       return CalendarTopToolbar(
                         dateRange: _currentRange,
@@ -154,14 +154,15 @@ class _OwnerTimelineCalendarScreenState
                         isMultiSelectActive: multiSelectState.isEnabled,
                         onMultiSelectToggle: () {
                           if (multiSelectState.isEnabled) {
-                            ref
-                                .read(multiSelectProvider.notifier)
-                                .disableMultiSelect();
+                            ref.read(multiSelectProvider.notifier).disableMultiSelect();
                           } else {
-                            ref
-                                .read(multiSelectProvider.notifier)
-                                .enableMultiSelect();
+                            ref.read(multiSelectProvider.notifier).enableMultiSelect();
                           }
+                        },
+                        // Overbooking conflict badge
+                        overbookingConflictCount: conflictCount,
+                        onOverbookingBadgeTap: () {
+                          _handleOverbookingBadgeTap(ref);
                         },
                       );
                     },
@@ -176,9 +177,8 @@ class _OwnerTimelineCalendarScreenState
                       // FIXED: Only use counter in key, NOT startDate
                       // Including startDate caused infinite rebuild loop:
                       // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
-                      key: ValueKey(_calendarRebuildCounter),
-                      initialScrollToDate:
-                          _currentRange.startDate, // Scroll to selected date
+                      key: timelineKey,
+                      initialScrollToDate: _currentRange.startDate, // Scroll to selected date
                       showSummary: _showSummary,
                       // FIXED: Preserve vertical scroll position during toolbar navigation
                       // When user clicks left/right arrows, widget rebuilds but we restore scroll position
@@ -187,10 +187,7 @@ class _OwnerTimelineCalendarScreenState
                         // Track vertical scroll position (don't call setState to avoid rebuild)
                         _verticalScrollOffset = offset;
                       },
-                      onCellLongPress: (date, unit) => _showCreateBookingDialog(
-                        initialCheckIn: date,
-                        unitId: unit.id,
-                      ),
+                      onCellLongPress: (date, unit) => _showCreateBookingDialog(initialCheckIn: date, unitId: unit.id),
                       onUnitNameTap: _showUnitFutureBookings,
                       onVisibleDateRangeChanged: (startDate) {
                         // FIXED: Only update toolbar when user scrolls MANUALLY
@@ -200,10 +197,7 @@ class _OwnerTimelineCalendarScreenState
 
                         // Update toolbar date range when user scrolls manually
                         setState(() {
-                          _currentRange = DateRangeSelection.days(
-                            startDate,
-                            _visibleDays,
-                          );
+                          _currentRange = DateRangeSelection.days(startDate, _visibleDays);
                         });
                       },
                     ),
@@ -249,6 +243,82 @@ class _OwnerTimelineCalendarScreenState
   /// Go to today - creates new range starting from today
   void _goToToday() {
     _navigateTo(DateRangeSelection.days(DateTime.now(), _visibleDays));
+  }
+
+  /// Handle overbooking badge tap
+  /// Scrolls to first conflict and shows snackbar with details
+  void _handleOverbookingBadgeTap(WidgetRef ref) {
+    if (!mounted) return;
+
+    final conflictsAsync = ref.read(overbookingConflictsProvider);
+    final conflicts = conflictsAsync.valueOrNull ?? [];
+
+    if (conflicts.isEmpty) return;
+
+    final firstConflict = conflicts.first;
+
+    // Safely get localizations
+    final l10n = AppLocalizations.maybeOf(context);
+    if (l10n == null) return;
+
+    // Scroll to conflict location
+    final timelineState = timelineKey.currentState;
+    if (timelineState != null && firstConflict.conflictDates.isNotEmpty) {
+      final conflictDate = firstConflict.conflictDates.first;
+      // Use dynamic call since we can't import private class
+      try {
+        (timelineState as dynamic).scrollToConflict(firstConflict.unitId, conflictDate);
+      } catch (e) {
+        // If scroll fails, just show snackbar
+        debugPrint('Failed to scroll to conflict: $e');
+      }
+    }
+
+    // Show snackbar with conflict details
+    final guest1 = firstConflict.booking1.guestName ?? 'Unknown';
+    final guest2 = firstConflict.booking2.guestName ?? 'Unknown';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Conflict: $guest1 vs $guest2'),
+        backgroundColor: Colors.red,
+        action: SnackBarAction(
+          label: 'View',
+          textColor: Colors.white,
+          onPressed: () {
+            // Navigate to booking details
+            _showBookingDetailsFromConflict(ref, firstConflict);
+          },
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+
+  /// Show booking details dialog for a conflict
+  void _showBookingDetailsFromConflict(WidgetRef ref, OverbookingConflict conflict) async {
+    // Try to get booking from repository
+    try {
+      final repository = ref.read(ownerBookingsRepositoryProvider);
+      final ownerBooking = await repository.getOwnerBookingById(conflict.booking1.id);
+
+      if (ownerBooking != null && mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+        );
+      }
+    } catch (e) {
+      // If booking not found, show error
+      if (mounted) {
+        final l10n = AppLocalizations.maybeOf(context);
+        if (l10n != null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.ownerBookingsNotFound), backgroundColor: Colors.red));
+        }
+      }
+    }
   }
 
   /// Show date picker dialog
@@ -319,33 +389,23 @@ class _OwnerTimelineCalendarScreenState
     if (mounted) {
       await showDialog(
         context: context,
-        builder: (context) => UnitFutureBookingsDialog(
-          unit: unit,
-          bookings: futureBookings,
-          onBookingTap: showBookingDetailsDialog,
-        ),
+        builder: (context) =>
+            UnitFutureBookingsDialog(unit: unit, bookings: futureBookings, onBookingTap: showBookingDetailsDialog),
       );
     }
   }
 
   /// Show create booking dialog
   /// ENHANCED: Now accepts optional initialCheckIn date and unitId for auto-fill
-  void _showCreateBookingDialog({
-    DateTime? initialCheckIn,
-    String? unitId,
-  }) async {
+  void _showCreateBookingDialog({DateTime? initialCheckIn, String? unitId}) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) =>
-          BookingCreateDialog(initialCheckIn: initialCheckIn, unitId: unitId),
+      builder: (context) => BookingCreateDialog(initialCheckIn: initialCheckIn, unitId: unitId),
     );
 
     // If booking was created successfully, refresh calendar
     if (result == true && mounted) {
-      await Future.wait([
-        ref.refresh(calendarBookingsProvider.future),
-        ref.refresh(allOwnerUnitsProvider.future),
-      ]);
+      await Future.wait([ref.refresh(calendarBookingsProvider.future), ref.refresh(allOwnerUnitsProvider.future)]);
     }
   }
 
@@ -421,9 +481,7 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: widget.gradient.colors.first.withAlpha(
-                  (_isHovered ? 0.5 : 0.35 * 255).toInt(),
-                ),
+                color: widget.gradient.colors.first.withAlpha((_isHovered ? 0.5 : 0.35 * 255).toInt()),
                 blurRadius: _isHovered ? 20 : 12,
                 offset: Offset(0, _isHovered ? 8 : 4),
                 spreadRadius: _isHovered ? 2 : 0,

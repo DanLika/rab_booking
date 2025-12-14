@@ -184,14 +184,31 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
                   size: Size(width - 2, blockHeight),
                 ),
 
-                // Conflict indicators (warning icons) - one per day with offset
+                // Conflict indicator (single centered warning icon)
                 if (hasConflict)
-                  ..._buildConflictIndicators(
-                    booking: booking,
-                    allBookingsByUnit: allBookingsByUnit,
-                    dayWidth: dayWidth,
-                    blockWidth: width - 2,
-                    blockHeight: blockHeight,
+                  Positioned.fill(
+                    child: Center(
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade700,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(80),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.warning_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -201,110 +218,4 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
     );
   }
 
-  /// Build conflict indicator icons positioned per day to avoid overlap
-  ///
-  /// Icons are positioned at the center of each day cell that has a conflict,
-  /// with a small vertical offset to prevent overlapping when multiple days
-  /// have conflicts.
-  List<Widget> _buildConflictIndicators({
-    required BookingModel booking,
-    required Map<String, List<BookingModel>> allBookingsByUnit,
-    required double dayWidth,
-    required double blockWidth,
-    required double blockHeight,
-  }) {
-    final conflictDates = TimelineBookingBlock.getConflictDates(booking, allBookingsByUnit);
-
-    if (conflictDates.isEmpty) {
-      return [];
-    }
-
-    final indicators = <Widget>[];
-    final iconSize = 14.0;
-    final iconPadding = 4.0;
-    final iconRadius = iconSize / 2 + iconPadding;
-    final iconDiameter = iconRadius * 2;
-
-    // Calculate the start date of the booking (normalized to midnight)
-    final bookingStart = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-
-    // Track positions to avoid overlaps (store both X and Y)
-    final usedPositionsX = <double>[];
-    final usedPositionsY = <double>[];
-
-    // Group conflict dates and calculate positions with offset
-    for (int i = 0; i < conflictDates.length; i++) {
-      final conflictDate = conflictDates[i];
-      final daysFromStart = conflictDate.difference(bookingStart).inDays;
-
-      // Calculate horizontal position (center of the day cell)
-      final dayCenterX = (daysFromStart * dayWidth) + (dayWidth / 2);
-
-      // Calculate vertical offset to prevent overlap
-      // Only check overlap if icons are on adjacent or same days
-      // Icons on different days (far apart horizontally) don't need vertical offset
-      double verticalOffset = 0;
-      bool foundPosition = false;
-
-      // Try positions: center, slight up, slight down, more up, more down
-      final offsetOptions = [0.0, -iconRadius * 0.4, iconRadius * 0.4, -iconRadius * 0.8, iconRadius * 0.8];
-
-      for (final offset in offsetOptions) {
-        final testY = (blockHeight / 2) - iconRadius + offset;
-        bool overlaps = false;
-
-        // Check if this position overlaps with any existing icon
-        // Only check icons that are close horizontally (within 1.5 day widths)
-        for (int j = 0; j < usedPositionsX.length; j++) {
-          final usedX = usedPositionsX[j];
-          final usedY = usedPositionsY[j];
-          final horizontalDistance = (dayCenterX - usedX).abs();
-          final verticalDistance = (testY - usedY).abs();
-
-          // If icons are close horizontally, check vertical overlap
-          if (horizontalDistance < dayWidth * 1.5) {
-            // Check if they overlap (both horizontally and vertically)
-            if (horizontalDistance < iconDiameter && verticalDistance < iconDiameter * 0.8) {
-              overlaps = true;
-              break;
-            }
-          }
-        }
-
-        if (!overlaps) {
-          verticalOffset = offset;
-          usedPositionsX.add(dayCenterX);
-          usedPositionsY.add(testY);
-          foundPosition = true;
-          break;
-        }
-      }
-
-      // If all positions overlap, use the alternating pattern as fallback
-      if (!foundPosition) {
-        verticalOffset = (i % 2 == 0) ? -iconRadius * 0.3 : iconRadius * 0.3;
-        final finalY = (blockHeight / 2) - iconRadius + verticalOffset;
-        usedPositionsX.add(dayCenterX);
-        usedPositionsY.add(finalY);
-      }
-
-      indicators.add(
-        Positioned(
-          left: dayCenterX - iconRadius,
-          top: (blockHeight / 2) - iconRadius + verticalOffset,
-          child: Container(
-            padding: EdgeInsets.all(iconPadding),
-            decoration: BoxDecoration(
-              color: Colors.red.shade700,
-              shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: Colors.black.withAlpha(60), blurRadius: 4, offset: const Offset(0, 2))],
-            ),
-            child: const Icon(Icons.warning_rounded, size: 14, color: Colors.white),
-          ),
-        ),
-      );
-    }
-
-    return indicators;
-  }
 }

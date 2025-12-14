@@ -132,10 +132,8 @@ class EmbedUrlParams {
 
     // Parse payment methods
     final bool enableStripe = params['enableStripe']?.toLowerCase() == 'true';
-    final bool enableBank =
-        params['enableBankTransfer']?.toLowerCase() != 'false'; // default: true
-    final bool enablePayOnPlace =
-        params['enablePayOnPlace']?.toLowerCase() == 'true';
+    final bool enableBank = params['enableBankTransfer']?.toLowerCase() != 'false'; // default: true
+    final bool enablePayOnPlace = params['enablePayOnPlace']?.toLowerCase() == 'true';
 
     // Parse number of months (1-4)
     int? months;
@@ -165,13 +163,11 @@ class EmbedUrlParams {
     }
 
     // Parse transparent mode
-    final bool isTransparent =
-        params['transparentMode']?.toLowerCase() == 'true';
+    final bool isTransparent = params['transparentMode']?.toLowerCase() == 'true';
 
     // Parse preset (only accept valid values)
     final rawPreset = params['preset']?.toLowerCase();
-    final String? themePreset =
-        rawPreset != null && ['neutral', 'flat', 'material'].contains(rawPreset)
+    final String? themePreset = rawPreset != null && ['neutral', 'flat', 'material'].contains(rawPreset)
         ? rawPreset
         : null;
 
@@ -209,16 +205,35 @@ class EmbedUrlParams {
 
   /// Parse hex color string to [Color].
   ///
-  /// Supports formats: #RRGGBB, RRGGBB, #AARRGGBB, AARRGGBB
+  /// Supports formats:
+  /// - #RRGGBB or RRGGBB (6 chars) - adds FF for full opacity
+  /// - #AARRGGBB or AARRGGBB (8 chars) - uses as-is
+  /// - #RGB or RGB (3 chars) - expands to RRGGBB and adds FF
+  /// - #ARGB or ARGB (4 chars) - expands to AARRGGBB
   static Color? _parseColor(String? colorString) {
     if (colorString == null || colorString.isEmpty) return null;
 
     // Remove # if present
     colorString = colorString.replaceAll('#', '');
 
-    // Add FF for opacity if not present
+    // Handle different formats
     if (colorString.length == 6) {
+      // RRGGBB - add FF for full opacity
       colorString = 'FF$colorString';
+    } else if (colorString.length == 3) {
+      // RGB short format - expand to RRGGBB and add FF
+      colorString =
+          'FF${colorString[0]}${colorString[0]}${colorString[1]}${colorString[1]}${colorString[2]}${colorString[2]}';
+    } else if (colorString.length == 4) {
+      // ARGB short format - expand to AARRGGBB
+      colorString =
+          '${colorString[0]}${colorString[0]}${colorString[1]}${colorString[1]}${colorString[2]}${colorString[2]}${colorString[3]}${colorString[3]}';
+    }
+    // If length is 8, it's already AARRGGBB format, use as is
+
+    // Validate final format before parsing
+    if (colorString.length != 8) {
+      return null; // Invalid format
     }
 
     try {

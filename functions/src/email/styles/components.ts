@@ -1,8 +1,9 @@
 /**
- * Email Component Styles - 2025 Modern Design
+ * Email Component Styles - Minimalist Design
  *
  * Reusable component styles for cards, buttons, tables, alerts, etc.
  * All styles use inline CSS for maximum email client compatibility.
+ * Minimalist design: simple colors, no shadows, reduced padding and font sizes.
  */
 
 import {EMAIL_COLORS_LIGHT, EMAIL_COLORS_DARK} from "./colors";
@@ -18,23 +19,22 @@ export function getComponentStyles(): string {
     <style>
       /* ==========================================
          CARD COMPONENT
-         Modern card with subtle shadow and rounded corners
+         Simple card with border
          ========================================== */
 
       .card {
         background-color: ${light.backgroundSecondary};
         border: 1px solid ${light.border};
-        border-radius: 12px;
-        padding: 24px;
+        border-radius: 0;
+        padding: 16px;
         margin-bottom: 16px;
-        box-shadow: 0 2px 4px rgba(${light.shadowColor}, ${light.shadowOpacity});
       }
 
       .card h2 {
-        font-size: 18px;
-        font-weight: 700;
+        font-size: 16px;
+        font-weight: 600;
         color: ${light.text};
-        margin: 0 0 16px 0;
+        margin: 0 0 12px 0;
       }
 
       .card:last-child {
@@ -73,15 +73,15 @@ export function getComponentStyles(): string {
       }
 
       .details-table .value {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 400;
         color: ${light.text};
         text-align: right;
       }
 
       .details-table .value-highlight {
-        font-size: 20px;
-        font-weight: 700;
+        font-size: 16px;
+        font-weight: 600;
         color: ${light.primary};
       }
 
@@ -92,19 +92,18 @@ export function getComponentStyles(): string {
 
       .button-container {
         text-align: center;
-        margin: 32px 0;
+        margin: 24px 0;
       }
 
       .button {
         display: inline-block;
         background-color: ${light.primary};
         color: #FFFFFF !important;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
         text-decoration: none;
-        padding: 14px 32px;
-        border-radius: 8px;
-        transition: background-color 0.2s ease;
+        padding: 12px 24px;
+        border-radius: 4px;
       }
 
       .button:hover {
@@ -127,10 +126,10 @@ export function getComponentStyles(): string {
          ========================================== */
 
       .alert {
-        padding: 16px;
-        border-radius: 8px;
+        padding: 12px;
+        border-radius: 0;
         margin-bottom: 16px;
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1.5;
       }
 
@@ -171,7 +170,7 @@ export function getComponentStyles(): string {
       .divider {
         height: 1px;
         background-color: ${light.border};
-        margin: 24px 0;
+        margin: 16px 0;
         border: none;
       }
 
@@ -182,9 +181,9 @@ export function getComponentStyles(): string {
 
       .badge {
         display: inline-block;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 0;
+        font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -251,7 +250,6 @@ export function getComponentStyles(): string {
         .card {
           background-color: ${dark.backgroundSecondary} !important;
           border-color: ${dark.border} !important;
-          box-shadow: 0 2px 4px rgba(${dark.shadowColor}, ${dark.shadowOpacity}) !important;
         }
 
         .card h2 {
@@ -336,20 +334,20 @@ export function getComponentStyles(): string {
 
       @media only screen and (max-width: 600px) {
         .card {
-          padding: 16px !important;
+          padding: 12px !important;
         }
 
         .details-table .label {
-          font-size: 13px !important;
+          font-size: 12px !important;
         }
 
         .details-table .value {
-          font-size: 15px !important;
+          font-size: 13px !important;
         }
 
         .button {
-          padding: 12px 24px !important;
-          font-size: 15px !important;
+          padding: 10px 20px !important;
+          font-size: 13px !important;
         }
       }
     </style>

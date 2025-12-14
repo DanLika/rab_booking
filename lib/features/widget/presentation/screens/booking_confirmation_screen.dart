@@ -112,29 +112,45 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   /// 3. Auto-close popup (only if opened as popup)
   void _notifyParentOfPaymentComplete() {
     final booking = widget.booking;
-    if (booking == null) return;
+    if (booking == null) {
+      LoggingService.log('[PaymentComplete] Cannot notify - booking is null', tag: 'STRIPE');
+      return;
+    }
 
     final bookingId = booking.id;
     final bookingRef = widget.bookingReference;
+
+    if (bookingId.isEmpty || bookingRef.isEmpty) {
+      LoggingService.log('[PaymentComplete] Cannot notify - missing bookingId or bookingRef', tag: 'STRIPE');
+      return;
+    }
+
+    // Extract session ID from URL if available (for PaymentBridge)
+    final uri = Uri.base;
+    final sessionId = uri.queryParameters['session_id'] ?? uri.queryParameters['stripe_session_id'] ?? '';
 
     final message = {
       'type': 'stripe-payment-complete',
       'source': 'bookbed-widget',
       'bookingId': bookingId,
       'bookingRef': bookingRef,
+      if (sessionId.isNotEmpty) 'sessionId': sessionId,
     };
+
+    LoggingService.log(
+      '[PaymentComplete] Notifying parent with bookingId: $bookingId, bookingRef: $bookingRef, sessionId: ${sessionId.isNotEmpty ? sessionId : "N/A"}',
+      tag: 'STRIPE',
+    );
 
     // Method 1: PaymentBridge.notifyComplete (most reliable for popup scenarios)
     // This handles BroadcastChannel, postMessage, and localStorage fallbacks
     if (kIsWeb) {
       try {
-        // Extract session ID from URL if available
-        final uri = Uri.base;
-        final sessionId = uri.queryParameters['session_id'] ?? uri.queryParameters['stripe_session_id'] ?? '';
-
         if (sessionId.isNotEmpty) {
           notifyPaymentComplete(sessionId, 'success');
-          LoggingService.log('[PaymentComplete] Sent via PaymentBridge', tag: 'STRIPE');
+          LoggingService.log('[PaymentComplete] Sent via PaymentBridge with sessionId: $sessionId', tag: 'STRIPE');
+        } else {
+          LoggingService.log('[PaymentComplete] PaymentBridge skipped - no sessionId in URL', tag: 'STRIPE');
         }
       } catch (e) {
         LoggingService.log('[PaymentComplete] PaymentBridge failed: $e', tag: 'STRIPE');
@@ -158,28 +174,62 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
         });
       } catch (e) {
         LoggingService.log('[PaymentComplete] BroadcastChannel failed: $e', tag: 'STRIPE');
+        // Retry once after short delay
+        Future.delayed(const Duration(milliseconds: 500), () {
+          try {
+            final retryTabService = createTabCommunicationService();
+            retryTabService.sendPaymentComplete(bookingId: bookingId, ref: bookingRef);
+            LoggingService.log('[PaymentComplete] Retry sent via BroadcastChannel', tag: 'STRIPE');
+            Future.delayed(const Duration(seconds: 2), () {
+              try {
+                retryTabService.dispose();
+              } catch (_) {
+                // Ignore disposal errors
+              }
+            });
+          } catch (retryError) {
+            LoggingService.log('[PaymentComplete] BroadcastChannel retry failed: $retryError', tag: 'STRIPE');
+          }
+        });
       }
     }
 
     // Method 3: postMessage (works for iframe/popup communication)
     // Only works if opened as popup (window.opener exists)
     if (kIsWeb && isPopupWindow) {
-      sendMessageToParent(message);
-      LoggingService.log('[PaymentComplete] Sent via postMessage', tag: 'STRIPE');
+      try {
+        sendMessageToParent(message);
+        LoggingService.log('[PaymentComplete] Sent via postMessage', tag: 'STRIPE');
+        // Retry postMessage once after short delay for reliability
+        Future.delayed(const Duration(milliseconds: 500), () {
+          try {
+            sendMessageToParent(message);
+            LoggingService.log('[PaymentComplete] Retry sent via postMessage', tag: 'STRIPE');
+          } catch (e) {
+            LoggingService.log('[PaymentComplete] postMessage retry failed: $e', tag: 'STRIPE');
+          }
+        });
+      } catch (e) {
+        LoggingService.log('[PaymentComplete] postMessage failed: $e', tag: 'STRIPE');
+      }
     }
 
-    // Method 3: Close popup after short delay (allows message to be received)
+    // Method 4: Close popup after short delay (allows message to be received)
     // Only close if we're in a popup window (opened from iframe)
     if (kIsWeb && isPopupWindow) {
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        final closed = closePopupWindow();
-        if (closed) {
-          LoggingService.log('[PaymentComplete] Popup window closed', tag: 'STRIPE');
-        } else {
-          LoggingService.log(
-            '[PaymentComplete] Popup could not be auto-closed (user can close manually)',
-            tag: 'STRIPE',
-          );
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        try {
+          final closed = closePopupWindow();
+          if (closed) {
+            LoggingService.log('[PaymentComplete] Popup window closed', tag: 'STRIPE');
+          } else {
+            LoggingService.log(
+              '[PaymentComplete] Popup could not be auto-closed (user can close manually)',
+              tag: 'STRIPE',
+            );
+          }
+        } catch (e) {
+          LoggingService.log('[PaymentComplete] Error closing popup: $e', tag: 'STRIPE');
         }
       });
     }
@@ -271,6 +321,8 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SafeArea(
+          left: false,
+          right: false,
           child: Column(
             children: [
               // Custom header with centered title and back button
@@ -278,9 +330,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
               Divider(height: 1, thickness: 1, color: colors.borderDefault),
               // Content
               Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(SpacingTokens.l),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(SpacingTokens.l),
+                  child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 600),
                       child: Column(

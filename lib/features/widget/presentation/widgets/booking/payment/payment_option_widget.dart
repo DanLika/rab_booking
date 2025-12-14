@@ -20,7 +20,8 @@ class PaymentOptionWidget extends StatelessWidget {
   /// Optional deposit amount to display (null for "Pay on Arrival")
   final String? depositAmount;
 
-  const PaymentOptionWidget({
+  // Bug #29 Fix: Removed const to allow assert validation for non-empty title and subtitle
+  PaymentOptionWidget({
     super.key,
     required this.icon,
     this.secondaryIcon,
@@ -30,7 +31,8 @@ class PaymentOptionWidget extends StatelessWidget {
     required this.onTap,
     required this.isDarkMode,
     this.depositAmount,
-  });
+  }) : assert(title.isNotEmpty, 'Title cannot be empty'),
+       assert(subtitle.isNotEmpty, 'Subtitle cannot be empty');
 
   // Size constants
   static const _primaryIconSize = 24.0;
@@ -50,32 +52,48 @@ class PaymentOptionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderTokens.circularMedium,
-      child: Container(
-        padding: const EdgeInsets.all(SpacingTokens.m),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? colors.borderFocus : colors.borderDefault,
-            width: isSelected
-                ? BorderTokens.widthMedium
-                : BorderTokens.widthThin,
+    // Build semantic label combining title, subtitle, and deposit amount
+    final semanticLabel = _buildSemanticLabel();
+
+    return Semantics(
+      label: semanticLabel,
+      button: true,
+      selected: isSelected,
+      hint: subtitle,
+      value: depositAmount,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderTokens.circularMedium,
+        child: Container(
+          padding: const EdgeInsets.all(SpacingTokens.m),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isSelected ? colors.borderFocus : colors.borderDefault,
+              width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
+            ),
+            borderRadius: BorderTokens.circularMedium,
+            color: isSelected ? colors.backgroundSecondary : null,
           ),
-          borderRadius: BorderTokens.circularMedium,
-          color: isSelected ? colors.backgroundSecondary : null,
-        ),
-        child: Row(
-          children: [
-            _RadioIndicator(isSelected: isSelected, colors: colors),
-            const SizedBox(width: SpacingTokens.s),
-            _buildIcons(colors),
-            const SizedBox(width: SpacingTokens.s),
-            Expanded(child: _buildContent(colors)),
-          ],
+          child: Row(
+            children: [
+              _RadioIndicator(isSelected: isSelected, colors: colors),
+              const SizedBox(width: SpacingTokens.s),
+              _buildIcons(colors),
+              const SizedBox(width: SpacingTokens.s),
+              Expanded(child: _buildContent(colors)),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  String _buildSemanticLabel() {
+    final parts = <String>[title];
+    if (depositAmount != null) {
+      parts.add(depositAmount!);
+    }
+    return parts.join(', ');
   }
 
   Widget _buildIcons(MinimalistColorSchemeAdapter colors) {
@@ -105,22 +123,14 @@ class PaymentOptionWidget extends StatelessWidget {
                 maxLines: 1,
                 minFontSize: _titleMinFontSize,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: _titleFontSize,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textPrimary,
-                ),
+                style: TextStyle(fontSize: _titleFontSize, fontWeight: FontWeight.w600, color: colors.textPrimary),
               ),
             ),
             if (depositAmount case final amount?) ...[
               const SizedBox(width: SpacingTokens.xs),
               Text(
                 amount,
-                style: TextStyle(
-                  fontSize: _depositFontSize,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
+                style: TextStyle(fontSize: _depositFontSize, fontWeight: FontWeight.bold, color: colors.textPrimary),
               ),
             ],
           ],
@@ -132,10 +142,7 @@ class PaymentOptionWidget extends StatelessWidget {
           minFontSize: _subtitleMinFontSize,
           maxFontSize: _subtitleFontSize,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: _subtitleFontSize,
-            color: colors.textSecondary,
-          ),
+          style: TextStyle(fontSize: _subtitleFontSize, color: colors.textSecondary),
         ),
       ],
     );
@@ -165,10 +172,7 @@ class _RadioIndicator extends StatelessWidget {
               child: Container(
                 width: PaymentOptionWidget._radioInnerSize,
                 height: PaymentOptionWidget._radioInnerSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colors.buttonPrimary,
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: colors.buttonPrimary),
               ),
             )
           : null,

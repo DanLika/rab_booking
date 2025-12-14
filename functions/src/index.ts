@@ -50,6 +50,9 @@ export * from "./notificationPreferences";
 // Export guest booking cancellation function
 export * from "./guestCancelBooking";
 
+// Export update booking token expiration function
+export * from "./updateBookingTokenExpiration";
+
 // Export resend booking email function
 export * from "./resendBookingEmail";
 
@@ -58,3 +61,27 @@ export * from "./subdomainService";
 
 // Export cleanup scheduled functions (Stripe pending bookings)
 export * from "./cleanupExpiredPendingBookings";
+
+// Export Booking.com API integration functions
+export * from "./bookingComApi";
+
+// Export Airbnb API integration functions
+export * from "./airbnbApi";
+
+// Export two-way sync engine
+export * from "./twoWaySync";
+
+// Export overbooking notifications
+export * from "./overbookingNotifications";
+
+// Export SMS service
+export * from "./smsService";
+
+// Export external booking notifications
+export * from "./externalBookingNotifications";
+
+// Export sync reminders
+export * from "./syncReminders";
+
+// Export migration functions (Development only)
+export * from "./migrations/migrateToSubcollections";

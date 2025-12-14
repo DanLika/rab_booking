@@ -26,8 +26,7 @@ class DailyPriceModel with _$DailyPriceModel {
     @JsonKey(name: 'unit_id') required String unitId,
 
     /// Date
-    @TimestampConverter()
-    required DateTime date,
+    @TimestampConverter() required DateTime date,
 
     /// Base price for this date
     required double price,
@@ -67,29 +66,23 @@ class DailyPriceModel with _$DailyPriceModel {
     // === TIMESTAMPS ===
 
     /// Created at timestamp
-    @TimestampConverter()
-    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @TimestampConverter() @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// Updated at timestamp
-    @NullableTimestampConverter()
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @NullableTimestampConverter() @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _DailyPriceModel;
 
   const DailyPriceModel._();
 
   /// Create from JSON
-  factory DailyPriceModel.fromJson(Map<String, dynamic> json) =>
-      _$DailyPriceModelFromJson(json);
+  factory DailyPriceModel.fromJson(Map<String, dynamic> json) => _$DailyPriceModelFromJson(json);
 
   /// Get formatted price
   String get formattedPrice => '€${price.toStringAsFixed(2)}';
 
   /// Get formatted date (e.g., "Jan 15, 2024")
   String get formattedDate {
-    final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
+    final months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     final month = months[date.month];
     return '$month ${date.day}, ${date.year}';
@@ -109,9 +102,7 @@ class DailyPriceModel with _$DailyPriceModel {
   /// Check if date is today
   bool get isToday {
     final now = DateTime.now();
-    return date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
+    return date.year == now.year && date.month == now.month && date.day == now.day;
   }
 
   /// Check if date is in the future
@@ -188,7 +179,7 @@ class DailyPriceModel with _$DailyPriceModel {
           weekendPrice: weekendPrice,
           minDaysAdvance: minDaysAdvance,
           maxDaysAdvance: maxDaysAdvance,
-          createdAt: DateTime.now(),
+          createdAt: DateTime.now().toUtc(),
         ),
       );
       currentDate = currentDate.add(const Duration(days: 1));

@@ -253,24 +253,6 @@ export const createBookingAtomic = onCall(async (request) => {
     );
 
     // ========================================================================
-    // STEP 0.6: SECURITY - Validate client-provided price matches server calculation
-    // CRITICAL: Prevents price manipulation attacks (booking €1000 unit for €1)
-    // Now includes fallback to unit base price if daily_prices don't exist
-    // ========================================================================
-    await validateBookingPrice(
-      unitId,
-      checkInDate,
-      checkOutDate,
-      numericTotalPrice, // Use validated numeric price
-      propertyId // Pass propertyId for fallback to unit base price
-    );
-
-    logInfo("[AtomicBooking] Price validated against server calculation", {
-      unitId,
-      totalPrice: numericTotalPrice,
-    });
-
-    // ========================================================================
     // STEP 1: Fetch and validate widget settings
     // ========================================================================
     const widgetSettingsDoc = await db
@@ -372,16 +354,14 @@ export const createBookingAtomic = onCall(async (request) => {
     });
 
     // ========================================================================
-    // STRIPE PAYMENT: No validation here - pass data to stripePayment.ts
+    // STRIPE PAYMENT: Skip price validation - stripePayment.ts will handle it
     // ========================================================================
-    // CRITICAL FIX: Removed 214 lines of duplicated validation to eliminate:
-    // 1. Code duplication (daily_prices validation repeated twice)
-    // 2. Race condition (between this validation and placeholder creation)
-    // 3. Memory waste (large transaction objects)
+    // CRITICAL FIX: Price validation moved to stripePayment.ts to allow
+    // server-calculated price to be used if client's locked price doesn't match.
     //
     // NEW FLOW:
-    // - atomicBooking.ts: Just returns booking data (no validation)
-    // - stripePayment.ts: Creates placeholder booking with atomic validation
+    // - atomicBooking.ts: Returns booking data with client's price (no validation)
+    // - stripePayment.ts: Validates price and uses server-calculated price if mismatch
     // - This ensures dates are blocked BEFORE Stripe redirect (no race condition)
     // ========================================================================
     if (paymentMethod === "stripe") {
@@ -417,6 +397,25 @@ export const createBookingAtomic = onCall(async (request) => {
         message: "Proceed to Stripe payment.",
       };
     }
+
+    // ========================================================================
+    // NON-STRIPE PAYMENT: Validate price BEFORE creating booking
+    // ========================================================================
+    // SECURITY: For non-Stripe payments, validate price here since booking
+    // is created immediately. For Stripe, validation happens in stripePayment.ts.
+    // ========================================================================
+    await validateBookingPrice(
+      unitId,
+      checkInDate,
+      checkOutDate,
+      numericTotalPrice, // Use validated numeric price
+      propertyId // Pass propertyId for fallback to unit base price
+    );
+
+    logInfo("[AtomicBooking] Price validated against server calculation", {
+      unitId,
+      totalPrice: numericTotalPrice,
+    });
 
     // Determine booking status for NON-STRIPE payments
     // pending = awaiting owner approval (BLOCKS calendar dates)

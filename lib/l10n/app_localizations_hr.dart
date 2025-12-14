@@ -7183,4 +7183,32 @@ class AppLocalizationsHr extends AppLocalizations {
   String priceCalendarHintExample(String value) {
     return 'npr. $value';
   }
+
+  @override
+  String overbookingConflictDetected(String unitName) {
+    return 'Overbooking detektovan za $unitName';
+  }
+
+  @override
+  String overbookingConflictCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count konflikata',
+      one: '1 konflikt',
+      zero: 'Nema konflikata',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String overbookingConflictDetails(String guest1, String guest2) {
+    return 'Konflikt: $guest1 vs $guest2';
+  }
+
+  @override
+  String get overbookingViewBooking => 'Prikaži';
+
+  @override
+  String get overbookingScrollToConflict => 'Skroluj do konflikta';
 }

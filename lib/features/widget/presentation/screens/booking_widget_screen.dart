@@ -187,6 +187,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // ============================================
   // CROSS-TAB COMMUNICATION
   // ============================================
+  /// Timer for payment completion timeout (resets loading state if message doesn't arrive)
+  Timer? _paymentCompletionTimeout;
   // Cross-tab communication for Stripe payments
   // When payment completes in one tab, other tabs are notified to update UI
   TabCommunicationService? _tabCommunicationService;
@@ -312,6 +314,29 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   void _initTabCommunication() {
     if (!kIsWeb) return; // Only on web platform
 
+    // #region agent log
+    try {
+      final logData = {
+        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+        'location': 'booking_widget_screen.dart:312',
+        'message': 'Tab communication init - entry',
+        'data': {
+          'isInIframe': isInIframe,
+          'hasExistingSubscription': _tabMessageSubscription != null,
+          'hasExistingService': _tabCommunicationService != null,
+        },
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'B',
+      };
+      LoggingService.log(
+        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+        tag: 'DEBUG_${logData['hypothesisId']}',
+      );
+    } catch (_) {}
+    // #endregion
+
     try {
       // LOW: Cancel any existing subscription to prevent memory leak
       // (safety measure in case this method is called multiple times)
@@ -325,6 +350,30 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Listen for messages from other tabs
       _tabMessageSubscription = _tabCommunicationService!.messageStream.listen(_handleTabMessage);
+
+      // #region agent log
+      try {
+        final logData = {
+          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+          'location': 'booking_widget_screen.dart:327',
+          'message': 'Tab communication init - listeners setup',
+          'data': {
+            'hasSubscription': _tabMessageSubscription != null,
+            'isInIframe': isInIframe,
+            'willSetupPostMessage': isInIframe,
+            'willSetupPaymentBridge': isInIframe && kIsWeb,
+          },
+          'sessionId': 'debug-session',
+          'runId': 'run1',
+          'hypothesisId': 'B',
+        };
+        LoggingService.log(
+          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+          tag: 'DEBUG_${logData['hypothesisId']}',
+        );
+      } catch (_) {}
+      // #endregion
 
       // If in iframe, also listen for postMessage from popup windows
       if (isInIframe) {
@@ -360,16 +409,134 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             final sessionId = result['sessionId'] as String?;
             final status = result['status'] as String?;
 
+            // #region agent log
+            try {
+              final logData = {
+                'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+                'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+                'location': 'booking_widget_screen.dart:359',
+                'message': 'PaymentBridge message received',
+                'data': {
+                  'sessionId': sessionId,
+                  'status': status,
+                  'hasTimeout': _paymentCompletionTimeout != null,
+                  '_isProcessing': _isProcessing,
+                },
+                'sessionId': 'debug-session',
+                'runId': 'run1',
+                'hypothesisId': 'B',
+              };
+              // Debug logging via enhanced LoggingService (will be visible in browser console)
+              LoggingService.log(
+                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+                tag: 'DEBUG_${logData['hypothesisId']}',
+              );
+            } catch (_) {}
+            // #endregion
+
             if (sessionId != null && status == 'success') {
               LoggingService.log('[PaymentBridge] Payment complete received, sessionId: $sessionId', tag: 'STRIPE');
+
+              // CRITICAL: Cancel timeout since we received the message
+              if (_paymentCompletionTimeout != null) {
+                // #region agent log
+                try {
+                  final logData = {
+                    'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+                    'location': 'booking_widget_screen.dart:369',
+                    'message': 'PaymentBridge - timeout cancel BEFORE',
+                    'data': {'hasTimeout': _paymentCompletionTimeout != null, '_isProcessing': _isProcessing},
+                    'sessionId': 'debug-session',
+                    'runId': 'run1',
+                    'hypothesisId': 'B',
+                  };
+                  // Debug logging via enhanced LoggingService (will be visible in browser console)
+                  LoggingService.log(
+                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+                    tag: 'DEBUG_${logData['hypothesisId']}',
+                  );
+                } catch (_) {}
+                // #endregion
+
+                _paymentCompletionTimeout!.cancel();
+                _paymentCompletionTimeout = null;
+
+                // #region agent log
+                try {
+                  final logData = {
+                    'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+                    'location': 'booking_widget_screen.dart:372',
+                    'message': 'PaymentBridge - timeout cancel AFTER',
+                    'data': {'hasTimeout': _paymentCompletionTimeout != null},
+                    'sessionId': 'debug-session',
+                    'runId': 'run1',
+                    'hypothesisId': 'B',
+                  };
+                  // Debug logging via enhanced LoggingService (will be visible in browser console)
+                  LoggingService.log(
+                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+                    tag: 'DEBUG_${logData['hypothesisId']}',
+                  );
+                } catch (_) {}
+                // #endregion
+
+                LoggingService.log(
+                  '[PaymentBridge] Payment completion timeout cancelled (message received)',
+                  tag: 'STRIPE',
+                );
+              }
 
               // Handle payment completion by polling for booking
               // This is called when payment completes in popup and sends message to iframe
               if (mounted) {
-                // Reset processing state first
+                // #region agent log
+                try {
+                  final logData = {
+                    'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+                    'location': 'booking_widget_screen.dart:377',
+                    'message': 'PaymentBridge - state reset BEFORE',
+                    'data': {'_isProcessing': _isProcessing, 'isMounted': mounted},
+                    'sessionId': 'debug-session',
+                    'runId': 'run1',
+                    'hypothesisId': 'C',
+                  };
+                  // Debug logging via enhanced LoggingService (will be visible in browser console)
+                  LoggingService.log(
+                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+                    tag: 'DEBUG_${logData['hypothesisId']}',
+                  );
+                } catch (_) {}
+                // #endregion
+
+                // Reset processing state FIRST (before any async operations)
                 setState(() {
                   _isProcessing = false;
                 });
+
+                // #region agent log
+                try {
+                  final logData = {
+                    'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+                    'location': 'booking_widget_screen.dart:382',
+                    'message': 'PaymentBridge - state reset AFTER',
+                    'data': {'_isProcessing': _isProcessing},
+                    'sessionId': 'debug-session',
+                    'runId': 'run1',
+                    'hypothesisId': 'C',
+                  };
+                  // Debug logging via enhanced LoggingService (will be visible in browser console)
+                  LoggingService.log(
+                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+                    tag: 'DEBUG_${logData['hypothesisId']}',
+                  );
+                } catch (_) {}
+                // #endregion
+
+                LoggingService.log('[PaymentBridge] Loading state reset (message received)', tag: 'STRIPE');
 
                 // Handle Stripe return with session ID (same as URL-based flow)
                 _handleStripeReturnWithSessionId(sessionId);
@@ -378,6 +545,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           }
         } catch (e) {
           LoggingService.log('[PaymentBridge] Error handling payment result: $e', tag: 'STRIPE');
+          // On error, still reset processing state
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+            });
+          }
         }
       }).toJS;
 
@@ -412,11 +585,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (bookingId != null && bookingRef != null) {
           LoggingService.log('[PostMessage] Payment complete, showing confirmation', tag: 'POSTMESSAGE');
 
-          // Reset processing state first
+          // CRITICAL: Cancel timeout since we received the message
+          if (_paymentCompletionTimeout != null) {
+            _paymentCompletionTimeout!.cancel();
+            _paymentCompletionTimeout = null;
+            LoggingService.log(
+              '[PostMessage] Payment completion timeout cancelled (message received)',
+              tag: 'POSTMESSAGE',
+            );
+          }
+
+          // CRITICAL: Reset processing state FIRST (before any async operations)
           if (mounted) {
             setState(() {
               _isProcessing = false;
             });
+            LoggingService.log('[PostMessage] Loading state reset (message received)', tag: 'POSTMESSAGE');
           }
 
           // Clear form and show confirmation
@@ -425,11 +609,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               _showConfirmationFromUrl(bookingRef, bookingId, fromOtherTab: true);
             }
           });
+        } else {
+          LoggingService.log(
+            '[PostMessage] Invalid payment complete message - missing bookingId or bookingRef',
+            tag: 'POSTMESSAGE',
+          );
+          // Still reset processing state even if message is invalid
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+            });
+          }
         }
         break;
       case 'stripe-popup-close':
         // User wants to close popup - reset processing state
         LoggingService.log('[PostMessage] Popup close requested', tag: 'POSTMESSAGE');
+
+        // Cancel timeout since popup was closed
+        _paymentCompletionTimeout?.cancel();
+        _paymentCompletionTimeout = null;
+
         if (mounted) {
           setState(() {
             _isProcessing = false;
@@ -457,8 +657,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // Defensive check: ensure size is valid and finite
         final size = renderBox.size;
-        if (!size.height.isFinite || !size.width.isFinite || 
-            size.height <= 0 || size.width <= 0) {
+        if (!size.height.isFinite || !size.width.isFinite || size.height <= 0 || size.width <= 0) {
           return;
         }
 
@@ -514,15 +713,63 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// This handles the case when popup is blocked and Stripe opens in new tab
   /// NOTE: Email is NOT required - booking is fetched by bookingId
   Future<void> _handlePaymentCompleteFromOtherTab(TabMessage message) async {
+    // #region agent log
+    try {
+      final logData = {
+        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+        'location': 'booking_widget_screen.dart:516',
+        'message': 'CrossTab message received - entry',
+        'data': {
+          'bookingId': message.bookingId,
+          'bookingRef': message.bookingRef,
+          'hasTimeout': _paymentCompletionTimeout != null,
+          '_isProcessing': _isProcessing,
+          'isMounted': mounted,
+        },
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'B',
+      };
+      // Debug logging via enhanced LoggingService (will be visible in browser console)
+      LoggingService.log(
+        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+        tag: 'DEBUG_${logData['hypothesisId']}',
+      );
+    } catch (_) {}
+    // #endregion
+
     final bookingId = message.bookingId;
     final bookingRef = message.bookingRef;
 
     if (bookingId == null || bookingRef == null) {
       LoggingService.log('[CrossTab] Invalid payment complete message - missing params', tag: 'TAB_COMM_ERROR');
+      // Still reset processing state even if message is invalid
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
       return;
     }
 
     LoggingService.log('[CrossTab] Payment complete received for booking: $bookingRef', tag: 'TAB_COMM');
+
+    // CRITICAL: Cancel timeout since we received the message
+    if (_paymentCompletionTimeout != null) {
+      _paymentCompletionTimeout!.cancel();
+      _paymentCompletionTimeout = null;
+      LoggingService.log('[CrossTab] Payment completion timeout cancelled (message received)', tag: 'TAB_COMM');
+    }
+
+    // CRITICAL: Reset processing state FIRST (before any async operations)
+    // This is important for iframe loading state - must happen immediately
+    if (mounted) {
+      setState(() {
+        _isProcessing = false;
+      });
+      LoggingService.log('[CrossTab] Loading state reset (message received)', tag: 'TAB_COMM');
+    }
 
     // Track payment completion with analytics (from other tab/popup)
     final browser = BrowserDetection.getBrowserName();
@@ -536,13 +783,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         timeToCompleteSeconds: 0, // Time tracking not available for cross-tab messages
       ),
     );
-
-    // Reset processing state first (important for iframe loading state)
-    if (mounted) {
-      setState(() {
-        _isProcessing = false;
-      });
-    }
 
     // CRITICAL: Clear form data and reset state BEFORE showing confirmation
     // This prevents the bug where pressing "back" shows old form data
@@ -659,14 +899,164 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     LoggingService.log('[CrossTab] Form state reset after payment completion', tag: 'TAB_COMM');
   }
 
+  /// Start timeout timer for payment completion
+  /// If payment completion message doesn't arrive within timeout period,
+  /// reset loading state to prevent infinite loading
+  void _startPaymentCompletionTimeout() {
+    // #region agent log
+    if (kIsWeb) {
+      try {
+        final logData = {
+          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+          'location': 'booking_widget_screen.dart:717',
+          'message': 'Timeout start - entry',
+          'data': {
+            'hasExistingTimeout': _paymentCompletionTimeout != null,
+            'isMounted': mounted,
+            '_isProcessing': _isProcessing,
+          },
+          'sessionId': 'debug-session',
+          'runId': 'run1',
+          'hypothesisId': 'A',
+        };
+        // Debug logging via enhanced LoggingService (will be visible in browser console)
+        LoggingService.log(
+          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+          tag: 'DEBUG_${logData['hypothesisId']}',
+        );
+      } catch (_) {}
+    }
+    // #endregion
+
+    // Cancel any existing timeout
+    _paymentCompletionTimeout?.cancel();
+
+    LoggingService.log(
+      '[PaymentTimeout] Starting 30-second timeout timer for payment completion',
+      tag: 'STRIPE_TIMEOUT',
+    );
+
+    // Set timeout to 30 seconds
+    // This gives enough time for webhook to process and message to arrive
+    _paymentCompletionTimeout = Timer(const Duration(seconds: 30), () {
+      // #region agent log
+      try {
+        final logData = {
+          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+          'location': 'booking_widget_screen.dart:728',
+          'message': 'Timeout fired',
+          'data': {'isMounted': mounted, '_isProcessing': _isProcessing},
+          'sessionId': 'debug-session',
+          'runId': 'run1',
+          'hypothesisId': 'A',
+        };
+        // Debug logging via enhanced LoggingService (will be visible in browser console)
+        LoggingService.log(
+          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+          tag: 'DEBUG_${logData['hypothesisId']}',
+        );
+      } catch (_) {}
+      // #endregion
+      if (!mounted) {
+        LoggingService.log('[PaymentTimeout] Widget disposed, timeout cancelled', tag: 'STRIPE_TIMEOUT');
+        return;
+      }
+
+      LoggingService.log(
+        '[PaymentTimeout] ⚠️ Payment completion message not received within 30 seconds, resetting loading state',
+        tag: 'STRIPE_TIMEOUT',
+      );
+
+      // Reset processing state to prevent infinite loading
+      if (mounted) {
+        // #region agent log
+        try {
+          final logData = {
+            'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+            'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+            'location': 'booking_widget_screen.dart:740',
+            'message': 'Timeout - state reset BEFORE',
+            'data': {'_isProcessing': _isProcessing, '_showGuestForm': _showGuestForm},
+            'sessionId': 'debug-session',
+            'runId': 'run1',
+            'hypothesisId': 'A',
+          };
+          // Debug logging via enhanced LoggingService (will be visible in browser console)
+          LoggingService.log(
+            '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+            tag: 'DEBUG_${logData['hypothesisId']}',
+          );
+        } catch (_) {}
+        // #endregion
+
+        setState(() {
+          _isProcessing = false;
+          _showGuestForm = false;
+        });
+        _resetFormState();
+
+        // #region agent log
+        try {
+          final logData = {
+            'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+            'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+            'location': 'booking_widget_screen.dart:747',
+            'message': 'Timeout - state reset AFTER',
+            'data': {'_isProcessing': _isProcessing, '_showGuestForm': _showGuestForm},
+            'sessionId': 'debug-session',
+            'runId': 'run1',
+            'hypothesisId': 'A',
+          };
+          // Debug logging via enhanced LoggingService (will be visible in browser console)
+          LoggingService.log(
+            '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+            tag: 'DEBUG_${logData['hypothesisId']}',
+          );
+        } catch (_) {}
+        // #endregion
+
+        LoggingService.log('[PaymentTimeout] Loading state reset due to timeout', tag: 'STRIPE_TIMEOUT');
+      }
+
+      _paymentCompletionTimeout = null;
+    });
+
+    // #region agent log
+    try {
+      final logData = {
+        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+        'location': 'booking_widget_screen.dart:751',
+        'message': 'Timeout start - exit',
+        'data': {'timeoutCreated': _paymentCompletionTimeout != null},
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'A',
+      };
+      // Debug logging via enhanced LoggingService (will be visible in browser console)
+      LoggingService.log(
+        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+        tag: 'DEBUG_${logData['hypothesisId']}',
+      );
+    } catch (_) {}
+    // #endregion
+  }
+
   /// Handle Stripe return when booking is created by webhook (NEW FLOW)
   /// URL has: stripe_status=success&session_id=cs_xxx but NO bookingId
   /// We need to poll Firestore until webhook creates the booking
   Future<void> _handleStripeReturnWithSessionId(String sessionId) async {
     LoggingService.log('[STRIPE_RETURN] Handling Stripe return with session_id: $sessionId', tag: 'STRIPE_SESSION');
 
+    // CRITICAL: Cancel timeout since we're handling the return (payment completed)
+    _paymentCompletionTimeout?.cancel();
+    _paymentCompletionTimeout = null;
+    LoggingService.log('[STRIPE_RETURN] Payment completion timeout cancelled', tag: 'STRIPE_SESSION');
+
     // Track payment completion start time for analytics
-    final paymentStartTime = DateTime.now();
+    final paymentStartTime = DateTime.now().toUtc();
 
     // Show loading state while we wait for webhook
     setState(() {
@@ -699,7 +1089,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           );
 
           // Track payment completion with analytics
-          final timeToComplete = DateTime.now().difference(paymentStartTime).inSeconds;
+          final timeToComplete = DateTime.now().toUtc().difference(paymentStartTime).inSeconds;
           final browser = BrowserDetection.getBrowserName();
           final deviceType = BrowserDetection.getDeviceType();
           unawaited(
@@ -998,7 +1388,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       paymentMethod: _selectedPaymentMethod,
       pillBarDismissed: _pillBarDismissed,
       hasInteractedWithBookingFlow: _hasInteractedWithBookingFlow,
-      timestamp: DateTime.now(),
+      timestamp: DateTime.now().toUtc(),
     );
   }
 
@@ -1114,6 +1504,54 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Ignore - cleanup might already be called or throw
     }
 
+    // Cancel payment completion timeout
+    // #region agent log
+    try {
+      final logData = {
+        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+        'location': 'booking_widget_screen.dart:1214',
+        'message': 'Dispose - cleanup entry',
+        'data': {
+          'hasTimeout': _paymentCompletionTimeout != null,
+          '_isProcessing': _isProcessing,
+          '_isDisposed': _isDisposed,
+        },
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'E',
+      };
+      // Debug logging via enhanced LoggingService (will be visible in browser console)
+      LoggingService.log(
+        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+        tag: 'DEBUG_${logData['hypothesisId']}',
+      );
+    } catch (_) {}
+    // #endregion
+
+    _paymentCompletionTimeout?.cancel();
+    _paymentCompletionTimeout = null;
+
+    // #region agent log
+    try {
+      final logData = {
+        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+        'location': 'booking_widget_screen.dart:1217',
+        'message': 'Dispose - cleanup exit',
+        'data': {'hasTimeout': _paymentCompletionTimeout != null},
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'E',
+      };
+      // Debug logging via enhanced LoggingService (will be visible in browser console)
+      LoggingService.log(
+        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+        tag: 'DEBUG_${logData['hypothesisId']}',
+      );
+    } catch (_) {}
+    // #endregion
+
     super.dispose();
   }
 
@@ -1137,18 +1575,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         (previous, next) {
           // Defensive check: ensure widget is still mounted
           if (!mounted) return;
-          
+
           try {
             next.whenOrNull(
               error: (error, stack) {
                 // Defensive check: ensure widget is still mounted
                 if (!mounted) return;
-                
+
                 // Check if error is DatesNotAvailableException
                 if (error is DatesNotAvailableException) {
                   // Defensive check: ensure widget is still mounted before setState
                   if (!mounted) return;
-                  
+
                   try {
                     // Clear selected dates
                     setState(() {
@@ -1166,7 +1604,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       } catch (e) {
                         errorMessage = 'Selected dates are no longer available';
                       }
-                      
+
                       // Defensive check: ensure context is still valid
                       try {
                         SnackBarHelper.showError(
@@ -1247,7 +1685,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       backgroundColor: minimalistColors.backgroundPrimary,
       body: SafeArea(
         bottom: false, // No bottom padding - widget embedded in iframe, host handles safe area
-          child: LayoutBuilder(
+        child: LayoutBuilder(
           builder: (context, constraints) {
             // Defensive check: ensure constraints are bounded and finite
             final screenWidth = constraints.maxWidth.isFinite && constraints.maxWidth != double.infinity
@@ -1514,7 +1952,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         double servicesTotal = 0.0;
         if (checkOut.isAfter(checkIn)) {
           final nights = checkOut.difference(checkIn).inDays;
-          
+
           // If servicesAsync has data, calculate total synchronously
           // Otherwise, servicesTotal remains 0.0 (default)
           if (servicesAsync.hasValue) {
@@ -1553,7 +1991,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         final screenHeight = constraints.maxHeight.isFinite && constraints.maxHeight != double.infinity
             ? constraints.maxHeight
             : 800.0; // Fallback to reasonable default
-        
+
         double pillBarWidth;
         double maxHeight;
 
@@ -1582,7 +2020,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           }
           maxHeight = 282.0; // Fixed height for compact view (increased by 12px)
         }
-        
+
         // Ensure final values are finite and valid
         pillBarWidth = pillBarWidth.isFinite ? pillBarWidth.clamp(300.0, screenWidth) : 400.0;
         maxHeight = maxHeight.isFinite ? maxHeight.clamp(282.0, screenHeight) : 600.0;
@@ -1593,9 +2031,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           final mediaQuery = MediaQuery.maybeOf(context);
           if (mediaQuery != null) {
             final viewInsets = mediaQuery.viewInsets;
-            keyboardInset = viewInsets.bottom.isFinite && viewInsets.bottom >= 0
-                ? viewInsets.bottom
-                : 0.0;
+            keyboardInset = viewInsets.bottom.isFinite && viewInsets.bottom >= 0 ? viewInsets.bottom : 0.0;
           }
         } catch (e) {
           // If MediaQuery access fails, use 0.0 as fallback
@@ -1656,14 +2092,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     data: (services) {
                       // Defensive check: ensure services is not empty
                       if (services.isEmpty) return const SizedBox.shrink();
-                      
+
                       // _checkIn and _checkOut are guaranteed non-null here (checked before showing pill bar)
                       final checkIn = _checkIn;
                       final checkOut = _checkOut;
                       if (checkIn == null || checkOut == null) {
                         return const SizedBox.shrink();
                       }
-                      
+
                       // Defensive check: ensure dates are valid before calculating difference
                       try {
                         final nights = checkOut.isAfter(checkIn)
@@ -1793,6 +2229,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
               // If only one method, auto-select and show simplified UI
               if (enabledCount == 1) {
+                // Bug #29 Fix: Defensive check for singleMethodTitle (should never be null due to enabledCount == 1, but defensive programming)
+                if (singleMethodTitle == null || singleMethodTitle.isEmpty) {
+                  return NoPaymentInfo(isDarkMode: isDarkMode);
+                }
+
                 // Auto-select the single method
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (_selectedPaymentMethod != singleMethod) {
@@ -1817,7 +2258,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           : singleMethod == 'bank_transfer'
                           ? Icons.account_balance
                           : Icons.home_outlined,
-                      title: singleMethodTitle!,
+                      title: singleMethodTitle,
                       subtitle: singleMethodSubtitle,
                       isDarkMode: isDarkMode,
                     ),
@@ -2215,8 +2656,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
 
     // Bug #64: Check if price changed since user started booking
+    // CRITICAL: After price lock check, use the appropriate price
+    // - If user confirmed price change: use current calculation (locked price was updated)
+    // - If price unchanged: use locked price if available, otherwise current calculation
+    BookingPriceCalculation finalCalculation = calculation;
+    PriceLockResult? priceLockResult;
     if (mounted) {
-      final priceLockResult = await PriceLockService.checkAndConfirmPriceChange(
+      priceLockResult = await PriceLockService.checkAndConfirmPriceChange(
         context: context,
         currentCalculation: calculation,
         lockedCalculation: _lockedPriceCalculation,
@@ -2229,6 +2675,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (priceLockResult == PriceLockResult.cancelled) {
         return;
+      }
+
+      // After price lock check, determine which price to use
+      if (priceLockResult == PriceLockResult.confirmedProceed) {
+        // User confirmed price change - use current calculation (locked price was updated)
+        finalCalculation = calculation;
+      } else if (_lockedPriceCalculation != null) {
+        // Price unchanged - use locked price to ensure consistency
+        finalCalculation = _lockedPriceCalculation!;
       }
     }
 
@@ -2254,20 +2709,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Defensive null checks before submitting booking
     if (_propertyId == null || _propertyId!.isEmpty) {
       if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Property ID is missing. Please refresh the page.',
-        );
+        SnackBarHelper.showError(context: context, message: 'Property ID is missing. Please refresh the page.');
       }
       return;
     }
 
     if (_ownerId == null || _ownerId!.isEmpty) {
       if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Owner ID is missing. Please refresh the page.',
-        );
+        SnackBarHelper.showError(context: context, message: 'Owner ID is missing. Please refresh the page.');
       }
       return;
     }
@@ -2281,6 +2730,32 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Race condition is handled atomically by createBookingAtomic Cloud Function
       // Client-side checks are unsafe due to TOCTOU (Time-of-check-to-time-of-use)
       final submitBookingUseCase = ref.read(submitBookingUseCaseProvider);
+
+      // #region agent log
+      try {
+        final logData = {
+          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+          'location': 'booking_widget_screen.dart:2777',
+          'message': 'Booking submission - price calculation',
+          'data': {
+            'currentCalculationTotalPrice': calculation.totalPrice,
+            'lockedCalculationTotalPrice': _lockedPriceCalculation?.totalPrice,
+            'finalCalculationTotalPrice': finalCalculation.totalPrice,
+            'priceLockResult': priceLockResult?.toString(),
+            'checkIn': _checkIn?.toIso8601String(),
+            'checkOut': _checkOut?.toIso8601String(),
+          },
+          'sessionId': 'debug-session',
+          'runId': 'run1',
+          'hypothesisId': 'PRICE',
+        };
+        LoggingService.log(
+          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+          tag: 'DEBUG_PRICE',
+        );
+      } catch (_) {}
+      // #endregion
 
       final params = SubmitBookingParams(
         unitId: _unitId,
@@ -2297,7 +2772,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         adults: _adults,
         children: _children,
-        totalPrice: calculation.totalPrice,
+        totalPrice: finalCalculation.totalPrice, // Use final calculation (locked or current)
         paymentMethod: widgetMode == WidgetMode.bookingPending
             ? 'none'
             : (_selectedPaymentMethod.isEmpty ? 'stripe' : _selectedPaymentMethod), // Fallback to 'stripe' if empty
@@ -2435,14 +2910,33 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // IMPORTANT: Flutter Web uses hash routing (e.g., /#/calendar)
       // NOTE: Email is NOT included in URL for security/privacy
       final baseUrl = Uri.base;
+
+      // Validate base URL components
+      if (baseUrl.scheme.isEmpty || baseUrl.host.isEmpty) {
+        throw Exception('Invalid base URL: scheme or host is empty');
+      }
+
       final returnUrlWithoutHash = Uri(
         scheme: baseUrl.scheme,
         host: baseUrl.host,
         port: baseUrl.port,
         queryParameters: {...baseUrl.queryParameters, 'payment': 'stripe'},
       ).toString();
+
       // Append hash fragment for Flutter's hash-based routing
       final returnUrl = '$returnUrlWithoutHash#/calendar';
+
+      // Validate return URL format
+      try {
+        final returnUri = Uri.parse(returnUrl);
+        if (returnUri.scheme.isEmpty || returnUri.host.isEmpty) {
+          throw Exception('Invalid return URL format: scheme or host is empty');
+        }
+        LoggingService.log('[Stripe] Return URL validated: $returnUrl', tag: 'STRIPE');
+      } catch (e) {
+        LoggingService.logError('[Stripe] Invalid return URL format: $returnUrl', e);
+        throw Exception('Failed to build valid return URL: $e');
+      }
 
       // CRITICAL: Pre-open popup SYNCHRONOUSLY on user click (before async operations)
       // This prevents popup blockers from blocking the window
@@ -2534,9 +3028,67 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 });
                 _resetFormState();
               }
+
+              // CRITICAL: Start timeout timer to reset loading state if payment completion message doesn't arrive
+              // This prevents infinite loading if cross-tab communication fails
+              LoggingService.log('[Stripe] Starting payment completion timeout (30s)', tag: 'STRIPE');
+
+              // #region agent log
+              try {
+                final logData = {
+                  'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+                  'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+                  'location': 'booking_widget_screen.dart:2660',
+                  'message': 'Timeout start decision - popup scenario',
+                  'data': {
+                    'popupResult': popupResult,
+                    'isInIframe': isInIframe,
+                    '_isProcessing': _isProcessing,
+                    'willStartTimeout': true,
+                  },
+                  'sessionId': 'debug-session',
+                  'runId': 'run1',
+                  'hypothesisId': 'A',
+                };
+                // Debug logging via enhanced LoggingService (will be visible in browser console)
+                LoggingService.log(
+                  '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+                  tag: 'DEBUG_${logData['hypothesisId']}',
+                );
+              } catch (_) {}
+              // #endregion
+
+              _startPaymentCompletionTimeout();
             }
           } else if (popupResult == 'redirect') {
+            // #region agent log
+            try {
+              final logData = {
+                'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+                'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+                'location': 'booking_widget_screen.dart:2662',
+                'message': 'Timeout start decision - redirect scenario',
+                'data': {
+                  'popupResult': popupResult,
+                  'isInIframe': isInIframe,
+                  '_isProcessing': _isProcessing,
+                  'willStartTimeout': false,
+                  'reason': 'Redirect - page navigates away, timeout not needed',
+                },
+                'sessionId': 'debug-session',
+                'runId': 'run1',
+                'hypothesisId': 'A',
+              };
+              // Debug logging via enhanced LoggingService (will be visible in browser console)
+              LoggingService.log(
+                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+                tag: 'DEBUG_${logData['hypothesisId']}',
+              );
+            } catch (_) {}
+            // #endregion
             // Iframe + mobile: redirect top-level window (not iframe)
+            // NOTE: In redirect scenario, we reset _isProcessing immediately because
+            // the page will navigate away. Timeout is not needed here.
             LoggingService.log('[Stripe] Redirecting top-level window (mobile/iframe)', tag: 'STRIPE');
             redirectTopLevelWindow(checkoutResult.checkoutUrl);
 
@@ -2548,7 +3100,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               });
               _resetFormState();
             }
+            LoggingService.log('[Stripe] Loading state reset after redirect', tag: 'STRIPE');
           } else if (popupResult == 'blocked') {
+            // #region agent log
+            try {
+              final logData = {
+                'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+                'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+                'location': 'booking_widget_screen.dart:2648',
+                'message': 'Timeout start decision - blocked scenario',
+                'data': {
+                  'popupResult': popupResult,
+                  'isInIframe': isInIframe,
+                  '_isProcessing': _isProcessing,
+                  'willStartTimeout': false,
+                  'reason': 'Popup blocked - user will use dialog, timeout not needed',
+                },
+                'sessionId': 'debug-session',
+                'runId': 'run1',
+                'hypothesisId': 'A',
+              };
+              // Debug logging via enhanced LoggingService (will be visible in browser console)
+              LoggingService.log(
+                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+                tag: 'DEBUG_${logData['hypothesisId']}',
+              );
+            } catch (_) {}
+            // #endregion
+
             // Popup was blocked - show dialog with options
             LoggingService.log('[Stripe] Popup blocked - showing dialog with options', tag: 'STRIPE');
 
@@ -2784,7 +3363,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final screenHeight = mediaQuery.size.height;
     // Defensive check: ensure height is valid
     if (!screenHeight.isFinite || screenHeight <= 0) return false;
-    
+
     final orientation = mediaQuery.orientation;
     final isPortrait = orientation == Orientation.portrait || screenHeight > screenWidth;
 

@@ -68,25 +68,27 @@ class DetailRowWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    final row = Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeM,
-            color: colors.textSecondary,
+    // Bug #46 Fix: Add Semantics widget for accessibility (screen readers)
+    final row = Semantics(
+      label: label,
+      value: value,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
           ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeM,
-            fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
-            color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeM,
+              fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
+              color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
 
     if (hasPadding) {

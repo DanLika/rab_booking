@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/enums.dart';
@@ -34,7 +34,7 @@ class UnitFormScreen extends ConsumerStatefulWidget {
 }
 
 class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
-    with AndroidKeyboardDismissFix {
+    with AndroidKeyboardDismissFixApproach1<UnitFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _slugController = TextEditingController();
@@ -109,27 +109,49 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
     final isMobile = screenWidth < 600;
     final l10n = AppLocalizations.of(context);
 
-    return KeyedSubtree(
-      key: ValueKey('unit_form_$keyboardFixRebuildKey'),
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: theme.colorScheme.surface,
-        appBar: CommonAppBar(
-          title: _isEditing ? l10n.unitFormTitleEdit : l10n.unitFormTitleAdd,
-          leadingIcon: Icons.arrow_back,
-          onLeadingIconTap: (context) => Navigator.of(context).pop(),
-        ),
-        body: Stack(
-          children: [
-            Form(
-              key: _formKey,
-              child: ListView(
-                padding: EdgeInsets.fromLTRB(
-                  isMobile ? 16 : 24,
-                  isMobile ? 16 : 24,
-                  isMobile ? 16 : 24,
-                  24,
-                ),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          // Handle browser back button on Chrome Android
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        }
+      },
+      child: KeyedSubtree(
+        key: ValueKey('unit_form_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          backgroundColor: theme.colorScheme.surface,
+          appBar: CommonAppBar(
+            title: _isEditing ? l10n.unitFormTitleEdit : l10n.unitFormTitleAdd,
+            leadingIcon: Icons.arrow_back,
+            onLeadingIconTap: (context) {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/properties');
+              }
+            },
+          ),
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
+                return Stack(
+                  children: [
+                    Form(
+                      key: _formKey,
+                      child: ListView(
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.fromLTRB(
+                          isMobile ? 16 : 24,
+                          isMobile ? 16 : 24,
+                          isMobile ? 16 : 24,
+                          24,
+                        ),
                 children: [
                   // Basic Info Section
                   _buildSection(
@@ -542,7 +564,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                   ),
                 ),
               ),
-          ],
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

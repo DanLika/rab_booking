@@ -18,23 +18,23 @@ export {
   sendBookingConfirmationEmail,
   generateBookingConfirmationEmail,
   type BookingConfirmationParams,
-} from "./templates/booking-confirmation";
+} from "./templates/version-1/booking-confirmation";
 
 export {
   sendBookingConfirmationEmailV2,
   generateBookingConfirmationEmailV2,
-} from "./templates/booking-confirmation-v2";
+} from "./templates/version-2/booking-confirmation-v2";
 
 export {
   sendBookingApprovedEmail,
   generateBookingApprovedEmail,
   type BookingApprovedParams,
-} from "./templates/booking-approved";
+} from "./templates/version-1/booking-approved";
 
 export {
   sendBookingApprovedEmailV2,
   generateBookingApprovedEmailV2,
-} from "./templates/booking-approved-v2";
+} from "./templates/version-2/booking-approved-v2";
 
 export {
   sendGuestCancellationEmail,
@@ -46,29 +46,29 @@ export {
   type GuestCancellationParams,
   type OwnerCancellationParams,
   type RefundNotificationParams,
-} from "./templates/cancellation";
+} from "./templates/version-1/cancellation";
 
 export {
   sendGuestCancellationEmailV2,
   generateGuestCancellationEmailV2,
-} from "./templates/guest-cancellation-v2";
+} from "./templates/version-2/guest-cancellation-v2";
 
 export {
   sendRefundNotificationEmailV2,
   generateRefundNotificationEmailV2,
-} from "./templates/refund-notification-v2";
+} from "./templates/version-2/refund-notification-v2";
 
 export {
   sendOwnerNotificationEmail,
   generateOwnerNotificationEmail,
   type OwnerNotificationParams,
-} from "./templates/owner-notification";
+} from "./templates/version-1/owner-notification";
 
 export {
   sendPendingBookingRequestEmailV2,
   generatePendingBookingRequestEmailV2,
   type PendingBookingRequestParams,
-} from "./templates/pending-request-v2";
+} from "./templates/version-2/pending-request-v2";
 
 export {
   sendPaymentReminderEmail,
@@ -80,58 +80,64 @@ export {
   type PaymentReminderParams,
   type CheckInReminderParams,
   type CheckOutReminderParams,
-} from "./templates/reminder";
+} from "./templates/version-1/reminder";
 
 export {
   sendPaymentReminderEmailV2,
   generatePaymentReminderEmailV2,
-} from "./templates/payment-reminder-v2";
+} from "./templates/version-2/payment-reminder-v2";
 
 export {
   sendCheckInReminderEmailV2,
   generateCheckInReminderEmailV2,
-} from "./templates/check-in-reminder-v2";
+} from "./templates/version-2/check-in-reminder-v2";
 
 export {
   sendCheckOutReminderEmailV2,
   generateCheckOutReminderEmailV2,
-} from "./templates/check-out-reminder-v2";
+} from "./templates/version-2/check-out-reminder-v2";
 
 export {
   sendCustomGuestEmail,
   generateCustomGuestEmail,
   type CustomGuestEmailParams,
-} from "./templates/custom-email";
+} from "./templates/version-1/custom-email";
 
 export {
   sendEmailVerificationEmailV2,
   generateEmailVerificationEmailV2,
   type EmailVerificationParams,
-} from "./templates/email-verification-v2";
+} from "./templates/version-2/email-verification-v2";
 
 export {
   sendPendingOwnerNotificationEmailV2,
   generatePendingOwnerNotificationEmailV2,
   type PendingOwnerNotificationParams,
-} from "./templates/pending-owner-notification-v2";
+} from "./templates/version-2/pending-owner-notification-v2";
 
 export {
   sendBookingRejectedEmailV2,
   generateBookingRejectedEmailV2,
   type BookingRejectedParams,
-} from "./templates/booking-rejected-v2";
+} from "./templates/version-2/booking-rejected-v2";
 
 export {
   sendSuspiciousActivityEmailV2,
   generateSuspiciousActivityEmailV2,
   type SuspiciousActivityParams,
-} from "./templates/suspicious-activity-v2";
+} from "./templates/version-2/suspicious-activity-v2";
 
 export {
   sendPasswordResetEmailV2,
   generatePasswordResetEmailV2,
   type PasswordResetParams,
-} from "./templates/password-reset-v2";
+} from "./templates/version-2/password-reset-v2";
+
+export {
+  sendOverbookingDetectedEmailV2,
+  generateOverbookingDetectedEmailV2,
+  type OverbookingDetectedParams,
+} from "./templates/version-2/overbooking-detected-v2";
 
 // Base template
 export {

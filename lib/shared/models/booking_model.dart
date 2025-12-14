@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../core/constants/enums.dart';
 import '../../core/utils/timestamp_converter.dart';
+import '../../features/widget/utils/date_normalizer.dart';
 
 part 'booking_model.freezed.dart';
 part 'booking_model.g.dart';
@@ -37,8 +38,7 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'guest_phone') String? guestPhone,
 
     /// Check-in date
-    @TimestampConverter()
-    @JsonKey(name: 'check_in') required DateTime checkIn,
+    @TimestampConverter() @JsonKey(name: 'check_in') required DateTime checkIn,
 
     /// Check-in time
     @JsonKey(name: 'check_in_time') String? checkInTime,
@@ -47,8 +47,7 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'check_out_time') String? checkOutTime,
 
     /// Check-out date
-    @TimestampConverter()
-    @JsonKey(name: 'check_out') required DateTime checkOut,
+    @TimestampConverter() @JsonKey(name: 'check_out') required DateTime checkOut,
 
     /// Booking status
     required BookingStatus status,
@@ -102,19 +101,16 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'booking_reference') String? bookingReference,
 
     /// Booking creation timestamp
-    @TimestampConverter()
-    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @TimestampConverter() @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// Last update timestamp
-    @NullableTimestampConverter()
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @NullableTimestampConverter() @JsonKey(name: 'updated_at') DateTime? updatedAt,
 
     /// Cancellation reason (if cancelled)
     @JsonKey(name: 'cancellation_reason') String? cancellationReason,
 
     /// Cancelled at timestamp
-    @NullableTimestampConverter()
-    @JsonKey(name: 'cancelled_at') DateTime? cancelledAt,
+    @NullableTimestampConverter() @JsonKey(name: 'cancelled_at') DateTime? cancelledAt,
 
     /// User ID who cancelled the booking
     @JsonKey(name: 'cancelled_by') String? cancelledBy,
@@ -123,8 +119,7 @@ class BookingModel with _$BookingModel {
   const BookingModel._();
 
   /// Create from JSON
-  factory BookingModel.fromJson(Map<String, dynamic> json) =>
-      _$BookingModelFromJson(json);
+  factory BookingModel.fromJson(Map<String, dynamic> json) => _$BookingModelFromJson(json);
 
   /// Calculate number of nights
   int get numberOfNights {
@@ -149,18 +144,28 @@ class BookingModel with _$BookingModel {
 
   /// Check if booking is in the past
   bool get isPast {
-    return checkOut.isBefore(DateTime.now());
+    // Normalize dates for consistent comparison (ignores time components)
+    final today = DateNormalizer.normalize(DateTime.now());
+    final normalizedCheckOut = DateNormalizer.normalize(checkOut);
+    return normalizedCheckOut.isBefore(today);
   }
 
   /// Check if booking is current (guest is currently staying)
   bool get isCurrent {
-    final now = DateTime.now();
-    return checkIn.isBefore(now) && checkOut.isAfter(now);
+    // Normalize dates for consistent comparison (ignores time components)
+    // Booking is current if today is >= checkIn and < checkOut
+    final today = DateNormalizer.normalize(DateTime.now());
+    final normalizedCheckIn = DateNormalizer.normalize(checkIn);
+    final normalizedCheckOut = DateNormalizer.normalize(checkOut);
+    return !normalizedCheckIn.isAfter(today) && normalizedCheckOut.isAfter(today);
   }
 
   /// Check if booking is upcoming
   bool get isUpcoming {
-    return checkIn.isAfter(DateTime.now());
+    // Normalize dates for consistent comparison (ignores time components)
+    final today = DateNormalizer.normalize(DateTime.now());
+    final normalizedCheckIn = DateNormalizer.normalize(checkIn);
+    return normalizedCheckIn.isAfter(today);
   }
 
   /// Check if booking can be cancelled
@@ -177,10 +182,7 @@ class BookingModel with _$BookingModel {
     // Check by source field
     if (source != null) {
       final src = source!.toLowerCase();
-      return src == 'booking_com' ||
-          src == 'airbnb' ||
-          src == 'ical' ||
-          src == 'external';
+      return src == 'booking_com' || src == 'airbnb' || src == 'ical' || src == 'external';
     }
 
     // Check by payment method
@@ -214,21 +216,26 @@ class BookingModel with _$BookingModel {
   /// Get days until check-in
   int get daysUntilCheckIn {
     if (!isUpcoming) return 0;
-    return checkIn.difference(DateTime.now()).inDays;
+    // Normalize to UTC for consistent comparison
+    // checkIn comes from Firestore Timestamp which is UTC-based
+    final checkInUtc = checkIn.isUtc ? checkIn : checkIn.toUtc();
+    final nowUtc = DateTime.now().toUtc();
+    return checkInUtc.difference(nowUtc).inDays;
   }
 
   /// Get days until check-out
   int get daysUntilCheckOut {
     if (isPast) return 0;
-    return checkOut.difference(DateTime.now()).inDays;
+    // Normalize to UTC for consistent comparison
+    // checkOut comes from Firestore Timestamp which is UTC-based
+    final checkOutUtc = checkOut.isUtc ? checkOut : checkOut.toUtc();
+    final nowUtc = DateTime.now().toUtc();
+    return checkOutUtc.difference(nowUtc).inDays;
   }
 
   /// Get formatted date range (e.g., "Jan 15 - Jan 20, 2024")
   String get dateRangeFormatted {
-    final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
+    final months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     final checkInMonth = months[checkIn.month];
     final checkOutMonth = months[checkOut.month];
@@ -284,11 +291,6 @@ class BookingModel with _$BookingModel {
 
   /// Check if this booking overlaps with given dates
   bool overlapsWithDates(DateTime start, DateTime end) {
-    return datesOverlap(
-      start1: checkIn,
-      end1: checkOut,
-      start2: start,
-      end2: end,
-    );
+    return datesOverlap(start1: checkIn, end1: checkOut, start2: start, end2: end);
   }
 }

@@ -42,18 +42,10 @@ class StripePaymentConfig with PaymentConfigBase {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'deposit_percentage': depositPercentage,
-      'stripe_account_id': stripeAccountId,
-    };
+    return {'enabled': enabled, 'deposit_percentage': depositPercentage, 'stripe_account_id': stripeAccountId};
   }
 
-  StripePaymentConfig copyWith({
-    bool? enabled,
-    int? depositPercentage,
-    String? stripeAccountId,
-  }) {
+  StripePaymentConfig copyWith({bool? enabled, int? depositPercentage, String? stripeAccountId}) {
     return StripePaymentConfig(
       enabled: enabled ?? this.enabled,
       depositPercentage: depositPercentage ?? this.depositPercentage,

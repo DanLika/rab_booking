@@ -99,7 +99,7 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
  */
 export const scheduledIcalSync = onSchedule(
   {
-    schedule: "every 30 minutes",
+    schedule: "every 15 minutes",
     timeoutSeconds: 540, // 9 minutes (max for scheduled functions)
     memory: "512MiB",
     region: "europe-west1",

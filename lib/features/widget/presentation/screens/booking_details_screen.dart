@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
 import '../mixins/theme_detection_mixin.dart';
 import '../../domain/models/booking_details_model.dart';
 import '../../domain/models/widget_settings.dart';
@@ -10,6 +11,7 @@ import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../widgets/details/booking_status_banner.dart';
 import '../widgets/details/details_reference_card.dart';
 import '../widgets/details/property_info_card.dart';
+import '../widgets/details/guest_info_card.dart';
 import '../widgets/details/booking_dates_card.dart';
 import '../widgets/details/payment_info_card.dart';
 import '../widgets/details/contact_owner_card.dart';
@@ -28,15 +30,10 @@ class BookingDetailsScreen extends ConsumerStatefulWidget {
   final BookingDetailsModel booking;
   final WidgetSettings? widgetSettings;
 
-  const BookingDetailsScreen({
-    super.key,
-    required this.booking,
-    this.widgetSettings,
-  });
+  const BookingDetailsScreen({super.key, required this.booking, this.widgetSettings});
 
   @override
-  ConsumerState<BookingDetailsScreen> createState() =>
-      _BookingDetailsScreenState();
+  ConsumerState<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
 }
 
 class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
@@ -70,14 +67,12 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     // Note: status is already a String in BookingDetailsModel
     _currentStatus = widget.booking.status;
 
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
+    _animationController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
 
     _animationController.forward();
   }
@@ -97,11 +92,22 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
   /// Safely parse check-in date and calculate hours until check-in
   /// Returns null if parsing fails
+  ///
+  /// Normalizes both dates to UTC before calculation to ensure accurate
+  /// hours calculation regardless of user timezone. Cloud Function returns
+  /// checkIn as ISO 8601 string in UTC format (e.g., "2024-01-15T10:00:00.000Z").
   int? _getHoursUntilCheckIn() {
     try {
       final checkInDate = DateTime.parse(widget.booking.checkIn);
-      final now = DateTime.now();
-      return checkInDate.difference(now).inHours;
+      // Cloud Function returns ISO 8601 string in UTC format (with 'Z' suffix)
+      // DateTime.parse() preserves timezone, so checkInDate is already UTC
+      // Normalize to UTC to be safe (handles edge cases where string might not have 'Z')
+      final checkInUtc = checkInDate.isUtc ? checkInDate : checkInDate.toUtc();
+
+      // Use UTC for current time to ensure consistent comparison
+      final nowUtc = DateTime.now().toUtc();
+
+      return checkInUtc.difference(nowUtc).inHours;
     } catch (e) {
       return null;
     }
@@ -122,13 +128,12 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     }
 
     // Check if guest cancellation is enabled
-    if (!widget.widgetSettings!.allowGuestCancellation) {
+    if (widget.widgetSettings?.allowGuestCancellation != true) {
       return false;
     }
 
     // Check cancellation deadline with safe date parsing
-    final deadlineHours =
-        widget.widgetSettings!.cancellationDeadlineHours ?? 48;
+    final deadlineHours = widget.widgetSettings?.cancellationDeadlineHours ?? 48;
 
     final hoursUntilCheckIn = _getHoursUntilCheckIn();
     // If date parsing fails (null), allow cancellation (owner can decide)
@@ -148,13 +153,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
       return tr.bookingCannotBeCancelled;
     }
 
-    if (widget.widgetSettings != null &&
-        !widget.widgetSettings!.allowGuestCancellation) {
+    if (widget.widgetSettings?.allowGuestCancellation != true) {
       return tr.guestCancellationNotEnabled;
     }
 
-    final deadlineHours =
-        widget.widgetSettings?.cancellationDeadlineHours ?? 48;
+    final deadlineHours = widget.widgetSettings?.cancellationDeadlineHours ?? 48;
 
     // Safe date parsing with helper method
     final hoursUntilCheckIn = _getHoursUntilCheckIn();
@@ -235,15 +238,15 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     // Use pure black background for dark theme in widget
-    final backgroundColor = isDarkMode
-        ? ColorTokens.pureBlack
-        : colors.backgroundPrimary;
+    final backgroundColor = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SafeArea(
+          left: false,
+          right: false,
           child: Column(
             children: [
               // Custom header with centered title (no back button)
@@ -251,9 +254,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
               Divider(height: 1, thickness: 1, color: colors.borderDefault),
               // Content
               Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(SpacingTokens.l),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(SpacingTokens.l),
+                  child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 600),
                       child: Column(
@@ -262,18 +265,12 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                         children: [
                           // Status banner - full width
                           // Uses _currentStatus which updates after cancellation
-                          BookingStatusBanner(
-                            status: _currentStatus,
-                            colors: colors,
-                          ),
+                          BookingStatusBanner(status: _currentStatus, colors: colors),
 
                           const SizedBox(height: SpacingTokens.l),
 
                           // Booking reference - full width, prominent
-                          DetailsReferenceCard(
-                            bookingReference: widget.booking.bookingReference,
-                            colors: colors,
-                          ),
+                          DetailsReferenceCard(bookingReference: widget.booking.bookingReference, colors: colors),
 
                           const SizedBox(height: SpacingTokens.l),
 
@@ -294,10 +291,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                               return Text(
                                 tr.needHelpContactOwner,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: TypographyTokens.fontSizeS,
-                                  color: colors.textTertiary,
-                                ),
+                                style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textTertiary),
                               );
                             },
                           ),
@@ -317,24 +311,74 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     );
   }
 
-  /// Custom header with centered title (no back button for email link access)
+  /// Custom header with centered title and language switcher
   Widget _buildHeader(WidgetColorScheme colors) {
     final tr = WidgetTranslations.of(context, ref);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.m,
-        vertical: SpacingTokens.s,
-      ),
-      child: Center(
-        child: Text(
-          tr.myBooking,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeXL,
-            fontWeight: TypographyTokens.bold,
-            color: colors.textPrimary,
+      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+      child: Row(
+        children: [
+          // Spacer to center title
+          const Spacer(),
+          // Title
+          Expanded(
+            child: Center(
+              child: Text(
+                tr.myBooking,
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeXL,
+                  fontWeight: TypographyTokens.bold,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
           ),
+          // Language switcher button
+          IconButton(
+            icon: Icon(Icons.language, color: colors.textPrimary, size: 24),
+            onPressed: () => _showLanguageDialog(colors),
+            tooltip: tr.tooltipChangeLanguage,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog(WidgetColorScheme colors) {
+    final tr = WidgetTranslations.of(context, ref);
+    final currentLang = ref.watch(languageProvider);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.backgroundPrimary,
+        title: Text(tr.selectLanguage, style: TextStyle(color: colors.textPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLanguageOption('hr', 'Hrvatski', currentLang, colors),
+            _buildLanguageOption('en', 'English', currentLang, colors),
+            _buildLanguageOption('de', 'Deutsch', currentLang, colors),
+            _buildLanguageOption('it', 'Italiano', currentLang, colors),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLanguageOption(String code, String name, String current, WidgetColorScheme colors) {
+    final isSelected = current == code;
+    return ListTile(
+      title: Text(
+        name,
+        style: TextStyle(color: colors.textPrimary, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+      ),
+      trailing: isSelected ? Icon(Icons.check, color: colors.primary) : null,
+      onTap: () {
+        ref.read(languageProvider.notifier).state = code;
+        Navigator.of(context).pop();
+      },
     );
   }
 
@@ -345,6 +389,14 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         PropertyInfoCard(
           propertyName: widget.booking.propertyName,
           unitName: widget.booking.unitName,
+          colors: colors,
+          isDarkMode: isDarkMode,
+        ),
+        const SizedBox(height: SpacingTokens.l),
+        GuestInfoCard(
+          guestName: widget.booking.guestName,
+          guestEmail: widget.booking.guestEmail,
+          guestPhone: widget.booking.guestPhone,
           colors: colors,
           isDarkMode: isDarkMode,
         ),
@@ -370,8 +422,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           colors: colors,
         ),
         // Contact info
-        if (widget.booking.ownerEmail != null ||
-            widget.booking.ownerPhone != null) ...[
+        if (widget.booking.ownerEmail != null || widget.booking.ownerPhone != null) ...[
           const SizedBox(height: SpacingTokens.l),
           ContactOwnerCard(
             ownerEmail: widget.booking.ownerEmail,
@@ -383,15 +434,13 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         if (widget.widgetSettings?.allowGuestCancellation == true) ...[
           const SizedBox(height: SpacingTokens.l),
           CancellationPolicyCard(
-            deadlineHours:
-                widget.widgetSettings?.cancellationDeadlineHours ?? 48,
+            deadlineHours: widget.widgetSettings?.cancellationDeadlineHours ?? 48,
             checkIn: widget.booking.checkIn,
             colors: colors,
           ),
         ],
         // Notes
-        if (widget.booking.notes != null &&
-            widget.booking.notes!.isNotEmpty) ...[
+        if (widget.booking.notes != null && widget.booking.notes!.isNotEmpty) ...[
           const SizedBox(height: SpacingTokens.l),
           BookingNotesCard(notes: widget.booking.notes!, colors: colors),
         ],
@@ -410,9 +459,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
     // Cancel button colors based on theme (from ColorTokens)
     final cancelBg = colors.statusCancelledBackground;
-    final cancelText = isDarkMode
-        ? ColorTokens.pureWhite
-        : ColorTokens.pureBlack;
+    final cancelText = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
 
     // If booking is cancelled, don't show cancel button
     if (isCancelled) {
@@ -426,24 +473,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         child: ElevatedButton.icon(
           onPressed: canCancel && !_isCancelling ? _handleCancelBooking : null,
           icon: _isCancelling
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: cancelText,
-                  ),
-                )
-              : Icon(
-                  Icons.cancel_outlined,
-                  color: canCancel ? cancelText : colors.textTertiary,
-                ),
+              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: cancelText))
+              : Icon(Icons.cancel_outlined, color: canCancel ? cancelText : colors.textTertiary),
           label: Text(
             _isCancelling ? tr.cancelling : tr.cancelBooking,
-            style: const TextStyle(
-              fontSize: TypographyTokens.fontSizeL,
-              fontWeight: TypographyTokens.bold,
-            ),
+            style: const TextStyle(fontSize: TypographyTokens.fontSizeL, fontWeight: TypographyTokens.bold),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: canCancel ? cancelBg : colors.buttonDisabled,
@@ -451,9 +485,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             disabledBackgroundColor: colors.buttonDisabled,
             disabledForegroundColor: colors.textTertiary,
             padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderTokens.circularRounded,
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularRounded),
           ),
         ),
       ),

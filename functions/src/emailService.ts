@@ -68,7 +68,7 @@ import {
 
 // Lazy initialization of Resend client (avoids issues with Firebase CLI analysis)
 let resend: Resend | null = null;
-function getResendClient(): Resend {
+export function getResendClient(): Resend {
   if (!resend) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
@@ -148,6 +148,9 @@ const FROM_NAME = (): string => getFromName();
 // Widget URL for booking lookup
 const WIDGET_URL = process.env.WIDGET_URL || "https://bookbed.io";
 const BOOKING_DOMAIN = process.env.BOOKING_DOMAIN || null;
+// View booking URL for booking details page (automatically derived from BOOKING_DOMAIN)
+// If BOOKING_DOMAIN is set, use view.{BOOKING_DOMAIN}, otherwise null
+const VIEW_BOOKING_URL = BOOKING_DOMAIN ? `https://view.${BOOKING_DOMAIN}` : null;
 
 // ==========================================
 // PROPERTY DATA HELPER (DRY - Single Fetch)
@@ -289,13 +292,13 @@ function isValidSubdomain(subdomain: string): boolean {
  * Generate view booking URL with subdomain support
  *
  * If BOOKING_DOMAIN is configured (production):
- *   Returns: https://{subdomain}.{BOOKING_DOMAIN}/view?ref=XXX&email=XXX&token=XXX
+ *   Returns: https://{subdomain}.{BOOKING_DOMAIN}/view?ref=XXX&email=XXX&token=XXX&lang=XXX
  *
  * If BOOKING_DOMAIN is not set (testing/development):
- *   Returns: https://widget.web.app/view?subdomain=XXX&ref=XXX&email=XXX&token=XXX
+ *   Returns: https://widget.web.app/view?subdomain=XXX&ref=XXX&email=XXX&token=XXX&lang=XXX
  *
  * If subdomain is not set or invalid:
- *   Returns: https://widget.web.app/view?ref=XXX&email=XXX&token=XXX (fallback)
+ *   Returns: https://widget.web.app/view?ref=XXX&email=XXX&token=XXX&lang=XXX (fallback)
  *
  * SECURITY: Subdomain is validated against RFC 1123 to prevent URL injection
  *
@@ -303,17 +306,24 @@ function isValidSubdomain(subdomain: string): boolean {
  * @param guestEmail - Guest email for URL params
  * @param accessToken - Access token for URL params
  * @param propertyData - Pre-fetched property data (avoids duplicate Firestore reads)
+ * @param language - Optional language code (hr, en, de, it) to include in URL
  */
 function generateViewBookingUrl(
   bookingReference: string,
   guestEmail: string,
   accessToken: string,
-  propertyData?: PropertyData
+  propertyData?: PropertyData,
+  language?: string
 ): string {
   const params = new URLSearchParams();
   params.set("ref", bookingReference);
   params.set("email", guestEmail);
   params.set("token", accessToken);
+  
+  // Add language if provided and valid
+  if (language && ['hr', 'en', 'de', 'it'].includes(language.toLowerCase())) {
+    params.set("lang", language.toLowerCase());
+  }
 
   // Use pre-fetched subdomain (validated)
   let subdomain: string | null = null;
@@ -331,8 +341,13 @@ function generateViewBookingUrl(
     }
   }
 
-  // Generate URL based on configuration (with validated subdomain)
-  if (subdomain) {
+  // Generate URL based on configuration
+  // Use VIEW_BOOKING_URL if set (for booking details page on view.bookbed.io)
+  // Otherwise use subdomain logic for widget
+  if (VIEW_BOOKING_URL) {
+    // Production: view.bookbed.io/view?ref=XXX
+    return `${VIEW_BOOKING_URL}/view?${params.toString()}`;
+  } else if (subdomain) {
     if (BOOKING_DOMAIN) {
       // Production: subdomain.domain.com/view?ref=XXX
       return `https://${subdomain}.${BOOKING_DOMAIN}/view?${params.toString()}`;

@@ -146,9 +146,10 @@ class SubmitBookingUseCase {
       final booking = bookingResult.booking!;
 
       // Send email notifications
-      _sendBookingEmails(
+      await _sendBookingEmails(
         booking: booking,
         requiresApproval: true,
+        ownerId: params.ownerId,
         widgetSettings: params.widgetSettings,
         unit: params.unit,
       );
@@ -187,9 +188,10 @@ class SubmitBookingUseCase {
     // Non-Stripe flow: Booking created, send emails
     final booking = bookingResult.booking!;
 
-    _sendBookingEmails(
+    await _sendBookingEmails(
       booking: booking,
       requiresApproval: params.widgetSettings?.requireOwnerApproval ?? false,
+      ownerId: params.ownerId,
       widgetSettings: params.widgetSettings,
       unit: params.unit,
       paymentMethod: params.paymentMethod,
@@ -199,29 +201,33 @@ class SubmitBookingUseCase {
   }
 
   /// Helper to send booking emails.
-  void _sendBookingEmails({
+  Future<void> _sendBookingEmails({
     required BookingModel booking,
     required bool requiresApproval,
+    required String ownerId,
     WidgetSettings? widgetSettings,
     UnitModel? unit,
     String? paymentMethod,
-  }) {
+  }) async {
     // Calculate payment deadline for bank transfer (if applicable)
     String? paymentDeadline;
     if (paymentMethod == 'bank_transfer') {
       final deadlineDays = widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
-      final deadline = DateTime.now().add(Duration(days: deadlineDays));
+      // Use UTC for consistency with backend (atomicBooking.ts uses server timestamp/UTC)
+      // Backend uses fixed 3 days, but we use paymentDeadlineDays from settings for email display
+      final deadline = DateTime.now().toUtc().add(Duration(days: deadlineDays));
       paymentDeadline =
           '${deadline.day.toString().padLeft(2, '0')}'
           '.${deadline.month.toString().padLeft(2, '0')}'
           '.${deadline.year}';
     }
 
-    EmailNotificationHelper.sendBookingEmails(
+    await EmailNotificationHelper.sendBookingEmails(
       booking: booking,
       requiresApproval: requiresApproval,
       widgetSettings: widgetSettings,
       unit: unit,
+      ownerId: ownerId,
       paymentMethod: paymentMethod,
       paymentDeadline: paymentDeadline,
     );

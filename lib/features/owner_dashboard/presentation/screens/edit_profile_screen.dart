@@ -9,7 +9,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../auth/presentation/widgets/auth_background.dart';
@@ -27,7 +27,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with AndroidKeyboardDismissFix {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with AndroidKeyboardDismissFixApproach1<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isDirty = false;
   bool _isSaving = false;
@@ -488,276 +488,303 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
       child: KeyedSubtree(
         key: ValueKey('edit_profile_$keyboardFixRebuildKey'),
         child: Scaffold(
-          resizeToAvoidBottomInset: false,
+          resizeToAvoidBottomInset: true,
           body: AuthBackground(
-            child: userDataAsync.when(
-              data: (userData) {
-                // Create default userData if null
-                final effectiveUserData =
-                    userData ??
-                    UserData(
-                      profile: UserProfile(
-                        userId: FirebaseAuth.instance.currentUser!.uid,
-                        displayName: authState.userModel?.fullName ?? '',
-                        emailContact: authState.userModel?.email ?? '',
-                        phoneE164: authState.userModel?.phone ?? '',
-                      ),
-                    );
+            child: SafeArea(
+              child: userDataAsync.when(
+                data: (userData) {
+                  // Create default userData if null
+                  final effectiveUserData =
+                      userData ??
+                      UserData(
+                        profile: UserProfile(
+                          userId: FirebaseAuth.instance.currentUser!.uid,
+                          displayName: authState.userModel?.fullName ?? '',
+                          emailContact: authState.userModel?.email ?? '',
+                          phoneE164: authState.userModel?.phone ?? '',
+                        ),
+                      );
 
-                _loadData(effectiveUserData);
-                _currentAvatarUrl = authState.userModel?.avatarUrl;
-                final l10n = AppLocalizations.of(context);
+                  _loadData(effectiveUserData);
+                  _currentAvatarUrl = authState.userModel?.avatarUrl;
+                  final l10n = AppLocalizations.of(context);
+                  final isCompact = MediaQuery.of(context).size.width < 400;
 
-                return SingleChildScrollView(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(MediaQuery.of(context).size.width < 400 ? 16 : 24),
-                      child: GlassCard(
-                        maxWidth: 600,
-                        child: Form(
-                          key: _formKey,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Back Button
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: IconButton(
-                                  onPressed: () {
-                                    if (context.canPop()) {
-                                      context.pop();
-                                    } else {
-                                      context.go('/owner/profile');
-                                    }
-                                  },
-                                  icon: const Icon(Icons.arrow_back),
-                                  tooltip: l10n.back,
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Get keyboard height to adjust padding dynamically (with null safety)
+                      final mediaQuery = MediaQuery.maybeOf(context);
+                      final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
+                      final isKeyboardOpen = keyboardHeight > 0;
+
+                      // Calculate minHeight safely - ensure it's always finite and valid
+                      double minHeight;
+                      if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
+                        final calculated = constraints.maxHeight - keyboardHeight;
+                        minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                      } else {
+                        minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
+                      }
+                      // Ensure minHeight is always finite (never infinity)
+                      minHeight = minHeight.isFinite ? minHeight : 0.0;
+
+                      return SingleChildScrollView(
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.all(isCompact ? 16 : 24),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: minHeight),
+                          child: Center(
+                            child: GlassCard(
+                              maxWidth: 600,
+                              child: Form(
+                                key: _formKey,
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    // Back Button
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (context.canPop()) {
+                                            context.pop();
+                                          } else {
+                                            context.go('/owner/profile');
+                                          }
+                                        },
+                                        icon: const Icon(Icons.arrow_back),
+                                        tooltip: l10n.back,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+
+                                    // Profile Image Picker
+                                    ProfileImagePicker(
+                                      imageUrl: _currentAvatarUrl,
+                                      initials: authState.userModel?.initials,
+                                      onImageSelected: (bytes, name) {
+                                        setState(() {
+                                          _profileImageBytes = bytes;
+                                          _profileImageName = name;
+                                          _markDirty();
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(height: 32),
+
+                                    // Title
+                                    Text(
+                                      l10n.editProfileTitle,
+                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 28,
+                                        color: Theme.of(context).colorScheme.onSurface,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 8),
+
+                                    // Subtitle
+                                    Text(
+                                      l10n.editProfileSubtitle,
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        fontSize: 15,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 32),
+
+                                    // ========== KARTICA 1: LIČNI PODACI ==========
+                                    _buildProfileCard(
+                                      title: l10n.editProfilePersonalData,
+                                      icon: Icons.person_outline,
+                                      initiallyExpanded: true,
+                                      subtitle: l10n.editProfilePersonalDataSubtitle,
+                                      children: [
+                                        PremiumInputField(
+                                          controller: _displayNameController,
+                                          labelText: l10n.editProfileFullName,
+                                          prefixIcon: Icons.person_outline,
+                                          validator: ProfileValidators.validateName,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        PremiumInputField(
+                                          controller: _emailContactController,
+                                          labelText: l10n.editProfileEmail,
+                                          prefixIcon: Icons.email_outlined,
+                                          keyboardType: TextInputType.emailAddress,
+                                          validator: ProfileValidators.validateEmail,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        PremiumInputField(
+                                          controller: _phoneController,
+                                          labelText: l10n.editProfilePhone,
+                                          prefixIcon: Icons.phone_outlined,
+                                          keyboardType: TextInputType.phone,
+                                          validator: ProfileValidators.validatePhone,
+                                        ),
+                                      ],
+                                    ),
+
+                                    // ========== KARTICA 2: ADRESA ==========
+                                    _buildProfileCard(
+                                      title: l10n.editProfileAddress,
+                                      icon: Icons.location_on_outlined,
+                                      initiallyExpanded: _hasAddressData(),
+                                      isOptional: true,
+                                      subtitle: l10n.editProfileAddressSubtitle,
+                                      children: [
+                                        PremiumInputField(
+                                          controller: _countryController,
+                                          labelText: l10n.editProfileCountry,
+                                          prefixIcon: Icons.public,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        PremiumInputField(
+                                          controller: _streetController,
+                                          labelText: l10n.editProfileStreet,
+                                          prefixIcon: Icons.location_on_outlined,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: PremiumInputField(
+                                                controller: _cityController,
+                                                labelText: l10n.editProfileCity,
+                                                prefixIcon: Icons.location_city,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: PremiumInputField(
+                                                controller: _postalCodeController,
+                                                labelText: l10n.editProfilePostalCode,
+                                                prefixIcon: Icons.markunread_mailbox,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+
+                                    // ========== KARTICA 3: KOMPANIJA ==========
+                                    // Note: Bankovni Podaci moved to dedicated Bank Account screen
+                                    // in Integracije → Plaćanja → Bankovni Račun
+                                    _buildProfileCard(
+                                      title: l10n.editProfileCompany,
+                                      icon: Icons.business_outlined,
+                                      isOptional: true,
+                                      subtitle: l10n.editProfileCompanySubtitle,
+                                      children: [
+                                        // Company Info
+                                        PremiumInputField(
+                                          controller: _companyNameController,
+                                          labelText: l10n.editProfileCompanyName,
+                                          prefixIcon: Icons.business,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        PremiumInputField(
+                                          controller: _taxIdController,
+                                          labelText: l10n.editProfileTaxId,
+                                          prefixIcon: Icons.receipt_long,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        PremiumInputField(
+                                          controller: _vatIdController,
+                                          labelText: l10n.editProfileVatId,
+                                          prefixIcon: Icons.account_balance,
+                                        ),
+                                        const SizedBox(height: 20),
+
+                                        // Company Address
+                                        _buildSectionDivider(l10n.editProfileCompanyAddress),
+                                        PremiumInputField(
+                                          controller: _companyCountryController,
+                                          labelText: l10n.editProfileCountry,
+                                          prefixIcon: Icons.public,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        PremiumInputField(
+                                          controller: _companyStreetController,
+                                          labelText: l10n.editProfileStreet,
+                                          prefixIcon: Icons.location_on_outlined,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: PremiumInputField(
+                                                controller: _companyCityController,
+                                                labelText: l10n.editProfileCity,
+                                                prefixIcon: Icons.location_city,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: PremiumInputField(
+                                                controller: _companyPostalCodeController,
+                                                labelText: l10n.editProfilePostalCode,
+                                                prefixIcon: Icons.markunread_mailbox,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 20),
+
+                                        // Online Presence
+                                        _buildSectionDivider(l10n.editProfileOnlinePresence),
+                                        PremiumInputField(
+                                          controller: _websiteController,
+                                          labelText: l10n.editProfileWebsite,
+                                          prefixIcon: Icons.language_outlined,
+                                          keyboardType: TextInputType.url,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        PremiumInputField(
+                                          controller: _facebookController,
+                                          labelText: l10n.editProfileFacebook,
+                                          prefixIcon: Icons.facebook,
+                                          keyboardType: TextInputType.url,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        PremiumInputField(
+                                          controller: _propertyTypeController,
+                                          labelText: l10n.editProfilePropertyType,
+                                          prefixIcon: Icons.home_work_outlined,
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 8),
+
+                                    // ========== ACTION BUTTONS ==========
+                                    _buildActionButtons(),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 8),
-
-                              // Profile Image Picker
-                              ProfileImagePicker(
-                                imageUrl: _currentAvatarUrl,
-                                initials: authState.userModel?.initials,
-                                onImageSelected: (bytes, name) {
-                                  setState(() {
-                                    _profileImageBytes = bytes;
-                                    _profileImageName = name;
-                                    _markDirty();
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 32),
-
-                              // Title
-                              Text(
-                                l10n.editProfileTitle,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 28,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-
-                              // Subtitle
-                              Text(
-                                l10n.editProfileSubtitle,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  fontSize: 15,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 32),
-
-                              // ========== KARTICA 1: LIČNI PODACI ==========
-                              _buildProfileCard(
-                                title: l10n.editProfilePersonalData,
-                                icon: Icons.person_outline,
-                                initiallyExpanded: true,
-                                subtitle: l10n.editProfilePersonalDataSubtitle,
-                                children: [
-                                  PremiumInputField(
-                                    controller: _displayNameController,
-                                    labelText: l10n.editProfileFullName,
-                                    prefixIcon: Icons.person_outline,
-                                    validator: ProfileValidators.validateName,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  PremiumInputField(
-                                    controller: _emailContactController,
-                                    labelText: l10n.editProfileEmail,
-                                    prefixIcon: Icons.email_outlined,
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: ProfileValidators.validateEmail,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  PremiumInputField(
-                                    controller: _phoneController,
-                                    labelText: l10n.editProfilePhone,
-                                    prefixIcon: Icons.phone_outlined,
-                                    keyboardType: TextInputType.phone,
-                                    validator: ProfileValidators.validatePhone,
-                                  ),
-                                ],
-                              ),
-
-                              // ========== KARTICA 2: ADRESA ==========
-                              _buildProfileCard(
-                                title: l10n.editProfileAddress,
-                                icon: Icons.location_on_outlined,
-                                initiallyExpanded: _hasAddressData(),
-                                isOptional: true,
-                                subtitle: l10n.editProfileAddressSubtitle,
-                                children: [
-                                  PremiumInputField(
-                                    controller: _countryController,
-                                    labelText: l10n.editProfileCountry,
-                                    prefixIcon: Icons.public,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  PremiumInputField(
-                                    controller: _streetController,
-                                    labelText: l10n.editProfileStreet,
-                                    prefixIcon: Icons.location_on_outlined,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: PremiumInputField(
-                                          controller: _cityController,
-                                          labelText: l10n.editProfileCity,
-                                          prefixIcon: Icons.location_city,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: PremiumInputField(
-                                          controller: _postalCodeController,
-                                          labelText: l10n.editProfilePostalCode,
-                                          prefixIcon: Icons.markunread_mailbox,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-
-                              // ========== KARTICA 3: KOMPANIJA ==========
-                              // Note: Bankovni Podaci moved to dedicated Bank Account screen
-                              // in Integracije → Plaćanja → Bankovni Račun
-                              _buildProfileCard(
-                                title: l10n.editProfileCompany,
-                                icon: Icons.business_outlined,
-                                isOptional: true,
-                                subtitle: l10n.editProfileCompanySubtitle,
-                                children: [
-                                  // Company Info
-                                  PremiumInputField(
-                                    controller: _companyNameController,
-                                    labelText: l10n.editProfileCompanyName,
-                                    prefixIcon: Icons.business,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  PremiumInputField(
-                                    controller: _taxIdController,
-                                    labelText: l10n.editProfileTaxId,
-                                    prefixIcon: Icons.receipt_long,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  PremiumInputField(
-                                    controller: _vatIdController,
-                                    labelText: l10n.editProfileVatId,
-                                    prefixIcon: Icons.account_balance,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Company Address
-                                  _buildSectionDivider(l10n.editProfileCompanyAddress),
-                                  PremiumInputField(
-                                    controller: _companyCountryController,
-                                    labelText: l10n.editProfileCountry,
-                                    prefixIcon: Icons.public,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  PremiumInputField(
-                                    controller: _companyStreetController,
-                                    labelText: l10n.editProfileStreet,
-                                    prefixIcon: Icons.location_on_outlined,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: PremiumInputField(
-                                          controller: _companyCityController,
-                                          labelText: l10n.editProfileCity,
-                                          prefixIcon: Icons.location_city,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: PremiumInputField(
-                                          controller: _companyPostalCodeController,
-                                          labelText: l10n.editProfilePostalCode,
-                                          prefixIcon: Icons.markunread_mailbox,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Online Presence
-                                  _buildSectionDivider(l10n.editProfileOnlinePresence),
-                                  PremiumInputField(
-                                    controller: _websiteController,
-                                    labelText: l10n.editProfileWebsite,
-                                    prefixIcon: Icons.language_outlined,
-                                    keyboardType: TextInputType.url,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  PremiumInputField(
-                                    controller: _facebookController,
-                                    labelText: l10n.editProfileFacebook,
-                                    prefixIcon: Icons.facebook,
-                                    keyboardType: TextInputType.url,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  PremiumInputField(
-                                    controller: _propertyTypeController,
-                                    labelText: l10n.editProfilePropertyType,
-                                    prefixIcon: Icons.home_work_outlined,
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              // ========== ACTION BUTTONS ==========
-                              _buildActionButtons(),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) {
-                final l10n = AppLocalizations.of(context);
-                return Center(child: Text(l10n.errorWithMessage(error.toString())));
-              },
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) {
+                  final l10n = AppLocalizations.of(context);
+                  return Center(child: Text(l10n.errorWithMessage(error.toString())));
+                },
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
+  // Helper method for building profile cards
 }

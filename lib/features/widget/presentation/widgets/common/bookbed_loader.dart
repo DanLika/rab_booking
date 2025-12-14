@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../features/auth/presentation/widgets/auth_logo_icon.dart';
-import '../../theme/minimalist_colors.dart';
 
 /// Custom BookBed loader with logo, progress bar, and percentage
 ///
@@ -39,20 +39,18 @@ class BookBedLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AuthLogoIcon(size: logoSize),
+        AuthLogoIcon(size: logoSize, useMinimalistic: true),
         const SizedBox(height: _logoToBarSpacing),
         SizedBox(
           width: _progressBarWidth,
           child: Column(
             children: [
-              _buildProgressBar(colors),
+              _buildProgressBar(),
               const SizedBox(height: _barToTextSpacing),
-              if (progress != null) _buildPercentageText(colors),
+              if (progress != null) _buildPercentageText(),
             ],
           ),
         ),
@@ -60,13 +58,13 @@ class BookBedLoader extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressBar(MinimalistColorSchemeAdapter colors) {
-    // Minimalistic: Use black in light mode, white in dark mode
+  Widget _buildProgressBar() {
+    // Minimalistic: Use only black and white
     final progressColor = isDarkMode ? Colors.white : Colors.black;
-    final backgroundColor = isDarkMode 
+    final backgroundColor = isDarkMode
         ? Colors.white.withValues(alpha: _backgroundOpacity)
         : Colors.black.withValues(alpha: _backgroundOpacity);
-    
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(_progressBarRadius),
       child: SizedBox(
@@ -88,17 +86,17 @@ class BookBedLoader extends StatelessWidget {
     );
   }
 
-  Widget _buildPercentageText(MinimalistColorSchemeAdapter colors) {
+  Widget _buildPercentageText() {
     // Minimalistic: Pure black in light mode, pure white in dark mode
     final textColor = isDarkMode ? Colors.white : Colors.black;
-    
+
     return Text(
       '${(progress! * 100).toInt()}%',
       style: TextStyle(
         fontSize: _percentageFontSize,
         fontWeight: FontWeight.w500,
         color: textColor,
-        fontFamily: 'Manrope',
+        fontFamily: TypographyTokens.primaryFont,
       ),
     );
   }

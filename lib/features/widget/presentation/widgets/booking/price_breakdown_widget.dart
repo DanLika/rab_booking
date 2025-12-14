@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../l10n/widget_translations.dart';
+import '../../../domain/constants/widget_constants.dart';
 import 'price_row_widget.dart';
 
 /// Price breakdown container showing room price, services, total, and deposit.
@@ -81,14 +82,11 @@ class PriceBreakdownWidget extends StatelessWidget {
       child: Column(
         children: [
           // Room price
-          PriceRowWidget(
-            label: translations.roomNights(nights),
-            amount: formattedRoomPrice,
-            isDarkMode: isDarkMode,
-          ),
+          PriceRowWidget(label: translations.roomNights(nights), amount: formattedRoomPrice, isDarkMode: isDarkMode),
 
-          // Additional services (only show if > 0)
-          if (additionalServicesTotal > 0 &&
+          // Additional services (only show if > tolerance)
+          // Bug #37 Fix: Use tolerance-based comparison to handle floating point precision
+          if (additionalServicesTotal.abs() > WidgetConstants.priceTolerance &&
               formattedAdditionalServices != null) ...[
             const SizedBox(height: SpacingTokens.s),
             PriceRowWidget(
@@ -105,24 +103,16 @@ class PriceBreakdownWidget extends StatelessWidget {
           ),
 
           // Total
-          PriceRowWidget(
-            label: translations.total,
-            amount: formattedTotal,
-            isDarkMode: isDarkMode,
-            isBold: true,
-          ),
+          PriceRowWidget(label: translations.total, amount: formattedTotal, isDarkMode: isDarkMode, isBold: true),
 
           // Deposit info
           const SizedBox(height: SpacingTokens.s),
           Text(
-            translations.depositWithPercentage(
-              formattedDeposit,
-              depositPercentage,
-            ),
+            translations.depositWithPercentage(formattedDeposit, depositPercentage),
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeS,
               color: colors.textSecondary,
-              fontFamily: 'Manrope',
+              fontFamily: TypographyTokens.primaryFont,
             ),
           ),
         ],

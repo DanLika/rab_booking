@@ -23,30 +23,31 @@ class NoPaymentInfo extends ConsumerWidget {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final tr = WidgetTranslations.of(context, ref);
 
-    return Container(
-      margin: const EdgeInsets.only(top: SpacingTokens.m),
-      padding: const EdgeInsets.all(SpacingTokens.m),
-      decoration: BoxDecoration(
-        color: colors.error.withValues(
-          alpha: isDarkMode ? _darkModeAlpha : _lightModeAlpha,
+    final errorMessage = message ?? tr.noPaymentMethodsAvailable;
+
+    return Semantics(
+      label: errorMessage,
+      hint: 'Error message',
+      child: Container(
+        margin: const EdgeInsets.only(top: SpacingTokens.m),
+        padding: const EdgeInsets.all(SpacingTokens.m),
+        decoration: BoxDecoration(
+          color: colors.error.withValues(alpha: isDarkMode ? _darkModeAlpha : _lightModeAlpha),
+          borderRadius: BorderTokens.circularMedium,
+          border: Border.all(color: colors.error),
         ),
-        borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: colors.error),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: colors.error),
-          const SizedBox(width: SpacingTokens.s),
-          Expanded(
-            child: Text(
-              message ?? tr.noPaymentMethodsAvailable,
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeS,
-                color: colors.error,
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, color: colors.error),
+            const SizedBox(width: SpacingTokens.s),
+            Expanded(
+              child: Text(
+                errorMessage,
+                style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.error),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

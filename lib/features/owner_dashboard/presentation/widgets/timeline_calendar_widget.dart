@@ -380,6 +380,69 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     }
   }
 
+  /// Scroll to a specific conflict location (date and unit)
+  /// Public method that can be called from parent widget via GlobalKey
+  void scrollToConflict(String unitId, DateTime conflictDate) {
+    if (!_horizontalScrollController.hasClients || !_verticalScrollController.hasClients) {
+      // Wait for controllers to be ready
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) scrollToConflict(unitId, conflictDate);
+      });
+      return;
+    }
+
+    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+    
+    // Scroll horizontally to conflict date
+    final daysSinceStart = conflictDate.difference(_dynamicStartDate).inDays;
+    final horizontalScrollPosition = daysSinceStart * dimensions.dayWidth;
+    final maxHorizontalScroll = _horizontalScrollController.position.maxScrollExtent;
+    final visibleWidth = dimensions.visibleContentWidth;
+    final targetHorizontalScroll = (horizontalScrollPosition - (visibleWidth / 2) + (dimensions.dayWidth / 2))
+        .clamp(0.0, maxHorizontalScroll);
+
+    // Scroll vertically to unit
+    // Get units list to find unit index
+    final unitsAsync = ref.read(filteredUnitsProvider);
+    if (unitsAsync.isLoading || unitsAsync.value == null) return;
+    
+    final units = unitsAsync.value!;
+    final unitIndex = units.indexWhere((unit) => unit.id == unitId);
+    if (unitIndex < 0) return; // Unit not found
+    
+    // Calculate vertical scroll position (each unit row is ~60px tall)
+    const unitRowHeight = 60.0;
+    final verticalScrollPosition = unitIndex * unitRowHeight;
+    final maxVerticalScroll = _verticalScrollController.position.maxScrollExtent;
+    final visibleHeight = MediaQuery.of(context).size.height * 0.7; // Approximate visible height
+    final targetVerticalScroll = (verticalScrollPosition - (visibleHeight / 2) + (unitRowHeight / 2))
+        .clamp(0.0, maxVerticalScroll);
+
+    // Perform scrolls
+    _horizontalScrollController.animateTo(
+      targetHorizontalScroll,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+    
+    _verticalScrollController.animateTo(
+      targetVerticalScroll,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+    
+    // Sync unit names scroll
+    if (_unitNamesScrollController.hasClients) {
+      final unitMaxOffset = _unitNamesScrollController.position.maxScrollExtent;
+      final unitClampedOffset = targetVerticalScroll.clamp(0.0, unitMaxOffset);
+      _unitNamesScrollController.animateTo(
+        unitClampedOffset,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   List<DateTime> _getDateRange() {
     // Ensure dates are valid
     if (_dynamicStartDate.isAfter(_dynamicEndDate)) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
 
@@ -51,14 +52,9 @@ class ContactPillCardWidget extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: _isDesktop ? _desktopMaxWidth : _mobileMaxWidth,
-        ),
+        constraints: BoxConstraints(maxWidth: _isDesktop ? _desktopMaxWidth : _mobileMaxWidth),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpacingTokens.m,
-            vertical: SpacingTokens.s,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
           decoration: BoxDecoration(
             color: colors.backgroundTertiary,
             borderRadius: BorderTokens.circularMedium,
@@ -72,8 +68,8 @@ class ContactPillCardWidget extends StatelessWidget {
             ],
           ),
           child: _useColumnLayout
-              ? _buildColumnLayout(hasEmail, hasPhone, colors)
-              : _buildRowLayout(hasEmail, hasPhone, colors),
+              ? _buildColumnLayout(hasEmail, hasPhone, colors, context)
+              : _buildRowLayout(hasEmail, hasPhone, colors, context),
         ),
       ),
     );
@@ -89,11 +85,7 @@ class ContactPillCardWidget extends StatelessWidget {
       contactOptions?.phoneNumber != null &&
       contactOptions!.phoneNumber!.isNotEmpty;
 
-  Widget _buildColumnLayout(
-    bool hasEmail,
-    bool hasPhone,
-    MinimalistColorSchemeAdapter colors,
-  ) {
+  Widget _buildColumnLayout(bool hasEmail, bool hasPhone, MinimalistColorSchemeAdapter colors, BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -101,7 +93,7 @@ class ContactPillCardWidget extends StatelessWidget {
           _ContactRow(
             icon: Icons.email,
             value: contactOptions!.emailAddress!,
-            onTap: () => _launchUrl('mailto:${contactOptions!.emailAddress}'),
+            onTap: (ctx) => _launchUrl('mailto:${contactOptions!.emailAddress}', ctx),
             colors: colors,
           ),
         if (hasEmail && hasPhone)
@@ -114,18 +106,14 @@ class ContactPillCardWidget extends StatelessWidget {
           _ContactRow(
             icon: Icons.phone,
             value: contactOptions!.phoneNumber!,
-            onTap: () => _launchUrl('tel:${contactOptions!.phoneNumber}'),
+            onTap: (ctx) => _launchUrl('tel:${contactOptions!.phoneNumber}', ctx),
             colors: colors,
           ),
       ],
     );
   }
 
-  Widget _buildRowLayout(
-    bool hasEmail,
-    bool hasPhone,
-    MinimalistColorSchemeAdapter colors,
-  ) {
+  Widget _buildRowLayout(bool hasEmail, bool hasPhone, MinimalistColorSchemeAdapter colors, BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -135,7 +123,7 @@ class ContactPillCardWidget extends StatelessWidget {
             child: _ContactRow(
               icon: Icons.email,
               value: contactOptions!.emailAddress!,
-              onTap: () => _launchUrl('mailto:${contactOptions!.emailAddress}'),
+              onTap: (ctx) => _launchUrl('mailto:${contactOptions!.emailAddress}', ctx),
               colors: colors,
               centerContent: true,
             ),
@@ -152,7 +140,7 @@ class ContactPillCardWidget extends StatelessWidget {
             child: _ContactRow(
               icon: Icons.phone,
               value: contactOptions!.phoneNumber!,
-              onTap: () => _launchUrl('tel:${contactOptions!.phoneNumber}'),
+              onTap: (ctx) => _launchUrl('tel:${contactOptions!.phoneNumber}', ctx),
               colors: colors,
               centerContent: true,
             ),
@@ -161,10 +149,46 @@ class ContactPillCardWidget extends StatelessWidget {
     );
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
+  Future<void> _launchUrl(String url, BuildContext context) async {
+    try {
+      final uri = Uri.parse(url);
+
+      // Check if URL can be launched
+      final canLaunch = await canLaunchUrl(uri);
+      if (!canLaunch) {
+        // URL cannot be launched (e.g., no email/phone app installed)
+        if (context.mounted) {
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Unable to open $url. Please check if you have an app installed to handle this action.',
+            duration: const Duration(seconds: 4),
+          );
+        }
+        return;
+      }
+
+      // Launch URL
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on FormatException catch (e) {
+      // Invalid URL format
+      debugPrint('Error parsing URL: $url, error: $e');
+      if (context.mounted) {
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Invalid URL format. Please contact the property owner.',
+          duration: const Duration(seconds: 4),
+        );
+      }
+    } catch (e) {
+      // Any other error (canLaunchUrl, launchUrl, etc.)
+      debugPrint('Error launching URL: $url, error: $e');
+      if (context.mounted) {
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Unable to open $url. Please try again or contact the property owner.',
+          duration: const Duration(seconds: 4),
+        );
+      }
     }
   }
 }
@@ -172,7 +196,7 @@ class ContactPillCardWidget extends StatelessWidget {
 class _ContactRow extends StatelessWidget {
   final IconData icon;
   final String value;
-  final VoidCallback onTap;
+  final Function(BuildContext) onTap;
   final MinimalistColorSchemeAdapter colors;
   final bool centerContent;
 
@@ -187,24 +211,15 @@ class _ContactRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () => onTap(context),
       borderRadius: BorderTokens.circularSmall,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: SpacingTokens.xxs,
-          vertical: SpacingTokens.xxs,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xxs, vertical: SpacingTokens.xxs),
         child: Row(
           mainAxisSize: centerContent ? MainAxisSize.min : MainAxisSize.max,
-          mainAxisAlignment: centerContent
-              ? MainAxisAlignment.center
-              : MainAxisAlignment.start,
+          mainAxisAlignment: centerContent ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              size: ContactPillCardWidget._iconSize,
-              color: colors.buttonPrimary,
-            ),
+            Icon(icon, size: ContactPillCardWidget._iconSize, color: colors.buttonPrimary),
             const SizedBox(width: SpacingTokens.s),
             Flexible(
               child: Text(

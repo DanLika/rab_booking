@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/constants/auth_feature_flags.dart';
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -209,10 +210,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                     isLoading: _isLoading,
                                     icon: Icons.login_rounded,
                                   ),
-                                  SizedBox(height: isCompact ? 16 : 20),
-                                  _buildDivider(theme, l10n),
-                                  SizedBox(height: isCompact ? 16 : 20),
-                                  _buildSocialButtons(),
+                                  if (AuthFeatureFlags.isGoogleSignInEnabled || AuthFeatureFlags.isAppleSignInEnabled) ...[
+                                    SizedBox(height: isCompact ? 16 : 20),
+                                    _buildDivider(theme, l10n),
+                                    SizedBox(height: isCompact ? 16 : 20),
+                                    _buildSocialButtons(),
+                                  ],
                                   SizedBox(height: isCompact ? 20 : 24),
                                   _buildRegisterLink(theme, l10n),
                                 ],
@@ -354,7 +357,32 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
   Widget _buildSocialButtons() {
     final authNotifier = ref.read(enhancedAuthProvider.notifier);
+    final isAppleEnabled = AuthFeatureFlags.isAppleSignInEnabled;
+    final isGoogleEnabled = AuthFeatureFlags.isGoogleSignInEnabled;
 
+    // Hide entire section if no social logins are enabled
+    if (!isGoogleEnabled && !isAppleEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    // If only one provider is enabled, show it full width
+    if (isGoogleEnabled && !isAppleEnabled) {
+      return SocialLoginButton(
+        customIcon: const GoogleBrandIcon(),
+        label: 'Google',
+        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
+      );
+    }
+
+    if (!isGoogleEnabled && isAppleEnabled) {
+      return SocialLoginButton(
+        customIcon: const AppleBrandIcon(),
+        label: 'Apple',
+        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
+      );
+    }
+
+    // Both enabled - show side by side
     return Row(
       children: [
         Expanded(

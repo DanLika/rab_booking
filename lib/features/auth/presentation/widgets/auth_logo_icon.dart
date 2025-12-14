@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Custom animated logo icon for auth screens
 /// Combines house + key with gradient and pulse animation
@@ -6,18 +7,17 @@ class AuthLogoIcon extends StatefulWidget {
   final double size;
   final bool isWhite;
 
-  const AuthLogoIcon({
-    super.key,
-    this.size = 100,
-    this.isWhite = false,
-  });
+  /// If true, uses minimalistic black/white colors (for preloader)
+  /// If false, uses brand purple colors (for login/register pages)
+  final bool useMinimalistic;
+
+  const AuthLogoIcon({super.key, this.size = 100, this.isWhite = false, this.useMinimalistic = false});
 
   @override
   State<AuthLogoIcon> createState() => _AuthLogoIconState();
 }
 
-class _AuthLogoIconState extends State<AuthLogoIcon>
-    with SingleTickerProviderStateMixin {
+class _AuthLogoIconState extends State<AuthLogoIcon> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _pulseAnimation;
   late Animation<double> _glowAnimation;
@@ -25,26 +25,17 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    )..repeat(reverse: true);
+    _controller = AnimationController(duration: const Duration(seconds: 3), vsync: this)..repeat(reverse: true);
 
     _pulseAnimation = Tween<double>(
       begin: 1.0,
       end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _glowAnimation = Tween<double>(
       begin: 0.3,
       end: 0.6,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -57,8 +48,16 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    // Minimalistic: Use black in light mode, white in dark mode
-    final logoColor = widget.isWhite ? Colors.white : (isDarkMode ? Colors.white : Colors.black);
+
+    // Determine logo color based on mode
+    final Color logoColor;
+    if (widget.useMinimalistic) {
+      // Minimalistic: Use black in light mode, white in dark mode (for preloader)
+      logoColor = widget.isWhite ? Colors.white : (isDarkMode ? Colors.white : Colors.black);
+    } else {
+      // Colorized: Use brand purple colors (for login/register pages)
+      logoColor = widget.isWhite ? Colors.white : (isDarkMode ? AppColors.primaryLight : AppColors.primary);
+    }
 
     return AnimatedBuilder(
       animation: _controller,
@@ -82,6 +81,7 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
               painter: _LogoPainter(
                 isWhite: widget.isWhite,
                 isDarkMode: isDarkMode,
+                useMinimalistic: widget.useMinimalistic,
               ),
             ),
           ),
@@ -94,25 +94,29 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
 class _LogoPainter extends CustomPainter {
   final bool isWhite;
   final bool isDarkMode;
+  final bool useMinimalistic;
 
-  _LogoPainter({
-    this.isWhite = false,
-    required this.isDarkMode,
-  });
+  _LogoPainter({this.isWhite = false, required this.isDarkMode, this.useMinimalistic = false});
 
   @override
   void paint(Canvas canvas, Size size) {
     // Defensive check: ensure size is valid before painting
-    if (!size.width.isFinite || !size.height.isFinite ||
-        size.width <= 0 || size.height <= 0) {
+    if (!size.width.isFinite || !size.height.isFinite || size.width <= 0 || size.height <= 0) {
       return; // Skip painting if size is invalid
     }
 
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width * 0.4;
 
-    // Minimalistic: Use black in light mode, white in dark mode
-    final logoColor = isWhite ? Colors.white : (isDarkMode ? Colors.white : Colors.black);
+    // Determine logo color based on mode
+    final Color logoColor;
+    if (useMinimalistic) {
+      // Minimalistic: Use black in light mode, white in dark mode (for preloader)
+      logoColor = isWhite ? Colors.white : (isDarkMode ? Colors.white : Colors.black);
+    } else {
+      // Colorized: Use brand purple colors (for login/register pages)
+      logoColor = isWhite ? Colors.white : (isDarkMode ? AppColors.primaryLight : AppColors.primary);
+    }
 
     // Outer circle badge
     final circlePaint = Paint()
@@ -142,40 +146,22 @@ class _LogoPainter extends CustomPainter {
     // Wave 1 (bottom)
     final wave1 = Path();
     wave1.moveTo(size.width * 0.25, baseY + 10);
-    wave1.quadraticBezierTo(
-      size.width * 0.37, baseY + 5,
-      size.width * 0.5, baseY + 10,
-    );
-    wave1.quadraticBezierTo(
-      size.width * 0.63, baseY + 15,
-      size.width * 0.75, baseY + 10,
-    );
+    wave1.quadraticBezierTo(size.width * 0.37, baseY + 5, size.width * 0.5, baseY + 10);
+    wave1.quadraticBezierTo(size.width * 0.63, baseY + 15, size.width * 0.75, baseY + 10);
     canvas.drawPath(wave1, wavePaint);
 
     // Wave 2 (middle)
     final wave2 = Path();
     wave2.moveTo(size.width * 0.25, baseY - 5);
-    wave2.quadraticBezierTo(
-      size.width * 0.37, baseY - 10,
-      size.width * 0.5, baseY - 5,
-    );
-    wave2.quadraticBezierTo(
-      size.width * 0.63, baseY,
-      size.width * 0.75, baseY - 5,
-    );
+    wave2.quadraticBezierTo(size.width * 0.37, baseY - 10, size.width * 0.5, baseY - 5);
+    wave2.quadraticBezierTo(size.width * 0.63, baseY, size.width * 0.75, baseY - 5);
     canvas.drawPath(wave2, wavePaint);
 
     // Wave 3 (top)
     final wave3 = Path();
     wave3.moveTo(size.width * 0.25, baseY - 20);
-    wave3.quadraticBezierTo(
-      size.width * 0.37, baseY - 25,
-      size.width * 0.5, baseY - 20,
-    );
-    wave3.quadraticBezierTo(
-      size.width * 0.63, baseY - 15,
-      size.width * 0.75, baseY - 20,
-    );
+    wave3.quadraticBezierTo(size.width * 0.37, baseY - 25, size.width * 0.5, baseY - 20);
+    wave3.quadraticBezierTo(size.width * 0.63, baseY - 15, size.width * 0.75, baseY - 20);
     canvas.drawPath(wave3, wavePaint);
   }
 

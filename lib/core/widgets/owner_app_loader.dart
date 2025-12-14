@@ -42,8 +42,8 @@ class OwnerAppLoader extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Logo uses theme colors automatically
-        AuthLogoIcon(size: logoSize),
+        // Logo uses minimalistic black/white for preloader
+        AuthLogoIcon(size: logoSize, useMinimalistic: true),
         const SizedBox(height: _logoToBarSpacing),
         SizedBox(
           width: _progressBarWidth,
@@ -62,10 +62,10 @@ class OwnerAppLoader extends StatelessWidget {
   Widget _buildProgressBar(bool isDarkMode) {
     // Minimalistic: Use black in light mode, white in dark mode
     final progressColor = isDarkMode ? Colors.white : Colors.black;
-    final backgroundColor = isDarkMode 
+    final backgroundColor = isDarkMode
         ? Colors.white.withValues(alpha: _backgroundOpacity)
         : Colors.black.withValues(alpha: _backgroundOpacity);
-    
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(_progressBarRadius),
       child: SizedBox(

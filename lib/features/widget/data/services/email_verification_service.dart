@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 
@@ -128,10 +129,10 @@ class EmailVerificationService {
 
       return status;
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError('$_tag Functions error: ${e.code}', e);
+      unawaited(LoggingService.logError('$_tag Functions error: ${e.code}', e));
       rethrow;
     } catch (e) {
-      await LoggingService.logError('$_tag Unexpected error', e);
+      unawaited(LoggingService.logError('$_tag Unexpected error', e));
       rethrow;
     }
   }
@@ -162,10 +163,10 @@ class EmailVerificationService {
       LoggingService.logSuccess('$_tag Code sent');
       return true;
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError('$_tag Failed to send: ${e.code}', e);
+      unawaited(LoggingService.logError('$_tag Failed to send: ${e.code}', e));
       return false;
     } catch (e) {
-      await LoggingService.logError('$_tag Failed to send code', e);
+      unawaited(LoggingService.logError('$_tag Failed to send code', e));
       return false;
     }
   }
@@ -201,10 +202,10 @@ class EmailVerificationService {
 
       return verified;
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError('$_tag Verify failed: ${e.code}', e);
+      unawaited(LoggingService.logError('$_tag Verify failed: ${e.code}', e));
       return false;
     } catch (e) {
-      await LoggingService.logError('$_tag Verification failed', e);
+      unawaited(LoggingService.logError('$_tag Verification failed', e));
       return false;
     }
   }

@@ -16,17 +16,13 @@ class ValidationResult {
       snackBarDuration = const Duration(seconds: 3),
       isWarning = false;
 
-  const ValidationResult.failure(
-    this.errorMessage, {
-    this.snackBarDuration = const Duration(seconds: 3),
-  }) : isValid = false,
-       isWarning = false;
+  const ValidationResult.failure(this.errorMessage, {this.snackBarDuration = const Duration(seconds: 3)})
+    : isValid = false,
+      isWarning = false;
 
-  const ValidationResult.warning(
-    this.errorMessage, {
-    this.snackBarDuration = const Duration(seconds: 7),
-  }) : isValid = true, // Warnings don't block
-       isWarning = true;
+  const ValidationResult.warning(this.errorMessage, {this.snackBarDuration = const Duration(seconds: 7)})
+    : isValid = true, // Warnings don't block
+      isWarning = true;
 }
 
 /// Service for validating booking form data
@@ -52,18 +48,13 @@ class BookingValidationService {
     required bool emailVerified,
   }) {
     if (requireEmailVerification && !emailVerified) {
-      return const ValidationResult.failure(
-        'Please verify your email before booking',
-      );
+      return const ValidationResult.failure('Please verify your email before booking');
     }
     return const ValidationResult.success();
   }
 
   /// Validate tax/legal disclaimer acceptance if required
-  static ValidationResult validateTaxLegal({
-    required TaxLegalConfig? taxConfig,
-    required bool taxLegalAccepted,
-  }) {
+  static ValidationResult validateTaxLegal({required TaxLegalConfig? taxConfig, required bool taxLegalAccepted}) {
     if (taxConfig != null && taxConfig.enabled && !taxLegalAccepted) {
       return const ValidationResult.failure(
         'Please accept the tax and legal obligations before booking',
@@ -74,20 +65,18 @@ class BookingValidationService {
   }
 
   /// Validate that dates are selected and check-out is after check-in
-  static ValidationResult validateDates({
-    required DateTime? checkIn,
-    required DateTime? checkOut,
-  }) {
+  static ValidationResult validateDates({required DateTime? checkIn, required DateTime? checkOut}) {
     if (checkIn == null || checkOut == null) {
-      return const ValidationResult.failure(
-        'Please select check-in and check-out dates.',
-      );
+      return const ValidationResult.failure('Please select check-in and check-out dates.');
     }
 
-    if (checkOut.isBefore(checkIn) || checkOut.isAtSameMomentAs(checkIn)) {
-      return const ValidationResult.failure(
-        'Check-out must be after check-in date.',
-      );
+    // Normalize dates to UTC for timezone-safe comparison
+    // Bug #18 Fix: Use UTC normalization to avoid timezone-related edge cases
+    final checkInUtc = DateTime.utc(checkIn.year, checkIn.month, checkIn.day);
+    final checkOutUtc = DateTime.utc(checkOut.year, checkOut.month, checkOut.day);
+
+    if (checkOutUtc.isBefore(checkInUtc) || checkOutUtc.isAtSameMomentAs(checkInUtc)) {
+      return const ValidationResult.failure('Check-out must be after check-in date.');
     }
 
     return const ValidationResult.success();
@@ -117,14 +106,9 @@ class BookingValidationService {
   }
 
   /// Validate that property and owner IDs are loaded
-  static ValidationResult validatePropertyOwner({
-    required String? propertyId,
-    required String? ownerId,
-  }) {
+  static ValidationResult validatePropertyOwner({required String? propertyId, required String? ownerId}) {
     if (propertyId == null || ownerId == null) {
-      return const ValidationResult.failure(
-        'Property information not loaded. Please refresh the page.',
-      );
+      return const ValidationResult.failure('Property information not loaded. Please refresh the page.');
     }
     return const ValidationResult.success();
   }
@@ -141,8 +125,7 @@ class BookingValidationService {
     }
 
     final isStripeEnabled = widgetSettings?.stripeConfig?.enabled == true;
-    final isBankTransferEnabled =
-        widgetSettings?.bankTransferConfig?.enabled == true;
+    final isBankTransferEnabled = widgetSettings?.bankTransferConfig?.enabled == true;
     final isPayOnArrivalEnabled = widgetSettings?.allowPayOnArrival == true;
 
     // Check if at least one payment method is enabled
@@ -168,8 +151,7 @@ class BookingValidationService {
       );
     }
 
-    if (selectedPaymentMethod == 'pay_on_arrival' &&
-        !(widgetSettings?.allowPayOnArrival ?? false)) {
+    if (selectedPaymentMethod == 'pay_on_arrival' && !(widgetSettings?.allowPayOnArrival ?? false)) {
       return const ValidationResult.failure(
         'Pay on arrival is not available. Please select another payment method.',
         snackBarDuration: Duration(seconds: 5),
@@ -180,11 +162,7 @@ class BookingValidationService {
   }
 
   /// Validate guest count against property capacity
-  static ValidationResult validateGuestCount({
-    required int adults,
-    required int children,
-    required int maxGuests,
-  }) {
+  static ValidationResult validateGuestCount({required int adults, required int children, required int maxGuests}) {
     final totalGuests = adults + children;
     if (totalGuests > maxGuests) {
       final guestWord = maxGuests == 1 ? 'guest' : 'guests';
@@ -241,10 +219,7 @@ class BookingValidationService {
     if (!emailResult.isValid) return emailResult;
 
     // 3. Tax/Legal acceptance
-    final taxResult = validateTaxLegal(
-      taxConfig: taxConfig,
-      taxLegalAccepted: taxLegalAccepted,
-    );
+    final taxResult = validateTaxLegal(taxConfig: taxConfig, taxLegalAccepted: taxLegalAccepted);
     if (!taxResult.isValid) return taxResult;
 
     // 4. Date validation
@@ -252,10 +227,7 @@ class BookingValidationService {
     if (!dateResult.isValid) return dateResult;
 
     // 5. Property/Owner validation
-    final propertyResult = validatePropertyOwner(
-      propertyId: propertyId,
-      ownerId: ownerId,
-    );
+    final propertyResult = validatePropertyOwner(propertyId: propertyId, ownerId: ownerId);
     if (!propertyResult.isValid) return propertyResult;
 
     // 6. Payment method validation
@@ -267,11 +239,7 @@ class BookingValidationService {
     if (!paymentResult.isValid) return paymentResult;
 
     // 7. Guest count validation
-    final guestResult = validateGuestCount(
-      adults: adults,
-      children: children,
-      maxGuests: maxGuests,
-    );
+    final guestResult = validateGuestCount(adults: adults, children: children, maxGuests: maxGuests);
     if (!guestResult.isValid) return guestResult;
 
     // 8. Adult count validation

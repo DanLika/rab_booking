@@ -12977,6 +12977,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'e.g. {value}'**
   String priceCalendarHintExample(String value);
+
+  /// No description provided for @overbookingConflictDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Overbooking detected for {unitName}'**
+  String overbookingConflictDetected(String unitName);
+
+  /// No description provided for @overbookingConflictCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No conflicts} =1{1 conflict} other{{count} conflicts}}'**
+  String overbookingConflictCount(num count);
+
+  /// No description provided for @overbookingConflictDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict: {guest1} vs {guest2}'**
+  String overbookingConflictDetails(String guest1, String guest2);
+
+  /// No description provided for @overbookingViewBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get overbookingViewBooking;
+
+  /// No description provided for @overbookingScrollToConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to conflict'**
+  String get overbookingScrollToConflict;
 }
 
 class _AppLocalizationsDelegate

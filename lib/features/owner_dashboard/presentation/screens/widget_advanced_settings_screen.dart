@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -32,7 +34,8 @@ class WidgetAdvancedSettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<WidgetAdvancedSettingsScreen> createState() => _WidgetAdvancedSettingsScreenState();
 }
 
-class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSettingsScreen> {
+class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSettingsScreen>
+    with AndroidKeyboardDismissFixApproach1<WidgetAdvancedSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Email Config
@@ -240,6 +243,7 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
           if (!widget.showAppBar) return errorContent;
 
           return Scaffold(
+            resizeToAvoidBottomInset: true,
             appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
             body: errorContent,
           );
@@ -264,6 +268,7 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         final bodyContent = Form(
           key: _formKey,
           child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: EdgeInsets.zero,
             children: [
               // Email Verification Section (first section)
@@ -348,22 +353,44 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
           return bodyContent;
         }
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(l10n.advancedSettingsTitle),
-            actions: [
-              if (_isSaving)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                  ),
-                )
-              else
-                IconButton(icon: const Icon(Icons.save), onPressed: () => _saveSettings(settings), tooltip: l10n.save),
-            ],
+        return PopScope(
+          onPopInvokedWithResult: (didPop, result) async {
+            if (!didPop) {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/properties');
+              }
+            }
+          },
+          child: KeyedSubtree(
+            key: ValueKey('widget_advanced_settings_screen_$keyboardFixRebuildKey'),
+            child: Scaffold(
+              resizeToAvoidBottomInset: true,
+              appBar: AppBar(
+                title: Text(l10n.advancedSettingsTitle),
+                actions: [
+                  if (_isSaving)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                      ),
+                    )
+                  else
+                    IconButton(icon: const Icon(Icons.save), onPressed: () => _saveSettings(settings), tooltip: l10n.save),
+                ],
+              ),
+              body: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
+                    return bodyContent;
+                  },
+                ),
+              ),
+            ),
           ),
-          body: bodyContent,
         );
       },
       loading: () {
@@ -371,6 +398,7 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         if (!widget.showAppBar) return loadingContent;
 
         return Scaffold(
+          resizeToAvoidBottomInset: true,
           appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
           body: loadingContent,
         );
@@ -390,6 +418,7 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         if (!widget.showAppBar) return errorContent;
 
         return Scaffold(
+          resizeToAvoidBottomInset: true,
           appBar: AppBar(title: Text(l10n.advancedSettingsTitle)),
           body: errorContent,
         );

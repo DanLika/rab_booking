@@ -3020,5 +3020,35 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "overbookingConflictDetected": "Overbooking detektovan za {unitName}",
+  "@overbookingConflictDetected": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "overbookingConflictCount": "{count, plural, =0{Nema konflikata} =1{1 konflikt} other{{count} konflikata}}",
+  "@overbookingConflictCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "overbookingConflictDetails": "Konflikt: {guest1} vs {guest2}",
+  "@overbookingConflictDetails": {
+    "placeholders": {
+      "guest1": {
+        "type": "String"
+      },
+      "guest2": {
+        "type": "String"
+      }
+    }
+  },
+  "overbookingViewBooking": "Prikaži",
+  "overbookingScrollToConflict": "Skroluj do konflikta"
 }

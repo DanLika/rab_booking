@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../l10n/app_localizations.dart';
+import '../../../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
@@ -38,7 +39,8 @@ class UnitWizardScreen extends ConsumerStatefulWidget {
   ConsumerState<UnitWizardScreen> createState() => _UnitWizardScreenState();
 }
 
-class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
+class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
+    with AndroidKeyboardDismissFixApproach1<UnitWizardScreen> {
   final PageController _pageController = PageController();
 
   @override
@@ -328,26 +330,43 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     final wizardState = ref.watch(unitWizardNotifierProvider(widget.unitId));
     final theme = Theme.of(context);
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false, // Prevent double-resize with keyboard
-      appBar: AppBar(
-        toolbarHeight: 56.0, // Standard AppBar height (matches CommonAppBar)
-        title: Text(
-          widget.unitId == null ? l10n.unitWizardCreateTitle : l10n.unitWizardEditTitle,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            letterSpacing: 0,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          // Handle browser back button on Chrome Android
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        }
+      },
+      child: KeyedSubtree(
+        key: ValueKey('unit_wizard_screen_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: AppBar(
+            toolbarHeight: 56.0, // Standard AppBar height (matches CommonAppBar)
+            title: Text(
+              widget.unitId == null ? l10n.unitWizardCreateTitle : l10n.unitWizardEditTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 0,
+              ),
+            ),
+            centerTitle: false,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+            flexibleSpace: Container(decoration: const BoxDecoration(gradient: GradientTokens.brandPrimary)),
           ),
-        ),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: GradientTokens.brandPrimary)),
-      ),
-      body: wizardState.when(
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Note: PageView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
+                return wizardState.when(
         data: (draft) => Column(
           children: [
             // Progress Bar
@@ -398,6 +417,11 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
                 textAlign: TextAlign.center,
               ),
             ],
+          ),
+        ),
+                );
+              },
+            ),
           ),
         ),
       ),

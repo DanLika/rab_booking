@@ -3014,5 +3014,35 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "overbookingConflictDetected": "Overbooking detected for {unitName}",
+  "@overbookingConflictDetected": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "overbookingConflictCount": "{count, plural, =0{No conflicts} =1{1 conflict} other{{count} conflicts}}",
+  "@overbookingConflictCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "overbookingConflictDetails": "Conflict: {guest1} vs {guest2}",
+  "@overbookingConflictDetails": {
+    "placeholders": {
+      "guest1": {
+        "type": "String"
+      },
+      "guest2": {
+        "type": "String"
+      }
+    }
+  },
+  "overbookingViewBooking": "View",
+  "overbookingScrollToConflict": "Scroll to conflict"
 }

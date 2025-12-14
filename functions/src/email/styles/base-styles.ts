@@ -1,9 +1,10 @@
 /**
- * Base Email Styles - 2025 Modern Design
+ * Base Email Styles - Minimalist Design
  *
  * Core CSS styles that work across all email clients.
  * Uses inline styles for maximum compatibility.
  * Includes responsive design with media queries.
+ * Minimalist design: simple colors, no gradients, no shadows, reduced padding.
  */
 
 import {EMAIL_COLORS_LIGHT, EMAIL_COLORS_DARK} from "./colors";
@@ -67,9 +68,8 @@ export function getBaseStyles(): string {
         max-width: 600px;
         margin: 0 auto;
         background-color: ${light.background};
-        border-radius: 16px;
+        border-radius: 0;
         overflow: hidden;
-        box-shadow: 0 4px 6px rgba(${light.shadowColor}, ${light.shadowOpacity});
       }
 
       .email-container {
@@ -82,22 +82,22 @@ export function getBaseStyles(): string {
          ========================================== */
 
       .header {
-        background: linear-gradient(135deg, ${light.primary} 0%, #8B5CF6 100%);
+        background-color: ${light.primary};
         color: #FFFFFF;
-        padding: 40px 24px;
+        padding: 20px 24px;
         text-align: center;
       }
 
       .header-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 16px;
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 12px;
         display: block;
       }
 
       .header h1 {
-        font-size: 28px;
-        font-weight: 700;
+        font-size: 20px;
+        font-weight: 600;
         margin: 0 0 8px 0;
         color: #FFFFFF;
       }
@@ -112,14 +112,14 @@ export function getBaseStyles(): string {
       .booking-ref {
         display: inline-block;
         background-color: rgba(255, 255, 255, 0.2);
-        padding: 8px 16px;
-        border-radius: 8px;
-        margin-top: 16px;
+        padding: 6px 12px;
+        border-radius: 4px;
+        margin-top: 12px;
       }
 
       .booking-ref span {
         display: block;
-        font-size: 12px;
+        font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         opacity: 0.8;
@@ -128,9 +128,9 @@ export function getBaseStyles(): string {
 
       .booking-ref strong {
         display: block;
-        font-size: 20px;
-        font-weight: 700;
-        letter-spacing: 1px;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
       }
 
       /* ==========================================
@@ -138,7 +138,7 @@ export function getBaseStyles(): string {
          ========================================== */
 
       .content {
-        padding: 32px 24px;
+        padding: 20px 24px;
       }
 
       .greeting {
@@ -160,10 +160,10 @@ export function getBaseStyles(): string {
          ========================================== */
 
       h2 {
-        font-size: 20px;
-        font-weight: 700;
+        font-size: 16px;
+        font-weight: 600;
         color: ${light.text};
-        margin: 0 0 16px 0;
+        margin: 0 0 12px 0;
       }
 
       p {
@@ -199,14 +199,14 @@ export function getBaseStyles(): string {
          ========================================== */
 
       .footer {
-        padding: 24px;
+        padding: 16px 24px;
         text-align: center;
         background-color: ${light.backgroundSecondary};
         border-top: 1px solid ${light.border};
       }
 
       .footer p {
-        font-size: 14px;
+        font-size: 13px;
         color: ${light.textSecondary};
         margin: 0 0 8px 0;
       }
@@ -226,23 +226,23 @@ export function getBaseStyles(): string {
         }
 
         .header {
-          padding: 32px 16px !important;
+          padding: 16px !important;
         }
 
         .header h1 {
-          font-size: 24px !important;
-        }
-
-        .content {
-          padding: 24px 16px !important;
-        }
-
-        h2 {
           font-size: 18px !important;
         }
 
+        .content {
+          padding: 16px !important;
+        }
+
+        h2 {
+          font-size: 15px !important;
+        }
+
         .footer {
-          padding: 20px 16px !important;
+          padding: 12px 16px !important;
         }
       }
 
@@ -259,7 +259,6 @@ export function getBaseStyles(): string {
 
         .email-wrapper {
           background-color: ${dark.background} !important;
-          box-shadow: 0 4px 6px rgba(${dark.shadowColor}, ${dark.shadowOpacity}) !important;
         }
 
         .email-container {
@@ -267,7 +266,7 @@ export function getBaseStyles(): string {
         }
 
         .header {
-          background: linear-gradient(135deg, ${dark.primary} 0%, #A78BFA 100%) !important;
+          background-color: ${dark.primary} !important;
         }
 
         .content {

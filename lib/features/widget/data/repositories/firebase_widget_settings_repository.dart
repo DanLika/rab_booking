@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rxdart/rxdart.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
 import '../../../../core/services/logging_service.dart';
@@ -14,6 +16,9 @@ class FirebaseWidgetSettingsRepository {
 
   /// Log tag for this repository
   static const String _logTag = 'WidgetSettingsRepository';
+
+  /// Maximum operations per Firestore batch
+  static const int _maxBatchSize = 500;
 
   FirebaseWidgetSettingsRepository(this._firestore);
 
@@ -41,10 +46,21 @@ class FirebaseWidgetSettingsRepository {
 
   /// Watch widget settings for real-time updates
   Stream<WidgetSettings?> watchWidgetSettings({required String propertyId, required String unitId}) {
-    return _settingsDocRef(propertyId, unitId).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      return WidgetSettings.fromFirestore(doc);
-    });
+    return _settingsDocRef(propertyId, unitId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return null;
+          try {
+            return WidgetSettings.fromFirestore(doc);
+          } catch (e) {
+            LoggingService.logError('Error parsing widget settings', e);
+            return null;
+          }
+        })
+        .onErrorReturnWith((error, stackTrace) {
+          LoggingService.logError('Error in widget settings stream', error, stackTrace);
+          return null;
+        });
   }
 
   /// Create default widget settings for a new unit
@@ -69,8 +85,8 @@ class FirebaseWidgetSettingsRepository {
         emailConfig: const EmailNotificationConfig(), // Default disabled
         taxLegalConfig: const TaxLegalConfig(), // Default enabled
         requireOwnerApproval: true, // Owner approval required
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
       );
 
       await _settingsDocRef(propertyId, unitId).set(settings.toFirestore());
@@ -85,7 +101,7 @@ class FirebaseWidgetSettingsRepository {
   /// Update widget settings
   Future<void> updateWidgetSettings(WidgetSettings settings) async {
     try {
-      final updatedSettings = settings.copyWith(updatedAt: DateTime.now());
+      final updatedSettings = settings.copyWith(updatedAt: DateTime.now().toUtc());
 
       await _settingsDocRef(
         settings.propertyId,
@@ -192,7 +208,17 @@ class FirebaseWidgetSettingsRepository {
     try {
       final snapshot = await _settingsCollectionRef(propertyId).get();
 
-      return snapshot.docs.map(WidgetSettings.fromFirestore).toList();
+      return snapshot.docs
+          .map((doc) {
+            try {
+              return WidgetSettings.fromFirestore(doc);
+            } catch (e) {
+              LoggingService.log('Error parsing widget settings doc ${doc.id}: $e', tag: _logTag);
+              return null;
+            }
+          })
+          .whereType<WidgetSettings>()
+          .toList();
     } catch (e) {
       LoggingService.log('Error getting all property settings: $e', tag: _logTag);
       return [];
@@ -226,8 +252,9 @@ class FirebaseWidgetSettingsRepository {
         return;
       }
 
-      final batch = _firestore.batch();
+      WriteBatch batch = _firestore.batch();
       int updateCount = 0;
+      int totalUpdated = 0;
 
       for (final doc in snapshot.docs) {
         // Update email_config with new require_email_verification value
@@ -236,11 +263,22 @@ class FirebaseWidgetSettingsRepository {
           'updated_at': Timestamp.now(),
         });
         updateCount++;
+        totalUpdated++;
+
+        // Commit batch when reaching max size and create new batch
+        if (updateCount >= _maxBatchSize) {
+          await batch.commit();
+          batch = _firestore.batch();
+          updateCount = 0;
+        }
       }
 
-      await batch.commit();
+      // Commit remaining operations
+      if (updateCount > 0) {
+        await batch.commit();
+      }
 
-      LoggingService.log('Email verification updated for $updateCount units in property: $propertyId', tag: _logTag);
+      LoggingService.log('Email verification updated for $totalUpdated units in property: $propertyId', tag: _logTag);
     } catch (e) {
       LoggingService.log('Error updating email verification for all units: $e', tag: _logTag);
       rethrow;

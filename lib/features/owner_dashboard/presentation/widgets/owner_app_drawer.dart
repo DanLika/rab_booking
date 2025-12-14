@@ -46,16 +46,6 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Analytics
-            _DrawerItem(
-              icon: Icons.bar_chart_rounded,
-              title: l10n.ownerDrawerAnalytics,
-              isSelected: currentRoute == 'analytics',
-              onTap: () => context.go(OwnerRoutes.analytics),
-            ),
-
-            const SizedBox(height: 4),
-
             // Kalendar
             _DrawerItem(
               icon: Icons.calendar_month_rounded,
@@ -72,6 +62,16 @@ class OwnerAppDrawer extends ConsumerWidget {
               title: l10n.ownerDrawerBookings,
               isSelected: currentRoute == 'bookings',
               onTap: () => context.go(OwnerRoutes.bookings),
+            ),
+
+            const SizedBox(height: 4),
+
+            // Analytics
+            _DrawerItem(
+              icon: Icons.bar_chart_rounded,
+              title: l10n.ownerDrawerAnalytics,
+              isSelected: currentRoute == 'analytics',
+              onTap: () => context.go(OwnerRoutes.analytics),
             ),
 
             const SizedBox(height: 4),
@@ -124,8 +124,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                   title: l10n.ownerDrawerBankAccount,
                   subtitle: l10n.ownerDrawerBankAccountData,
                   icon: Icons.account_balance,
-                  isSelected:
-                      currentRoute == 'integrations/payments/bank-account',
+                  isSelected: currentRoute == 'integrations/payments/bank-account',
                   onTap: () => context.go(OwnerRoutes.bankAccount),
                 ),
               ],
@@ -187,15 +186,9 @@ class OwnerAppDrawer extends ConsumerWidget {
     );
   }
 
-  Widget _buildPremiumHeader(
-    BuildContext context,
-    User? user,
-    dynamic authState,
-  ) {
+  Widget _buildPremiumHeader(BuildContext context, User? user, dynamic authState) {
     final theme = Theme.of(context);
-    final displayName =
-        authState.userModel?.firstName != null &&
-            authState.userModel?.lastName != null
+    final displayName = authState.userModel?.firstName != null && authState.userModel?.lastName != null
         ? '${authState.userModel!.firstName} ${authState.userModel!.lastName}'
         : user?.displayName ?? 'Owner';
 
@@ -231,14 +224,9 @@ class OwnerAppDrawer extends ConsumerWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
-                  boxShadow: AppShadows.getElevation(
-                    2,
-                    isDark: theme.brightness == Brightness.dark,
-                  ),
+                  boxShadow: AppShadows.getElevation(2, isDark: theme.brightness == Brightness.dark),
                 ),
-                child:
-                    authState.userModel?.avatarUrl != null &&
-                        authState.userModel!.avatarUrl!.isNotEmpty
+                child: authState.userModel?.avatarUrl != null && authState.userModel!.avatarUrl!.isNotEmpty
                     ? ClipOval(
                         child: Image.network(
                           authState.userModel!.avatarUrl!,
@@ -279,21 +267,14 @@ class OwnerAppDrawer extends ConsumerWidget {
                   children: [
                     Text(
                       displayName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       email,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -315,12 +296,7 @@ class _DrawerItem extends StatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _DrawerItem({
-    required this.icon,
-    required this.title,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _DrawerItem({required this.icon, required this.title, required this.isSelected, required this.onTap});
 
   @override
   State<_DrawerItem> createState() => _DrawerItemState();
@@ -338,9 +314,7 @@ class _DrawerItemState extends State<_DrawerItem> {
     final isDark = theme.brightness == Brightness.dark;
 
     // In dark mode, use lighter purple text and stronger purple background
-    final selectedTextColor = isDark
-        ? _lightPurple
-        : theme.colorScheme.brandPurple;
+    final selectedTextColor = isDark ? _lightPurple : theme.colorScheme.brandPurple;
     final selectedBgAlpha = isDark ? 0.15 : 0.12;
     final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
@@ -362,27 +336,19 @@ class _DrawerItemState extends State<_DrawerItem> {
           child: ListTile(
             leading: Icon(
               widget.icon,
-              color: widget.isSelected
-                  ? selectedTextColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+              color: widget.isSelected ? selectedTextColor : theme.colorScheme.onSurface.withValues(alpha: 0.75),
               size: 24,
             ),
             title: Text(
               widget.title,
               style: TextStyle(
                 fontSize: 15,
-                fontWeight: widget.isSelected
-                    ? FontWeight.w600
-                    : FontWeight.w500,
-                color: widget.isSelected
-                    ? selectedTextColor
-                    : theme.colorScheme.onSurface,
+                fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: widget.isSelected ? selectedTextColor : theme.colorScheme.onSurface,
               ),
             ),
             onTap: widget.onTap,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),
@@ -397,16 +363,10 @@ class _DrawerItemWithBadge extends ConsumerStatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _DrawerItemWithBadge({
-    required this.icon,
-    required this.title,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _DrawerItemWithBadge({required this.icon, required this.title, required this.isSelected, required this.onTap});
 
   @override
-  ConsumerState<_DrawerItemWithBadge> createState() =>
-      _DrawerItemWithBadgeState();
+  ConsumerState<_DrawerItemWithBadge> createState() => _DrawerItemWithBadgeState();
 }
 
 class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
@@ -422,15 +382,10 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
 
     // Get pending bookings count using optimized provider (dedicated query)
     final pendingCountAsync = ref.watch(pendingBookingsCountProvider);
-    final pendingCount = pendingCountAsync.maybeWhen(
-      data: (count) => count,
-      orElse: () => 0,
-    );
+    final pendingCount = pendingCountAsync.maybeWhen(data: (count) => count, orElse: () => 0);
 
     // In dark mode, use lighter purple text and stronger purple background
-    final selectedTextColor = isDark
-        ? _lightPurple
-        : theme.colorScheme.brandPurple;
+    final selectedTextColor = isDark ? _lightPurple : theme.colorScheme.brandPurple;
     final selectedBgAlpha = isDark ? 0.15 : 0.12;
     final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
@@ -452,9 +407,7 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
           child: ListTile(
             leading: Icon(
               widget.icon,
-              color: widget.isSelected
-                  ? selectedTextColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+              color: widget.isSelected ? selectedTextColor : theme.colorScheme.onSurface.withValues(alpha: 0.75),
               size: 24,
             ),
             title: Row(
@@ -464,40 +417,24 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
                     widget.title,
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: widget.isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                      color: widget.isSelected
-                          ? selectedTextColor
-                          : theme.colorScheme.onSurface,
+                      fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: widget.isSelected ? selectedTextColor : theme.colorScheme.onSurface,
                     ),
                   ),
                 ),
                 if (pendingCount > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.danger,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(color: theme.colorScheme.danger, borderRadius: BorderRadius.circular(12)),
                     child: Text(
                       pendingCount.toString(),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
               ],
             ),
             onTap: widget.onTap,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),
@@ -551,13 +488,7 @@ class _DrawerSubItem extends StatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _DrawerSubItem({
-    required this.title,
-    this.subtitle,
-    this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _DrawerSubItem({required this.title, this.subtitle, this.icon, required this.isSelected, required this.onTap});
 
   @override
   State<_DrawerSubItem> createState() => _DrawerSubItemState();
@@ -575,9 +506,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
     final isDark = theme.brightness == Brightness.dark;
 
     // In dark mode, use lighter purple text and stronger purple background
-    final selectedTextColor = isDark
-        ? _lightPurple
-        : theme.colorScheme.brandPurple;
+    final selectedTextColor = isDark ? _lightPurple : theme.colorScheme.brandPurple;
     final selectedBgAlpha = isDark ? 0.15 : 0.12;
     final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
@@ -602,30 +531,21 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                 ? Icon(
                     widget.icon,
                     size: 18,
-                    color: widget.isSelected
-                        ? selectedTextColor
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: widget.isSelected ? selectedTextColor : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   )
                 : const SizedBox(width: 18),
             title: Text(
               widget.title,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: widget.isSelected
-                    ? FontWeight.w600
-                    : FontWeight.w500,
-                color: widget.isSelected
-                    ? selectedTextColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: widget.isSelected ? selectedTextColor : theme.colorScheme.onSurface.withValues(alpha: 0.85),
               ),
             ),
             subtitle: widget.subtitle != null
                 ? Text(
                     widget.subtitle!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
+                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                   )
                 : null,
             onTap: widget.onTap,
@@ -659,9 +579,7 @@ class _PremiumExpansionTile extends StatelessWidget {
     const lightPurple = Color(0xFFB794F6);
 
     // Colors matching _DrawerItem styling
-    final selectedTextColor = isDark
-        ? lightPurple
-        : theme.colorScheme.brandPurple;
+    final selectedTextColor = isDark ? lightPurple : theme.colorScheme.brandPurple;
     final normalTextColor = theme.colorScheme.onSurface;
     final iconColor = isExpanded
         ? (isDark ? lightPurple : theme.colorScheme.brandPurple)
@@ -689,12 +607,8 @@ class _PremiumExpansionTile extends StatelessWidget {
             ),
           ),
           initiallyExpanded: isExpanded,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          collapsedShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           tilePadding: const EdgeInsets.symmetric(horizontal: 16),
           childrenPadding: const EdgeInsets.only(bottom: 8),
           children: children,

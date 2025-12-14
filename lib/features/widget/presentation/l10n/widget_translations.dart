@@ -516,6 +516,22 @@ class WidgetTranslations {
     }
   }
 
+  /// Copy button tooltip text
+  /// Bug #40 Fix: Localized copy tooltip for CopyableTextField widget
+  String get copy {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kopiraj';
+      case 'de':
+        return 'Kopieren';
+      case 'it':
+        return 'Copia';
+      case 'en':
+      default:
+        return 'Copy';
+    }
+  }
+
   // ============================================================================
   // PAYMENT METHOD TRANSLATIONS
   // ============================================================================
@@ -2684,6 +2700,20 @@ class WidgetTranslations {
     }
   }
 
+  String canCancelUpToDays(int days) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Možete besplatno otkazati do $days ${days == 1 ? 'dana' : 'dana'} prije prijave.';
+      case 'de':
+        return 'Sie können bis $days ${days == 1 ? 'Tag' : 'Tage'} vor dem Check-in kostenlos stornieren.';
+      case 'it':
+        return 'Puoi cancellare gratuitamente fino a $days ${days == 1 ? 'giorno' : 'giorni'} prima del check-in.';
+      case 'en':
+      default:
+        return 'You can cancel free of charge up to $days ${days == 1 ? 'day' : 'days'} before check-in.';
+    }
+  }
+
   String get cancellationDeadlinePassedContactOwner {
     switch (locale.languageCode) {
       case 'hr':
@@ -3694,6 +3724,20 @@ class WidgetTranslations {
       case 'en':
       default:
         return 'Change Language';
+    }
+  }
+
+  String get selectLanguage {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Odaberite jezik';
+      case 'de':
+        return 'Sprache auswählen';
+      case 'it':
+        return 'Seleziona lingua';
+      case 'en':
+      default:
+        return 'Select Language';
     }
   }
 

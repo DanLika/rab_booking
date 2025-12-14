@@ -28,10 +28,7 @@ void main() {
     });
 
     test('failure supports custom snackbar duration', () {
-      const result = ValidationResult.failure(
-        'Error',
-        snackBarDuration: Duration(seconds: 10),
-      );
+      const result = ValidationResult.failure('Error', snackBarDuration: Duration(seconds: 10));
       expect(result.snackBarDuration, equals(const Duration(seconds: 10)));
     });
   });
@@ -65,10 +62,7 @@ void main() {
 
   group('BookingValidationService.validateTaxLegal', () {
     test('returns success when config is null', () {
-      final result = BookingValidationService.validateTaxLegal(
-        taxConfig: null,
-        taxLegalAccepted: false,
-      );
+      final result = BookingValidationService.validateTaxLegal(taxConfig: null, taxLegalAccepted: false);
       expect(result.isValid, isTrue);
     });
 
@@ -100,76 +94,89 @@ void main() {
 
   group('BookingValidationService.validateDates', () {
     test('returns failure when checkIn is null', () {
-      final result = BookingValidationService.validateDates(
-        checkIn: null,
-        checkOut: DateTime.now(),
-      );
+      final result = BookingValidationService.validateDates(checkIn: null, checkOut: DateTime.now());
       expect(result.isValid, isFalse);
       expect(result.errorMessage, contains('select check-in'));
     });
 
     test('returns failure when checkOut is null', () {
-      final result = BookingValidationService.validateDates(
-        checkIn: DateTime.now(),
-        checkOut: null,
-      );
+      final result = BookingValidationService.validateDates(checkIn: DateTime.now(), checkOut: null);
       expect(result.isValid, isFalse);
     });
 
     test('returns failure when checkOut is before checkIn', () {
       final checkIn = DateTime(2025, 1, 15);
       final checkOut = DateTime(2025, 1, 10);
-      final result = BookingValidationService.validateDates(
-        checkIn: checkIn,
-        checkOut: checkOut,
-      );
+      final result = BookingValidationService.validateDates(checkIn: checkIn, checkOut: checkOut);
       expect(result.isValid, isFalse);
       expect(result.errorMessage, contains('after check-in'));
     });
 
     test('returns failure when checkOut equals checkIn', () {
       final date = DateTime(2025, 1, 15);
-      final result = BookingValidationService.validateDates(
-        checkIn: date,
-        checkOut: date,
-      );
+      final result = BookingValidationService.validateDates(checkIn: date, checkOut: date);
       expect(result.isValid, isFalse);
     });
 
     test('returns success when checkOut is after checkIn', () {
       final checkIn = DateTime(2025, 1, 15);
       final checkOut = DateTime(2025, 1, 20);
-      final result = BookingValidationService.validateDates(
-        checkIn: checkIn,
-        checkOut: checkOut,
-      );
+      final result = BookingValidationService.validateDates(checkIn: checkIn, checkOut: checkOut);
       expect(result.isValid, isTrue);
+    });
+
+    test('handles timezone differences correctly', () {
+      // Same calendar day in different timezones should be treated as same day
+      final checkIn = DateTime(2025, 1, 15, 10, 0); // Local timezone
+      final checkOut = DateTime.utc(2025, 1, 15, 23, 0); // UTC, same calendar day
+
+      final result = BookingValidationService.validateDates(checkIn: checkIn, checkOut: checkOut);
+      // Should fail because checkout is same day as checkin (after UTC normalization)
+      expect(result.isValid, isFalse);
+      expect(result.errorMessage, contains('after check-in'));
+    });
+
+    test('handles UTC dates correctly', () {
+      final checkIn = DateTime.utc(2025, 1, 15);
+      final checkOut = DateTime.utc(2025, 1, 20);
+
+      final result = BookingValidationService.validateDates(checkIn: checkIn, checkOut: checkOut);
+      expect(result.isValid, isTrue);
+    });
+
+    test('handles local timezone dates correctly', () {
+      final checkIn = DateTime(2025, 1, 15);
+      final checkOut = DateTime(2025, 1, 20);
+
+      final result = BookingValidationService.validateDates(checkIn: checkIn, checkOut: checkOut);
+      expect(result.isValid, isTrue);
+    });
+
+    test('handles mixed timezone dates correctly', () {
+      // CheckIn in local timezone, CheckOut in UTC - same calendar day
+      final checkIn = DateTime(2025, 1, 15, 12, 0); // Local
+      final checkOut = DateTime.utc(2025, 1, 15, 10, 0); // UTC, same calendar day
+
+      final result = BookingValidationService.validateDates(checkIn: checkIn, checkOut: checkOut);
+      // Should fail because after UTC normalization, both are same day
+      expect(result.isValid, isFalse);
     });
   });
 
   group('BookingValidationService.validatePropertyOwner', () {
     test('returns failure when propertyId is null', () {
-      final result = BookingValidationService.validatePropertyOwner(
-        propertyId: null,
-        ownerId: 'owner123',
-      );
+      final result = BookingValidationService.validatePropertyOwner(propertyId: null, ownerId: 'owner123');
       expect(result.isValid, isFalse);
       expect(result.errorMessage, contains('Property information'));
     });
 
     test('returns failure when ownerId is null', () {
-      final result = BookingValidationService.validatePropertyOwner(
-        propertyId: 'prop123',
-        ownerId: null,
-      );
+      final result = BookingValidationService.validatePropertyOwner(propertyId: 'prop123', ownerId: null);
       expect(result.isValid, isFalse);
     });
 
     test('returns success when both IDs are present', () {
-      final result = BookingValidationService.validatePropertyOwner(
-        propertyId: 'prop123',
-        ownerId: 'owner123',
-      );
+      final result = BookingValidationService.validatePropertyOwner(propertyId: 'prop123', ownerId: 'owner123');
       expect(result.isValid, isTrue);
     });
   });
@@ -280,29 +287,17 @@ void main() {
 
   group('BookingValidationService.validateGuestCount', () {
     test('returns success when within capacity', () {
-      final result = BookingValidationService.validateGuestCount(
-        adults: 2,
-        children: 1,
-        maxGuests: 4,
-      );
+      final result = BookingValidationService.validateGuestCount(adults: 2, children: 1, maxGuests: 4);
       expect(result.isValid, isTrue);
     });
 
     test('returns success when at max capacity', () {
-      final result = BookingValidationService.validateGuestCount(
-        adults: 2,
-        children: 2,
-        maxGuests: 4,
-      );
+      final result = BookingValidationService.validateGuestCount(adults: 2, children: 2, maxGuests: 4);
       expect(result.isValid, isTrue);
     });
 
     test('returns failure when over capacity', () {
-      final result = BookingValidationService.validateGuestCount(
-        adults: 3,
-        children: 2,
-        maxGuests: 4,
-      );
+      final result = BookingValidationService.validateGuestCount(adults: 3, children: 2, maxGuests: 4);
       expect(result.isValid, isFalse);
       expect(result.errorMessage, contains('Maximum 4 guests'));
       expect(result.errorMessage, contains('5 guests'));
@@ -330,9 +325,7 @@ void main() {
   group('BookingValidationService.checkSameDayCheckIn', () {
     test('returns success for future date', () {
       final futureDate = DateTime.now().add(const Duration(days: 5));
-      final result = BookingValidationService.checkSameDayCheckIn(
-        checkIn: futureDate,
-      );
+      final result = BookingValidationService.checkSameDayCheckIn(checkIn: futureDate);
       expect(result.isValid, isTrue);
       expect(result.isWarning, isFalse);
     });
@@ -342,9 +335,7 @@ void main() {
   });
 
   group('BookingValidationService.validateAllBlocking', () {
-    WidgetSettings createTestSettings({
-      WidgetMode mode = WidgetMode.bookingPending,
-    }) {
+    WidgetSettings createTestSettings({WidgetMode mode = WidgetMode.bookingPending}) {
       return WidgetSettings(
         id: 'unit1',
         propertyId: 'prop1',

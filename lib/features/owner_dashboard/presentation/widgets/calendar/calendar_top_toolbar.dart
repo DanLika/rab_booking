@@ -30,6 +30,10 @@ class CalendarTopToolbar extends StatelessWidget {
   final bool isMultiSelectActive;
   final VoidCallback? onMultiSelectToggle;
 
+  // Overbooking conflict badge
+  final int? overbookingConflictCount;
+  final VoidCallback? onOverbookingBadgeTap;
+
   const CalendarTopToolbar({
     super.key,
     required this.dateRange,
@@ -50,6 +54,8 @@ class CalendarTopToolbar extends StatelessWidget {
     this.showMultiSelectToggle = false,
     this.isMultiSelectActive = false,
     this.onMultiSelectToggle,
+    this.overbookingConflictCount,
+    this.onOverbookingBadgeTap,
   });
 
   @override
@@ -299,6 +305,10 @@ class CalendarTopToolbar extends StatelessWidget {
                     // Today button
                     _buildStyledTodayButton(theme, l10n),
 
+                    // Overbooking conflict badge
+                    if (overbookingConflictCount != null && overbookingConflictCount! > 0)
+                      _buildOverbookingBadge(theme, l10n),
+
                     // Notifications button
                     if (onNotificationsTap != null)
                       _buildStyledNotificationsButton(
@@ -441,6 +451,42 @@ class CalendarTopToolbar extends StatelessWidget {
   }
 
   /// Build styled Notifications button with badge
+  Widget _buildOverbookingBadge(ThemeData theme, AppLocalizations l10n) {
+    final count = overbookingConflictCount ?? 0;
+    
+    return GestureDetector(
+      onTap: onOverbookingBadgeTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.red.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.shade300),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.red.shade700,
+              size: 16
+            ),
+            const SizedBox(width: 4),
+            Text(
+              count == 1 ? '1 conflict' : '$count conflicts',
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStyledNotificationsButton(
     ThemeData theme,
     AppLocalizations l10n,

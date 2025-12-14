@@ -72,6 +72,15 @@ class BookingConfirmationData {
   /// Unit ID for navigation
   final String? unitId;
 
+  /// Sentinel value for copyWith to distinguish between "not provided" and "explicitly set to null"
+  static const _sentinel = Object();
+
+  /// Helper to return non-empty string or fallback
+  /// Handles both null and empty string cases
+  static String _nonEmptyOr(String? value, String fallback) {
+    return (value?.isNotEmpty ?? false) ? value! : fallback;
+  }
+
   const BookingConfirmationData({
     required this.bookingReference,
     required this.guestEmail,
@@ -102,9 +111,9 @@ class BookingConfirmationData {
     String? unitId,
   }) {
     return BookingConfirmationData(
-      bookingReference: booking.bookingReference ?? booking.id,
-      guestEmail: booking.guestEmail ?? '',
-      guestName: booking.guestName ?? '',
+      bookingReference: _nonEmptyOr(booking.bookingReference, booking.id),
+      guestEmail: _nonEmptyOr(booking.guestEmail, ''),
+      guestName: _nonEmptyOr(booking.guestName, ''),
       checkIn: booking.checkIn,
       checkOut: booking.checkOut,
       totalPrice: booking.totalPrice,
@@ -112,7 +121,7 @@ class BookingConfirmationData {
       guests: booking.guestCount,
       propertyName: propertyName,
       unitName: unitName,
-      paymentMethod: booking.paymentMethod ?? 'unknown',
+      paymentMethod: _nonEmptyOr(booking.paymentMethod, 'unknown'),
       booking: booking,
       emailConfig: emailConfig,
       widgetSettings: widgetSettings,
@@ -122,6 +131,16 @@ class BookingConfirmationData {
   }
 
   /// Creates a copy with some fields replaced
+  ///
+  /// For nullable fields, you can explicitly set them to null:
+  /// ```dart
+  /// data.copyWith(unitName: null) // Sets unitName to null
+  /// ```
+  ///
+  /// If you don't provide a nullable field, it keeps the existing value:
+  /// ```dart
+  /// data.copyWith(propertyName: 'New Name') // unitName stays unchanged
+  /// ```
   BookingConfirmationData copyWith({
     String? bookingReference,
     String? guestEmail,
@@ -132,13 +151,14 @@ class BookingConfirmationData {
     int? nights,
     int? guests,
     String? propertyName,
-    String? unitName,
     String? paymentMethod,
-    BookingModel? booking,
-    EmailNotificationConfig? emailConfig,
-    WidgetSettings? widgetSettings,
-    String? propertyId,
-    String? unitId,
+    // Nullable fields use sentinel pattern to support explicit null assignment
+    Object? unitName = _sentinel,
+    Object? booking = _sentinel,
+    Object? emailConfig = _sentinel,
+    Object? widgetSettings = _sentinel,
+    Object? propertyId = _sentinel,
+    Object? unitId = _sentinel,
   }) {
     return BookingConfirmationData(
       bookingReference: bookingReference ?? this.bookingReference,
@@ -150,13 +170,14 @@ class BookingConfirmationData {
       nights: nights ?? this.nights,
       guests: guests ?? this.guests,
       propertyName: propertyName ?? this.propertyName,
-      unitName: unitName ?? this.unitName,
       paymentMethod: paymentMethod ?? this.paymentMethod,
-      booking: booking ?? this.booking,
-      emailConfig: emailConfig ?? this.emailConfig,
-      widgetSettings: widgetSettings ?? this.widgetSettings,
-      propertyId: propertyId ?? this.propertyId,
-      unitId: unitId ?? this.unitId,
+      // Use sentinel pattern for nullable fields to support explicit null
+      unitName: identical(unitName, _sentinel) ? this.unitName : unitName as String?,
+      booking: identical(booking, _sentinel) ? this.booking : booking as BookingModel?,
+      emailConfig: identical(emailConfig, _sentinel) ? this.emailConfig : emailConfig as EmailNotificationConfig?,
+      widgetSettings: identical(widgetSettings, _sentinel) ? this.widgetSettings : widgetSettings as WidgetSettings?,
+      propertyId: identical(propertyId, _sentinel) ? this.propertyId : propertyId as String?,
+      unitId: identical(unitId, _sentinel) ? this.unitId : unitId as String?,
     );
   }
 }

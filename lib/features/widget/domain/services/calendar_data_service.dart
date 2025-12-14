@@ -55,22 +55,24 @@ class CalendarDataService {
   ///
   /// Returns a map of date keys (yyyy-MM-dd) to CalendarDateInfo
   /// Includes: bookings, iCal events, daily prices, gap blocking
-  Future<Map<String, CalendarDateInfo>> loadCalendarData(
-    CalendarDataParams params,
-  ) async {
-    final effectiveWeekendDays =
-        params.weekendDays ?? WidgetConstants.defaultWeekendDays;
+  Future<Map<String, CalendarDateInfo>> loadCalendarData(CalendarDataParams params) async {
+    final effectiveWeekendDays = params.weekendDays ?? WidgetConstants.defaultWeekendDays;
 
     // Calculate extended range for gap detection
-    final extendedStart = DateTime.utc(
-      params.startDate.year,
-      params.startDate.month - CalendarConstants.monthsBeforeForGapDetection,
-    );
-    final extendedEnd = DateTime.utc(
-      params.endDate.year,
-      params.endDate.month + CalendarConstants.monthsAfterForGapDetection + 1,
-      0,
-    );
+    // Handle month/year overflow explicitly to avoid invalid DateTime values
+    final startMonth = params.startDate.month - CalendarConstants.monthsBeforeForGapDetection;
+    final startYear = params.startDate.year;
+    final adjustedStartMonth = startMonth <= 0 ? 12 + startMonth : startMonth;
+    final adjustedStartYear = startMonth <= 0 ? startYear - 1 : startYear;
+
+    final extendedStart = DateTime.utc(adjustedStartYear, adjustedStartMonth);
+
+    final endMonth = params.endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
+    final endYear = params.endDate.year;
+    final adjustedEndMonth = endMonth > 12 ? endMonth - 12 : endMonth;
+    final adjustedEndYear = endMonth > 12 ? endYear + 1 : endYear;
+
+    final extendedEnd = DateTime.utc(adjustedEndYear, adjustedEndMonth, 0);
 
     // Load data in parallel for performance
     final results = await Future.wait([
@@ -106,18 +108,10 @@ class CalendarDataService {
     );
 
     // Mark booked dates from internal bookings
-    _markBookedDates(
-      calendarData: calendarData,
-      bookings: bookings,
-      todayNormalized: todayNormalized,
-    );
+    _markBookedDates(calendarData: calendarData, bookings: bookings, todayNormalized: todayNormalized);
 
     // Mark booked dates from iCal events (Booking.com, Airbnb)
-    _markIcalEventDates(
-      calendarData: calendarData,
-      icalEvents: icalEvents,
-      todayNormalized: todayNormalized,
-    );
+    _markIcalEventDates(calendarData: calendarData, icalEvents: icalEvents, todayNormalized: todayNormalized);
 
     // Block small gaps that are less than minNights
     _blockSmallGaps(
@@ -150,10 +144,8 @@ class CalendarDataService {
     }
 
     // 2. Weekend price (if it's a weekend and weekendBasePrice is set)
-    final effectiveWeekendDays =
-        weekendDays ?? WidgetConstants.defaultWeekendDays;
-    if (weekendBasePrice != null &&
-        effectiveWeekendDays.contains(date.weekday)) {
+    final effectiveWeekendDays = weekendDays ?? WidgetConstants.defaultWeekendDays;
+    if (weekendBasePrice != null && effectiveWeekendDays.contains(date.weekday)) {
       return weekendBasePrice;
     }
 
@@ -166,8 +158,15 @@ class CalendarDataService {
   // ============================================
 
   /// Format date as yyyy-MM-dd key for map lookup
+  ///
+  /// Normalizes date to UTC before formatting to ensure consistent keys
+  /// regardless of timezone. This prevents timezone offset issues when
+  /// formatting dates that may have time components.
   String getDateKey(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date);
+    // Normalize to UTC by extracting year/month/day components
+    // This ensures we format the correct day regardless of timezone
+    final utcDate = DateTime.utc(date.year, date.month, date.day);
+    return DateFormat('yyyy-MM-dd').format(utcDate);
   }
 
   /// Check if two dates are the same day
@@ -180,53 +179,27 @@ class CalendarDataService {
   // ============================================
 
   /// Load bookings from repository, filtering out cancelled
-  Future<List<BookingModel>> _loadBookings(
-    String unitId,
-    DateTime start,
-    DateTime end,
-  ) async {
-    final allBookings = await _bookingRepository.getBookingsInRange(
-      unitId: unitId,
-      startDate: start,
-      endDate: end,
-    );
+  Future<List<BookingModel>> _loadBookings(String unitId, DateTime start, DateTime end) async {
+    final allBookings = await _bookingRepository.getBookingsInRange(unitId: unitId, startDate: start, endDate: end);
 
     // Filter out bookings that should NOT block dates
     // Uses BookingStatus.blocksCalendarDates helper:
     // - cancelled: Does NOT block
     // - pending/confirmed/completed: BLOCKS dates
-    return allBookings
-        .where((booking) => booking.status.blocksCalendarDates)
-        .toList();
+    return allBookings.where((booking) => booking.status.blocksCalendarDates).toList();
   }
 
   /// Load iCal events from repository
-  Future<List<IcalEvent>> _loadIcalEvents(
-    String unitId,
-    DateTime start,
-    DateTime end,
-  ) async {
+  Future<List<IcalEvent>> _loadIcalEvents(String unitId, DateTime start, DateTime end) async {
     // Using repository instead of direct Firestore access
-    final events = await _icalRepository.getUnitIcalEventsInRange(
-      unitId: unitId,
-      startDate: start,
-      endDate: end,
-    );
+    final events = await _icalRepository.getUnitIcalEventsInRange(unitId: unitId, startDate: start, endDate: end);
 
     return events;
   }
 
   /// Load daily prices from repository
-  Future<List<DailyPriceModel>> _loadDailyPrices(
-    String unitId,
-    DateTime start,
-    DateTime end,
-  ) async {
-    return await _dailyPriceRepository.getPricesForDateRange(
-      unitId: unitId,
-      startDate: start,
-      endDate: end,
-    );
+  Future<List<DailyPriceModel>> _loadDailyPrices(String unitId, DateTime start, DateTime end) async {
+    return await _dailyPriceRepository.getPricesForDateRange(unitId: unitId, startDate: start, endDate: end);
   }
 
   /// Build a map of date keys to DailyPriceModel for quick lookup
@@ -300,21 +273,19 @@ class CalendarDataService {
     required DateTime todayNormalized,
   }) {
     for (final booking in bookings) {
-      final checkIn = DateTime.utc(
-        booking.checkIn.year,
-        booking.checkIn.month,
-        booking.checkIn.day,
-      );
-      final checkOut = DateTime.utc(
-        booking.checkOut.year,
-        booking.checkOut.month,
-        booking.checkOut.day,
-      );
+      final checkIn = DateTime.utc(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
+      final checkOut = DateTime.utc(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
 
       // Check if booking is pending (awaiting owner approval)
       final isPending = booking.status == BookingStatus.pending;
 
       DateTime current = checkIn;
+      // NOTE: Checkout day is included in the loop (isSameDay) for visual display.
+      // This shows checkout day with partialCheckOut status in the calendar.
+      // However, checkout day does NOT block new check-ins (turnover day is supported),
+      // and is NOT included in price calculation or night count.
+      // Availability checking is handled separately by AvailabilityChecker which uses
+      // end1.isAfter(start2) && start1.isBefore(end2) to allow same-day turnover.
       while (current.isBefore(checkOut) || isSameDay(current, checkOut)) {
         final key = getDateKey(current);
         if (calendarData.containsKey(key)) {
@@ -325,8 +296,7 @@ class CalendarDataService {
 
           final status = _calculateBookingStatus(
             isPast: isPast,
-            isPending:
-                false, // Use normal status, isPendingBooking flag handles the pattern
+            isPending: false, // Use normal status, isPendingBooking flag handles the pattern
             isCheckIn: isCheckIn,
             isCheckOut: isCheckOut,
             existingStatus: existingInfo.status,
@@ -357,8 +327,7 @@ class CalendarDataService {
 
           calendarData[key] = existingInfo.copyWith(
             status: status,
-            isPendingBooking:
-                isPending, // Set flag for pending pattern overlay (full days)
+            isPendingBooking: isPending, // Set flag for pending pattern overlay (full days)
             isCheckOutPending: newIsCheckOutPending,
             isCheckInPending: newIsCheckInPending,
           );
@@ -375,18 +344,14 @@ class CalendarDataService {
     required DateTime todayNormalized,
   }) {
     for (final event in icalEvents) {
-      final checkIn = DateTime.utc(
-        event.startDate.year,
-        event.startDate.month,
-        event.startDate.day,
-      );
-      final checkOut = DateTime.utc(
-        event.endDate.year,
-        event.endDate.month,
-        event.endDate.day,
-      );
+      final checkIn = DateTime.utc(event.startDate.year, event.startDate.month, event.startDate.day);
+      final checkOut = DateTime.utc(event.endDate.year, event.endDate.month, event.endDate.day);
 
       DateTime current = checkIn;
+      // NOTE: Checkout day is included in the loop (isSameDay) for visual display.
+      // This shows checkout day with partialCheckOut status in the calendar.
+      // However, checkout day does NOT block new check-ins (turnover day is supported).
+      // Availability checking is handled separately by AvailabilityChecker.
       while (current.isBefore(checkOut) || isSameDay(current, checkOut)) {
         final key = getDateKey(current);
         if (calendarData.containsKey(key)) {
@@ -465,16 +430,8 @@ class CalendarDataService {
     for (final booking in bookings) {
       allReservations.add(
         _ReservationPeriod(
-          checkIn: DateTime.utc(
-            booking.checkIn.year,
-            booking.checkIn.month,
-            booking.checkIn.day,
-          ),
-          checkOut: DateTime.utc(
-            booking.checkOut.year,
-            booking.checkOut.month,
-            booking.checkOut.day,
-          ),
+          checkIn: DateTime.utc(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day),
+          checkOut: DateTime.utc(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day),
         ),
       );
     }
@@ -482,16 +439,8 @@ class CalendarDataService {
     for (final event in icalEvents) {
       allReservations.add(
         _ReservationPeriod(
-          checkIn: DateTime.utc(
-            event.startDate.year,
-            event.startDate.month,
-            event.startDate.day,
-          ),
-          checkOut: DateTime.utc(
-            event.endDate.year,
-            event.endDate.month,
-            event.endDate.day,
-          ),
+          checkIn: DateTime.utc(event.startDate.year, event.startDate.month, event.startDate.day),
+          checkOut: DateTime.utc(event.endDate.year, event.endDate.month, event.endDate.day),
         ),
       );
     }
@@ -504,9 +453,18 @@ class CalendarDataService {
       final current = allReservations[i];
       final next = allReservations[i + 1];
 
-      // Calculate gap size
+      // Calculate gap boundaries
       final gapStart = current.checkOut.add(const Duration(days: 1));
       final gapEnd = next.checkIn.subtract(const Duration(days: 1));
+
+      // Check if there's actually a gap (no overlap or adjacency)
+      // If reservations overlap or are adjacent (checkout == checkin), gapEnd will be before gapStart
+      if (gapEnd.isBefore(gapStart)) {
+        // Reservations overlap or are adjacent - no gap to block
+        continue;
+      }
+
+      // Calculate gap size
       final gapNights = gapEnd.difference(gapStart).inDays;
 
       // Block if gap is positive but less than minNights
@@ -518,9 +476,7 @@ class CalendarDataService {
             final existingInfo = calendarData[key]!;
             // Only block if currently available
             if (existingInfo.status == DateStatus.available) {
-              calendarData[key] = existingInfo.copyWith(
-                status: DateStatus.blocked,
-              );
+              calendarData[key] = existingInfo.copyWith(status: DateStatus.blocked);
             }
           }
           gapDate = gapDate.add(const Duration(days: 1));

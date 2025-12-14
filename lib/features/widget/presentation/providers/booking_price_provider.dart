@@ -14,8 +14,7 @@ class BookingPriceCalculation {
   final double remainingAmount; // 80% preostalo (of total)
   final int nights;
   final DateTime? priceLockTimestamp; // Bug #64: When price was locked
-  final double?
-  lockedTotalPrice; // Bug #64: Original locked price for comparison
+  final double? lockedTotalPrice; // Bug #64: Original locked price for comparison
 
   BookingPriceCalculation({
     required this.roomPrice,
@@ -31,8 +30,7 @@ class BookingPriceCalculation {
   double get totalPrice => roomPrice + additionalServicesTotal;
 
   String get formattedRoomPrice => '€${roomPrice.toStringAsFixed(2)}';
-  String get formattedAdditionalServices =>
-      '€${additionalServicesTotal.toStringAsFixed(2)}';
+  String get formattedAdditionalServices => '€${additionalServicesTotal.toStringAsFixed(2)}';
   String get formattedTotal => '€${totalPrice.toStringAsFixed(2)}';
   String get formattedDeposit => '€${depositAmount.toStringAsFixed(2)}';
   String get formattedRemaining => '€${remainingAmount.toStringAsFixed(2)}';
@@ -62,21 +60,14 @@ class BookingPriceCalculation {
   }
 
   // Copy with method for updating additional services
-  BookingPriceCalculation copyWithServices(
-    double servicesTotal,
-    int depositPercentage,
-  ) {
+  BookingPriceCalculation copyWithServices(double servicesTotal, int depositPercentage) {
     final newTotal = roomPrice + servicesTotal;
     final newDeposit = (depositPercentage == 0 || depositPercentage == 100)
         ? newTotal
-        : double.parse(
-            (newTotal * (depositPercentage / 100)).toStringAsFixed(2),
-          );
+        : double.parse((newTotal * (depositPercentage / 100)).toStringAsFixed(2));
     final newRemaining = (depositPercentage == 0 || depositPercentage == 100)
         ? 0.0
-        : double.parse(
-            (newTotal * ((100 - depositPercentage) / 100)).toStringAsFixed(2),
-          );
+        : double.parse((newTotal * ((100 - depositPercentage) / 100)).toStringAsFixed(2));
 
     return BookingPriceCalculation(
       roomPrice: roomPrice,
@@ -100,8 +91,7 @@ Future<BookingPriceCalculation?> bookingPrice(
   required String unitId,
   required DateTime? checkIn,
   required DateTime? checkOut,
-  String?
-  propertyId, // Optional: enables cache reuse from widgetContextProvider
+  String? propertyId, // Optional: enables cache reuse from widgetContextProvider
   int depositPercentage = 20, // Configurable deposit percentage (0-100)
 }) async {
   // Return null if dates not selected
@@ -120,9 +110,7 @@ Future<BookingPriceCalculation?> bookingPrice(
   if (propertyId != null) {
     // Try to get unit from cached context (no additional query)
     try {
-      final context = await ref.read(
-        widgetContextProvider((propertyId: propertyId, unitId: unitId)).future,
-      );
+      final context = await ref.read(widgetContextProvider((propertyId: propertyId, unitId: unitId)).future);
       // Defensive null checks: properties are required but handle edge cases
       final unit = context.unit;
       basePrice = unit.pricePerNight;
@@ -164,14 +152,10 @@ Future<BookingPriceCalculation?> bookingPrice(
   // Bug #29: Round to 2 decimal places to prevent rounding errors
   final depositAmount = (depositPercentage == 0 || depositPercentage == 100)
       ? roomPrice
-      : double.parse(
-          (roomPrice * (depositPercentage / 100)).toStringAsFixed(2),
-        );
+      : double.parse((roomPrice * (depositPercentage / 100)).toStringAsFixed(2));
   final remainingAmount = (depositPercentage == 0 || depositPercentage == 100)
       ? 0.0
-      : double.parse(
-          (roomPrice * ((100 - depositPercentage) / 100)).toStringAsFixed(2),
-        );
+      : double.parse((roomPrice * ((100 - depositPercentage) / 100)).toStringAsFixed(2));
 
   return BookingPriceCalculation(
     roomPrice: roomPrice,

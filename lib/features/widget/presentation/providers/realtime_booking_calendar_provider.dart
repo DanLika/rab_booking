@@ -13,7 +13,16 @@ part 'realtime_booking_calendar_provider.g.dart';
 const _calendarDebounceMs = 150;
 
 /// Convert DateTime key to String key (yyyy-MM-dd format)
-String _dateToKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
+///
+/// Normalizes date to UTC before formatting to ensure consistent keys
+/// regardless of timezone. Repository returns UTC DateTime objects, so
+/// we must format them as UTC to avoid timezone offset issues.
+String _dateToKey(DateTime date) {
+  // Normalize to UTC by extracting year/month/day components
+  // This ensures we format the correct day regardless of timezone
+  final utcDate = DateTime.utc(date.year, date.month, date.day);
+  return DateFormat('yyyy-MM-dd').format(utcDate);
+}
 
 /// Repository provider (V2 with price support)
 /// Returns interface type for better testability and flexibility
@@ -45,17 +54,9 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
 ) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository
-      .watchYearCalendarDataOptimized(
-        propertyId: propertyId,
-        unitId: unitId,
-        year: year,
-        minNights: minNights,
-      )
+      .watchYearCalendarDataOptimized(propertyId: propertyId, unitId: unitId, year: year, minNights: minNights)
       .debounceTime(const Duration(milliseconds: _calendarDebounceMs))
-      .map(
-        (dateTimeMap) =>
-            dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)),
-      );
+      .map((dateTimeMap) => dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)));
 }
 
 /// Realtime calendar data provider for month view.
@@ -89,10 +90,7 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
         minNights: minNights,
       )
       .debounceTime(const Duration(milliseconds: _calendarDebounceMs))
-      .map(
-        (dateTimeMap) =>
-            dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)),
-      );
+      .map((dateTimeMap) => dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)));
 }
 
 /// Check date availability
@@ -104,9 +102,5 @@ Future<bool> checkDateAvailability(
   required DateTime checkOut,
 }) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
-  return repository.checkAvailability(
-    unitId: unitId,
-    checkIn: checkIn,
-    checkOut: checkOut,
-  );
+  return repository.checkAvailability(unitId: unitId, checkIn: checkIn, checkOut: checkOut);
 }

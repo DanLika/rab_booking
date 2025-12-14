@@ -158,10 +158,23 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
     final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
-      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
+    // FIXED BUG #14b: Prevent accidental dismiss during email sending
+    return PopScope(
+      canPop: !_isLoading,
+      onPopInvokedWithResult: (didPop, result) {
+        if (_isLoading) {
+          // Show a brief message if user tries to dismiss during sending
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            'Please wait for the email to be sent',
+            duration: const Duration(seconds: 2),
+          );
+        }
+      },
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: dialogWidth,
         constraints: BoxConstraints(
@@ -463,7 +476,8 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
           ],
         ),
       ),
-    );
+      ), // Close Dialog
+    ); // Close PopScope
   }
 
   Future<void> _sendEmail() async {

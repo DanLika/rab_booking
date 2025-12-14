@@ -47,11 +47,22 @@ class SubdomainService {
         return null;
       }
 
-      // Parse subdomain from hostname (e.g., "jasko-rab.rabbooking.com" -> "jasko-rab")
+      // Skip view.bookbed.io domain (booking details page, not a property subdomain)
+      if (host == 'view.bookbed.io' || host.startsWith('view.')) {
+        return null;
+      }
+
+      // Parse subdomain from hostname (e.g., "jasko-rab.bookbed.io" -> "jasko-rab")
+      // But skip if it's a known special domain like "view", "app", "www"
       final parts = host.split('.');
       if (parts.length >= 3) {
-        final subdomain = parts.first;
-        return subdomain.toLowerCase();
+        final subdomain = parts.first.toLowerCase();
+        // Skip known special domains that are not property subdomains
+        const specialDomains = ['view', 'app', 'www', 'owner', 'admin'];
+        if (specialDomains.contains(subdomain)) {
+          return null;
+        }
+        return subdomain;
       }
 
       return null;

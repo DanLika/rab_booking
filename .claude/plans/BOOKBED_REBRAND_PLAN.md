@@ -497,15 +497,15 @@ Update project name references:
 **BookBed** - Modern booking management platform for property owners.
 ```
 
-3. **CLAUDE_WIDGET_SYSTEM.md**
+3. **docs/cloud-widget-systems/CLAUDE_WIDGET_SYSTEM.md**
 
 Search and replace project name references.
 
-4. **CLAUDE_MCP_TOOLS.md**
+4. **docs/cloud-mcp-tools/CLAUDE_MCP_TOOLS.md**
 
 Update any project-specific references.
 
-5. **.claude/plans/RabBooking-Architecture-Plan-v2.md**
+5. **docs/architecture/RabBooking-Architecture-Plan-v2.md**
 
 ```markdown
 # BEFORE

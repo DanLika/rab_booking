@@ -3,13 +3,13 @@
 **BookBed** - Booking management platforma za property owner-e.
 
 **Dodatni dokumenti:**
-- [CLAUDE_BUGS_ARCHIVE.md](./CLAUDE_BUGS_ARCHIVE.md) - Detaljni bug fix-evi sa code examples
-- [CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md) - Widget modovi, payment logic, pricing
-- [CLAUDE_MCP_TOOLS.md](./CLAUDE_MCP_TOOLS.md) - MCP serveri, slash commands
+- [CLAUDE_BUGS_ARCHIVE.md](./docs/bugs-archive/CLAUDE_BUGS_ARCHIVE.md) - Detaljni bug fix-evi sa code examples
+- [CLAUDE_WIDGET_SYSTEM.md](./docs/cloud-widget-systems/CLAUDE_WIDGET_SYSTEM.md) - Widget modovi, payment logic, pricing
+- [CLAUDE_MCP_TOOLS.md](./docs/cloud-mcp-tools/CLAUDE_MCP_TOOLS.md) - MCP serveri, slash commands
 
 ---
 
-## <� NIKADA NE MIJENJAJ
+## <? NIKADA NE MIJENJAJ
 
 | Komponenta | Razlog |
 |------------|--------|
@@ -25,7 +25,7 @@ an |
 
 ---
 
-## <� STANDARDI
+## <? STANDARDI
 
 ```dart
 // Gradients
@@ -45,7 +45,7 @@ currentSettings.emailConfig.copyWith(requireEmailVerification: false)
 
 ---
 
-## =� CALENDAR SYSTEM - KRITINO
+## =? CALENDAR SYSTEM - KRITINO
 
 **Repository**: `firebase_booking_calendar_repository.dart`
 - Koristi `DateTime.utc()` za SVE map keys
@@ -53,11 +53,11 @@ currentSettings.emailConfig.copyWith(requireEmailVerification: false)
 - Turnover detection MORA provjeriti: `partialCheckIn`, `partialCheckOut`, `booked`, `partialBoth`
 
 **DateStatus enum**:
-- `pending` � ~uta + dijagonalni uzorak (`#6B4C00` @ 60%)
-- `partialBoth` � turnover day (oba bookinga)
-- `isCheckOutPending` / `isCheckInPending` � prati koja polovica je pending
+- `pending` ? ~uta + dijagonalni uzorak (`#6B4C00` @ 60%)
+- `partialBoth` ? turnover day (oba bookinga)
+- `isCheckOutPending` / `isCheckInPending` ? prati koja polovica je pending
 
-**� NE REFAKTORISATI** - duplikacija `_buildCalendarMap` vs `_buildYearCalendarMap` je NAMJERNA safety net. Prethodni refaktoring uveo 5+ bugova.
+**? NE REFAKTORISATI** - duplikacija `_buildCalendarMap` vs `_buildYearCalendarMap` je NAMJERNA safety net. Prethodni refaktoring uveo 5+ bugova.
 
 ---
 
@@ -87,7 +87,7 @@ sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 
 ---
 
-## =� STRIPE FLOW
+## =? STRIPE FLOW
 
 ```
 1. User klikne "Pay with Stripe"
@@ -104,9 +104,9 @@ ava race condition gdje 2 korisnika plate za iste datume.
 
 ---
 
-## 🌐 HOSTING & DOMENE
+## ?? HOSTING & DOMENE
 
-**Domena**: `bookbed.io` (Porkbun) → DNS na Cloudflare
+**Domena**: `bookbed.io` (Porkbun) ? DNS na Cloudflare
 
 **Firebase Hosting targets** (`.firebaserc`):
 | Target | Site ID | Build folder | Custom domain |
@@ -126,22 +126,22 @@ flutter build web --release --target lib/widget_main.dart -o build/web_widget
 firebase deploy --only hosting
 ```
 
-**Klijent subdomene** (dodaju se u Firebase Console → Hosting → Add custom domain):
-- `jasko-rab.bookbed.io` → widget za Jasmina
+**Klijent subdomene** (dodaju se u Firebase Console ? Hosting ? Add custom domain):
+- `jasko-rab.bookbed.io` ? widget za Jasmina
 
 ---
 
-## 📱 MULTI-PLATFORM BUILD SYSTEM
+## ?? MULTI-PLATFORM BUILD SYSTEM
 
-### Podržane platforme
+### Podr�ane platforme
 | Platforma | Build mod | Hot Reload | Napomena |
 |-----------|-----------|------------|----------|
-| **Web (Chrome)** | Debug | ✅ Da | Normalno radi |
-| **iOS Simulator** | Debug | ✅ Da | Normalno radi |
-| **Android fizički** | **Release** | ❌ Ne | Debug ima bug |
-| **Android Emulator** | **Release** | ❌ Ne | Debug ima bug |
+| **Web (Chrome)** | Debug | ? Da | Normalno radi |
+| **iOS Simulator** | Debug | ? Da | Normalno radi |
+| **Android fizi�ki** | **Release** | ? Ne | Debug ima bug |
+| **Android Emulator** | **Release** | ? Ne | Debug ima bug |
 
-### Verzije dependency-a (KRITIČNO)
+### Verzije dependency-a (KRITI�NO)
 ```yaml
 # pubspec.yaml - NE UPGRADEATI bez testiranja!
 flutter_riverpod: ^2.5.1      # NE 3.x - breaking changes
@@ -162,7 +162,7 @@ distributionUrl=gradle-8.11.1-all.zip  // Gradle
 ### Poznati bug: Android Debug Build
 **Problem**: `firebase_storage` plugin ne kompajlira Kotlin kod prije Java koda u debug modu.
 **Error**: `cannot find symbol: FlutterFirebaseStoragePlugin`
-**Workaround**: Koristi `--release` flag za Android uređaje.
+**Workaround**: Koristi `--release` flag za Android ure�aje.
 
 ### Pokretanje na svim platformama
 ```bash
@@ -172,7 +172,7 @@ flutter run -d chrome --web-port 8080
 # 2. iOS Simulator (debug, sa hot reload)
 flutter run -d <iOS_DEVICE_ID>
 
-# 3. Android fizički uređaj (MORA biti release)
+# 3. Android fizi�ki ure�aj (MORA biti release)
 flutter run -d <ANDROID_DEVICE_ID> --release
 
 # 4. Android Emulator (MORA biti release)
@@ -180,21 +180,21 @@ flutter run -d emulator-5554 --release
 ```
 
 ### Conditional imports za Web
-Web-specifični kod (npr. `package:web`) koristi conditional imports:
+Web-specifi�ni kod (npr. `package:web`) koristi conditional imports:
 ```dart
 // lib/core/utils/web_utils.dart - barrel export
 export 'web_utils_stub.dart'
     if (dart.library.js_interop) 'web_utils_web.dart';
 
-// Korištenje:
+// Kori�tenje:
 import 'package:rab_booking/core/utils/web_utils.dart';
 replaceUrlState('/new-path');  // No-op na mobile, radi na web
-createTabCommunicationService();  // Vraća Stub ili Web implementaciju
+createTabCommunicationService();  // Vra�a Stub ili Web implementaciju
 ```
 
 ### Prije build-a
 ```bash
-# 1. Očisti stare artefakte
+# 1. O�isti stare artefakte
 flutter clean
 
 # 2. Regeneriraj dependencies
@@ -209,20 +209,20 @@ flutter build ios --release --no-codesign  # iOS
 flutter build web --release  # Web
 ```
 
-### ⚠️ NE RADITI
-- NE pokreći više Android buildova paralelno (Gradle cache conflict)
+### ?? NE RADITI
+- NE pokre�i vi�e Android buildova paralelno (Gradle cache conflict)
 - NE upgradeati Riverpod/Freezed na 3.x bez full refactora
-- NE miješati debug i release buildove bez `flutter clean`
+- NE mije�ati debug i release buildove bez `flutter clean`
 
 ---
 
-## 📱 ANDROID CHROME KEYBOARD FIX (Flutter #175074)
+## ?? ANDROID CHROME KEYBOARD FIX (Flutter #175074)
 
 **Problem**: Na Android Chrome, kada korisnik zatvori tastaturu BACK tipkom, Flutter Web (CanvasKit) ne recalculate-a layout i ostavlja bijeli prostor gdje je bila tastatura.
 
 **Uzrok**: Flutter issue [#175074](https://github.com/flutter/flutter/issues/175074) - `resizeToAvoidBottomInset` ne radi korektno na Android Web.
 
-### Rješenje (3 komponente):
+### Rje�enje (3 komponente):
 
 **1. JavaScript fix u `web/index.html`**:
 ```javascript
@@ -256,7 +256,7 @@ Widget build(BuildContext context) {
   return KeyedSubtree(
     key: ValueKey('my_screen_$keyboardFixRebuildKey'),
     child: Scaffold(
-      resizeToAvoidBottomInset: false, // KRITIČNO!
+      resizeToAvoidBottomInset: false, // KRITI�NO!
       // ...
     ),
   );
@@ -287,29 +287,29 @@ Widget build(BuildContext context) {
 - `unit_form_screen.dart`
 - `step_1_basic_info.dart`, `step_2_capacity.dart`, `step_3_pricing.dart`
 
-### ⚠️ KADA KREIRAŠ NOVI SCREEN SA INPUT POLJIMA:
+### ?? KADA KREIRA� NOVI SCREEN SA INPUT POLJIMA:
 1. Dodaj `with AndroidKeyboardDismissFix` mixinu
 2. Wrap `Scaffold` u `KeyedSubtree(key: ValueKey('screen_name_$keyboardFixRebuildKey'), ...)`
 3. Postavi `resizeToAvoidBottomInset: false` na Scaffold
 
 ---
 
-## 🔗 SUBDOMAIN & URL SLUG SYSTEM
+## ?? SUBDOMAIN & URL SLUG SYSTEM
 
 **URL formati** (widget):
-| Format | Primjer | Korištenje |
+| Format | Primjer | Kori�tenje |
 |--------|---------|------------|
 | Query params | `jasko-rab.bookbed.io/?property=XXX&unit=YYY` | iframe embed |
 | Clean slug | `jasko-rab.bookbed.io/apartman-6` | standalone, dijeljenje |
 
 **Rezolucija slug URL-a**:
-1. Subdomain (`jasko-rab`) → `fetchPropertyBySubdomain()` → property
-2. Path slug (`apartman-6`) → `fetchUnitBySlug(propertyId, slug)` → unit
+1. Subdomain (`jasko-rab`) ? `fetchPropertyBySubdomain()` ? property
+2. Path slug (`apartman-6`) ? `fetchUnitBySlug(propertyId, slug)` ? unit
 
-**Ključni fajlovi**:
-- `subdomain_service.dart` → `resolveFullContext(urlSlug)`
-- `subdomain_provider.dart` → `fullSlugContextProvider(slug)`
-- `router_widget.dart` → `/:slug` route
+**Klju�ni fajlovi**:
+- `subdomain_service.dart` ? `resolveFullContext(urlSlug)`
+- `subdomain_provider.dart` ? `fullSlugContextProvider(slug)`
+- `router_widget.dart` ? `/:slug` route
 
 **Slug stabilnost**: Slug se NE regenerira automatski kad se promijeni naziv unita (`_isManualSlugEdit` flag u `unit_form_screen.dart`).
 
@@ -336,7 +336,7 @@ ne sekcije
 
 ---
 
-## 🎨 UI/UX STANDARDI
+## ?? UI/UX STANDARDI
 
 **Filozofija**: Less colorful, more professional - neutralne pozadine sa jednom accent bojom na ikonama.
 
@@ -347,7 +347,7 @@ ne sekcije
 
 **Cards/Tiles**:
 - Ikone: jedna boja (primary) sa 10-12% opacity pozadinom
-- Shadows: `AppShadows.elevation1` za većinu, `elevation2` za istaknute
+- Shadows: `AppShadows.elevation1` za ve�inu, `elevation2` za istaknute
 - Border radius: 12px standard
 
 **Skeleton loaders**: `SkeletonColors.baseColor/highlightColor` iz `skeleton_loader.dart`
@@ -364,7 +364,7 @@ ne sekcije
 
 **Changelog 4.9**: Android Chrome keyboard dismiss fix (Flutter #175074) - JavaScript "jiggle" method + Dart mixin za sve forme.
 
-**Changelog 4.8**: Widget snackbar boje usklađene sa calendar statusima.
+**Changelog 4.8**: Widget snackbar boje uskla�ene sa calendar statusima.
 
 **Changelog 4.7**: Multi-platform build dokumentacija - Android release mode, conditional imports, dependency verzije.
 

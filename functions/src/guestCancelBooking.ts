@@ -54,7 +54,11 @@ function validateEmailConfig(emailConfig: any): {
  */
 export const guestCancelBooking = onCall(async (request) => {
   const data = request.data;
-  const {bookingId, bookingReference, guestEmail} = data;
+  
+  // Support both camelCase and snake_case for backward compatibility
+  const bookingId = data.bookingId || data.booking_id;
+  const bookingReference = data.bookingReference || data.booking_reference;
+  const guestEmail = data.guestEmail || data.guest_email;
 
   // Validate required fields
   if (!bookingId || !bookingReference || !guestEmail) {

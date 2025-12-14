@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -28,7 +30,8 @@ class UnitPricingScreen extends ConsumerStatefulWidget {
   ConsumerState<UnitPricingScreen> createState() => _UnitPricingScreenState();
 }
 
-class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
+class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
+    with AndroidKeyboardDismissFixApproach1<UnitPricingScreen> {
   final _basePriceController = TextEditingController();
   bool _isUpdatingBasePrice = false;
   UnitModel? _selectedUnit;
@@ -113,18 +116,38 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             );
           }
 
-          return Scaffold(
-            resizeToAvoidBottomInset: false,
-            appBar: CommonAppBar(
-              title: l10n.unitPricingTitle,
-              leadingIcon: Icons.arrow_back,
-              onLeadingIconTap: (context) => Navigator.of(context).pop(),
-            ),
-            body: _buildMainContent(
-              isMobile: isMobile,
-              units: units,
-              showUnitSelector: true,
-              l10n: l10n,
+          return PopScope(
+            onPopInvokedWithResult: (didPop, result) async {
+              if (!didPop) {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/owner/properties');
+                }
+              }
+            },
+            child: KeyedSubtree(
+              key: ValueKey('unit_pricing_screen_$keyboardFixRebuildKey'),
+              child: Scaffold(
+                resizeToAvoidBottomInset: true,
+                appBar: CommonAppBar(
+                  title: l10n.unitPricingTitle,
+                  leadingIcon: Icons.arrow_back,
+                  onLeadingIconTap: (context) {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/owner/properties');
+                    }
+                  },
+                ),
+                body: _buildMainContent(
+                  isMobile: isMobile,
+                  units: units,
+                  showUnitSelector: true,
+                  l10n: l10n,
+                ),
+              ),
             ),
           );
         },
@@ -144,18 +167,38 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
       );
     }
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: CommonAppBar(
-        title: l10n.unitPricingTitle,
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
-      ),
-      body: _buildMainContent(
-        isMobile: isMobile,
-        units: null,
-        showUnitSelector: false,
-        l10n: l10n,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        }
+      },
+      child: KeyedSubtree(
+        key: ValueKey('unit_pricing_screen_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: CommonAppBar(
+            title: l10n.unitPricingTitle,
+            leadingIcon: Icons.arrow_back,
+            onLeadingIconTap: (context) {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/properties');
+              }
+            },
+          ),
+          body: _buildMainContent(
+            isMobile: isMobile,
+            units: null,
+            showUnitSelector: false,
+            l10n: l10n,
+          ),
+        ),
       ),
     );
   }
@@ -172,6 +215,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     final gap = isMobile ? 8.0 : 16.0;
 
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
         children: [
           // Unit selector (only when accessed from drawer)
@@ -287,12 +331,18 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CommonAppBar(
         title: l10n.unitPricingTitle,
         leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        onLeadingIconTap: (context) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        },
       ),
       body: Center(
         child: Padding(
@@ -340,12 +390,18 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
   Widget _buildLoadingState(AppLocalizations l10n) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CommonAppBar(
         title: l10n.unitPricingTitle,
         leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        onLeadingIconTap: (context) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        },
       ),
       body: const Center(child: CircularProgressIndicator()),
     );
@@ -355,12 +411,18 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CommonAppBar(
         title: l10n.unitPricingTitle,
         leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        onLeadingIconTap: (context) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        },
       ),
       body: Center(
         child: Padding(

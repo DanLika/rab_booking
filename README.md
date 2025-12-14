@@ -192,9 +192,9 @@ RESEND_API_KEY=re_...
 ## 📚 Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - Development standards & critical sections
-- **[CLAUDE_BUGS_ARCHIVE.md](./CLAUDE_BUGS_ARCHIVE.md)** - Bug fixes with code examples
-- **[CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md)** - Widget modes & payment logic
-- **[CLAUDE_MCP_TOOLS.md](./CLAUDE_MCP_TOOLS.md)** - MCP servers & slash commands
+- **[CLAUDE_BUGS_ARCHIVE.md](./docs/bugs-archive/CLAUDE_BUGS_ARCHIVE.md)** - Bug fixes with code examples
+- **[CLAUDE_WIDGET_SYSTEM.md](./docs/cloud-widget-systems/CLAUDE_WIDGET_SYSTEM.md)** - Widget modes & payment logic
+- **[CLAUDE_MCP_TOOLS.md](./docs/cloud-mcp-tools/CLAUDE_MCP_TOOLS.md)** - MCP servers & slash commands
 
 ---
 

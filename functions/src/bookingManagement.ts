@@ -112,7 +112,11 @@ export const autoCancelExpiredBookings = onSchedule(
                   propertyName,
                   unitName,
                   booking.check_in.toDate(),
-                  booking.check_out.toDate()
+                  booking.check_out.toDate(),
+                  undefined, // refundAmount
+                  booking.property_id, // propertyId
+                  booking.cancellation_reason || "Payment not received within deadline", // cancellationReason
+                  true // cancelledByOwner
                 );
               },
               "Auto-Cancel Notification",

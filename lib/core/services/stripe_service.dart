@@ -87,14 +87,34 @@ class StripeService {
         '[StripeService] Firebase Functions error: ${e.code} - ${e.message}',
         e,
       );
+      
+      // Provide more detailed error messages based on error code
+      String userMessage;
+      switch (e.code) {
+        case 'invalid-argument':
+          userMessage = e.message ?? 'Invalid booking data. Please check your information and try again.';
+          break;
+        case 'failed-precondition':
+          userMessage = e.message ?? 'Payment setup incomplete. Please contact the property owner.';
+          break;
+        case 'already-exists':
+          userMessage = e.message ?? 'These dates are no longer available. Please select different dates.';
+          break;
+        case 'permission-denied':
+          userMessage = 'Permission denied. Please refresh the page and try again.';
+          break;
+        default:
+          userMessage = e.message ?? 'Failed to create checkout session. Please try again.';
+      }
+      
       throw StripeServiceException(
-        'Failed to create checkout session: ${e.message}',
+        userMessage,
         e.code,
       );
     } catch (e) {
       await LoggingService.logError('[StripeService] Unexpected error', e);
       throw StripeServiceException(
-        'Unexpected error creating checkout session',
+        'Unexpected error creating checkout session. Please try again.',
         e.toString(),
       );
     }

@@ -10,7 +10,7 @@ import {getAuth} from "firebase-admin/auth";
 import {logError, logSuccess, logOperation} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
 import {sanitizeEmail} from "./utils/inputSanitization";
-import {sendPasswordResetEmailV2} from "./email/templates/password-reset-v2";
+import {sendPasswordResetEmailV2} from "./email/templates/version-2/password-reset-v2";
 import {Resend} from "resend";
 
 // Lazy initialization of Resend client

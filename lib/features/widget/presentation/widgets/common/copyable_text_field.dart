@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
+import '../../l10n/widget_translations.dart';
+import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 
 /// A text field with a label, value, icon, and copy button.
 ///
@@ -14,10 +17,11 @@ import '../../theme/minimalist_colors.dart';
 ///   value: 'HR1234567890123456789',
 ///   icon: Icons.account_balance,
 ///   isDarkMode: isDarkMode,
-///   onCopy: () {
-///     Clipboard.setData(ClipboardData(text: value));
+///   onCopy: () async {
+///     await Clipboard.setData(ClipboardData(text: value));
 ///     // Show snackbar
 ///   },
+///   translations: tr, // Optional: for localized error messages
 /// )
 /// ```
 class CopyableTextField extends StatelessWidget {
@@ -34,7 +38,12 @@ class CopyableTextField extends StatelessWidget {
   final bool isDarkMode;
 
   /// Callback when copy button is pressed
-  final VoidCallback onCopy;
+  /// Bug #42 Fix: Changed to async function to support error handling
+  final Future<void> Function() onCopy;
+
+  /// Optional translations for localized tooltip
+  /// Bug #40 Fix: Localized copy tooltip
+  final WidgetTranslations? translations;
 
   const CopyableTextField({
     super.key,
@@ -43,17 +52,54 @@ class CopyableTextField extends StatelessWidget {
     required this.icon,
     required this.isDarkMode,
     required this.onCopy,
+    this.translations,
   });
+
+  /// Check if label should use monospace font based on case-insensitive keyword matching
+  ///
+  /// Returns true if label contains any of the following keywords (case-insensitive):
+  /// - IBAN, SWIFT, BIC (banking codes)
+  /// - Reference, Referenca, Referenz, Riferimento (reference numbers)
+  /// - Account, Broj, Number, Numero, Kontonummer (account numbers)
+  bool _shouldUseMonospace(String label) {
+    final lowerLabel = label.toLowerCase();
+
+    // Banking codes (IBAN, SWIFT, BIC)
+    if (lowerLabel.contains('iban') || lowerLabel.contains('swift') || lowerLabel.contains('bic')) {
+      return true;
+    }
+
+    // Reference numbers (all languages)
+    if (lowerLabel.contains('reference') ||
+        lowerLabel.contains('referenca') ||
+        lowerLabel.contains('referenz') ||
+        lowerLabel.contains('riferimento')) {
+      return true;
+    }
+
+    // Account numbers (all languages)
+    if (lowerLabel.contains('account') ||
+        lowerLabel.contains('broj') ||
+        lowerLabel.contains('number') ||
+        lowerLabel.contains('numero') ||
+        lowerLabel.contains('kontonummer')) {
+      return true;
+    }
+
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Bug #47 Fix: Return empty widget if value is empty to prevent layout issues
+    if (value.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    // Use monospace font for IBAN and reference numbers
-    final useMonospace =
-        label.contains('IBAN') ||
-        label.contains('Broj') ||
-        label.contains('Reference');
+    // Bug #41 Fix: Use case-insensitive helper method for monospace font detection
+    final useMonospace = _shouldUseMonospace(label);
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.s),
@@ -92,13 +138,26 @@ class CopyableTextField extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.content_copy,
-              size: IconSizeTokens.small,
-              color: colors.buttonPrimary,
-            ),
-            onPressed: onCopy,
-            tooltip: 'Kopiraj',
+            icon: Icon(Icons.content_copy, size: IconSizeTokens.small, color: colors.buttonPrimary),
+            onPressed: onCopy != null
+                ? () async {
+                    try {
+                      await onCopy!();
+                    } catch (e) {
+                      // Bug #42 Fix: Handle clipboard errors gracefully
+                      if (context.mounted) {
+                        final errorMessage = translations?.errorOccurred ?? 'Failed to copy to clipboard';
+                        SnackBarHelper.showError(
+                          context: context,
+                          message: errorMessage,
+                          duration: const Duration(seconds: 3),
+                        );
+                      }
+                      debugPrint('Error copying to clipboard: $e');
+                    }
+                  }
+                : null,
+            tooltip: translations?.copy ?? 'Copy', // Bug #40 Fix: Localized tooltip
           ),
         ],
       ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 import '../../theme/minimalist_colors.dart';
+import '../../../utils/date_normalizer.dart';
 import 'price_breakdown_widget.dart';
 
 /// Compact summary displayed in the pill bar showing dates, price, and reserve button.
@@ -87,12 +89,7 @@ class CompactPillSummary extends StatelessWidget {
           translations: translations,
         ),
         const SizedBox(height: SpacingTokens.m),
-        if (showReserveButton)
-          _ReserveButton(
-            onTap: onReserve,
-            label: translations.reserve,
-            colors: colors,
-          ),
+        if (showReserveButton) _ReserveButton(onTap: onReserve, label: translations.reserve, colors: colors),
       ],
     );
   }
@@ -103,11 +100,7 @@ class _CloseButton extends StatelessWidget {
   final bool isDarkMode;
   final MinimalistColorSchemeAdapter colors;
 
-  const _CloseButton({
-    required this.onTap,
-    required this.isDarkMode,
-    required this.colors,
-  });
+  const _CloseButton({required this.onTap, required this.isDarkMode, required this.colors});
 
   @override
   Widget build(BuildContext context) {
@@ -116,20 +109,12 @@ class _CloseButton extends StatelessWidget {
       children: [
         InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(
-            CompactPillSummary._closeButtonRadius,
-          ),
+          borderRadius: BorderRadius.circular(CompactPillSummary._closeButtonRadius),
           child: Container(
-            padding: const EdgeInsets.all(
-              CompactPillSummary._closeButtonPadding,
-            ),
+            padding: const EdgeInsets.all(CompactPillSummary._closeButtonPadding),
             decoration: BoxDecoration(
-              color: isDarkMode
-                  ? ColorTokens.pureWhite
-                  : colors.backgroundSecondary,
-              borderRadius: BorderRadius.circular(
-                CompactPillSummary._closeButtonRadius,
-              ),
+              color: isDarkMode ? ColorTokens.pureWhite : colors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(CompactPillSummary._closeButtonRadius),
               border: Border.all(color: colors.borderLight),
             ),
             child: Icon(
@@ -163,30 +148,52 @@ class _DateRangeSection extends StatelessWidget {
 
   static final _dateFormat = DateFormat('MMM dd, yyyy');
 
+  /// Safely format date with fallback to simple format if DateFormat fails
+  ///
+  /// Returns formatted date string using DateFormat, or falls back to
+  /// simple format (YYYY-MM-DD) if formatting fails.
+  ///
+  /// Bug #39 Fix: Normalizes date and converts to local time if in UTC
+  /// to ensure consistent date display regardless of timezone.
+  String _formatDate(DateTime date) {
+    try {
+      // Bug #39 Fix: Normalize date first (remove time components)
+      final normalized = DateNormalizer.normalize(date);
+
+      // Bug #39 Fix: Convert to local time if in UTC for display
+      // DateFormat.format() uses local time, so we need to ensure
+      // the date is in local timezone to avoid timezone conversion issues
+      final localDate = normalized.isUtc ? normalized.toLocal() : normalized;
+
+      return _dateFormat.format(localDate);
+    } catch (e) {
+      // Fallback to simple format if DateFormat.format() fails
+      // This prevents app crashes from invalid DateTime or formatting errors
+      debugPrint('Error formatting date: $date, error: $e');
+
+      // Bug #39 Fix: Also normalize and convert to local for fallback format
+      final normalized = DateNormalizer.normalize(date);
+      final localDate = normalized.isUtc ? normalized.toLocal() : normalized;
+
+      return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useColumnLayout =
-            constraints.maxWidth < CompactPillSummary._columnLayoutBreakpoint;
-        final dateText =
-            '${_dateFormat.format(checkIn)} - ${_dateFormat.format(checkOut)}';
+        final useColumnLayout = constraints.maxWidth < CompactPillSummary._columnLayoutBreakpoint;
+        final dateText = '${_formatDate(checkIn)} - ${_formatDate(checkOut)}';
 
         return Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpacingTokens.m,
-            vertical: SpacingTokens.s,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
           decoration: BoxDecoration(
             color: colors.buttonPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(SpacingTokens.m),
-            border: Border.all(
-              color: colors.buttonPrimary.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: colors.buttonPrimary.withValues(alpha: 0.3)),
           ),
-          child: useColumnLayout
-              ? _buildColumnLayout(dateText)
-              : _buildRowLayout(dateText),
+          child: useColumnLayout ? _buildColumnLayout(dateText) : _buildRowLayout(dateText),
         );
       },
     );
@@ -198,12 +205,7 @@ class _DateRangeSection extends StatelessWidget {
       children: [
         _buildDateRow(dateText),
         const SizedBox(height: SpacingTokens.xs),
-        _NightsBadge(
-          nights: nights,
-          translations: translations,
-          isDarkMode: isDarkMode,
-          colors: colors,
-        ),
+        _NightsBadge(nights: nights, translations: translations, isDarkMode: isDarkMode, colors: colors),
       ],
     );
   }
@@ -214,12 +216,7 @@ class _DateRangeSection extends StatelessWidget {
       children: [
         _buildDateRow(dateText),
         const SizedBox(width: SpacingTokens.s),
-        _NightsBadge(
-          nights: nights,
-          translations: translations,
-          isDarkMode: isDarkMode,
-          colors: colors,
-        ),
+        _NightsBadge(nights: nights, translations: translations, isDarkMode: isDarkMode, colors: colors),
       ],
     );
   }
@@ -233,11 +230,7 @@ class _DateRangeSection extends StatelessWidget {
         Flexible(
           child: Text(
             dateText,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: colors.textPrimary,
-            ),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textPrimary),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -262,10 +255,7 @@ class _NightsBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.s,
-        vertical: 2,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: 2),
       decoration: BoxDecoration(
         color: colors.statusAvailableBackground,
         borderRadius: BorderRadius.circular(CompactPillSummary._badgeRadius),
@@ -287,26 +277,18 @@ class _ReserveButton extends StatelessWidget {
   final String label;
   final MinimalistColorSchemeAdapter colors;
 
-  const _ReserveButton({
-    required this.onTap,
-    required this.label,
-    required this.colors,
-  });
+  const _ReserveButton({required this.onTap, required this.label, required this.colors});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(
-        CompactPillSummary._reserveButtonRadius,
-      ),
+      borderRadius: BorderRadius.circular(CompactPillSummary._reserveButtonRadius),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
         decoration: BoxDecoration(
           color: colors.buttonPrimary,
-          borderRadius: BorderRadius.circular(
-            CompactPillSummary._reserveButtonRadius,
-          ),
+          borderRadius: BorderRadius.circular(CompactPillSummary._reserveButtonRadius),
         ),
         child: Text(
           label,

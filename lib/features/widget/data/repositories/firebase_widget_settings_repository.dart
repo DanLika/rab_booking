@@ -49,18 +49,18 @@ class FirebaseWidgetSettingsRepository {
     return _settingsDocRef(propertyId, unitId)
         .snapshots()
         .map((doc) {
-          if (!doc.exists) return null;
-          try {
-            return WidgetSettings.fromFirestore(doc);
-          } catch (e) {
+      if (!doc.exists) return null;
+      try {
+        return WidgetSettings.fromFirestore(doc);
+      } catch (e) {
             LoggingService.logError('Error parsing widget settings', e);
-            return null;
-          }
+        return null;
+      }
         })
         .onErrorReturnWith((error, stackTrace) {
           LoggingService.logError('Error in widget settings stream', error, stackTrace);
-          return null;
-        });
+      return null;
+    });
   }
 
   /// Create default widget settings for a new unit
@@ -275,7 +275,7 @@ class FirebaseWidgetSettingsRepository {
 
       // Commit remaining operations
       if (updateCount > 0) {
-        await batch.commit();
+      await batch.commit();
       }
 
       LoggingService.log('Email verification updated for $totalUpdated units in property: $propertyId', tag: _logTag);

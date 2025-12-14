@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
 import '../../l10n/widget_translations.dart';
+import '../../../domain/constants/widget_constants.dart';
 
 /// Card displaying payment information for a booking.
 ///
@@ -64,9 +65,7 @@ class PaymentInfoCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark
-        ? colors.backgroundTertiary
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -97,7 +96,7 @@ class PaymentInfoCard extends ConsumerWidget {
           _buildPaymentRow(
             tr.remaining,
             remainingAmount,
-            color: remainingAmount > 0 ? colors.error : colors.success,
+            color: remainingAmount.abs() > WidgetConstants.priceTolerance ? colors.error : colors.success,
           ),
           const SizedBox(height: SpacingTokens.s),
           Divider(color: colors.borderDefault),
@@ -105,43 +104,38 @@ class PaymentInfoCard extends ConsumerWidget {
           _buildStatusRow(tr),
           const SizedBox(height: SpacingTokens.xs),
           _buildMethodRow(tr),
-          if (paymentDeadline != null) ...[
-            const SizedBox(height: SpacingTokens.xs),
-            _buildDeadlineRow(tr),
-          ],
+          if (paymentDeadline != null) ...[const SizedBox(height: SpacingTokens.xs), _buildDeadlineRow(tr)],
         ],
       ),
     );
   }
 
-  Widget _buildPaymentRow(
-    String label,
-    double amount, {
-    bool bold = false,
-    Color? color,
-  }) {
+  /// Format amount with fallback for non-finite values
+  /// Bug #72 Fix: Handle NaN and Infinity values gracefully
+  String _formatAmount(double amount) {
+    if (!amount.isFinite) {
+      return '€0.00'; // Fallback za NaN/Infinity
+    }
+    return '€${amount.toStringAsFixed(2)}';
+  }
+
+  Widget _buildPaymentRow(String label, double amount, {bool bold = false, Color? color}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
-            fontSize: bold
-                ? TypographyTokens.fontSizeM
-                : TypographyTokens.fontSizeS,
+            fontSize: bold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
             fontWeight: bold ? TypographyTokens.bold : TypographyTokens.regular,
             color: color ?? colors.textSecondary,
           ),
         ),
         Text(
-          '€${amount.toStringAsFixed(2)}',
+          _formatAmount(amount),
           style: TextStyle(
-            fontSize: bold
-                ? TypographyTokens.fontSizeL
-                : TypographyTokens.fontSizeM,
-            fontWeight: bold
-                ? TypographyTokens.bold
-                : TypographyTokens.semiBold,
+            fontSize: bold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
+            fontWeight: bold ? TypographyTokens.bold : TypographyTokens.semiBold,
             color: color ?? colors.textPrimary,
           ),
         ),
@@ -155,10 +149,7 @@ class PaymentInfoCard extends ConsumerWidget {
       children: [
         Text(
           tr.paymentStatusLabel,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
-            color: colors.textSecondary,
-          ),
+          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
         ),
         _buildPaymentStatusChip(tr),
       ],
@@ -171,10 +162,7 @@ class PaymentInfoCard extends ConsumerWidget {
       children: [
         Text(
           tr.paymentMethodLabel,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
-            color: colors.textSecondary,
-          ),
+          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
         ),
         Text(
           _formatPaymentMethod(tr),
@@ -188,24 +176,30 @@ class PaymentInfoCard extends ConsumerWidget {
     );
   }
 
+  /// Bug #67 Fix: Format deadline with error handling
+  String _formatDeadline(String? deadline, WidgetTranslations tr) {
+    if (deadline == null || deadline.isEmpty) return '';
+
+    try {
+      final date = DateTimeParser.parseOrThrow(deadline, context: 'PaymentInfoCard.paymentDeadline');
+      return DateFormat('MMM d, yyyy').format(date);
+    } catch (e) {
+      debugPrint('Error formatting deadline: $deadline, error: $e');
+      // Fallback to original string if formatting fails
+      return deadline;
+    }
+  }
+
   Widget _buildDeadlineRow(WidgetTranslations tr) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           tr.paymentDeadline,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
-            color: colors.textSecondary,
-          ),
+          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
         ),
         Text(
-          DateFormat('MMM d, yyyy').format(
-            DateTimeParser.parseOrThrow(
-              paymentDeadline,
-              context: 'PaymentInfoCard.paymentDeadline',
-            ),
-          ),
+          _formatDeadline(paymentDeadline, tr),
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             fontWeight: TypographyTokens.semiBold,
@@ -225,10 +219,7 @@ class PaymentInfoCard extends ConsumerWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.s,
-        vertical: SpacingTokens.xxs,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xxs),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderTokens.circularRounded,
@@ -245,11 +236,10 @@ class PaymentInfoCard extends ConsumerWidget {
     );
   }
 
-  String _formatPaymentMethod(WidgetTranslations tr) =>
-      switch (paymentMethod.toLowerCase()) {
-        'bank_transfer' => tr.bankTransfer,
-        'stripe' => tr.creditCard,
-        'cash' => tr.cash,
-        _ => paymentMethod,
-      };
+  String _formatPaymentMethod(WidgetTranslations tr) => switch (paymentMethod.toLowerCase()) {
+    'bank_transfer' => tr.bankTransfer,
+    'stripe' => tr.creditCard,
+    'cash' => tr.cash,
+    _ => paymentMethod,
+  };
 }

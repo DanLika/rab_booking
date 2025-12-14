@@ -24,22 +24,16 @@ class MonthCalendarWidget extends ConsumerStatefulWidget {
   final String unitId;
   final Function(DateTime? start, DateTime? end)? onRangeSelected;
 
-  const MonthCalendarWidget({
-    super.key,
-    required this.propertyId,
-    required this.unitId,
-    this.onRangeSelected,
-  });
+  const MonthCalendarWidget({super.key, required this.propertyId, required this.unitId, this.onRangeSelected});
 
   @override
-  ConsumerState<MonthCalendarWidget> createState() =>
-      _MonthCalendarWidgetState();
+  ConsumerState<MonthCalendarWidget> createState() => _MonthCalendarWidgetState();
 }
 
 class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
-  DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  DateTime _currentMonth = DateTime.utc(DateTime.now().toUtc().year, DateTime.now().toUtc().month);
   DateTime? _hoveredDate; // For hover tooltip (desktop)
   Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
   bool _isValidating = false; // Prevent concurrent date range validations
@@ -47,12 +41,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   @override
   Widget build(BuildContext context) {
     // OPTIMIZED: Get minNights from cached widgetContext (eliminates duplicate unit fetch)
-    final widgetCtxAsync = ref.watch(
-      widgetContextProvider((
-        propertyId: widget.propertyId,
-        unitId: widget.unitId,
-      )),
-    );
+    final widgetCtxAsync = ref.watch(widgetContextProvider((propertyId: widget.propertyId, unitId: widget.unitId)));
     // Defensive null check: handle loading/error states gracefully
     final widgetCtx = widgetCtxAsync.valueOrNull;
     final minNights = widgetCtx?.unit.minStayNights ?? 1;
@@ -72,8 +61,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Column(
-      mainAxisSize:
-          MainAxisSize.min, // Take only needed height for iframe embedding
+      mainAxisSize: MainAxisSize.min, // Take only needed height for iframe embedding
       children: [
         // Combined header - explicitly outside any GestureDetector
         CalendarCombinedHeaderWidget(
@@ -93,19 +81,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         // Calendar and tooltip in Stack for overlay positioning
         // Note: No Expanded - calendar takes natural height for proper inline layout
         MouseRegion(
-          onHover: (event) =>
-              setState(() => _mousePosition = event.localPosition),
+          onHover: (event) => setState(() => _mousePosition = event.localPosition),
           child: GestureDetector(
             // Swipe gesture for month navigation
             onHorizontalDragEnd: (details) {
               // Swipe right (previous month) - positive velocity
-              if (details.primaryVelocity != null &&
-                  details.primaryVelocity! > 0) {
+              if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
                 setState(() {
-                  _currentMonth = DateTime(
-                    _currentMonth.year,
-                    _currentMonth.month - 1,
-                  );
+                  _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
                   // Only clear range if BOTH dates are selected (complete selection)
                   if (_rangeStart != null && _rangeEnd != null) {
                     _rangeStart = null;
@@ -115,13 +98,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 });
               }
               // Swipe left (next month) - negative velocity
-              else if (details.primaryVelocity != null &&
-                  details.primaryVelocity! < 0) {
+              else if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
                 setState(() {
-                  _currentMonth = DateTime(
-                    _currentMonth.year,
-                    _currentMonth.month + 1,
-                  );
+                  _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
                   // Only clear range if BOTH dates are selected (complete selection)
                   if (_rangeStart != null && _rangeEnd != null) {
                     _rangeStart = null;
@@ -149,8 +128,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                   child: calendarData.when(
                     data: (data) => _buildMonthView(data, colors),
                     loading: () => const MonthCalendarSkeleton(),
-                    error: (error, stack) =>
-                        Center(child: Text(ErrorMessages.calendarError(error))),
+                    error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
                   ),
                 ),
                 // Hover tooltip overlay (desktop) - highest z-index
@@ -185,20 +163,18 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   Widget _buildCompactMonthNavigation(WidgetColorScheme colors) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final mediaQuery = MediaQuery.maybeOf(context);
+    final screenWidth = mediaQuery?.size.width ?? 400.0;
     final isSmallScreen = screenWidth < 400; // iPhone SE and similar
-    final monthYear = DateFormat.yMMM().format(_currentMonth);
+    final locale = Localizations.localeOf(context);
+    final monthYear = DateFormat.yMMM(locale.toString()).format(_currentMonth);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(
-            Icons.chevron_left,
-            size: isSmallScreen ? 16 : IconSizeTokens.small,
-            color: colors.textPrimary,
-          ),
+          icon: Icon(Icons.chevron_left, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -206,10 +182,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           onPressed: () {
             setState(() {
-              _currentMonth = DateTime(
-                _currentMonth.year,
-                _currentMonth.month - 1,
-              );
+              _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
               // Only clear range if BOTH dates are selected (complete selection)
               // Preserve _rangeStart if user is still selecting checkOut
               // This allows cross-month date range selection
@@ -226,20 +199,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         Text(
           monthYear,
           style: TextStyle(
-            fontSize: isSmallScreen
-                ? TypographyTokens.fontSizeS
-                : TypographyTokens.fontSizeM,
+            fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
             fontWeight: TypographyTokens.bold,
             color: colors.textPrimary,
           ),
         ),
         const SizedBox(width: SpacingTokens.xxs),
         IconButton(
-          icon: Icon(
-            Icons.chevron_right,
-            size: isSmallScreen ? 16 : IconSizeTokens.small,
-            color: colors.textPrimary,
-          ),
+          icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -247,10 +214,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           onPressed: () {
             setState(() {
-              _currentMonth = DateTime(
-                _currentMonth.year,
-                _currentMonth.month + 1,
-              );
+              _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
               // Only clear range if BOTH dates are selected (complete selection)
               // Preserve _rangeStart if user is still selecting checkOut
               // This allows cross-month date range selection
@@ -267,16 +231,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildMonthView(
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildMonthView(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        final screenHeight = MediaQuery.of(context).size.height;
-        final maxHeight =
-            screenHeight * 0.75; // 75% of screen height for better centering
+        final mediaQuery = MediaQuery.maybeOf(context);
+        final screenWidth = mediaQuery?.size.width ?? 400.0;
+        final screenHeight = mediaQuery?.size.height ?? 800.0;
+        final maxHeight = screenHeight * 0.75; // 75% of screen height for better centering
 
         // Desktop: Show 1 month + booking sidebar (>= 1024px)
         final isDesktop = screenWidth >= 1024;
@@ -299,11 +260,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Center(
       child: Padding(
         // No top padding - spacing handled by CalendarCompactLegend margin (consistent with year view)
-        padding: const EdgeInsets.only(
-          left: SpacingTokens.l,
-          right: SpacingTokens.l,
-          bottom: SpacingTokens.m,
-        ),
+        padding: const EdgeInsets.only(left: SpacingTokens.l, right: SpacingTokens.l, bottom: SpacingTokens.m),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 650),
           child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
@@ -312,19 +269,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildMobileLayout(
-    Map<String, CalendarDateInfo> data,
-    double maxHeight,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildMobileLayout(Map<String, CalendarDateInfo> data, double maxHeight, WidgetColorScheme colors) {
     return Center(
       child: Padding(
         // No top padding - spacing handled by CalendarCompactLegend margin (consistent with year view)
-        padding: const EdgeInsets.only(
-          left: SpacingTokens.m,
-          right: SpacingTokens.m,
-          bottom: SpacingTokens.s,
-        ),
+        padding: const EdgeInsets.only(left: SpacingTokens.m, right: SpacingTokens.m, bottom: SpacingTokens.s),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
@@ -379,11 +328,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildMonthGridForMonth(
-    DateTime month,
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildMonthGridForMonth(DateTime month, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     // Get first day of month
     final firstDay = DateTime(month.year, month.month);
 
@@ -412,8 +357,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         crossAxisCount: 7,
         mainAxisSpacing: cellGap,
         crossAxisSpacing: cellGap,
-        childAspectRatio:
-            aspectRatio, // Responsive: 1.0 on mobile, 0.95 on desktop
+        childAspectRatio: aspectRatio, // Responsive: 1.0 on mobile, 0.95 on desktop
       ),
       itemCount: weeksNeeded * 7,
       itemBuilder: (context, index) {
@@ -430,11 +374,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildDayCell(
-    DateTime date,
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildDayCell(DateTime date, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     final key = CalendarDateUtils.getDateKey(date);
     final dateInfo = data[key];
 
@@ -442,23 +382,15 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       return _buildEmptyCell(colors);
     }
 
-    final isInRange = CalendarDateUtils.isDateInRange(
-      date,
-      _rangeStart,
-      _rangeEnd,
-    );
-    final isRangeStart =
-        _rangeStart != null && CalendarDateUtils.isSameDay(date, _rangeStart!);
-    final isRangeEnd =
-        _rangeEnd != null && CalendarDateUtils.isSameDay(date, _rangeEnd!);
-    final today = DateTime.now();
-    final todayNormalized = DateTime(today.year, today.month, today.day);
+    final isInRange = CalendarDateUtils.isDateInRange(date, _rangeStart, _rangeEnd);
+    final isRangeStart = _rangeStart != null && CalendarDateUtils.isSameDay(date, _rangeStart!);
+    final isRangeEnd = _rangeEnd != null && CalendarDateUtils.isSameDay(date, _rangeEnd!);
+    final today = DateTime.now().toUtc();
+    final todayNormalized = DateTime.utc(today.year, today.month, today.day);
     final isToday = CalendarDateUtils.isSameDay(date, today);
     final isPast = date.isBefore(todayNormalized);
 
-    final isHovered =
-        _hoveredDate != null &&
-        CalendarDateUtils.isSameDay(date, _hoveredDate!);
+    final isHovered = _hoveredDate != null && CalendarDateUtils.isSameDay(date, _hoveredDate!);
 
     // Generate semantic label for screen readers (localized)
     final translations = WidgetTranslations.of(context, ref);
@@ -474,9 +406,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Semantics(
       label: semanticLabel,
       button: widget.onRangeSelected != null,
-      enabled:
-          dateInfo.status == DateStatus.available &&
-          widget.onRangeSelected != null,
+      enabled: dateInfo.status == DateStatus.available && widget.onRangeSelected != null,
       selected: isRangeStart || isRangeEnd,
       child: MouseRegion(
         onEnter: (_) => setState(() => _hoveredDate = date),
@@ -499,9 +429,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                     ? colors.borderStrong
                     : _getBorderColorForDate(dateInfo.status, colors),
                 // Border width hierarchy: selected/today (thick) > hover/normal (medium)
-                width: (isRangeStart || isRangeEnd || isToday)
-                    ? BorderTokens.widthThick
-                    : BorderTokens.widthMedium,
+                width: (isRangeStart || isRangeEnd || isToday) ? BorderTokens.widthThick : BorderTokens.widthMedium,
               ),
               borderRadius: BorderTokens.calendarCell,
               boxShadow: isHovered ? ShadowTokens.hover : ShadowTokens.light,
@@ -544,9 +472,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                         Shadow(
                           offset: const Offset(0, 1),
                           blurRadius: 2.0,
-                          color: colors.backgroundPrimary.withValues(
-                            alpha: 0.3,
-                          ),
+                          color: colors.backgroundPrimary.withValues(alpha: 0.3),
                         ),
                       ],
                     ),
@@ -559,10 +485,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                     right: SpacingTokens.xs,
                     child: Container(
                       padding: const EdgeInsets.all(SpacingTokens.xxs),
-                      decoration: BoxDecoration(
-                        color: colors.textPrimary,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: BoxDecoration(color: colors.textPrimary, shape: BoxShape.circle),
                       child: Icon(
                         isRangeStart ? Icons.login : Icons.logout,
                         size: IconSizeTokens.xs,
@@ -586,10 +509,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         border: Border.all(color: colors.borderLight),
         borderRadius: BorderTokens.circularSubtle,
       ),
-      child: const Opacity(
-        opacity: OpacityTokens.mostlyVisible,
-        child: SizedBox.expand(),
-      ),
+      child: const Opacity(opacity: OpacityTokens.mostlyVisible, child: SizedBox.expand()),
     );
   }
 
@@ -599,10 +519,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    final validator = CalendarDateSelectionValidator(
-      context: context,
-      ref: ref,
-    );
+    final validator = CalendarDateSelectionValidator(context: context, ref: ref);
 
     // Pre-selection validation (past date, advance booking, restrictions)
     final preResult = validator.validatePreSelection(
@@ -628,20 +545,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         }
 
         // Determine start/end order
-        final DateTime start = date.isBefore(_rangeStart!)
-            ? date
-            : _rangeStart!;
+        final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
         // OPTIMIZED: Get minNights from cached widgetContext (reuses cached data)
         final validationMinNights =
             ref
-                .read(
-                  widgetContextProvider((
-                    propertyId: widget.propertyId,
-                    unitId: widget.unitId,
-                  )),
-                )
+                .read(widgetContextProvider((propertyId: widget.propertyId, unitId: widget.unitId)))
                 .valueOrNull
                 ?.unit
                 .minStayNights ??
@@ -672,10 +582,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   /// Show helpful message when user taps date in calendar_only (view-only) mode
   void _onViewOnlyTap(WidgetTranslations translations) {
-    SnackBarHelper.showInfo(
-      context: context,
-      message: translations.calendarOnlyTapMessage,
-    );
+    SnackBarHelper.showInfo(context: context, message: translations.calendarOnlyTapMessage);
   }
 
   /// Bug #72 Fix: Async validation using backend availability check
@@ -685,11 +592,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   /// - Uses _isValidating guard to prevent concurrent validation requests
   /// - Scenario: User rapidly clicks multiple dates → only first validation executes
   /// - Without guard: Multiple async calls could overwrite each other's results
-  Future<void> _validateAndSetRange(
-    DateTime start,
-    DateTime end,
-    WidgetColorScheme colors,
-  ) async {
+  Future<void> _validateAndSetRange(DateTime start, DateTime end, WidgetColorScheme colors) async {
     // Prevent concurrent validations (race condition protection)
     if (_isValidating) return;
 
@@ -698,11 +601,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     try {
       // Check availability using backend (works across all months)
       final isAvailable = await ref.read(
-        checkDateAvailabilityProvider(
-          unitId: widget.unitId,
-          checkIn: start,
-          checkOut: end,
-        ).future,
+        checkDateAvailabilityProvider(unitId: widget.unitId, checkIn: start, checkOut: end).future,
       );
 
       if (!mounted) return;
@@ -716,10 +615,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
         SnackBarHelper.showError(
           context: context,
-          message: WidgetTranslations.of(
-            context,
-            ref,
-          ).errorCannotSelectBookedDates,
+          message: WidgetTranslations.of(context, ref).errorCannotSelectBookedDates,
           duration: const Duration(seconds: 3),
         );
         return;
@@ -746,15 +642,22 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   /// Get darker border color for calendar cell based on status
-  Color _getBorderColorForDate(DateStatus status, WidgetColorScheme colors) =>
-      switch (status) {
-        DateStatus.available ||
-        DateStatus.partialCheckIn ||
-        DateStatus.partialCheckOut => colors.statusAvailableBorder,
-        DateStatus.booked ||
-        DateStatus.partialBoth => colors.statusBookedBorder,
-        DateStatus.pending => colors.statusPendingBorder,
-        DateStatus.blocked || DateStatus.disabled => colors.borderDefault,
-        DateStatus.pastReservation => colors.statusPastReservationBorder,
-      };
+  Color _getBorderColorForDate(DateStatus status, WidgetColorScheme colors) {
+    switch (status) {
+      case DateStatus.available:
+      case DateStatus.partialCheckIn:
+      case DateStatus.partialCheckOut:
+        return colors.statusAvailableBorder;
+      case DateStatus.booked:
+      case DateStatus.partialBoth:
+        return colors.statusBookedBorder;
+      case DateStatus.pending:
+        return colors.statusPendingBorder;
+      case DateStatus.blocked:
+      case DateStatus.disabled:
+        return colors.borderDefault;
+      case DateStatus.pastReservation:
+        return colors.statusPastReservationBorder;
+    }
+  }
 }

@@ -147,10 +147,7 @@ class _SmartLoadingScreenState extends ConsumerState<SmartLoadingScreen> {
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
       body: Center(
-        child: BookBedLoader(
-          isDarkMode: widget.isDarkMode,
-          progress: _progressController.progress,
-        ),
+        child: BookBedLoader(isDarkMode: widget.isDarkMode, progress: _progressController.progress),
       ),
     );
   }
@@ -177,12 +174,10 @@ class SmartLoadingScreenWithProvider<T> extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SmartLoadingScreenWithProvider<T>> createState() =>
-      _SmartLoadingScreenWithProviderState<T>();
+  ConsumerState<SmartLoadingScreenWithProvider<T>> createState() => _SmartLoadingScreenWithProviderState<T>();
 }
 
-class _SmartLoadingScreenWithProviderState<T>
-    extends ConsumerState<SmartLoadingScreenWithProvider<T>> {
+class _SmartLoadingScreenWithProviderState<T> extends ConsumerState<SmartLoadingScreenWithProvider<T>> {
   late final SmartProgressController _progressController;
   bool _minTimePassed = false;
   bool _showContent = false;
@@ -193,7 +188,7 @@ class _SmartLoadingScreenWithProviderState<T>
     super.initState();
     _progressController = SmartProgressController();
     _progressController.addListener(_onProgressChanged);
-    _startTime = DateTime.now();
+    _startTime = DateTime.now().toUtc();
 
     // Start progress animation if currently loading
     if (widget.asyncValue.isLoading) {
@@ -228,8 +223,8 @@ class _SmartLoadingScreenWithProviderState<T>
   Future<void> _finishProgress() async {
     // Calculate remaining time to meet minimum display
     // Defensive check: ensure _startTime is initialized
-    final startTime = _startTime ?? DateTime.now();
-    final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+    final startTime = _startTime ?? DateTime.now().toUtc();
+    final elapsed = DateTime.now().toUtc().difference(startTime).inMilliseconds;
     final remaining = widget.minimumDisplayTime - elapsed;
 
     if (remaining > 0) {
@@ -285,10 +280,7 @@ class _SmartLoadingScreenWithProviderState<T>
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
       body: Center(
-        child: BookBedLoader(
-          isDarkMode: widget.isDarkMode,
-          progress: _progressController.progress,
-        ),
+        child: BookBedLoader(isDarkMode: widget.isDarkMode, progress: _progressController.progress),
       ),
     );
   }

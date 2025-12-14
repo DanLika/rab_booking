@@ -21,20 +21,19 @@ class BookingNotesCard extends ConsumerWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const BookingNotesCard({
-    super.key,
-    required this.notes,
-    required this.colors,
-  });
+  const BookingNotesCard({super.key, required this.notes, required this.colors});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Bug #61 Fix: Check for empty notes string
+    if (notes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark
-        ? colors.backgroundTertiary
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -64,11 +63,7 @@ class BookingNotesCard extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.s),
           Text(
             notes,
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
-              color: colors.textSecondary,
-              height: 1.5,
-            ),
+            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary, height: 1.5),
           ),
         ],
       ),

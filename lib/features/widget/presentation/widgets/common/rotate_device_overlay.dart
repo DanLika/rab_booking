@@ -63,20 +63,30 @@ class RotateDeviceOverlay extends StatelessWidget {
               children: [
                 Icon(Icons.screen_rotation, size: iconSize, color: colors.textPrimary),
                 const SizedBox(height: SpacingTokens.l),
-                Text(
-                  translations.rotateYourDevice,
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXXL,
-                    fontWeight: TypographyTokens.bold,
-                    color: colors.textPrimary,
+                // Bug #51 Fix: Add Semantics for rotate prompt
+                Semantics(
+                  label: translations.rotateYourDevice,
+                  hint: translations.rotateForBestExperience,
+                  header: true,
+                  child: Column(
+                    children: [
+                      Text(
+                        translations.rotateYourDevice,
+                        style: TextStyle(
+                          fontSize: TypographyTokens.fontSizeXXL,
+                          fontWeight: TypographyTokens.bold,
+                          color: colors.textPrimary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: SpacingTokens.m),
+                      Text(
+                        translations.rotateForBestExperience,
+                        style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: SpacingTokens.m),
-                Text(
-                  translations.rotateForBestExperience,
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: SpacingTokens.xl),
                 _buildSwitchButton(),
@@ -92,17 +102,23 @@ class RotateDeviceOverlay extends StatelessWidget {
     final backgroundColor = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
     final foregroundColor = isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
 
-    return ElevatedButton(
-      onPressed: onSwitchToMonthView,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: foregroundColor,
-        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xl, vertical: SpacingTokens.m),
-        shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
-      ),
-      child: Text(
-        translations.switchToMonthView,
-        style: const TextStyle(fontSize: TypographyTokens.fontSizeM, fontWeight: TypographyTokens.semiBold),
+    // Bug #51 Fix: Add Semantics for button
+    return Semantics(
+      label: translations.switchToMonthView,
+      hint: translations.rotateForBestExperience,
+      button: true,
+      child: ElevatedButton(
+        onPressed: onSwitchToMonthView,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xl, vertical: SpacingTokens.m),
+          shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
+        ),
+        child: Text(
+          translations.switchToMonthView,
+          style: const TextStyle(fontSize: TypographyTokens.fontSizeM, fontWeight: TypographyTokens.semiBold),
+        ),
       ),
     );
   }

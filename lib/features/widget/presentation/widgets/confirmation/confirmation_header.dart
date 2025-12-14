@@ -57,69 +57,68 @@ class ConfirmationHeader extends ConsumerWidget {
   Widget _getConfirmationIcon(double iconSize) {
     switch (paymentMethod) {
       case 'stripe':
-        return Icon(
-          Icons.check_circle,
-          size: iconSize,
-          color: colors.textPrimary,
-        );
+        return Icon(Icons.check_circle, size: iconSize, color: colors.textPrimary);
       case 'bank_transfer':
-        return Icon(
-          Icons.schedule,
-          size: iconSize,
-          color: colors.textSecondary,
-        );
+        return Icon(Icons.schedule, size: iconSize, color: colors.textSecondary);
       case 'pay_on_arrival':
         return Icon(Icons.hotel, size: iconSize, color: colors.textPrimary);
       case 'pending':
         return Icon(Icons.pending, size: iconSize, color: colors.textSecondary);
       default:
-        return Icon(
-          Icons.check_circle,
-          size: iconSize,
-          color: colors.textPrimary,
-        );
+        return Icon(Icons.check_circle, size: iconSize, color: colors.textPrimary);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
-    // Responsive icon and logo sizes
-    final screenWidth = MediaQuery.of(context).size.width;
+    // Bug #53 Fix: Defensive check za MediaQuery
+    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
     final iconSize = screenWidth < 600 ? 56.0 : 80.0;
     final logoHeight = screenWidth < 600 ? 60.0 : 80.0;
+
+    final confirmationMessage = _getConfirmationMessage(tr);
+    final confirmationIcon = _getConfirmationIcon(iconSize);
+    // Bug #56 Fix: Remove redundant null assertion operator - use local variable
+    final logoUrl = customLogoUrl;
 
     return Column(
       children: [
         // Custom logo display (if configured)
-        if (customLogoUrl != null && customLogoUrl!.isNotEmpty) ...[
+        if (logoUrl != null && logoUrl.isNotEmpty) ...[
           CachedNetworkImage(
-            imageUrl: customLogoUrl!,
+            imageUrl: logoUrl,
             height: logoHeight,
             fit: BoxFit.contain,
-            placeholder: (context, url) =>
-                SizedBox(height: logoHeight, width: logoHeight),
+            placeholder: (context, url) => SizedBox(height: logoHeight, width: logoHeight),
             errorWidget: (context, url, error) => const SizedBox.shrink(),
           ),
           const SizedBox(height: SpacingTokens.l),
         ],
 
         // Success icon with animation
-        ScaleTransition(
-          scale: scaleAnimation,
-          child: _getConfirmationIcon(iconSize),
+        // Bug #57 Fix: Add Semantics for accessibility
+        Semantics(
+          label: confirmationMessage,
+          image: true,
+          child: ScaleTransition(scale: scaleAnimation, child: confirmationIcon),
         ),
 
         const SizedBox(height: SpacingTokens.l),
 
         // Confirmation message
-        Text(
-          _getConfirmationMessage(tr),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeXL,
-            fontWeight: TypographyTokens.bold,
-            color: colors.textPrimary,
+        // Bug #57 Fix: Add Semantics for accessibility
+        Semantics(
+          label: confirmationMessage,
+          header: true,
+          child: Text(
+            confirmationMessage,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeXL,
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
+            ),
           ),
         ),
       ],

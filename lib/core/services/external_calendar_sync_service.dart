@@ -35,7 +35,7 @@ class ExternalCalendarSyncService {
 
   ExternalCalendarSyncService({FirebaseFirestore? firestore, http.Client? httpClient})
     : _firestore = firestore ?? FirebaseFirestore.instance,
-      _httpClient = httpClient ?? http.Client();
+        _httpClient = httpClient ?? http.Client();
 
   /// Check if sync is needed based on sync interval
   bool isSyncNeeded(ExternalCalendarConfig config) {
@@ -293,9 +293,9 @@ class ExternalCalendarSyncService {
       } else {
         // Create new booking
         batch.set(_firestore.collection('bookings').doc(booking.id), {
-          ...booking.toJson(),
-          'created_at': FieldValue.serverTimestamp(),
-          'external_sync': true,
+            ...booking.toJson(),
+            'created_at': FieldValue.serverTimestamp(),
+            'external_sync': true,
         });
       }
     }

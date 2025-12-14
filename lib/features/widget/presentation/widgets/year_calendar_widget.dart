@@ -25,12 +25,7 @@ class YearCalendarWidget extends ConsumerStatefulWidget {
   final String unitId;
   final Function(DateTime? start, DateTime? end)? onRangeSelected;
 
-  const YearCalendarWidget({
-    super.key,
-    required this.propertyId,
-    required this.unitId,
-    this.onRangeSelected,
-  });
+  const YearCalendarWidget({super.key, required this.propertyId, required this.unitId, this.onRangeSelected});
 
   @override
   ConsumerState<YearCalendarWidget> createState() => _YearCalendarWidgetState();
@@ -39,23 +34,23 @@ class YearCalendarWidget extends ConsumerStatefulWidget {
 class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
-  int _currentYear = DateTime.now().year;
+  int _currentYear = DateTime.now().toUtc().year;
   DateTime? _hoveredDate;
   Offset _mousePosition = Offset.zero;
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final tr = WidgetTranslations.of(context, ref);
 
     // Year calendar needs minimum width to be usable - show rotate message on very narrow screens
     const minWidthForYearCalendar = 350.0;
-    
+
     // Check if overlay should be shown based on screen width and orientation
     final shouldShowOverlay = screenWidth < minWidthForYearCalendar;
-    
+
     if (shouldShowOverlay) {
       // In iframe context, use physical screen orientation instead of iframe dimensions
       // MediaQuery returns iframe dimensions which may differ from device orientation
@@ -68,7 +63,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         final orientation = MediaQuery.of(context).orientation;
         isLandscape = orientation == Orientation.landscape;
       }
-      
+
       // Ne prikazuj overlay ako je landscape (čak i ako je širina < 350px)
       if (!isLandscape) {
         return _buildRotateDeviceOverlay(colors, tr);
@@ -76,12 +71,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     }
 
     // OPTIMIZED: Get minNights from cached widgetContext (eliminates duplicate unit fetch)
-    final widgetCtxAsync = ref.watch(
-      widgetContextProvider((
-        propertyId: widget.propertyId,
-        unitId: widget.unitId,
-      )),
-    );
+    final widgetCtxAsync = ref.watch(widgetContextProvider((propertyId: widget.propertyId, unitId: widget.unitId)));
     // Defensive null check: handle loading/error states gracefully
     final widgetCtx = widgetCtxAsync.valueOrNull;
     final minNights = widgetCtx?.unit.minStayNights ?? 1;
@@ -89,12 +79,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     // Use realtime stream provider for automatic updates when bookings change
     // OPTIMIZED: Pass minNights to eliminate redundant widgetSettings stream fetch
     final calendarData = ref.watch(
-      realtimeYearCalendarProvider(
-        widget.propertyId,
-        widget.unitId,
-        _currentYear,
-        minNights,
-      ),
+      realtimeYearCalendarProvider(widget.propertyId, widget.unitId, _currentYear, minNights),
     );
 
     return Stack(
@@ -103,15 +88,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           // Swipe gesture for year navigation
           onHorizontalDragEnd: (details) {
             // Swipe right (previous year) - positive velocity
-            if (details.primaryVelocity != null &&
-                details.primaryVelocity! > 0) {
+            if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
               setState(() {
                 _currentYear--;
               });
             }
             // Swipe left (next year) - negative velocity
-            else if (details.primaryVelocity != null &&
-                details.primaryVelocity! < 0) {
+            else if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
               setState(() {
                 _currentYear++;
               });
@@ -119,8 +102,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           },
           child: Center(
             child: Column(
-              mainAxisSize: MainAxisSize
-                  .min, // Take only needed height for iframe embedding
+              mainAxisSize: MainAxisSize.min, // Take only needed height for iframe embedding
               children: [
                 // Combined header matching month/week view layout
                 CalendarCombinedHeaderWidget(
@@ -138,11 +120,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                   ),
                 // No Expanded - calendar takes natural height for proper inline layout
                 calendarData.when(
-                  data: (data) =>
-                      _buildYearGridWithIntegratedSelector(data, colors),
+                  data: (data) => _buildYearGridWithIntegratedSelector(data, colors),
                   loading: () => const YearCalendarSkeleton(),
-                  error: (error, stack) =>
-                      Center(child: Text(ErrorMessages.calendarError(error))),
+                  error: (error, stack) => Center(child: Text(ErrorMessages.calendarError(error))),
                 ),
               ],
             ),
@@ -174,21 +154,14 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   }
 
   /// Shows a friendly message asking user to rotate device to landscape
-  Widget _buildRotateDeviceOverlay(
-    WidgetColorScheme colors,
-    WidgetTranslations tr,
-  ) {
+  Widget _buildRotateDeviceOverlay(WidgetColorScheme colors, WidgetTranslations tr) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(SpacingTokens.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.screen_rotation_outlined,
-              size: 64,
-              color: colors.textSecondary,
-            ),
+            Icon(Icons.screen_rotation_outlined, size: 64, color: colors.textSecondary),
             const SizedBox(height: SpacingTokens.l),
             Text(
               tr.rotateYourDevice,
@@ -202,10 +175,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             const SizedBox(height: SpacingTokens.s),
             Text(
               tr.rotateForBestExperience,
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeS,
-                color: colors.textSecondary,
-              ),
+              style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -215,7 +185,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   }
 
   Widget _buildCompactYearNavigation(WidgetColorScheme colors) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
     final isSmallScreen = screenWidth < 400; // iPhone SE and similar
 
     return Row(
@@ -223,11 +193,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(
-            Icons.chevron_left,
-            size: isSmallScreen ? 16 : IconSizeTokens.small,
-            color: colors.textPrimary,
-          ),
+          icon: Icon(Icons.chevron_left, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -243,20 +209,14 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         Text(
           _currentYear.toString(),
           style: TextStyle(
-            fontSize: isSmallScreen
-                ? TypographyTokens.fontSizeS
-                : TypographyTokens.fontSizeM,
+            fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
             fontWeight: TypographyTokens.bold,
             color: colors.textPrimary,
           ),
         ),
         const SizedBox(width: SpacingTokens.xxs),
         IconButton(
-          icon: Icon(
-            Icons.chevron_right,
-            size: isSmallScreen ? 16 : IconSizeTokens.small,
-            color: colors.textPrimary,
-          ),
+          icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -272,11 +232,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildYearGridWithIntegratedSelector(
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
-    final screenWidth = MediaQuery.of(context).size.width;
+  Widget _buildYearGridWithIntegratedSelector(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
+    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
     final isDesktop = screenWidth >= 1024;
     final padding = isDesktop ? SpacingTokens.l : SpacingTokens.m;
 
@@ -290,20 +247,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         // Calculate available width after padding
         final availableWidth = (maxWidth - (padding * 2)).clamp(300.0, maxWidth);
         // Get cell size that fits within available width
-        final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
-          availableWidth,
-        );
-        final calendarWidth =
-            ConstraintTokens.monthLabelWidth + (31 * cellSize);
+        final cellSize = ResponsiveHelper.getYearCellSizeForWidth(availableWidth);
+        final calendarWidth = ConstraintTokens.monthLabelWidth + (31 * cellSize);
 
         return Center(
           child: Padding(
             // No top padding - spacing handled by CalendarCompactLegend margin
-            padding: EdgeInsets.only(
-              left: padding,
-              right: padding,
-              bottom: padding,
-            ),
+            padding: EdgeInsets.only(left: padding, right: padding, bottom: padding),
             child: Stack(
               children: [
                 // Year calendar grid - sized to fit within container
@@ -316,12 +266,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                       const SizedBox(height: SpacingTokens.s),
                       ...List.generate(
                         12,
-                        (monthIndex) => _buildMonthRow(
-                          monthIndex + 1,
-                          data,
-                          cellSize,
-                          colors,
-                        ),
+                        (monthIndex) =>
+                            _buildMonthRow(monthIndex + 1, data, cellSize, colors, WidgetTranslations.of(context, ref)),
                       ),
                     ],
                   ),
@@ -334,10 +280,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildHeaderRowWithYearSelector(
-    double cellSize,
-    WidgetColorScheme colors,
-  ) {
+  Widget _buildHeaderRowWithYearSelector(double cellSize, WidgetColorScheme colors) {
     // Responsive font size for headers - proportional to cell size
     final headerFontSize = (cellSize * 0.5).clamp(9.0, 13.0);
     final dayNumberFontSize = (cellSize * 0.45).clamp(8.0, 12.0);
@@ -356,11 +299,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           ),
           child: Text(
             WidgetTranslations.of(context, ref).monthView,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: headerFontSize,
-              color: colors.textPrimary,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: headerFontSize, color: colors.textPrimary),
           ),
         ),
         // Day number headers
@@ -372,17 +311,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             decoration: BoxDecoration(
               color: colors.backgroundTertiary,
               border: Border.all(color: colors.borderLight),
-              borderRadius: dayIndex == 30
-                  ? BorderTokens.onlyTopRight(BorderTokens.radiusSubtle)
-                  : BorderRadius.zero,
+              borderRadius: dayIndex == 30 ? BorderTokens.onlyTopRight(BorderTokens.radiusSubtle) : BorderRadius.zero,
             ),
             child: Text(
               (dayIndex + 1).toString(),
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: dayNumberFontSize,
-                color: colors.textSecondary,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: dayNumberFontSize, color: colors.textSecondary),
             ),
           );
         }),
@@ -395,8 +328,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     double cellSize,
     WidgetColorScheme colors,
+    WidgetTranslations tr,
   ) {
-    final monthName = DateFormat.MMM().format(DateTime(_currentYear, month));
+    final monthName = DateFormat.MMM(tr.locale.languageCode).format(DateTime(_currentYear, month));
     final monthFontSize = (cellSize * 0.5).clamp(9.0, 13.0);
 
     return Row(
@@ -409,17 +343,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           decoration: BoxDecoration(
             color: colors.backgroundTertiary,
             border: Border.all(color: colors.borderLight),
-            borderRadius: month == 12
-                ? BorderTokens.onlyBottomLeft(BorderTokens.radiusSubtle)
-                : BorderRadius.zero,
+            borderRadius: month == 12 ? BorderTokens.onlyBottomLeft(BorderTokens.radiusSubtle) : BorderRadius.zero,
           ),
           child: Text(
             monthName,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: monthFontSize,
-              color: colors.textSecondary,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: monthFontSize, color: colors.textSecondary),
           ),
         ),
         // Day cells
@@ -456,21 +384,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         return _buildEmptyCell(cellSize, colors);
       }
 
-      final isInRange = CalendarDateUtils.isDateInRange(
-        date,
-        _rangeStart,
-        _rangeEnd,
-      );
-      final isRangeStart =
-          _rangeStart != null &&
-          CalendarDateUtils.isSameDay(date, _rangeStart!);
-      final isRangeEnd =
-          _rangeEnd != null && CalendarDateUtils.isSameDay(date, _rangeEnd!);
-      final isHovered =
-          _hoveredDate != null &&
-          CalendarDateUtils.isSameDay(date, _hoveredDate!);
-      final today = DateTime.now();
-      final todayNormalized = DateTime(today.year, today.month, today.day);
+      final isInRange = CalendarDateUtils.isDateInRange(date, _rangeStart, _rangeEnd);
+      final isRangeStart = _rangeStart != null && CalendarDateUtils.isSameDay(date, _rangeStart!);
+      final isRangeEnd = _rangeEnd != null && CalendarDateUtils.isSameDay(date, _rangeEnd!);
+      final isHovered = _hoveredDate != null && CalendarDateUtils.isSameDay(date, _hoveredDate!);
+      final today = DateTime.now().toUtc();
+      final todayNormalized = DateTime.utc(today.year, today.month, today.day);
       final isToday = CalendarDateUtils.isSameDay(date, today);
       final isPast = date.isBefore(todayNormalized);
 
@@ -503,9 +422,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         enabled: isInteractive && widget.onRangeSelected != null,
         selected: isRangeStart || isRangeEnd,
         child: MouseRegion(
-          cursor: isInteractive
-              ? SystemMouseCursors.click
-              : SystemMouseCursors.basic,
+          cursor: isInteractive ? SystemMouseCursors.click : SystemMouseCursors.basic,
           onEnter: (_) {
             if (showTooltip) {
               setState(() {
@@ -534,30 +451,19 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               duration: const Duration(milliseconds: 150),
               width: cellSize,
               height: cellSize,
-              clipBehavior:
-                  Clip.antiAlias, // Clip pattern painters to cell bounds
+              clipBehavior: Clip.antiAlias, // Clip pattern painters to cell bounds
               decoration: BoxDecoration(
-                color: _getCellColor(
-                  dateInfo,
-                  isInRange,
-                  isHovered,
-                  isInteractive,
-                  colors,
-                ),
+                color: _getCellColor(dateInfo, isInRange, isHovered, isInteractive, colors),
                 border: Border.all(
                   color: isRangeStart || isRangeEnd
                       ? colors.textPrimary
                       : isToday
                       ? colors.textPrimary
                       : dateInfo.status.getBorderColor(colors),
-                  width: (isRangeStart || isRangeEnd || isToday)
-                      ? BorderTokens.widthMedium
-                      : BorderTokens.widthThin,
+                  width: (isRangeStart || isRangeEnd || isToday) ? BorderTokens.widthMedium : BorderTokens.widthThin,
                 ),
                 borderRadius: BorderTokens.circularTiny,
-                boxShadow: isHovered && isInteractive
-                    ? ShadowTokens.light
-                    : colors.shadowMinimal,
+                boxShadow: isHovered && isInteractive ? ShadowTokens.light : colors.shadowMinimal,
               ),
               child: Stack(
                 children: [
@@ -590,8 +496,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                               : colors.statusBookedBackground,
                           isCheckOutPending: dateInfo.isCheckOutPending,
                           isCheckInPending: dateInfo.isCheckInPending,
-                          patternLineColor: DateStatus.pending
-                              .getPatternLineColor(colors),
+                          patternLineColor: DateStatus.pending.getPatternLineColor(colors),
                         ),
                       ),
                     ),
@@ -603,11 +508,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                       dateInfo.status == DateStatus.booked)
                     Positioned.fill(
                       child: CustomPaint(
-                        painter: PendingPatternPainter(
-                          lineColor: DateStatus.pending.getPatternLineColor(
-                            colors,
-                          ),
-                        ),
+                        painter: PendingPatternPainter(lineColor: DateStatus.pending.getPatternLineColor(colors)),
                       ),
                     ),
                   // Day number in center
@@ -618,9 +519,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                         fontSize: (cellSize * 0.45).clamp(8.0, 14.0),
                         fontWeight: FontWeight.w600,
                         // Past dates use secondary color for cleaner "disabled" look
-                        color: isPast
-                            ? colors.textSecondary
-                            : colors.textPrimary,
+                        color: isPast ? colors.textSecondary : colors.textPrimary,
                       ),
                     ),
                   ),
@@ -632,10 +531,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                       child: Container(
                         width: cellSize < 30 ? 3 : 4,
                         height: cellSize < 30 ? 3 : 4,
-                        decoration: BoxDecoration(
-                          color: colors.textPrimary,
-                          shape: BoxShape.circle,
-                        ),
+                        decoration: BoxDecoration(color: colors.textPrimary, shape: BoxShape.circle),
                       ),
                     ),
                 ],
@@ -660,10 +556,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     if (isInRange) {
       // Match month calendar: available background + 20% black overlay
       final baseColor = colors.statusAvailableBackground;
-      return Color.alphaBlend(
-        colors.buttonPrimary.withValues(alpha: 0.2),
-        baseColor,
-      );
+      return Color.alphaBlend(colors.buttonPrimary.withValues(alpha: 0.2), baseColor);
     }
 
     // partialBoth is drawn with _PartialBothPainter, so return transparent
@@ -674,10 +567,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     // Pending bookings use yellow background (for full booked days, not partial)
     if (dateInfo.isPendingBooking && dateInfo.status == DateStatus.booked) {
       if (isHovered && isInteractive) {
-        return Color.alphaBlend(
-          Colors.white.withValues(alpha: 0.3),
-          colors.statusPendingBackground,
-        );
+        return Color.alphaBlend(Colors.white.withValues(alpha: 0.3), colors.statusPendingBackground);
       }
       return colors.statusPendingBackground;
     }
@@ -709,10 +599,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    final validator = CalendarDateSelectionValidator(
-      context: context,
-      ref: ref,
-    );
+    final validator = CalendarDateSelectionValidator(context: context, ref: ref);
 
     // Pre-selection validation (past date, advance booking, restrictions)
     final preResult = validator.validatePreSelection(
@@ -738,20 +625,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         }
 
         // Determine start/end order
-        final DateTime start = date.isBefore(_rangeStart!)
-            ? date
-            : _rangeStart!;
+        final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
         // OPTIMIZED: Get minNights from cached widgetContext (reuses cached data)
         final validationMinNights =
             ref
-                .read(
-                  widgetContextProvider((
-                    propertyId: widget.propertyId,
-                    unitId: widget.unitId,
-                  )),
-                )
+                .read(widgetContextProvider((propertyId: widget.propertyId, unitId: widget.unitId)))
                 .valueOrNull
                 ?.unit
                 .minStayNights ??
@@ -780,10 +660,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           _rangeEnd = null;
           SnackBarHelper.showError(
             context: context,
-            message: WidgetTranslations.of(
-              context,
-              ref,
-            ).errorOrphanGap(validationMinNights),
+            message: WidgetTranslations.of(context, ref).errorOrphanGap(validationMinNights),
           );
           return;
         }
@@ -794,10 +671,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           _rangeEnd = null;
           SnackBarHelper.showError(
             context: context,
-            message: WidgetTranslations.of(
-              context,
-              ref,
-            ).errorCannotSelectBookedDates,
+            message: WidgetTranslations.of(context, ref).errorCannotSelectBookedDates,
             duration: const Duration(seconds: 3),
           );
           return;
@@ -818,19 +692,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
   /// Show helpful snackbar when user taps in calendar_only mode
   void _onViewOnlyTap(WidgetTranslations translations) {
-    SnackBarHelper.showInfo(
-      context: context,
-      message: translations.calendarOnlyTapMessage,
-    );
+    SnackBarHelper.showInfo(context: context, message: translations.calendarOnlyTapMessage);
   }
 
   /// Check if there are any booked, pending, or partial dates between start and end (inclusive)
   /// Partial dates (partialCheckIn/partialCheckOut) are allowed at endpoints but not in between
-  bool _hasBlockedDatesInRange(
-    DateTime start,
-    DateTime end,
-    Map<String, CalendarDateInfo> data,
-  ) {
+  bool _hasBlockedDatesInRange(DateTime start, DateTime end, Map<String, CalendarDateInfo> data) {
     DateTime current = start;
     while (current.isBefore(end) || CalendarDateUtils.isSameDay(current, end)) {
       final key = CalendarDateUtils.getDateKey(current);
@@ -848,12 +715,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         if (isBlocked) {
           // Allow partial dates only at the exact start or end points
           // This enables: check-in on a check-out day, and check-out on a check-in day
-          final isEndpoint =
-              CalendarDateUtils.isSameDay(current, start) ||
-              CalendarDateUtils.isSameDay(current, end);
+          final isEndpoint = CalendarDateUtils.isSameDay(current, start) || CalendarDateUtils.isSameDay(current, end);
           final isPartialDate =
-              dateInfo.status == DateStatus.partialCheckIn ||
-              dateInfo.status == DateStatus.partialCheckOut;
+              dateInfo.status == DateStatus.partialCheckIn || dateInfo.status == DateStatus.partialCheckOut;
 
           if (!isEndpoint || !isPartialDate) {
             return true; // Found a blocked date that's not an allowed endpoint
@@ -869,12 +733,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   /// Check if this selection would create an orphan gap (gap < minNights)
   /// An orphan gap occurs when the selection leaves a small gap before or after
   /// that is smaller than minNights, preventing future bookings
-  bool _wouldCreateOrphanGap(
-    DateTime start,
-    DateTime end,
-    Map<String, CalendarDateInfo> data,
-    int minNights,
-  ) {
+  bool _wouldCreateOrphanGap(DateTime start, DateTime end, Map<String, CalendarDateInfo> data, int minNights) {
     // Find the next booked/blocked date after the end date
     DateTime current = end.add(const Duration(days: 1));
     DateTime? nextBlockedDate;

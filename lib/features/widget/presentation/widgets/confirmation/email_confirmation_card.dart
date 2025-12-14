@@ -72,8 +72,7 @@ class EmailConfirmationCard extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EmailConfirmationCard> createState() =>
-      _EmailConfirmationCardState();
+  ConsumerState<EmailConfirmationCard> createState() => _EmailConfirmationCardState();
 }
 
 class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
@@ -86,19 +85,13 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
 
   Future<void> _resendConfirmationEmail(WidgetTranslations tr) async {
     if (widget.booking == null || widget.emailConfig == null) {
-      SnackBarHelper.showError(
-        context: context,
-        message: tr.unableToResendEmail,
-      );
+      SnackBarHelper.showError(context: context, message: tr.unableToResendEmail);
       return;
     }
 
     // Check rate limit - prevent spam
     if (_resendCount >= _maxResendAttempts) {
-      SnackBarHelper.showWarning(
-        context: context,
-        message: tr.maxResendAttemptsReached,
-      );
+      SnackBarHelper.showWarning(context: context, message: tr.maxResendAttemptsReached);
       return;
     }
 
@@ -106,10 +99,7 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
     // The 'enabled' flag controls email verification on the booking form, not confirmation emails
     final config = widget.emailConfig!;
     if (config.resendApiKey == null || config.fromEmail == null) {
-      SnackBarHelper.showWarning(
-        context: context,
-        message: tr.emailServiceNotConfigured,
-      );
+      SnackBarHelper.showWarning(context: context, message: tr.emailServiceNotConfigured);
       return;
     }
 
@@ -124,10 +114,8 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
         emailConfig: widget.emailConfig!,
         propertyName: widget.propertyName,
         bookingReference: widget.bookingReference,
-        allowGuestCancellation:
-            widget.widgetSettings?.allowGuestCancellation ?? false,
-        cancellationDeadlineHours:
-            widget.widgetSettings?.cancellationDeadlineHours,
+        allowGuestCancellation: widget.widgetSettings?.allowGuestCancellation ?? false,
+        cancellationDeadlineHours: widget.widgetSettings?.cancellationDeadlineHours,
         ownerEmail: widget.widgetSettings?.contactOptions.emailAddress,
         ownerPhone: widget.widgetSettings?.contactOptions.phoneNumber,
         customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
@@ -140,10 +128,7 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
       });
 
       if (mounted) {
-        SnackBarHelper.showSuccess(
-          context: context,
-          message: tr.confirmationEmailSentSuccessfully,
-        );
+        SnackBarHelper.showSuccess(context: context, message: tr.confirmationEmailSentSuccessfully);
       }
     } catch (e) {
       setState(() {
@@ -167,9 +152,7 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark
-        ? colors.backgroundTertiary
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -187,85 +170,95 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  tr.confirmationEmailSentTitle,
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    fontWeight: TypographyTokens.semiBold,
-                    color: colors.textPrimary,
+                // Bug #57 Fix: Add Semantics for accessibility
+                Semantics(
+                  label: tr.confirmationEmailSentTitle,
+                  header: true,
+                  child: Text(
+                    tr.confirmationEmailSentTitle,
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeM,
+                      fontWeight: TypographyTokens.semiBold,
+                      color: colors.textPrimary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: SpacingTokens.xxs),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: tr.checkYourEmailAt,
-                        style: TextStyle(
-                          fontSize: TypographyTokens.fontSizeS,
-                          color: colors.textSecondary,
+                // Bug #54 Fix: Check for empty email string
+                // Bug #57 Fix: Add Semantics for accessibility
+                Semantics(
+                  label: widget.guestEmail.isEmpty
+                      ? '${tr.checkYourEmailAt} ${tr.forBookingDetails}'
+                      : '${tr.checkYourEmailAt} ${widget.guestEmail} ${tr.forBookingDetails}',
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: tr.checkYourEmailAt,
+                          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
                         ),
-                      ),
-                      TextSpan(
-                        text: ' ${widget.guestEmail} ',
-                        style: TextStyle(
-                          fontSize: TypographyTokens.fontSizeS,
-                          fontWeight: FontWeight.w600,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      TextSpan(
-                        text: tr.forBookingDetails,
-                        style: TextStyle(
-                          fontSize: TypographyTokens.fontSizeS,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ],
+                        if (widget.guestEmail.isEmpty)
+                          TextSpan(
+                            text: tr.forBookingDetails,
+                            style: TextStyle(
+                              fontSize: TypographyTokens.fontSizeS,
+                              color: colors.textSecondary,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                        else ...[
+                          TextSpan(
+                            text: ' ${widget.guestEmail} ',
+                            style: TextStyle(
+                              fontSize: TypographyTokens.fontSizeS,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          TextSpan(
+                            text: tr.forBookingDetails,
+                            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
                 if (canResend) ...[
                   const SizedBox(height: SpacingTokens.s),
-                  InkWell(
-                    onTap: _isResendingEmail
-                        ? null
-                        : () => _resendConfirmationEmail(tr),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: SpacingTokens.xxs,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (_isResendingEmail)
-                            SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                  // Bug #57 Fix: Add Semantics for accessibility
+                  Semantics(
+                    label: _emailResent ? tr.emailSent : tr.didntReceiveResendEmail,
+                    button: true,
+                    enabled: !_isResendingEmail,
+                    child: InkWell(
+                      onTap: _isResendingEmail ? null : () => _resendConfirmationEmail(tr),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xxs),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_isResendingEmail)
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: colors.textSecondary),
+                              )
+                            else
+                              Icon(_emailResent ? Icons.check : Icons.refresh, size: 14, color: colors.textSecondary),
+                            const SizedBox(width: SpacingTokens.xxs),
+                            Text(
+                              _emailResent ? tr.emailSent : tr.didntReceiveResendEmail,
+                              style: TextStyle(
+                                fontSize: TypographyTokens.fontSizeS,
                                 color: colors.textSecondary,
+                                decoration: TextDecoration.underline,
+                                decorationColor: colors.textSecondary,
                               ),
-                            )
-                          else
-                            Icon(
-                              _emailResent ? Icons.check : Icons.refresh,
-                              size: 14,
-                              color: colors.textSecondary,
                             ),
-                          const SizedBox(width: SpacingTokens.xxs),
-                          Text(
-                            _emailResent
-                                ? tr.emailSent
-                                : tr.didntReceiveResendEmail,
-                            style: TextStyle(
-                              fontSize: TypographyTokens.fontSizeS,
-                              color: colors.textSecondary,
-                              decoration: TextDecoration.underline,
-                              decorationColor: colors.textSecondary,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

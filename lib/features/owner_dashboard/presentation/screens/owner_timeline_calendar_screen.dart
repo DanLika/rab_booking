@@ -258,8 +258,8 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     final firstConflict = conflicts.first;
 
     // Safely get localizations
-    final l10n = AppLocalizations.maybeOf(context);
-    if (l10n == null) return;
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
 
     // Scroll to conflict location
     final timelineState = timelineKey.currentState;
@@ -311,12 +311,10 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     } catch (e) {
       // If booking not found, show error
       if (mounted) {
-        final l10n = AppLocalizations.maybeOf(context);
-        if (l10n != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.ownerBookingsNotFound), backgroundColor: Colors.red));
-        }
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.ownerBookingsNotFound), backgroundColor: Colors.red));
       }
     }
   }

@@ -183,31 +183,44 @@ class BookingFormState {
   ///
   /// Returns 0 if dates are not selected.
   int get nights {
-    if (checkIn == null || checkOut == null) return 0;
-    return checkOut!.difference(checkIn!).inDays;
+    final checkInDate = checkIn;
+    final checkOutDate = checkOut;
+    if (checkInDate == null || checkOutDate == null) return 0;
+    return checkOutDate.difference(checkInDate).inDays;
   }
 
   /// Check if dates are selected
   bool get hasDatesSelected => checkIn != null && checkOut != null;
 
   /// Get full guest name from controllers
+  ///
+  /// Returns empty string if both fields are empty (expected behavior).
   String get guestFullName {
     final first = firstNameController.text.trim();
     final last = lastNameController.text.trim();
-    return '$first $last'.trim();
+    final fullName = '$first $last'.trim();
+    return fullName;
   }
 
   /// Get full phone number with country code
+  ///
+  /// Returns empty string if phone is not entered.
   String get fullPhoneNumber {
-    return '${selectedCountry.dialCode} ${phoneController.text.trim()}';
+    final phone = phoneController.text.trim();
+    if (phone.isEmpty) {
+      return ''; // Return empty string if phone is not entered
+    }
+    return '${selectedCountry.dialCode} $phone';
   }
 
   /// Adjust guest count to respect max capacity
   ///
   /// Called when unit data is loaded to ensure defaults don't exceed limits.
   void adjustGuestCountToCapacity(int maxGuests) {
+    if (maxGuests <= 0) return; // Defensive check
+
     if (totalGuests > maxGuests) {
-      adults = maxGuests.clamp(1, maxGuests);
+      adults = maxGuests; // maxGuests is already >= 1 (checked above)
       children = 0;
     }
   }

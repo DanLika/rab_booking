@@ -5,6 +5,7 @@ import '../providers/widget_settings_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../domain/models/widget_settings.dart';
+import '../l10n/widget_translations.dart';
 
 /// Widget for Tax & Legal Disclaimer (Croatian boravišna pristojba, fiskalizacija, eVisitor)
 /// Bug #68: Tax disclaimer with required acceptance before booking
@@ -58,6 +59,12 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
     bool isDarkMode,
     MinimalistColorSchemeAdapter colors,
   ) {
+    // Bug #83 Fix: Check for empty disclaimerText
+    if (taxConfig.disclaimerText.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final tr = WidgetTranslations.of(context, ref);
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
@@ -83,7 +90,7 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
                   const SizedBox(width: SpacingTokens.m),
                   Expanded(
                     child: Text(
-                      'Tax & Legal Information',
+                      tr.taxLegalInformation,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -131,7 +138,7 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
             },
             contentPadding: EdgeInsets.zero,
             title: Text(
-              'I understand and accept the tax and legal obligations',
+              tr.taxLegalAcceptanceText,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

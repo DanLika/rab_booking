@@ -10,21 +10,25 @@ class CalendarDateUtils {
   CalendarDateUtils._();
 
   /// Check if two dates represent the same day (ignoring time).
+  /// Bug #40 Fix: Normalize both dates to UTC for consistent comparison
   static bool isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+    // Normalize both dates to UTC for consistent comparison
+    final aUtc = DateTime.utc(a.year, a.month, a.day);
+    final bUtc = DateTime.utc(b.year, b.month, b.day);
+    return aUtc == bUtc;
   }
 
   /// Get a string key for a date in 'yyyy-MM-dd' format.
+  /// Bug #40 Fix: Normalize to UTC by extracting year/month/day components
   static String getDateKey(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date);
+    // Normalize to UTC by extracting year/month/day components
+    // This ensures we format the correct day regardless of timezone
+    final utcDate = DateTime.utc(date.year, date.month, date.day);
+    return DateFormat('yyyy-MM-dd').format(utcDate);
   }
 
   /// Check if a date is within a range (inclusive on both ends).
-  static bool isDateInRange(
-    DateTime date,
-    DateTime? rangeStart,
-    DateTime? rangeEnd,
-  ) {
+  static bool isDateInRange(DateTime date, DateTime? rangeStart, DateTime? rangeEnd) {
     if (rangeStart == null || rangeEnd == null) return false;
     return (date.isAfter(rangeStart) || isSameDay(date, rangeStart)) &&
         (date.isBefore(rangeEnd) || isSameDay(date, rangeEnd));
@@ -57,9 +61,7 @@ class CalendarDateUtils {
         ? translations.semanticUnavailable
         : translations.semanticPastReservation;
 
-    final pendingStr = isPending
-        ? ', ${translations.semanticPendingApproval}'
-        : '';
+    final pendingStr = isPending ? ', ${translations.semanticPendingApproval}' : '';
 
     // Range indicators (localized)
     final rangeStr = isRangeStart

@@ -4554,4 +4554,38 @@ class WidgetTranslations {
         return 'Booking confirmed! You can close this tab.';
     }
   }
+
+  // ============================================================================
+  // TAX & LEGAL DISCLAIMER TRANSLATIONS
+  // ============================================================================
+
+  /// Title for tax and legal information section
+  String get taxLegalInformation {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Porezne i pravne informacije';
+      case 'de':
+        return 'Steuer- und Rechtsinformationen';
+      case 'it':
+        return 'Informazioni fiscali e legali';
+      case 'en':
+      default:
+        return 'Tax & Legal Information';
+    }
+  }
+
+  /// Text for tax and legal acceptance checkbox
+  String get taxLegalAcceptanceText {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Razumijem i prihvaćam porezne i pravne obveze';
+      case 'de':
+        return 'Ich verstehe und akzeptiere die steuerlichen und rechtlichen Verpflichtungen';
+      case 'it':
+        return 'Comprendo e accetto gli obblighi fiscali e legali';
+      case 'en':
+      default:
+        return 'I understand and accept the tax and legal obligations';
+    }
+  }
 }

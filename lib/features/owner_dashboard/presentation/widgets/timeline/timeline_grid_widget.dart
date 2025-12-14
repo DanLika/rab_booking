@@ -121,39 +121,39 @@ class _TimelineUnitRow extends StatelessWidget {
           border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()))),
         ),
         child: Stack(
-        alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
-        children: [
-          // Day cells (background)
-          Row(
-            children: [
-              if (offsetWidth > 0) SizedBox(width: offsetWidth),
-              ...dates.map((date) => _TimelineDayCell(date: date, dimensions: dimensions)),
-            ],
-          ),
-
-          // Drop zones layer (if provided)
-          if (dropZoneBuilder != null)
-            Stack(
-              alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
-              children: dates.asMap().entries.map((entry) {
-                final index = entry.key;
-                final date = entry.value;
-                final left = offsetWidth + (index * dimensions.dayWidth);
-
-                return Positioned(
-                  left: left,
-                  top: 0,
-                  width: dimensions.dayWidth,
-                  height: dimensions.unitRowHeight,
-                  child: dropZoneBuilder!(unit, date, index),
-                );
-              }).toList(),
+          alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+          children: [
+            // Day cells (background)
+            Row(
+              children: [
+                if (offsetWidth > 0) SizedBox(width: offsetWidth),
+                ...dates.map((date) => _TimelineDayCell(date: date, dimensions: dimensions)),
+              ],
             ),
 
-          // Reservation blocks (foreground)
-          Stack(alignment: Alignment.topLeft, children: _buildReservationBlocks(stackLevels)),
-        ],
-      ),
+            // Drop zones layer (if provided)
+            if (dropZoneBuilder != null)
+              Stack(
+                alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+                children: dates.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final date = entry.value;
+                  final left = offsetWidth + (index * dimensions.dayWidth);
+
+                  return Positioned(
+                    left: left,
+                    top: 0,
+                    width: dimensions.dayWidth,
+                    height: dimensions.unitRowHeight,
+                    child: dropZoneBuilder!(unit, date, index),
+                  );
+                }).toList(),
+              ),
+
+            // Reservation blocks (foreground)
+            Stack(alignment: Alignment.topLeft, children: _buildReservationBlocks(stackLevels)),
+          ],
+        ),
       ),
     );
   }
@@ -194,6 +194,8 @@ class _TimelineUnitRow extends StatelessWidget {
       // Ensure unitRowHeight is valid
       if (!unitRowHeight.isFinite || unitRowHeight <= 0) continue;
 
+      // Use unitRowHeight for stack level offset to ensure proper vertical spacing
+      // Each stack level should be offset by the full row height to prevent overlap
       final topPosition = kTimelineBookingTopPadding + (stackLevel * unitRowHeight);
       // Ensure topPosition is valid
       if (!topPosition.isFinite) continue;

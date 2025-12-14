@@ -40,11 +40,14 @@ class PropertyInfoCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Bug #71 Fix: Check for empty strings to prevent layout issues
+    if (propertyName.isEmpty || unitName.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final tr = WidgetTranslations.of(context, ref);
     // Use backgroundTertiary in dark mode for better contrast
-    final cardBackground = isDarkMode
-        ? colors.backgroundTertiary
-        : colors.backgroundSecondary;
+    final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Container(

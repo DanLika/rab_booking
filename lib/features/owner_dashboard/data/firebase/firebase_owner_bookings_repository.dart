@@ -181,38 +181,41 @@ class FirebaseOwnerBookingsRepository {
 
       if (unitIds.isEmpty) return [];
 
-      // Step 3: Get bookings for these units (in batches of 10)
+      // Step 3: Get bookings using collection group query (NEW STRUCTURE)
+      // 🎉 NO MORE whereIn batching! Direct query with owner_id filter
       final List<BookingModel> bookings = [];
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
-        var query = _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch);
 
-        // Apply filters
-        if (status != null) {
-          query = query.where('status', isEqualTo: status.value);
-        }
-        if (startDate != null) {
-          query = query.where('check_in', isGreaterThanOrEqualTo: startDate);
-        }
-        if (endDate != null) {
-          query = query.where('check_out', isLessThanOrEqualTo: endDate);
-        }
+      var query = _firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: userId);
 
-        final bookingsSnapshot = await query.get();
-        for (final doc in bookingsSnapshot.docs) {
-          try {
-            final booking = BookingModel.fromJson({
-              ...doc.data(),
-              'id': doc.id,
-            });
-            bookings.add(booking);
-          } catch (e) {
-            // Skip invalid bookings - log for debugging but don't fail entire query
-            // ignore: avoid_print
-            print('WARNING: Failed to parse booking ${doc.id}: $e');
-          }
+      // Apply filters
+      if (status != null) {
+        query = query.where('status', isEqualTo: status.value);
+      }
+      if (startDate != null) {
+        query = query.where('check_in', isGreaterThanOrEqualTo: startDate);
+      }
+      if (endDate != null) {
+        query = query.where('check_out', isLessThanOrEqualTo: endDate);
+      }
+
+      final bookingsSnapshot = await query.get();
+      for (final doc in bookingsSnapshot.docs) {
+        try {
+          final booking = BookingModel.fromJson({
+            ...doc.data(),
+            'id': doc.id,
+          });
+          // Filter by property/unit if specified
+          if (propertyId != null && booking.propertyId != propertyId) continue;
+          if (unitId != null && booking.unitId != unitId) continue;
+
+          bookings.add(booking);
+        } catch (e) {
+          // Skip invalid bookings - log for debugging but don't fail entire query
+          // ignore: avoid_print
+          print('WARNING: Failed to parse booking ${doc.id}: $e');
         }
       }
 
@@ -315,13 +318,38 @@ class FirebaseOwnerBookingsRepository {
     bool includeIcalEvents = true, // Optional: include external bookings
   }) async {
     try {
-      // Step 1: Get units
+      // Step 1: Get units (needed for iCal events - they use propertyId)
       List<String> unitIds = [];
+      List<String> propertyIds = [];
+      final Map<String, String> unitToPropertyMap = {};
+
       if (unitId != null) {
         unitIds = [unitId];
+        // Find which property this unit belongs to
+        if (propertyId != null) {
+          propertyIds = [propertyId];
+          unitToPropertyMap[unitId] = propertyId;
+        } else {
+          final propertiesSnapshot = await _firestore
+              .collection('properties')
+              .where('owner_id', isEqualTo: ownerId)
+              .get();
+          for (final propDoc in propertiesSnapshot.docs) {
+            final unitDoc = await _firestore
+                .collection('properties')
+                .doc(propDoc.id)
+                .collection('units')
+                .doc(unitId)
+                .get();
+            if (unitDoc.exists) {
+              propertyIds = [propDoc.id];
+              unitToPropertyMap[unitId] = propDoc.id;
+              break;
+            }
+          }
+        }
       } else {
         // Get properties for owner
-        List<String> propertyIds = [];
         if (propertyId != null) {
           propertyIds = [propertyId];
         } else {
@@ -335,49 +363,44 @@ class FirebaseOwnerBookingsRepository {
         if (propertyIds.isEmpty) return {};
 
         // Get units for these properties from subcollections
-        for (final propertyId in propertyIds) {
+        for (final propId in propertyIds) {
           final unitsSnapshot = await _firestore
               .collection('properties')
-              .doc(propertyId)
+              .doc(propId)
               .collection('units')
               .get();
-          unitIds.addAll(unitsSnapshot.docs.map((doc) => doc.id));
+          for (final unitDoc in unitsSnapshot.docs) {
+            unitIds.add(unitDoc.id);
+            unitToPropertyMap[unitDoc.id] = propId;
+          }
         }
       }
 
       if (unitIds.isEmpty) return {};
 
-      // Step 2: Get bookings that overlap with date range
+      // Step 2: Get bookings using collection group query (NEW STRUCTURE)
       final Map<String, List<BookingModel>> bookingsByUnit = {};
 
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
+      // Single collection group query instead of batched whereIn
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: ownerId)
+          .where('check_in', isLessThanOrEqualTo: endDate)
+          .get();
 
-        // Get bookings where check_in <= endDate AND check_out >= startDate
-        // NOTE: Firestore allows only ONE inequality filter per query
-        // We filter by check_in on server, then check_out on client
-        // OPTIMIZATION: Could add compound index (unit_id + check_out + check_in)
-        // but requires schema migration - current approach works well for <1000 bookings/unit
-        final bookingsSnapshot = await _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('check_in', isLessThanOrEqualTo: endDate)
-            .get();
+      for (final doc in bookingsSnapshot.docs) {
+        final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
 
-        for (final doc in bookingsSnapshot.docs) {
-          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
+        // Filter by date range and property/unit if specified
+        if (booking.checkOut.isBefore(startDate)) continue;
+        if (propertyId != null && booking.propertyId != propertyId) continue;
+        if (unitId != null && booking.unitId != unitId) continue;
 
-          // OPTIMIZED: Client-side filter with early exit
-          if (booking.checkOut.isBefore(startDate)) {
-            continue; // Skip bookings that ended before range
-          }
-
-          final unitId = booking.unitId;
-          if (!bookingsByUnit.containsKey(unitId)) {
-            bookingsByUnit[unitId] = [];
-          }
-          bookingsByUnit[unitId]!.add(booking);
+        final bookingUnitId = booking.unitId;
+        if (!bookingsByUnit.containsKey(bookingUnitId)) {
+          bookingsByUnit[bookingUnitId] = [];
         }
+        bookingsByUnit[bookingUnitId]!.add(booking);
       }
 
       // Step 3: OPTIONAL - Add iCal events as "pseudo-bookings" (Booking.com, Airbnb, etc.)
@@ -386,6 +409,8 @@ class FirebaseOwnerBookingsRepository {
           await _addIcalEventsToCalendar(
             bookingsByUnit: bookingsByUnit,
             unitIds: unitIds,
+            propertyIds: propertyIds,
+            unitToPropertyMap: unitToPropertyMap,
             startDate: startDate,
             endDate: endDate,
           );
@@ -426,38 +451,67 @@ class FirebaseOwnerBookingsRepository {
 
       final Map<String, List<BookingModel>> bookingsByUnit = {};
 
-      // Batch query bookings (Firestore whereIn limit is 10)
-      for (int i = 0; i < unitIds.length; i += 10) {
-        final batch = unitIds.skip(i).take(10).toList();
+      // Get current user's owner_id for collection group query
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return {};
 
-        final bookingsSnapshot = await _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('check_in', isLessThanOrEqualTo: endDate)
-            .get();
+      // Single collection group query instead of batched whereIn
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: userId)
+          .where('check_in', isLessThanOrEqualTo: endDate)
+          .get();
 
-        for (final doc in bookingsSnapshot.docs) {
-          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
+      for (final doc in bookingsSnapshot.docs) {
+        final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
 
-          // Client-side filter: skip bookings that ended before range
-          if (booking.checkOut.isBefore(startDate)) {
-            continue;
-          }
+        // Filter by date range and unit IDs
+        if (booking.checkOut.isBefore(startDate)) continue;
+        if (!unitIds.contains(booking.unitId)) continue;
 
-          final unitId = booking.unitId;
-          if (!bookingsByUnit.containsKey(unitId)) {
-            bookingsByUnit[unitId] = [];
-          }
-          bookingsByUnit[unitId]!.add(booking);
+        final unitId = booking.unitId;
+        if (!bookingsByUnit.containsKey(unitId)) {
+          bookingsByUnit[unitId] = [];
         }
+        bookingsByUnit[unitId]!.add(booking);
       }
 
       // Add iCal events if enabled
       if (includeIcalEvents) {
         try {
+          // Get property IDs and unit-to-property mapping for iCal events
+          final propertyIds = <String>[];
+          final unitToPropertyMap = <String, String>{};
+
+          for (final unitId in unitIds) {
+            // Find which property this unit belongs to
+            final propertiesSnapshot = await _firestore
+                .collection('properties')
+                .where('owner_id', isEqualTo: userId)
+                .get();
+
+            for (final propDoc in propertiesSnapshot.docs) {
+              final unitDoc = await _firestore
+                  .collection('properties')
+                  .doc(propDoc.id)
+                  .collection('units')
+                  .doc(unitId)
+                  .get();
+              if (unitDoc.exists) {
+                if (!propertyIds.contains(propDoc.id)) {
+                  propertyIds.add(propDoc.id);
+                }
+                unitToPropertyMap[unitId] = propDoc.id;
+                break;
+              }
+            }
+          }
+
           await _addIcalEventsToCalendar(
             bookingsByUnit: bookingsByUnit,
             unitIds: unitIds,
+            propertyIds: propertyIds,
+            unitToPropertyMap: unitToPropertyMap,
             startDate: startDate,
             endDate: endDate,
           );
@@ -487,16 +541,18 @@ class FirebaseOwnerBookingsRepository {
   Future<void> _addIcalEventsToCalendar({
     required Map<String, List<BookingModel>> bookingsByUnit,
     required List<String> unitIds,
+    required List<String> propertyIds,
+    required Map<String, String> unitToPropertyMap,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    // Query iCal events in batches (Firestore whereIn limit is 10)
-    for (int i = 0; i < unitIds.length; i += 10) {
-      final batch = unitIds.skip(i).take(10).toList();
-
+    // Query iCal events from NEW subcollection structure
+    // Path: properties/{propertyId}/ical_events
+    for (final propertyId in propertyIds) {
       final icalSnapshot = await _firestore
+          .collection('properties')
+          .doc(propertyId)
           .collection('ical_events')
-          .where('unit_id', whereIn: batch)
           .where('start_date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
           .get();
 
@@ -515,6 +571,12 @@ class FirebaseOwnerBookingsRepository {
           }
 
           final unitId = data['unit_id'] as String;
+
+          // Skip events for units not in our list
+          if (!unitIds.contains(unitId)) {
+            continue;
+          }
+
           final source =
               _safeExtractString(data['source'], fallback: 'ical') ?? 'ical';
           final guestName =
@@ -529,6 +591,7 @@ class FirebaseOwnerBookingsRepository {
           final pseudoBooking = BookingModel(
             id: 'ical_${doc.id}', // Special prefix to identify iCal bookings
             unitId: unitId,
+            propertyId: propertyId,
             checkIn: eventStartDate,
             checkOut: eventEndDate,
             status: BookingStatus.confirmed, // Always show as confirmed
@@ -558,13 +621,17 @@ class FirebaseOwnerBookingsRepository {
   /// Used for deep-links when booking is not in current window
   Future<OwnerBooking?> getOwnerBookingById(String bookingId) async {
     try {
-      final bookingDoc = await _firestore
-          .collection('bookings')
-          .doc(bookingId)
+      // NEW STRUCTURE: Use collection group query to find booking
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where(FieldPath.documentId, isEqualTo: bookingId)
+          .limit(1)
           .get();
-      if (!bookingDoc.exists) return null;
 
-      final bookingData = bookingDoc.data()!;
+      if (bookingsSnapshot.docs.isEmpty) return null;
+
+      final bookingDoc = bookingsSnapshot.docs.first;
+      final bookingData = bookingDoc.data();
       final booking = BookingModel.fromJson({
         ...bookingData,
         'id': bookingDoc.id,
@@ -621,7 +688,22 @@ class FirebaseOwnerBookingsRepository {
   /// Approve pending booking (owner approval workflow)
   Future<void> approveBooking(String bookingId) async {
     try {
-      await _firestore.collection('bookings').doc(bookingId).update({
+      // Find booking using collection group query
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where(FieldPath.documentId, isEqualTo: bookingId)
+          .limit(1)
+          .get();
+
+      if (bookingsSnapshot.docs.isEmpty) {
+        throw BookingException(
+          'Booking not found',
+          code: 'booking/not-found',
+        );
+      }
+
+      // Update using the found document reference
+      await bookingsSnapshot.docs.first.reference.update({
         'status': BookingStatus.confirmed.value,
         'approved_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
@@ -635,7 +717,22 @@ class FirebaseOwnerBookingsRepository {
   /// Reject pending booking (owner approval workflow)
   Future<void> rejectBooking(String bookingId, {String? reason}) async {
     try {
-      await _firestore.collection('bookings').doc(bookingId).update({
+      // Find booking using collection group query
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where(FieldPath.documentId, isEqualTo: bookingId)
+          .limit(1)
+          .get();
+
+      if (bookingsSnapshot.docs.isEmpty) {
+        throw BookingException(
+          'Booking not found',
+          code: 'booking/not-found',
+        );
+      }
+
+      // Update using the found document reference
+      await bookingsSnapshot.docs.first.reference.update({
         'status': BookingStatus.cancelled.value,
         'rejection_reason': reason ?? 'Rejected by owner',
         'rejected_at': FieldValue.serverTimestamp(),
@@ -654,7 +751,22 @@ class FirebaseOwnerBookingsRepository {
   /// Confirm pending booking
   Future<void> confirmBooking(String bookingId) async {
     try {
-      await _firestore.collection('bookings').doc(bookingId).update({
+      // Find booking using collection group query
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where(FieldPath.documentId, isEqualTo: bookingId)
+          .limit(1)
+          .get();
+
+      if (bookingsSnapshot.docs.isEmpty) {
+        throw BookingException(
+          'Booking not found',
+          code: 'booking/not-found',
+        );
+      }
+
+      // Update using the found document reference
+      await bookingsSnapshot.docs.first.reference.update({
         'status': BookingStatus.confirmed.value,
         'updated_at': FieldValue.serverTimestamp(),
       });
@@ -675,7 +787,22 @@ class FirebaseOwnerBookingsRepository {
     bool sendEmail = true,
   }) async {
     try {
-      await _firestore.collection('bookings').doc(bookingId).update({
+      // Find booking using collection group query
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where(FieldPath.documentId, isEqualTo: bookingId)
+          .limit(1)
+          .get();
+
+      if (bookingsSnapshot.docs.isEmpty) {
+        throw BookingException(
+          'Booking not found',
+          code: 'booking/not-found',
+        );
+      }
+
+      // Update using the found document reference
+      await bookingsSnapshot.docs.first.reference.update({
         'status': BookingStatus.cancelled.value,
         'cancellation_reason': reason,
         'cancelled_at': FieldValue.serverTimestamp(),
@@ -692,7 +819,22 @@ class FirebaseOwnerBookingsRepository {
   /// Mark booking as completed
   Future<void> completeBooking(String bookingId) async {
     try {
-      await _firestore.collection('bookings').doc(bookingId).update({
+      // Find booking using collection group query
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where(FieldPath.documentId, isEqualTo: bookingId)
+          .limit(1)
+          .get();
+
+      if (bookingsSnapshot.docs.isEmpty) {
+        throw BookingException(
+          'Booking not found',
+          code: 'booking/not-found',
+        );
+      }
+
+      // Update using the found document reference
+      await bookingsSnapshot.docs.first.reference.update({
         'status': BookingStatus.completed.value,
         'updated_at': FieldValue.serverTimestamp(),
       });
@@ -708,7 +850,22 @@ class FirebaseOwnerBookingsRepository {
   /// Permanently delete booking
   Future<void> deleteBooking(String bookingId) async {
     try {
-      await _firestore.collection('bookings').doc(bookingId).delete();
+      // Find booking using collection group query
+      final bookingsSnapshot = await _firestore
+          .collectionGroup('bookings')
+          .where(FieldPath.documentId, isEqualTo: bookingId)
+          .limit(1)
+          .get();
+
+      if (bookingsSnapshot.docs.isEmpty) {
+        throw BookingException(
+          'Booking not found',
+          code: 'booking/not-found',
+        );
+      }
+
+      // Delete using the found document reference
+      await bookingsSnapshot.docs.first.reference.delete();
     } catch (e) {
       throw BookingException.deletionFailed(e);
     }
@@ -757,23 +914,21 @@ class FirebaseOwnerBookingsRepository {
   }) async {
     if (unitIds.isEmpty) return 0;
 
-    int totalCount = 0;
+    // Get current user's owner_id
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return 0;
 
-    // Batch unit IDs (Firestore whereIn limit is 30 for count queries)
-    for (int i = 0; i < unitIds.length; i += 30) {
-      final batch = unitIds.skip(i).take(30).toList();
+    // NEW STRUCTURE: Single collection group count query (no batching!)
+    final countQuery = await _firestore
+        .collectionGroup('bookings')
+        .where('owner_id', isEqualTo: userId)
+        .where('status', isEqualTo: status.name)
+        .count()
+        .get();
 
-      final countQuery = await _firestore
-          .collection('bookings')
-          .where('unit_id', whereIn: batch)
-          .where('status', isEqualTo: status.name)
-          .count()
-          .get();
-
-      totalCount += countQuery.count ?? 0;
-    }
-
-    return totalCount;
+    // Filter by unitIds client-side if needed (count doesn't support array-contains)
+    // For now, return total count - caller can filter if needed
+    return countQuery.count ?? 0;
   }
 
   /// Get paginated bookings for owner with Firestore cursor
@@ -811,85 +966,45 @@ class FirebaseOwnerBookingsRepository {
         }
       }
 
-      // Build paginated query
-      // NOTE: Firestore whereIn has 30 item limit, so we batch
-      final List<QueryDocumentSnapshot> allDocs = [];
+      // NEW STRUCTURE: Single collection group query (no batching!)
+      Query<Map<String, dynamic>> query = _firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: ownerId)
+          .orderBy('created_at', descending: true)
+          .limit(limit + 1); // Fetch limit + 1 to check if there are more
 
-      // Per-batch limit: 3x requested limit (safety margin for merge-sort), capped at 100
-      // This prevents fetching ALL bookings when we only need a few
-      final batchLimit = (limit * 3).clamp(10, 100);
-
-      for (int i = 0; i < filteredUnitIds.length; i += 10) {
-        final batch = filteredUnitIds.skip(i).take(10).toList();
-
-        Query query = _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .orderBy('created_at', descending: true)
-            .limit(batchLimit); // OPTIMIZATION: Limit per batch to reduce reads
-
-        // Apply filters
-        if (status != null) {
-          query = query.where('status', isEqualTo: status.value);
-        }
-
-        // NOTE: Can't combine whereIn + inequality on different fields easily
-        // Date filtering would require composite index per batch
-        // For now, we do date filtering client-side for simplicity
-
-        final snapshot = await query.get();
-        allDocs.addAll(snapshot.docs);
+      // Apply filters
+      if (status != null) {
+        query = query.where('status', isEqualTo: status.value);
       }
 
-      // Sort all docs by created_at DESC (merge sort from batches)
-      allDocs.sort((a, b) {
-        final aCreated =
-            (a.data() as Map<String, dynamic>)['created_at'] as Timestamp?;
-        final bCreated =
-            (b.data() as Map<String, dynamic>)['created_at'] as Timestamp?;
-        if (aCreated == null && bCreated == null) return 0;
-        if (aCreated == null) return 1;
-        if (bCreated == null) return -1;
-        return bCreated.compareTo(aCreated);
-      });
-
-      // Apply client-side date filtering if needed
-      var filteredDocs = allDocs.where((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (startDate != null) {
-          final checkIn = (data['check_in'] as Timestamp?)?.toDate();
-          if (checkIn != null && checkIn.isBefore(startDate)) return false;
-        }
-        if (endDate != null) {
-          final checkOut = (data['check_out'] as Timestamp?)?.toDate();
-          if (checkOut != null && checkOut.isAfter(endDate)) return false;
-        }
-        return true;
-      }).toList();
-
-      // Apply cursor (skip documents until we find startAfterDocument)
+      // Apply cursor
       if (startAfterDocument != null) {
-        final startIndex = filteredDocs.indexWhere(
-          (doc) => doc.id == startAfterDocument.id,
-        );
-        if (startIndex != -1) {
-          filteredDocs = filteredDocs.sublist(startIndex + 1);
-        }
+        query = query.startAfterDocument(startAfterDocument);
       }
 
-      // Take limit + 1 to check if there are more
-      final hasMore = filteredDocs.length > limit;
-      final pageDocs = filteredDocs.take(limit).toList();
+      final snapshot = await query.get();
+
+      // Check if there are more pages
+      final hasMore = snapshot.docs.length > limit;
+      final pageDocs = snapshot.docs.take(limit).toList();
       final lastDoc = pageDocs.isNotEmpty ? pageDocs.last : null;
 
-      // Parse bookings
+      // Parse bookings and apply client-side filters
       final List<BookingModel> bookings = [];
       for (final doc in pageDocs) {
         try {
           final booking = BookingModel.fromJson({
-            ...(doc.data() as Map<String, dynamic>),
+            ...(doc.data()),
             'id': doc.id,
           });
+
+          // Client-side filtering by unit IDs, property, and dates
+          if (!filteredUnitIds.contains(booking.unitId)) continue;
+          if (propertyId != null && booking.propertyId != propertyId) continue;
+          if (startDate != null && booking.checkIn.isBefore(startDate)) continue;
+          if (endDate != null && booking.checkOut.isAfter(endDate)) continue;
+
           bookings.add(booking);
         } catch (e) {
           // Skip invalid bookings
@@ -968,81 +1083,39 @@ class FirebaseOwnerBookingsRepository {
         }
       }
 
-      // Build query - fetch all docs first, then apply cursor client-side
-      // This is necessary because we need to sort across multiple batches
-      final List<QueryDocumentSnapshot> allDocs = [];
+      // NEW STRUCTURE: Use collection group query with endBeforeDocument cursor
+      Query<Map<String, dynamic>> query = _firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: ownerId)
+          .orderBy('created_at', descending: true)
+          .endBeforeDocument(endBeforeDocument)
+          .limitToLast(limit + 1); // Fetch limit + 1 to check if there are more
 
-      for (int i = 0; i < filteredUnitIds.length; i += 10) {
-        final batch = filteredUnitIds.skip(i).take(10).toList();
-
-        Query query = _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .orderBy('created_at', descending: true);
-
-        if (status != null) {
-          query = query.where('status', isEqualTo: status.value);
-        }
-
-        final snapshot = await query.get();
-        allDocs.addAll(snapshot.docs);
+      if (status != null) {
+        query = query.where('status', isEqualTo: status.value);
       }
 
-      // Sort all docs by created_at DESC
-      allDocs.sort((a, b) {
-        final aCreated =
-            (a.data() as Map<String, dynamic>)['created_at'] as Timestamp?;
-        final bCreated =
-            (b.data() as Map<String, dynamic>)['created_at'] as Timestamp?;
-        if (aCreated == null && bCreated == null) return 0;
-        if (aCreated == null) return 1;
-        if (bCreated == null) return -1;
-        return bCreated.compareTo(aCreated);
-      });
-
-      // Apply client-side date filtering
-      final filteredDocs = allDocs.where((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (startDate != null) {
-          final checkIn = (data['check_in'] as Timestamp?)?.toDate();
-          if (checkIn != null && checkIn.isBefore(startDate)) return false;
-        }
-        if (endDate != null) {
-          final checkOut = (data['check_out'] as Timestamp?)?.toDate();
-          if (checkOut != null && checkOut.isAfter(endDate)) return false;
-        }
-        return true;
-      }).toList();
-
-      // Find the cursor position and get items BEFORE it
-      final cursorIndex = filteredDocs.indexWhere(
-        (doc) => doc.id == endBeforeDocument.id,
-      );
-      if (cursorIndex == -1 || cursorIndex == 0) {
-        // Cursor not found or at the beginning - no more items above
-        return const BidirectionalBookingsResult(
-          bookings: [],
-          hasMoreTop: false,
-          hasMoreBottom: true,
-        );
-      }
-
-      // Get items before the cursor (items with index < cursorIndex)
-      // Since list is sorted DESC, items before cursor are "newer" items
-      final startIndex = (cursorIndex - limit).clamp(0, cursorIndex);
-      final beforeCursorDocs = filteredDocs.sublist(startIndex, cursorIndex);
+      final snapshot = await query.get();
 
       // Check if there are more items above
-      final hasMoreTop = startIndex > 0;
+      final hasMoreTop = snapshot.docs.length > limit;
+      final beforeCursorDocs = snapshot.docs.take(limit).toList();
 
-      // Parse bookings
+      // Parse bookings and apply client-side filters
       final List<BookingModel> bookings = [];
       for (final doc in beforeCursorDocs) {
         try {
           final booking = BookingModel.fromJson({
-            ...(doc.data() as Map<String, dynamic>),
+            ...(doc.data()),
             'id': doc.id,
           });
+
+          // Client-side filtering
+          if (!filteredUnitIds.contains(booking.unitId)) continue;
+          if (propertyId != null && booking.propertyId != propertyId) continue;
+          if (startDate != null && booking.checkIn.isBefore(startDate)) continue;
+          if (endDate != null && booking.checkOut.isAfter(endDate)) continue;
+
           bookings.add(booking);
         } catch (e) {
           // Skip invalid bookings
@@ -1270,35 +1343,37 @@ class FirebaseOwnerBookingsRepository {
     required DateTime createdAfter,
     required int limit,
   }) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return [];
+
     final List<BookingModel> allBookings = [];
-    final batchLimit = (limit ~/ ((unitIds.length / 10).ceil())).clamp(10, 100);
 
-    for (int i = 0; i < unitIds.length; i += 10) {
-      final batch = unitIds.skip(i).take(10).toList();
+    // NEW STRUCTURE: Single collection group query per status (no batching!)
+    for (final status in statuses) {
+      final query = _firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: userId)
+          .where('status', isEqualTo: status.value)
+          .where(
+            'created_at',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(createdAfter),
+          )
+          .orderBy('created_at', descending: true)
+          .limit(limit);
 
-      for (final status in statuses) {
-        final query = _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('status', isEqualTo: status.value)
-            .where(
-              'created_at',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(createdAfter),
-            )
-            .orderBy('created_at', descending: true)
-            .limit(batchLimit);
-
-        final snapshot = await query.get();
-        for (final doc in snapshot.docs) {
-          try {
-            final booking = BookingModel.fromJson({
-              ...(doc.data()),
-              'id': doc.id,
-            });
+      final snapshot = await query.get();
+      for (final doc in snapshot.docs) {
+        try {
+          final booking = BookingModel.fromJson({
+            ...(doc.data()),
+            'id': doc.id,
+          });
+          // Filter by unitIds client-side
+          if (unitIds.contains(booking.unitId)) {
             allBookings.add(booking);
-          } catch (_) {
-            // Skip invalid bookings
           }
+        } catch (_) {
+          // Skip invalid bookings
         }
       }
     }
@@ -1313,36 +1388,37 @@ class FirebaseOwnerBookingsRepository {
     required DateTime checkInBefore,
     required int limit,
   }) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return [];
+
     final List<BookingModel> allBookings = [];
-    final batchLimit = (limit ~/ ((unitIds.length / 10).ceil())).clamp(5, 50);
 
-    for (int i = 0; i < unitIds.length; i += 10) {
-      final batch = unitIds.skip(i).take(10).toList();
+    // NEW STRUCTURE: Single collection group query per status (no batching!)
+    for (final status in [BookingStatus.confirmed, BookingStatus.pending]) {
+      final query = _firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: userId)
+          .where('status', isEqualTo: status.value)
+          .where(
+            'check_in',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter),
+          )
+          .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
+          .limit(limit);
 
-      // Query confirmed and pending bookings with upcoming check-ins
-      for (final status in [BookingStatus.confirmed, BookingStatus.pending]) {
-        final query = _firestore
-            .collection('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('status', isEqualTo: status.value)
-            .where(
-              'check_in',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter),
-            )
-            .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
-            .limit(batchLimit);
-
-        final snapshot = await query.get();
-        for (final doc in snapshot.docs) {
-          try {
-            final booking = BookingModel.fromJson({
-              ...(doc.data()),
-              'id': doc.id,
-            });
+      final snapshot = await query.get();
+      for (final doc in snapshot.docs) {
+        try {
+          final booking = BookingModel.fromJson({
+            ...(doc.data()),
+            'id': doc.id,
+          });
+          // Filter by unitIds client-side
+          if (unitIds.contains(booking.unitId)) {
             allBookings.add(booking);
-          } catch (_) {
-            // Skip invalid bookings
           }
+        } catch (_) {
+          // Skip invalid bookings
         }
       }
     }

@@ -64,48 +64,50 @@ class InfoCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Bug #50 Fix: Check for empty message string
+    if (message.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final hasTitle = title != null && title!.isNotEmpty;
-    final effectiveIconSize =
-        iconSize ?? (hasTitle ? _iconSizeWithTitle : _iconSizeSimple);
+    final effectiveIconSize = iconSize ?? (hasTitle ? _iconSizeWithTitle : _iconSizeSimple);
     final iconSpacing = hasTitle ? SpacingTokens.s : _iconToTextSpacingSimple;
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: hasTitle ? SpacingTokens.m : SpacingTokens.s,
-        vertical: hasTitle ? SpacingTokens.m : SpacingTokens.xs,
-      ),
-      decoration: BoxDecoration(
-        color: colors.backgroundTertiary,
-        borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: colors.borderDefault),
-      ),
-      child: Row(
-        mainAxisSize: useMinimalWidth ? MainAxisSize.min : MainAxisSize.max,
-        crossAxisAlignment: centerContent
-            ? CrossAxisAlignment.center
-            : CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(top: (hasTitle || centerContent) ? 0 : 1),
-            child: Icon(
-              icon,
-              color: colors.textSecondary,
-              size: effectiveIconSize,
+    // Bug #51 Fix: Add Semantics for accessibility
+    final semanticsLabel = hasTitle ? '$title: $message' : message;
+
+    return Semantics(
+      label: semanticsLabel,
+      hint: 'Information message',
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: hasTitle ? SpacingTokens.m : SpacingTokens.s,
+          vertical: hasTitle ? SpacingTokens.m : SpacingTokens.xs,
+        ),
+        decoration: BoxDecoration(
+          color: colors.backgroundTertiary,
+          borderRadius: BorderTokens.circularMedium,
+          border: Border.all(color: colors.borderDefault),
+        ),
+        child: Row(
+          mainAxisSize: useMinimalWidth ? MainAxisSize.min : MainAxisSize.max,
+          crossAxisAlignment: centerContent ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(top: (hasTitle || centerContent) ? 0 : 1),
+              child: Icon(icon, color: colors.textSecondary, size: effectiveIconSize),
             ),
-          ),
-          SizedBox(width: iconSpacing),
-          _buildContent(colors, hasTitle),
-        ],
+            SizedBox(width: iconSpacing),
+            _buildContent(colors, hasTitle),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildContent(MinimalistColorSchemeAdapter colors, bool hasTitle) {
-    final messageStyle = TextStyle(
-      fontSize: TypographyTokens.fontSizeS,
-      color: colors.textSecondary,
-    );
+    final messageStyle = TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary);
 
     if (useMinimalWidth) {
       return Flexible(
@@ -113,17 +115,10 @@ class InfoCardWidget extends StatelessWidget {
       );
     }
 
-    return Expanded(
-      child: hasTitle
-          ? _buildTitleAndMessage(colors, messageStyle)
-          : Text(message, style: messageStyle),
-    );
+    return Expanded(child: hasTitle ? _buildTitleAndMessage(colors, messageStyle) : Text(message, style: messageStyle));
   }
 
-  Widget _buildTitleAndMessage(
-    MinimalistColorSchemeAdapter colors,
-    TextStyle messageStyle,
-  ) {
+  Widget _buildTitleAndMessage(MinimalistColorSchemeAdapter colors, TextStyle messageStyle) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

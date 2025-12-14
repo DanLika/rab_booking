@@ -23,32 +23,39 @@ class DetailsReferenceCard extends ConsumerWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const DetailsReferenceCard({
-    super.key,
-    required this.bookingReference,
-    required this.colors,
-  });
+  const DetailsReferenceCard({super.key, required this.bookingReference, required this.colors});
 
   Future<void> _copyToClipboard(BuildContext context, WidgetRef ref) async {
     final tr = WidgetTranslations.of(context, ref);
-    await Clipboard.setData(ClipboardData(text: bookingReference));
-    if (context.mounted) {
-      SnackBarHelper.showSuccess(
-        context: context,
-        message: tr.bookingReferenceCopied,
-        duration: const Duration(seconds: 2),
-      );
+    try {
+      // Bug #65 Fix: Handle clipboard errors gracefully
+      await Clipboard.setData(ClipboardData(text: bookingReference));
+      if (context.mounted) {
+        SnackBarHelper.showSuccess(
+          context: context,
+          message: tr.bookingReferenceCopied,
+          duration: const Duration(seconds: 2),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error copying to clipboard: $e');
+      if (context.mounted) {
+        SnackBarHelper.showError(context: context, message: tr.errorOccurred, duration: const Duration(seconds: 3));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Bug #70 Fix: Check for empty string to prevent layout issues
+    if (bookingReference.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark
-        ? colors.backgroundTertiary
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -62,10 +69,7 @@ class DetailsReferenceCard extends ConsumerWidget {
         children: [
           Text(
             tr.bookingReference,
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
-              color: colors.textSecondary,
-            ),
+            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
           ),
           const SizedBox(height: SpacingTokens.xs),
           Row(

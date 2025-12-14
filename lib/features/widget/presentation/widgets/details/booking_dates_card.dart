@@ -55,24 +55,35 @@ class BookingDatesCard extends ConsumerWidget {
     required this.isDarkMode,
   });
 
+  /// Bug #59 Fix: Parse date safely with error handling
+  DateTime? _parseDateSafely(String dateString, String context) {
+    try {
+      return DateTimeParser.parseOrThrow(dateString, context: context);
+    } catch (e) {
+      debugPrint('Error parsing date in $context: $dateString, error: $e');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
-    final checkInDate = DateTimeParser.parseOrThrow(
-      checkIn,
-      context: 'BookingDatesCard.checkIn',
-    );
-    final checkOutDate = DateTimeParser.parseOrThrow(
-      checkOut,
-      context: 'BookingDatesCard.checkOut',
-    );
-    // Match BookingSummaryCard date format
-    final formatter = DateFormat('EEEE, MMM dd, yyyy');
+
+    // Bug #59 Fix: Parse dates with error handling
+    final checkInDate = _parseDateSafely(checkIn, 'BookingDatesCard.checkIn');
+    final checkOutDate = _parseDateSafely(checkOut, 'BookingDatesCard.checkOut');
+
+    // Return empty widget if dates cannot be parsed
+    if (checkInDate == null || checkOutDate == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Bug #60 Fix: Add localization to DateFormat
+    final locale = Localizations.localeOf(context);
+    final formatter = DateFormat('EEEE, MMM dd, yyyy', locale.toString());
 
     // Use backgroundTertiary in dark mode for better contrast
-    final cardBackground = isDarkMode
-        ? colors.backgroundTertiary
-        : colors.backgroundSecondary;
+    final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Container(

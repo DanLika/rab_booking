@@ -47,11 +47,11 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year);
     final endDate = DateTime.utc(year, 12, 31, 23, 59, 59);
 
-    // Stream bookings
+    // Stream bookings (NEW STRUCTURE: collection group query)
     // Note: Using client-side filtering to avoid Firestore limitation of
     // whereIn + inequality filters requiring composite index
     final bookingsStream = _firestore
-        .collection('bookings')
+        .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
@@ -64,9 +64,14 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (Booking.com, Airbnb, etc.)
+    // Stream iCal events (NEW STRUCTURE: subcollection path)
     // Note: Using client-side filtering to avoid Firestore index requirement for inequality filter
-    final icalEventsStream = _firestore.collection('ical_events').where('unit_id', isEqualTo: unitId).snapshots();
+    final icalEventsStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('ical_events')
+        .where('unit_id', isEqualTo: unitId)
+        .snapshots();
 
     // Stream widget settings to get minNights
     // FIXED: Use correct subcollection path: properties/{propertyId}/widget_settings/{unitId}
@@ -172,11 +177,11 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year, month);
     final endDate = DateTime.utc(year, month + 1, 0, 23, 59, 59);
 
-    // Stream bookings
+    // Stream bookings (NEW STRUCTURE: collection group query)
     // Note: Using client-side filtering to avoid Firestore limitation of
     // whereIn + inequality filters requiring composite index
     final bookingsStream = _firestore
-        .collection('bookings')
+        .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
@@ -189,8 +194,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (Booking.com, Airbnb, etc.) - OPTIONAL
+    // Stream iCal events (NEW STRUCTURE: subcollection path)
     final icalEventsStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
         .collection('ical_events')
         .where('unit_id', isEqualTo: unitId)
         .where('start_date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
@@ -304,9 +311,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year);
     final endDate = DateTime.utc(year, 12, 31, 23, 59, 59);
 
-    // Stream bookings (no widgetSettingsStream needed!)
+    // Stream bookings (NEW STRUCTURE: collection group query)
     final bookingsStream = _firestore
-        .collection('bookings')
+        .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
@@ -319,8 +326,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events
-    final icalEventsStream = _firestore.collection('ical_events').where('unit_id', isEqualTo: unitId).snapshots();
+    // Stream iCal events (NEW STRUCTURE: subcollection path)
+    final icalEventsStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('ical_events')
+        .where('unit_id', isEqualTo: unitId)
+        .snapshots();
 
     // Combine only 3 streams (instead of 4)
     return Rx.combineLatest3(bookingsStream, pricesStream, icalEventsStream, (

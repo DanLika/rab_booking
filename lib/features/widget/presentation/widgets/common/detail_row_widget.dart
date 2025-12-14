@@ -54,7 +54,8 @@ class DetailRowWidget extends StatelessWidget {
   /// Use FontWeight.w400 (regular) for booking confirmation style.
   final FontWeight valueFontWeight;
 
-  const DetailRowWidget({
+  // Bug #45 Fix: Removed const to allow assert validation for non-empty label and value
+  DetailRowWidget({
     super.key,
     required this.label,
     required this.value,
@@ -62,7 +63,8 @@ class DetailRowWidget extends StatelessWidget {
     this.isHighlighted = false,
     this.hasPadding = false,
     this.valueFontWeight = TypographyTokens.semiBold,
-  });
+  }) : assert(label.isNotEmpty, 'Label cannot be empty'),
+       assert(value.isNotEmpty, 'Value cannot be empty');
 
   @override
   Widget build(BuildContext context) {

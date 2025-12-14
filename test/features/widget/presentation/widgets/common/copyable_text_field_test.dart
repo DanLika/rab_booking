@@ -13,7 +13,7 @@ void main() {
               value: 'HR1234567890123456789',
               icon: Icons.account_balance,
               isDarkMode: false,
-              onCopy: () {},
+              onCopy: () async {},
             ),
           ),
         ),
@@ -32,7 +32,7 @@ void main() {
               value: 'HR1234567890123456789',
               icon: Icons.account_balance,
               isDarkMode: false,
-              onCopy: () {},
+              onCopy: () async {},
             ),
           ),
         ),
@@ -50,7 +50,7 @@ void main() {
               value: 'REF123',
               icon: Icons.tag,
               isDarkMode: false,
-              onCopy: () {},
+              onCopy: () async {},
             ),
           ),
         ),
@@ -70,7 +70,9 @@ void main() {
               value: 'HR1234567890123456789',
               icon: Icons.account_balance,
               isDarkMode: false,
-              onCopy: () => copyPressed = true,
+              onCopy: () async {
+                copyPressed = true;
+              },
             ),
           ),
         ),
@@ -91,7 +93,7 @@ void main() {
               value: '€500.00',
               icon: Icons.euro,
               isDarkMode: true,
-              onCopy: () {},
+              onCopy: () async {},
             ),
           ),
         ),
@@ -109,15 +111,13 @@ void main() {
               value: 'HR1234567890123456789',
               icon: Icons.account_balance,
               isDarkMode: false,
-              onCopy: () {},
+              onCopy: () async {},
             ),
           ),
         ),
       );
 
-      final valueText = tester.widget<Text>(
-        find.text('HR1234567890123456789'),
-      );
+      final valueText = tester.widget<Text>(find.text('HR1234567890123456789'));
       expect(valueText.style?.fontFamily, 'monospace');
     });
 
@@ -130,7 +130,7 @@ void main() {
               value: 'Some Bank',
               icon: Icons.business,
               isDarkMode: false,
-              onCopy: () {},
+              onCopy: () async {},
             ),
           ),
         ),

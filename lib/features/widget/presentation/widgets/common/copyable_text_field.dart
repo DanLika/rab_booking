@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../l10n/widget_translations.dart';
@@ -139,24 +138,22 @@ class CopyableTextField extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.content_copy, size: IconSizeTokens.small, color: colors.buttonPrimary),
-            onPressed: onCopy != null
-                ? () async {
-                    try {
-                      await onCopy!();
-                    } catch (e) {
-                      // Bug #42 Fix: Handle clipboard errors gracefully
-                      if (context.mounted) {
-                        final errorMessage = translations?.errorOccurred ?? 'Failed to copy to clipboard';
-                        SnackBarHelper.showError(
-                          context: context,
-                          message: errorMessage,
-                          duration: const Duration(seconds: 3),
-                        );
-                      }
-                      debugPrint('Error copying to clipboard: $e');
-                    }
-                  }
-                : null,
+            onPressed: () async {
+              try {
+                await onCopy();
+              } catch (e) {
+                // Bug #42 Fix: Handle clipboard errors gracefully
+                if (context.mounted) {
+                  final errorMessage = translations?.errorOccurred ?? 'Failed to copy to clipboard';
+                  SnackBarHelper.showError(
+                    context: context,
+                    message: errorMessage,
+                    duration: const Duration(seconds: 3),
+                  );
+                }
+                debugPrint('Error copying to clipboard: $e');
+              }
+            },
             tooltip: translations?.copy ?? 'Copy', // Bug #40 Fix: Localized tooltip
           ),
         ],

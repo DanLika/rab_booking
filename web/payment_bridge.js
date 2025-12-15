@@ -408,12 +408,30 @@
       }.bind(this));
     },
 
+    // Track processed session IDs to avoid duplicate handling
+    _processedSessions: {},
+
     /**
-     * Handle payment result
+     * Handle payment result (with deduplication)
      */
     _handleResult: function(data) {
       console.log('[PaymentBridge] Payment result received:', data);
-      
+
+      // Deduplication: ignore if we've already processed this sessionId
+      if (data.sessionId && this._processedSessions[data.sessionId]) {
+        console.log('[PaymentBridge] Ignoring duplicate message for session:', data.sessionId);
+        return;
+      }
+
+      // Mark as processed (with TTL of 60 seconds)
+      if (data.sessionId) {
+        this._processedSessions[data.sessionId] = Date.now();
+        // Cleanup old entries after 60 seconds
+        setTimeout(function() {
+          delete this._processedSessions[data.sessionId];
+        }.bind(this), 60000);
+      }
+
       if (this._paymentCallback) {
         try {
           // Call callback with JSON string (for Dart interop)

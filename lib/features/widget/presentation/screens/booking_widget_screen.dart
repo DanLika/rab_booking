@@ -1211,75 +1211,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         await _validateUnitAndProperty();
       }
 
-      // CRITICAL: Send payment completion notification via BroadcastChannel
-      // This notifies the original iframe (on duskolicanin.com) that payment is complete
-      // Must be done BEFORE showing confirmation screen and BEFORE relying on isPopupWindow
-      // because Stripe redirect breaks window.opener reference
-      if (kIsWeb) {
-        try {
-          // Method 1: BroadcastChannel (same-origin, most reliable)
-          final tabService = createTabCommunicationService();
-          tabService.sendPaymentComplete(
-            bookingId: booking.id,
-            ref: booking.bookingReference ?? booking.id,
-            sessionId: sessionId, // Include sessionId for lookup in receiving tab
-          );
-          LoggingService.log(
-            '[STRIPE_RETURN] ✅ Sent payment complete via BroadcastChannel',
-            tag: 'STRIPE_SESSION',
-          );
-          // Dispose after short delay to ensure message is sent
-          Future.delayed(const Duration(seconds: 2), () {
-            try {
-              tabService.dispose();
-            } catch (_) {}
-          });
-
-          // Method 2: PaymentBridge.notifyComplete (handles multiple channels)
-          notifyPaymentComplete(sessionId, 'success');
-          LoggingService.log(
-            '[STRIPE_RETURN] ✅ Sent payment complete via PaymentBridge',
-            tag: 'STRIPE_SESSION',
-          );
-
-          // Try to close this window/tab after short delay
-          // This works if we're in a popup that was opened by the iframe
-          // Note: closePopupWindow() checks window.opener but Stripe redirect breaks that
-          // So we use tryCloseWindow() which attempts close unconditionally
-          Future.delayed(const Duration(milliseconds: 1500), () {
-            try {
-              // First try the conditional close (checks window.opener)
-              var closed = closePopupWindow();
-              if (!closed) {
-                // If that didn't work, try unconditional close
-                // This may work if browser allows closing windows opened by script
-                closed = tryCloseWindow();
-              }
-              if (closed) {
-                LoggingService.log(
-                  '[STRIPE_RETURN] ✅ Window close attempted',
-                  tag: 'STRIPE_SESSION',
-                );
-              } else {
-                LoggingService.log(
-                  '[STRIPE_RETURN] ℹ️ Window close not possible, showing confirmation screen',
-                  tag: 'STRIPE_SESSION',
-                );
-              }
-            } catch (e) {
-              LoggingService.log(
-                '[STRIPE_RETURN] ⚠️ Could not auto-close window: $e',
-                tag: 'STRIPE_SESSION',
-              );
-            }
-          });
-        } catch (e) {
-          LoggingService.log(
-            '[STRIPE_RETURN] ⚠️ Failed to send payment notification: $e',
-            tag: 'STRIPE_SESSION',
-          );
-        }
-      }
+      // NOTE: DO NOT send payment completion notification here!
+      // This function is called AS A RESPONSE to receiving a payment-complete message
+      // (from BookingConfirmationScreen or from URL params after Stripe redirect).
+      // Sending another message here creates an INFINITE LOOP because:
+      // 1. BookingConfirmationScreen sends paymentComplete via BroadcastChannel
+      // 2. This widget receives it and calls _handleStripeReturnWithSessionId()
+      // 3. If we send paymentComplete again here, BookingConfirmationScreen receives it
+      // 4. This triggers another round of processing -> INFINITE LOOP
+      //
+      // The BookingConfirmationScreen already handles all notification methods:
+      // - BroadcastChannel (same-origin tabs)
+      // - postMessage (iframe/popup communication)
+      // - PaymentBridge (legacy support)
 
       // Invalidate calendar cache
       ref.invalidate(realtimeYearCalendarProvider);

@@ -129,96 +129,59 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     final uri = Uri.base;
     final sessionId = uri.queryParameters['session_id'] ?? uri.queryParameters['stripe_session_id'] ?? '';
 
-    final message = {
-      'type': 'stripe-payment-complete',
-      'source': 'bookbed-widget',
-      'bookingId': bookingId,
-      'bookingRef': bookingRef,
-      if (sessionId.isNotEmpty) 'sessionId': sessionId,
-    };
-
     LoggingService.log(
       '[PaymentComplete] Notifying parent with bookingId: $bookingId, bookingRef: $bookingRef, sessionId: ${sessionId.isNotEmpty ? sessionId : "N/A"}',
       tag: 'STRIPE',
     );
 
-    // Method 1: PaymentBridge.notifyComplete (most reliable for popup scenarios)
-    // This handles BroadcastChannel, postMessage, and localStorage fallbacks
-    if (kIsWeb) {
+    // Use PaymentBridge.notifyComplete() as the SINGLE notification method.
+    // PaymentBridge internally handles multiple channels (BroadcastChannel, postMessage,
+    // localStorage) with deduplication, so we don't need to call them separately.
+    // This avoids the previous issue of 8+ duplicate messages being sent.
+    if (kIsWeb && sessionId.isNotEmpty) {
       try {
-        if (sessionId.isNotEmpty) {
-          notifyPaymentComplete(sessionId, 'success');
-          LoggingService.log('[PaymentComplete] Sent via PaymentBridge with sessionId: $sessionId', tag: 'STRIPE');
-        } else {
-          LoggingService.log('[PaymentComplete] PaymentBridge skipped - no sessionId in URL', tag: 'STRIPE');
-        }
+        notifyPaymentComplete(sessionId, 'success');
+        LoggingService.log(
+          '[PaymentComplete] Sent via PaymentBridge (handles all channels)',
+          tag: 'STRIPE',
+        );
       } catch (e) {
         LoggingService.log('[PaymentComplete] PaymentBridge failed: $e', tag: 'STRIPE');
-      }
-    }
 
-    // Method 2: BroadcastChannel (works for same-origin tabs/windows)
-    // This is the most reliable method when popup is blocked and opens in new tab
-    if (kIsWeb) {
+        // Fallback: try BroadcastChannel directly if PaymentBridge failed
+        try {
+          final tabService = createTabCommunicationService();
+          tabService.sendPaymentComplete(
+            bookingId: bookingId,
+            ref: bookingRef,
+            sessionId: sessionId,
+          );
+          LoggingService.log('[PaymentComplete] Fallback sent via BroadcastChannel', tag: 'STRIPE');
+          Future.delayed(const Duration(seconds: 2), () {
+            try {
+              tabService.dispose();
+            } catch (_) {}
+          });
+        } catch (fallbackError) {
+          LoggingService.log('[PaymentComplete] Fallback also failed: $fallbackError', tag: 'STRIPE');
+        }
+      }
+    } else if (kIsWeb) {
+      // No sessionId - use BroadcastChannel directly
       try {
         final tabService = createTabCommunicationService();
         tabService.sendPaymentComplete(
           bookingId: bookingId,
           ref: bookingRef,
-          sessionId: sessionId.isNotEmpty ? sessionId : null,
         );
-        LoggingService.log('[PaymentComplete] Sent via BroadcastChannel', tag: 'STRIPE');
-        // Dispose after sending (one-time use) - delay to ensure message is sent
+        LoggingService.log('[PaymentComplete] Sent via BroadcastChannel (no sessionId)', tag: 'STRIPE');
         Future.delayed(const Duration(seconds: 2), () {
           try {
             tabService.dispose();
-          } catch (_) {
-            // Ignore disposal errors
-          }
+          } catch (_) {}
         });
       } catch (e) {
         LoggingService.log('[PaymentComplete] BroadcastChannel failed: $e', tag: 'STRIPE');
-        // Retry once after short delay
-        Future.delayed(const Duration(milliseconds: 500), () {
-          try {
-            final retryTabService = createTabCommunicationService();
-            retryTabService.sendPaymentComplete(
-              bookingId: bookingId,
-              ref: bookingRef,
-              sessionId: sessionId.isNotEmpty ? sessionId : null,
-            );
-            LoggingService.log('[PaymentComplete] Retry sent via BroadcastChannel', tag: 'STRIPE');
-            Future.delayed(const Duration(seconds: 2), () {
-              try {
-                retryTabService.dispose();
-              } catch (_) {
-                // Ignore disposal errors
-              }
-            });
-          } catch (retryError) {
-            LoggingService.log('[PaymentComplete] BroadcastChannel retry failed: $retryError', tag: 'STRIPE');
-          }
-        });
-      }
-    }
-
-    // Method 3: postMessage (works for iframe/popup communication)
-    // Only works if opened as popup (window.opener exists)
-    if (kIsWeb && isPopupWindow) {
-      try {
-        sendMessageToParent(message);
-        LoggingService.log('[PaymentComplete] Sent via postMessage', tag: 'STRIPE');
-        // Retry postMessage once after short delay for reliability
-        Future.delayed(const Duration(milliseconds: 500), () {
-          try {
-            sendMessageToParent(message);
-            LoggingService.log('[PaymentComplete] Retry sent via postMessage', tag: 'STRIPE');
-          } catch (e) {
-            LoggingService.log('[PaymentComplete] postMessage retry failed: $e', tag: 'STRIPE');
-          }
-        });
-      } catch (e) {
-        LoggingService.log('[PaymentComplete] postMessage failed: $e', tag: 'STRIPE');
       }
     }
 

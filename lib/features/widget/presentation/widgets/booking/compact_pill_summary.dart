@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';

@@ -312,18 +312,20 @@ export const scheduledTwoWaySync = onSchedule(
         const failureId = failureDoc.id;
 
         try {
-          // Get booking data
-          const bookingDoc = await db
-            .collection("bookings")
-            .doc(failure.booking_id)
+          // NEW STRUCTURE: Get booking data using collection group query
+          const bookingQuery = await db
+            .collectionGroup("bookings")
+            .where(admin.firestore.FieldPath.documentId(), "==", failure.booking_id)
+            .limit(1)
             .get();
 
-          if (!bookingDoc.exists) {
+          if (bookingQuery.empty) {
             // Booking no longer exists, delete failure record
             await failureDoc.ref.delete();
             continue;
           }
 
+          const bookingDoc = bookingQuery.docs[0];
           const bookingData = bookingDoc.data()!;
           const checkIn = bookingData.check_in?.toDate();
           const checkOut = bookingData.check_out?.toDate();
@@ -428,19 +430,24 @@ export const scheduledTwoWaySync = onSchedule(
 async function notifyOwnerOfSyncFailure(ownerId: string, failure: any): Promise<void> {
   try {
     // Create notification in Firestore
-    await db.collection("notifications").add({
-      ownerId,
-      type: "sync_failure",
-      title: "Sync Failure - Manual Action Required",
-      message: `Failed to sync booking to ${failure.platform} after multiple retries. Please block dates manually.`,
-      metadata: {
-        platform: failure.platform,
-        bookingId: failure.booking_id,
-        unitId: failure.unit_id,
-      },
-      timestamp: admin.firestore.Timestamp.now(),
-      isRead: false,
-    });
+    // NEW STRUCTURE: Write to users/{ownerId}/notifications subcollection
+    await db
+      .collection("users")
+      .doc(ownerId)
+      .collection("notifications")
+      .add({
+        ownerId,
+        type: "sync_failure",
+        title: "Sync Failure - Manual Action Required",
+        message: `Failed to sync booking to ${failure.platform} after multiple retries. Please block dates manually.`,
+        metadata: {
+          platform: failure.platform,
+          bookingId: failure.booking_id,
+          unitId: failure.unit_id,
+        },
+        timestamp: admin.firestore.Timestamp.now(),
+        isRead: false,
+      });
 
     logInfo("[Two-Way Sync] Owner notified of sync failure", {
       ownerId,

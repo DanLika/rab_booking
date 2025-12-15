@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,23 +17,14 @@ Stream<List<PlatformConnection>> platformConnections(Ref ref) {
 
   final firestore = ref.watch(firestoreProvider);
 
-  return firestore
-      .collection('platform_connections')
-      .where('owner_id', isEqualTo: userId)
-      .snapshots()
-      .map((snapshot) {
-    return snapshot.docs
-        .map((doc) => PlatformConnection.fromFirestore(doc))
-        .toList();
+  return firestore.collection('platform_connections').where('owner_id', isEqualTo: userId).snapshots().map((snapshot) {
+    return snapshot.docs.map(PlatformConnection.fromFirestore).toList();
   });
 }
 
 /// Provider for platform connections for a specific unit
 @riverpod
-Stream<List<PlatformConnection>> platformConnectionsForUnit(
-  Ref ref,
-  String unitId,
-) {
+Stream<List<PlatformConnection>> platformConnectionsForUnit(Ref ref, String unitId) {
   final userId = FirebaseAuth.instance.currentUser?.uid;
   if (userId == null) {
     return Stream.value([]);
@@ -49,10 +39,8 @@ Stream<List<PlatformConnection>> platformConnectionsForUnit(
       .where('status', isEqualTo: 'active')
       .snapshots()
       .map((snapshot) {
-    return snapshot.docs
-        .map((doc) => PlatformConnection.fromFirestore(doc))
-        .toList();
-  });
+        return snapshot.docs.map(PlatformConnection.fromFirestore).toList();
+      });
 }
 
 /// Initiate Booking.com OAuth flow
@@ -66,49 +54,32 @@ Future<Map<String, dynamic>> connectBookingCom(
   final functions = FirebaseFunctions.instance;
   final callable = functions.httpsCallable('initiateBookingComOAuth');
 
-  final result = await callable.call({
-    'unitId': unitId,
-    'hotelId': hotelId,
-    'roomTypeId': roomTypeId,
-  });
+  final result = await callable.call({'unitId': unitId, 'hotelId': hotelId, 'roomTypeId': roomTypeId});
 
   return result.data as Map<String, dynamic>;
 }
 
 /// Initiate Airbnb OAuth flow
 @riverpod
-Future<Map<String, dynamic>> connectAirbnb(
-  Ref ref, {
-  required String unitId,
-  required String listingId,
-}) async {
+Future<Map<String, dynamic>> connectAirbnb(Ref ref, {required String unitId, required String listingId}) async {
   final functions = FirebaseFunctions.instance;
   final callable = functions.httpsCallable('initiateAirbnbOAuth');
 
-  final result = await callable.call({
-    'unitId': unitId,
-    'listingId': listingId,
-  });
+  final result = await callable.call({'unitId': unitId, 'listingId': listingId});
 
   return result.data as Map<String, dynamic>;
 }
 
 /// Remove platform connection
 @riverpod
-Future<void> removePlatformConnection(
-  Ref ref,
-  String connectionId,
-) async {
+Future<void> removePlatformConnection(Ref ref, String connectionId) async {
   final userId = FirebaseAuth.instance.currentUser?.uid;
   if (userId == null) {
     throw Exception('User not authenticated');
   }
 
   final firestore = ref.watch(firestoreProvider);
-  final connectionDoc = await firestore
-      .collection('platform_connections')
-      .doc(connectionId)
-      .get();
+  final connectionDoc = await firestore.collection('platform_connections').doc(connectionId).get();
 
   if (!connectionDoc.exists) {
     throw Exception('Connection not found');
@@ -124,12 +95,8 @@ Future<void> removePlatformConnection(
 
 /// Test platform connection
 @riverpod
-Future<bool> testPlatformConnection(
-  Ref ref,
-  String connectionId,
-) async {
+Future<bool> testPlatformConnection(Ref ref, String connectionId) async {
   // TODO: Implement connection test
   // This would call the platform API to verify the connection is working
   return true;
 }
-

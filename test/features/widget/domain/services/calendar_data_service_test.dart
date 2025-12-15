@@ -93,7 +93,7 @@ void main() {
 
     test('year boundary crossing works correctly', () {
       // Test: startDate in January, endDate in December of same year
-      final startDate = DateTime.utc(2024, 1, 1); // January 1, 2024
+      final startDate = DateTime.utc(2024); // January 1, 2024
       final endDate = DateTime.utc(2024, 12, 31); // December 31, 2024
 
       // Test extendedStart (should go to December 2023)
@@ -126,7 +126,7 @@ void main() {
 
     test('normal months (not at boundaries) work correctly', () {
       // Test: startDate and endDate in middle of year
-      final startDate = DateTime.utc(2024, 6, 1); // June 1, 2024
+      final startDate = DateTime.utc(2024, 6); // June 1, 2024
       final endDate = DateTime.utc(2024, 8, 31); // August 31, 2024
 
       // Test extendedStart (should go to May 2024)
@@ -218,7 +218,7 @@ void main() {
     test('large gap is not blocked (greater than minNights)', () {
       // Test: Large gap should not be blocked
       // current.checkOut = Jan 1, next.checkIn = Jan 10
-      final currentCheckOut = DateTime.utc(2024, 1, 1);
+      final currentCheckOut = DateTime.utc(2024);
       final nextCheckIn = DateTime.utc(2024, 1, 10);
 
       final gapStart = currentCheckOut.add(const Duration(days: 1)); // Jan 2

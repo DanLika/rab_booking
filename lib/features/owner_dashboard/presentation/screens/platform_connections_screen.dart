@@ -114,7 +114,6 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Colors.orange.shade300,
-                  width: 1,
                 ),
               ),
               child: Column(
@@ -169,7 +168,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
           child: Center(
             child: Column(
               children: [
-                Icon(Icons.link_off, size: 64, color: Colors.grey),
+                const Icon(Icons.link_off, size: 64, color: Colors.grey),
                 const SizedBox(height: 16),
                 Text(
                   'No platform connections',
@@ -321,11 +320,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     final proceed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
-            const SizedBox(width: 8),
-            const Text('Important Information'),
+            SizedBox(width: 8),
+            Text('Important Information'),
           ],
         ),
         content: const SingleChildScrollView(
@@ -450,11 +449,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     final proceed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
-            const SizedBox(width: 8),
-            const Text('Important Information'),
+            SizedBox(width: 8),
+            Text('Important Information'),
           ],
         ),
         content: const SingleChildScrollView(

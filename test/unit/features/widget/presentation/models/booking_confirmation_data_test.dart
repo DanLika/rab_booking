@@ -2,9 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/models/booking_confirmation_data.dart';
 import 'package:bookbed/shared/models/booking_model.dart';
 import 'package:bookbed/features/widget/domain/models/widget_settings.dart';
-import 'package:bookbed/features/widget/domain/models/settings/contact_options.dart';
-import 'package:bookbed/features/widget/domain/models/settings/email_notification_config.dart';
-import 'package:bookbed/features/widget/domain/models/settings/tax_legal_config.dart';
 import 'package:bookbed/core/constants/enums.dart';
 
 void main() {
@@ -19,10 +16,10 @@ void main() {
       guestCount: 2,
       totalPrice: 500.0,
       status: BookingStatus.confirmed,
-      createdAt: DateTime(2025, 1, 1),
+      createdAt: DateTime(2025),
     );
 
-    final testEmailConfig = EmailNotificationConfig(enabled: true, sendBookingConfirmation: true);
+    const testEmailConfig = EmailNotificationConfig(enabled: true);
 
     final testWidgetSettings = WidgetSettings(
       id: 'test-unit-id',
@@ -31,8 +28,8 @@ void main() {
       contactOptions: const ContactOptions(),
       emailConfig: const EmailNotificationConfig(),
       taxLegalConfig: const TaxLegalConfig(),
-      createdAt: DateTime(2025, 1, 1),
-      updatedAt: DateTime(2025, 1, 1),
+      createdAt: DateTime(2025),
+      updatedAt: DateTime(2025),
     );
 
     final baseData = BookingConfirmationData(
@@ -118,7 +115,7 @@ void main() {
           propertyId: 'new-property-id',
           unitId: 'new-unit-id',
           ownerId: 'new-owner-id',
-          checkIn: DateTime(2025, 2, 1),
+          checkIn: DateTime(2025, 2),
           checkOut: DateTime(2025, 2, 5),
           guestCount: 4,
           totalPrice: 800.0,
@@ -126,7 +123,7 @@ void main() {
           createdAt: DateTime(2025, 1, 15),
         );
 
-        final newEmailConfig = EmailNotificationConfig(enabled: false, sendBookingConfirmation: false);
+        const newEmailConfig = EmailNotificationConfig(sendBookingConfirmation: false);
 
         final updated = baseData.copyWith(
           unitName: 'Unit B',

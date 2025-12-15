@@ -71,7 +71,8 @@ void saveBookingStateForPayment(String bookingDataJson) {
 }
 
 /// Setup payment result listener (no-op on mobile)
-void setupPaymentResultListener(dynamic callback) {
+/// Callback receives JSON string with payment result
+void setupPaymentResultListener(void Function(String) callback) {
   // No-op on non-web platforms
 }
 
@@ -102,6 +103,12 @@ void Function() listenToParentMessages(void Function(Map<String, dynamic>) onMes
 
 /// Close current window (no-op on mobile)
 bool closePopupWindow() {
+  // No-op on non-web platforms
+  return false;
+}
+
+/// Try to close current window unconditionally (no-op on mobile)
+bool tryCloseWindow() {
   // No-op on non-web platforms
   return false;
 }

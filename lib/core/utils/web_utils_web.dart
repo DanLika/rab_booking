@@ -190,10 +190,11 @@ void saveBookingStateForPayment(String bookingDataJson) {
 
 /// Setup payment result listener
 /// Callback receives JSON string with payment result
-void setupPaymentResultListener(JSFunction callback) {
+void setupPaymentResultListener(void Function(String) callback) {
   try {
     if (_paymentBridge != null) {
-      _paymentBridgeOnPaymentResult(callback);
+      // Convert Dart function to JSFunction for JS interop
+      _paymentBridgeOnPaymentResult(callback.toJS);
       web.console.log('[STRIPE] Payment result listener registered'.toJS);
     }
   } catch (e) {
@@ -274,6 +275,22 @@ bool closePopupWindow() {
     return false;
   } catch (e) {
     web.console.log('[CLOSE_POPUP] Error closing window: $e'.toJS);
+    return false;
+  }
+}
+
+/// Try to close current window unconditionally
+/// This is used after Stripe redirect where window.opener may be lost
+/// Returns true if close was attempted (doesn't guarantee success)
+bool tryCloseWindow() {
+  try {
+    // Attempt to close - will only work if window was opened by script
+    // Browsers may ignore this if the window wasn't opened programmatically
+    web.window.close();
+    web.console.log('[CLOSE_WINDOW] Attempted to close window'.toJS);
+    return true;
+  } catch (e) {
+    web.console.log('[CLOSE_WINDOW] Error closing window: $e'.toJS);
     return false;
   }
 }

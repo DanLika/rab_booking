@@ -185,8 +185,9 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
         // PERFORMANCE FIX: Add date filter to prevent unbounded data download
         // Filter by check_in <= endDate (server-side) - Firestore only allows one inequality
         // Bookings with check_out before startDate will be ignored via provider filtering
+        // NEW STRUCTURE: Use collection group query for subcollection
         final bookingsSubscription = firestore
-            .collection('bookings')
+            .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
             .where('check_in', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
             .snapshots()
@@ -210,9 +211,10 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
 
         // Listener 2: OPTIONAL - iCal events (Booking.com, Airbnb, etc.)
         // Gracefully fails if ical_events collection doesn't exist or has no data
+        // NEW STRUCTURE: Use collection group query for subcollection
         try {
           final icalSubscription = firestore
-              .collection('ical_events')
+              .collectionGroup('ical_events')
               .where('unit_id', whereIn: batch)
               .snapshots()
               .listen(

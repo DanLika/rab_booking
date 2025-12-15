@@ -37,11 +37,12 @@ class FirebaseAnalyticsRepository with FirestoreRepositoryMixin {
       };
 
       // SINGLE COMBINED QUERY: Get ALL bookings (including cancelled) in date range
+      // NEW STRUCTURE: Use collection group query for subcollection
       final List<Map<String, dynamic>> allBookingsRaw = [];
       for (int i = 0; i < unitIds.length; i += 10) {
         final batch = unitIds.skip(i).take(10).toList();
         final bookingsSnapshot = await _firestore
-            .collection('bookings')
+            .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
             .where('check_in', isGreaterThanOrEqualTo: dateRange.startDate)
             .where('check_in', isLessThanOrEqualTo: dateRange.endDate)
@@ -248,11 +249,12 @@ class FirebaseAnalyticsRepository with FirestoreRepositoryMixin {
       }
 
       // Get bookings within date range (in batches)
+      // NEW STRUCTURE: Use collection group query for subcollection
       final List<Map<String, dynamic>> bookings = [];
       for (int i = 0; i < unitIds.length; i += 10) {
         final batch = unitIds.skip(i).take(10).toList();
         final bookingsSnapshot = await _firestore
-            .collection('bookings')
+            .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
             .where('check_in', isGreaterThanOrEqualTo: dateRange.startDate)
             .where('check_in', isLessThanOrEqualTo: dateRange.endDate)
@@ -328,11 +330,12 @@ class FirebaseAnalyticsRepository with FirestoreRepositoryMixin {
           : 0.0;
 
       // Get cancelled bookings for cancellation rate
+      // NEW STRUCTURE: Use collection group query for subcollection
       final List<Map<String, dynamic>> cancelledBookings = [];
       for (int i = 0; i < unitIds.length; i += 10) {
         final batch = unitIds.skip(i).take(10).toList();
         final cancelledSnapshot = await _firestore
-            .collection('bookings')
+            .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
             .where('check_in', isGreaterThanOrEqualTo: dateRange.startDate)
             .where('check_in', isLessThanOrEqualTo: dateRange.endDate)

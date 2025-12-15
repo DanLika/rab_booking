@@ -161,7 +161,6 @@ class ContactPillCardWidget extends StatelessWidget {
           SnackBarHelper.showError(
             context: context,
             message: 'Unable to open $url. Please check if you have an app installed to handle this action.',
-            duration: const Duration(seconds: 4),
           );
         }
         return;
@@ -176,7 +175,6 @@ class ContactPillCardWidget extends StatelessWidget {
         SnackBarHelper.showError(
           context: context,
           message: 'Invalid URL format. Please contact the property owner.',
-          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
@@ -186,7 +184,6 @@ class ContactPillCardWidget extends StatelessWidget {
         SnackBarHelper.showError(
           context: context,
           message: 'Unable to open $url. Please try again or contact the property owner.',
-          duration: const Duration(seconds: 4),
         );
       }
     }

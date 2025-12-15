@@ -1,68 +1,63 @@
 /**
  * Email Module - Centralized Export
  *
- * Exports all email template functions and utilities.
+ * All email templates are V2 (Refined Premium minimalist design).
  * Import from this file in emailService.ts and other modules.
  *
  * @example
  * ```ts
  * import {
- *   sendBookingConfirmationEmail,
+ *   sendBookingConfirmationEmailV2,
  *   BookingConfirmationParams
  * } from './email';
  * ```
  */
 
-// Template functions
-export {
-  sendBookingConfirmationEmail,
-  generateBookingConfirmationEmail,
-  type BookingConfirmationParams,
-} from "./templates/version-1/booking-confirmation";
+// ==========================================
+// V2 EMAIL TEMPLATES (Refined Premium)
+// ==========================================
 
 export {
   sendBookingConfirmationEmailV2,
   generateBookingConfirmationEmailV2,
+  type BookingConfirmationParams,
 } from "./templates/version-2/booking-confirmation-v2";
-
-export {
-  sendBookingApprovedEmail,
-  generateBookingApprovedEmail,
-  type BookingApprovedParams,
-} from "./templates/version-1/booking-approved";
 
 export {
   sendBookingApprovedEmailV2,
   generateBookingApprovedEmailV2,
+  type BookingApprovedParams,
 } from "./templates/version-2/booking-approved-v2";
-
-export {
-  sendGuestCancellationEmail,
-  sendOwnerCancellationEmail,
-  sendRefundNotificationEmail,
-  generateGuestCancellationEmail,
-  generateOwnerCancellationEmail,
-  generateRefundNotificationEmail,
-  type GuestCancellationParams,
-  type OwnerCancellationParams,
-  type RefundNotificationParams,
-} from "./templates/version-1/cancellation";
 
 export {
   sendGuestCancellationEmailV2,
   generateGuestCancellationEmailV2,
+  type GuestCancellationParams,
 } from "./templates/version-2/guest-cancellation-v2";
 
 export {
   sendRefundNotificationEmailV2,
   generateRefundNotificationEmailV2,
+  type RefundNotificationParams,
 } from "./templates/version-2/refund-notification-v2";
 
 export {
-  sendOwnerNotificationEmail,
-  generateOwnerNotificationEmail,
-  type OwnerNotificationParams,
-} from "./templates/version-1/owner-notification";
+  sendOwnerNotificationEmailV2,
+  generateOwnerNotificationEmailV2,
+  type OwnerNotificationParamsV2,
+} from "./templates/version-2/owner-notification-v2";
+
+export {
+  sendOwnerCancellationEmailV2,
+  generateOwnerCancellationEmailV2,
+  type OwnerCancellationParamsV2,
+} from "./templates/version-2/owner-cancellation-v2";
+
+export {
+  sendCustomGuestEmailV2,
+  generateCustomGuestEmailV2,
+  type CustomGuestEmailParamsV2,
+} from "./templates/version-2/custom-email-v2";
 
 export {
   sendPendingBookingRequestEmailV2,
@@ -71,37 +66,22 @@ export {
 } from "./templates/version-2/pending-request-v2";
 
 export {
-  sendPaymentReminderEmail,
-  sendCheckInReminderEmail,
-  sendCheckOutReminderEmail,
-  generatePaymentReminderEmail,
-  generateCheckInReminderEmail,
-  generateCheckOutReminderEmail,
-  type PaymentReminderParams,
-  type CheckInReminderParams,
-  type CheckOutReminderParams,
-} from "./templates/version-1/reminder";
-
-export {
   sendPaymentReminderEmailV2,
   generatePaymentReminderEmailV2,
+  type PaymentReminderParams,
 } from "./templates/version-2/payment-reminder-v2";
 
 export {
   sendCheckInReminderEmailV2,
   generateCheckInReminderEmailV2,
+  type CheckInReminderParams,
 } from "./templates/version-2/check-in-reminder-v2";
 
 export {
   sendCheckOutReminderEmailV2,
   generateCheckOutReminderEmailV2,
+  type CheckOutReminderParams,
 } from "./templates/version-2/check-out-reminder-v2";
-
-export {
-  sendCustomGuestEmail,
-  generateCustomGuestEmail,
-  type CustomGuestEmailParams,
-} from "./templates/version-1/custom-email";
 
 export {
   sendEmailVerificationEmailV2,
@@ -139,13 +119,15 @@ export {
   type OverbookingDetectedParams,
 } from "./templates/version-2/overbooking-detected-v2";
 
-// Base template
+// ==========================================
+// BASE TEMPLATE & STYLES
+// ==========================================
+
 export {
   generateEmailHtml,
   type BaseEmailOptions,
 } from "./templates/base";
 
-// Styles
 export {
   EMAIL_COLORS_LIGHT,
   EMAIL_COLORS_DARK,
@@ -174,7 +156,10 @@ export {
   getComponentStyles,
 } from "./styles/components";
 
-// SVG Icons
+// ==========================================
+// SVG ICONS
+// ==========================================
+
 export {
   getSuccessIcon,
   getInfoIcon,
@@ -192,7 +177,10 @@ export {
   getIcon,
 } from "./utils/svg-icons";
 
-// Template helpers
+// ==========================================
+// TEMPLATE HELPERS
+// ==========================================
+
 export {
   escapeHtml,
   formatCurrency,

@@ -4,7 +4,6 @@ import 'dart:convert' show jsonEncode;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/enums.dart';
@@ -49,7 +48,7 @@ import '../widgets/booking_actions/booking_complete_dialog.dart';
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
   final String? initialBookingId;
   const OwnerBookingsScreen({super.key, this.initialBookingId});
-  
+
   // FIXED: Also read bookingId from GoRouter query parameters as fallback
   // This avoids issues with widget parameter passing during navigation
   static String? getBookingIdFromRoute(BuildContext context) {
@@ -75,24 +74,21 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   bool _showSync = false;
   bool _showFaq = false;
 
-  // Web performance: Debounce scroll listener to reduce scroll handler calls
-  Timer? _scrollDebounceTimer;
-  
   // Timer for checking initial booking (avoid multiple timers)
   Timer? _initialBookingCheckTimer;
 
   // Store booking to show in dialog (set from listener, shown in build)
   OwnerBooking? _pendingBookingToShow;
-  
+
   // Flag to prevent showing the same booking dialog multiple times
   bool _dialogShownForBooking = false;
-  
+
   // Flag to track if we've already scheduled a post-frame callback for booking check
   bool _bookingCheckScheduled = false;
-  
+
   // Store the bookingId that we've already handled to prevent re-processing
   String? _handledBookingId;
-  
+
   // Helper to get current bookingId (from widget or route)
   String? get _currentBookingId {
     return widget.initialBookingId ?? OwnerBookingsScreen.getBookingIdFromRoute(context);
@@ -125,7 +121,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     if (widget.initialBookingId != null) {
       _isLoadingInitialBooking = true;
       // #region agent log
-      _log('owner_bookings_screen.dart:initState', 'Initial booking ID set', {'initialBookingId': widget.initialBookingId}, 'A');
+      _log('owner_bookings_screen.dart:initState', 'Initial booking ID set', {
+        'initialBookingId': widget.initialBookingId,
+      }, 'A');
       // #endregion
     }
   }
@@ -143,16 +141,21 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final currentBookingId = bookingId ?? _currentBookingId;
     if (_hasHandledInitialBooking || currentBookingId == null) {
       // #region agent log
-      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Skipping fetch', {'_hasHandledInitialBooking': _hasHandledInitialBooking, 'bookingId': currentBookingId}, 'B');
+      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Skipping fetch', {
+        '_hasHandledInitialBooking': _hasHandledInitialBooking,
+        'bookingId': currentBookingId,
+      }, 'B');
       // #endregion
       return;
     }
     _hasHandledInitialBooking = true;
 
     // #region agent log
-    _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Entry', {'initialBookingId': currentBookingId}, 'B');
+    _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Entry', {
+      'initialBookingId': currentBookingId,
+    }, 'B');
     // #endregion
-    
+
     // Clear pending booking ID
     ref.read(pendingBookingIdProvider.notifier).state = null;
 
@@ -169,7 +172,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       // #region agent log
       _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Before ref.read repository', {}, 'B');
       // #endregion
-      
+
       // FIXED: Access repository directly instead of through notifier to avoid dependency issues
       // This is safe because we're in a Timer callback, completely outside build phase
       final repository = ref.read(ownerBookingsRepositoryProvider);
@@ -190,14 +193,18 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       // #endregion
 
       // FIXED BUG #1: Add timeout to prevent infinite loading loop
-      final ownerBooking = await repository.getOwnerBookingById(currentBookingId).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw TimeoutException('Failed to load booking - request timed out after 10 seconds');
-        },
-      );
+      final ownerBooking = await repository
+          .getOwnerBookingById(currentBookingId)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw TimeoutException('Failed to load booking - request timed out after 10 seconds');
+            },
+          );
       // #region agent log
-      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'After fetch', {'ownerBooking': ownerBooking != null ? ownerBooking.booking.id : 'null'}, 'B');
+      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'After fetch', {
+        'ownerBooking': ownerBooking != null ? ownerBooking.booking.id : 'null',
+      }, 'B');
       // #endregion
       if (!mounted) return;
 
@@ -219,15 +226,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !context.mounted) return;
           final l10n = AppLocalizations.of(context);
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            l10n.ownerBookingsNotFound,
-          );
+          ErrorDisplayUtils.showErrorSnackBar(context, l10n.ownerBookingsNotFound);
         });
       }
     } catch (error) {
       // #region agent log
-      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Error fetching booking', {'error': error.toString()}, 'B');
+      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Error fetching booking', {
+        'error': error.toString(),
+      }, 'B');
       // #endregion
       // Handle error when fetching booking
       if (!mounted) return;
@@ -245,7 +251,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
   @override
   void dispose() {
-    _scrollDebounceTimer?.cancel();
     _initialBookingCheckTimer?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
@@ -294,11 +299,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // Activate auto-resolution of overbooking conflicts
     // Automatically rejects pending bookings when they conflict with confirmed bookings
     ref.watch(overbookingAutoResolverProvider);
-    
+
     // FIXED: Watch pendingBookingIdProvider to detect when booking should be shown
     // This avoids issues with widget parameter passing during navigation
     final pendingBookingId = ref.watch(pendingBookingIdProvider);
-    
+
     // Set pending booking ID from route if not already set
     // FIXED: Also check _handledBookingId to prevent re-triggering after dialog close
     final routeBookingId = _currentBookingId;
@@ -307,11 +312,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // This allows re-opening the same booking from notifications later
     if (routeBookingId == null && _handledBookingId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            _handledBookingId = null;
-          });
-        }
+        if (!mounted || !context.mounted) return;
+        setState(() {
+          _handledBookingId = null;
+        });
       });
     }
 
@@ -319,7 +323,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       if (routeBookingId != null && routeBookingId != _handledBookingId) {
         // Use addPostFrameCallback to set provider value after build
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && ref.read(pendingBookingIdProvider) == null && routeBookingId != _handledBookingId) {
+          if (!mounted || !context.mounted) return;
+          if (ref.read(pendingBookingIdProvider) == null && routeBookingId != _handledBookingId) {
             ref.read(pendingBookingIdProvider.notifier).state = routeBookingId;
             if (!_isLoadingInitialBooking) {
               setState(() {
@@ -330,11 +335,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         });
       }
     }
-    
+
     // FIXED: Watch windowedBookingsNotifierProvider and check for booking when data is ready
     // This avoids ref.listen() which can cause dependency tracking issues
     final bookingId = pendingBookingId ?? _currentBookingId;
-    
+
     // Check if we need to show booking dialog
     // Only check once per bookingId to avoid infinite loops
     // Also check that dialog is not already shown and that we haven't already handled this bookingId
@@ -348,34 +353,34 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         !windowedState.isInitialLoad &&
         !windowedState.isLoadingBottom) {
       _bookingCheckScheduled = true;
-      
+
       // Use addPostFrameCallback to check for booking after build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // FIXED BUG #13: Add _dialogShownForBooking check to prevent race condition
-        if (!mounted || _hasHandledInitialBooking || _dialogShownForBooking) {
+        if (!mounted || !context.mounted || _hasHandledInitialBooking || _dialogShownForBooking) {
           _bookingCheckScheduled = false;
           return;
         }
-        
+
         // Try to find booking in visible bookings
         if (windowedState.visibleBookings.isNotEmpty) {
           try {
-            final booking = windowedState.visibleBookings.firstWhere(
-              (b) => b.booking.id == bookingId,
-            );
-            
+            final booking = windowedState.visibleBookings.firstWhere((b) => b.booking.id == bookingId);
+
             // #region agent log
-            _log('owner_bookings_screen.dart:build', 'Booking found in visible list', {'bookingId': booking.booking.id}, 'A');
+            _log('owner_bookings_screen.dart:build', 'Booking found in visible list', {
+              'bookingId': booking.booking.id,
+            }, 'A');
             // #endregion
-            
+
             // Mark as handled immediately to prevent duplicate dialogs
             _hasHandledInitialBooking = true;
             _bookingCheckScheduled = false;
             _handledBookingId = bookingId; // Store the bookingId we've handled
-            
+
             // Clear pending booking ID
             ref.read(pendingBookingIdProvider.notifier).state = null;
-            
+
             if (mounted) {
               setState(() {
                 _isLoadingInitialBooking = false;
@@ -390,7 +395,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             // #endregion
           }
         }
-        
+
         // If we reach here, booking is not in visible window - fetch directly
         // Only fetch once when data is fully loaded
         if (!_hasHandledInitialBooking) {
@@ -400,25 +405,27 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         }
       });
     }
-    
+
     // FIXED: Show dialog when _pendingBookingToShow is set
     // This is done in build() method, not from ref.listen() callback
     // Use a flag to ensure we only show the dialog once per booking
     if (_pendingBookingToShow != null && !_dialogShownForBooking) {
       final bookingToShow = _pendingBookingToShow!;
       _dialogShownForBooking = true;
-      
+
       // Show dialog after frame is built
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !context.mounted) return;
-        
+
         // Small delay to ensure UI is stable
         Future.delayed(const Duration(milliseconds: 100), () {
           if (!mounted || !context.mounted) return;
-          
+
           try {
             // #region agent log
-            _log('owner_bookings_screen.dart:build', 'Showing dialog from build', {'bookingId': bookingToShow.booking.id}, 'C');
+            _log('owner_bookings_screen.dart:build', 'Showing dialog from build', {
+              'bookingId': bookingToShow.booking.id,
+            }, 'C');
             // #endregion
             showDialog(
               context: context,
@@ -444,7 +451,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               // Clear bookingId from route query parameters
               // Use post-frame callback to ensure UI is stable
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
+                if (!mounted || !context.mounted) return;
 
                 try {
                   final router = GoRouter.of(this.context);
@@ -691,29 +698,28 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   void _handleOverbookingBadgeTap(WidgetRef ref) {
     final conflictsAsync = ref.read(overbookingConflictsProvider);
     final conflicts = conflictsAsync.valueOrNull ?? [];
-    
+
     if (conflicts.isEmpty) return;
-    
+
     final firstConflict = conflicts.first;
-    
+
     // Find the first conflicted booking in the current list
     final windowedState = ref.read(windowedBookingsNotifierProvider);
     final bookings = windowedState.visibleBookings;
-    
+
     // Find booking that matches conflict
     OwnerBooking? conflictedBooking;
     for (final booking in bookings) {
-      if (booking.booking.id == firstConflict.booking1.id || 
-          booking.booking.id == firstConflict.booking2.id) {
+      if (booking.booking.id == firstConflict.booking1.id || booking.booking.id == firstConflict.booking2.id) {
         conflictedBooking = booking;
         break;
       }
     }
-    
+
     // Show snackbar with conflict details
     final guest1 = firstConflict.booking1.guestName ?? 'Unknown';
     final guest2 = firstConflict.booking2.guestName ?? 'Unknown';
-    
+
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -730,7 +736,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         duration: const Duration(seconds: 5),
       ),
     );
-    
+
     // Scroll to conflicted booking if found
     if (conflictedBooking != null && _scrollController.hasClients) {
       // Find index of booking in list
@@ -739,7 +745,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         // Calculate approximate scroll position (each card is ~300px tall)
         const estimatedCardHeight = 300.0;
         final scrollPosition = index * estimatedCardHeight;
-        
+
         // Scroll to position
         _scrollController.animateTo(
           scrollPosition.clamp(0.0, _scrollController.position.maxScrollExtent),
@@ -758,7 +764,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       final ownerBooking = await repository.getOwnerBookingById(conflict.booking1.id);
 
       if (ownerBooking != null && mounted) {
-        showDialog(
+        await showDialog(
           context: context,
           builder: (dialogContext) => BookingDetailsDialog(ownerBooking: ownerBooking),
         );
@@ -766,7 +772,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         // Fallback: try booking2 if booking1 not found
         final ownerBooking2 = await repository.getOwnerBookingById(conflict.booking2.id);
         if (ownerBooking2 != null && mounted) {
-          showDialog(
+          await showDialog(
             context: context,
             builder: (dialogContext) => BookingDetailsDialog(ownerBooking: ownerBooking2),
           );
@@ -776,12 +782,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       debugPrint('Error showing booking details from conflict: $e');
       // Show error snackbar if dialog fails
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading booking details'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Error loading booking details'), backgroundColor: Colors.red));
       }
     }
   }
@@ -797,7 +800,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    
+
     // Get overbooking conflict count
     final conflictCount = ref.watch(overbookingConflictCountProvider);
 
@@ -848,19 +851,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.red.shade700,
-                            size: 16,
-                          ),
+                          Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             conflictCount == 1 ? '1 conflict' : '$conflictCount conflicts',
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: TextStyle(color: Colors.red.shade700, fontSize: 12, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -1288,7 +1283,7 @@ class _BookingCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
 
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Check if booking is in conflict
     final hasConflict = ref.watch(isBookingInConflictProvider(booking.id));
 
@@ -1297,9 +1292,7 @@ class _BookingCard extends ConsumerWidget {
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: hasConflict 
-              ? Colors.red 
-              : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          color: hasConflict ? Colors.red : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
           width: hasConflict ? 2 : 1,
         ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
@@ -1314,74 +1307,76 @@ class _BookingCard extends ConsumerWidget {
                 // Header Section
                 BookingCardHeader(booking: booking, isMobile: isMobile),
 
-            // Card Body
-            Padding(
-              padding: EdgeInsets.all(isMobile ? 12 : 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Guest info
-                  BookingCardGuestInfo(ownerBooking: ownerBooking, isMobile: isMobile),
+                // Card Body
+                Padding(
+                  padding: EdgeInsets.all(isMobile ? 12 : 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Guest info
+                      BookingCardGuestInfo(ownerBooking: ownerBooking, isMobile: isMobile),
 
-                  Divider(
-                    height: isMobile ? 16 : 24,
-                    color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                      Divider(
+                        height: isMobile ? 16 : 24,
+                        color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                      ),
+
+                      // Property and unit info
+                      BookingCardPropertyInfo(property: property, unit: unit, isMobile: isMobile),
+
+                      SizedBox(height: isMobile ? 8 : 12),
+
+                      // Date range
+                      BookingCardDateRange(booking: booking, isMobile: isMobile),
+
+                      SizedBox(height: isMobile ? 8 : 12),
+
+                      // Guests with icon container
+                      _InfoRow(
+                        icon: Icons.people_outline,
+                        child: Text(
+                          '${booking.guestCount} ${booking.guestCount == 1 ? l10n.ownerBookingsGuest : l10n.ownerBookingsGuests}',
+                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+
+                      Divider(
+                        height: isMobile ? 16 : 24,
+                        color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                      ),
+
+                      // Payment info
+                      BookingCardPaymentInfo(booking: booking, isMobile: isMobile),
+
+                      // Notes
+                      BookingCardNotes(booking: booking, isMobile: isMobile),
+                    ],
                   ),
+                ),
 
-                  // Property and unit info
-                  BookingCardPropertyInfo(property: property, unit: unit, isMobile: isMobile),
+                SizedBox(height: isMobile ? 12 : 16),
 
-                  SizedBox(height: isMobile ? 8 : 12),
-
-                  // Date range
-                  BookingCardDateRange(booking: booking, isMobile: isMobile),
-
-                  SizedBox(height: isMobile ? 8 : 12),
-
-                  // Guests with icon container
-                  _InfoRow(
-                    icon: Icons.people_outline,
-                    child: Text(
-                      '${booking.guestCount} ${booking.guestCount == 1 ? l10n.ownerBookingsGuest : l10n.ownerBookingsGuests}',
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                    ),
-                  ),
-
-                  Divider(
-                    height: isMobile ? 16 : 24,
-                    color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
-                  ),
-
-                  // Payment info
-                  BookingCardPaymentInfo(booking: booking, isMobile: isMobile),
-
-                  // Notes
-                  BookingCardNotes(booking: booking, isMobile: isMobile),
-                ],
-              ),
-            ),
-
-            SizedBox(height: isMobile ? 12 : 16),
-
-            // Action buttons
-            BookingCardActions(
-              booking: booking,
-              isMobile: isMobile,
-              onShowDetails: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
-                );
-              },
-              onApprove: booking.status == BookingStatus.pending
-                  ? () => _approveBooking(context, ref, booking.id)
-                  : null,
-              onReject: booking.status == BookingStatus.pending ? () => _rejectBooking(context, ref, booking.id) : null,
-              onComplete: booking.status == BookingStatus.confirmed && booking.isPast
-                  ? () => _completeBooking(context, ref, booking.id)
-                  : null,
-              onCancel: booking.canBeCancelled ? () => _cancelBooking(context, ref, booking.id) : null,
-            ),
+                // Action buttons
+                BookingCardActions(
+                  booking: booking,
+                  isMobile: isMobile,
+                  onShowDetails: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+                    );
+                  },
+                  onApprove: booking.status == BookingStatus.pending
+                      ? () => _approveBooking(context, ref, booking.id)
+                      : null,
+                  onReject: booking.status == BookingStatus.pending
+                      ? () => _rejectBooking(context, ref, booking.id)
+                      : null,
+                  onComplete: booking.status == BookingStatus.confirmed && booking.isPast
+                      ? () => _completeBooking(context, ref, booking.id)
+                      : null,
+                  onCancel: booking.canBeCancelled ? () => _cancelBooking(context, ref, booking.id) : null,
+                ),
               ],
             ),
           ),
@@ -1397,22 +1392,11 @@ class _BookingCard extends ConsumerWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.red.shade300, width: 2),
                 ),
-                child: Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.red.shade700,
-                  size: 20,
-                ),
+                child: Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 20),
               ),
             ),
         ],
       ),
-    );
-  }
-
-  void _showBookingDetails(BuildContext context, WidgetRef ref, OwnerBooking ownerBooking) {
-    showDialog(
-      context: context,
-      builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
     );
   }
 

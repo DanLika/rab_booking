@@ -205,8 +205,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
   }) async {
     try {
       // Using client-side filtering to avoid Firestore composite index requirement
+      // NEW STRUCTURE: Use collection group query for subcollection
       final snapshot = await _firestore
-          .collection(_bookingsCollection)
+          .collectionGroup(_bookingsCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('status', whereIn: ActiveBookingStatuses.values)
           .get();
@@ -242,7 +243,8 @@ class AvailabilityChecker implements IAvailabilityChecker {
   }) async {
     try {
       // Using client-side filtering to avoid Firestore index requirement
-      final snapshot = await _firestore.collection(_icalEventsCollection).where('unit_id', isEqualTo: unitId).get();
+      // NEW STRUCTURE: Use collection group query for subcollection
+      final snapshot = await _firestore.collectionGroup(_icalEventsCollection).where('unit_id', isEqualTo: unitId).get();
 
       for (final doc in snapshot.docs) {
         try {
@@ -280,8 +282,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
     required DateTime checkOut,
   }) async {
     try {
+      // NEW STRUCTURE: Use collection group query for subcollection
       final snapshot = await _firestore
-          .collection(_dailyPricesCollection)
+          .collectionGroup(_dailyPricesCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('available', isEqualTo: false)
           .get();
@@ -329,8 +332,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
       final checkOutTimestamp = Timestamp.fromDate(checkOut);
 
       // Single query fetching both dates if they exist
+      // NEW STRUCTURE: Use collection group query for subcollection
       final snapshot = await _firestore
-          .collection(_dailyPricesCollection)
+          .collectionGroup(_dailyPricesCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('date', whereIn: [checkInTimestamp, checkOutTimestamp])
           .get();

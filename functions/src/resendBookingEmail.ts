@@ -43,16 +43,21 @@ export const resendBookingEmail = onCall(async (request) => {
       requesterId: request.auth.uid,
     });
 
-    // Get the booking
-    const bookingDoc = await db.collection("bookings").doc(bookingId).get();
+    // NEW STRUCTURE: Get the booking using collection group query
+    const bookingQuery = await db
+      .collectionGroup("bookings")
+      .where(admin.firestore.FieldPath.documentId(), "==", bookingId)
+      .limit(1)
+      .get();
 
-    if (!bookingDoc.exists) {
+    if (bookingQuery.empty) {
       throw new HttpsError(
         "not-found",
         "Booking not found"
       );
     }
 
+    const bookingDoc = bookingQuery.docs[0];
     const booking = bookingDoc.data()!;
 
     // Get unit to verify ownership

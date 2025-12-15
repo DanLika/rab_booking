@@ -316,8 +316,14 @@ export const createBookingAtomic = onCall(async (request) => {
     // ========================================================================
     // STEP 2: GENERATE UNIQUE BOOKING ID AND REFERENCE
     // ========================================================================
-    // Generate Firestore document ID (guaranteed unique)
-    const bookingId = db.collection("bookings").doc().id;
+    // NEW STRUCTURE: Generate Firestore document ID in new subcollection path
+    const bookingId = db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("units")
+      .doc(unitId)
+      .collection("bookings")
+      .doc().id;
 
     // Generate booking reference using document ID (no collision possible)
     const bookingRef = generateBookingReference(bookingId);
@@ -462,9 +468,14 @@ export const createBookingAtomic = onCall(async (request) => {
       //
       // NOTE: pending bookings BLOCK calendar dates (awaiting owner approval or payment)
       // This includes both regular pending bookings and Stripe checkout placeholders
+      //
+      // NEW STRUCTURE: Use direct subcollection path (faster than collection group)
       const conflictingBookingsQuery = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId)
         .collection("bookings")
-        .where("unit_id", "==", unitId)
         .where("status", "in", ["pending", "confirmed"])
         .where("check_in", "<", checkOutDate)
         .where("check_out", ">", checkInDate);
@@ -516,9 +527,13 @@ export const createBookingAtomic = onCall(async (request) => {
 
       // Query daily_prices for all dates in the booking range
       // (check-in date to check-out date - 1, as check-out is exclusive)
+      // NEW STRUCTURE: Use subcollection path (faster than collection group)
       const dailyPricesQuery = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId)
         .collection("daily_prices")
-        .where("unit_id", "==", unitId)
         .where("date", ">=", checkInDate)
         .where("date", "<", checkOutDate);
 
@@ -665,25 +680,29 @@ export const createBookingAtomic = onCall(async (request) => {
 
       // Check 7: Is check-out blocked on the check-out date?
       // (Check-out date is not in the range query above, need separate check)
-      const checkOutPriceQuery = db
+      // NEW STRUCTURE: Use subcollection path with date as document ID
+      const checkOutDateStr = `${checkOutDate.toDate().getUTCFullYear()}-${String(checkOutDate.toDate().getUTCMonth() + 1).padStart(2, "0")}-${String(checkOutDate.toDate().getUTCDate()).padStart(2, "0")}`;
+      const checkOutPriceDocRef = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId)
         .collection("daily_prices")
-        .where("unit_id", "==", unitId)
-        .where("date", "==", checkOutDate);
+        .doc(checkOutDateStr);
 
-      const checkOutPriceSnapshot = await transaction.get(checkOutPriceQuery);
+      const checkOutPriceSnapshot = await transaction.get(checkOutPriceDocRef);
 
-      if (!checkOutPriceSnapshot.empty) {
-        const checkOutData = checkOutPriceSnapshot.docs[0].data();
-        if (checkOutData.block_checkout === true) {
-          const dateStr = checkOutDate.toDate().toISOString().split("T")[0];
+      if (checkOutPriceSnapshot.exists) {
+        const checkOutData = checkOutPriceSnapshot.data();
+        if (checkOutData?.block_checkout === true) {
           logError("[AtomicBooking] Check-out blocked on this date", null, {
             unitId,
-            checkOutDate: dateStr,
+            checkOutDate: checkOutDateStr,
           });
 
           throw new HttpsError(
             "failed-precondition",
-            `Check-out is not allowed on ${dateStr}.`
+            `Check-out is not allowed on ${checkOutDateStr}.`
           );
         }
       }
@@ -810,7 +829,14 @@ export const createBookingAtomic = onCall(async (request) => {
         updated_at: admin.firestore.FieldValue.serverTimestamp(),
       };
 
-      const bookingDocRef = db.collection("bookings").doc(bookingId);
+      // NEW STRUCTURE: Write to subcollection path
+      const bookingDocRef = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId)
+        .collection("bookings")
+        .doc(bookingId);
       transaction.set(bookingDocRef, bookingData);
 
       // SECURITY FIX: Removed guestEmail from log (PII reduction)

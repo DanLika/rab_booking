@@ -131,8 +131,9 @@ class FirebaseUnitRepository implements UnitRepository {
     // Fetch all active bookings for this unit
     // Note: Using client-side filtering to avoid Firestore limitation of
     // multiple inequality filters on different fields (check_in and check_out)
+    // NEW STRUCTURE: Use collection group query for subcollection
     final snapshot = await _firestore
-        .collection('bookings')
+        .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed', 'in_progress'])
         .get();

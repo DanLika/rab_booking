@@ -94,7 +94,7 @@ class QuickActionButtons extends ConsumerWidget {
             );
           }
           return const SizedBox.shrink();
-        }).whereType<Widget>().toList(),
+        }).whereType<Widget>(),
 
         const SizedBox(height: 8),
 

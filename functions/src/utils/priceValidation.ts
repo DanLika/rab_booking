@@ -40,7 +40,7 @@ interface PriceCalculationResult {
  * @param unitId - The unit ID to calculate price for
  * @param checkInDate - Check-in date (Firestore Timestamp)
  * @param checkOutDate - Check-out date (Firestore Timestamp)
- * @param propertyId - The property ID (needed to fetch unit data for fallback)
+ * @param propertyId - The property ID (REQUIRED for subcollection path)
  * @param transaction - Optional Firestore transaction for atomic reads
  * @returns Price calculation result with total and breakdown
  * @throws HttpsError if pricing not configured or invalid
@@ -49,7 +49,7 @@ export async function calculateBookingPrice(
   unitId: string,
   checkInDate: admin.firestore.Timestamp,
   checkOutDate: admin.firestore.Timestamp,
-  propertyId?: string,
+  propertyId: string,
   transaction?: admin.firestore.Transaction
 ): Promise<PriceCalculationResult> {
   // Calculate expected number of nights
@@ -68,9 +68,13 @@ export async function calculateBookingPrice(
   // Query daily_prices for the booking range
   // NOTE: We query check-in to check-out (exclusive) because
   // check-out day is not charged (guest leaves)
+  // NEW STRUCTURE: Use subcollection path
   const dailyPricesQuery = db
+    .collection("properties")
+    .doc(propertyId)
+    .collection("units")
+    .doc(unitId)
     .collection("daily_prices")
-    .where("unit_id", "==", unitId)
     .where("date", ">=", checkInDate)
     .where("date", "<", checkOutDate)
     .orderBy("date", "asc");
@@ -94,7 +98,7 @@ export async function calculateBookingPrice(
   let weekendBasePrice: number | null = null;
   let weekendDays: number[] = [5, 6]; // Default: Friday (5), Saturday (6) - JS uses 0=Sun
 
-  if (dailyPricesMap.size < expectedNights && propertyId) {
+  if (dailyPricesMap.size < expectedNights) {
     // Need fallback - fetch unit data
     const unitRef = db
       .collection("properties")
@@ -220,7 +224,7 @@ export async function calculateBookingPrice(
  * @param checkInDate - Check-in date (Firestore Timestamp)
  * @param checkOutDate - Check-out date (Firestore Timestamp)
  * @param clientTotalPrice - Price provided by client
- * @param propertyId - The property ID (needed to fetch unit data for fallback pricing)
+ * @param propertyId - The property ID (REQUIRED for subcollection path)
  * @param transaction - Optional Firestore transaction for atomic validation
  * @throws HttpsError if price mismatch detected
  */
@@ -229,7 +233,7 @@ export async function validateBookingPrice(
   checkInDate: admin.firestore.Timestamp,
   checkOutDate: admin.firestore.Timestamp,
   clientTotalPrice: number,
-  propertyId?: string,
+  propertyId: string,
   transaction?: admin.firestore.Transaction
 ): Promise<void> {
   // Validate clientTotalPrice is a valid number

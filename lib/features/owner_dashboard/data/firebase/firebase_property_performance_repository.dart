@@ -72,8 +72,9 @@ class FirebasePropertyPerformanceRepository with FirestoreRepositoryMixin {
           .skip(i)
           .take(FirestoreRepositoryMixin.batchLimit)
           .toList();
+      // NEW STRUCTURE: Use collection group query for subcollection
       final bookingsSnapshot = await _firestore
-          .collection('bookings')
+          .collectionGroup('bookings')
           .where('unit_id', whereIn: batch)
           .where('status', whereIn: FirestoreRepositoryMixin.confirmedStatuses)
           .where('check_in', isGreaterThanOrEqualTo: startDate)
@@ -179,8 +180,9 @@ class FirebasePropertyPerformanceRepository with FirestoreRepositoryMixin {
           .take(FirestoreRepositoryMixin.batchLimit)
           .toList();
 
+      // NEW STRUCTURE: Use collection group query for subcollection
       Query<Map<String, dynamic>> query = _firestore
-          .collection('bookings')
+          .collectionGroup('bookings')
           .where('unit_id', whereIn: batch)
           .where('status', whereIn: FirestoreRepositoryMixin.activeStatuses);
 
@@ -310,15 +312,17 @@ class FirebasePropertyPerformanceRepository with FirestoreRepositoryMixin {
             .toList();
 
         // All bookings
+        // NEW STRUCTURE: Use collection group query for subcollection
         final allSnapshot = await _firestore
-            .collection('bookings')
+            .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
             .get();
         totalBookings += allSnapshot.docs.length;
 
         // Cancelled bookings
+        // NEW STRUCTURE: Use collection group query for subcollection
         final cancelledSnapshot = await _firestore
-            .collection('bookings')
+            .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
             .where('status', isEqualTo: 'cancelled')
             .get();

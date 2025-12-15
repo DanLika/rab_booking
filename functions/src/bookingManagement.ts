@@ -76,9 +76,9 @@ export const autoCancelExpiredBookings = onSchedule(
     const now = admin.firestore.Timestamp.now();
 
     try {
-      // Find all pending bookings with expired payment deadline
+      // NEW STRUCTURE: Use collection group query to find expired bookings across all units
       const expiredBookings = await db
-        .collection("bookings")
+        .collectionGroup("bookings")
         .where("status", "==", "pending")
         .where("payment_deadline", "<", now)
         .get();
@@ -152,8 +152,9 @@ export const autoCancelExpiredBookings = onSchedule(
  * Triggers when a new booking is created with payment_method = 'bank_transfer'
  * Sends email with payment instructions immediately
  */
+// NEW STRUCTURE: Wildcard path for subcollection triggers
 export const onBookingCreated = onDocumentCreated(
-  "bookings/{bookingId}",
+  "properties/{propertyId}/units/{unitId}/bookings/{bookingId}",
   async (event) => {
     const booking = event.data?.data();
 
@@ -244,8 +245,9 @@ export const onBookingCreated = onDocumentCreated(
 /**
  * Firestore trigger: Update calendar when booking changes
  */
+// NEW STRUCTURE: Wildcard path for subcollection triggers
 export const onBookingStatusChange = onDocumentUpdated(
-  "bookings/{bookingId}",
+  "properties/{propertyId}/units/{unitId}/bookings/{bookingId}",
   async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();

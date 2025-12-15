@@ -544,7 +544,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Horizontal row of action buttons (more compact)
               SizedBox(

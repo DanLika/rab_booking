@@ -47,6 +47,7 @@ String _safeErrorToString(dynamic error) {
 /// Starts from today, horizontal scroll, pinch-to-zoom support
 class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final bool showSummary;
+  final bool showEmptyUnits;
   final Function(DateTime date, UnitModel unit)? onCellLongPress;
   final DateTime? initialScrollToDate;
   final Function(UnitModel unit)? onUnitNameTap;
@@ -63,6 +64,7 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
   const TimelineCalendarWidget({
     super.key,
     this.showSummary = false,
+    this.showEmptyUnits = true,
     this.onCellLongPress,
     this.initialScrollToDate,
     this.onUnitNameTap,
@@ -392,31 +394,35 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     }
 
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
-    
+
     // Scroll horizontally to conflict date
     final daysSinceStart = conflictDate.difference(_dynamicStartDate).inDays;
     final horizontalScrollPosition = daysSinceStart * dimensions.dayWidth;
     final maxHorizontalScroll = _horizontalScrollController.position.maxScrollExtent;
     final visibleWidth = dimensions.visibleContentWidth;
-    final targetHorizontalScroll = (horizontalScrollPosition - (visibleWidth / 2) + (dimensions.dayWidth / 2))
-        .clamp(0.0, maxHorizontalScroll);
+    final targetHorizontalScroll = (horizontalScrollPosition - (visibleWidth / 2) + (dimensions.dayWidth / 2)).clamp(
+      0.0,
+      maxHorizontalScroll,
+    );
 
     // Scroll vertically to unit
     // Get units list to find unit index
     final unitsAsync = ref.read(filteredUnitsProvider);
     if (unitsAsync.isLoading || unitsAsync.value == null) return;
-    
+
     final units = unitsAsync.value!;
     final unitIndex = units.indexWhere((unit) => unit.id == unitId);
     if (unitIndex < 0) return; // Unit not found
-    
+
     // Calculate vertical scroll position (each unit row is ~60px tall)
     const unitRowHeight = 60.0;
     final verticalScrollPosition = unitIndex * unitRowHeight;
     final maxVerticalScroll = _verticalScrollController.position.maxScrollExtent;
     final visibleHeight = MediaQuery.of(context).size.height * 0.7; // Approximate visible height
-    final targetVerticalScroll = (verticalScrollPosition - (visibleHeight / 2) + (unitRowHeight / 2))
-        .clamp(0.0, maxVerticalScroll);
+    final targetVerticalScroll = (verticalScrollPosition - (visibleHeight / 2) + (unitRowHeight / 2)).clamp(
+      0.0,
+      maxVerticalScroll,
+    );
 
     // Perform scrolls
     _horizontalScrollController.animateTo(
@@ -424,13 +430,13 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
-    
+
     _verticalScrollController.animateTo(
       targetVerticalScroll,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
-    
+
     // Sync unit names scroll
     if (_unitNamesScrollController.hasClients) {
       final unitMaxOffset = _unitNamesScrollController.position.maxScrollExtent;
@@ -468,24 +474,24 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   List<DateTime> _getVisibleDateRange() {
     final fullRange = _getDateRange();
     final totalDays = fullRange.length;
-    
+
     // Ensure we have dates
     if (totalDays == 0) {
       // Return a default range if empty
       final now = DateTime.now();
       return List.generate(30, (i) => now.add(Duration(days: i)));
     }
-    
+
     // Ensure indices are valid
     final startIndex = _visibleStartIndex.clamp(0, totalDays - 1);
     final endIndex = (startIndex + _visibleDayCount).clamp(startIndex + 1, totalDays);
-    
+
     // Ensure endIndex > startIndex
     if (endIndex <= startIndex) {
       final defaultEndIndex = (startIndex + 30).clamp(startIndex + 1, totalDays);
       return fullRange.sublist(startIndex, defaultEndIndex);
     }
-    
+
     return fullRange.sublist(startIndex, endIndex);
   }
 
@@ -626,13 +632,18 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     );
   }
 
-  Widget _buildTimelineView(
-    List<UnitModel> units,
-    Map<String, List<BookingModel>> bookingsByUnit,
-  ) {
+  Widget _buildTimelineView(List<UnitModel> units, Map<String, List<BookingModel>> bookingsByUnit) {
+    // FILTER: Optionally hide units without bookings based on toggle
+    final visibleUnits = widget.showEmptyUnits
+        ? units
+        : units.where((unit) {
+            final bookings = bookingsByUnit[unit.id] ?? [];
+            return bookings.isNotEmpty;
+          }).toList();
+
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
     final dates = _getVisibleDateRange();
-    
+
     // Defensive check: ensure dates list is not empty
     if (dates.isEmpty) {
       // If dates are empty, try to regenerate the date range
@@ -653,11 +664,11 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       }
       // Use retry dates
       final offsetWidth = dimensions.getOffsetWidth(_visibleStartIndex);
-      return _buildTimelineContent(units, bookingsByUnit, retryDates, offsetWidth, dimensions);
+      return _buildTimelineContent(visibleUnits, bookingsByUnit, retryDates, offsetWidth, dimensions);
     }
-    
+
     final offsetWidth = dimensions.getOffsetWidth(_visibleStartIndex);
-    
+
     // Ensure offsetWidth and dayWidth are valid
     if (!offsetWidth.isFinite || !dimensions.dayWidth.isFinite || dimensions.dayWidth <= 0) {
       return Center(
@@ -675,7 +686,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     // NOTE: Grid should ALWAYS render when units exist, even if bookingsByUnit is empty
     // Empty bookings is a valid state (e.g., new property with no reservations)
     // User needs the grid to navigate dates, see unit rows, and add new bookings
-    return _buildTimelineContent(units, bookingsByUnit, dates, offsetWidth, dimensions);
+    return _buildTimelineContent(visibleUnits, bookingsByUnit, dates, offsetWidth, dimensions);
   }
 
   Widget _buildTimelineContent(

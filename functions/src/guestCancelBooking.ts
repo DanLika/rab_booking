@@ -74,14 +74,19 @@ export const guestCancelBooking = onCall(async (request) => {
       guestEmail,
     });
 
-    // Get booking document
-    const bookingRef = db.collection("bookings").doc(bookingId);
-    const bookingDoc = await bookingRef.get();
+    // NEW STRUCTURE: Get booking document using collection group query
+    const bookingQuery = await db
+      .collectionGroup("bookings")
+      .where(admin.firestore.FieldPath.documentId(), "==", bookingId)
+      .limit(1)
+      .get();
 
-    if (!bookingDoc.exists) {
+    if (bookingQuery.empty) {
       throw new HttpsError("not-found", "Booking not found");
     }
 
+    const bookingDoc = bookingQuery.docs[0];
+    const bookingRef = bookingDoc.ref;
     const booking = bookingDoc.data()!;
 
     // Verify booking reference matches

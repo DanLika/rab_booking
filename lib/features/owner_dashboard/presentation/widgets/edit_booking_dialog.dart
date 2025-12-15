@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -405,9 +406,23 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
       final checkOutChanged = _checkOut != widget.booking.checkOut;
 
       // FIXED BUG #2: Use transaction with existence check to prevent creating new document
+      // NEW STRUCTURE: Use collection group query to find booking in subcollection
       final firestore = ref.read(firestoreProvider);
+
+      // First, find the booking using collection group query
+      final bookingQuery = await firestore
+          .collectionGroup('bookings')
+          .where(FieldPath.documentId, isEqualTo: widget.booking.id)
+          .limit(1)
+          .get();
+
+      if (bookingQuery.docs.isEmpty) {
+        throw Exception('Booking no longer exists. It may have been deleted.');
+      }
+
+      final docRef = bookingQuery.docs.first.reference;
+
       await firestore.runTransaction((transaction) async {
-        final docRef = firestore.collection('bookings').doc(widget.booking.id);
         final docSnapshot = await transaction.get(docRef);
 
         if (!docSnapshot.exists) {

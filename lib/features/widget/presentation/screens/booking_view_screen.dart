@@ -142,7 +142,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
         'message': 'Booking lookup - entry',
         'data': {
           'bookingRef': widget.bookingRef,
-          'email': widget.email != null ? widget.email!.substring(0, 3) + '***' : null,
+          'email': widget.email != null ? '${widget.email!.substring(0, 3)}***' : null,
           'hasToken': widget.token != null,
           'hostname': Uri.base.host,
         },
@@ -169,7 +169,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           'message': 'Booking lookup - calling verifyBookingAccess',
           'data': {
             'bookingRef': widget.bookingRef,
-            'email': widget.email != null ? widget.email!.substring(0, 3) + '***' : null,
+            'email': widget.email != null ? '${widget.email!.substring(0, 3)}***' : null,
             'hasToken': widget.token != null,
           },
           'sessionId': 'debug-session',

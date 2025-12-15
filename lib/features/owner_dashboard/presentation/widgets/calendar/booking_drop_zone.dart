@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../providers/calendar_drag_drop_provider.dart';
 
 /// Booking Drop Zone Widget
@@ -49,12 +50,7 @@ class BookingDropZone extends ConsumerWidget {
         onTap: onTap,
         onDoubleTap: onDoubleTap,
         onLongPress: onLongPress,
-        child: Container(
-          width: width,
-          height: height,
-          decoration: _buildBaseDecoration(theme),
-          child: child,
-        ),
+        child: Container(width: width, height: height, decoration: _buildBaseDecoration(theme), child: child),
       );
     }
 
@@ -67,11 +63,7 @@ class BookingDropZone extends ConsumerWidget {
           // Validate drop in real-time
           ref
               .read(dragDropProvider.notifier)
-              .validateDrop(
-                dropDate: date,
-                targetUnitId: unit.id,
-                allBookings: allBookings,
-              );
+              .validateDrop(dropDate: date, targetUnitId: unit.id, allBookings: allBookings);
           return true; // Always show feedback
         },
         onAcceptWithDetails: (details) {
@@ -94,11 +86,7 @@ class BookingDropZone extends ConsumerWidget {
             curve: Curves.easeInOut,
             width: width,
             height: height,
-            decoration: _buildDropZoneDecoration(
-              theme: theme,
-              isHovering: isHovering,
-              isValid: isValid,
-            ),
+            decoration: _buildDropZoneDecoration(theme: theme, isHovering: isHovering, isValid: isValid),
             child: Stack(
               alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
               children: [
@@ -131,22 +119,14 @@ class BookingDropZone extends ConsumerWidget {
                 ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
                 : Colors.transparent), // Transparent to show parent gradient
       border: Border(
-        right: BorderSide(
-          color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-        ),
-        bottom: BorderSide(
-          color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-        ),
+        right: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt())),
+        bottom: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt())),
       ),
     );
   }
 
   /// Build drop zone decoration (with hover feedback)
-  BoxDecoration _buildDropZoneDecoration({
-    required ThemeData theme,
-    required bool isHovering,
-    required bool isValid,
-  }) {
+  BoxDecoration _buildDropZoneDecoration({required ThemeData theme, required bool isHovering, required bool isValid}) {
     Color backgroundColor;
     Color borderColor;
 
@@ -178,11 +158,7 @@ class BookingDropZone extends ConsumerWidget {
   }
 
   /// Build drop indicator (icon + message)
-  Widget _buildDropIndicator({
-    required BuildContext context,
-    required bool isValid,
-    String? errorMessage,
-  }) {
+  Widget _buildDropIndicator({required BuildContext context, required bool isValid, String? errorMessage}) {
     final theme = Theme.of(context);
 
     return Container(
@@ -191,12 +167,8 @@ class BookingDropZone extends ConsumerWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            (isValid ? AppColors.success : AppColors.error).withAlpha(
-              (0.3 * 255).toInt(),
-            ),
-            (isValid ? AppColors.success : AppColors.error).withAlpha(
-              (0.1 * 255).toInt(),
-            ),
+            (isValid ? AppColors.success : AppColors.error).withAlpha((0.3 * 255).toInt()),
+            (isValid ? AppColors.success : AppColors.error).withAlpha((0.1 * 255).toInt()),
           ],
         ),
         borderRadius: BorderRadius.circular(4),
@@ -215,16 +187,21 @@ class BookingDropZone extends ConsumerWidget {
             // Message (only if space available)
             if (height > 50 && width > 80) ...[
               const SizedBox(height: 4),
-              Text(
-                isValid ? 'Pusti ovdje' : (errorMessage ?? 'Nije moguće'),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isValid ? AppColors.success : AppColors.error,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Text(
+                    isValid ? l10n.bookingDropZoneDropHere : (errorMessage ?? l10n.bookingDropZoneCannotDrop),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isValid ? AppColors.success : AppColors.error,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
               ),
             ],
           ],

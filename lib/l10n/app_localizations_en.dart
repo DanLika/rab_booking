@@ -1559,6 +1559,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerCalendarShowStats => 'Show statistics';
 
   @override
+  String get ownerCalendarHideEmptyUnits => 'Hide empty units';
+
+  @override
+  String get ownerCalendarShowEmptyUnits => 'Show empty units';
+
+  @override
   String get ownerCalendarNoUnits => 'No units to display';
 
   @override
@@ -6923,6 +6929,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingActionUnknownGuest => 'Unknown guest';
 
   @override
+  String get bookingBlockHasConflict => 'has conflict with another booking';
+
+  @override
   String get bookingActionEditTitle => 'Edit booking';
 
   @override
@@ -7161,4 +7170,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get overbookingScrollToConflict => 'Scroll to conflict';
+
+  @override
+  String get bookingDropZoneDropHere => 'Drop here';
+
+  @override
+  String get bookingDropZoneCannotDrop => 'Cannot drop';
+
+  @override
+  String bookingBlockSemanticLabel(
+    String guestName,
+    String checkIn,
+    String checkOut,
+    int nights,
+    int guestCount,
+    String conflictText,
+  ) {
+    return 'Booking for $guestName, from $checkIn to $checkOut, $nights nights, $guestCount guests$conflictText. Tap for details.';
+  }
 }

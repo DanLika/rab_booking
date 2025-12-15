@@ -39,8 +39,8 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
   // GlobalKey for accessing TimelineCalendarWidget's scroll methods
   final GlobalKey timelineKey = GlobalKey();
   bool _showSummary = false;
+  bool _showEmptyUnits = true; // Show all units by default (including those without bookings)
   int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
-  int _calendarRebuildCounter = 0; // Force rebuild counter for Today button
 
   // FIXED: Flag to prevent onVisibleDateRangeChanged from overwriting _currentRange
   // during programmatic navigation (Today, Previous, Next, DatePicker)
@@ -149,6 +149,14 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                             _showSummary = value;
                           });
                         },
+                        // Show empty units toggle
+                        showEmptyUnitsToggle: true,
+                        isEmptyUnitsVisible: _showEmptyUnits,
+                        onEmptyUnitsToggleChanged: (value) {
+                          setState(() {
+                            _showEmptyUnits = value;
+                          });
+                        },
                         // ENHANCED: Multi-select mode toggle
                         showMultiSelectToggle: true,
                         isMultiSelectActive: multiSelectState.isEnabled,
@@ -180,6 +188,7 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                       key: timelineKey,
                       initialScrollToDate: _currentRange.startDate, // Scroll to selected date
                       showSummary: _showSummary,
+                      showEmptyUnits: _showEmptyUnits,
                       // FIXED: Preserve vertical scroll position during toolbar navigation
                       // When user clicks left/right arrows, widget rebuilds but we restore scroll position
                       initialVerticalOffset: _verticalScrollOffset,
@@ -257,10 +266,6 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
 
     final firstConflict = conflicts.first;
 
-    // Safely get localizations
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-
     // Scroll to conflict location
     final timelineState = timelineKey.currentState;
     if (timelineState != null && firstConflict.conflictDates.isNotEmpty) {
@@ -303,7 +308,7 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
       final ownerBooking = await repository.getOwnerBookingById(conflict.booking1.id);
 
       if (ownerBooking != null && mounted) {
-        showDialog(
+        await showDialog(
           context: context,
           builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
         );
@@ -348,17 +353,15 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     setState(() {
       _isProgrammaticNavigation = true;
       _currentRange = newRange;
-      _calendarRebuildCounter++;
     });
 
     // Reset flag after scroll animation completes (~500ms for smooth animation)
     // This allows manual scrolling to update toolbar after programmatic navigation
     Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        setState(() {
-          _isProgrammaticNavigation = false;
-        });
-      }
+      if (!mounted || !context.mounted) return;
+      setState(() {
+        _isProgrammaticNavigation = false;
+      });
     });
   }
 
@@ -415,7 +418,6 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     // First, reset to today (this will rebuild widget with new key)
     setState(() {
       _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
-      _calendarRebuildCounter++; // Force widget rebuild to trigger scroll to today
     });
 
     // Then, refresh providers

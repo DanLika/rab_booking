@@ -127,8 +127,8 @@ void main() {
 
     test('handles timezone differences correctly', () {
       // Same calendar day in different timezones should be treated as same day
-      final checkIn = DateTime(2025, 1, 15, 10, 0); // Local timezone
-      final checkOut = DateTime.utc(2025, 1, 15, 23, 0); // UTC, same calendar day
+      final checkIn = DateTime(2025, 1, 15, 10); // Local timezone
+      final checkOut = DateTime.utc(2025, 1, 15, 23); // UTC, same calendar day
 
       final result = BookingValidationService.validateDates(checkIn: checkIn, checkOut: checkOut);
       // Should fail because checkout is same day as checkin (after UTC normalization)
@@ -154,8 +154,8 @@ void main() {
 
     test('handles mixed timezone dates correctly', () {
       // CheckIn in local timezone, CheckOut in UTC - same calendar day
-      final checkIn = DateTime(2025, 1, 15, 12, 0); // Local
-      final checkOut = DateTime.utc(2025, 1, 15, 10, 0); // UTC, same calendar day
+      final checkIn = DateTime(2025, 1, 15, 12); // Local
+      final checkOut = DateTime.utc(2025, 1, 15, 10); // UTC, same calendar day
 
       final result = BookingValidationService.validateDates(checkIn: checkIn, checkOut: checkOut);
       // Should fail because after UTC normalization, both are same day

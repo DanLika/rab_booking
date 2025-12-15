@@ -36,8 +36,9 @@ export const verifyBookingAccess = onCall(async (request) => {
       hasToken: !!accessToken,
     });
 
-    // Query booking by reference
-    const bookingsSnapshot = await db.collection("bookings")
+    // NEW STRUCTURE: Query booking by reference using collection group
+    const bookingsSnapshot = await db
+      .collectionGroup("bookings")
       .where("booking_reference", "==", bookingReference)
       .limit(1)
       .get();

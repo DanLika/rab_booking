@@ -6,13 +6,9 @@ void main() {
   group('PaymentMethodCard', () {
     testWidgets('renders container with styling', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(
-              icon: Icons.credit_card,
-              title: 'Credit Card',
-              isDarkMode: false,
-            ),
+            body: PaymentMethodCard(icon: Icons.credit_card, title: 'Credit Card', isDarkMode: false),
           ),
         ),
       );
@@ -22,13 +18,9 @@ void main() {
 
     testWidgets('renders provided icon', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(
-              icon: Icons.credit_card,
-              title: 'Credit Card',
-              isDarkMode: false,
-            ),
+            body: PaymentMethodCard(icon: Icons.credit_card, title: 'Credit Card', isDarkMode: false),
           ),
         ),
       );
@@ -38,13 +30,9 @@ void main() {
 
     testWidgets('renders title text', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(
-              icon: Icons.credit_card,
-              title: 'Credit Card',
-              isDarkMode: false,
-            ),
+            body: PaymentMethodCard(icon: Icons.credit_card, title: 'Credit Card', isDarkMode: false),
           ),
         ),
       );
@@ -54,7 +42,7 @@ void main() {
 
     testWidgets('renders subtitle when provided', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: PaymentMethodCard(
               icon: Icons.credit_card,
@@ -71,13 +59,9 @@ void main() {
 
     testWidgets('does not render subtitle when not provided', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(
-              icon: Icons.credit_card,
-              title: 'Credit Card',
-              isDarkMode: false,
-            ),
+            body: PaymentMethodCard(icon: Icons.credit_card, title: 'Credit Card', isDarkMode: false),
           ),
         ),
       );
@@ -89,7 +73,7 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: PaymentMethodCard(
               icon: Icons.account_balance,
@@ -106,13 +90,9 @@ void main() {
 
     testWidgets('uses Row layout with icon and column', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(
-              icon: Icons.home_outlined,
-              title: 'Pay on Arrival',
-              isDarkMode: false,
-            ),
+            body: PaymentMethodCard(icon: Icons.home_outlined, title: 'Pay on Arrival', isDarkMode: false),
           ),
         ),
       );

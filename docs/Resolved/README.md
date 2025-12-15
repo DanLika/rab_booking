@@ -23,3 +23,8 @@ Sve dokumentacije u ovom folderu predstavljaju **završene i implementirane** fu
 ---
 
 **Napomena:** Ova dokumentacija služi kao referenca za već implementirane funkcionalnosti. Za planove i feature requests koji nisu još implementirani, vidi `docs/architecture/` folder.
+
+
+
+
+

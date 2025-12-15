@@ -133,7 +133,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> wit
     final isCompact = MediaQuery.of(context).size.width < 400;
 
     return PopScope(
-      canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) {
           // Handle browser back button on Chrome Android

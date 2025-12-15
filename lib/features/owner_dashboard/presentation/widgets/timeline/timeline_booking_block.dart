@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/utils/platform_utils.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../utils/booking_overlap_detector.dart';
 import '../calendar/skewed_booking_painter.dart';
 import '../calendar/smart_booking_tooltip.dart';
+import 'timeline_constants.dart';
 
 /// Timeline booking block widget
 ///
@@ -129,88 +132,99 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
     final unitRowHeight = widget.unitRowHeight;
     final dayWidth = widget.dayWidth;
     final allBookingsByUnit = widget.allBookingsByUnit;
-    final blockHeight = unitRowHeight - 8; // Reduced padding for smaller blocks
+    final blockHeight = unitRowHeight - kTimelineBookingBlockHeightPadding;
 
     // Detect conflicts with other bookings in the same unit
-    final conflictingBookings = TimelineBookingBlock.getConflictingBookings(booking, allBookingsByUnit);
-    final hasConflict = conflictingBookings.isNotEmpty;
+    // Add error handling for conflict detection failures
+    bool hasConflict = false;
+    List<BookingModel> conflictingBookings = [];
+    try {
+      conflictingBookings = TimelineBookingBlock.getConflictingBookings(booking, allBookingsByUnit);
+      hasConflict = conflictingBookings.isNotEmpty;
+    } catch (e) {
+      debugPrint('Error detecting booking conflicts: $e');
+      // Fallback to no conflict on error
+      hasConflict = false;
+    }
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: PlatformUtils.supportsHover
-          ? (event) {
-              setState(() => _isHovered = true);
-              SmartBookingTooltip.show(
-                context: context,
-                booking: booking,
-                position: event.position,
-                hasConflict: hasConflict,
-                conflictingBookings: conflictingBookings,
-              );
-            }
-          : null,
-      onExit: PlatformUtils.supportsHover
-          ? (_) {
-              setState(() => _isHovered = false);
-              SmartBookingTooltip.hide();
-            }
-          : null,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onLongPress: widget.onLongPress,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          width: width - 4, // 2px left + 2px right gap
-          height: blockHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 2), // 2px gap on each side
-          transform: _isHovered ? Matrix4.diagonal3Values(1.02, 1.02, 1.0) : Matrix4.identity(),
-          transformAlignment: Alignment.center,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 150),
-            opacity: _isHovered ? 1.0 : 0.92,
-            child: Stack(
-              alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
-              children: [
-                // Background layer with skewed parallelogram
-                // dayWidth is used to calculate skewOffset for turnover day alignment
-                CustomPaint(
-                  painter: SkewedBookingPainter(
-                    backgroundColor: booking.status.color,
-                    borderColor: booking.status.color,
-                    dayWidth: dayWidth,
+    // Build semantic label for accessibility
+    final semanticLabel = _buildSemanticLabel(booking, hasConflict);
+
+    return RepaintBoundary(
+      child: Semantics(
+        label: semanticLabel,
+        button: true,
+        enabled: true,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: PlatformUtils.supportsHover
+              ? (event) {
+                  setState(() => _isHovered = true);
+                  SmartBookingTooltip.show(
+                    context: context,
+                    booking: booking,
+                    position: event.position,
                     hasConflict: hasConflict,
-                  ),
-                  size: Size(width - 2, blockHeight),
-                ),
+                    conflictingBookings: conflictingBookings,
+                  );
+                }
+              : null,
+          onExit: PlatformUtils.supportsHover
+              ? (_) {
+                  setState(() => _isHovered = false);
+                  SmartBookingTooltip.hide();
+                }
+              : null,
+          child: GestureDetector(
+            onTap: widget.onTap,
+            onLongPress: widget.onLongPress,
+            child: AnimatedContainer(
+              duration: kTimelineBookingBlockHoverAnimationDuration,
+              curve: Curves.easeOut,
+              width: width - (kTimelineBookingBlockHorizontalMargin * 2),
+              height: blockHeight,
+              margin: const EdgeInsets.symmetric(horizontal: kTimelineBookingBlockHorizontalMargin),
+              transform: _isHovered
+                  ? Matrix4.diagonal3Values(kTimelineBookingBlockHoverScale, kTimelineBookingBlockHoverScale, 1.0)
+                  : Matrix4.identity(),
+              transformAlignment: Alignment.center,
+              child: AnimatedOpacity(
+                duration: kTimelineBookingBlockHoverAnimationDuration,
+                opacity: _isHovered ? kTimelineBookingBlockHoverOpacity : kTimelineBookingBlockNormalOpacity,
+                child: Stack(
+                  alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+                  children: [
+                    // Background layer with skewed parallelogram
+                    // dayWidth is used to calculate skewOffset for turnover day alignment
+                    CustomPaint(
+                      painter: SkewedBookingPainter(
+                        backgroundColor: booking.status.color,
+                        borderColor: booking.status.color,
+                        dayWidth: dayWidth,
+                        hasConflict: hasConflict,
+                      ),
+                      size: Size(width - 2, blockHeight),
+                    ),
 
-                // Conflict indicator (single centered warning icon)
-                if (hasConflict)
-                  Positioned.fill(
-                    child: Center(
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade700,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(80),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
+                    // Conflict indicator (single centered warning icon)
+                    if (hasConflict)
+                      Positioned.fill(
+                        child: Center(
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade700,
+                              shape: BoxShape.circle,
+                              boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 2))],
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.warning_rounded,
-                          size: 16,
-                          color: Colors.white,
+                            child: const Icon(Icons.warning_rounded, size: 16, color: Colors.white),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -218,4 +232,16 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
     );
   }
 
+  /// Build semantic label for screen readers
+  String _buildSemanticLabel(BookingModel booking, bool hasConflict) {
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
+    final checkInStr = DateFormat('d. MMM', locale.toString()).format(booking.checkIn);
+    final checkOutStr = DateFormat('d. MMM', locale.toString()).format(booking.checkOut);
+    final nights = booking.checkOut.difference(booking.checkIn).inDays;
+    final guestName = booking.guestName ?? l10n.bookingActionUnknownGuest;
+    final conflictText = hasConflict ? ', ${l10n.bookingBlockHasConflict}' : '';
+
+    return l10n.bookingBlockSemanticLabel(guestName, checkInStr, checkOutStr, nights, booking.guestCount, conflictText);
+  }
 }

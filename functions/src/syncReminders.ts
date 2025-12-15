@@ -36,8 +36,9 @@ export const scheduledSyncReminders = onSchedule(
         new Date(Date.now() - 60 * 60 * 1000)
       );
 
+      // NEW STRUCTURE: Use collection group query
       const bookingsSnapshot = await db
-        .collection("bookings")
+        .collectionGroup("bookings")
         .where("created_at", ">=", oneHourAgo)
         .where("status", "in", ["pending", "confirmed"])
         .limit(100)

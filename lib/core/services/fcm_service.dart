@@ -15,7 +15,14 @@ class FcmService {
   factory FcmService() => _instance;
   FcmService._internal();
 
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  // Lazy initialization: only create FirebaseMessaging instance when needed (not on web)
+  // This prevents platform channel access during app initialization on web
+  FirebaseMessaging? _messaging;
+  FirebaseMessaging get _messagingInstance {
+    _messaging ??= FirebaseMessaging.instance;
+    return _messaging!;
+  }
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   bool _initialized = false;
@@ -34,9 +41,7 @@ class FcmService {
 
     try {
       // Request permission (iOS requires this)
-      final settings = await _messaging.requestPermission(
-        
-      );
+      final settings = await _messagingInstance.requestPermission();
 
       debugPrint('[FCM] Permission status: ${settings.authorizationStatus}');
 
@@ -46,7 +51,7 @@ class FcmService {
         await _getAndSaveToken();
 
         // Listen for token refresh
-        _messaging.onTokenRefresh.listen(_onTokenRefresh);
+        _messagingInstance.onTokenRefresh.listen(_onTokenRefresh);
 
         // Configure foreground message handling
         await _configureMessageHandling();
@@ -66,7 +71,7 @@ class FcmService {
     if (kIsWeb) return null;
 
     try {
-      _currentToken = await _messaging.getToken();
+      _currentToken = await _messagingInstance.getToken();
       return _currentToken;
     } catch (e) {
       debugPrint('[FCM] Error getting token: $e');
@@ -99,17 +104,9 @@ class FcmService {
 
     try {
       final platform = _getPlatform();
-      final tokenData = {
-        'token': token,
-        'platform': platform,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+      final tokenData = {'token': token, 'platform': platform, 'updatedAt': FieldValue.serverTimestamp()};
 
-      final tokensRef = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('data')
-          .doc('fcmTokens');
+      final tokensRef = _firestore.collection('users').doc(userId).collection('data').doc('fcmTokens');
 
       // Get existing tokens
       final doc = await tokensRef.get();
@@ -125,10 +122,7 @@ class FcmService {
       tokens.add(tokenData);
 
       // Save
-      await tokensRef.set({
-        'tokens': tokens,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await tokensRef.set({'tokens': tokens, 'updatedAt': FieldValue.serverTimestamp()});
 
       debugPrint('[FCM] Token saved for platform: $platform');
     } catch (e) {
@@ -142,17 +136,12 @@ class FcmService {
     if (userId == null || _currentToken == null) return;
 
     try {
-      final tokensRef = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('data')
-          .doc('fcmTokens');
+      final tokensRef = _firestore.collection('users').doc(userId).collection('data').doc('fcmTokens');
 
       final doc = await tokensRef.get();
       if (!doc.exists) return;
 
-      final tokens =
-          List<Map<String, dynamic>>.from(doc.data()?['tokens'] as List? ?? []);
+      final tokens = List<Map<String, dynamic>>.from(doc.data()?['tokens'] as List? ?? []);
       tokens.removeWhere((t) => t['token'] == _currentToken);
 
       await tokensRef.update({'tokens': tokens});
@@ -177,7 +166,7 @@ class FcmService {
     });
 
     // Check if app was opened from terminated state via notification
-    final initialMessage = await _messaging.getInitialMessage();
+    final initialMessage = await _messagingInstance.getInitialMessage();
     if (initialMessage != null) {
       debugPrint('[FCM] App opened from notification');
       _handleMessageTap(initialMessage);
@@ -205,13 +194,25 @@ class FcmService {
   }
 
   /// Get platform string
+  /// Returns platform identifier, safe for web (checks kIsWeb before accessing Platform)
   String _getPlatform() {
+    // CRITICAL: Check kIsWeb FIRST before any Platform access
+    // Platform class from dart:io uses platform channels internally
+    // which are not available on web and will cause errors
     if (kIsWeb) return 'web';
-    if (Platform.isIOS) return 'ios';
-    if (Platform.isAndroid) return 'android';
-    if (Platform.isMacOS) return 'macos';
-    if (Platform.isWindows) return 'windows';
-    if (Platform.isLinux) return 'linux';
+
+    // Only access Platform on non-web platforms
+    try {
+      if (Platform.isIOS) return 'ios';
+      if (Platform.isAndroid) return 'android';
+      if (Platform.isMacOS) return 'macos';
+      if (Platform.isWindows) return 'windows';
+      if (Platform.isLinux) return 'linux';
+    } catch (e) {
+      // Fallback if Platform access fails (shouldn't happen, but be safe)
+      debugPrint('[FCM] Error detecting platform: $e');
+      return 'unknown';
+    }
     return 'unknown';
   }
 
@@ -219,7 +220,7 @@ class FcmService {
   Future<bool> areNotificationsEnabled() async {
     if (kIsWeb) return false;
 
-    final settings = await _messaging.getNotificationSettings();
+    final settings = await _messagingInstance.getNotificationSettings();
     return settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional;
   }

@@ -19,6 +19,7 @@ import 'calendar/calendar_tooltip_builder.dart';
 import 'calendar/year_calendar_painters.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import 'calendar/year_calendar_skeleton.dart';
+import '../../../../core/services/logging_service.dart';
 
 class YearCalendarWidget extends ConsumerStatefulWidget {
   final String propertyId;
@@ -687,6 +688,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       }
     });
 
+    LoggingService.log(
+      '📞 Calling onRangeSelected callback with: start=$_rangeStart, end=$_rangeEnd, callback=${widget.onRangeSelected != null ? "exists" : "NULL"}',
+      tag: 'YEAR_CALENDAR',
+    );
     widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
   }
 

@@ -38,20 +38,20 @@ import {
   sendPaymentReminderEmailV2,
   sendCheckInReminderEmailV2,
   sendCheckOutReminderEmailV2,
-  sendOwnerCancellationEmail as sendOwnerCancellationEmailTemplate,
-  sendOwnerNotificationEmail as sendOwnerNotificationEmailTemplate,
-  sendCustomGuestEmail as sendCustomGuestEmailTemplate,
+  sendOwnerCancellationEmailV2,
+  sendOwnerNotificationEmailV2,
+  sendCustomGuestEmailV2,
   type BookingConfirmationParams,
   type PendingBookingRequestParams,
   type BookingApprovedParams,
   type GuestCancellationParams,
-  type OwnerCancellationParams,
+  type OwnerCancellationParamsV2,
   type RefundNotificationParams,
-  type OwnerNotificationParams,
+  type OwnerNotificationParamsV2,
   type PaymentReminderParams,
   type CheckInReminderParams,
   type CheckOutReminderParams,
-  type CustomGuestEmailParams,
+  type CustomGuestEmailParamsV2,
   sendEmailVerificationEmailV2,
   type EmailVerificationParams,
   sendPendingOwnerNotificationEmailV2,
@@ -510,7 +510,7 @@ export async function sendBookingApprovedEmail(
 /**
  * Send owner notification email
  *
- * MIGRATED: Now uses modern email template
+ * MIGRATED: Now uses V2 template (Refined Premium)
  */
 export async function sendOwnerNotificationEmail(
   ownerEmail: string,
@@ -541,8 +541,8 @@ export async function sendOwnerNotificationEmail(
   validateAmount(depositAmount, "depositAmount");
 
   try {
-    // Build params for new template
-    const params: OwnerNotificationParams = {
+    // Build params for V2 template
+    const params: OwnerNotificationParamsV2 = {
       ownerEmail,
       bookingReference,
       guestName,
@@ -558,15 +558,15 @@ export async function sendOwnerNotificationEmail(
       paymentMethod,
     };
 
-    // Send email using new template
-    await sendOwnerNotificationEmailTemplate(
+    // Send email using V2 template (Refined Premium)
+    await sendOwnerNotificationEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL(),
       FROM_NAME()
     );
 
-    logSuccess("Owner notification email sent (NEW TEMPLATE)", { email: ownerEmail });
+    logSuccess("Owner notification email sent (V2 - Refined Premium)", { email: ownerEmail });
   } catch (error) {
     logError("Error sending owner notification email", error);
     throw error;
@@ -639,7 +639,7 @@ export const sendBookingCancellationEmail = sendGuestCancellationEmail;
 /**
  * Send owner cancellation notification email
  *
- * MIGRATED: Now uses modern email template
+ * MIGRATED: Now uses V2 template (Refined Premium)
  */
 export async function sendOwnerCancellationNotificationEmail(
   ownerEmail: string,
@@ -663,8 +663,8 @@ export async function sendOwnerCancellationNotificationEmail(
   validateAmount(totalAmount, "totalAmount");
 
   try {
-    // Build params for new template
-    const params: OwnerCancellationParams = {
+    // Build params for V2 template
+    const params: OwnerCancellationParamsV2 = {
       ownerEmail,
       bookingReference,
       guestName,
@@ -676,15 +676,15 @@ export async function sendOwnerCancellationNotificationEmail(
       totalAmount,
     };
 
-    // Send email using new template
-    await sendOwnerCancellationEmailTemplate(
+    // Send email using V2 template (Refined Premium)
+    await sendOwnerCancellationEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL(),
       FROM_NAME()
     );
 
-    logSuccess("Owner cancellation notification sent (NEW TEMPLATE)", { email: ownerEmail });
+    logSuccess("Owner cancellation notification sent (V2 - Refined Premium)", { email: ownerEmail });
   } catch (error) {
     logError("Error sending owner cancellation notification", error);
     throw error;
@@ -742,7 +742,7 @@ export async function sendRefundNotificationEmail(
 /**
  * Send custom email to guest
  *
- * MIGRATED: Previously named sendCustomEmailToGuest
+ * MIGRATED: Now uses V2 template (Refined Premium)
  */
 export async function sendCustomGuestEmail(
   guestEmail: string,
@@ -760,8 +760,8 @@ export async function sendCustomGuestEmail(
   if (ownerEmail) validateEmail(ownerEmail, "ownerEmail");
 
   try {
-    // Build params for new template
-    const params: CustomGuestEmailParams = {
+    // Build params for V2 template
+    const params: CustomGuestEmailParamsV2 = {
       guestEmail,
       guestName,
       subject,
@@ -770,15 +770,15 @@ export async function sendCustomGuestEmail(
       propertyName,
     };
 
-    // Send email using new template
-    await sendCustomGuestEmailTemplate(
+    // Send email using V2 template (Refined Premium)
+    await sendCustomGuestEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL(),
       FROM_NAME()
     );
 
-    logSuccess("Custom guest email sent (NEW TEMPLATE)", { email: guestEmail });
+    logSuccess("Custom guest email sent (V2 - Refined Premium)", { email: guestEmail });
   } catch (error) {
     logError("Error sending custom guest email", error);
     throw error;

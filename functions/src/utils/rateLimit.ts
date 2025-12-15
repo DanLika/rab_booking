@@ -169,11 +169,11 @@ export async function enforceRateLimit(
   const now = Date.now();
   const windowStart = now - windowMs;
 
-  // Rate limit collection: rate_limits/{userId}/actions/{action}
+  // NEW STRUCTURE: users/{userId}/rate_limits/{action}
   const rateLimitRef = db
-    .collection("rate_limits")
+    .collection("users")
     .doc(userId)
-    .collection("actions")
+    .collection("rate_limits")
     .doc(action);
 
   try {
@@ -284,10 +284,11 @@ export async function getRateLimitStatus(
   const now = Date.now();
   const windowStart = now - windowMs;
 
+  // NEW STRUCTURE: users/{userId}/rate_limits/{action}
   const rateLimitRef = db
-    .collection("rate_limits")
+    .collection("users")
     .doc(userId)
-    .collection("actions")
+    .collection("rate_limits")
     .doc(action);
 
   const doc = await rateLimitRef.get();

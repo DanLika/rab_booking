@@ -79,23 +79,29 @@ final groupedNotificationsProvider =
     });
 
 /// Notification actions provider (for mutations)
+/// Uses current user's ownerId for efficient direct subcollection access
 final notificationActionsProvider = Provider<NotificationActions>((ref) {
   final service = ref.watch(notificationServiceProvider);
-  return NotificationActions(service);
+  final authState = ref.watch(enhancedAuthProvider);
+  final ownerId = authState.firebaseUser?.uid;
+  return NotificationActions(service, ownerId);
 });
 
 /// Notification actions class
+/// NEW STRUCTURE: All methods pass ownerId for direct subcollection access
+/// This avoids expensive collectionGroup queries
 class NotificationActions {
   final NotificationService _service;
+  final String? _ownerId;
 
-  NotificationActions(this._service);
+  NotificationActions(this._service, this._ownerId);
 
   Future<void> markAsRead(String notificationId) async {
-    await _service.markAsRead(notificationId);
+    await _service.markAsRead(notificationId, ownerId: _ownerId);
   }
 
   Future<void> markMultipleAsRead(List<String> notificationIds) async {
-    await _service.markMultipleAsRead(notificationIds);
+    await _service.markMultipleAsRead(notificationIds, ownerId: _ownerId);
   }
 
   Future<void> markAllAsRead(String ownerId) async {
@@ -103,11 +109,11 @@ class NotificationActions {
   }
 
   Future<void> deleteNotification(String notificationId) async {
-    await _service.deleteNotification(notificationId);
+    await _service.deleteNotification(notificationId, ownerId: _ownerId);
   }
 
   Future<void> deleteMultiple(List<String> notificationIds) async {
-    await _service.deleteMultipleNotifications(notificationIds);
+    await _service.deleteMultipleNotifications(notificationIds, ownerId: _ownerId);
   }
 
   Future<void> deleteAllNotifications(String ownerId) async {

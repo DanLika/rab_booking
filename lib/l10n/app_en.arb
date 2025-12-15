@@ -563,6 +563,8 @@
   "ownerCalendarFilters": "Filters",
   "ownerCalendarHideStats": "Hide statistics",
   "ownerCalendarShowStats": "Show statistics",
+  "ownerCalendarHideEmptyUnits": "Hide empty units",
+  "ownerCalendarShowEmptyUnits": "Show empty units",
   "ownerCalendarNoUnits": "No units to display",
   "ownerCalendarLoadingUnits": "Loading units...",
   "ownerCalendarErrorLoadingUnits": "Error loading units",
@@ -2861,6 +2863,7 @@
   "taxLegalPreviewButton": "Preview Disclaimer",
 
   "bookingActionUnknownGuest": "Unknown guest",
+  "bookingBlockHasConflict": "has conflict with another booking",
   "bookingActionEditTitle": "Edit booking",
   "bookingActionEditSubtitle": "Change booking details",
   "bookingActionStatusTitle": "Change status",
@@ -3044,5 +3047,31 @@
     }
   },
   "overbookingViewBooking": "View",
-  "overbookingScrollToConflict": "Scroll to conflict"
+  "overbookingScrollToConflict": "Scroll to conflict",
+
+  "bookingDropZoneDropHere": "Drop here",
+  "bookingDropZoneCannotDrop": "Cannot drop",
+  "bookingBlockSemanticLabel": "Booking for {guestName}, from {checkIn} to {checkOut}, {nights} nights, {guestCount} guests{conflictText}. Tap for details.",
+  "@bookingBlockSemanticLabel": {
+    "placeholders": {
+      "guestName": {
+        "type": "String"
+      },
+      "checkIn": {
+        "type": "String"
+      },
+      "checkOut": {
+        "type": "String"
+      },
+      "nights": {
+        "type": "int"
+      },
+      "guestCount": {
+        "type": "int"
+      },
+      "conflictText": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -213,7 +213,6 @@ class OverbookingAutoResolver extends _$OverbookingAutoResolver {
           await repository.cancelBooking(
             bookingToReject.id,
             'Automatically cancelled due to overbooking conflict with confirmed booking',
-            sendEmail: true, // Notify guest about cancellation
           );
 
           // Mark this conflict as resolved

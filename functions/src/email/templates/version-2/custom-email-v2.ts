@@ -1,8 +1,10 @@
 /**
- * Custom Email Template
+ * Custom Email Template V2
+ * Minimalist Design using Helper Functions
  *
  * Allows property owners to send custom messages to guests.
- * Includes basic formatting and safety features.
+ * Uses helper functions for clean, maintainable code.
+ * All user-provided content is HTML-escaped for security.
  */
 
 import {Resend} from "resend";
@@ -15,9 +17,9 @@ import {
 } from "../../utils/template-helpers";
 
 /**
- * Custom guest email parameters
+ * Custom guest email parameters (V2)
  */
-export interface CustomGuestEmailParams {
+export interface CustomGuestEmailParamsV2 {
   guestEmail: string;
   guestName: string;
   subject: string;
@@ -27,10 +29,10 @@ export interface CustomGuestEmailParams {
 }
 
 /**
- * Generate custom guest email HTML
+ * Generate custom guest email HTML (V2)
  */
-export function generateCustomGuestEmail(
-  params: CustomGuestEmailParams
+export function generateCustomGuestEmailV2(
+  params: CustomGuestEmailParamsV2
 ): string {
   const {
     guestName,
@@ -42,8 +44,8 @@ export function generateCustomGuestEmail(
   // Header with email icon
   const header = generateHeader({
     icon: getEmailIcon(64, "#FFFFFF"),
-    title: subject,
-    subtitle: propertyName ? `Poruka od: ${propertyName}` : undefined,
+    title: escapeHtml(subject),
+    subtitle: propertyName ? `Poruka od: ${escapeHtml(propertyName)}` : undefined,
   });
 
   // Escape and format message (preserve line breaks)
@@ -52,8 +54,8 @@ export function generateCustomGuestEmail(
 
   // Combine all content
   const content = `
-    ${generateGreeting(guestName)}
-    <div style="padding: 16px 0;">
+    ${generateGreeting(escapeHtml(guestName))}
+    <div style="padding: 16px 0; font-size: 14px; font-weight: 400; line-height: 1.7; color: #1F2937;">
       ${formattedMessage}
     </div>
   `;
@@ -62,21 +64,24 @@ export function generateCustomGuestEmail(
   return generateEmailHtml({
     header,
     content,
+    footer: {
+      additionalText: propertyName ? escapeHtml(propertyName) : undefined,
+    },
   });
 }
 
 /**
- * Send custom guest email via Resend
+ * Send custom guest email via Resend (V2)
  *
- * SECURITY: message and subject are already escaped in generateCustomGuestEmail
+ * SECURITY: message and subject are HTML-escaped in generateCustomGuestEmailV2
  */
-export async function sendCustomGuestEmail(
+export async function sendCustomGuestEmailV2(
   resendClient: Resend,
-  params: CustomGuestEmailParams,
+  params: CustomGuestEmailParamsV2,
   fromEmail: string,
   fromName: string
 ): Promise<void> {
-  const html = generateCustomGuestEmail(params);
+  const html = generateCustomGuestEmailV2(params);
 
   await resendClient.emails.send({
     from: `${fromName} <${fromEmail}>`,
@@ -84,24 +89,5 @@ export async function sendCustomGuestEmail(
     replyTo: params.ownerEmail || fromEmail,
     subject: params.subject,
     html: html,
-    text: stripHtml(html),
   });
-}
-
-/**
- * Strip HTML tags to create plain text version
- */
-function stripHtml(html: string): string {
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
 }

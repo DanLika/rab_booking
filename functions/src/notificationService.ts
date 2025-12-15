@@ -30,16 +30,22 @@ export async function createNotification(data: NotificationData): Promise<void> 
 
     // Use set() with merge:false to prevent duplicates
     // If document already exists, this will overwrite (idempotent behavior)
-    await db.collection("notifications").doc(idempotencyKey).set({
-      ownerId: data.ownerId,
-      type: data.type,
-      title: data.title,
-      message: data.message,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      isRead: false,
-      bookingId: data.bookingId || null,
-      metadata: data.metadata || null,
-    });
+    // NEW STRUCTURE: Write to users/{ownerId}/notifications subcollection
+    await db
+      .collection("users")
+      .doc(data.ownerId)
+      .collection("notifications")
+      .doc(idempotencyKey)
+      .set({
+        ownerId: data.ownerId,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        isRead: false,
+        bookingId: data.bookingId || null,
+        metadata: data.metadata || null,
+      });
 
     logInfo(`Notification created for owner ${data.ownerId}: ${data.type}`);
   } catch (error) {

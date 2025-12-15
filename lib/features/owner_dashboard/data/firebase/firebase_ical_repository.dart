@@ -98,8 +98,28 @@ class FirebaseIcalRepository {
   /// Delete iCal feed
   Future<void> deleteIcalFeed(String feedId) async {
     try {
-      // Delete all events from this feed first (using batch for efficiency)
-      final eventsSnapshot = await _firestore.collection('ical_events').where('feed_id', isEqualTo: feedId).get();
+      // First get the feed to know which property it belongs to
+      final feedDoc = await _firestore.collection('ical_feeds').doc(feedId).get();
+      if (!feedDoc.exists) {
+        LoggingService.log('Feed not found: $feedId', tag: 'IcalRepository');
+        return;
+      }
+
+      final feedData = feedDoc.data()!;
+      final propertyId = feedData['property_id'] as String?;
+
+      if (propertyId == null) {
+        LoggingService.log('Feed has no property_id: $feedId', tag: 'IcalRepository');
+        return;
+      }
+
+      // NEW STRUCTURE: Delete all events from this feed in the new subcollection
+      final eventsSnapshot = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('ical_events')
+          .where('feed_id', isEqualTo: feedId)
+          .get();
 
       // Use batch delete (Firestore batch limit is 500)
       const batchSize = 500;
@@ -169,8 +189,9 @@ class FirebaseIcalRepository {
   /// Get all iCal events for a unit
   Future<List<IcalEvent>> getUnitIcalEvents(String unitId) async {
     try {
+      // NEW STRUCTURE: Use collection group query since we don't know propertyId
       final snapshot = await _firestore
-          .collection('ical_events')
+          .collectionGroup('ical_events')
           .where('unit_id', isEqualTo: unitId)
           .orderBy('start_date', descending: false)
           .get();
@@ -189,8 +210,9 @@ class FirebaseIcalRepository {
     required DateTime endDate,
   }) async {
     try {
+      // NEW STRUCTURE: Use collection group query since we don't know propertyId
       final snapshot = await _firestore
-          .collection('ical_events')
+          .collectionGroup('ical_events')
           .where('unit_id', isEqualTo: unitId)
           .where('start_date', isGreaterThanOrEqualTo: startDate)
           .where('start_date', isLessThan: endDate)
@@ -205,8 +227,9 @@ class FirebaseIcalRepository {
 
   /// Watch iCal events for a unit (real-time)
   Stream<List<IcalEvent>> watchUnitIcalEvents(String unitId) {
+    // NEW STRUCTURE: Use collection group query since we don't know propertyId
     return _firestore
-        .collection('ical_events')
+        .collectionGroup('ical_events')
         .where('unit_id', isEqualTo: unitId)
         .orderBy('start_date', descending: false)
         .snapshots()
@@ -218,7 +241,23 @@ class FirebaseIcalRepository {
   /// Create iCal event
   Future<String> createIcalEvent(IcalEvent event) async {
     try {
+      // NEW STRUCTURE: Get feed to determine property path
+      final feedDoc = await _firestore.collection('ical_feeds').doc(event.feedId).get();
+      if (!feedDoc.exists) {
+        throw Exception('Feed not found: ${event.feedId}');
+      }
+
+      final feedData = feedDoc.data()!;
+      final propertyId = feedData['property_id'] as String?;
+
+      if (propertyId == null) {
+        throw Exception('Feed has no property_id: ${event.feedId}');
+      }
+
+      // Write to new subcollection structure
       final docRef = await _firestore
+          .collection('properties')
+          .doc(propertyId)
           .collection('ical_events')
           .add(event.copyWith(createdAt: DateTime.now(), updatedAt: DateTime.now()).toFirestore());
 
@@ -231,17 +270,40 @@ class FirebaseIcalRepository {
   }
 
   /// Batch create iCal events (for sync)
+  /// CRITICAL: All events must belong to the same feed (same propertyId)
   Future<void> batchCreateIcalEvents(List<IcalEvent> events) async {
     try {
+      if (events.isEmpty) return;
+
+      // NEW STRUCTURE: Get propertyId from the first event's feed
+      // All events in a batch should have the same feedId
+      final feedId = events.first.feedId;
+      final feedDoc = await _firestore.collection('ical_feeds').doc(feedId).get();
+      if (!feedDoc.exists) {
+        throw Exception('Feed not found: $feedId');
+      }
+
+      final feedData = feedDoc.data()!;
+      final propertyId = feedData['property_id'] as String?;
+
+      if (propertyId == null) {
+        throw Exception('Feed has no property_id: $feedId');
+      }
+
+      // Write to new subcollection structure
       final batch = _firestore.batch();
 
       for (final event in events) {
-        final docRef = _firestore.collection('ical_events').doc();
+        final docRef = _firestore
+            .collection('properties')
+            .doc(propertyId)
+            .collection('ical_events')
+            .doc();
         batch.set(docRef, event.toFirestore());
       }
 
       await batch.commit();
-      LoggingService.log('Batch created ${events.length} events', tag: 'IcalRepository');
+      LoggingService.log('Batch created ${events.length} events in property $propertyId', tag: 'IcalRepository');
     } catch (e) {
       LoggingService.log('Error batch creating events: $e', tag: 'IcalRepository');
       rethrow;
@@ -251,7 +313,28 @@ class FirebaseIcalRepository {
   /// Delete all events for a feed (before re-syncing)
   Future<void> deleteEventsForFeed(String feedId) async {
     try {
-      final snapshot = await _firestore.collection('ical_events').where('feed_id', isEqualTo: feedId).get();
+      // NEW STRUCTURE: Get feed to determine property path
+      final feedDoc = await _firestore.collection('ical_feeds').doc(feedId).get();
+      if (!feedDoc.exists) {
+        LoggingService.log('Feed not found: $feedId', tag: 'IcalRepository');
+        return;
+      }
+
+      final feedData = feedDoc.data()!;
+      final propertyId = feedData['property_id'] as String?;
+
+      if (propertyId == null) {
+        LoggingService.log('Feed has no property_id: $feedId', tag: 'IcalRepository');
+        return;
+      }
+
+      // Query events from new subcollection structure
+      final snapshot = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('ical_events')
+          .where('feed_id', isEqualTo: feedId)
+          .get();
 
       final batch = _firestore.batch();
 
@@ -274,8 +357,9 @@ class FirebaseIcalRepository {
     required DateTime checkOut,
   }) async {
     try {
+      // NEW STRUCTURE: Use collection group query since we don't know propertyId
       final snapshot = await _firestore
-          .collection('ical_events')
+          .collectionGroup('ical_events')
           .where('unit_id', isEqualTo: unitId)
           .where('start_date', isLessThan: checkOut)
           .get();

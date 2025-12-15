@@ -1,28 +1,32 @@
 /**
- * Owner Notification Email Template
+ * Owner New Booking Notification Template V2
+ * Minimalist Design using Helper Functions
  *
- * Sent to property owners when a new booking is created.
- * Includes guest information and booking details.
+ * Sent to property owners when a new booking is CONFIRMED.
+ * Uses helper functions for clean, maintainable code.
+ * All user-provided content is HTML-escaped for security.
  */
 
 import {Resend} from "resend";
 import {generateEmailHtml} from "../base";
-import {getInfoIcon} from "../../utils/svg-icons";
+import {getSuccessIcon} from "../../utils/svg-icons";
 import {
   generateHeader,
+  generateIntro,
   generateCard,
   generateDetailsTable,
-  generateAlert,
+  generateButton,
   DetailRow,
   formatCurrency,
   formatDate,
   calculateNights,
+  escapeHtml,
 } from "../../utils/template-helpers";
 
 /**
- * Owner notification email parameters
+ * Owner notification email parameters (V2)
  */
-export interface OwnerNotificationParams {
+export interface OwnerNotificationParamsV2 {
   ownerEmail: string;
   bookingReference: string;
   guestName: string;
@@ -36,13 +40,14 @@ export interface OwnerNotificationParams {
   totalAmount: number;
   depositAmount?: number;
   paymentMethod?: string;
+  dashboardUrl?: string;
 }
 
 /**
- * Generate owner notification email HTML
+ * Generate owner notification email HTML (V2)
  */
-export function generateOwnerNotificationEmail(
-  params: OwnerNotificationParams
+export function generateOwnerNotificationEmailV2(
+  params: OwnerNotificationParamsV2
 ): string {
   const {
     bookingReference,
@@ -57,33 +62,27 @@ export function generateOwnerNotificationEmail(
     totalAmount,
     depositAmount,
     paymentMethod,
+    dashboardUrl,
   } = params;
 
   const nights = calculateNights(checkIn, checkOut);
 
-  // Header
+  // Header with success icon
   const header = generateHeader({
-    icon: getInfoIcon(),
-    title: "Nova rezervacija",
+    icon: getSuccessIcon(),
+    title: "Nova potvrđena rezervacija",
     subtitle: "Imate novu rezervaciju",
-    bookingReference: bookingReference,
-  });
-
-  // Info alert
-  const infoAlert = generateAlert({
-    type: "info",
-    title: "Nova rezervacija",
-    message: "Primili ste novu rezervaciju. Provjerite detalje u nastavku.",
+    bookingReference: escapeHtml(bookingReference),
   });
 
   // Guest info card
   const guestInfoRows: DetailRow[] = [
-    {label: "Ime gosta", value: guestName},
-    {label: "Email", value: guestEmail},
+    {label: "Ime gosta", value: escapeHtml(guestName)},
+    {label: "Email", value: escapeHtml(guestEmail)},
   ];
 
   if (guestPhone) {
-    guestInfoRows.push({label: "Telefon", value: guestPhone});
+    guestInfoRows.push({label: "Telefon", value: escapeHtml(guestPhone)});
   }
 
   const guestInfoCard = generateCard(
@@ -93,17 +92,17 @@ export function generateOwnerNotificationEmail(
 
   // Booking details card
   const bookingDetailsRows: DetailRow[] = [
-    {label: "Nekretnina", value: propertyName},
+    {label: "Nekretnina", value: escapeHtml(propertyName)},
   ];
 
   if (unitName) {
-    bookingDetailsRows.push({label: "Jedinica", value: unitName});
+    bookingDetailsRows.push({label: "Jedinica", value: escapeHtml(unitName)});
   }
 
   bookingDetailsRows.push(
     {label: "Prijava", value: formatDate(checkIn)},
     {label: "Odjava", value: formatDate(checkOut)},
-    {label: "Broj noćenja", value: `${nights} ${nights === 1 ? "noć" : nights < 5 ? "noći" : "noći"}`},
+    {label: "Broj noćenja", value: `${nights} ${nights === 1 ? "noć" : "noći"}`},
     {label: "Broj gostiju", value: guests.toString()}
   );
 
@@ -141,58 +140,47 @@ export function generateOwnerNotificationEmail(
     generateDetailsTable(paymentDetailsRows)
   );
 
+  // Dashboard button
+  const dashboardButton = dashboardUrl ? generateButton({
+    text: "Pogledaj rezervaciju",
+    url: dashboardUrl,
+  }) : "";
+
   // Combine all content
   const content = `
-    <p class="greeting">Nova rezervacija</p>
-    ${infoAlert}
+    ${generateIntro(`Gost ${escapeHtml(guestName)} je uspješno rezervirao vaš smještaj.`)}
     ${guestInfoCard}
     ${bookingDetailsCard}
     ${paymentDetailsCard}
-    <p class="intro">Provjerite rezervaciju u vašem dashboard-u.</p>
+    ${dashboardButton}
   `;
 
   // Generate complete email
   return generateEmailHtml({
     header,
     content,
+    footer: {
+      additionalText: "BookBed Owner Dashboard",
+    },
   });
 }
 
 /**
- * Send owner notification email via Resend
+ * Send owner notification email via Resend (V2)
  */
-export async function sendOwnerNotificationEmail(
+export async function sendOwnerNotificationEmailV2(
   resendClient: Resend,
-  params: OwnerNotificationParams,
+  params: OwnerNotificationParamsV2,
   fromEmail: string,
   fromName: string
 ): Promise<void> {
-  const html = generateOwnerNotificationEmail(params);
-  const subject = `Nova rezervacija - ${params.bookingReference}`;
+  const html = generateOwnerNotificationEmailV2(params);
+  const subject = `Nova rezervacija - ${escapeHtml(params.bookingReference)}`;
 
   await resendClient.emails.send({
     from: `${fromName} <${fromEmail}>`,
     to: params.ownerEmail,
     subject: subject,
     html: html,
-    text: stripHtml(html),
   });
-}
-
-/**
- * Strip HTML tags to create plain text version
- */
-function stripHtml(html: string): string {
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
 }

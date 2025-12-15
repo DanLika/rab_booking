@@ -268,11 +268,19 @@ async function syncSingleFeed(
 
     logInfo("[iCal Sync] Parsed events from platform", {platform, eventCount: events.length});
 
+    // Get propertyId from feed data for subcollection path
+    const propertyId = feedData.property_id;
+    if (!propertyId) {
+      throw new Error(`Feed ${feedId} is missing property_id`);
+    }
+
     // Delete old events for this feed
-    await deleteOldEvents(db, feedId);
+    // NEW STRUCTURE: Use property-level subcollection
+    await deleteOldEvents(db, feedId, propertyId);
 
     // Insert new events
-    const insertedCount = await insertNewEvents(db, feedId, unit_id, platform, events);
+    // NEW STRUCTURE: Use property-level subcollection
+    const insertedCount = await insertNewEvents(db, feedId, unit_id, propertyId, platform, events);
 
     // Update feed metadata
     await db.collection('ical_feeds').doc(feedId).update({
@@ -427,34 +435,49 @@ async function parseIcalData(icalData: string): Promise<any[]> {
 
 /**
  * Delete old events for a feed
+ * NEW STRUCTURE: Use property-level subcollection
  */
 async function deleteOldEvents(
   db: FirebaseFirestore.Firestore,
-  feedId: string
+  feedId: string,
+  propertyId: string
 ): Promise<void> {
+  // NEW STRUCTURE: Query from property-level subcollection
   const eventsSnapshot = await db
+    .collection('properties')
+    .doc(propertyId)
     .collection('ical_events')
     .where('feed_id', '==', feedId)
     .get();
 
-  const batch = db.batch();
+  // Handle case where there are more than 500 events (batch limit)
+  const batchSize = 500;
+  let deletedCount = 0;
 
-  eventsSnapshot.docs.forEach((doc) => {
-    batch.delete(doc.ref);
-  });
+  for (let i = 0; i < eventsSnapshot.docs.length; i += batchSize) {
+    const batch = db.batch();
+    const batchDocs = eventsSnapshot.docs.slice(i, i + batchSize);
 
-  await batch.commit();
+    batchDocs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
 
-  logInfo("[iCal Sync] Deleted old events for feed", {feedId, count: eventsSnapshot.size});
+    await batch.commit();
+    deletedCount += batchDocs.length;
+  }
+
+  logInfo("[iCal Sync] Deleted old events for feed", {feedId, propertyId, count: deletedCount});
 }
 
 /**
  * Insert new events for a feed
+ * NEW STRUCTURE: Use property-level subcollection
  */
 async function insertNewEvents(
   db: FirebaseFirestore.Firestore,
   feedId: string,
   unitId: string,
+  propertyId: string,
   platform: string,
   events: any[]
 ): Promise<number> {
@@ -471,11 +494,17 @@ async function insertNewEvents(
     const batchEvents = events.slice(i, i + batchSize);
 
     batchEvents.forEach((event) => {
-      const docRef = db.collection('ical_events').doc();
+      // NEW STRUCTURE: Write to property-level subcollection
+      const docRef = db
+        .collection('properties')
+        .doc(propertyId)
+        .collection('ical_events')
+        .doc();
 
       batch.set(docRef, {
         feed_id: feedId,
         unit_id: unitId,
+        property_id: propertyId, // Add property_id for reference
         source: platform,
         external_id: event.externalId,
         start_date: admin.firestore.Timestamp.fromDate(event.startDate),
@@ -491,7 +520,7 @@ async function insertNewEvents(
     insertedCount += batchEvents.length;
   }
 
-  logInfo("[iCal Sync] Inserted new events for feed", {feedId, count: insertedCount});
+  logInfo("[iCal Sync] Inserted new events for feed", {feedId, propertyId, count: insertedCount});
 
   return insertedCount;
 }

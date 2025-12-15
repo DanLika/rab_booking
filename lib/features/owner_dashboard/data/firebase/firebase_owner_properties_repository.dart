@@ -574,9 +574,13 @@ class FirebaseOwnerPropertiesRepository {
   Future<void> deleteUnit(String propertyId, String unitId) async {
     try {
       // Check if unit has active bookings
+      // NEW STRUCTURE: Use subcollection path
       final bookingsSnapshot = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('units')
+          .doc(unitId)
           .collection('bookings')
-          .where('unit_id', isEqualTo: unitId)
           .where('status', whereIn: ['pending', 'confirmed'])
           .limit(1)
           .get();

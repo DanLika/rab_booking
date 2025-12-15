@@ -123,8 +123,9 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
             .skip(i)
             .take(FirestoreRepositoryMixin.batchLimit)
             .toList();
+        // NEW STRUCTURE: Use collection group query for subcollection
         final bookingsSnapshot = await _firestore
-            .collection('bookings')
+            .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
             .where(
               'status',
@@ -180,8 +181,9 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
             .skip(i)
             .take(FirestoreRepositoryMixin.batchLimit)
             .toList();
+        // NEW STRUCTURE: Use collection group query for subcollection
         final bookingsSnapshot = await _firestore
-            .collection('bookings')
+            .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
             .where(
               'status',
@@ -373,8 +375,9 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
           .take(FirestoreRepositoryMixin.batchLimit)
           .toList();
 
+      // NEW STRUCTURE: Use collection group query for subcollection
       Query<Map<String, dynamic>> query = _firestore
-          .collection('bookings')
+          .collectionGroup('bookings')
           .where('unit_id', whereIn: batch)
           .where('status', whereIn: FirestoreRepositoryMixin.confirmedStatuses);
 

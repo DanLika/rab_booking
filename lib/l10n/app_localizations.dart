@@ -3026,6 +3026,18 @@ abstract class AppLocalizations {
   /// **'Show statistics'**
   String get ownerCalendarShowStats;
 
+  /// No description provided for @ownerCalendarHideEmptyUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide empty units'**
+  String get ownerCalendarHideEmptyUnits;
+
+  /// No description provided for @ownerCalendarShowEmptyUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'Show empty units'**
+  String get ownerCalendarShowEmptyUnits;
+
   /// No description provided for @ownerCalendarNoUnits.
   ///
   /// In en, this message translates to:
@@ -12600,6 +12612,12 @@ abstract class AppLocalizations {
   /// **'Unknown guest'**
   String get bookingActionUnknownGuest;
 
+  /// No description provided for @bookingBlockHasConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'has conflict with another booking'**
+  String get bookingBlockHasConflict;
+
   /// No description provided for @bookingActionEditTitle.
   ///
   /// In en, this message translates to:
@@ -13007,6 +13025,31 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scroll to conflict'**
   String get overbookingScrollToConflict;
+
+  /// No description provided for @bookingDropZoneDropHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop here'**
+  String get bookingDropZoneDropHere;
+
+  /// No description provided for @bookingDropZoneCannotDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot drop'**
+  String get bookingDropZoneCannotDrop;
+
+  /// No description provided for @bookingBlockSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking for {guestName}, from {checkIn} to {checkOut}, {nights} nights, {guestCount} guests{conflictText}. Tap for details.'**
+  String bookingBlockSemanticLabel(
+    String guestName,
+    String checkIn,
+    String checkOut,
+    int nights,
+    int guestCount,
+    String conflictText,
+  );
 }
 
 class _AppLocalizationsDelegate

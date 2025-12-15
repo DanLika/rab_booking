@@ -56,15 +56,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
 
-    // Stream prices
+    // Stream prices (NEW STRUCTURE: subcollection path)
     final pricesStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .doc(unitId)
         .collection('daily_prices')
-        .where('unit_id', isEqualTo: unitId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (NEW STRUCTURE: subcollection path)
+    // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
     // Note: Using client-side filtering to avoid Firestore index requirement for inequality filter
     final icalEventsStream = _firestore
         .collection('properties')
@@ -186,15 +189,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
 
-    // Stream prices
+    // Stream prices (NEW STRUCTURE: subcollection path)
     final pricesStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .doc(unitId)
         .collection('daily_prices')
-        .where('unit_id', isEqualTo: unitId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (NEW STRUCTURE: subcollection path)
+    // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
     final icalEventsStream = _firestore
         .collection('properties')
         .doc(propertyId)
@@ -318,15 +324,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
 
-    // Stream prices
+    // Stream prices (NEW STRUCTURE: subcollection path)
     final pricesStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .doc(unitId)
         .collection('daily_prices')
-        .where('unit_id', isEqualTo: unitId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (NEW STRUCTURE: subcollection path)
+    // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
     final icalEventsStream = _firestore
         .collection('properties')
         .doc(propertyId)
@@ -420,23 +429,31 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year, month);
     final endDate = DateTime.utc(year, month + 1, 0, 23, 59, 59);
 
-    // Stream bookings (no widgetSettingsStream needed!)
+    // Stream bookings (NEW STRUCTURE: subcollection path)
     final bookingsStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .doc(unitId)
         .collection('bookings')
-        .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
 
-    // Stream prices
+    // Stream prices (NEW STRUCTURE: subcollection path)
     final pricesStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .doc(unitId)
         .collection('daily_prices')
-        .where('unit_id', isEqualTo: unitId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events
+    // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
     final icalEventsStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
         .collection('ical_events')
         .where('unit_id', isEqualTo: unitId)
         .where('start_date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
@@ -1032,6 +1049,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   /// Check availability with detailed result.
   ///
   /// Returns [AvailabilityCheckResult] with conflict information if not available.
+  @override
   Future<AvailabilityCheckResult> checkAvailabilityDetailed({
     required String unitId,
     required DateTime checkIn,

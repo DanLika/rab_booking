@@ -239,7 +239,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
     final l10n = AppLocalizations.of(context);
 
     return PopScope(
-      canPop: true,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) {
           // Handle browser back button on Chrome Android

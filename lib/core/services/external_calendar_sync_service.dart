@@ -271,6 +271,7 @@ class ExternalCalendarSyncService {
   /// Import external bookings to Firestore
   ///
   /// This prevents double-booking by marking dates as unavailable
+  /// NEW STRUCTURE: Uses subcollection path properties/{propertyId}/units/{unitId}/bookings
   Future<void> _importExternalBookings(List<BookingModel> bookings, String propertyId) async {
     final batch = _firestore.batch();
 
@@ -280,19 +281,28 @@ class ExternalCalendarSyncService {
         continue;
       }
 
+      // NEW STRUCTURE: Use subcollection path
+      final bookingRef = _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('units')
+          .doc(booking.unitId)
+          .collection('bookings')
+          .doc(booking.id);
+
       // Check if booking already exists
-      final existingDoc = await _firestore.collection('bookings').doc(booking.id).get();
+      final existingDoc = await bookingRef.get();
 
       if (existingDoc.exists) {
         // Update existing booking
-        batch.update(existingDoc.reference, {
+        batch.update(bookingRef, {
           ...booking.toJson(),
           'updated_at': FieldValue.serverTimestamp(),
           'external_sync': true,
         });
       } else {
         // Create new booking
-        batch.set(_firestore.collection('bookings').doc(booking.id), {
+        batch.set(bookingRef, {
             ...booking.toJson(),
             'created_at': FieldValue.serverTimestamp(),
             'external_sync': true,

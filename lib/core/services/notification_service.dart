@@ -8,6 +8,9 @@ import '../exceptions/app_exceptions.dart';
 /// stored in Firestore. Supports batch operations with Firestore's
 /// 500 operation limit.
 ///
+/// NEW STRUCTURE: notifications are stored as subcollection under users
+/// Path: users/{userId}/notifications/{notificationId}
+///
 /// Usage:
 /// ```dart
 /// final service = NotificationService();
@@ -27,7 +30,16 @@ import '../exceptions/app_exceptions.dart';
 /// ```
 class NotificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _collectionName = 'notifications';
+
+  /// Get notifications collection reference for a user
+  /// NEW STRUCTURE: users/{userId}/notifications
+  CollectionReference<Map<String, dynamic>> _notificationsCollection(
+      String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notifications');
+  }
 
   /// Create a new notification with localization support
   Future<void> createNotification({
@@ -54,9 +66,8 @@ class NotificationService {
         messageKey: messageKey,
       );
 
-      await _firestore
-          .collection(_collectionName)
-          .add(notification.toFirestore());
+      // NEW STRUCTURE: Write to user's notifications subcollection
+      await _notificationsCollection(ownerId).add(notification.toFirestore());
     } catch (e) {
       throw NotificationException.creationFailed(e);
     }
@@ -64,47 +75,79 @@ class NotificationService {
 
   /// Get all notifications for owner (stream)
   Stream<List<NotificationModel>> getNotifications(String ownerId) {
-    return _firestore
-        .collection(_collectionName)
-        .where('ownerId', isEqualTo: ownerId)
+    // NEW STRUCTURE: Query from user's notifications subcollection
+    // No longer need 'ownerId' filter since it's scoped to the user
+    return _notificationsCollection(ownerId)
         .orderBy('timestamp', descending: true)
         .limit(100) // Limit to last 100 notifications
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map(NotificationModel.fromFirestore).toList();
-        });
+      return snapshot.docs.map(NotificationModel.fromFirestore).toList();
+    });
   }
 
   /// Get unread notifications count (stream)
   Stream<int> getUnreadCount(String ownerId) {
-    return _firestore
-        .collection(_collectionName)
-        .where('ownerId', isEqualTo: ownerId)
+    // NEW STRUCTURE: Query from user's notifications subcollection
+    return _notificationsCollection(ownerId)
         .where('isRead', isEqualTo: false)
         .snapshots()
         .map((snapshot) => snapshot.docs.length);
   }
 
   /// Mark notification as read
-  Future<void> markAsRead(String notificationId) async {
+  Future<void> markAsRead(String notificationId, {String? ownerId}) async {
     try {
-      await _firestore.collection(_collectionName).doc(notificationId).update({
-        'isRead': true,
-      });
+      if (ownerId != null) {
+        // NEW STRUCTURE: Use subcollection path
+        await _notificationsCollection(ownerId).doc(notificationId).update({
+          'isRead': true,
+        });
+      } else {
+        // Fallback: Use collection group query to find notification
+        final query = await _firestore
+            .collectionGroup('notifications')
+            .where(FieldPath.documentId, isEqualTo: notificationId)
+            .limit(1)
+            .get();
+
+        if (query.docs.isNotEmpty) {
+          await query.docs.first.reference.update({'isRead': true});
+        }
+      }
     } catch (e) {
       throw NotificationException.updateFailed(e);
     }
   }
 
   /// Mark multiple notifications as read
-  Future<void> markMultipleAsRead(List<String> notificationIds) async {
+  Future<void> markMultipleAsRead(List<String> notificationIds,
+      {String? ownerId}) async {
+    if (notificationIds.isEmpty) return;
+
     try {
       final batch = _firestore.batch();
 
-      for (final id in notificationIds) {
-        batch.update(_firestore.collection(_collectionName).doc(id), {
-          'isRead': true,
-        });
+      if (ownerId != null) {
+        // NEW STRUCTURE: Use subcollection path directly
+        for (final id in notificationIds) {
+          batch.update(_notificationsCollection(ownerId).doc(id), {
+            'isRead': true,
+          });
+        }
+      } else {
+        // Fallback: Find each notification via collection group
+        for (final id in notificationIds) {
+          final query = await _firestore
+              .collectionGroup('notifications')
+              .where(FieldPath.documentId, isEqualTo: id)
+              .limit(1)
+              .get();
+
+          if (query.docs.isNotEmpty) {
+            batch.update(query.docs.first.reference, {'isRead': true});
+          }
+        }
       }
 
       await batch.commit();
@@ -117,9 +160,8 @@ class NotificationService {
   /// Note: Handles Firestore batch limit of 500 operations
   Future<void> markAllAsRead(String ownerId) async {
     try {
-      final snapshot = await _firestore
-          .collection(_collectionName)
-          .where('ownerId', isEqualTo: ownerId)
+      // NEW STRUCTURE: Query from user's notifications subcollection
+      final snapshot = await _notificationsCollection(ownerId)
           .where('isRead', isEqualTo: false)
           .get();
 
@@ -130,9 +172,8 @@ class NotificationService {
       // Process in chunks to avoid batch limit
       for (var i = 0; i < docs.length; i += batchLimit) {
         final batch = _firestore.batch();
-        final end = (i + batchLimit < docs.length)
-            ? i + batchLimit
-            : docs.length;
+        final end =
+            (i + batchLimit < docs.length) ? i + batchLimit : docs.length;
 
         for (var j = i; j < end; j++) {
           batch.update(docs[j].reference, {'isRead': true});
@@ -146,9 +187,24 @@ class NotificationService {
   }
 
   /// Delete notification
-  Future<void> deleteNotification(String notificationId) async {
+  Future<void> deleteNotification(String notificationId,
+      {String? ownerId}) async {
     try {
-      await _firestore.collection(_collectionName).doc(notificationId).delete();
+      if (ownerId != null) {
+        // NEW STRUCTURE: Use subcollection path
+        await _notificationsCollection(ownerId).doc(notificationId).delete();
+      } else {
+        // Fallback: Use collection group query to find notification
+        final query = await _firestore
+            .collectionGroup('notifications')
+            .where(FieldPath.documentId, isEqualTo: notificationId)
+            .limit(1)
+            .get();
+
+        if (query.docs.isNotEmpty) {
+          await query.docs.first.reference.delete();
+        }
+      }
     } catch (e) {
       throw NotificationException(
         'Failed to delete notification',
@@ -160,7 +216,8 @@ class NotificationService {
 
   /// Delete multiple notifications by IDs
   /// Note: Handles Firestore batch limit of 500 operations
-  Future<void> deleteMultipleNotifications(List<String> notificationIds) async {
+  Future<void> deleteMultipleNotifications(List<String> notificationIds,
+      {String? ownerId}) async {
     if (notificationIds.isEmpty) return;
 
     try {
@@ -174,9 +231,21 @@ class NotificationService {
             : notificationIds.length;
 
         for (var j = i; j < end; j++) {
-          batch.delete(
-            _firestore.collection(_collectionName).doc(notificationIds[j]),
-          );
+          if (ownerId != null) {
+            // NEW STRUCTURE: Use subcollection path
+            batch.delete(_notificationsCollection(ownerId).doc(notificationIds[j]));
+          } else {
+            // Fallback: Find via collection group
+            final query = await _firestore
+                .collectionGroup('notifications')
+                .where(FieldPath.documentId, isEqualTo: notificationIds[j])
+                .limit(1)
+                .get();
+
+            if (query.docs.isNotEmpty) {
+              batch.delete(query.docs.first.reference);
+            }
+          }
         }
 
         await batch.commit();
@@ -194,10 +263,8 @@ class NotificationService {
   /// Note: Handles Firestore batch limit of 500 operations
   Future<void> deleteAllNotifications(String ownerId) async {
     try {
-      final snapshot = await _firestore
-          .collection(_collectionName)
-          .where('ownerId', isEqualTo: ownerId)
-          .get();
+      // NEW STRUCTURE: Query from user's notifications subcollection
+      final snapshot = await _notificationsCollection(ownerId).get();
 
       // Firestore batch limit is 500 operations
       const batchLimit = 500;
@@ -206,9 +273,8 @@ class NotificationService {
       // Process in chunks to avoid batch limit
       for (var i = 0; i < docs.length; i += batchLimit) {
         final batch = _firestore.batch();
-        final end = (i + batchLimit < docs.length)
-            ? i + batchLimit
-            : docs.length;
+        final end =
+            (i + batchLimit < docs.length) ? i + batchLimit : docs.length;
 
         for (var j = i; j < end; j++) {
           batch.delete(docs[j].reference);

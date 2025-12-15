@@ -2,327 +2,278 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if user is authenticated
+    // ========================================================================
+    // HELPER FUNCTIONS
+    // ========================================================================
+
+    // Check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
 
-
-
-    // Helper function for legacy documents that may not have owner_id yet
-    // Allows update if: owner_id matches OR owner_id doesn't exist/is null (legacy)
-    // IMPORTANT: For legacy docs, we rely on the update including owner_id to migrate them
-    function isResourceOwnerOrLegacy() {
-      return isAuthenticated() && (
-        resource.data.owner_id == request.auth.uid ||
-        !('owner_id' in resource.data) ||
-        resource.data.owner_id == null ||
-        resource.data.owner_id == ''
-      );
+    // Check if user owns the resource by owner_id field
+    // STRICT: No legacy support - all documents must have valid owner_id
+    function isResourceOwner() {
+      return isAuthenticated() && resource.data.owner_id == request.auth.uid;
     }
 
-    // Helper function to check if user is creating resource as themselves (for create)
+    // Check if user is creating resource as themselves
     // CRITICAL SECURITY: Ensures owner_id in new document matches authenticated user
     function canCreateAsOwner() {
       return isAuthenticated() && request.resource.data.owner_id == request.auth.uid;
     }
 
-    // Helper function for legacy create operations (owner_id optional for migration)
-    // Allows create if: owner_id matches OR owner_id is not provided (legacy)
-    // IMPORTANT: This is for backward compatibility during migration
-    function canCreateAsOwnerOrLegacy() {
-      return isAuthenticated() && (
-        !('owner_id' in request.resource.data) ||
-        request.resource.data.owner_id == null ||
-        request.resource.data.owner_id == '' ||
-        request.resource.data.owner_id == request.auth.uid
-      );
-    }
-
-    // Helper function to check if user owns the document by userId param
+    // Check if user owns the document by userId param (for user subcollections)
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Check if user owns the parent property
+    // STRICT: No legacy support - property must have valid owner_id
+    function isPropertyOwner(propertyId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
+    }
 
-
-    // Users collection - users can only read their own data (MEDIUM SECURITY FIX)
+    // ========================================================================
+    // USERS COLLECTION
+    // ========================================================================
     match /users/{userId} {
-      allow read: if isOwner(userId); // Changed from isAuthenticated() - users can only read their own profile
+      allow read: if isOwner(userId);
       allow write: if isOwner(userId);
 
-      // Subcollection for user data (profile, company, preferences)
+      // User data subcollection (profile, company, preferences)
       match /data/{document} {
-        allow read: if isOwner(userId); // Only user can read their own data
+        allow read: if isOwner(userId);
         allow write: if isOwner(userId);
       }
 
-      // Security events subcollection - user's security audit log
+      // Security events subcollection
       match /securityEvents/{eventId} {
-        allow read: if isOwner(userId); // User can read their own security events
-        allow write: if isOwner(userId); // User can write their own security events
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId);
+      }
+
+      // Notifications subcollection
+      // Path: users/{userId}/notifications/{notificationId}
+      match /notifications/{notificationId} {
+        allow read: if isOwner(userId);
+        // Only Cloud Functions can create notifications (via Admin SDK)
+        allow create: if false;
+        // User can only update isRead field
+        allow update: if isOwner(userId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+        allow delete: if isOwner(userId);
+      }
+
+      // Rate limits - only Cloud Functions
+      match /rate_limits/{action} {
+        allow read: if false;
+        allow write: if false;
       }
     }
 
     // User Profiles - LEGACY collection (kept for backwards compatibility)
-    // SECURITY FIX: Users can only read their own profile
     match /user_profiles/{userId} {
       allow read: if isOwner(userId);
       allow write: if isOwner(userId);
     }
 
-    // Collection group query for units (allows searching across all properties)
-    // For writes, we look up the parent property using the unit's property_id field
-    match /{path=**}/units/{unitId} {
-      allow read: if true; // Widget and owner app need to read units across properties
-      // Check ownership via parent property (using property_id field from the document)
-      allow create: if isAuthenticated() &&
-        ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
-    }
-
-    // Collection group query for widget_settings
-    // Widget settings have property_id field - we look up the parent property to verify ownership
-    match /{path=**}/widget_settings/{unitId} {
-      allow read: if true; // Widget needs to read settings
-      // Check ownership via parent property (using property_id field from the document)
-      allow create: if isAuthenticated() &&
-        ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
-    }
-
-
-
-    // Helper for legacy properties without owner_id
-    function isPropertyOwnerOrLegacy(propertyId) {
-      let propertyData = get(/databases/$(database)/documents/properties/$(propertyId)).data;
-      return isAuthenticated() && (
-        propertyData.owner_id == request.auth.uid ||
-        !('owner_id' in propertyData) ||
-        propertyData.owner_id == null ||
-        propertyData.owner_id == ''
-      );
-    }
-
-    // Properties - owners can CRUD, anyone can read (for widget)
+    // ========================================================================
+    // PROPERTIES COLLECTION (MAIN STRUCTURE)
+    // ========================================================================
     match /properties/{propertyId} {
       allow read: if true; // Public read for widget
       allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwnerOrLegacy();
+      allow update, delete: if isResourceOwner();
 
-      // Units subcollection - inherits ownership from parent property
-      // NO owner_id needed on units - we check the property's owner_id
+      // Units subcollection
       match /units/{unitId} {
         allow read: if true; // Public read for widget
-        allow create: if isPropertyOwnerOrLegacy(propertyId);
-        allow update, delete: if isPropertyOwnerOrLegacy(propertyId);
+        allow create, update, delete: if isPropertyOwner(propertyId);
+
+        // Bookings subcollection
+        // READ: Public for widget calendar availability
+        // NOTE: Firestore doesn't support field-level security.
+        // Widget needs check_in/check_out/status for availability.
+        // Guest data (name, email, phone) is also readable but not displayed by widget.
+        // Future: Consider Cloud Function for stricter data access.
+        match /bookings/{bookingId} {
+          allow read: if true;
+          allow create, update, delete: if isPropertyOwner(propertyId);
+        }
+
+        // Daily prices subcollection
+        match /daily_prices/{dateStr} {
+          allow read: if true; // Public read for widget price display
+          allow create, update, delete: if isPropertyOwner(propertyId);
+        }
       }
 
-      // Widget settings subcollection - inherits ownership from parent property
+      // Widget settings subcollection
       match /widget_settings/{unitId} {
         allow read: if true; // Widget needs to read settings
-        allow create: if isPropertyOwnerOrLegacy(propertyId);
-        allow update, delete: if isPropertyOwnerOrLegacy(propertyId);
+        allow create, update, delete: if isPropertyOwner(propertyId);
+      }
+
+      // iCal events subcollection
+      match /ical_events/{eventId} {
+        allow read: if true; // Widget needs to read events for availability
+        allow create, update, delete: if isPropertyOwner(propertyId);
       }
     }
 
-    // OLD: Top-level units collection (deprecated - units are now in properties subcollection)
-    // Keeping for backwards compatibility if there are any old documents
-    match /units/{unitId} {
-      allow read: if true; // Public read for widget
-      // ✅ FIXED: Use legacy support for documents without owner_id
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwnerOrLegacy();
-    }
+    // ========================================================================
+    // COLLECTION GROUP QUERIES
+    // Enables cross-property/cross-unit queries for dashboard and widget
+    // ========================================================================
 
-    // ========================================================================
-    // BOOKINGS COLLECTION
-    // ========================================================================
-    // OLD: Top-level bookings collection (DEPRECATED - keeping for backward compatibility during migration)
-    match /bookings/{bookingId} {
-      // READ: Multiple scenarios need read access
-      // 1. Owner dashboard: authenticated owner reads their own bookings
-      // 2. Widget calendar: public read for availability display
-      // 3. Stripe webhook polling: query by stripe_session_id
-      // 4. Guest booking view: query by booking_reference
-      // Using permissive read because complex query conditions don't work reliably
-      // Security: booking data is not highly sensitive (no payment card details stored)
+    // Collection group: units
+    match /{path=**}/units/{unitId} {
       allow read: if true;
-
-      // WRITES:
-      // - CREATE: Owner can create bookings from dashboard (manual/phone bookings)
-      //           Widget/guest bookings go through Cloud Functions (atomicBooking.ts)
-      // - UPDATE: Owner can update their own bookings (confirm/reject/cancel)
-      // - DELETE: Owner can delete their own bookings from dashboard
-      allow create: if canCreateAsOwner();
-      allow update: if isResourceOwnerOrLegacy();
-      allow delete: if isResourceOwnerOrLegacy();
+      // Writes via property_id lookup
+      allow create: if isAuthenticated() &&
+        ('property_id' in request.resource.data) &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
-    // NEW: Bookings as subcollection of units (properties/{propertyId}/units/{unitId}/bookings/{bookingId})
-    // This is the NEW STRUCTURE for improved scalability and tenant isolation
-    match /properties/{propertyId}/units/{unitId}/bookings/{bookingId} {
-      allow read: if true; // Widget needs public read for calendar availability
-      // CREATE: Owner can create bookings (verified via parent property ownership)
-      allow create: if isPropertyOwnerOrLegacy(propertyId);
-      // UPDATE/DELETE: Owner can manage their property's bookings
-      allow update, delete: if isPropertyOwnerOrLegacy(propertyId);
+    // Collection group: widget_settings
+    match /{path=**}/widget_settings/{unitId} {
+      allow read: if true;
+      allow create: if isAuthenticated() &&
+        ('property_id' in request.resource.data) &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
-    // Collection group query support for bookings (enables cross-property queries)
-    // Used by: Owner dashboard (all bookings), Guest bookings (by user_id), Stripe webhooks (by session_id)
+    // Collection group: bookings
+    // Used by: Owner dashboard, Guest bookings (by user_id), Stripe webhooks (by session_id)
     match /{path=**}/bookings/{bookingId} {
-      allow read: if true; // Collection group queries need public read
-      // Writes still go through the specific path above (properties/{pId}/units/{uId}/bookings/{id})
+      allow read: if true;
+      // Writes go through specific subcollection path above
     }
 
-    // Daily prices - owners manage, anyone can read
-    // Uses legacy functions to support docs without owner_id during migration
-    match /daily_prices/{priceId} {
-      allow read: if true; // Widget needs to read prices
-      // CRITICAL SECURITY: Only resource owner can modify their own prices
-      // Legacy support: allows create/update without owner_id for backward compatibility
-      allow create: if canCreateAsOwnerOrLegacy();
-      allow update, delete: if isResourceOwnerOrLegacy();
+    // Collection group: daily_prices
+    // Used by: Price calculator, Availability checker
+    match /{path=**}/daily_prices/{priceId} {
+      allow read: if true;
+      // Writes go through specific subcollection path above
     }
+
+    // Collection group: ical_events
+    // Used by: Availability checker (widget needs to check external calendar blocks)
+    match /{path=**}/ical_events/{eventId} {
+      allow read: if true;
+      // Writes go through specific subcollection path above
+    }
+
+    // ========================================================================
+    // DEPRECATED TOP-LEVEL COLLECTIONS
+    // Kept for backward compatibility - migrate data to subcollections
+    // TODO: Remove after confirming no legacy data remains
+    // ========================================================================
+
+    // DEPRECATED: Top-level units
+    match /units/{unitId} {
+      allow read: if true;
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
+    }
+
+    // DEPRECATED: Top-level bookings
+    match /bookings/{bookingId} {
+      allow read: if true;
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
+    }
+
+    // DEPRECATED: Top-level daily_prices
+    match /daily_prices/{priceId} {
+      allow read: if true;
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
+    }
+
+    // DEPRECATED: Top-level ical_events
+    match /ical_events/{eventId} {
+      allow read: if true;
+      allow create: if isAuthenticated() &&
+        ('property_id' in request.resource.data) &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+    }
+
+    // ========================================================================
+    // OTHER COLLECTIONS
+    // ========================================================================
 
     // Additional services - owners manage, anyone can read
     match /additional_services/{serviceId} {
       allow read: if true; // Widget needs to read services
-      // ✅ FIXED: Use legacy support for documents without owner_id
       allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwnerOrLegacy();
+      allow update, delete: if isResourceOwner();
+    }
+
+    // iCal feeds - owner dashboard manages external calendar imports
+    match /ical_feeds/{feedId} {
+      allow read: if isAuthenticated() && (
+        resource == null ||
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
+      );
+      allow create: if isAuthenticated() &&
+        ('property_id' in request.resource.data) &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+    }
+
+    // Booking services - junction table for booking ↔ additional_services
+    // Only Cloud Functions create these (during booking creation)
+    match /booking_services/{bookingServiceId} {
+      allow read: if true; // Widget needs to read for price calculation
+      allow create: if false; // Only Cloud Functions via Admin SDK
+      allow update, delete: if isResourceOwner();
     }
 
     // ========================================================================
-    // UNUSED COLLECTIONS - Locked down (only Cloud Functions via Admin SDK)
+    // LOCKED COLLECTIONS - Only Cloud Functions via Admin SDK
     // ========================================================================
 
-    // Email templates - NOT CURRENTLY USED (Cloud Functions use hardcoded templates)
-    // Locked for future use - only Admin SDK can access
+    // Login attempts - rate limiting
+    match /loginAttempts/{email} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // Email verifications - OTP codes
+    match /email_verifications/{emailHash} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // Security events - audit log (top-level, deprecated)
+    match /securityEvents/{eventId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Email templates - locked for future use
     match /email_templates/{templateId} {
       allow read: if false;
       allow write: if false;
     }
 
-    // Tenants - NOT CURRENTLY USED in codebase
-    // Locked for future use - only Admin SDK can access
+    // Tenants - locked for future use
     match /tenants/{tenantId} {
       allow read: if false;
-      allow write: if false;
-    }
-
-    // ========================================================================
-    // OWNER DASHBOARD COLLECTIONS - Authenticated owner access only
-    // ========================================================================
-
-    // iCal feeds - Owner Dashboard manages external calendar imports
-    // iCal feeds use property_id (not owner_id) - we verify ownership via parent property
-    match /ical_feeds/{feedId} {
-      // READ: Allow if authenticated (query-safe) OR if user owns the parent property
-      allow read: if isAuthenticated() && (
-        resource == null ||
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
-      );
-      // CREATE: Verify user owns the parent property
-      allow create: if isAuthenticated() &&
-        ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      // UPDATE/DELETE: Verify user owns the parent property
-      allow update, delete: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
-    }
-
-    // OLD: Top-level iCal events (DEPRECATED - keeping for backward compatibility during migration)
-    // iCal events use property_id and unit_id (not owner_id) - we verify ownership via parent property
-    match /ical_events/{eventId} {
-      allow read: if true; // Widget needs to read events for availability
-      // CREATE: Verify user owns the parent property
-      allow create: if isAuthenticated() &&
-        ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      // UPDATE/DELETE: Verify user owns the parent property
-      allow update, delete: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
-    }
-
-    // NEW: iCal events as subcollection of properties (properties/{propertyId}/ical_events/{eventId})
-    // This is the NEW STRUCTURE for improved scalability and tenant isolation
-    match /properties/{propertyId}/ical_events/{eventId} {
-      allow read: if true; // Widget needs to read events for calendar availability
-      // CREATE/UPDATE/DELETE: Owner can manage their property's iCal events
-      allow create, update, delete: if isPropertyOwnerOrLegacy(propertyId);
-    }
-
-    // ========================================================================
-    // CRITICAL SECURITY FIX: BOOKING SERVICES
-    // ========================================================================
-    // Booking Services - junction table for booking ↔ additional_services
-    // Only Cloud Functions should create these (during booking creation)
-    match /booking_services/{bookingServiceId} {
-      allow read: if true; // Widget needs to read for price calculation
-
-      // CRITICAL FIX: Only Cloud Functions can create booking services
-      // (Admin SDK bypasses these rules)
-      // This prevents unauthenticated users from creating arbitrary booking_services
-      allow create: if false;
-
-      // ✅ FIXED: Use legacy support for documents without owner_id
-      allow update, delete: if isResourceOwnerOrLegacy();
-    }
-
-    // Notifications - owner notifications for new bookings
-    match /notifications/{notificationId} {
-      // Allow reading notifications where ownerId matches current user
-      // resource == null handles queries, resource.data checks individual docs
-      allow read: if isAuthenticated() &&
-        (resource == null || resource.data.ownerId == request.auth.uid);
-      // Only Cloud Functions can create notifications
-      allow create: if false;
-      // Owners can update their own notifications (mark as read)
-      // Only allow updating isRead field
-      allow update: if isAuthenticated() &&
-        resource.data.ownerId == request.auth.uid &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
-      // Owners can delete their own notifications
-      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
-    }
-
-    // ========================================================================
-    // CRITICAL SECURITY FIX: LOGIN ATTEMPTS
-    // ========================================================================
-    // Login attempts - rate limiting for security
-    match /loginAttempts/{email} {
-      // Only Cloud Functions can read/write (prevents rate limit bypass)
-      allow read: if false;
-      allow write: if false;
-    }
-
-    // Email verifications - OTP codes for guest booking verification
-    // Only Cloud Functions can read/write (enforced via Firebase Admin SDK)
-    // Client apps should use Cloud Functions to verify codes
-    match /email_verifications/{emailHash} {
-      allow read: if false; // Only Cloud Functions can read
-      allow write: if false; // Only Cloud Functions can write
-    }
-
-    // ========================================================================
-    // CRITICAL SECURITY FIX: SECURITY EVENTS
-    // ========================================================================
-    // Security events - security audit log
-    // CRITICAL FIX: Users can only read their OWN security events
-    match /securityEvents/{eventId} {
-      // Only allow reading events where userId matches the authenticated user
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      // Only Cloud Functions can write (prevents log poisoning)
       allow write: if false;
     }
   }

@@ -7,6 +7,10 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
+// Initialize Sentry for error tracking (must be first)
+import {initSentry} from "./sentry";
+initSentry();
+
 // Export booking management functions
 export * from "./bookingManagement";
 
@@ -32,8 +36,7 @@ export * from "./icalSync";
 // Export iCal export function (Public calendar feed)
 export * from "./icalExport";
 
-// Export iCal export management (Generate/revoke URLs)
-export * from "./icalExportManagement";
+// REMOVED: icalExportManagement - generateIcalExportUrl & revokeIcalExportUrl not used in Dart code
 
 // Export booking access verification functions (Booking lookup)
 export * from "./verifyBookingAccess";
@@ -83,5 +86,4 @@ export * from "./externalBookingNotifications";
 // Export sync reminders
 export * from "./syncReminders";
 
-// Export migration functions (Development only)
-export * from "./migrations/migrateToSubcollections";
+// REMOVED: migrations/migrateToSubcollections - One-time migration complete, no longer needed

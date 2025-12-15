@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_widget.dart';
@@ -12,6 +16,10 @@ import 'features/widget/domain/models/widget_config.dart';
 import 'features/widget/domain/models/widget_settings.dart';
 import 'shared/providers/repository_providers.dart';
 import 'firebase_options.dart';
+
+// Sentry DSN for widget error tracking (same project as owner dashboard)
+const String _sentryDsn =
+    'https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144';
 
 /// Widget-only entry point for embeddable booking widget
 ///
@@ -61,10 +69,32 @@ void main() async {
       ? [sharedPreferencesProvider.overrideWithValue(prefs)]
       : <Override>[];
 
-  runApp(ProviderScope(
-    overrides: overrides,
-    child: const BookingWidgetApp(),
-  ));
+  // Initialize Sentry for error tracking (production only)
+  if (kReleaseMode && _sentryDsn.isNotEmpty) {
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = _sentryDsn;
+        options.tracesSampleRate = 0.2;
+        options.environment = 'production';
+        // Tag as widget to distinguish from owner dashboard
+        options.beforeSend = (event, hint) {
+          return event.copyWith(
+            tags: {...?event.tags, 'app_type': 'booking_widget'},
+          );
+        };
+      },
+      appRunner: () => runApp(ProviderScope(
+        overrides: overrides,
+        child: const BookingWidgetApp(),
+      )),
+    );
+  } else {
+    // Debug mode - run without Sentry
+    runApp(ProviderScope(
+      overrides: overrides,
+      child: const BookingWidgetApp(),
+    ));
+  }
 }
 
 /// Booking Widget App - Minimalna aplikacija samo za widget

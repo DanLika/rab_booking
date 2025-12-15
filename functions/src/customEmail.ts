@@ -3,7 +3,7 @@ import {sendCustomEmailToGuest as sendCustomGuestEmailService} from "./emailServ
 import {logError} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
 import {enforceRateLimit} from "./utils/rateLimit";
-import {db} from "./firebase";
+import {admin, db} from "./firebase";
 
 /**
  * Callable Cloud Function: Send custom email to guest
@@ -45,13 +45,18 @@ export const sendCustomEmailToGuest = onCall(async (request) => {
     );
   }
 
-  // SECURITY: Authorization - verify user owns the booking
-  const bookingDoc = await db.collection("bookings").doc(bookingId).get();
+  // NEW STRUCTURE: Authorization - verify user owns the booking using collection group
+  const bookingQuery = await db
+    .collectionGroup("bookings")
+    .where(admin.firestore.FieldPath.documentId(), "==", bookingId)
+    .limit(1)
+    .get();
 
-  if (!bookingDoc.exists) {
+  if (bookingQuery.empty) {
     throw new HttpsError("not-found", "Booking not found");
   }
 
+  const bookingDoc = bookingQuery.docs[0];
   const bookingData = bookingDoc.data()!;
 
   // Check: Is this user the owner of the booking?

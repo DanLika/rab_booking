@@ -180,13 +180,15 @@ class BookingPriceCalculator implements IPriceCalculator {
   );
 
   /// Fetch daily prices from Firestore.
+  /// NEW STRUCTURE: Use collection group query for subcollection
   Future<Map<String, DailyPriceModel>> _fetchDailyPrices({
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
+    // NEW STRUCTURE: Use collection group query for subcollection
     final snapshot = await _firestore
-        .collection(_dailyPricesCollection)
+        .collectionGroup(_dailyPricesCollection)
         .where('unit_id', isEqualTo: unitId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(checkIn))
         .where('date', isLessThan: Timestamp.fromDate(checkOut))
@@ -285,8 +287,9 @@ class BookingPriceCalculator implements IPriceCalculator {
           weekendDays ?? WidgetConstants.defaultWeekendDays;
 
       // Try to fetch daily price
+      // NEW STRUCTURE: Use collection group query for subcollection
       final snapshot = await _firestore
-          .collection(_dailyPricesCollection)
+          .collectionGroup(_dailyPricesCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('date', isEqualTo: Timestamp.fromDate(normalizedDate))
           .limit(1)

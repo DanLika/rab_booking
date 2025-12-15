@@ -563,6 +563,8 @@
   "ownerCalendarFilters": "Filteri",
   "ownerCalendarHideStats": "Sakrij statistiku",
   "ownerCalendarShowStats": "Prikaži statistiku",
+  "ownerCalendarHideEmptyUnits": "Sakrij prazne jedinice",
+  "ownerCalendarShowEmptyUnits": "Prikaži prazne jedinice",
   "ownerCalendarNoUnits": "Nema jedinica za prikaz",
   "ownerCalendarLoadingUnits": "Učitavanje jedinica...",
   "ownerCalendarErrorLoadingUnits": "Greška pri učitavanju jedinica",
@@ -2867,6 +2869,7 @@
   "taxLegalPreviewButton": "Pregledaj izjavu",
 
   "bookingActionUnknownGuest": "Nepoznati gost",
+  "bookingBlockHasConflict": "ima konflikt sa drugom rezervacijom",
   "bookingActionEditTitle": "Uredi rezervaciju",
   "bookingActionEditSubtitle": "Promijeni detalje rezervacije",
   "bookingActionStatusTitle": "Promijeni status",
@@ -3050,5 +3053,31 @@
     }
   },
   "overbookingViewBooking": "Prikaži",
-  "overbookingScrollToConflict": "Skroluj do konflikta"
+  "overbookingScrollToConflict": "Skroluj do konflikta",
+
+  "bookingDropZoneDropHere": "Pusti ovdje",
+  "bookingDropZoneCannotDrop": "Nije moguće",
+  "bookingBlockSemanticLabel": "Rezervacija za {guestName}, od {checkIn} do {checkOut}, {nights} noći, {guestCount} gostiju{conflictText}. Tapni za detalje.",
+  "@bookingBlockSemanticLabel": {
+    "placeholders": {
+      "guestName": {
+        "type": "String"
+      },
+      "checkIn": {
+        "type": "String"
+      },
+      "checkOut": {
+        "type": "String"
+      },
+      "nights": {
+        "type": "int"
+      },
+      "guestCount": {
+        "type": "int"
+      },
+      "conflictText": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1566,6 +1566,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerCalendarShowStats => 'Prikaži statistiku';
 
   @override
+  String get ownerCalendarHideEmptyUnits => 'Sakrij prazne jedinice';
+
+  @override
+  String get ownerCalendarShowEmptyUnits => 'Prikaži prazne jedinice';
+
+  @override
   String get ownerCalendarNoUnits => 'Nema jedinica za prikaz';
 
   @override
@@ -6970,6 +6976,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get bookingActionUnknownGuest => 'Nepoznati gost';
 
   @override
+  String get bookingBlockHasConflict => 'ima konflikt sa drugom rezervacijom';
+
+  @override
   String get bookingActionEditTitle => 'Uredi rezervaciju';
 
   @override
@@ -7211,4 +7220,22 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get overbookingScrollToConflict => 'Skroluj do konflikta';
+
+  @override
+  String get bookingDropZoneDropHere => 'Pusti ovdje';
+
+  @override
+  String get bookingDropZoneCannotDrop => 'Nije moguće';
+
+  @override
+  String bookingBlockSemanticLabel(
+    String guestName,
+    String checkIn,
+    String checkOut,
+    int nights,
+    int guestCount,
+    String conflictText,
+  ) {
+    return 'Rezervacija za $guestName, od $checkIn do $checkOut, $nights noći, $guestCount gostiju$conflictText. Tapni za detalje.';
+  }
 }

@@ -105,8 +105,9 @@ export const cleanupExpiredStripePendingBookings = onSchedule({
     // Query all pending bookings with stripe_pending_expires_at field that have expired
     // This identifies Stripe checkout placeholders (not regular pending bookings)
     // Limit query to prevent memory issues with large datasets
+    // NEW STRUCTURE: Use collection group query to find expired bookings across all units
     const expiredBookingsQuery = db
-      .collection("bookings")
+      .collectionGroup("bookings")
       .where("status", "==", "pending")
       .where("stripe_pending_expires_at", "<", now)
       .limit(CONFIG.maxDocsPerRun);

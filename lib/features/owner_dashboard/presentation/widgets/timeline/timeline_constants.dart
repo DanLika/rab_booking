@@ -102,3 +102,25 @@ const double kTimelineBookingTopPadding = 12.0;
 /// Kept at 16px to maintain compact row heights while centering is achieved
 /// via kTimelineBookingTopPadding positioning
 const double kTimelineStackedRowPadding = 16.0;
+
+// ============================================================================
+// BOOKING BLOCK CONFIGURATION
+// ============================================================================
+
+/// Block height padding (reduces block height from unit row height)
+const double kTimelineBookingBlockHeightPadding = 8.0;
+
+/// Horizontal margin for booking blocks (gap on each side)
+const double kTimelineBookingBlockHorizontalMargin = 2.0;
+
+/// Hover scale transform (1.02 = 2% larger on hover)
+const double kTimelineBookingBlockHoverScale = 1.02;
+
+/// Normal opacity for booking blocks
+const double kTimelineBookingBlockNormalOpacity = 0.92;
+
+/// Hover opacity for booking blocks
+const double kTimelineBookingBlockHoverOpacity = 1.0;
+
+/// Animation duration for hover effects
+const Duration kTimelineBookingBlockHoverAnimationDuration = Duration(milliseconds: 150);

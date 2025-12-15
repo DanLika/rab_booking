@@ -335,9 +335,13 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     // ========================================================================
     const placeholderResult = await db.runTransaction(async (transaction) => {
       // Check for conflicting bookings (including pending placeholders from Stripe checkout)
+      // NEW STRUCTURE: Use direct subcollection path (faster than collection group in transaction)
       const conflictingBookingsQuery = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId)
         .collection("bookings")
-        .where("unit_id", "==", unitId)
         .where("status", "in", ["pending", "confirmed"])
         .where("check_in", "<", checkOutDate)
         .where("check_out", ">", checkInDate);
@@ -365,7 +369,14 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       }
 
       // Create placeholder booking
-      const placeholderBookingId = db.collection("bookings").doc().id;
+      // NEW STRUCTURE: Generate ID from subcollection path
+      const placeholderBookingId = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId)
+        .collection("bookings")
+        .doc().id;
       const bookingRef = generateBookingReference(placeholderBookingId);
 
       // Generate access token for future "View my reservation" link
@@ -412,8 +423,15 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
         updated_at: admin.firestore.FieldValue.serverTimestamp(),
       };
 
+      // NEW STRUCTURE: Write to subcollection path
       transaction.set(
-        db.collection("bookings").doc(placeholderBookingId),
+        db
+          .collection("properties")
+          .doc(propertyId)
+          .collection("units")
+          .doc(unitId)
+          .collection("bookings")
+          .doc(placeholderBookingId),
         placeholderData
       );
 
@@ -455,6 +473,15 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       const separator = baseUrl.includes("?") ? "&" : "?";
       successUrl = `${baseUrl}${separator}stripe_status=success&session_id={CHECKOUT_SESSION_ID}${hashFragment}`;
       cancelUrl = `${baseUrl}${separator}stripe_status=cancelled${hashFragment}`;
+
+      logInfo("createStripeCheckoutSession: Built success/cancel URLs", {
+        returnUrl,
+        baseUrl,
+        hashFragment,
+        separator,
+        successUrl,
+        cancelUrl,
+      });
     } else {
       successUrl = "https://rab-booking-248fc.web.app/booking-success?session_id={CHECKOUT_SESSION_ID}";
       cancelUrl = "https://rab-booking-248fc.web.app/booking-cancelled";
@@ -625,8 +652,26 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
 
       logInfo(`Processing Stripe webhook for placeholder booking: ${placeholderBookingId}`);
 
-      // Fetch placeholder booking
-      const placeholderBookingRef = db.collection("bookings").doc(placeholderBookingId);
+      // Extract property_id and unit_id from metadata to construct direct path
+      // This is more reliable than collection group query with documentId()
+      const propertyIdFromMeta = metadata.property_id;
+      const unitIdFromMeta = metadata.unit_id;
+
+      if (!propertyIdFromMeta || !unitIdFromMeta) {
+        logError("Missing property_id or unit_id in session metadata");
+        res.status(400).send("Missing property/unit ID in session metadata");
+        return;
+      }
+
+      // NEW STRUCTURE: Fetch placeholder booking using direct subcollection path
+      const placeholderBookingRef = db
+        .collection("properties")
+        .doc(propertyIdFromMeta)
+        .collection("units")
+        .doc(unitIdFromMeta)
+        .collection("bookings")
+        .doc(placeholderBookingId);
+
       const placeholderBookingSnap = await placeholderBookingRef.get();
 
       if (!placeholderBookingSnap.exists) {

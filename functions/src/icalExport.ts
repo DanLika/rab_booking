@@ -197,9 +197,9 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + ICAL_CONFIG.FUTURE_DAYS);
 
-    // 7. Fetch bookings with date filter and limit (DoS protection)
+    // NEW STRUCTURE: Fetch bookings using collection group query (unitId filter works across all properties)
     const bookingsSnapshot = await db
-      .collection("bookings")
+      .collectionGroup("bookings")
       .where("unit_id", "==", unitId)
       .where("status", "in", ["confirmed", "pending", "completed"])
       .where("check_in", ">=", admin.firestore.Timestamp.fromDate(pastDate))

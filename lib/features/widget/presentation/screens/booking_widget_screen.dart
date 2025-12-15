@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:js_interop' if (dart.library.html) 'dart:js_interop';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -212,6 +211,39 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Priority: 1. URL slug (clean URLs), 2. Query parameters (iframe embeds)
     final uri = Uri.base;
 
+    // DEBUG: Log full URI to diagnose Stripe return detection
+    LoggingService.log(
+      '[INIT] Uri.base: $uri',
+      tag: 'STRIPE_RETURN_DEBUG',
+    );
+    LoggingService.log(
+      '[INIT] Uri.base.toString(): ${uri.toString()}',
+      tag: 'STRIPE_RETURN_DEBUG',
+    );
+    LoggingService.log(
+      '[INIT] Uri.base.query: ${uri.query}',
+      tag: 'STRIPE_RETURN_DEBUG',
+    );
+    LoggingService.log(
+      '[INIT] Uri.base.fragment: ${uri.fragment}',
+      tag: 'STRIPE_RETURN_DEBUG',
+    );
+    LoggingService.log(
+      '[INIT] Query params: ${uri.queryParameters}',
+      tag: 'STRIPE_RETURN_DEBUG',
+    );
+    LoggingService.log(
+      '[INIT] stripe_status: ${uri.queryParameters['stripe_status']}, session_id: ${uri.queryParameters['session_id']}',
+      tag: 'STRIPE_RETURN_DEBUG',
+    );
+    // Check if params are in fragment instead of query (hash routing issue)
+    if (uri.fragment.contains('stripe_status') || uri.fragment.contains('session_id')) {
+      LoggingService.log(
+        '[INIT] ⚠️ STRIPE PARAMS IN FRAGMENT! This is the bug.',
+        tag: 'STRIPE_RETURN_DEBUG',
+      );
+    }
+
     // Check if using slug-based URL (will be resolved in _validateUnitAndProperty)
     if (widget.urlSlug != null && widget.urlSlug!.isNotEmpty) {
       // Slug URL: property resolved from subdomain, unit from slug
@@ -400,7 +432,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Setup listener using JS interop
       // PaymentBridge will call this callback when payment completes
       // Wrap Dart function in JS interop
-      final callback = ((String resultJson) {
+      void callback(String resultJson) {
         try {
           final result = jsonDecode(resultJson) as Map<String, dynamic>;
           final type = result['type'] as String?;
@@ -552,7 +584,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             });
           }
         }
-      }).toJS;
+      }
 
       setupPaymentResultListener(callback);
 
@@ -580,8 +612,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       case 'stripe-payment-complete':
         final bookingId = message['bookingId'] as String?;
         final bookingRef = message['bookingRef'] as String?;
+        final sessionId = message['sessionId'] as String?;
 
-        // NOTE: Email is NOT required - booking is fetched by bookingId
+        // NOTE: Email is NOT required - booking is fetched by sessionId or bookingId
         if (bookingId != null && bookingRef != null) {
           LoggingService.log('[PostMessage] Payment complete, showing confirmation', tag: 'POSTMESSAGE');
 
@@ -603,12 +636,29 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             LoggingService.log('[PostMessage] Loading state reset (message received)', tag: 'POSTMESSAGE');
           }
 
-          // Clear form and show confirmation
-          _clearFormData().then((_) {
-            if (mounted) {
-              _showConfirmationFromUrl(bookingRef, bookingId, fromOtherTab: true);
-            }
-          });
+          // Prefer sessionId for lookup (avoids documentId collection group query bug)
+          if (sessionId != null && sessionId.isNotEmpty) {
+            LoggingService.log(
+              '[PostMessage] Using sessionId for lookup: $sessionId',
+              tag: 'POSTMESSAGE',
+            );
+            _clearFormData().then((_) {
+              if (mounted) {
+                _handleStripeReturnWithSessionId(sessionId);
+              }
+            });
+          } else {
+            // Fallback to bookingId lookup (may fail with collection group query)
+            LoggingService.log(
+              '[PostMessage] No sessionId, falling back to bookingId lookup',
+              tag: 'POSTMESSAGE',
+            );
+            _clearFormData().then((_) {
+              if (mounted) {
+                _showConfirmationFromUrl(bookingRef, bookingId, fromOtherTab: true);
+              }
+            });
+          }
         } else {
           LoggingService.log(
             '[PostMessage] Invalid payment complete message - missing bookingId or bookingRef',
@@ -741,6 +791,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     final bookingId = message.bookingId;
     final bookingRef = message.bookingRef;
+    final sessionId = message.sessionId;
 
     if (bookingId == null || bookingRef == null) {
       LoggingService.log('[CrossTab] Invalid payment complete message - missing params', tag: 'TAB_COMM_ERROR');
@@ -753,7 +804,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return;
     }
 
-    LoggingService.log('[CrossTab] Payment complete received for booking: $bookingRef', tag: 'TAB_COMM');
+    LoggingService.log(
+      '[CrossTab] Payment complete received for booking: $bookingRef, sessionId: ${sessionId ?? "N/A"}',
+      tag: 'TAB_COMM',
+    );
 
     // CRITICAL: Cancel timeout since we received the message
     if (_paymentCompletionTimeout != null) {
@@ -790,10 +844,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _resetFormState();
 
     // Navigate to confirmation screen
-    // Use the same method as URL-based confirmation
-    // Pass fromOtherTab: true to prevent circular broadcasting
+    // Prefer sessionId for lookup (avoids documentId collection group query bug)
     if (mounted) {
-      await _showConfirmationFromUrl(bookingRef, bookingId, fromOtherTab: true);
+      if (sessionId != null && sessionId.isNotEmpty) {
+        LoggingService.log(
+          '[CrossTab] Using sessionId for lookup: $sessionId',
+          tag: 'TAB_COMM',
+        );
+        await _handleStripeReturnWithSessionId(sessionId);
+      } else {
+        // Fallback to bookingId lookup (may fail with collection group query)
+        LoggingService.log(
+          '[CrossTab] No sessionId, falling back to bookingId lookup',
+          tag: 'TAB_COMM',
+        );
+        await _showConfirmationFromUrl(bookingRef, bookingId, fromOtherTab: true);
+      }
     }
   }
 
@@ -1143,6 +1209,76 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Found booking! Load unit data if not already loaded
       if (_unit == null && _propertyId != null) {
         await _validateUnitAndProperty();
+      }
+
+      // CRITICAL: Send payment completion notification via BroadcastChannel
+      // This notifies the original iframe (on duskolicanin.com) that payment is complete
+      // Must be done BEFORE showing confirmation screen and BEFORE relying on isPopupWindow
+      // because Stripe redirect breaks window.opener reference
+      if (kIsWeb) {
+        try {
+          // Method 1: BroadcastChannel (same-origin, most reliable)
+          final tabService = createTabCommunicationService();
+          tabService.sendPaymentComplete(
+            bookingId: booking.id,
+            ref: booking.bookingReference ?? booking.id,
+            sessionId: sessionId, // Include sessionId for lookup in receiving tab
+          );
+          LoggingService.log(
+            '[STRIPE_RETURN] ✅ Sent payment complete via BroadcastChannel',
+            tag: 'STRIPE_SESSION',
+          );
+          // Dispose after short delay to ensure message is sent
+          Future.delayed(const Duration(seconds: 2), () {
+            try {
+              tabService.dispose();
+            } catch (_) {}
+          });
+
+          // Method 2: PaymentBridge.notifyComplete (handles multiple channels)
+          notifyPaymentComplete(sessionId, 'success');
+          LoggingService.log(
+            '[STRIPE_RETURN] ✅ Sent payment complete via PaymentBridge',
+            tag: 'STRIPE_SESSION',
+          );
+
+          // Try to close this window/tab after short delay
+          // This works if we're in a popup that was opened by the iframe
+          // Note: closePopupWindow() checks window.opener but Stripe redirect breaks that
+          // So we use tryCloseWindow() which attempts close unconditionally
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            try {
+              // First try the conditional close (checks window.opener)
+              var closed = closePopupWindow();
+              if (!closed) {
+                // If that didn't work, try unconditional close
+                // This may work if browser allows closing windows opened by script
+                closed = tryCloseWindow();
+              }
+              if (closed) {
+                LoggingService.log(
+                  '[STRIPE_RETURN] ✅ Window close attempted',
+                  tag: 'STRIPE_SESSION',
+                );
+              } else {
+                LoggingService.log(
+                  '[STRIPE_RETURN] ℹ️ Window close not possible, showing confirmation screen',
+                  tag: 'STRIPE_SESSION',
+                );
+              }
+            } catch (e) {
+              LoggingService.log(
+                '[STRIPE_RETURN] ⚠️ Could not auto-close window: $e',
+                tag: 'STRIPE_SESSION',
+              );
+            }
+          });
+        } catch (e) {
+          LoggingService.log(
+            '[STRIPE_RETURN] ⚠️ Failed to send payment notification: $e',
+            tag: 'STRIPE_SESSION',
+          );
+        }
       }
 
       // Invalidate calendar cache
@@ -2916,9 +3052,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         throw Exception('Invalid base URL: scheme or host is empty');
       }
 
+      // CRITICAL: Use view.bookbed.io for return URL instead of bookbed.io
+      // This ensures the popup/redirect opens on the view subdomain
+      // which is the correct domain for the widget
+      String returnHost = baseUrl.host;
+      if (returnHost == 'bookbed.io' || returnHost == 'www.bookbed.io') {
+        returnHost = 'view.bookbed.io';
+      }
+
       final returnUrlWithoutHash = Uri(
         scheme: baseUrl.scheme,
-        host: baseUrl.host,
+        host: returnHost,
         port: baseUrl.port,
         queryParameters: {...baseUrl.queryParameters, 'payment': 'stripe'},
       ).toString();
@@ -3277,7 +3421,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Broadcast to other tabs (in case user has multiple tabs open)
       // This is optional now since we redirect in same tab, but useful for edge cases
       if (!fromOtherTab && _tabCommunicationService != null) {
-        _tabCommunicationService!.sendPaymentComplete(bookingId: bookingId, ref: bookingReference);
+        _tabCommunicationService!.sendPaymentComplete(
+          bookingId: bookingId,
+          ref: bookingReference,
+          sessionId: confirmedBooking.stripeSessionId,
+        );
         LoggingService.log('[CrossTab] Broadcasted payment complete to other tabs', tag: 'TAB_COMM');
       }
 

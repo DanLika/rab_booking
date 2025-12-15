@@ -162,7 +162,11 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     if (kIsWeb) {
       try {
         final tabService = createTabCommunicationService();
-        tabService.sendPaymentComplete(bookingId: bookingId, ref: bookingRef);
+        tabService.sendPaymentComplete(
+          bookingId: bookingId,
+          ref: bookingRef,
+          sessionId: sessionId.isNotEmpty ? sessionId : null,
+        );
         LoggingService.log('[PaymentComplete] Sent via BroadcastChannel', tag: 'STRIPE');
         // Dispose after sending (one-time use) - delay to ensure message is sent
         Future.delayed(const Duration(seconds: 2), () {
@@ -178,7 +182,11 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
         Future.delayed(const Duration(milliseconds: 500), () {
           try {
             final retryTabService = createTabCommunicationService();
-            retryTabService.sendPaymentComplete(bookingId: bookingId, ref: bookingRef);
+            retryTabService.sendPaymentComplete(
+              bookingId: bookingId,
+              ref: bookingRef,
+              sessionId: sessionId.isNotEmpty ? sessionId : null,
+            );
             LoggingService.log('[PaymentComplete] Retry sent via BroadcastChannel', tag: 'STRIPE');
             Future.delayed(const Duration(seconds: 2), () {
               try {

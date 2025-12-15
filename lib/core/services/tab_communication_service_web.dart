@@ -169,8 +169,15 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   }
 
   @override
-  void sendPaymentComplete({required String bookingId, required String ref}) {
-    final message = TabMessage(type: TabMessageType.paymentComplete, params: {'bookingId': bookingId, 'ref': ref});
+  void sendPaymentComplete({required String bookingId, required String ref, String? sessionId}) {
+    final message = TabMessage(
+      type: TabMessageType.paymentComplete,
+      params: {
+        'bookingId': bookingId,
+        'ref': ref,
+        if (sessionId != null && sessionId.isNotEmpty) 'sessionId': sessionId,
+      },
+    );
     send(message.serialize());
   }
 

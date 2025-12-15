@@ -99,6 +99,14 @@ sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 7. Confirmation screen
 ```
 
+**KRITIČNO - Collection Group Query Bug**:
+- NE KORISTITI `FieldPath.documentId` sa `collectionGroup()` query
+- Firestore očekuje PUNI PUT dokumenta, ne samo ID
+- Error: `Invalid query. When querying a collection group by documentId()...`
+- **RJEŠENJE**: Koristi `stripe_session_id` field za lookup umjesto document ID
+- Svi cross-tab messaging pathovi (BroadcastChannel, postMessage) MORAJU proslijediti `sessionId`
+- `TabCommunicationService.sendPaymentComplete()` prima optional `sessionId` parametar
+
 **KRITINO**: Placeholder booking sprje
 ava race condition gdje 2 korisnika plate za iste datume.
 
@@ -360,7 +368,9 @@ ne sekcije
 
 ---
 
-**Last Updated**: 2025-12-11 | **Version**: 4.9
+**Last Updated**: 2025-12-15 | **Version**: 5.0
+
+**Changelog 5.0**: Firestore collection group query bug fix - NE koristiti FieldPath.documentId sa collectionGroup(), dodano sessionId u cross-tab messaging.
 
 **Changelog 4.9**: Android Chrome keyboard dismiss fix (Flutter #175074) - JavaScript "jiggle" method + Dart mixin za sve forme.
 

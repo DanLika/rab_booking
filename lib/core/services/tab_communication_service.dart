@@ -84,6 +84,9 @@ class TabMessage {
   /// Get email (common param)
   String? get email => params['email'];
 
+  /// Get sessionId (Stripe session ID for lookup)
+  String? get sessionId => params['sessionId'];
+
   @override
   String toString() => 'TabMessage(type: $type, params: $params)';
 }
@@ -114,9 +117,17 @@ abstract class TabCommunicationService {
   void send(String message);
 
   /// Send payment complete message to other tabs
-  /// NOTE: Email is NOT included - booking is fetched by bookingId
-  void sendPaymentComplete({required String bookingId, required String ref}) {
-    final message = TabMessage(type: TabMessageType.paymentComplete, params: {'bookingId': bookingId, 'ref': ref});
+  /// NOTE: Email is NOT included - booking is fetched by sessionId or bookingId
+  /// [sessionId] - Stripe session ID (preferred for lookup, avoids collection group query bug)
+  void sendPaymentComplete({required String bookingId, required String ref, String? sessionId}) {
+    final message = TabMessage(
+      type: TabMessageType.paymentComplete,
+      params: {
+        'bookingId': bookingId,
+        'ref': ref,
+        if (sessionId != null && sessionId.isNotEmpty) 'sessionId': sessionId,
+      },
+    );
     send(message.serialize());
   }
 
@@ -150,7 +161,7 @@ class TabCommunicationServiceStub implements TabCommunicationService {
   }
 
   @override
-  void sendPaymentComplete({required String bookingId, required String ref}) {
+  void sendPaymentComplete({required String bookingId, required String ref, String? sessionId}) {
     // No-op
   }
 

@@ -222,29 +222,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   /// Navigate back to calendar
   /// Uses Navigator.pop() which works for:
   /// - Direct bookings (Pay on Arrival, Bank Transfer) - pushed via Navigator
-  /// - Stripe returns - also pushed via Navigator
+  /// - Stripe returns (same-tab redirect) - also pushed via Navigator
   /// The parent widget handles form reset and URL cleanup after pop
   void _navigateToCleanCalendar() {
-    // If in popup window (opened from iframe), close the popup
-    if (kIsWeb && isPopupWindow) {
-      sendMessageToParent({'type': 'stripe-popup-close', 'source': 'bookbed-widget'});
-      // Try to close popup window
-      Future.delayed(const Duration(milliseconds: 100), closePopupWindow);
-      return;
-    }
-
-    // If in new tab (not popup), don't navigate - just show message
-    // User should manually close the tab
-    if (kIsWeb && !isPopupWindow && widget.paymentMethod == 'stripe') {
-      // In new tab, we can't navigate back to iframe
-      // Just show a message or do nothing
-      LoggingService.log(
-        '[NavigateBack] Cannot navigate back from new tab - user should close tab manually',
-        tag: 'STRIPE',
-      );
-      return;
-    }
-
     // Priority 1: Custom close callback (if provided)
     if (widget.onClose != null) {
       widget.onClose!();
@@ -252,23 +232,47 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     }
 
     // Priority 2: Navigator.pop() - works for all Navigator.push scenarios
+    // This includes same-tab Stripe redirect returns
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
+      return;
     }
+
+    // Priority 3: If in popup window (opened from iframe), close the popup
+    if (kIsWeb && isPopupWindow) {
+      sendMessageToParent({'type': 'stripe-popup-close', 'source': 'bookbed-widget'});
+      // Try to close popup window
+      Future.delayed(const Duration(milliseconds: 100), closePopupWindow);
+      return;
+    }
+
+    // Fallback: In a new tab that can't navigate back
+    // User should manually close the tab
+    LoggingService.log(
+      '[NavigateBack] Cannot navigate back - user should close tab manually',
+      tag: 'STRIPE',
+    );
   }
 
   /// Check if we should show navigation buttons
-  /// Hide them if we're in a new tab (not popup) after Stripe payment
+  /// Show them unless we're truly in a NEW TAB that can't navigate back
   bool get _shouldShowNavigationButtons {
     if (!kIsWeb) return true;
 
-    // If in new tab (not popup) and this is a Stripe payment, hide buttons
-    // User should manually close the tab
-    if (!isPopupWindow && widget.paymentMethod == 'stripe') {
-      return false;
-    }
+    // PRIORITY 1: If we have an onClose callback, always show button
+    if (widget.onClose != null) return true;
 
-    return true;
+    // PRIORITY 2: If Navigator can pop, show button (same-tab redirect scenario)
+    // This handles the case where BookingWidgetScreen pushed this screen
+    // via Navigator.push() after Stripe redirect return
+    if (Navigator.of(context).canPop()) return true;
+
+    // PRIORITY 3: If in popup window, show button (will close popup)
+    if (isPopupWindow) return true;
+
+    // Otherwise: We're in a new tab opened for Stripe that can't navigate back
+    // User should manually close the tab
+    return false;
   }
 
   @override

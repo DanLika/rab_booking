@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../utils/date_normalizer.dart';
 import 'realtime_booking_calendar_provider.dart';
 import 'widget_context_provider.dart';
 
@@ -29,10 +31,28 @@ class BookingPriceCalculation {
   // Total price = room price + additional services
   double get totalPrice => roomPrice + additionalServicesTotal;
 
+  /// Format price with currency symbol
+  /// Use these methods instead of the deprecated getters
+  String formatRoomPrice(String currency) => '$currency${roomPrice.toStringAsFixed(2)}';
+  String formatAdditionalServices(String currency) => '$currency${additionalServicesTotal.toStringAsFixed(2)}';
+  String formatTotal(String currency) => '$currency${totalPrice.toStringAsFixed(2)}';
+  String formatDeposit(String currency) => '$currency${depositAmount.toStringAsFixed(2)}';
+  String formatRemaining(String currency) => '$currency${remainingAmount.toStringAsFixed(2)}';
+
+  /// @deprecated Use formatRoomPrice(currency) instead
+  @Deprecated('Use formatRoomPrice(currency) instead to support multiple currencies')
   String get formattedRoomPrice => '€${roomPrice.toStringAsFixed(2)}';
+  /// @deprecated Use formatAdditionalServices(currency) instead
+  @Deprecated('Use formatAdditionalServices(currency) instead to support multiple currencies')
   String get formattedAdditionalServices => '€${additionalServicesTotal.toStringAsFixed(2)}';
+  /// @deprecated Use formatTotal(currency) instead
+  @Deprecated('Use formatTotal(currency) instead to support multiple currencies')
   String get formattedTotal => '€${totalPrice.toStringAsFixed(2)}';
+  /// @deprecated Use formatDeposit(currency) instead
+  @Deprecated('Use formatDeposit(currency) instead to support multiple currencies')
   String get formattedDeposit => '€${depositAmount.toStringAsFixed(2)}';
+  /// @deprecated Use formatRemaining(currency) instead
+  @Deprecated('Use formatRemaining(currency) instead to support multiple currencies')
   String get formattedRemaining => '€${remainingAmount.toStringAsFixed(2)}';
 
   // Bug #64: Check if price has changed since lock
@@ -62,12 +82,13 @@ class BookingPriceCalculation {
   // Copy with method for updating additional services
   BookingPriceCalculation copyWithServices(double servicesTotal, int depositPercentage) {
     final newTotal = roomPrice + servicesTotal;
+    // Bug Fix: Use integer multiplication for precise rounding instead of toStringAsFixed
     final newDeposit = (depositPercentage == 0 || depositPercentage == 100)
         ? newTotal
-        : double.parse((newTotal * (depositPercentage / 100)).toStringAsFixed(2));
+        : (newTotal * depositPercentage).roundToDouble() / 100;
     final newRemaining = (depositPercentage == 0 || depositPercentage == 100)
         ? 0.0
-        : double.parse((newTotal * ((100 - depositPercentage) / 100)).toStringAsFixed(2));
+        : (newTotal * (100 - depositPercentage)).roundToDouble() / 100;
 
     return BookingPriceCalculation(
       roomPrice: roomPrice,
@@ -103,7 +124,8 @@ Future<BookingPriceCalculation?> bookingPrice(
 
   // OPTIMIZED: Try to get unit from cached widgetContext first
   // Falls back to direct fetch if propertyId not provided or cache miss
-  double basePrice = 100.0;
+  const fallbackBasePrice = 100.0;
+  double basePrice = fallbackBasePrice;
   double? weekendBasePrice;
   List<int>? weekendDays;
 
@@ -116,11 +138,17 @@ Future<BookingPriceCalculation?> bookingPrice(
       basePrice = unit.pricePerNight;
       weekendBasePrice = unit.weekendBasePrice;
       weekendDays = unit.weekendDays;
-    } catch (_) {
+    } catch (e) {
       // Fall back to direct fetch if context not available
       final unitRepo = ref.watch(unitRepositoryProvider);
       final unit = await unitRepo.fetchUnitById(unitId);
-      basePrice = unit?.pricePerNight ?? 100.0;
+      if (unit?.pricePerNight != null) {
+        basePrice = unit!.pricePerNight;
+      } else {
+        LoggingService.logWarning(
+          'BookingPrice: Unit $unitId has no pricePerNight, using fallback $fallbackBasePrice. Error: $e',
+        );
+      }
       weekendBasePrice = unit?.weekendBasePrice;
       weekendDays = unit?.weekendDays;
     }
@@ -128,7 +156,13 @@ Future<BookingPriceCalculation?> bookingPrice(
     // No propertyId provided - must fetch directly
     final unitRepo = ref.watch(unitRepositoryProvider);
     final unit = await unitRepo.fetchUnitById(unitId);
-    basePrice = unit?.pricePerNight ?? 100.0;
+    if (unit?.pricePerNight != null) {
+      basePrice = unit!.pricePerNight;
+    } else {
+      LoggingService.logWarning(
+        'BookingPrice: Unit $unitId not found or has no pricePerNight, using fallback $fallbackBasePrice',
+      );
+    }
     weekendBasePrice = unit?.weekendBasePrice;
     weekendDays = unit?.weekendDays;
   }
@@ -143,19 +177,20 @@ Future<BookingPriceCalculation?> bookingPrice(
     weekendDays: weekendDays,
   );
 
-  // Calculate nights
-  final nights = checkOut.difference(checkIn).inDays;
+  // Bug Fix: Use DateNormalizer for consistent night calculation across timezones
+  final nights = DateNormalizer.nightsBetween(checkIn, checkOut);
 
   // Calculate deposit and remaining amount based on configurable percentage
   // Note: Additional services total will be 0 initially, can be updated with copyWithServices()
   // If depositPercentage is 0 or 100, treat as full payment (no split)
-  // Bug #29: Round to 2 decimal places to prevent rounding errors
+  // Bug Fix: Use integer multiplication for precise rounding instead of toStringAsFixed
+  // This avoids floating point representation errors (e.g., 0.1 + 0.2 != 0.3)
   final depositAmount = (depositPercentage == 0 || depositPercentage == 100)
       ? roomPrice
-      : double.parse((roomPrice * (depositPercentage / 100)).toStringAsFixed(2));
+      : (roomPrice * depositPercentage).roundToDouble() / 100;
   final remainingAmount = (depositPercentage == 0 || depositPercentage == 100)
       ? 0.0
-      : double.parse((roomPrice * ((100 - depositPercentage) / 100)).toStringAsFixed(2));
+      : (roomPrice * (100 - depositPercentage)).roundToDouble() / 100;
 
   return BookingPriceCalculation(
     roomPrice: roomPrice,

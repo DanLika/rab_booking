@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../domain/models/booking_details_model.dart';
 
 /// Provider for Firebase Functions instance
@@ -72,7 +73,13 @@ class BookingLookupService {
         default:
           throw BookingException.lookupFailed(e.message);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // Log the original error before wrapping it
+      await LoggingService.logError(
+        'BookingLookupService: Unexpected error during booking verification',
+        e,
+        stackTrace,
+      );
       throw BookingException.lookupFailed(e);
     }
   }

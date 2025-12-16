@@ -7188,4 +7188,78 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return 'Booking for $guestName, from $checkIn to $checkOut, $nights nights, $guestCount guests$conflictText. Tap for details.';
   }
+
+  @override
+  String tooltipNightsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nights',
+      one: '1 night',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tooltipGuestsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count guests',
+      one: '1 guest',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tooltipConflictWith => 'Conflict with:';
+
+  @override
+  String tooltipMoreConflicts(int count) {
+    return '+$count more...';
+  }
+
+  @override
+  String get tooltipImportedBooking => 'Imported booking';
+
+  @override
+  String tooltipManageOn(String platform) {
+    return 'Manage on $platform';
+  }
+
+  @override
+  String get tooltipGuest => 'Guest';
+
+  @override
+  String get tooltipCheckIn => 'Check-in';
+
+  @override
+  String get tooltipCheckOut => 'Check-out';
+
+  @override
+  String get tooltipNights => 'Nights';
+
+  @override
+  String get tooltipGuests => 'Guests';
+
+  @override
+  String get tooltipPrice => 'Price';
+
+  @override
+  String get tooltipSource => 'Source';
+
+  @override
+  String get tooltipNote => 'Note:';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusConfirmed => 'Confirmed';
+
+  @override
+  String get statusCompleted => 'Completed';
+
+  @override
+  String get statusCancelled => 'Cancelled';
 }

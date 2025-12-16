@@ -19,6 +19,7 @@ import '../widgets/booking_create_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../mixins/calendar_common_methods_mixin.dart';
 import '../providers/multi_select_provider.dart';
+import '../providers/show_empty_units_provider.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -39,7 +40,6 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
   // GlobalKey for accessing TimelineCalendarWidget's scroll methods
   final GlobalKey timelineKey = GlobalKey();
   bool _showSummary = false;
-  bool _showEmptyUnits = true; // Show all units by default (including those without bookings)
   int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
 
   // FIXED: Flag to prevent onVisibleDateRangeChanged from overwriting _currentRange
@@ -122,6 +122,7 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                       final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
                       final multiSelectState = ref.watch(multiSelectProvider);
                       final conflictCount = ref.watch(overbookingConflictCountProvider);
+                      final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
 
                       return CalendarTopToolbar(
                         dateRange: _currentRange,
@@ -149,13 +150,11 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                             _showSummary = value;
                           });
                         },
-                        // Show empty units toggle
+                        // Show empty units toggle (persisted via provider)
                         showEmptyUnitsToggle: true,
-                        isEmptyUnitsVisible: _showEmptyUnits,
+                        isEmptyUnitsVisible: showEmptyUnits,
                         onEmptyUnitsToggleChanged: (value) {
-                          setState(() {
-                            _showEmptyUnits = value;
-                          });
+                          ref.read(showEmptyUnitsProvider.notifier).setValue(value);
                         },
                         // ENHANCED: Multi-select mode toggle
                         showMultiSelectToggle: true,
@@ -181,33 +180,38 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
 
                   // Timeline calendar widget (it fetches its own data via providers)
                   Expanded(
-                    child: TimelineCalendarWidget(
-                      // FIXED: Only use counter in key, NOT startDate
-                      // Including startDate caused infinite rebuild loop:
-                      // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
-                      key: timelineKey,
-                      initialScrollToDate: _currentRange.startDate, // Scroll to selected date
-                      showSummary: _showSummary,
-                      showEmptyUnits: _showEmptyUnits,
-                      // FIXED: Preserve vertical scroll position during toolbar navigation
-                      // When user clicks left/right arrows, widget rebuilds but we restore scroll position
-                      initialVerticalOffset: _verticalScrollOffset,
-                      onVerticalOffsetChanged: (offset) {
-                        // Track vertical scroll position (don't call setState to avoid rebuild)
-                        _verticalScrollOffset = offset;
-                      },
-                      onCellLongPress: (date, unit) => _showCreateBookingDialog(initialCheckIn: date, unitId: unit.id),
-                      onUnitNameTap: _showUnitFutureBookings,
-                      onVisibleDateRangeChanged: (startDate) {
-                        // FIXED: Only update toolbar when user scrolls MANUALLY
-                        // Skip update during programmatic navigation (Today, arrows, date picker)
-                        // to prevent overwriting the intended navigation target
-                        if (_isProgrammaticNavigation) return;
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
+                        return TimelineCalendarWidget(
+                          // FIXED: Only use counter in key, NOT startDate
+                          // Including startDate caused infinite rebuild loop:
+                          // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
+                          key: timelineKey,
+                          initialScrollToDate: _currentRange.startDate, // Scroll to selected date
+                          showSummary: _showSummary,
+                          showEmptyUnits: showEmptyUnits,
+                          // FIXED: Preserve vertical scroll position during toolbar navigation
+                          // When user clicks left/right arrows, widget rebuilds but we restore scroll position
+                          initialVerticalOffset: _verticalScrollOffset,
+                          onVerticalOffsetChanged: (offset) {
+                            // Track vertical scroll position (don't call setState to avoid rebuild)
+                            _verticalScrollOffset = offset;
+                          },
+                          onCellLongPress: (date, unit) => _showCreateBookingDialog(initialCheckIn: date, unitId: unit.id),
+                          onUnitNameTap: _showUnitFutureBookings,
+                          onVisibleDateRangeChanged: (startDate) {
+                            // FIXED: Only update toolbar when user scrolls MANUALLY
+                            // Skip update during programmatic navigation (Today, arrows, date picker)
+                            // to prevent overwriting the intended navigation target
+                            if (_isProgrammaticNavigation) return;
 
-                        // Update toolbar date range when user scrolls manually
-                        setState(() {
-                          _currentRange = DateRangeSelection.days(startDate, _visibleDays);
-                        });
+                            // Update toolbar date range when user scrolls manually
+                            setState(() {
+                              _currentRange = DateRangeSelection.days(startDate, _visibleDays);
+                            });
+                          },
+                        );
                       },
                     ),
                   ),

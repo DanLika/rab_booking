@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/services/logging_service.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/services/i_availability_checker.dart';
@@ -210,7 +211,8 @@ class AvailabilityChecker implements IAvailabilityChecker {
           .collectionGroup(_bookingsCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('status', whereIn: ActiveBookingStatuses.values)
-          .get();
+          .get()
+          .withBookingFetchTimeout('checkBookings');
 
       for (final doc in snapshot.docs) {
         try {
@@ -244,7 +246,11 @@ class AvailabilityChecker implements IAvailabilityChecker {
     try {
       // Using client-side filtering to avoid Firestore index requirement
       // NEW STRUCTURE: Use collection group query for subcollection
-      final snapshot = await _firestore.collectionGroup(_icalEventsCollection).where('unit_id', isEqualTo: unitId).get();
+      final snapshot = await _firestore
+          .collectionGroup(_icalEventsCollection)
+          .where('unit_id', isEqualTo: unitId)
+          .get()
+          .withShortTimeout('checkIcalEvents');
 
       for (final doc in snapshot.docs) {
         try {
@@ -287,7 +293,8 @@ class AvailabilityChecker implements IAvailabilityChecker {
           .collectionGroup(_dailyPricesCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('available', isEqualTo: false)
-          .get();
+          .get()
+          .withShortTimeout('checkBlockedDates');
 
       for (final doc in snapshot.docs) {
         try {
@@ -337,7 +344,8 @@ class AvailabilityChecker implements IAvailabilityChecker {
           .collectionGroup(_dailyPricesCollection)
           .where('unit_id', isEqualTo: unitId)
           .where('date', whereIn: [checkInTimestamp, checkOutTimestamp])
-          .get();
+          .get()
+          .withShortTimeout('checkBlockedCheckInOut');
 
       for (final doc in snapshot.docs) {
         final data = doc.data();
@@ -345,8 +353,11 @@ class AvailabilityChecker implements IAvailabilityChecker {
 
         if (docDate == null) continue;
 
+        // Bug Fix: Use DateNormalizer.isSameDay instead of isAtSameMomentAs
+        // for consistent date comparison regardless of time components
+
         // Check if this doc is for check-in date
-        if (docDate.isAtSameMomentAs(checkIn)) {
+        if (DateNormalizer.isSameDay(docDate, checkIn)) {
           final isBlockedCheckIn = data['block_checkin'] as bool? ?? false;
           if (isBlockedCheckIn) {
             LoggingService.log('❌ Check-in blocked on $checkIn', tag: 'AVAILABILITY_CHECK');
@@ -355,7 +366,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
         }
 
         // Check if this doc is for check-out date
-        if (docDate.isAtSameMomentAs(checkOut)) {
+        if (DateNormalizer.isSameDay(docDate, checkOut)) {
           final isBlockedCheckOut = data['block_checkout'] as bool? ?? false;
           if (isBlockedCheckOut) {
             LoggingService.log('❌ Check-out blocked on $checkOut', tag: 'AVAILABILITY_CHECK');
@@ -367,8 +378,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
       return const AvailabilityCheckResult.available();
     } catch (e) {
       unawaited(LoggingService.logError('Error checking blockCheckIn/blockCheckOut', e));
-      // Return available on error - don't block legitimate bookings
-      return const AvailabilityCheckResult.available();
+      // Bug Fix: Fail-safe approach - return error to prevent potential overbooking
+      // Previously returned available() which could allow bookings on blocked dates
+      return AvailabilityCheckResult.error(ConflictType.blockedCheckIn);
     }
   }
 

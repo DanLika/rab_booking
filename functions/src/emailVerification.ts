@@ -245,64 +245,88 @@ export const verifyEmailCode = onCall(
       const emailHash = hashEmail(emailLower);
       const verificationRef = db.collection("email_verifications").doc(emailHash);
 
-      // Get verification document
-      const doc = await verificationRef.get();
+      // RACE CONDITION FIX: Use transaction to atomically check AND update attempts
+      // This ensures two simultaneous requests can't both pass the attempt limit check
+      const result = await db.runTransaction(async (transaction) => {
+        const doc = await transaction.get(verificationRef);
 
-      if (!doc.exists) {
-        throw new HttpsError(
-          "not-found",
-          "No verification code found. Please request a new code."
-        );
-      }
+        if (!doc.exists) {
+          throw new HttpsError(
+            "not-found",
+            "No verification code found. Please request a new code."
+          );
+        }
 
-      const data = doc.data()!;
+        const data = doc.data()!;
 
-      // Check if already verified
-      if (data.verified === true) {
+        // Check if already verified
+        if (data.verified === true) {
+          return {
+            alreadyVerified: true,
+          };
+        }
+
+        // Check expiry
+        const expiresAt = data.expiresAt?.toDate();
+        if (!expiresAt || new Date() > expiresAt) {
+          throw new HttpsError(
+            "deadline-exceeded",
+            "Verification code expired. Please request a new code."
+          );
+        }
+
+        // Check max attempts (3 failed attempts = locked)
+        if (data.attempts >= MAX_ATTEMPTS) {
+          throw new HttpsError(
+            "permission-denied",
+            "Too many failed attempts. Please request a new code."
+          );
+        }
+
+        // Verify code
+        if (data.code !== codeClean) {
+          // Increment failed attempts ATOMICALLY inside transaction
+          const newAttempts = (data.attempts || 0) + 1;
+          transaction.update(verificationRef, {
+            attempts: newAttempts,
+          });
+
+          // Calculate remaining based on NEW value (after increment)
+          const remainingAttempts = MAX_ATTEMPTS - newAttempts;
+
+          // If this was the last attempt, throw lockout error
+          if (remainingAttempts <= 0) {
+            throw new HttpsError(
+              "permission-denied",
+              "Too many failed attempts. Please request a new code."
+            );
+          }
+
+          throw new HttpsError(
+            "invalid-argument",
+            `Invalid code. ${remainingAttempts} attempt${remainingAttempts === 1 ? "" : "s"} remaining.`
+          );
+        }
+
+        // CODE IS VALID - Mark as verified ATOMICALLY
+        transaction.update(verificationRef, {
+          verified: true,
+          verifiedAt: FieldValue.serverTimestamp(),
+        });
+
+        return {
+          verified: true,
+        };
+      });
+
+      // Handle already verified case (returned from transaction)
+      if (result.alreadyVerified) {
         return {
           success: true,
           verified: true,
           message: "Email already verified",
         };
       }
-
-      // Check expiry
-      const expiresAt = data.expiresAt?.toDate();
-      if (!expiresAt || new Date() > expiresAt) {
-        throw new HttpsError(
-          "deadline-exceeded",
-          "Verification code expired. Please request a new code."
-        );
-      }
-
-      // Check max attempts (3 failed attempts = locked)
-      if (data.attempts >= MAX_ATTEMPTS) {
-        throw new HttpsError(
-          "permission-denied",
-          "Too many failed attempts. Please request a new code."
-        );
-      }
-
-      // Verify code
-      if (data.code !== codeClean) {
-        // Increment failed attempts
-        await verificationRef.update({
-          attempts: FieldValue.increment(1),
-        });
-
-        const remainingAttempts = MAX_ATTEMPTS - (data.attempts + 1);
-
-        throw new HttpsError(
-          "invalid-argument",
-          `Invalid code. ${remainingAttempts} attempt${remainingAttempts === 1 ? "" : "s"} remaining.`
-        );
-      }
-
-      // CODE IS VALID - Mark as verified
-      await verificationRef.update({
-        verified: true,
-        verifiedAt: FieldValue.serverTimestamp(),
-      });
 
       // PII REDUCTION: Log hash instead of full email
       logSuccess(`Email verified successfully: hash ${emailHashForLog}...`);

@@ -85,7 +85,8 @@ class ErrorHandler {
     );
 
     // In production, send to error tracking service
-    if (kReleaseMode) {
+    // NOTE: Crashlytics is NOT supported on web platform
+    if (kReleaseMode && !kIsWeb) {
       // Send to Firebase Crashlytics
       await FirebaseCrashlytics.instance.recordError(
         error,

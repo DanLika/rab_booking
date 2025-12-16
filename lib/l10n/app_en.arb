@@ -3073,5 +3073,52 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "tooltipNightsCount": "{count, plural, =1{1 night} other{{count} nights}}",
+  "@tooltipNightsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipGuestsCount": "{count, plural, =1{1 guest} other{{count} guests}}",
+  "@tooltipGuestsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipConflictWith": "Conflict with:",
+  "tooltipMoreConflicts": "+{count} more...",
+  "@tooltipMoreConflicts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipImportedBooking": "Imported booking",
+  "tooltipManageOn": "Manage on {platform}",
+  "@tooltipManageOn": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "tooltipGuest": "Guest",
+  "tooltipCheckIn": "Check-in",
+  "tooltipCheckOut": "Check-out",
+  "tooltipNights": "Nights",
+  "tooltipGuests": "Guests",
+  "tooltipPrice": "Price",
+  "tooltipSource": "Source",
+  "tooltipNote": "Note:",
+  "statusPending": "Pending",
+  "statusConfirmed": "Confirmed",
+  "statusCompleted": "Completed",
+  "statusCancelled": "Cancelled"
 }

@@ -100,7 +100,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
       if (mounted) {
         setState(() {
-          _errorMessage = e.message ?? 'Failed to send verification code';
+          _errorMessage = e.message ?? WidgetTranslations.of(context, ref).emailVerificationFailedToSend;
         });
       }
     } catch (e) {
@@ -108,7 +108,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to send code: $e';
+          _errorMessage = '${WidgetTranslations.of(context, ref).emailVerificationFailedToSend}: $e';
         });
       }
     } finally {
@@ -157,7 +157,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
       if (mounted) {
         setState(() {
-          _errorMessage = e.message ?? 'Invalid verification code';
+          _errorMessage = e.message ?? WidgetTranslations.of(context, ref).emailVerificationInvalidCode;
         });
       }
     } catch (e) {
@@ -165,7 +165,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
       if (mounted) {
         setState(() {
-          _errorMessage = 'Verification failed: $e';
+          _errorMessage = '${WidgetTranslations.of(context, ref).emailVerificationFailed}: $e';
         });
       }
     } finally {
@@ -255,7 +255,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
                 // Instructions
                 Text(
-                  'Enter the 6-digit code sent to your email',
+                  WidgetTranslations.of(context, ref).emailVerificationEnterCode,
                   style: GoogleFonts.inter(fontSize: 14, color: widget.colors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
@@ -304,10 +304,10 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter the code';
+                      return WidgetTranslations.of(context, ref).emailVerificationPleaseEnterCode;
                     }
                     if (value.length != 6) {
-                      return 'Code must be 6 digits';
+                      return WidgetTranslations.of(context, ref).emailVerificationCodeMustBe6Digits;
                     }
                     return null;
                   },
@@ -427,13 +427,15 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Sending...',
+                              WidgetTranslations.of(context, ref).emailVerificationSending,
                               style: GoogleFonts.inter(fontSize: 14, color: widget.colors.textSecondary),
                             ),
                           ],
                         )
                       : Text(
-                          _resendCooldown > 0 ? 'Resend code in ${_resendCooldown}s' : 'Didn\'t receive code? Resend',
+                          _resendCooldown > 0
+                              ? WidgetTranslations.of(context, ref).emailVerificationResendIn(_resendCooldown)
+                              : WidgetTranslations.of(context, ref).emailVerificationDidntReceive,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             color: _resendCooldown > 0 ? widget.colors.textDisabled : widget.colors.primary,

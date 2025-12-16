@@ -254,27 +254,6 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     );
   }
 
-  /// Check if we should show navigation buttons
-  /// Show them unless we're truly in a NEW TAB that can't navigate back
-  bool get _shouldShowNavigationButtons {
-    if (!kIsWeb) return true;
-
-    // PRIORITY 1: If we have an onClose callback, always show button
-    if (widget.onClose != null) return true;
-
-    // PRIORITY 2: If Navigator can pop, show button (same-tab redirect scenario)
-    // This handles the case where BookingWidgetScreen pushed this screen
-    // via Navigator.push() after Stripe redirect return
-    if (Navigator.of(context).canPop()) return true;
-
-    // PRIORITY 3: If in popup window, show button (will close popup)
-    if (isPopupWindow) return true;
-
-    // Otherwise: We're in a new tab opened for Stripe that can't navigate back
-    // User should manually close the tab
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
@@ -406,26 +385,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
 
                           const SizedBox(height: SpacingTokens.m),
 
-                          // Close button with extra bottom padding (only show if navigation is allowed)
-                          if (_shouldShowNavigationButtons) ...[
-                            _buildCloseButton(colors, isDark: isDarkMode),
-                            const SizedBox(height: SpacingTokens.xl),
-                          ] else ...[
-                            // Show message for new tab scenario
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-                              child: Text(
-                                tr.bookingConfirmedCloseTab,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: TypographyTokens.fontSizeM,
-                                  color: colors.textSecondary,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: SpacingTokens.xl),
-                          ],
+                          // Close button - always show for same-tab navigation
+                          _buildCloseButton(colors, isDark: isDarkMode),
+                          const SizedBox(height: SpacingTokens.xl),
 
                           // Helpful info
                           Text(
@@ -460,19 +422,16 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
 
   Widget _buildHeader(WidgetColorScheme colors) {
     final tr = WidgetTranslations.of(context, ref);
-    final showNavButtons = _shouldShowNavigationButtons;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
       child: Row(
         children: [
-          if (showNavButtons)
-            IconButton(
-              icon: Icon(Icons.arrow_back, color: colors.textPrimary),
-              onPressed: _navigateToCleanCalendar,
-            )
-          else
-            const SizedBox(width: 48), // Spacer when button is hidden
+          // Back button - always show for same-tab navigation
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+            onPressed: _navigateToCleanCalendar,
+          ),
           Expanded(
             child: Center(
               child: Text(

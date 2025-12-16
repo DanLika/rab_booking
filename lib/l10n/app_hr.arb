@@ -3079,5 +3079,52 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "tooltipNightsCount": "{count, plural, =1{1 noć} few{{count} noći} other{{count} noći}}",
+  "@tooltipNightsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipGuestsCount": "{count, plural, =1{1 gost} few{{count} gosta} other{{count} gostiju}}",
+  "@tooltipGuestsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipConflictWith": "Konflikt sa:",
+  "tooltipMoreConflicts": "+{count} više...",
+  "@tooltipMoreConflicts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipImportedBooking": "Uvezena rezervacija",
+  "tooltipManageOn": "Upravljajte na {platform}",
+  "@tooltipManageOn": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "tooltipGuest": "Gost",
+  "tooltipCheckIn": "Dolazak",
+  "tooltipCheckOut": "Odlazak",
+  "tooltipNights": "Noći",
+  "tooltipGuests": "Gosti",
+  "tooltipPrice": "Cijena",
+  "tooltipSource": "Izvor",
+  "tooltipNote": "Napomena:",
+  "statusPending": "Na čekanju",
+  "statusConfirmed": "Potvrđeno",
+  "statusCompleted": "Završeno",
+  "statusCancelled": "Otkazano"
 }

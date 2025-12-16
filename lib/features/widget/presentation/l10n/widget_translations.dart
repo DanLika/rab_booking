@@ -4072,6 +4072,136 @@ class WidgetTranslations {
   String get labelIban => 'IBAN';
   String get labelSwiftBic => 'SWIFT/BIC';
 
+  // ============================================================================
+  // EMAIL VERIFICATION DIALOG TRANSLATIONS
+  // ============================================================================
+
+  String get emailVerificationEnterCode {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Unesite 6-znamenkasti kod poslan na vaš email';
+      case 'de':
+        return 'Geben Sie den 6-stelligen Code ein, der an Ihre E-Mail gesendet wurde';
+      case 'it':
+        return 'Inserisci il codice a 6 cifre inviato alla tua email';
+      case 'en':
+      default:
+        return 'Enter the 6-digit code sent to your email';
+    }
+  }
+
+  String get emailVerificationPleaseEnterCode {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Molimo unesite kod';
+      case 'de':
+        return 'Bitte geben Sie den Code ein';
+      case 'it':
+        return 'Per favore inserisci il codice';
+      case 'en':
+      default:
+        return 'Please enter the code';
+    }
+  }
+
+  String get emailVerificationCodeMustBe6Digits {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kod mora imati 6 znamenaka';
+      case 'de':
+        return 'Der Code muss 6 Ziffern haben';
+      case 'it':
+        return 'Il codice deve avere 6 cifre';
+      case 'en':
+      default:
+        return 'Code must be 6 digits';
+    }
+  }
+
+  String get emailVerificationSending {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Šaljem...';
+      case 'de':
+        return 'Senden...';
+      case 'it':
+        return 'Invio...';
+      case 'en':
+      default:
+        return 'Sending...';
+    }
+  }
+
+  String emailVerificationResendIn(int seconds) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ponovno pošalji za ${seconds}s';
+      case 'de':
+        return 'Erneut senden in ${seconds}s';
+      case 'it':
+        return 'Reinvia tra ${seconds}s';
+      case 'en':
+      default:
+        return 'Resend code in ${seconds}s';
+    }
+  }
+
+  String get emailVerificationDidntReceive {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Niste primili kod? Pošalji ponovo';
+      case 'de':
+        return 'Code nicht erhalten? Erneut senden';
+      case 'it':
+        return 'Non hai ricevuto il codice? Rinvia';
+      case 'en':
+      default:
+        return "Didn't receive code? Resend";
+    }
+  }
+
+  String get emailVerificationFailedToSend {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Slanje verifikacijskog koda nije uspjelo';
+      case 'de':
+        return 'Verifizierungscode konnte nicht gesendet werden';
+      case 'it':
+        return 'Invio del codice di verifica fallito';
+      case 'en':
+      default:
+        return 'Failed to send verification code';
+    }
+  }
+
+  String get emailVerificationInvalidCode {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Neispravan verifikacijski kod';
+      case 'de':
+        return 'Ungültiger Verifizierungscode';
+      case 'it':
+        return 'Codice di verifica non valido';
+      case 'en':
+      default:
+        return 'Invalid verification code';
+    }
+  }
+
+  String get emailVerificationFailed {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Verifikacija nije uspjela';
+      case 'de':
+        return 'Verifizierung fehlgeschlagen';
+      case 'it':
+        return 'Verifica fallita';
+      case 'en':
+      default:
+        return 'Verification failed';
+    }
+  }
+
   String get bankTransferSubtitle {
     switch (locale.languageCode) {
       case 'hr':

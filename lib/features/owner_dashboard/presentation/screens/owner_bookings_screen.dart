@@ -1,6 +1,4 @@
 import 'dart:async' show Timer, TimeoutException, Completer;
-import 'dart:io' show File, FileMode;
-import 'dart:convert' show jsonEncode;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -94,24 +92,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     return widget.initialBookingId ?? OwnerBookingsScreen.getBookingIdFromRoute(context);
   }
 
-  // #region agent log
-  void _log(String location, String message, Map<String, dynamic> data, String hypothesisId) {
-    try {
-      final logEntry = {
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-        'location': location,
-        'message': message,
-        'data': data,
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': hypothesisId,
-      };
-      final file = File('/Users/duskolicanin/git/bookbed/.cursor/debug.log');
-      file.writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
-    } catch (_) {}
-  }
-  // #endregion
-
   @override
   void initState() {
     super.initState();
@@ -120,11 +100,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // Start loading indicator immediately if we have an initialBookingId
     if (widget.initialBookingId != null) {
       _isLoadingInitialBooking = true;
-      // #region agent log
-      _log('owner_bookings_screen.dart:initState', 'Initial booking ID set', {
-        'initialBookingId': widget.initialBookingId,
-      }, 'A');
-      // #endregion
     }
   }
 
@@ -140,21 +115,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   Future<void> _fetchAndShowInitialBooking([String? bookingId]) async {
     final currentBookingId = bookingId ?? _currentBookingId;
     if (_hasHandledInitialBooking || currentBookingId == null) {
-      // #region agent log
-      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Skipping fetch', {
-        '_hasHandledInitialBooking': _hasHandledInitialBooking,
-        'bookingId': currentBookingId,
-      }, 'B');
-      // #endregion
       return;
     }
     _hasHandledInitialBooking = true;
-
-    // #region agent log
-    _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Entry', {
-      'initialBookingId': currentBookingId,
-    }, 'B');
-    // #endregion
 
     // Clear pending booking ID
     ref.read(pendingBookingIdProvider.notifier).state = null;
@@ -169,10 +132,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     if (!mounted) return;
 
     try {
-      // #region agent log
-      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Before ref.read repository', {}, 'B');
-      // #endregion
-
       // FIXED: Access repository directly instead of through notifier to avoid dependency issues
       // This is safe because we're in a Timer callback, completely outside build phase
       final repository = ref.read(ownerBookingsRepositoryProvider);
@@ -188,10 +147,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         return;
       }
 
-      // #region agent log
-      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Before repository.getOwnerBookingById', {}, 'B');
-      // #endregion
-
       // FIXED BUG #1: Add timeout to prevent infinite loading loop
       final ownerBooking = await repository
           .getOwnerBookingById(currentBookingId)
@@ -201,11 +156,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               throw TimeoutException('Failed to load booking - request timed out after 10 seconds');
             },
           );
-      // #region agent log
-      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'After fetch', {
-        'ownerBooking': ownerBooking != null ? ownerBooking.booking.id : 'null',
-      }, 'B');
-      // #endregion
       if (!mounted) return;
 
       setState(() {
@@ -230,11 +180,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         });
       }
     } catch (error) {
-      // #region agent log
-      _log('owner_bookings_screen.dart:_fetchAndShowInitialBooking', 'Error fetching booking', {
-        'error': error.toString(),
-      }, 'B');
-      // #endregion
       // Handle error when fetching booking
       if (!mounted) return;
       setState(() {
@@ -367,12 +312,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           try {
             final booking = windowedState.visibleBookings.firstWhere((b) => b.booking.id == bookingId);
 
-            // #region agent log
-            _log('owner_bookings_screen.dart:build', 'Booking found in visible list', {
-              'bookingId': booking.booking.id,
-            }, 'A');
-            // #endregion
-
             // Mark as handled immediately to prevent duplicate dialogs
             _hasHandledInitialBooking = true;
             _bookingCheckScheduled = false;
@@ -390,9 +329,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             return; // Successfully found and handled
           } catch (_) {
             // Booking not found in current window - will fetch separately
-            // #region agent log
-            _log('owner_bookings_screen.dart:build', 'Booking not found in visible list, fetching', {}, 'B');
-            // #endregion
           }
         }
 
@@ -422,11 +358,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           if (!mounted || !context.mounted) return;
 
           try {
-            // #region agent log
-            _log('owner_bookings_screen.dart:build', 'Showing dialog from build', {
-              'bookingId': bookingToShow.booking.id,
-            }, 'C');
-            // #endregion
             showDialog(
               context: context,
               builder: (context) => BookingDetailsDialog(ownerBooking: bookingToShow),
@@ -469,9 +400,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               });
             });
           } catch (e) {
-            // #region agent log
-            _log('owner_bookings_screen.dart:build', 'Error showing dialog from build', {'error': e.toString()}, 'C');
-            // #endregion
             debugPrint('Error showing booking details dialog: $e');
             // Reset flags on error
             if (mounted) {

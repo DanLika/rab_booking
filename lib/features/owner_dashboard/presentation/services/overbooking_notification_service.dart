@@ -25,20 +25,32 @@ abstract class OverbookingNotificationService {
 class OverbookingNotificationServiceImpl implements OverbookingNotificationService {
   @override
   Future<void> sendEmailNotification(OverbookingConflict conflict) async {
-    // TODO: Implement email notification in future
-    // This would send an email to the owner about the conflict
+    // PLACEHOLDER: Email notification (Phase 2 feature)
+    // Implementation would:
+    // 1. Use Cloud Function sendEmail() with conflict details
+    // 2. Include links to affected bookings
+    // 3. Provide resolution suggestions
+    // Priority: Medium - owners can see conflicts in UI
   }
 
   @override
   Future<void> sendPushNotification(OverbookingConflict conflict) async {
-    // TODO: Implement push notification in future
-    // This would send a push notification to the owner's device
+    // PLACEHOLDER: Push notification (Phase 3 feature)
+    // Implementation would:
+    // 1. Use Firebase Cloud Messaging (FCM)
+    // 2. Send to owner's registered devices
+    // 3. Include actionable notification with booking IDs
+    // Priority: Low - requires mobile app push setup
   }
 
   @override
   Future<void> createFirestoreNotification(OverbookingConflict conflict) async {
-    // TODO: Implement Firestore notification in future
-    // This would create a notification document in Firestore
+    // PLACEHOLDER: Firestore notification (Phase 2 feature)
+    // Implementation would:
+    // 1. Create document in users/{ownerId}/notifications
+    // 2. Include conflict details and resolution actions
+    // 3. Integrate with existing NotificationsScreen
+    // Priority: Medium - useful for notification center
   }
 }
 

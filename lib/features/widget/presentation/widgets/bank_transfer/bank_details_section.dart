@@ -56,7 +56,7 @@ class BankDetailsSection extends ConsumerWidget {
           if (bankConfig.iban != null) ...[
             const SizedBox(height: SpacingTokens.s),
             CopyableTextField(
-              label: 'IBAN',
+              label: tr.labelIban, // Bug Fix: Use localized label instead of hardcoded 'IBAN'
               value: bankConfig.iban!,
               icon: Icons.credit_card,
               isDarkMode: isDarkMode,
@@ -67,7 +67,7 @@ class BankDetailsSection extends ConsumerWidget {
           if (bankConfig.swift != null) ...[
             const SizedBox(height: SpacingTokens.s),
             CopyableTextField(
-              label: 'SWIFT/BIC',
+              label: tr.labelSwiftBic, // Bug Fix: Use localized label instead of hardcoded 'SWIFT/BIC'
               value: bankConfig.swift!,
               icon: Icons.language,
               isDarkMode: isDarkMode,

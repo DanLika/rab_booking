@@ -1,9 +1,7 @@
-import 'dart:io' show File, FileMode;
-import 'dart:convert' show jsonEncode;
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/accessibility/accessibility_helpers.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -27,21 +25,6 @@ class BookingDetailsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // #region agent log
-    try {
-      final logEntry = {
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-        'location': 'booking_details_dialog.dart:build',
-        'message': 'Dialog build entry',
-        'data': {'bookingId': ownerBooking.booking.id},
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'C',
-      };
-      File('/Users/duskolicanin/git/bookbed/.cursor/debug.log').writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
-    } catch (_) {}
-    // #endregion
-    
     final l10n = AppLocalizations.of(context);
     final booking = ownerBooking.booking;
     final property = ownerBooking.property;
@@ -101,9 +84,11 @@ class BookingDetailsDialog extends ConsumerWidget {
                       maxLines: 1,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                  AccessibleIconButton(
+                    icon: Icons.close,
+                    color: Colors.white,
                     onPressed: () => Navigator.of(context).pop(),
+                    semanticLabel: l10n.close,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -388,9 +373,11 @@ class BookingDetailsDialog extends ConsumerWidget {
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
+                      AccessibleIconButton(
+                        icon: Icons.close,
+                        color: Colors.white,
                         onPressed: () => Navigator.of(dialogContext).pop(false),
+                        semanticLabel: dialogL10n.close,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -506,38 +493,8 @@ class BookingDetailsDialog extends ConsumerWidget {
       // Show loading
       ErrorDisplayUtils.showLoadingSnackBar(context, l10n.ownerDetailsSending);
 
-      // #region agent log
-      try {
-        final logEntry = {
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-          'location': 'booking_details_dialog.dart:_resendConfirmationEmail',
-          'message': 'Before ref.read firebaseFunctionsProvider',
-          'data': {'bookingId': ownerBooking.booking.id},
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'C',
-        };
-        File('/Users/duskolicanin/git/bookbed/.cursor/debug.log').writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
-      } catch (_) {}
-      // #endregion
-
       // Call Cloud Function
       final functions = ref.read(firebaseFunctionsProvider);
-      
-      // #region agent log
-      try {
-        final logEntry = {
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-          'location': 'booking_details_dialog.dart:_resendConfirmationEmail',
-          'message': 'After ref.read firebaseFunctionsProvider',
-          'data': {'bookingId': ownerBooking.booking.id},
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'C',
-        };
-        File('/Users/duskolicanin/git/bookbed/.cursor/debug.log').writeAsStringSync('${jsonEncode(logEntry)}\n', mode: FileMode.append);
-      } catch (_) {}
-      // #endregion
       final callable = functions.httpsCallable('resendBookingEmail');
 
       await callable.call({'bookingId': ownerBooking.booking.id});

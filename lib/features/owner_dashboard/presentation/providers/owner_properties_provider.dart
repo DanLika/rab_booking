@@ -9,6 +9,16 @@ part 'owner_properties_provider.g.dart';
 
 /// Owner properties provider (REAL-TIME STREAM)
 /// Automatically syncs across browser tabs
+///
+/// ## AutoDispose Decision: TRUE (default @riverpod behavior)
+/// AutoDispose is appropriate here because:
+/// - Stream re-subscribes quickly on navigation back
+/// - Firestore handles caching efficiently
+/// - Prevents stale data when user logs out
+/// - Memory freed when leaving owner dashboard
+///
+/// Note: If performance issues arise from frequent re-subscriptions,
+/// consider switching to @Riverpod(keepAlive: true)
 @riverpod
 Stream<List<PropertyModel>> ownerProperties(Ref ref) {
   final auth = FirebaseAuth.instance;

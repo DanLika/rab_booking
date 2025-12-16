@@ -127,14 +127,16 @@ class BookingSummaryCard extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.s),
           DetailRowWidget(
             label: tr.checkIn,
-            value: DateFormat('EEEE, MMM dd, yyyy').format(checkIn),
+            // Bug Fix: Use locale for proper date formatting (e.g., "Ponedjeljak, 15. sij. 2024" for HR)
+            value: DateFormat('EEEE, MMM dd, yyyy', tr.locale.languageCode).format(checkIn),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
           DetailRowWidget(
             label: tr.checkOut,
-            value: DateFormat('EEEE, MMM dd, yyyy').format(checkOut),
+            // Bug Fix: Use locale for proper date formatting
+            value: DateFormat('EEEE, MMM dd, yyyy', tr.locale.languageCode).format(checkOut),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
@@ -156,7 +158,13 @@ class BookingSummaryCard extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.s),
           DetailRowWidget(
             label: tr.totalPrice,
-            value: '${tr.currencySymbol}${totalPrice.toStringAsFixed(2)}',
+            // Bug Fix: Use NumberFormat.currency for proper locale-aware formatting
+            // (e.g., "500,00 €" for HR instead of "€500.00")
+            value: NumberFormat.currency(
+              symbol: tr.currencySymbol,
+              locale: tr.locale.toString(),
+              decimalDigits: 2,
+            ).format(totalPrice),
             isDarkMode: isDarkMode,
             hasPadding: true,
             isHighlighted: true,

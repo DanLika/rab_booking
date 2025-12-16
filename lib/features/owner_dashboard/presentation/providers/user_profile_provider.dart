@@ -17,6 +17,12 @@ UserProfileRepository userProfileRepository(Ref ref) {
 // ========== USER PROFILE PROVIDERS ==========
 
 /// Watch user profile data
+///
+/// ## AutoDispose Decision: TRUE (default @riverpod behavior)
+/// AutoDispose is correct because:
+/// - Profile data should refresh on re-entry
+/// - Cleans up Firestore listener when not in use
+/// - Memory freed when navigating away from profile screens
 @riverpod
 Stream<UserProfile?> watchUserProfile(Ref ref) {
   final userId = FirebaseAuth.instance.currentUser?.uid;

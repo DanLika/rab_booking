@@ -110,7 +110,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50.withOpacity(isDark ? 0.2 : 1.0),
+                color: Colors.orange.shade50.withValues(alpha: isDark ? 0.2 : 1.0),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Colors.orange.shade300,
@@ -240,12 +240,12 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
                 Chip(
                   label: Text(connection.status.toFirestoreValue()),
                   backgroundColor: connection.status == ConnectionStatus.active
-                      ? Colors.green.withOpacity(0.2)
-                      : Colors.orange.withOpacity(0.2),
+                      ? Colors.green.withValues(alpha: 0.2)
+                      : Colors.orange.withValues(alpha: 0.2),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete),
-                  onPressed: () => _handleRemoveConnection(context, connection),
+                  onPressed: () => _handleRemoveConnection(connection),
                 ),
               ],
             ),
@@ -261,7 +261,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -293,7 +293,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => _handleConnectBookingCom(context),
+              onPressed: _handleConnectBookingCom,
               icon: const Icon(Icons.hotel),
               label: const Text('Connect Booking.com'),
               style: ElevatedButton.styleFrom(
@@ -302,7 +302,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
-              onPressed: () => _handleConnectAirbnb(context),
+              onPressed: _handleConnectAirbnb,
               icon: const Icon(Icons.home),
               label: const Text('Connect Airbnb'),
               style: ElevatedButton.styleFrom(
@@ -315,11 +315,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     );
   }
 
-  Future<void> _handleConnectBookingCom(BuildContext context) async {
+  Future<void> _handleConnectBookingCom() async {
     // Show warning dialog first
     final proceed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
@@ -356,11 +356,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
             ),
@@ -377,9 +377,10 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     final roomTypeIdController = TextEditingController();
     final unitIdController = TextEditingController(text: widget.initialUnitId ?? '');
 
+    if (!mounted) return;
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Connect Booking.com'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -411,11 +412,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Connect'),
           ),
         ],
@@ -444,11 +445,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     }
   }
 
-  Future<void> _handleConnectAirbnb(BuildContext context) async {
+  Future<void> _handleConnectAirbnb() async {
     // Show warning dialog first
     final proceed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
@@ -485,11 +486,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
             ),
@@ -505,9 +506,10 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     final listingIdController = TextEditingController();
     final unitIdController = TextEditingController(text: widget.initialUnitId ?? '');
 
+    if (!mounted) return;
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Connect Airbnb'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -531,11 +533,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Connect'),
           ),
         ],
@@ -563,22 +565,19 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     }
   }
 
-  Future<void> _handleRemoveConnection(
-    BuildContext context,
-    PlatformConnection connection,
-  ) async {
+  Future<void> _handleRemoveConnection(PlatformConnection connection) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Remove Connection'),
         content: Text('Are you sure you want to remove the ${connection.platform.displayName} connection?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),

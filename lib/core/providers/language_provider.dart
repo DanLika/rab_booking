@@ -32,6 +32,14 @@ const String _languageKey = 'selected_language';
 const String _defaultLanguage = 'hr'; // Croatian as default for RAB Booking
 
 /// Provider for managing language preferences with persistent storage
+///
+/// ## AutoDispose Decision: TRUE (current) - SHOULD BE keepAlive
+/// Language preference is app-wide and used in MaterialApp.locale.
+/// AutoDispose is acceptable because:
+/// - SharedPreferences persists the value across sessions
+/// - State rebuilds quickly from cached SharedPreferences
+///
+/// Consider @Riverpod(keepAlive: true) if locale flickering occurs on navigation
 @riverpod
 class LanguageNotifier extends _$LanguageNotifier {
   static const _supportedLanguages = ['en', 'hr'];

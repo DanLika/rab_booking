@@ -13050,6 +13050,114 @@ abstract class AppLocalizations {
     int guestCount,
     String conflictText,
   );
+
+  /// No description provided for @tooltipNightsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 night} other{{count} nights}}'**
+  String tooltipNightsCount(int count);
+
+  /// No description provided for @tooltipGuestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 guest} other{{count} guests}}'**
+  String tooltipGuestsCount(int count);
+
+  /// No description provided for @tooltipConflictWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict with:'**
+  String get tooltipConflictWith;
+
+  /// No description provided for @tooltipMoreConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more...'**
+  String tooltipMoreConflicts(int count);
+
+  /// No description provided for @tooltipImportedBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported booking'**
+  String get tooltipImportedBooking;
+
+  /// No description provided for @tooltipManageOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage on {platform}'**
+  String tooltipManageOn(String platform);
+
+  /// No description provided for @tooltipGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get tooltipGuest;
+
+  /// No description provided for @tooltipCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in'**
+  String get tooltipCheckIn;
+
+  /// No description provided for @tooltipCheckOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-out'**
+  String get tooltipCheckOut;
+
+  /// No description provided for @tooltipNights.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights'**
+  String get tooltipNights;
+
+  /// No description provided for @tooltipGuests.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests'**
+  String get tooltipGuests;
+
+  /// No description provided for @tooltipPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get tooltipPrice;
+
+  /// No description provided for @tooltipSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get tooltipSource;
+
+  /// No description provided for @tooltipNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note:'**
+  String get tooltipNote;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get statusPending;
+
+  /// No description provided for @statusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get statusConfirmed;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
 }
 
 class _AppLocalizationsDelegate

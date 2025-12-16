@@ -57,20 +57,23 @@ class TimelineDateHeadersWidget extends StatelessWidget {
                     ),
                   ),
 
-                  // Day headers
-                  SizedBox(
-                    height: dimensions.dayHeaderHeight,
-                    child: Row(
-                      children: [
-                        if (offsetWidth > 0) SizedBox(width: offsetWidth),
-                        ...dates.map(
-                          (date) => TimelineDayHeader(
-                            date: date,
-                            dayWidth: dimensions.dayWidth,
-                            screenWidth: dimensions.screenWidth,
+                  // Day headers - RepaintBoundary isolates header repaints
+                  // from grid content during scroll
+                  RepaintBoundary(
+                    child: SizedBox(
+                      height: dimensions.dayHeaderHeight,
+                      child: Row(
+                        children: [
+                          if (offsetWidth > 0) SizedBox(width: offsetWidth),
+                          ...dates.map(
+                            (date) => TimelineDayHeader(
+                              date: date,
+                              dayWidth: dimensions.dayWidth,
+                              screenWidth: dimensions.screenWidth,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

@@ -57,16 +57,20 @@ class TimelineGridWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: units.map((unit) {
           final bookings = bookingsByUnit[unit.id] ?? [];
-          return _TimelineUnitRow(
-            unit: unit,
-            bookings: bookings,
-            dates: dates,
-            offsetWidth: offsetWidth,
-            allBookingsByUnit: bookingsByUnit,
-            dimensions: dimensions,
-            onBookingTap: onBookingTap,
-            onBookingLongPress: onBookingLongPress,
-            dropZoneBuilder: dropZoneBuilder,
+          // RepaintBoundary: Each unit row can repaint independently
+          // when bookings change, without affecting other rows
+          return RepaintBoundary(
+            child: _TimelineUnitRow(
+              unit: unit,
+              bookings: bookings,
+              dates: dates,
+              offsetWidth: offsetWidth,
+              allBookingsByUnit: bookingsByUnit,
+              dimensions: dimensions,
+              onBookingTap: onBookingTap,
+              onBookingLongPress: onBookingLongPress,
+              dropZoneBuilder: dropZoneBuilder,
+            ),
           );
         }).toList(),
       ),

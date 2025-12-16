@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/models/calendar_date_status.dart';
+import '../../../utils/date_normalizer.dart';
 import '../../l10n/widget_translations.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
@@ -255,7 +256,8 @@ class CalendarDateSelectionValidator {
     required int minNights,
     required CalendarDateInfo? checkInDateInfo,
   }) {
-    final selectedNights = end.difference(start).inDays;
+    // Bug #1 Fix: Use DateNormalizer for consistent date calculation
+    final selectedNights = DateNormalizer.nightsBetween(start, end);
 
     // 1. Validate minNightsOnArrival (per-date, takes priority)
     if (checkInDateInfo != null) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/accessibility/accessibility_helpers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/widgets/message_box.dart';
@@ -213,9 +214,11 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                  AccessibleIconButton(
+                    icon: Icons.close,
+                    color: Colors.white,
                     onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    semanticLabel: l10n.close,
                   ),
                 ],
               ),

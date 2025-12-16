@@ -1,5 +1,7 @@
 # BookBed Documentation
 
+**Last Updated**: 2024-12-15
+
 Dobrodošli u BookBed dokumentaciju!
 
 ## 📁 Struktura Dokumentacije
@@ -17,9 +19,9 @@ Dobrodošli u BookBed dokumentaciju!
 - [Security Analysis](./security/SECURITY_ANALYSIS.md)
 - [Widget Security Analysis](./widget-security/WIDGET_SECURITY_ANALYSIS.md)
 
-### 💳 Stripe & Payments
-- [Stripe Checkout Implementation Review](./stripe-checkout/STRIPE_CHECKOUT_IMPLEMENTATION_REVIEW.md)
-- [Stripe Checkout Iframe Plan](./stripe-checkout/STRIPE_CHECKOUT_IFRAME_PLAN.md)
+### 💳 Stripe & Payments ✅
+- [Stripe Checkout Implementation Review](./stripe-checkout/STRIPE_CHECKOUT_IMPLEMENTATION_REVIEW.md) - ✅ ALL ISSUES FIXED
+- [Stripe Checkout Iframe Plan](./stripe-checkout/STRIPE_CHECKOUT_IFRAME_PLAN.md) - ✅ COMPLETE
 
 ### ⌨️ Keyboard & UI
 - [Landscape Keyboard Fix Plan](./keyboard-implementation/LANDSCAPE_KEYBOARD_FIX_PLAN.md)
@@ -53,6 +55,7 @@ Dobrodošli u BookBed dokumentaciju!
 ### ⚙️ Setup
 - [Developer Setup](./setup/developer-setup/)
 - [Deployment](./setup/deployment/)
+  - [Subdomain Setup](./setup/deployment/SUBDOMAIN_SETUP.md) - ✅ IMPLEMENTED
 
 ### 📊 Summaries
 - [Complete Summary](./summaries/COMPLETE_SUMMARY.md)

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/utils/platform_utils.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -171,6 +172,7 @@ class _TooltipContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('d MMM yyyy', 'hr_HR');
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -190,6 +192,7 @@ class _TooltipContent extends StatelessWidget {
             _ConflictWarningBanner(
               conflictingBookings: conflictingBookings,
               isCompact: isCompact,
+              l10n: l10n,
             ),
             const SizedBox(height: 10),
           ],
@@ -199,14 +202,14 @@ class _TooltipContent extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  booking.guestName ?? 'Gost',
+                  booking.guestName ?? l10n.tooltipGuest,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: isCompact ? 14 : 18,
                   ),
                 ),
               ),
-              _StatusBadge(status: booking.status),
+              _StatusBadge(status: booking.status, l10n: l10n),
             ],
           ),
 
@@ -245,13 +248,13 @@ class _TooltipContent extends StatelessWidget {
           // Dates
           _InfoRow(
             icon: Icons.calendar_today,
-            label: 'Check-in',
+            label: l10n.tooltipCheckIn,
             value: dateFormat.format(booking.checkIn),
             isCompact: isCompact,
           ),
           _InfoRow(
             icon: Icons.event_available,
-            label: 'Check-out',
+            label: l10n.tooltipCheckOut,
             value: dateFormat.format(booking.checkOut),
             isCompact: isCompact,
           ),
@@ -267,7 +270,7 @@ class _TooltipContent extends StatelessWidget {
               Expanded(
                 child: _InfoRow(
                   icon: Icons.nightlight_round,
-                  label: 'Noći',
+                  label: l10n.tooltipNights,
                   value: '$nights',
                   isCompact: isCompact,
                 ),
@@ -275,7 +278,7 @@ class _TooltipContent extends StatelessWidget {
               Expanded(
                 child: _InfoRow(
                   icon: Icons.person,
-                  label: 'Gosti',
+                  label: l10n.tooltipGuests,
                   value: '${booking.guestCount}',
                   isCompact: isCompact,
                 ),
@@ -291,7 +294,7 @@ class _TooltipContent extends StatelessWidget {
             ),
             _InfoRow(
               icon: Icons.payments,
-              label: 'Cijena',
+              label: l10n.tooltipPrice,
               value: '€${booking.totalPrice.toStringAsFixed(2)}',
               isCompact: isCompact,
               isHighlight: true,
@@ -308,7 +311,7 @@ class _TooltipContent extends StatelessWidget {
             ),
             _InfoRow(
               icon: Icons.source,
-              label: 'Izvor',
+              label: l10n.tooltipSource,
               value: booking.sourceDisplayName,
               isCompact: isCompact,
             ),
@@ -323,7 +326,7 @@ class _TooltipContent extends StatelessWidget {
               color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
             ),
             Text(
-              'Napomena:',
+              l10n.tooltipNote,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w600,
@@ -347,10 +350,12 @@ class _TooltipContent extends StatelessWidget {
 class _ConflictWarningBanner extends StatelessWidget {
   final List<BookingModel>? conflictingBookings;
   final bool isCompact;
+  final AppLocalizations l10n;
 
   const _ConflictWarningBanner({
     this.conflictingBookings,
     required this.isCompact,
+    required this.l10n,
   });
 
   @override
@@ -391,7 +396,7 @@ class _ConflictWarningBanner extends StatelessWidget {
               conflictingBookings!.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              'Konflikt sa:',
+              l10n.tooltipConflictWith,
               style: TextStyle(
                 color: Colors.red.shade700,
                 fontSize: isCompact ? 10 : 11,
@@ -414,7 +419,7 @@ class _ConflictWarningBanner extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            '${conflict.guestName ?? "Gost"} (${dateFormat.format(conflict.checkIn)} - ${dateFormat.format(conflict.checkOut)})',
+                            '${conflict.guestName ?? l10n.tooltipGuest} (${dateFormat.format(conflict.checkIn)} - ${dateFormat.format(conflict.checkOut)})',
                             style: TextStyle(
                               color: Colors.red.shade700,
                               fontSize: isCompact ? 9 : 10,
@@ -449,7 +454,7 @@ class _ConflictWarningBanner extends StatelessWidget {
                 ),
             if (conflictingBookings!.length > 3)
               Text(
-                '+${conflictingBookings!.length - 3} više...',
+                l10n.tooltipMoreConflicts(conflictingBookings!.length - 3),
                 style: TextStyle(
                   color: Colors.red.shade600,
                   fontSize: isCompact ? 9 : 10,
@@ -524,8 +529,9 @@ class _InfoRow extends StatelessWidget {
 /// Status badge widget
 class _StatusBadge extends StatelessWidget {
   final BookingStatus status;
+  final AppLocalizations l10n;
 
-  const _StatusBadge({required this.status});
+  const _StatusBadge({required this.status, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -550,13 +556,13 @@ class _StatusBadge extends StatelessWidget {
   String _getStatusText(BookingStatus status) {
     switch (status) {
       case BookingStatus.pending:
-        return 'Pending';
+        return l10n.statusPending;
       case BookingStatus.confirmed:
-        return 'Potvrđeno';
+        return l10n.statusConfirmed;
       case BookingStatus.completed:
-        return 'Završeno';
+        return l10n.statusCompleted;
       case BookingStatus.cancelled:
-        return 'Otkazano';
+        return l10n.statusCancelled;
     }
   }
 }

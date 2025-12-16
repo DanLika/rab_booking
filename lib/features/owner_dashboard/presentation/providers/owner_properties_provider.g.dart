@@ -11,6 +11,16 @@ String _$ownerPropertiesHash() => r'a1def606c82c9fd153d738dd2e2b30ba787f3921';
 /// Owner properties provider (REAL-TIME STREAM)
 /// Automatically syncs across browser tabs
 ///
+/// ## AutoDispose Decision: TRUE (default @riverpod behavior)
+/// AutoDispose is appropriate here because:
+/// - Stream re-subscribes quickly on navigation back
+/// - Firestore handles caching efficiently
+/// - Prevents stale data when user logs out
+/// - Memory freed when leaving owner dashboard
+///
+/// Note: If performance issues arise from frequent re-subscriptions,
+/// consider switching to @Riverpod(keepAlive: true)
+///
 /// Copied from [ownerProperties].
 @ProviderFor(ownerProperties)
 final ownerPropertiesProvider =

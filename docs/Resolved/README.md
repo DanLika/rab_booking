@@ -11,6 +11,10 @@ Ovaj folder sadrži dokumentaciju za funkcionalnosti koje su **potpuno implement
 ### Deployment
 - **Firebase-Deployment.md** - Firebase deployment dokumentacija i upute
 
+### Bug Fixes (2025-12-15)
+- **WIDGET_CONFIRMATION_BUGS.md** - Svi critical bugovi riješeni (null checks, lokalizacija, hardcoded stringovi)
+- **WIDGET_HELPERS_BUGS.md** - Svi high priority bugovi riješeni (error handling, date comparison)
+
 ---
 
 ## ✅ Status
@@ -23,6 +27,11 @@ Sve dokumentacije u ovom folderu predstavljaju **završene i implementirane** fu
 ---
 
 **Napomena:** Ova dokumentacija služi kao referenca za već implementirane funkcionalnosti. Za planove i feature requests koji nisu još implementirani, vidi `docs/architecture/` folder.
+
+---
+
+**Zadnje ažurirano:** 2025-12-15
+
 
 
 

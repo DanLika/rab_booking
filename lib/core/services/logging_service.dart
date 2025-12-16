@@ -44,7 +44,8 @@ class LoggingService {
     }
 
     // In production, send to error tracking service
-    if (kReleaseMode && error != null) {
+    // NOTE: Crashlytics is NOT supported on web platform
+    if (kReleaseMode && !kIsWeb && error != null) {
       // Send to Firebase Crashlytics
       await FirebaseCrashlytics.instance.recordError(
         error,

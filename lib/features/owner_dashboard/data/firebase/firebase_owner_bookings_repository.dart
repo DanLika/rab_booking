@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
@@ -200,7 +201,9 @@ class FirebaseOwnerBookingsRepository {
         query = query.where('check_out', isLessThanOrEqualTo: endDate);
       }
 
-      final bookingsSnapshot = await query.get();
+      final bookingsSnapshot = await query
+          .get()
+          .withListFetchTimeout('getOwnerBookings');
       for (final doc in bookingsSnapshot.docs) {
         try {
           final booking = BookingModel.fromJson({
@@ -386,7 +389,8 @@ class FirebaseOwnerBookingsRepository {
           .collectionGroup('bookings')
           .where('owner_id', isEqualTo: ownerId)
           .where('check_in', isLessThanOrEqualTo: endDate)
-          .get();
+          .get()
+          .withListFetchTimeout('getCalendarBookings');
 
       for (final doc in bookingsSnapshot.docs) {
         final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
@@ -460,7 +464,8 @@ class FirebaseOwnerBookingsRepository {
           .collectionGroup('bookings')
           .where('owner_id', isEqualTo: userId)
           .where('check_in', isLessThanOrEqualTo: endDate)
-          .get();
+          .get()
+          .withListFetchTimeout('getCalendarBookingsWithUnitIds');
 
       for (final doc in bookingsSnapshot.docs) {
         final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
@@ -626,7 +631,8 @@ class FirebaseOwnerBookingsRepository {
           .collectionGroup('bookings')
           .where(FieldPath.documentId, isEqualTo: bookingId)
           .limit(1)
-          .get();
+          .get()
+          .withBookingFetchTimeout('getOwnerBookingById');
 
       if (bookingsSnapshot.docs.isEmpty) return null;
 
@@ -983,7 +989,9 @@ class FirebaseOwnerBookingsRepository {
         query = query.startAfterDocument(startAfterDocument);
       }
 
-      final snapshot = await query.get();
+      final snapshot = await query
+          .get()
+          .withListFetchTimeout('getOwnerBookingsPaginated');
 
       // Check if there are more pages
       final hasMore = snapshot.docs.length > limit;

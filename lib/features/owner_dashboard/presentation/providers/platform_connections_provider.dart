@@ -94,9 +94,16 @@ Future<void> removePlatformConnection(Ref ref, String connectionId) async {
 }
 
 /// Test platform connection
+///
+/// PLACEHOLDER: Returns true (always passes) until platform APIs are integrated.
+/// Future implementation would:
+/// 1. Fetch iCal feed from platform URL
+/// 2. Validate feed format (ICS/iCalendar)
+/// 3. Check for recent events/bookings
+/// Priority: Low - iCal sync already validates on import
 @riverpod
 Future<bool> testPlatformConnection(Ref ref, String connectionId) async {
-  // TODO: Implement connection test
-  // This would call the platform API to verify the connection is working
+  // PLACEHOLDER: Connection test (Phase 2 feature)
+  // Currently returns true as iCal sync validates feeds during import
   return true;
 }

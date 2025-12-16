@@ -124,6 +124,47 @@ void _runAppWithDeferredInit() {
     GlobalErrorHandler.initialize();
   }
 
+  // Set custom ErrorWidget for graceful error display in both debug and release
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    // In debug mode, show more details; in release, show friendly message
+    if (kDebugMode) {
+      return Material(
+        child: Container(
+          color: const Color(0xFFFFF3F3),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Color(0xFFD32F2F)),
+              const SizedBox(height: 16),
+              const Text(
+                'Widget Error',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFD32F2F)),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _safeErrorToString(details.exception),
+                style: const TextStyle(fontSize: 12, color: Color(0xFFC62828)),
+                textAlign: TextAlign.center,
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    // Release mode: minimal error display
+    return const Material(
+      child: Center(
+        child: Text(
+          'Something went wrong',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      ),
+    );
+  };
+
   // Run app IMMEDIATELY - splash screen will show
   runApp(const ProviderScope(child: BookBedApp()));
 

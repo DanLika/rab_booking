@@ -75,23 +75,30 @@ class BankTransferInstructionsCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: SpacingTokens.m),
-          _BankTransferDetailRow(
-            label: tr.bankName,
-            value: bankConfig.bankName!,
-            colors: colors,
-            tr: tr,
-          ),
-          const SizedBox(height: SpacingTokens.s),
-          _BankTransferDetailRow(
-            label: tr.accountHolder,
-            value: bankConfig.accountHolder!,
-            colors: colors,
-            tr: tr,
-          ),
-          const SizedBox(height: SpacingTokens.s),
+          // Bug #2 Fix: Add null checks to prevent crash when bankName is null
+          if (bankConfig.bankName != null) ...[
+            _BankTransferDetailRow(
+              label: tr.bankName,
+              value: bankConfig.bankName!,
+              colors: colors,
+              tr: tr,
+            ),
+            const SizedBox(height: SpacingTokens.s),
+          ],
+          // Bug #2 Fix: Add null checks to prevent crash when accountHolder is null
+          if (bankConfig.accountHolder != null) ...[
+            _BankTransferDetailRow(
+              label: tr.accountHolder,
+              value: bankConfig.accountHolder!,
+              colors: colors,
+              tr: tr,
+            ),
+            const SizedBox(height: SpacingTokens.s),
+          ],
+          // Bug #3 Fix: Use tr.labelIban instead of hardcoded 'IBAN'
           if (bankConfig.iban != null)
             _BankTransferDetailRow(
-              label: 'IBAN',
+              label: tr.labelIban,
               value: bankConfig.iban!,
               colors: colors,
               copyable: true,
@@ -105,10 +112,11 @@ class BankTransferInstructionsCard extends ConsumerWidget {
               copyable: true,
               tr: tr,
             ),
+          // Bug #3 Fix: Use tr.labelSwiftBic instead of hardcoded 'SWIFT/BIC'
           if (bankConfig.swift != null) ...[
             const SizedBox(height: SpacingTokens.s),
             _BankTransferDetailRow(
-              label: 'SWIFT/BIC',
+              label: tr.labelSwiftBic,
               value: bankConfig.swift!,
               colors: colors,
               copyable: true,

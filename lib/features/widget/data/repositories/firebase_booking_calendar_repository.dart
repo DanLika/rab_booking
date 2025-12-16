@@ -1049,7 +1049,6 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   /// Check availability with detailed result.
   ///
   /// Returns [AvailabilityCheckResult] with conflict information if not available.
-  @override
   Future<AvailabilityCheckResult> checkAvailabilityDetailed({
     required String unitId,
     required DateTime checkIn,

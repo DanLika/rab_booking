@@ -149,9 +149,10 @@ class CalendarDateInfo {
     );
   }
 
-  /// Get formatted price (e.g., "€50")
+  /// Get formatted price (e.g., "€50.00")
+  /// Bug #3 Fix: Standardized to 2 decimal places for consistency
   String? get formattedPrice {
     if (price == null) return null;
-    return '€${price!.toStringAsFixed(0)}';
+    return '€${price!.toStringAsFixed(2)}';
   }
 }

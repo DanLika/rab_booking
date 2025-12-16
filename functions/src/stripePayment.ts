@@ -349,8 +349,28 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       const conflictingBookings =
         await transaction.get(conflictingBookingsQuery);
 
-      if (!conflictingBookings.empty) {
-        const conflicts = conflictingBookings.docs.map((doc) => ({
+      // Filter out expired placeholder bookings (stripe_pending_expires_at < now)
+      // These are abandoned Stripe checkout sessions that haven't been cleaned up yet
+      const now = admin.firestore.Timestamp.now();
+      const activeConflicts = conflictingBookings.docs.filter((doc) => {
+        const data = doc.data();
+        // If booking has stripe_pending_expires_at, check if it's expired
+        if (data.stripe_pending_expires_at) {
+          const expiresAt = data.stripe_pending_expires_at as admin.firestore.Timestamp;
+          // Exclude expired placeholders (expiresAt < now)
+          if (expiresAt.toMillis() < now.toMillis()) {
+            logInfo("createStripeCheckoutSession: Ignoring expired placeholder", {
+              bookingId: doc.id,
+              expiresAt: expiresAt.toDate().toISOString(),
+            });
+            return false; // Exclude expired placeholder
+          }
+        }
+        return true; // Include confirmed bookings and non-expired pending bookings
+      });
+
+      if (activeConflicts.length > 0) {
+        const conflicts = activeConflicts.map((doc) => ({
           id: doc.id,
           status: doc.data().status,
           checkIn: doc.data().check_in,

@@ -1,12 +1,11 @@
 /**
- * Base Email Template - 2025 Modern Design
+ * Base Email Template - Inline Styles Version
  *
  * Core template structure used by all email types.
- * Provides consistent layout, styling, and dark mode support.
+ * All styling is done via inline styles for Gmail compatibility.
  */
 
 import {getBaseHtmlWrapper} from "../styles/base-styles";
-import {getComponentStyles} from "../styles/components";
 import {wrapEmailContent, generateFooter, FooterOptions} from "../utils/template-helpers";
 
 /**
@@ -33,7 +32,7 @@ export interface BaseEmailOptions {
  * ```ts
  * const html = generateEmailHtml({
  *   header: generateHeader({
- *     icon: getSuccessIcon(),
+ *     emoji: "✅",
  *     title: "Rezervacija potvrđena!",
  *     bookingReference: "RAB-ABC123"
  *   }),
@@ -53,23 +52,20 @@ export function generateEmailHtml(options: BaseEmailOptions): string {
   // Generate footer HTML
   const footerHtml = generateFooter(footer);
 
-  // Combine all content sections
+  // Combine all content sections with inline padding
   const emailContent = `
     ${header}
-    <div class="content">
+    <div style="padding: 24px;">
       ${content}
     </div>
     ${footerHtml}
   `;
 
-  // Wrap in email container
+  // Wrap in email container (applies card background, border, shadow)
   const wrappedContent = wrapEmailContent(emailContent);
 
-  // Wrap with base HTML structure (includes styles)
-  const finalHtml = getBaseHtmlWrapper(`
-    ${getComponentStyles()}
-    ${wrappedContent}
-  `);
+  // Wrap with base HTML structure (DOCTYPE, meta tags, minimal reset)
+  const finalHtml = getBaseHtmlWrapper(wrappedContent);
 
   return finalHtml;
 }

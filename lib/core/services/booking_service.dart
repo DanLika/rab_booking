@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../core/constants/enums.dart';
@@ -176,7 +178,7 @@ class BookingService {
       }
 
       if (missingFields.isNotEmpty) {
-        LoggingService.logError('Missing required fields before API call: ${missingFields.join(', ')}');
+        unawaited(LoggingService.logError('Missing required fields before API call: ${missingFields.join(', ')}'));
         throw Exception('Missing required booking fields: ${missingFields.join(', ')}');
       }
 

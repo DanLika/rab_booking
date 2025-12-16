@@ -381,11 +381,11 @@ void main() {
         remainingAmount: 115.16,
       );
 
-      expect(calc.formattedRoomPrice, equals('€123.45'));
-      expect(calc.formattedAdditionalServices, equals('€20.50'));
-      expect(calc.formattedTotal, equals('€143.95'));
-      expect(calc.formattedDeposit, equals('€28.79'));
-      expect(calc.formattedRemaining, equals('€115.16'));
+      expect(calc.formatRoomPrice('€'), equals('€123.45'));
+      expect(calc.formatAdditionalServices('€'), equals('€20.50'));
+      expect(calc.formatTotal('€'), equals('€143.95'));
+      expect(calc.formatDeposit('€'), equals('€28.79'));
+      expect(calc.formatRemaining('€'), equals('€115.16'));
     });
   });
 

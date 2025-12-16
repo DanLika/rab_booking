@@ -73,7 +73,8 @@ class CancellationPolicySection extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(dynamic colors, WidgetTranslations tr) {
+  // Bug Fix: Use WidgetColorScheme instead of dynamic for type safety
+  Widget _buildHeader(WidgetColorScheme colors, WidgetTranslations tr) {
     return Row(
       children: [
         Icon(Icons.event_available, color: colors.textPrimary, size: 24),
@@ -90,7 +91,8 @@ class CancellationPolicySection extends ConsumerWidget {
     );
   }
 
-  Widget _buildCancellationStep(dynamic colors, String text) {
+  // Bug Fix: Use WidgetColorScheme instead of dynamic for type safety
+  Widget _buildCancellationStep(WidgetColorScheme colors, String text) {
     return Padding(
       padding: const EdgeInsets.only(
         left: SpacingTokens.m,

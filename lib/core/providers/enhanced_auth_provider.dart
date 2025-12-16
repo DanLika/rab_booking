@@ -807,6 +807,13 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 }
 
 /// Enhanced Auth Provider
+///
+/// ## keepAlive Decision: TRUE (implicit via StateNotifierProvider)
+/// Auth state MUST persist throughout app lifecycle:
+/// - Used by all authenticated routes and guards
+/// - Maintains Firebase auth listener subscription
+/// - Prevents re-authentication on every navigation
+/// - Memory impact: Low (~1KB for auth state)
 final enhancedAuthProvider = StateNotifierProvider<EnhancedAuthNotifier, EnhancedAuthState>((ref) {
   final auth = ref.watch(firebaseAuthProvider);
   final firestore = ref.watch(firestoreProvider);

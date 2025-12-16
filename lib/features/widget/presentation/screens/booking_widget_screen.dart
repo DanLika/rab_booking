@@ -87,7 +87,7 @@ class BookingWidgetScreen extends ConsumerStatefulWidget {
 
 class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // ============================================
-  // URL SANITIZATION HELPER
+  // URL SANITIZATION & VALIDATION HELPERS
   // ============================================
   /// Sanitize ID from URL - removes any path segments (e.g., /calendar suffix)
   /// This prevents Firestore "invalid document reference" errors
@@ -98,6 +98,30 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return id.substring(0, slashIndex);
     }
     return id;
+  }
+
+  /// Validate booking reference format (defense-in-depth)
+  /// Format: BK-{12_ALPHANUMERIC_CHARS} e.g., BK-A3F7E2D1B9C4
+  static bool _isValidBookingReference(String? ref) {
+    if (ref == null || ref.isEmpty) return false;
+    // Regex: BK- followed by 12 alphanumeric characters (case-insensitive)
+    return RegExp(r'^BK-[A-Za-z0-9]{12}$').hasMatch(ref);
+  }
+
+  /// Validate Firestore document ID format (defense-in-depth)
+  /// Firestore auto-generated IDs are 20 alphanumeric characters
+  static bool _isValidFirestoreId(String? id) {
+    if (id == null || id.isEmpty) return false;
+    // Firestore IDs: 20 alphanumeric characters
+    return RegExp(r'^[A-Za-z0-9]{20}$').hasMatch(id);
+  }
+
+  /// Validate Stripe session ID format (defense-in-depth)
+  /// Format: cs_test_xxx or cs_live_xxx (alphanumeric + underscores)
+  static bool _isValidStripeSessionId(String? sessionId) {
+    if (sessionId == null || sessionId.isEmpty) return false;
+    // Stripe session IDs: cs_ prefix followed by test/live and alphanumeric chars
+    return RegExp(r'^cs_(test|live)_[A-Za-z0-9]+$').hasMatch(sessionId);
   }
 
   /// Safely convert error to string, handling null and edge cases
@@ -278,17 +302,23 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final stripeSessionId = uri.queryParameters['session_id'];
     final bookingStatus = uri.queryParameters['booking_status'];
 
+    // Defense-in-depth: Validate URL parameter formats before use
+    // Invalid formats are treated as missing parameters (fail-safe)
+    final isValidConfirmation = _isValidBookingReference(confirmationRef);
+    final isValidBookingId = _isValidFirestoreId(bookingId);
+    final isValidSessionId = _isValidStripeSessionId(stripeSessionId);
+
     // Check if this is a Stripe return (NEW FLOW - booking created by webhook)
     // URL has: stripe_status=success&session_id=cs_xxx but NO bookingId
     // We need to poll for booking using session_id
-    final isStripeReturn = stripeStatus == 'success' && stripeSessionId != null;
+    final isStripeReturn = stripeStatus == 'success' && isValidSessionId;
 
     // Legacy Stripe return (old flow - booking created before checkout)
     final hasLegacyStripeParams =
-        confirmationRef != null && bookingId != null && (paymentType == 'stripe' || stripeStatus == 'success');
+        isValidConfirmation && isValidBookingId && (paymentType == 'stripe' || stripeStatus == 'success');
 
     // Check if this is a direct booking return (same tab - Pay on Arrival, Bank Transfer)
-    final isDirectBookingReturn = bookingStatus == 'success' && confirmationRef != null && bookingId != null;
+    final isDirectBookingReturn = bookingStatus == 'success' && isValidConfirmation && isValidBookingId;
 
     // Validate unit and property immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -298,7 +328,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Clear any cached form data first (prevents conflict with booked dates)
         await _clearFormData();
 
-        await _handleStripeReturnWithSessionId(stripeSessionId);
+        // Safe to use ! - isStripeReturn guarantees isValidSessionId which requires non-null
+        await _handleStripeReturnWithSessionId(stripeSessionId!);
         return; // Don't continue with normal initialization
       }
 
@@ -306,13 +337,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (hasLegacyStripeParams) {
         await _clearFormData();
 
-        await _showConfirmationFromUrl(confirmationRef, bookingId);
+        // Safe to use ! - hasLegacyStripeParams guarantees isValidConfirmation & isValidBookingId
+        await _showConfirmationFromUrl(confirmationRef!, bookingId!);
         return; // Don't continue with normal initialization
       }
 
       // If this is a direct booking return (same tab), show confirmation
       if (isDirectBookingReturn) {
-        await _showConfirmationFromUrl(confirmationRef, bookingId, paymentMethod: paymentType, isDirectBooking: true);
+        // Safe to use ! - isDirectBookingReturn guarantees isValidConfirmation & isValidBookingId
+        await _showConfirmationFromUrl(confirmationRef!, bookingId!, paymentMethod: paymentType, isDirectBooking: true);
         return; // Don't continue with normal initialization
       }
 
@@ -2118,6 +2151,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           keyboardInset = 0.0;
         }
 
+        // Bug Fix: Use format methods with currencySymbol instead of deprecated getters
+        final currency = WidgetTranslations.of(context, ref).currencySymbol;
+
         return BookingPillBar(
           width: pillBarWidth,
           maxHeight: maxHeight,
@@ -2129,11 +2165,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             nights: checkOut.isAfter(checkIn)
                 ? checkOut.difference(checkIn).inDays
                 : 1, // Fallback to 1 night if dates are invalid
-            formattedRoomPrice: calculation.formattedRoomPrice,
+            formattedRoomPrice: calculation.formatRoomPrice(currency),
             additionalServicesTotal: calculation.additionalServicesTotal,
-            formattedAdditionalServices: calculation.formattedAdditionalServices,
-            formattedTotal: calculation.formattedTotal,
-            formattedDeposit: calculation.formattedDeposit,
+            formattedAdditionalServices: calculation.formatAdditionalServices(currency),
+            formattedTotal: calculation.formatTotal(currency),
+            formattedDeposit: calculation.formatDeposit(currency),
             depositPercentage: calculation.totalPrice > 0
                 ? ((calculation.depositAmount / calculation.totalPrice) * 100).round()
                 : 20,
@@ -2283,17 +2319,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
               final tr = WidgetTranslations.of(context, ref);
 
+              // Bug Fix: Use format method with currencySymbol instead of deprecated getter
+              final depositFormatted = calculation.formatDeposit(tr.currencySymbol);
+
               if (isStripeEnabled) {
                 enabledCount++;
                 singleMethod = 'stripe';
                 singleMethodTitle = tr.creditCard;
-                singleMethodSubtitle = calculation.formattedDeposit;
+                singleMethodSubtitle = depositFormatted;
               }
               if (isBankTransferEnabled) {
                 enabledCount++;
                 singleMethod = 'bank_transfer';
                 singleMethodTitle = tr.bankTransfer;
-                singleMethodSubtitle = calculation.formattedDeposit;
+                singleMethodSubtitle = depositFormatted;
               }
               if (isPayOnArrivalEnabled) {
                 enabledCount++;
@@ -2380,6 +2419,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
               // Multiple payment methods - show all options
               final tr = WidgetTranslations.of(context, ref);
+              // Bug Fix: Use format method with currencySymbol instead of deprecated getter
+              final depositFormatted = calculation.formatDeposit(tr.currencySymbol);
               return Column(
                 children: [
                   // Stripe option - credit card + secure payment icons
@@ -2392,7 +2433,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       isSelected: _selectedPaymentMethod == 'stripe',
                       onTap: () => setState(() => _selectedPaymentMethod = 'stripe'),
                       isDarkMode: isDarkMode,
-                      depositAmount: calculation.formattedDeposit,
+                      depositAmount: depositFormatted,
                     ),
 
                   // Bank Transfer option - bank building icon
@@ -2410,7 +2451,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             isSelected: _selectedPaymentMethod == 'bank_transfer',
                             onTap: () => setState(() => _selectedPaymentMethod = 'bank_transfer'),
                             isDarkMode: isDarkMode,
-                            depositAmount: calculation.formattedDeposit,
+                            depositAmount: calculation.formatDeposit(tr.currencySymbol),
                           ),
                         );
                       },
@@ -3022,7 +3063,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
         LoggingService.log('[Stripe] Return URL validated: $returnUrl', tag: 'STRIPE');
       } catch (e) {
-        LoggingService.logError('[Stripe] Invalid return URL format: $returnUrl', e);
+        unawaited(LoggingService.logError('[Stripe] Invalid return URL format: $returnUrl', e));
         throw Exception('Failed to build valid return URL: $e');
       }
 

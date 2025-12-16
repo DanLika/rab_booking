@@ -32,28 +32,12 @@ class BookingPriceCalculation {
   double get totalPrice => roomPrice + additionalServicesTotal;
 
   /// Format price with currency symbol
-  /// Use these methods instead of the deprecated getters
+  /// Multi-currency support: use currencySymbol from WidgetTranslations
   String formatRoomPrice(String currency) => '$currency${roomPrice.toStringAsFixed(2)}';
   String formatAdditionalServices(String currency) => '$currency${additionalServicesTotal.toStringAsFixed(2)}';
   String formatTotal(String currency) => '$currency${totalPrice.toStringAsFixed(2)}';
   String formatDeposit(String currency) => '$currency${depositAmount.toStringAsFixed(2)}';
   String formatRemaining(String currency) => '$currency${remainingAmount.toStringAsFixed(2)}';
-
-  /// @deprecated Use formatRoomPrice(currency) instead
-  @Deprecated('Use formatRoomPrice(currency) instead to support multiple currencies')
-  String get formattedRoomPrice => '€${roomPrice.toStringAsFixed(2)}';
-  /// @deprecated Use formatAdditionalServices(currency) instead
-  @Deprecated('Use formatAdditionalServices(currency) instead to support multiple currencies')
-  String get formattedAdditionalServices => '€${additionalServicesTotal.toStringAsFixed(2)}';
-  /// @deprecated Use formatTotal(currency) instead
-  @Deprecated('Use formatTotal(currency) instead to support multiple currencies')
-  String get formattedTotal => '€${totalPrice.toStringAsFixed(2)}';
-  /// @deprecated Use formatDeposit(currency) instead
-  @Deprecated('Use formatDeposit(currency) instead to support multiple currencies')
-  String get formattedDeposit => '€${depositAmount.toStringAsFixed(2)}';
-  /// @deprecated Use formatRemaining(currency) instead
-  @Deprecated('Use formatRemaining(currency) instead to support multiple currencies')
-  String get formattedRemaining => '€${remainingAmount.toStringAsFixed(2)}';
 
   // Bug #64: Check if price has changed since lock
   bool get hasPriceChanged {

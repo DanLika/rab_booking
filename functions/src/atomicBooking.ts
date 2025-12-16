@@ -30,7 +30,7 @@ import {
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {sendEmailWithRetry} from "./utils/emailRetry";
 import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
-import {validateBookingPrice} from "./utils/priceValidation";
+import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -197,7 +197,8 @@ export const createBookingAtomic = onCall(async (request) => {
   }
 
   // Validate paymentMethod is one of the allowed values
-  const allowedPaymentMethods = ["stripe", "bank_transfer", "none"];
+  // NOTE: "pay_on_arrival" is the client-side value, "none" is legacy - both mean pay on arrival
+  const allowedPaymentMethods = ["stripe", "bank_transfer", "none", "pay_on_arrival"];
   if (!allowedPaymentMethods.includes(paymentMethod)) {
     throw new HttpsError(
       "invalid-argument",
@@ -283,7 +284,7 @@ export const createBookingAtomic = onCall(async (request) => {
     const isBankTransferDisabled = paymentMethod === "bank_transfer" &&
       (!bankTransferConfig || !bankTransferConfig.enabled);
     const isPayOnArrivalDisabled =
-      paymentMethod === "none" && !allowPayOnArrival;
+      (paymentMethod === "none" || paymentMethod === "pay_on_arrival") && !allowPayOnArrival;
 
     if (isStripeDisabled) {
       throw new HttpsError(
@@ -409,19 +410,65 @@ export const createBookingAtomic = onCall(async (request) => {
     // ========================================================================
     // SECURITY: For non-Stripe payments, validate price here since booking
     // is created immediately. For Stripe, validation happens in stripePayment.ts.
+    //
+    // GRACEFUL HANDLING: If price mismatch (client locked price differs from
+    // server-calculated current price), use server-calculated price instead
+    // of blocking the booking. This matches Stripe flow behavior.
     // ========================================================================
-    await validateBookingPrice(
-      unitId,
-      checkInDate,
-      checkOutDate,
-      numericTotalPrice, // Use validated numeric price
-      propertyId // Pass propertyId for fallback to unit base price
-    );
+    let finalTotalPrice = numericTotalPrice;
+    let finalDepositAmount = depositAmount;
 
-    logInfo("[AtomicBooking] Price validated against server calculation", {
-      unitId,
-      totalPrice: numericTotalPrice,
-    });
+    try {
+      await validateBookingPrice(
+        unitId,
+        checkInDate,
+        checkOutDate,
+        numericTotalPrice, // Use validated numeric price
+        propertyId // Pass propertyId for fallback to unit base price
+      );
+
+      logInfo("[AtomicBooking] Price validated against server calculation", {
+        unitId,
+        totalPrice: numericTotalPrice,
+      });
+    } catch (priceError: any) {
+      // If price mismatch, use server-calculated price instead of client's locked price
+      if (priceError.code === "invalid-argument" && priceError.message?.includes("Price mismatch")) {
+        logInfo("[AtomicBooking] Price mismatch - using server-calculated price", {
+          unitId,
+          clientPrice: numericTotalPrice,
+          error: priceError.message,
+        });
+
+        // Calculate server-side price and use it instead
+        const {totalPrice: serverPrice} = await calculateBookingPrice(
+          unitId,
+          checkInDate,
+          checkOutDate,
+          propertyId
+        );
+
+        logInfo("[AtomicBooking] Using server-calculated price for booking", {
+          unitId,
+          oldPrice: numericTotalPrice,
+          newPrice: serverPrice,
+        });
+
+        // Update prices to use server-calculated price
+        finalTotalPrice = serverPrice;
+
+        // Recalculate deposit based on new price
+        if (paymentOption === "deposit") {
+          finalDepositAmount = calculateDepositAmount(serverPrice, depositPercentage);
+        } else if (paymentOption === "full") {
+          finalDepositAmount = serverPrice;
+        }
+        // paymentOption === "none" keeps depositAmount as 0
+      } else {
+        // Other validation errors - rethrow
+        throw priceError;
+      }
+    }
 
     // Determine booking status for NON-STRIPE payments
     // pending = awaiting owner approval (BLOCKS calendar dates)
@@ -433,7 +480,7 @@ export const createBookingAtomic = onCall(async (request) => {
       // Requires manual owner approval
       // pending status BLOCKS calendar dates until owner approves or rejects
       status = "pending";
-      paymentStatus = paymentMethod === "none" ? "not_required" : "pending";
+      paymentStatus = (paymentMethod === "none" || paymentMethod === "pay_on_arrival") ? "not_required" : "pending";
     } else {
       // Auto-confirmed (no approval needed, non-Stripe payment)
       status = "confirmed";
@@ -803,10 +850,10 @@ export const createBookingAtomic = onCall(async (request) => {
         check_in: checkInDate,
         check_out: checkOutDate,
         guest_count: numericGuestCount, // Use validated numeric value
-        total_price: numericTotalPrice, // Use validated numeric value
-        advance_amount: depositAmount,
-        deposit_amount: depositAmount, // For Stripe Cloud Function
-        remaining_amount: calculateRemainingAmount(numericTotalPrice, depositAmount),
+        total_price: finalTotalPrice, // Use server-validated price (may differ from client)
+        advance_amount: finalDepositAmount,
+        deposit_amount: finalDepositAmount, // For Stripe Cloud Function
+        remaining_amount: calculateRemainingAmount(finalTotalPrice, finalDepositAmount),
         paid_amount: 0,
         payment_method: paymentMethod,
         payment_status: paymentStatus,
@@ -851,7 +898,8 @@ export const createBookingAtomic = onCall(async (request) => {
       return {
         bookingId,
         bookingReference: bookingRef,
-        depositAmount,
+        depositAmount: finalDepositAmount,
+        totalPrice: finalTotalPrice, // Return server-calculated price for UI update
         status,
         paymentStatus,
         accessToken, // Plaintext token for email
@@ -975,8 +1023,8 @@ export const createBookingAtomic = onCall(async (request) => {
               result.bookingReference,
               checkInDate.toDate(),
               checkOutDate.toDate(),
-              totalPrice,
-              depositAmount,
+              result.totalPrice, // Use server-validated price
+              result.depositAmount, // Use server-validated deposit
               unitName,
               propertyData?.name || "Property",
               result.accessToken, // Plaintext token for email link
@@ -1036,8 +1084,8 @@ export const createBookingAtomic = onCall(async (request) => {
                     checkInDate.toDate(),
                     checkOutDate.toDate(),
                     Number(guestCount), // Use validated numeric value
-                    totalPrice,
-                    depositAmount
+                    result.totalPrice, // Use server-validated price
+                    result.depositAmount // Use server-validated deposit
                   );
                 },
                 "Owner Notification",
@@ -1068,7 +1116,7 @@ export const createBookingAtomic = onCall(async (request) => {
       ...result,
       message: paymentMethod === "bank_transfer" ?
         "Booking created. Awaiting bank transfer payment." :
-        paymentMethod === "none" ?
+        (paymentMethod === "none" || paymentMethod === "pay_on_arrival") ?
           "Booking confirmed. Payment will be collected on arrival." :
           requireOwnerApproval ?
             "Booking request submitted. Awaiting owner approval." :

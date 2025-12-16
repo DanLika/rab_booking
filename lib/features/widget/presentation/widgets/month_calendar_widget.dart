@@ -294,8 +294,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         // Week day headers
         _buildWeekDayHeaders(colors),
         const SizedBox(height: SpacingTokens.s),
-        // Calendar grid - part of page flow (no internal scroll)
-        _buildMonthGridForMonth(month, data, colors),
+        // RepaintBoundary: Calendar grid repaints independently from headers
+        // when dates are selected or hovered
+        RepaintBoundary(
+          child: _buildMonthGridForMonth(month, data, colors),
+        ),
       ],
     );
   }

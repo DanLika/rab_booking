@@ -124,10 +124,10 @@ class BookingActionBottomSheet extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildInfoChip(Icons.nights_stay, '$nights ${nights == 1 ? 'noć' : 'noći'}'),
+                        _buildInfoChip(Icons.nights_stay, l10n.tooltipNightsCount(nights)),
                         _buildInfoChip(
                           Icons.people_outline,
-                          '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''}',
+                          l10n.tooltipGuestsCount(booking.guestCount),
                         ),
                         _buildInfoChip(Icons.euro, '${booking.totalPrice.toStringAsFixed(0)} €'),
                       ],
@@ -313,7 +313,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
           if (conflictingBookings != null && conflictingBookings!.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              'Konflikt sa:', // TODO: localize
+              l10n.tooltipConflictWith,
               style: TextStyle(color: Colors.red.shade700, fontSize: 12, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 4),
@@ -353,7 +353,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
                 ),
             if (conflictingBookings!.length > 3)
               Text(
-                '+${conflictingBookings!.length - 3} više...', // TODO: localize
+                l10n.tooltipMoreConflicts(conflictingBookings!.length - 3),
                 style: TextStyle(color: Colors.red.shade600, fontSize: 11, fontStyle: FontStyle.italic),
               ),
           ],
@@ -388,12 +388,12 @@ class BookingActionBottomSheet extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Uvezena rezervacija', // TODO: localize
+                  l10n.tooltipImportedBooking,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Upravljajte na ${booking.sourceDisplayName}', // TODO: localize
+                  l10n.tooltipManageOn(booking.sourceDisplayName),
                   style: TextStyle(fontSize: 12, color: Colors.orange.shade700),
                 ),
               ],

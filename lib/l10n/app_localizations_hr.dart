@@ -7238,4 +7238,80 @@ class AppLocalizationsHr extends AppLocalizations {
   ) {
     return 'Rezervacija za $guestName, od $checkIn do $checkOut, $nights noći, $guestCount gostiju$conflictText. Tapni za detalje.';
   }
+
+  @override
+  String tooltipNightsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count noći',
+      few: '$count noći',
+      one: '1 noć',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tooltipGuestsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gostiju',
+      few: '$count gosta',
+      one: '1 gost',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tooltipConflictWith => 'Konflikt sa:';
+
+  @override
+  String tooltipMoreConflicts(int count) {
+    return '+$count više...';
+  }
+
+  @override
+  String get tooltipImportedBooking => 'Uvezena rezervacija';
+
+  @override
+  String tooltipManageOn(String platform) {
+    return 'Upravljajte na $platform';
+  }
+
+  @override
+  String get tooltipGuest => 'Gost';
+
+  @override
+  String get tooltipCheckIn => 'Dolazak';
+
+  @override
+  String get tooltipCheckOut => 'Odlazak';
+
+  @override
+  String get tooltipNights => 'Noći';
+
+  @override
+  String get tooltipGuests => 'Gosti';
+
+  @override
+  String get tooltipPrice => 'Cijena';
+
+  @override
+  String get tooltipSource => 'Izvor';
+
+  @override
+  String get tooltipNote => 'Napomena:';
+
+  @override
+  String get statusPending => 'Na čekanju';
+
+  @override
+  String get statusConfirmed => 'Potvrđeno';
+
+  @override
+  String get statusCompleted => 'Završeno';
+
+  @override
+  String get statusCancelled => 'Otkazano';
 }

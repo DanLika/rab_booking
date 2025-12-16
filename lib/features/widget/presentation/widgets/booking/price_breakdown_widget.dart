@@ -15,14 +15,15 @@ import 'price_row_widget.dart';
 ///
 /// Usage:
 /// ```dart
+/// final currency = WidgetTranslations.of(context, ref).currencySymbol;
 /// PriceBreakdownWidget(
 ///   isDarkMode: isDarkMode,
 ///   nights: calculation.nights,
-///   formattedRoomPrice: calculation.formattedRoomPrice,
+///   formattedRoomPrice: calculation.formatRoomPrice(currency),
 ///   additionalServicesTotal: calculation.additionalServicesTotal,
-///   formattedAdditionalServices: calculation.formattedAdditionalServices,
-///   formattedTotal: calculation.formattedTotal,
-///   formattedDeposit: calculation.formattedDeposit,
+///   formattedAdditionalServices: calculation.formatAdditionalServices(currency),
+///   formattedTotal: calculation.formatTotal(currency),
+///   formattedDeposit: calculation.formatDeposit(currency),
 ///   depositPercentage: 20,
 /// )
 /// ```

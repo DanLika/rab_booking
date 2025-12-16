@@ -11,9 +11,18 @@ Ovaj folder sadrži dokumentaciju za funkcionalnosti koje su **potpuno implement
 ### Deployment
 - **Firebase-Deployment.md** - Firebase deployment dokumentacija i upute
 
-### Bug Fixes (2025-12-15)
+### Bug Fixes (2025-12-15/16)
 - **WIDGET_CONFIRMATION_BUGS.md** - Svi critical bugovi riješeni (null checks, lokalizacija, hardcoded stringovi)
 - **WIDGET_HELPERS_BUGS.md** - Svi high priority bugovi riješeni (error handling, date comparison)
+- **WIDGET_BANK_TRANSFER_BUGS.md** - Svi bugovi riješeni (EPC QR validacija, clipboard error handling, lokalizacija)
+- **WIDGET_CALENDAR_BUGS.md** - Svi calendar bugovi riješeni
+- **WIDGET_MISC_BUGS.md** - Razni widget bugovi riješeni
+- **WIDGET_MODELS_BUGS.md** - Model bugovi riješeni
+- **WIDGET_PROVIDERS_BUGS.md** - Provider bugovi riješeni
+
+### Settings & Payment Config (2025-12-16)
+- **payment-config-bugs.md** - Svi bugovi riješeni (floating point precision, input validation)
+- **settings-config-bugs.md** - Svi bugovi riješeni (null handling, validacije, email/URL format)
 
 ---
 
@@ -30,7 +39,7 @@ Sve dokumentacije u ovom folderu predstavljaju **završene i implementirane** fu
 
 ---
 
-**Zadnje ažurirano:** 2025-12-15
+**Zadnje ažurirano:** 2025-12-16
 
 
 

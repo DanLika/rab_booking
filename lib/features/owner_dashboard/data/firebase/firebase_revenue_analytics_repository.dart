@@ -417,7 +417,7 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
       createdBefore: endDate,
     );
 
-    return bookings.fold<double>(0.0, (sum, b) => sum + b.totalPrice);
+    return bookings.fold<double>(0.0, (total, b) => total + b.totalPrice);
   }
 
   /// Generate date key for grouping (YYYY-MM-DD)

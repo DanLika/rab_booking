@@ -7314,4 +7314,50 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get statusCancelled => 'Otkazano';
+
+  @override
+  String get warningUnblockDatesTitle => 'Upozorenje: Otključavanje datuma';
+
+  @override
+  String warningUnblockDatesMessage(String platformName, String dateRange) {
+    return 'Spremate se otključati datume na $platformName za $dateRange. Ti datumi su možda blokirani zbog rezervacije na drugoj platformi.';
+  }
+
+  @override
+  String get warningUnblockDatesRisks => 'Molimo razmotrite ove rizike:';
+
+  @override
+  String get riskCancelledByMistake => 'Rezervacija je možda greškom otkazana';
+
+  @override
+  String get riskPlanToReactivate =>
+      'Gost možda planira ponovno aktivirati rezervaciju';
+
+  @override
+  String get riskAnotherBookingExists =>
+      'Možda postoji druga rezervacija za te datume na drugim platformama';
+
+  @override
+  String get yesUnblock => 'Da, Otključaj';
+
+  @override
+  String get warningUpdateBookingTitle => 'Ažuriranje datuma rezervacije';
+
+  @override
+  String get warningUpdateBookingMessage =>
+      'Ažuriranje datuma rezervacije će sinkronizirati promjene na eksterne platforme:';
+
+  @override
+  String get oldDatesWillBeUnblocked => 'Stari datumi (bit će otključani)';
+
+  @override
+  String get newDatesWillBeBlocked => 'Novi datumi (bit će zaključani)';
+
+  @override
+  String platformSyncInfo(String platforms) {
+    return 'Promjene će biti sinkronizirane na: $platforms';
+  }
+
+  @override
+  String get updateBooking => 'Ažuriraj rezervaciju';
 }

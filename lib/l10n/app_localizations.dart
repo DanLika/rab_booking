@@ -13158,6 +13158,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get statusCancelled;
+
+  /// No description provided for @warningUnblockDatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: Unblocking Dates'**
+  String get warningUnblockDatesTitle;
+
+  /// No description provided for @warningUnblockDatesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You are about to unblock dates on {platformName} for {dateRange}. These dates may have been blocked due to a booking on another platform.'**
+  String warningUnblockDatesMessage(String platformName, String dateRange);
+
+  /// No description provided for @warningUnblockDatesRisks.
+  ///
+  /// In en, this message translates to:
+  /// **'Please consider these risks:'**
+  String get warningUnblockDatesRisks;
+
+  /// No description provided for @riskCancelledByMistake.
+  ///
+  /// In en, this message translates to:
+  /// **'The booking may have been cancelled by mistake'**
+  String get riskCancelledByMistake;
+
+  /// No description provided for @riskPlanToReactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'The guest may plan to reactivate the booking'**
+  String get riskPlanToReactivate;
+
+  /// No description provided for @riskAnotherBookingExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Another booking may exist for these dates on other platforms'**
+  String get riskAnotherBookingExists;
+
+  /// No description provided for @yesUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, Unblock'**
+  String get yesUnblock;
+
+  /// No description provided for @warningUpdateBookingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Booking Dates'**
+  String get warningUpdateBookingTitle;
+
+  /// No description provided for @warningUpdateBookingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating booking dates will sync changes to external platforms:'**
+  String get warningUpdateBookingMessage;
+
+  /// No description provided for @oldDatesWillBeUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Old dates (will be unblocked)'**
+  String get oldDatesWillBeUnblocked;
+
+  /// No description provided for @newDatesWillBeBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'New dates (will be blocked)'**
+  String get newDatesWillBeBlocked;
+
+  /// No description provided for @platformSyncInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes will be synced to: {platforms}'**
+  String platformSyncInfo(String platforms);
+
+  /// No description provided for @updateBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Booking'**
+  String get updateBooking;
 }
 
 class _AppLocalizationsDelegate

@@ -3120,5 +3120,31 @@
   "statusPending": "Pending",
   "statusConfirmed": "Confirmed",
   "statusCompleted": "Completed",
-  "statusCancelled": "Cancelled"
+  "statusCancelled": "Cancelled",
+
+  "warningUnblockDatesTitle": "Warning: Unblocking Dates",
+  "warningUnblockDatesMessage": "You are about to unblock dates on {platformName} for {dateRange}. These dates may have been blocked due to a booking on another platform.",
+  "@warningUnblockDatesMessage": {
+    "placeholders": {
+      "platformName": {"type": "String"},
+      "dateRange": {"type": "String"}
+    }
+  },
+  "warningUnblockDatesRisks": "Please consider these risks:",
+  "riskCancelledByMistake": "The booking may have been cancelled by mistake",
+  "riskPlanToReactivate": "The guest may plan to reactivate the booking",
+  "riskAnotherBookingExists": "Another booking may exist for these dates on other platforms",
+  "yesUnblock": "Yes, Unblock",
+
+  "warningUpdateBookingTitle": "Update Booking Dates",
+  "warningUpdateBookingMessage": "Updating booking dates will sync changes to external platforms:",
+  "oldDatesWillBeUnblocked": "Old dates (will be unblocked)",
+  "newDatesWillBeBlocked": "New dates (will be blocked)",
+  "platformSyncInfo": "Changes will be synced to: {platforms}",
+  "@platformSyncInfo": {
+    "placeholders": {
+      "platforms": {"type": "String"}
+    }
+  },
+  "updateBooking": "Update Booking"
 }

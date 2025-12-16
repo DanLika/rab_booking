@@ -25,7 +25,7 @@ import 'timeline/timeline_date_headers_widget.dart';
 import 'timeline/timeline_unit_column_widget.dart';
 import 'timeline/timeline_grid_widget.dart';
 import 'timeline/timeline_summary_bar_widget.dart';
-import 'timeline/timeline_booking_block.dart';
+import '../../utils/booking_overlap_detector.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Safely convert error to string, handling null and edge cases
@@ -857,7 +857,13 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final bookingsByUnit = bookingsAsync.value ?? {};
 
     // Detect conflicting bookings
-    final conflictingBookings = TimelineBookingBlock.getConflictingBookings(booking, bookingsByUnit);
+    final conflictingBookings = BookingOverlapDetector.getConflictingBookings(
+      unitId: booking.unitId,
+      newCheckIn: booking.checkIn,
+      newCheckOut: booking.checkOut,
+      bookingIdToExclude: booking.id,
+      allBookings: bookingsByUnit,
+    );
     final hasConflict = conflictingBookings.isNotEmpty;
 
     final action = await showModalBottomSheet<String>(

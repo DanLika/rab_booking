@@ -3126,5 +3126,32 @@
   "statusPending": "Na čekanju",
   "statusConfirmed": "Potvrđeno",
   "statusCompleted": "Završeno",
-  "statusCancelled": "Otkazano"
+  "statusCancelled": "Otkazano",
+
+  "warningUnblockDatesTitle": "Upozorenje: Otključavanje datuma",
+  "warningUnblockDatesMessage": "Spremate se otključati datume na {platformName} za {dateRange}. Ti datumi su možda blokirani zbog rezervacije na drugoj platformi.",
+  "@warningUnblockDatesMessage": {
+    "placeholders": {
+      "platformName": {"type": "String"},
+      "dateRange": {"type": "String"}
+    }
+  },
+  "warningUnblockDatesRisks": "Molimo razmotrite ove rizike:",
+  "riskCancelledByMistake": "Rezervacija je možda greškom otkazana",
+  "riskPlanToReactivate": "Gost možda planira ponovno aktivirati rezervaciju",
+  "riskAnotherBookingExists": "Možda postoji druga rezervacija za te datume na drugim platformama",
+  "yesUnblock": "Da, Otključaj",
+  "warningUpdateBookingTitle": "Ažuriranje datuma rezervacije",
+  "warningUpdateBookingMessage": "Ažuriranje datuma rezervacije će sinkronizirati promjene na eksterne platforme:",
+  "oldDatesWillBeUnblocked": "Stari datumi (bit će otključani)",
+  "newDatesWillBeBlocked": "Novi datumi (bit će zaključani)",
+  "platformSyncInfo": "Promjene će biti sinkronizirane na: {platforms}",
+  "@platformSyncInfo": {
+    "placeholders": {
+      "platforms": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBooking": "Ažuriraj rezervaciju"
 }

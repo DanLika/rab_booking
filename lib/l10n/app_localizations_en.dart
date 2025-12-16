@@ -7262,4 +7262,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusCancelled => 'Cancelled';
+
+  @override
+  String get warningUnblockDatesTitle => 'Warning: Unblocking Dates';
+
+  @override
+  String warningUnblockDatesMessage(String platformName, String dateRange) {
+    return 'You are about to unblock dates on $platformName for $dateRange. These dates may have been blocked due to a booking on another platform.';
+  }
+
+  @override
+  String get warningUnblockDatesRisks => 'Please consider these risks:';
+
+  @override
+  String get riskCancelledByMistake =>
+      'The booking may have been cancelled by mistake';
+
+  @override
+  String get riskPlanToReactivate =>
+      'The guest may plan to reactivate the booking';
+
+  @override
+  String get riskAnotherBookingExists =>
+      'Another booking may exist for these dates on other platforms';
+
+  @override
+  String get yesUnblock => 'Yes, Unblock';
+
+  @override
+  String get warningUpdateBookingTitle => 'Update Booking Dates';
+
+  @override
+  String get warningUpdateBookingMessage =>
+      'Updating booking dates will sync changes to external platforms:';
+
+  @override
+  String get oldDatesWillBeUnblocked => 'Old dates (will be unblocked)';
+
+  @override
+  String get newDatesWillBeBlocked => 'New dates (will be blocked)';
+
+  @override
+  String platformSyncInfo(String platforms) {
+    return 'Changes will be synced to: $platforms';
+  }
+
+  @override
+  String get updateBooking => 'Update Booking';
 }

@@ -122,6 +122,20 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     _scheduleInitialScroll();
   }
 
+  @override
+  void didUpdateWidget(TimelineCalendarWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // CRITICAL FIX: React to initialScrollToDate prop changes from toolbar
+    // When user clicks toolbar arrows or changes month, parent updates initialScrollToDate
+    // Without this, widget only uses initialScrollToDate in initState() and ignores changes
+    if (widget.initialScrollToDate != oldWidget.initialScrollToDate &&
+        widget.initialScrollToDate != null) {
+      // Scroll to the new date
+      _scrollToDate(widget.initialScrollToDate!);
+    }
+  }
+
   void _initializeControllers() {
     _horizontalScrollController = ScrollController();
     _verticalScrollController = ScrollController();
@@ -357,10 +371,17 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   }
 
   void _scrollToToday() {
+    _scrollToDate(widget.initialScrollToDate ?? DateTime.now(), isInitialScroll: true);
+  }
+
+  /// Unified scroll-to-date method used by:
+  /// - _scrollToToday() for initial scroll
+  /// - didUpdateWidget() for toolbar navigation
+  /// - Any future date navigation needs
+  void _scrollToDate(DateTime targetDate, {bool isInitialScroll = false}) {
     if (!_horizontalScrollController.hasClients) return;
 
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
-    final targetDate = widget.initialScrollToDate ?? DateTime.now();
 
     // Check if target date is within current range, extend if needed
     if (targetDate.isBefore(_dynamicStartDate)) {
@@ -370,7 +391,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       });
       // Wait for rebuild then scroll
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _scrollToToday();
+        if (mounted) _scrollToDate(targetDate, isInitialScroll: isInitialScroll);
       });
       return;
     }
@@ -382,7 +403,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       });
       // Wait for rebuild then scroll
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _scrollToToday();
+        if (mounted) _scrollToDate(targetDate, isInitialScroll: isInitialScroll);
       });
       return;
     }
@@ -399,9 +420,13 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         .animateTo(targetScroll, duration: AppDimensions.animationSlow, curve: Curves.easeInOut)
         .then((_) {
           if (mounted) {
-            setState(() => _isInitialScrolling = false);
+            if (isInitialScroll) {
+              setState(() => _isInitialScrolling = false);
+            }
             // Restore vertical scroll position if provided (preserves position on toolbar navigation)
             _restoreVerticalScrollPosition();
+            // Notify parent of visible date change
+            widget.onVisibleDateRangeChanged?.call(targetDate);
           }
         });
   }

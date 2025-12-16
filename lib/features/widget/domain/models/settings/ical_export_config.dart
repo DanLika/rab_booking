@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../constants/widget_constants.dart';
 
@@ -116,8 +117,41 @@ class ICalExportConfig {
   }
 
   /// Check if iCal export is fully configured and ready to use.
+  ///
+  /// Returns true if:
+  /// - iCal export is enabled
+  /// - Export URL is set and has valid HTTP/HTTPS format
+  /// - Export token is set and not empty
   bool get isConfigured {
-    return enabled && exportUrl != null && exportToken != null;
+    if (!enabled) return false;
+    if (exportToken == null || exportToken!.trim().isEmpty) return false;
+    if (exportUrl == null) return false;
+
+    // Validate URL format
+    try {
+      final uri = Uri.parse(exportUrl!);
+      return uri.hasScheme &&
+          (uri.scheme == 'http' || uri.scheme == 'https') &&
+          uri.hasAuthority;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Check if the export URL has a valid format.
+  ///
+  /// Returns true if exportUrl is null (not set) or has valid HTTP/HTTPS format.
+  /// Returns false only if exportUrl is set but has invalid format.
+  bool get hasValidExportUrl {
+    if (exportUrl == null) return true; // Not set = valid (will fail isConfigured)
+    try {
+      final uri = Uri.parse(exportUrl!);
+      return uri.hasScheme &&
+          (uri.scheme == 'http' || uri.scheme == 'https') &&
+          uri.hasAuthority;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Check if the feed needs regeneration (older than sync interval).
@@ -182,11 +216,19 @@ class ICalExportConfig {
   String toString() =>
       'ICalExportConfig(enabled: $enabled, isConfigured: $isConfigured)';
 
+  /// Parse DateTime from various formats (Firestore Timestamp, DateTime, String).
+  ///
+  /// Logs unexpected types in debug mode for easier debugging.
   static DateTime? _parseDateTime(dynamic value) {
     if (value == null) return null;
     if (value is Timestamp) return value.toDate();
     if (value is DateTime) return value;
     if (value is String) return DateTime.tryParse(value);
+
+    // Log unexpected type for debugging
+    debugPrint(
+      'ICalExportConfig._parseDateTime: Unexpected type ${value.runtimeType}',
+    );
     return null;
   }
 }

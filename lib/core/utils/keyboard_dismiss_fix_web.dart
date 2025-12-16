@@ -94,3 +94,40 @@ void forceCanvasInvalidateImpl() {
     // Silently fail
   }
 }
+
+/// Stored callback reference for the window resize listener
+void Function()? _windowResizeCallback;
+
+/// Stored JS function reference for window resize - must be stored to properly remove listener
+JSFunction? _windowResizeJsHandler;
+
+/// Internal window resize handler that calls the Dart callback
+void _handleWindowResize(web.Event event) {
+  _windowResizeCallback?.call();
+}
+
+/// Listen to window resize events as fallback for visualViewport
+/// Returns a cleanup function to remove the listener
+void Function() listenToWindowResizeImpl(void Function() onResize) {
+  try {
+    // Store callback
+    _windowResizeCallback = onResize;
+
+    // Create and store JS handler
+    _windowResizeJsHandler = _handleWindowResize.toJS;
+
+    // Add listener to window
+    web.window.addEventListener('resize', _windowResizeJsHandler);
+
+    // Return cleanup function
+    return () {
+      if (_windowResizeJsHandler != null) {
+        web.window.removeEventListener('resize', _windowResizeJsHandler);
+        _windowResizeJsHandler = null;
+      }
+      _windowResizeCallback = null;
+    };
+  } catch (e) {
+    return () {}; // No-op cleanup on error
+  }
+}

@@ -293,6 +293,68 @@ void main() {
 
         expect(copy, original);
       });
+
+      // Note: In standard Dart copyWith pattern, passing null means "keep existing value".
+      // The auto-disable feature works with empty strings, not null parameters.
+
+      test('auto-disables showPhone when phoneNumber is empty', () {
+        const original = ContactOptions(
+          showPhone: true,
+          phoneNumber: '+385 91 123 4567',
+        );
+
+        final updated = original.copyWith(phoneNumber: '');
+
+        expect(updated.showPhone, false);
+        expect(updated.phoneNumber, '');
+      });
+
+      test('auto-disables showEmail when emailAddress is empty', () {
+        const original = ContactOptions(
+          showEmail: true,
+          emailAddress: 'test@example.com',
+        );
+
+        final updated = original.copyWith(emailAddress: '');
+
+        expect(updated.showEmail, false);
+        expect(updated.emailAddress, '');
+      });
+
+      test('auto-disables showWhatsApp when whatsAppNumber is empty', () {
+        const original = ContactOptions(
+          showWhatsApp: true,
+          whatsAppNumber: '+385 91 999 8888',
+        );
+
+        final updated = original.copyWith(whatsAppNumber: '');
+
+        expect(updated.showWhatsApp, false);
+      });
+
+      test('keeps showPhone enabled when phoneNumber has value', () {
+        const original = ContactOptions(
+          showPhone: true,
+          phoneNumber: '+385 91 123 4567',
+        );
+
+        final updated = original.copyWith(phoneNumber: '+385 91 999 0000');
+
+        expect(updated.showPhone, true);
+        expect(updated.phoneNumber, '+385 91 999 0000');
+      });
+
+      test('prevents enabling showPhone without phoneNumber', () {
+        const original = ContactOptions(
+          showPhone: false,
+          phoneNumber: null,
+        );
+
+        // Trying to enable showPhone without a number should stay disabled
+        final updated = original.copyWith(showPhone: true);
+
+        expect(updated.showPhone, false);
+      });
     });
 
     group('equality', () {

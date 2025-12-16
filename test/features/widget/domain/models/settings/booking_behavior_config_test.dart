@@ -78,6 +78,106 @@ void main() {
         expect(config.maxNights, null);
         expect(config.weekendDays, WidgetConstants.defaultWeekendDays);
       });
+
+      test('preserves explicit null for cancellationDeadlineHours', () {
+        final map = {
+          'cancellation_deadline_hours': null,
+        };
+
+        final config = BookingBehaviorConfig.fromMap(map);
+
+        // When explicitly set to null in Firestore, should be null (no deadline)
+        expect(config.cancellationDeadlineHours, isNull);
+      });
+
+      test('uses default when cancellationDeadlineHours key is missing', () {
+        final map = <String, dynamic>{};
+
+        final config = BookingBehaviorConfig.fromMap(map);
+
+        // When key doesn't exist, use default value of 48
+        expect(config.cancellationDeadlineHours, 48);
+      });
+
+      test('clamps negative minDaysAdvance to 0', () {
+        final map = {'min_days_advance': -5};
+
+        final config = BookingBehaviorConfig.fromMap(map);
+
+        expect(config.minDaysAdvance, 0);
+      });
+
+      test('clamps negative maxDaysAdvance to 0', () {
+        final map = {'max_days_advance': -10};
+
+        final config = BookingBehaviorConfig.fromMap(map);
+
+        expect(config.maxDaysAdvance, 0);
+      });
+
+      test('clamps minDaysAdvance to max 365', () {
+        final map = {'min_days_advance': 500};
+
+        final config = BookingBehaviorConfig.fromMap(map);
+
+        expect(config.minDaysAdvance, 365);
+      });
+
+      test('clamps maxDaysAdvance to max 730', () {
+        final map = {'max_days_advance': 1000};
+
+        final config = BookingBehaviorConfig.fromMap(map);
+
+        expect(config.maxDaysAdvance, 730);
+      });
+
+      test('clamps minNights to minimum 1', () {
+        final map = {'min_nights': 0};
+
+        final config = BookingBehaviorConfig.fromMap(map);
+
+        expect(config.minNights, 1);
+      });
+    });
+
+    group('isValidConfig', () {
+      test('returns true for valid configuration', () {
+        const config = BookingBehaviorConfig(
+          minNights: 1,
+          maxNights: 7,
+          minDaysAdvance: 0,
+          maxDaysAdvance: 365,
+        );
+
+        expect(config.isValidConfig, true);
+      });
+
+      test('returns false when maxNights is less than minNights', () {
+        const config = BookingBehaviorConfig(
+          minNights: 5,
+          maxNights: 3,
+        );
+
+        expect(config.isValidConfig, false);
+      });
+
+      test('returns true when maxNights is null (no limit)', () {
+        const config = BookingBehaviorConfig(
+          minNights: 5,
+          maxNights: null,
+        );
+
+        expect(config.isValidConfig, true);
+      });
+
+      test('returns true when maxNights is 0 (no limit)', () {
+        const config = BookingBehaviorConfig(
+          minNights: 5,
+          maxNights: 0,
+        );
+
+        expect(config.isValidConfig, true);
+      });
     });
 
     group('toMap', () {

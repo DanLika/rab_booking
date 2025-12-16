@@ -111,14 +111,73 @@ void main() {
         expect(config.disclaimerText, 'My custom legal disclaimer');
       });
 
-      test('returns empty string when custom text is null', () {
+      test('falls back to default when custom text is null', () {
         const config = TaxLegalConfig(
           enabled: true,
           useDefaultText: false,
           customText: null,
         );
 
-        expect(config.disclaimerText, '');
+        // Now falls back to default Croatian text instead of empty string
+        expect(config.disclaimerText, contains('VAŽNO - Pravne i porezne informacije'));
+      });
+
+      test('falls back to default when custom text is empty', () {
+        const config = TaxLegalConfig(
+          enabled: true,
+          useDefaultText: false,
+          customText: '',
+        );
+
+        // Falls back to default Croatian text
+        expect(config.disclaimerText, contains('VAŽNO - Pravne i porezne informacije'));
+      });
+
+      test('falls back to default when custom text is whitespace only', () {
+        const config = TaxLegalConfig(
+          enabled: true,
+          useDefaultText: false,
+          customText: '   ',
+        );
+
+        // Falls back to default Croatian text
+        expect(config.disclaimerText, contains('VAŽNO - Pravne i porezne informacije'));
+      });
+
+      test('trims custom text before returning', () {
+        const config = TaxLegalConfig(
+          enabled: true,
+          useDefaultText: false,
+          customText: '  My trimmed text  ',
+        );
+
+        expect(config.disclaimerText, 'My trimmed text');
+      });
+    });
+
+    group('hasValidCustomText', () {
+      test('returns false when customText is null', () {
+        const config = TaxLegalConfig(customText: null);
+
+        expect(config.hasValidCustomText, false);
+      });
+
+      test('returns false when customText is empty', () {
+        const config = TaxLegalConfig(customText: '');
+
+        expect(config.hasValidCustomText, false);
+      });
+
+      test('returns false when customText is whitespace only', () {
+        const config = TaxLegalConfig(customText: '   ');
+
+        expect(config.hasValidCustomText, false);
+      });
+
+      test('returns true when customText has content', () {
+        const config = TaxLegalConfig(customText: 'Valid custom text');
+
+        expect(config.hasValidCustomText, true);
       });
     });
 

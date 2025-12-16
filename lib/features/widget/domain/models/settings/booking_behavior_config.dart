@@ -60,22 +60,34 @@ class BookingBehaviorConfig {
   });
 
   /// Create from Firestore map data.
+  ///
+  /// Handles explicit null values correctly:
+  /// - If key exists with null value → uses null (explicit null in Firestore)
+  /// - If key doesn't exist → uses default value
   factory BookingBehaviorConfig.fromMap(Map<String, dynamic> map) {
     return BookingBehaviorConfig(
       requireOwnerApproval: map['require_owner_approval'] ?? false,
       allowGuestCancellation: map['allow_guest_cancellation'] ?? true,
-      cancellationDeadlineHours: map['cancellation_deadline_hours'] ?? 48,
-      minNights: map['min_nights'] ?? WidgetConstants.defaultMinStayNights,
+      // Handle explicit null: if key exists use its value (even if null),
+      // otherwise use default
+      cancellationDeadlineHours: map.containsKey('cancellation_deadline_hours')
+          ? map['cancellation_deadline_hours'] as int?
+          : 48,
+      minNights: (map['min_nights'] ?? WidgetConstants.defaultMinStayNights)
+          .clamp(1, 365) as int,
       maxNights: map['max_nights'],
       weekendDays:
           (map['weekend_days'] as List<dynamic>?)
               ?.map((e) => e as int)
               .toList() ??
           WidgetConstants.defaultWeekendDays,
+      // Clamp to valid range to prevent negative values
       minDaysAdvance:
-          map['min_days_advance'] ?? WidgetConstants.defaultMinDaysAdvance,
+          (map['min_days_advance'] ?? WidgetConstants.defaultMinDaysAdvance)
+              .clamp(0, 365) as int,
       maxDaysAdvance:
-          map['max_days_advance'] ?? WidgetConstants.defaultMaxDaysAdvance,
+          (map['max_days_advance'] ?? WidgetConstants.defaultMaxDaysAdvance)
+              .clamp(0, 730) as int,
     );
   }
 
@@ -91,6 +103,23 @@ class BookingBehaviorConfig {
       'min_days_advance': minDaysAdvance,
       'max_days_advance': maxDaysAdvance,
     };
+  }
+
+  /// Check if the configuration itself is valid.
+  ///
+  /// Returns false if:
+  /// - minDaysAdvance is negative
+  /// - maxDaysAdvance is negative
+  /// - minNights is less than 1
+  /// - maxNights is set but less than minNights
+  bool get isValidConfig {
+    if (minDaysAdvance < 0) return false;
+    if (maxDaysAdvance < 0) return false;
+    if (minNights < 1) return false;
+    if (maxNights != null && maxNights! > 0 && maxNights! < minNights) {
+      return false;
+    }
+    return true;
   }
 
   /// Check if a booking duration is valid.

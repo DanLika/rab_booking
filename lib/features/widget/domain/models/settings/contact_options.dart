@@ -103,7 +103,10 @@ class ContactOptions {
   /// Get the count of enabled contact methods.
   int get enabledMethodCount => enabledMethods.length;
 
-  /// Create a copy with modified fields
+  /// Create a copy with modified fields.
+  ///
+  /// Auto-disables show toggles if the corresponding value is empty/null.
+  /// This prevents inconsistent state where showPhone=true but phoneNumber=null.
   ContactOptions copyWith({
     bool? showPhone,
     String? phoneNumber,
@@ -113,13 +116,28 @@ class ContactOptions {
     String? whatsAppNumber,
     String? customMessage,
   }) {
+    final newPhoneNumber = phoneNumber ?? this.phoneNumber;
+    final newEmailAddress = emailAddress ?? this.emailAddress;
+    final newWhatsAppNumber = whatsAppNumber ?? this.whatsAppNumber;
+
+    // Auto-disable toggles if no valid value exists
+    final effectiveShowPhone = (showPhone ?? this.showPhone) &&
+        newPhoneNumber != null &&
+        newPhoneNumber.isNotEmpty;
+    final effectiveShowEmail = (showEmail ?? this.showEmail) &&
+        newEmailAddress != null &&
+        newEmailAddress.isNotEmpty;
+    final effectiveShowWhatsApp = (showWhatsApp ?? this.showWhatsApp) &&
+        newWhatsAppNumber != null &&
+        newWhatsAppNumber.isNotEmpty;
+
     return ContactOptions(
-      showPhone: showPhone ?? this.showPhone,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      showEmail: showEmail ?? this.showEmail,
-      emailAddress: emailAddress ?? this.emailAddress,
-      showWhatsApp: showWhatsApp ?? this.showWhatsApp,
-      whatsAppNumber: whatsAppNumber ?? this.whatsAppNumber,
+      showPhone: effectiveShowPhone,
+      phoneNumber: newPhoneNumber,
+      showEmail: effectiveShowEmail,
+      emailAddress: newEmailAddress,
+      showWhatsApp: effectiveShowWhatsApp,
+      whatsAppNumber: newWhatsAppNumber,
       customMessage: customMessage ?? this.customMessage,
     );
   }

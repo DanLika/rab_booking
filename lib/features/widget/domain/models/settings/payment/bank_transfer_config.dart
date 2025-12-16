@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../../../core/utils/nullable.dart';
 import 'payment_config_base.dart';
 
 /// Bank transfer payment configuration
@@ -115,33 +116,42 @@ class BankTransferConfig with PaymentConfigBase {
   bool get hasLegacyBankDetails =>
       (bankName?.isNotEmpty ?? false) && (accountHolder?.isNotEmpty ?? false) && (iban?.isNotEmpty ?? false);
 
+  /// Creates a copy with modified fields.
+  ///
+  /// For nullable String fields (ownerId, customNotes, bankName, etc.),
+  /// use [Nullable] wrapper to explicitly set to null:
+  /// ```dart
+  /// config.copyWith(ownerId: Nullable(null)) // Sets ownerId to null
+  /// config.copyWith(ownerId: Nullable('new_id')) // Sets ownerId to 'new_id'
+  /// config.copyWith() // Keeps existing ownerId
+  /// ```
   BankTransferConfig copyWith({
     bool? enabled,
     int? depositPercentage,
-    String? ownerId,
+    Nullable<String>? ownerId,
     int? paymentDeadlineDays,
     bool? enableQrCode,
-    String? customNotes,
+    Nullable<String>? customNotes,
     bool? useCustomNotes,
-    String? bankName,
-    String? accountNumber,
-    String? iban,
-    String? swift,
-    String? accountHolder,
+    Nullable<String>? bankName,
+    Nullable<String>? accountNumber,
+    Nullable<String>? iban,
+    Nullable<String>? swift,
+    Nullable<String>? accountHolder,
   }) {
     return BankTransferConfig(
       enabled: enabled ?? this.enabled,
       depositPercentage: depositPercentage ?? this.depositPercentage,
-      ownerId: ownerId ?? this.ownerId,
+      ownerId: ownerId != null ? ownerId.value : this.ownerId,
       paymentDeadlineDays: paymentDeadlineDays ?? this.paymentDeadlineDays,
       enableQrCode: enableQrCode ?? this.enableQrCode,
-      customNotes: customNotes ?? this.customNotes,
+      customNotes: customNotes != null ? customNotes.value : this.customNotes,
       useCustomNotes: useCustomNotes ?? this.useCustomNotes,
-      bankName: bankName ?? this.bankName,
-      accountNumber: accountNumber ?? this.accountNumber,
-      iban: iban ?? this.iban,
-      swift: swift ?? this.swift,
-      accountHolder: accountHolder ?? this.accountHolder,
+      bankName: bankName != null ? bankName.value : this.bankName,
+      accountNumber: accountNumber != null ? accountNumber.value : this.accountNumber,
+      iban: iban != null ? iban.value : this.iban,
+      swift: swift != null ? swift.value : this.swift,
+      accountHolder: accountHolder != null ? accountHolder.value : this.accountHolder,
     );
   }
 }

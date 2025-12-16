@@ -32,14 +32,30 @@ class BookingPriceBreakdown {
 
   /// Deposit amount (calculated client-side for display purposes only)
   ///
+  /// Uses cent-based integer arithmetic to avoid floating point precision errors.
+  /// Example: 100.10 * 0.33 = 33.03 (not 33.033000000000005)
+  ///
   /// ⚠️ SECURITY WARNING: This is CLIENT-SIDE calculation and can be manipulated!
   /// The createBookingAtomic Cloud Function MUST recalculate and validate the
   /// deposit amount server-side before creating Stripe checkout sessions.
   /// Never trust client-provided deposit amounts for payment processing.
-  double get depositAmount => total * depositPercentage;
+  double get depositAmount {
+    // Convert to cents for integer arithmetic
+    final totalCents = (total * 100).round();
+    // depositPercentage is 0.0-1.0, convert to 0-100
+    final percentageInt = (depositPercentage * 100).round();
+    final depositCents = (totalCents * percentageInt / 100).round();
+    return depositCents / 100;
+  }
 
   /// Remaining balance after deposit
-  double get remainingBalance => total - depositAmount;
+  ///
+  /// Uses cent-based integer arithmetic to avoid floating point precision errors.
+  double get remainingBalance {
+    final totalCents = (total * 100).round();
+    final depositCents = (depositAmount * 100).round();
+    return (totalCents - depositCents) / 100;
+  }
 
   /// Average price per night
   double get averageNightlyRate =>

@@ -232,8 +232,11 @@ const List<Country> countries = [
   Country(code: 'ZW', name: 'Zimbabwe', dialCode: '+263', flag: '🇿🇼'),
 ];
 
-/// Find Croatia as default country
-final defaultCountry = countries.firstWhere((c) => c.code == 'HR');
+/// Find Croatia as default country (with fallback to first country if not found)
+final defaultCountry = countries.firstWhere(
+  (c) => c.code == 'HR',
+  orElse: () => countries.first,
+);
 
 /// Country code dropdown widget with flags and dial codes
 /// Default: Croatia (+385)

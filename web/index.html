@@ -336,7 +336,8 @@
       var CONFIG = {
         portraitMinThreshold: 100,
         landscapeMinThreshold: 50,   // Lower for landscape (50-80px typical change)
-        percentageThreshold: 0.12,    // 12% of viewport height
+        portraitPercentageThreshold: 0.12,   // Portrait: 12% of viewport height
+        landscapePercentageThreshold: 0.15,  // Landscape: 15% (smaller viewport needs larger %)
         debounceMs: 100,
         jiggleDelayLandscape: 100,
         jiggleDelayPortrait: 50,
@@ -364,7 +365,10 @@
       function getThreshold() {
         var landscape = isLandscape();
         var viewportHeight = viewport.height || window.innerHeight;
-        var percentageThreshold = viewportHeight * CONFIG.percentageThreshold;
+        // Use orientation-specific percentage thresholds
+        var percentageThreshold = landscape
+          ? viewportHeight * CONFIG.landscapePercentageThreshold   // 15%
+          : viewportHeight * CONFIG.portraitPercentageThreshold;   // 12%
         var minThreshold = landscape ? CONFIG.landscapeMinThreshold : CONFIG.portraitMinThreshold;
         return Math.max(percentageThreshold, minThreshold);
       }
@@ -441,8 +445,12 @@
           } catch (_) {}
 
           // Keyboard dismissed: viewport height INCREASED significantly
-          if (heightDiff > threshold) {
-            console.log('[KB-FIX] ✅ Keyboard dismissed: +' + heightDiff.toFixed(0) + 'px (threshold: ' + threshold.toFixed(0) + 'px, landscape: ' + landscape + ')');
+          // Safety check: ensure we're near full viewport height to avoid false positives
+          var nearFullHeightThreshold = threshold * 0.5;
+          var isNearFullHeight = currentHeight >= (fullHeight - nearFullHeightThreshold);
+
+          if (heightDiff > threshold && isNearFullHeight) {
+            console.log('[KB-FIX] ✅ Keyboard dismissed: +' + heightDiff.toFixed(0) + 'px (threshold: ' + threshold.toFixed(0) + 'px, landscape: ' + landscape + ', nearFull: ' + isNearFullHeight + ')');
 
             // Blur active element first
             if (document.activeElement) {

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../../../core/utils/nullable.dart';
 import 'payment_config_base.dart';
 
 /// Stripe payment configuration
@@ -45,11 +46,24 @@ class StripePaymentConfig with PaymentConfigBase {
     return {'enabled': enabled, 'deposit_percentage': depositPercentage, 'stripe_account_id': stripeAccountId};
   }
 
-  StripePaymentConfig copyWith({bool? enabled, int? depositPercentage, String? stripeAccountId}) {
+  /// Creates a copy with modified fields.
+  ///
+  /// For nullable String fields (stripeAccountId), use [Nullable] wrapper
+  /// to explicitly set to null:
+  /// ```dart
+  /// config.copyWith(stripeAccountId: Nullable(null)) // Sets to null
+  /// config.copyWith(stripeAccountId: Nullable('acct_xxx')) // Sets new value
+  /// config.copyWith() // Keeps existing value
+  /// ```
+  StripePaymentConfig copyWith({
+    bool? enabled,
+    int? depositPercentage,
+    Nullable<String>? stripeAccountId,
+  }) {
     return StripePaymentConfig(
       enabled: enabled ?? this.enabled,
       depositPercentage: depositPercentage ?? this.depositPercentage,
-      stripeAccountId: stripeAccountId ?? this.stripeAccountId,
+      stripeAccountId: stripeAccountId != null ? stripeAccountId.value : this.stripeAccountId,
     );
   }
 }

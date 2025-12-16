@@ -26,6 +26,9 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
   /// Cleanup function for viewport listener
   void Function()? _viewportCleanup;
 
+  /// Cleanup function for window resize listener (fallback)
+  void Function()? _windowResizeCleanup;
+
   /// Last known viewport height - used to detect keyboard dismiss
   double _lastViewportHeight = 0;
 
@@ -82,6 +85,8 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
   void dispose() {
     _viewportCleanup?.call();
     _viewportCleanup = null;
+    _windowResizeCleanup?.call();
+    _windowResizeCleanup = null;
     super.dispose();
   }
 
@@ -93,8 +98,12 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
     _currentViewportHeight = _lastViewportHeight;
     _isKeyboardOpen = false;
 
-    // Set up listener
+    // Set up primary listener (visualViewport API)
     _viewportCleanup = listenToVisualViewportImpl(_onViewportResize);
+
+    // Set up fallback listener (window.resize) for cases where visualViewport
+    // doesn't fire events properly (e.g., some landscape mode edge cases)
+    _windowResizeCleanup = listenToWindowResizeImpl(_onViewportResize);
   }
 
   /// Called when visualViewport resizes (keyboard open/close)
@@ -121,12 +130,16 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
       final orientation = MediaQuery.of(context).orientation;
       final isLandscape = orientation == Orientation.landscape;
       
-      // Use relative thresholds based on orientation
-      // Landscape has smaller viewport, so use percentage-based thresholds
+      // Use orientation-specific thresholds (matching JavaScript implementation)
+      // Landscape has smaller viewport, so use larger percentage threshold
       final viewportSize = MediaQuery.of(context).size;
       final viewportHeight = isLandscape ? viewportSize.width : viewportSize.height;
-      final relativeThreshold = viewportHeight * 0.15; // 15% of viewport height
-      final absoluteThreshold = isLandscape ? 80.0 : 100.0; // Lower threshold for landscape
+      final relativeThreshold = isLandscape
+          ? viewportHeight * 0.15   // Landscape: 15%
+          : viewportHeight * 0.12;  // Portrait: 12%
+      final absoluteThreshold = isLandscape
+          ? 50.0    // Landscape: 50px (match JavaScript)
+          : 100.0;  // Portrait: 100px
       final threshold = relativeThreshold > absoluteThreshold ? relativeThreshold : absoluteThreshold;
 
       // Detect orientation change: very large height change (>40% of viewport) without keyboard
@@ -181,9 +194,10 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
           : 0;
       final isSignificantIncrease = heightDiff > threshold || heightIncreasePercent > 0.15;
       
-      // Check if we're near full viewport height (within 5% or 30px, whichever is smaller)
-      final nearFullHeightThreshold = (_fullViewportHeight * 0.05).clamp(0.0, 30.0);
-      final isNearFullHeight = _fullViewportHeight > 0 && 
+      // Safety check: ensure we're near full viewport height to avoid false positives
+      // Use threshold * 0.5 (matching JavaScript implementation)
+      final nearFullHeightThreshold = threshold * 0.5;
+      final isNearFullHeight = _fullViewportHeight > 0 &&
           currentHeight >= (_fullViewportHeight - nearFullHeightThreshold);
 
       // Keyboard dismiss: significant height increase AND near full height

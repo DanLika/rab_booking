@@ -62,11 +62,26 @@ class TaxLegalConfig {
 
   /// Get the full disclaimer text to display.
   ///
-  /// Returns empty string if disabled, default text if [useDefaultText],
-  /// otherwise [customText].
+  /// Returns empty string if disabled, default text if [useDefaultText].
+  /// If using custom text but it's null or empty, falls back to default text.
   String get disclaimerText {
     if (!enabled) return '';
-    return useDefaultText ? _defaultCroatianTaxText : (customText ?? '');
+    if (useDefaultText) return _defaultCroatianTaxText;
+
+    // Fallback to default if custom text is empty
+    final custom = customText?.trim();
+    if (custom == null || custom.isEmpty) {
+      return _defaultCroatianTaxText;
+    }
+    return custom;
+  }
+
+  /// Check if custom text is valid (not null/empty).
+  ///
+  /// Useful for UI to show warning when useDefaultText=false but no custom text.
+  bool get hasValidCustomText {
+    final custom = customText?.trim();
+    return custom != null && custom.isNotEmpty;
   }
 
   /// Short version of disclaimer for emails (3-4 key points).

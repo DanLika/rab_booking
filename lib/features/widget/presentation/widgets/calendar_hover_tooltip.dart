@@ -33,10 +33,17 @@ class CalendarHoverTooltip extends ConsumerWidget {
     final dateFormatter = DateFormat('EEEE, MMM d, y', t.locale.languageCode);
     final formattedDate = dateFormatter.format(date);
 
-    // Format price: "€85 / night" (localized)
-    final formattedPrice = price != null
-        ? '${t.currencySymbol}${price!.toStringAsFixed(0)} / ${t.perNightShort}'
-        : t.notAvailableShort;
+    // Format price: "€85 / night" (localized with proper number formatting)
+    String formattedPrice;
+    if (price case final priceValue?) {
+      formattedPrice = '${NumberFormat.currency(
+        symbol: t.currencySymbol,
+        locale: t.locale.toString(),
+        decimalDigits: 0,
+      ).format(priceValue)} / ${t.perNightShort}';
+    } else {
+      formattedPrice = t.notAvailableShort;
+    }
 
     // Get status label (localized)
     final statusLabel = _getStatusLabel(status, t);

@@ -87,14 +87,32 @@ class EmailNotificationConfig {
     };
   }
 
+  /// Regular expression for basic email validation.
+  /// Validates format: local@domain.tld
+  static final _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
   /// Check if email system is properly configured and ready to send.
   ///
   /// Returns true if:
   /// - Email notifications are enabled
-  /// - Resend API key is set
-  /// - From email address is set
+  /// - Resend API key is set and not empty
+  /// - From email address is set and has valid format
   bool get isConfigured {
-    return enabled && resendApiKey != null && fromEmail != null;
+    if (!enabled) return false;
+    if (resendApiKey == null || resendApiKey!.trim().isEmpty) return false;
+    if (fromEmail == null) return false;
+    return _emailRegex.hasMatch(fromEmail!.trim());
+  }
+
+  /// Check if the from email address has a valid format.
+  ///
+  /// Returns true if fromEmail is null (not set) or matches email format.
+  /// Returns false only if fromEmail is set but has invalid format.
+  bool get hasValidFromEmail {
+    if (fromEmail == null) return true; // Not set = valid (will fail isConfigured)
+    return _emailRegex.hasMatch(fromEmail!.trim());
   }
 
   /// Create a copy with modified fields

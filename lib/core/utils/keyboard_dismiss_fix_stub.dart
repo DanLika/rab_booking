@@ -14,3 +14,6 @@ void forceWindowResizeImpl() {}
 
 /// Force canvas invalidate - no-op on non-web platforms
 void forceCanvasInvalidateImpl() {}
+
+/// Listen to window resize - returns no-op cleanup on non-web platforms
+void Function() listenToWindowResizeImpl(void Function() onResize) => () {};

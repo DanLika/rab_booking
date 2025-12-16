@@ -256,15 +256,15 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   IconButton(
                     icon: Icon(Icons.add, size: 16, color: colors.textPrimary),
                     onPressed: () {
-                      // Check max quantity
-                      if (service.maxQuantity != null &&
-                          quantity >= service.maxQuantity!) {
+                      // Check max quantity - use local variable to avoid null assertion
+                      final maxQuantity = service.maxQuantity;
+                      if (maxQuantity != null && quantity >= maxQuantity) {
                         SnackBarHelper.showWarning(
                           context: context,
                           message: WidgetTranslations.of(
                             context,
                             ref,
-                          ).maxQuantityReached(service.maxQuantity!),
+                          ).maxQuantityReached(maxQuantity),
                           duration: const Duration(seconds: 2),
                         );
                         return;
@@ -324,7 +324,8 @@ class AdditionalServicesWidget extends ConsumerWidget {
           ),
         ),
         Text(
-          '€${total.toStringAsFixed(2)}',
+          // Bug Fix: Use localized currency symbol instead of hardcoded '€'
+          '${WidgetTranslations.of(context, ref).currencySymbol}${total.toStringAsFixed(2)}',
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeL,
             fontWeight: FontWeight.bold,

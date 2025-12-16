@@ -232,6 +232,90 @@ void main() {
 
         expect(config.isConfigured, false);
       });
+
+      test('returns false when exportToken is empty', () {
+        const config = ICalExportConfig(
+          enabled: true,
+          exportUrl: 'https://example.com/ical.ics',
+          exportToken: '   ',
+        );
+
+        expect(config.isConfigured, false);
+      });
+
+      test('returns false when exportUrl has invalid format', () {
+        const config = ICalExportConfig(
+          enabled: true,
+          exportUrl: 'not-a-valid-url',
+          exportToken: 'token123',
+        );
+
+        expect(config.isConfigured, false);
+      });
+
+      test('returns false when exportUrl is missing scheme', () {
+        const config = ICalExportConfig(
+          enabled: true,
+          exportUrl: 'example.com/ical.ics',
+          exportToken: 'token123',
+        );
+
+        expect(config.isConfigured, false);
+      });
+
+      test('returns false when exportUrl uses non-http scheme', () {
+        const config = ICalExportConfig(
+          enabled: true,
+          exportUrl: 'ftp://example.com/ical.ics',
+          exportToken: 'token123',
+        );
+
+        expect(config.isConfigured, false);
+      });
+
+      test('returns true with http scheme', () {
+        const config = ICalExportConfig(
+          enabled: true,
+          exportUrl: 'http://example.com/ical.ics',
+          exportToken: 'token123',
+        );
+
+        expect(config.isConfigured, true);
+      });
+
+      test('returns true with https scheme', () {
+        const config = ICalExportConfig(
+          enabled: true,
+          exportUrl: 'https://example.com/ical.ics',
+          exportToken: 'token123',
+        );
+
+        expect(config.isConfigured, true);
+      });
+    });
+
+    group('hasValidExportUrl', () {
+      test('returns true when exportUrl is null', () {
+        const config = ICalExportConfig(exportUrl: null);
+
+        expect(config.hasValidExportUrl, true);
+      });
+
+      test('returns true when exportUrl is valid https', () {
+        const config = ICalExportConfig(
+          exportUrl: 'https://example.com/ical.ics',
+        );
+
+        expect(config.hasValidExportUrl, true);
+      });
+
+      test('returns false when exportUrl is invalid', () {
+        const config = ICalExportConfig(
+          exportUrl: 'invalid-url',
+        );
+
+        expect(config.hasValidExportUrl, false);
+      });
     });
 
     group('needsRegeneration', () {

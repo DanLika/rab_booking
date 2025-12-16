@@ -164,6 +164,85 @@ void main() {
 
         expect(config.isConfigured, true);
       });
+
+      test('returns false when API key is empty', () {
+        const config = EmailNotificationConfig(
+          enabled: true,
+          resendApiKey: '   ',
+          fromEmail: 'email@test.com',
+        );
+
+        expect(config.isConfigured, false);
+      });
+
+      test('returns false when email has invalid format', () {
+        const config = EmailNotificationConfig(
+          enabled: true,
+          resendApiKey: 'key',
+          fromEmail: 'not-an-email',
+        );
+
+        expect(config.isConfigured, false);
+      });
+
+      test('returns false when email is missing @ symbol', () {
+        const config = EmailNotificationConfig(
+          enabled: true,
+          resendApiKey: 'key',
+          fromEmail: 'emailtest.com',
+        );
+
+        expect(config.isConfigured, false);
+      });
+
+      test('returns false when email is missing domain', () {
+        const config = EmailNotificationConfig(
+          enabled: true,
+          resendApiKey: 'key',
+          fromEmail: 'email@',
+        );
+
+        expect(config.isConfigured, false);
+      });
+
+      test('returns true with valid email formats', () {
+        const validEmails = [
+          'simple@example.com',
+          'user.name@example.com',
+          'user+tag@example.org',
+          'test123@sub.domain.com',
+        ];
+
+        for (final email in validEmails) {
+          final config = EmailNotificationConfig(
+            enabled: true,
+            resendApiKey: 'key',
+            fromEmail: email,
+          );
+
+          expect(config.isConfigured, true, reason: 'Email: $email should be valid');
+        }
+      });
+    });
+
+    group('hasValidFromEmail', () {
+      test('returns true when fromEmail is null', () {
+        const config = EmailNotificationConfig(fromEmail: null);
+
+        expect(config.hasValidFromEmail, true);
+      });
+
+      test('returns true when fromEmail is valid', () {
+        const config = EmailNotificationConfig(fromEmail: 'test@example.com');
+
+        expect(config.hasValidFromEmail, true);
+      });
+
+      test('returns false when fromEmail has invalid format', () {
+        const config = EmailNotificationConfig(fromEmail: 'invalid-email');
+
+        expect(config.hasValidFromEmail, false);
+      });
     });
 
     group('copyWith', () {

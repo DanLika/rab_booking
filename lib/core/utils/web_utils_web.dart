@@ -720,3 +720,93 @@ void hideNativeSplash([void Function()? callback]) {
     callback?.call();
   }
 }
+
+// ============================================
+// PWA INSTALL PROMPT
+// ============================================
+
+/// JS interop for PWA install prompt functions
+@JS('window.pwaCanInstall')
+external bool? get _pwaCanInstall;
+
+@JS('window.pwaPromptInstall')
+external JSPromise<JSBoolean>? _pwaPromptInstall();
+
+@JS('window.pwaIsInstalled')
+external bool? get _pwaIsInstalled;
+
+/// Check if PWA can be installed (install prompt is available)
+bool canInstallPwa() {
+  try {
+    return _pwaCanInstall ?? false;
+  } catch (e) {
+    return false;
+  }
+}
+
+/// Check if PWA is already installed
+bool isPwaInstalled() {
+  try {
+    // Check display-mode media query (works for installed PWAs)
+    final mediaQuery = web.window.matchMedia('(display-mode: standalone)');
+    if (mediaQuery.matches) return true;
+
+    // Also check iOS standalone mode
+    final navigator = web.window.navigator;
+    // Safari iOS uses navigator.standalone property
+    try {
+      final standalone = (navigator as dynamic).standalone;
+      if (standalone == true) return true;
+    } catch (_) {
+      // Property doesn't exist on this browser
+    }
+
+    return _pwaIsInstalled ?? false;
+  } catch (e) {
+    return false;
+  }
+}
+
+/// Prompt user to install PWA
+/// Returns true if user accepted, false if dismissed
+Future<bool> promptPwaInstall() async {
+  try {
+    final result = _pwaPromptInstall();
+    if (result == null) {
+      web.console.log('[PWA] Install prompt not available'.toJS);
+      return false;
+    }
+
+    final jsResult = await result.toDart;
+    final accepted = jsResult.toDart;
+    web.console.log('[PWA] Install prompt result: $accepted'.toJS);
+    return accepted;
+  } catch (e) {
+    web.console.log('[PWA] Error prompting install: $e'.toJS);
+    return false;
+  }
+}
+
+/// Listen for PWA installability changes
+/// Callback is called when install prompt becomes available
+void Function() listenToPwaInstallability(void Function(bool canInstall) callback) {
+  try {
+    // Check initial state
+    callback(canInstallPwa());
+
+    // Listen for custom event from index.html
+    void handler(web.Event event) {
+      callback(canInstallPwa());
+    }
+
+    final jsHandler = handler.toJS;
+    web.window.addEventListener('pwa-installable', jsHandler);
+
+    return () {
+      web.window.removeEventListener('pwa-installable', jsHandler);
+    };
+  } catch (e) {
+    web.console.log('[PWA] Error setting up installability listener: $e'.toJS);
+    return () {};
+  }
+}

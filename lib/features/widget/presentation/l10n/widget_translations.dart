@@ -4718,4 +4718,53 @@ class WidgetTranslations {
         return 'I understand and accept the tax and legal obligations';
     }
   }
+
+  // ============================================================================
+  // PWA & CONNECTIVITY TRANSLATIONS
+  // ============================================================================
+
+  /// Install app button text
+  String get installApp {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Instaliraj';
+      case 'de':
+        return 'Installieren';
+      case 'it':
+        return 'Installa';
+      case 'en':
+      default:
+        return 'Install';
+    }
+  }
+
+  /// Offline mode banner message
+  String get offlineMode {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Nema internet konekcije';
+      case 'de':
+        return 'Keine Internetverbindung';
+      case 'it':
+        return 'Nessuna connessione internet';
+      case 'en':
+      default:
+        return 'No internet connection';
+    }
+  }
+
+  /// Back online banner message
+  String get backOnline {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ponovo online';
+      case 'de':
+        return 'Wieder online';
+      case 'it':
+        return 'Di nuovo online';
+      case 'en':
+      default:
+        return 'Back online';
+    }
+  }
 }

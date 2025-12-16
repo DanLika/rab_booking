@@ -306,23 +306,66 @@
   <!-- PWA Install Prompt Handler -->
   <script>
     // Handle PWA install prompt
-    let deferredPrompt;
+    let deferredPrompt = null;
+
+    // Expose PWA state to Flutter via window properties
+    window.pwaCanInstall = false;
+    window.pwaIsInstalled = false;
+
+    // Check if already installed (standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      window.pwaIsInstalled = true;
+      console.log('[PWA] Already installed (standalone mode)');
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
       // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();
       // Stash the event so it can be triggered later
       deferredPrompt = e;
+      window.pwaCanInstall = true;
       console.log('[PWA] Install prompt available');
-      
-      // You can show a custom install button here if needed
-      // For now, we'll let the browser handle it automatically
+
+      // Dispatch custom event so Flutter can listen
+      window.dispatchEvent(new CustomEvent('pwa-installable', { detail: { canInstall: true } }));
     });
 
     // Track when app is installed
     window.addEventListener('appinstalled', (evt) => {
       console.log('[PWA] App installed successfully');
       deferredPrompt = null;
+      window.pwaCanInstall = false;
+      window.pwaIsInstalled = true;
+
+      // Dispatch event for Flutter
+      window.dispatchEvent(new CustomEvent('pwa-installed'));
     });
+
+    // Function to trigger install prompt from Flutter
+    window.pwaPromptInstall = async function() {
+      if (!deferredPrompt) {
+        console.log('[PWA] No install prompt available');
+        return false;
+      }
+
+      try {
+        // Show the install prompt
+        deferredPrompt.prompt();
+
+        // Wait for user response
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('[PWA] User choice:', outcome);
+
+        // Clear the deferred prompt (can only be used once)
+        deferredPrompt = null;
+        window.pwaCanInstall = false;
+
+        return outcome === 'accepted';
+      } catch (e) {
+        console.error('[PWA] Error showing install prompt:', e);
+        return false;
+      }
+    };
 
     // Flutter automatically registers its service worker via flutter_bootstrap.js
     // No need for manual registration

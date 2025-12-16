@@ -193,3 +193,21 @@ void hideNativeSplash([void Function()? callback]) {
   // No-op on non-web platforms - just call callback
   callback?.call();
 }
+
+// ============================================
+// PWA INSTALL PROMPT (stubs for non-web)
+// ============================================
+
+/// Check if PWA can be installed (always false on non-web)
+bool canInstallPwa() => false;
+
+/// Check if PWA is already installed (always false on non-web)
+bool isPwaInstalled() => false;
+
+/// Prompt user to install PWA (no-op on non-web)
+Future<bool> promptPwaInstall() async => false;
+
+/// Listen for PWA installability changes (no-op on non-web)
+void Function() listenToPwaInstallability(void Function(bool canInstall) callback) {
+  return () {};
+}

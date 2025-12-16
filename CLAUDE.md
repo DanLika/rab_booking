@@ -41,6 +41,14 @@ ref.invalidate(dataProvider);
 // Nested config - UVIJEK copyWith
 currentSettings.emailConfig.copyWith(requireEmailVerification: false)
 // NE: EmailNotificationConfig(requireEmailVerification: false) - gubi polja!
+
+// Provider error handling - UVIJEK graceful degradation
+try {
+  return await repository.fetchData();
+} catch (e, stackTrace) {
+  await LoggingService.logError('Provider: Failed', e, stackTrace);
+  return []; // ili null - NE throw
+}
 ```
 
 ---
@@ -188,17 +196,25 @@ flutter run -d emulator-5554 --release
 ```
 
 ### Conditional imports za Web
-Web-specifi�ni kod (npr. `package:web`) koristi conditional imports:
+Web-specifični kod (npr. `package:web`) koristi conditional imports:
 ```dart
 // lib/core/utils/web_utils.dart - barrel export
 export 'web_utils_stub.dart'
     if (dart.library.js_interop) 'web_utils_web.dart';
 
-// Kori�tenje:
-import 'package:rab_booking/core/utils/web_utils.dart';
+// lib/core/utils/browser_detection.dart - barrel export
+export 'browser_detection_stub.dart'
+    if (dart.library.js_interop) 'browser_detection_web.dart';
+
+// Korištenje:
+import 'package:bookbed/core/utils/web_utils.dart';
+import 'package:bookbed/core/utils/browser_detection.dart';
+
 replaceUrlState('/new-path');  // No-op na mobile, radi na web
-createTabCommunicationService();  // Vra�a Stub ili Web implementaciju
+BrowserDetection.getBrowserName();  // 'unknown' na mobile, detektira browser na web
 ```
+
+**⚠️ NIKADA direktno importovati `dart:js_interop` ili `dart:html`** - koristiti barrel exports!
 
 ### Prije build-a
 ```bash
@@ -342,9 +358,48 @@ ne sekcije
 
 ---
 
+## 🔥 FIRESTORE INDEXI
+
+### Composite vs Single-Field Indexi
+- **Single-field indexi** = Firestore automatski kreira za SVA polja (equality, whereIn, orderBy)
+- **Composite indexi** = MORAJU biti eksplicitno definirani u `firestore.indexes.json`
+
+### Kada Treba Composite Index:
+```dart
+// ✅ NE treba composite (single field equality)
+.where('subdomain', isEqualTo: subdomain)
+
+// ✅ NE treba composite (range na ISTOM polju)
+.where('date', isGreaterThanOrEqualTo: start)
+.where('date', isLessThanOrEqualTo: end)
+
+// ❌ TREBA composite (equality + range na RAZLIČITIM poljima)
+.where('unit_id', isEqualTo: unitId)
+.where('start_date', isLessThanOrEqualTo: endDate)
+```
+
+### Collection vs Collection Group
+- **Collection index** = query na subcollection (`collection('properties/{id}/units')`)
+- **Collection group index** = query preko SVIH subcollections (`collectionGroup('bookings')`)
+- ⚠️ **Collection group index NE pokriva collection query i obrnuto!**
+
+### Widget Potrebni Indexi (svi postoje):
+| Collection | Fields | Scope |
+|------------|--------|-------|
+| `bookings` | `unit_id` + `status` | Collection Group |
+| `daily_prices` | `unit_id` + `date` | Collection Group |
+| `daily_prices` | `unit_id` + `available` | Collection Group |
+| `ical_events` | `unit_id` + `start_date` | Collection Group |
+| `ical_events` | `unit_id` + `start_date` | Collection |
+
+### Deploy Indexa:
+```bash
+firebase deploy --only firestore:indexes
+```
+
 ---
 
-## ?? UI/UX STANDARDI
+## 🎨 UI/UX STANDARDI
 
 **Filozofija**: Less colorful, more professional - neutralne pozadine sa jednom accent bojom na ikonama.
 
@@ -368,13 +423,15 @@ ne sekcije
 
 ---
 
-**Last Updated**: 2025-12-15 | **Version**: 5.0
+**Last Updated**: 2025-12-15 | **Version**: 5.1
+
+**Changelog 5.1**: Dodana Firestore indexi sekcija, browser_detection conditional imports, upozorenje o dart:js_interop.
 
 **Changelog 5.0**: Firestore collection group query bug fix - NE koristiti FieldPath.documentId sa collectionGroup(), dodano sessionId u cross-tab messaging.
 
 **Changelog 4.9**: Android Chrome keyboard dismiss fix (Flutter #175074) - JavaScript "jiggle" method + Dart mixin za sve forme.
 
-**Changelog 4.8**: Widget snackbar boje uskla�ene sa calendar statusima.
+**Changelog 4.8**: Widget snackbar boje usklađene sa calendar statusima.
 
 **Changelog 4.7**: Multi-platform build dokumentacija - Android release mode, conditional imports, dependency verzije.
 

@@ -423,7 +423,9 @@ firebase deploy --only firestore:indexes
 
 ---
 
-**Last Updated**: 2025-12-15 | **Version**: 5.1
+**Last Updated**: 2025-12-16 | **Version**: 5.2
+
+**Changelog 5.2**: Keyboard fix threshold usklađivanje (JS/Dart 12%/15%), window.resize fallback, EPC QR validacija sa currency parametrom.
 
 **Changelog 5.1**: Dodana Firestore indexi sekcija, browser_detection conditional imports, upozorenje o dart:js_interop.
 

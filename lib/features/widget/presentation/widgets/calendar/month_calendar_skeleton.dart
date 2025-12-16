@@ -140,8 +140,12 @@ class _MonthCalendarSkeletonState extends State<MonthCalendarSkeleton>
   }
 
   Widget _buildDayCellSkeleton(bool isDark, int index) {
-    // Some cells are "empty" (like days from previous/next month)
-    final isEmpty = index < 3 || index > 31;
+    // Simulate empty cells like a typical month that starts mid-week
+    // First 3 cells are "previous month", cells after day 28+ vary by month
+    // Using average values for skeleton visual consistency
+    const emptyStartCells = 3; // Simulates month starting on Thursday
+    const totalDays = 28; // Minimum days in any month (February)
+    final isEmpty = index < emptyStartCells || index >= emptyStartCells + totalDays;
 
     return Container(
       decoration: BoxDecoration(

@@ -16,8 +16,10 @@ import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
+import '../providers/platform_connections_provider.dart';
 import '../state/price_calendar_state.dart';
 import 'calendar/calendar_day_cell.dart';
+import 'dialogs/unblock_warning_dialog.dart';
 
 /// BedBooking-style Price List Calendar
 /// Displays one month at a time with dropdown selector
@@ -2277,6 +2279,31 @@ class _PriceListCalendarWidgetState
                                     setState(() => isProcessing = true);
 
                                     try {
+                                      // Check for platform integrations and show warning
+                                      final platformConnections = await ref.read(
+                                        platformConnectionsForUnitProvider(widget.unit.id).future,
+                                      );
+
+                                      if (platformConnections.isNotEmpty && mounted) {
+                                        final platformNames = platformConnections
+                                            .map((c) => c.platform.displayName)
+                                            .toSet()
+                                            .join(', ');
+
+                                        final sortedDates = _selectedDays.toList()..sort();
+                                        final confirmed = await UnblockWarningDialog.show(
+                                          context: this.context,
+                                          platformName: platformNames,
+                                          startDate: sortedDates.first,
+                                          endDate: sortedDates.last,
+                                        );
+
+                                        if (!confirmed) {
+                                          setState(() => isProcessing = false);
+                                          return;
+                                        }
+                                      }
+
                                       final repository = ref.read(
                                         dailyPriceRepositoryProvider,
                                       );

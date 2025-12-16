@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../error_handling/error_boundary.dart';
 import '../utils/page_transitions.dart';
 import '../../features/auth/presentation/screens/enhanced_login_screen.dart';
 import '../services/logging_service.dart';
@@ -588,15 +589,17 @@ class PropertyEditLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final propertyAsync = ref.watch(propertyByIdProvider(propertyId));
 
-    return propertyAsync.when(
-      data: (property) {
-        if (property == null) {
-          return const NotFoundScreen();
-        }
-        return PropertyFormScreen(property: property);
-      },
-      loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading property...')),
-      error: (error, stack) => Scaffold(body: Center(child: Text('Error loading property: $error'))),
+    return ErrorBoundary(
+      child: propertyAsync.when(
+        data: (property) {
+          if (property == null) {
+            return const NotFoundScreen();
+          }
+          return PropertyFormScreen(property: property);
+        },
+        loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading property...')),
+        error: (error, stack) => Scaffold(body: Center(child: Text('Error loading property: $error'))),
+      ),
     );
   }
 }
@@ -611,15 +614,17 @@ class UnitEditLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unitAsync = ref.watch(unitByIdAcrossPropertiesProvider(unitId));
 
-    return unitAsync.when(
-      data: (unit) {
-        if (unit == null) {
-          return const NotFoundScreen();
-        }
-        return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
-      },
-      loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading unit...')),
-      error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+    return ErrorBoundary(
+      child: unitAsync.when(
+        data: (unit) {
+          if (unit == null) {
+            return const NotFoundScreen();
+          }
+          return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
+        },
+        loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading unit...')),
+        error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+      ),
     );
   }
 }
@@ -634,15 +639,17 @@ class UnitPricingLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unitAsync = ref.watch(unitByIdAcrossPropertiesProvider(unitId));
 
-    return unitAsync.when(
-      data: (unit) {
-        if (unit == null) {
-          return const NotFoundScreen();
-        }
-        return UnitPricingScreen(unit: unit);
-      },
-      loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading pricing...')),
-      error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+    return ErrorBoundary(
+      child: unitAsync.when(
+        data: (unit) {
+          if (unit == null) {
+            return const NotFoundScreen();
+          }
+          return UnitPricingScreen(unit: unit);
+        },
+        loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading pricing...')),
+        error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+      ),
     );
   }
 }
@@ -657,15 +664,17 @@ class WidgetSettingsLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unitAsync = ref.watch(unitByIdAcrossPropertiesProvider(unitId));
 
-    return unitAsync.when(
-      data: (unit) {
-        if (unit == null) {
-          return const NotFoundScreen();
-        }
-        return WidgetSettingsScreen(propertyId: unit.propertyId, unitId: unitId);
-      },
-      loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading settings...')),
-      error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+    return ErrorBoundary(
+      child: unitAsync.when(
+        data: (unit) {
+          if (unit == null) {
+            return const NotFoundScreen();
+          }
+          return WidgetSettingsScreen(propertyId: unit.propertyId, unitId: unitId);
+        },
+        loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading settings...')),
+        error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+      ),
     );
   }
 }

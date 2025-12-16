@@ -66,9 +66,11 @@ class CalendarDateSelectionValidator {
   }) {
     if (!isSelectingCheckIn) return const ValidationResult.valid();
 
+    // Use DateNormalizer for consistent UTC-based comparison
     final today = DateTime.now();
-    final todayNormalized = DateTime(today.year, today.month, today.day);
-    final daysInAdvance = date.difference(todayNormalized).inDays;
+    final todayNormalized = DateNormalizer.normalize(today);
+    final dateNormalized = DateNormalizer.normalize(date);
+    final daysInAdvance = dateNormalized.difference(todayNormalized).inDays;
 
     final t = WidgetTranslations.of(context, ref);
 

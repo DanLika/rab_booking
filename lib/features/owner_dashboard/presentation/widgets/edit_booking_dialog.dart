@@ -15,7 +15,9 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/services/logging_service.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_calendar_provider.dart';
+import '../providers/platform_connections_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
+import 'dialogs/update_booking_warning_dialog.dart';
 
 /// Edit Booking Dialog - Phase 2 Feature
 ///
@@ -402,7 +404,39 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
         return;
       }
 
-      // Check if check-out date changed
+      // Check if dates changed
+      final datesChanged = _checkIn != widget.booking.checkIn || _checkOut != widget.booking.checkOut;
+
+      // If dates changed, check for platform integrations and show warning
+      if (datesChanged) {
+        final platformConnectionsAsync = await ref.read(
+          platformConnectionsForUnitProvider(widget.booking.unitId).future,
+        );
+
+        // If unit has active platform connections, show warning dialog
+        if (platformConnectionsAsync.isNotEmpty && mounted) {
+          final platformNames = platformConnectionsAsync
+              .map((c) => c.platform.displayName)
+              .toSet()
+              .toList();
+
+          final confirmed = await UpdateBookingWarningDialog.show(
+            context: context,
+            oldCheckIn: widget.booking.checkIn,
+            oldCheckOut: widget.booking.checkOut,
+            newCheckIn: _checkIn,
+            newCheckOut: _checkOut,
+            platformNames: platformNames,
+          );
+
+          if (!confirmed) {
+            setState(() => _isLoading = false);
+            return;
+          }
+        }
+      }
+
+      // Check if check-out date changed (for token expiration update)
       final checkOutChanged = _checkOut != widget.booking.checkOut;
 
       // FIXED BUG #2: Use transaction with existence check to prevent creating new document

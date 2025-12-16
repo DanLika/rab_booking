@@ -456,7 +456,15 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-16 | **Version**: 5.6
+**Last Updated**: 2025-12-16 | **Version**: 5.7
+
+**Changelog 5.7**: Bug Fixes & Error Boundaries:
+- ErrorBoundary wrapperi dodani na Loader widgete u `router_owner.dart` (PropertyEditLoader, UnitEditLoader, UnitPricingLoader, WidgetSettingsLoader)
+- Warning dialogs integrirani: `UpdateBookingWarningDialog` u edit_booking_dialog, `UnblockWarningDialog` u price_list_calendar
+- Timezone fix: `DateNormalizer.normalize()` u validateAdvanceBooking umjesto lokalnog DateTime
+- Language fallback: `🌐` globe emoji za nepoznate jezike umjesto hardcoded `🇭🇷`
+- Skeleton loader: named constants umjesto magic numbers u month_calendar_skeleton
+- Async timeouts utility već postoji (`async_utils.dart`, `timeout_constants.dart`) - dokumentirano
 
 **Changelog 5.6**: PWA install button i connectivity banner widgeti, JS/Dart interop za PWA install prompt.
 

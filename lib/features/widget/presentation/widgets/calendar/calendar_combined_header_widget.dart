@@ -230,7 +230,8 @@ class _LanguageSwitcherButton extends ConsumerWidget {
       case 'it':
         return '🇮🇹';
       default:
-        return '🇭🇷';
+        // Use globe emoji for unknown languages (neutral fallback)
+        return '🌐';
     }
   }
 

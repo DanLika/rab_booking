@@ -4,6 +4,7 @@ import '../../domain/models/analytics_summary.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/services/logging_service.dart';
 import 'owner_bookings_provider.dart';
 import 'owner_calendar_provider.dart';
 
@@ -51,39 +52,91 @@ List<Map<String, dynamic>> _convertPropertiesToData(
 class AnalyticsNotifier extends _$AnalyticsNotifier {
   @override
   Future<AnalyticsSummary> build({required DateRangeFilter dateRange}) async {
-    final auth = FirebaseAuth.instance;
-    final userId = auth.currentUser?.uid;
+    // Using print() instead of LoggingService.logDebug() to see logs in release mode
+    // ignore: avoid_print
+    print('[Analytics] Provider starting...');
 
-    if (userId == null) {
-      throw AuthException(
-        'User not authenticated',
-        code: 'auth/not-authenticated',
+    try {
+      final auth = FirebaseAuth.instance;
+      final userId = auth.currentUser?.uid;
+
+      if (userId == null) {
+        // ignore: avoid_print
+        print('[Analytics] ERROR: User not authenticated');
+        await LoggingService.logError('Analytics: User not authenticated');
+        throw AuthException(
+          'User not authenticated',
+          code: 'auth/not-authenticated',
+        );
+      }
+
+      // ignore: avoid_print
+      print(
+        '[Analytics] User: $userId, Range: ${dateRange.startDate.toIso8601String()} to ${dateRange.endDate.toIso8601String()}',
       );
+
+      final repository = ref.watch(analyticsRepositoryProvider);
+
+      // OPTIMIZED: Get cached data from existing providers
+      // ignore: avoid_print
+      print('[Analytics] Fetching unitIds...');
+      final unitIds = await ref.watch(ownerUnitIdsProvider.future);
+      // ignore: avoid_print
+      print('[Analytics] Got ${unitIds.length} unitIds');
+
+      // ignore: avoid_print
+      print('[Analytics] Fetching properties...');
+      final properties =
+          await ref.watch(ownerPropertiesCalendarProvider.future);
+      // ignore: avoid_print
+      print('[Analytics] Got ${properties.length} properties');
+
+      // ignore: avoid_print
+      print('[Analytics] Fetching units...');
+      final units = await ref.watch(allOwnerUnitsProvider.future);
+      // ignore: avoid_print
+      print('[Analytics] Got ${units.length} units');
+
+      if (unitIds.isEmpty || properties.isEmpty) {
+        // ignore: avoid_print
+        print(
+          '[Analytics] WARNING: Empty data - unitIds: ${unitIds.length}, properties: ${properties.length}',
+        );
+        return _emptyAnalyticsSummary;
+      }
+
+      // Build unitId -> propertyId map from cached units
+      final unitToPropertyId = <String, String>{
+        for (final unit in units) unit.id: unit.propertyId,
+      };
+
+      // ignore: avoid_print
+      print(
+        '[Analytics] Calling repository with ${unitIds.length} units, ${properties.length} properties',
+      );
+
+      // Use optimized method with cached data
+      final result = await repository.getAnalyticsSummaryOptimized(
+        unitIds: unitIds,
+        unitToPropertyId: unitToPropertyId,
+        properties: _convertPropertiesToData(properties),
+        dateRange: dateRange,
+      );
+
+      // ignore: avoid_print
+      print(
+        '[Analytics] SUCCESS: ${result.totalBookings} bookings, €${result.totalRevenue}',
+      );
+
+      return result;
+    } catch (e, stackTrace) {
+      // ignore: avoid_print
+      print('[Analytics] ERROR: $e');
+      // ignore: avoid_print
+      print('[Analytics] Stack: $stackTrace');
+      await LoggingService.logError('Analytics provider error', e, stackTrace);
+      rethrow;
     }
-
-    final repository = ref.watch(analyticsRepositoryProvider);
-
-    // OPTIMIZED: Get cached data from existing providers
-    final unitIds = await ref.watch(ownerUnitIdsProvider.future);
-    final properties = await ref.watch(ownerPropertiesCalendarProvider.future);
-    final units = await ref.watch(allOwnerUnitsProvider.future);
-
-    if (unitIds.isEmpty || properties.isEmpty) {
-      return _emptyAnalyticsSummary;
-    }
-
-    // Build unitId -> propertyId map from cached units
-    final unitToPropertyId = <String, String>{
-      for (final unit in units) unit.id: unit.propertyId,
-    };
-
-    // Use optimized method with cached data
-    return repository.getAnalyticsSummaryOptimized(
-      unitIds: unitIds,
-      unitToPropertyId: unitToPropertyId,
-      properties: _convertPropertiesToData(properties),
-      dateRange: dateRange,
-    );
   }
 
   Future<void> refresh() async {

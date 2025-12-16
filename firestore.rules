@@ -93,13 +93,19 @@ service cloud.firestore {
         allow create, update, delete: if isPropertyOwner(propertyId);
 
         // Bookings subcollection
-        // READ: Public for widget calendar availability
-        // NOTE: Firestore doesn't support field-level security.
-        // Widget needs check_in/check_out/status for availability.
-        // Guest data (name, email, phone) is also readable but not displayed by widget.
-        // Future: Consider Cloud Function for stricter data access.
+        // READ: Selective access (see collection group rule for details)
+        // - Owner: by owner_id
+        // - Widget calendar: by unit_id + status
+        // - Stripe polling: by stripe_session_id
+        // - Booking view: by booking_reference
         match /bookings/{bookingId} {
-          allow read: if true;
+          allow read: if
+            // Owner can read their own bookings
+            (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
+            // Widget calendar and other valid queries (fields must exist)
+            ('unit_id' in resource.data && 'status' in resource.data) ||
+            ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
+            ('booking_reference' in resource.data && resource.data.booking_reference != null);
           allow create, update, delete: if isPropertyOwner(propertyId);
         }
 
@@ -152,9 +158,35 @@ service cloud.firestore {
     }
 
     // Collection group: bookings
-    // Used by: Owner dashboard, Guest bookings (by user_id), Stripe webhooks (by session_id)
+    // Used by: Owner dashboard, Guest bookings, Widget calendar, Stripe polling
+    //
+    // SECURITY: Selective read access based on query type:
+    // 1. Owner can read all their bookings (by owner_id in document)
+    // 2. Owner analytics: queries by unit_id + check_in (for revenue/stats)
+    // 3. Widget calendar: queries by unit_id + status (for availability display)
+    // 4. Stripe polling: queries by stripe_session_id (after payment redirect)
+    // 5. Booking view: queries by booking_reference (for guest access)
+    //
+    // NOTE: Firestore doesn't support field-level security, so all document
+    // fields are readable when query is allowed. Widget only displays
+    // availability data (dates, status), not guest PII.
     match /{path=**}/bookings/{bookingId} {
-      allow read: if true;
+      allow read: if
+        // Case 1: Authenticated owner can read their own bookings
+        (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
+        // Case 2: Owner analytics queries (by unit_id + check_in for date range)
+        // Authenticated users can query bookings by unit_id and check_in date
+        // Requires collection group index: unit_id ASC, check_in ASC
+        (isAuthenticated() && 'unit_id' in resource.data && 'check_in' in resource.data) ||
+        // Case 3: Widget calendar availability queries (unit_id + status)
+        // Requires collection group index: unit_id ASC, status ASC
+        ('unit_id' in resource.data && 'status' in resource.data) ||
+        // Case 4: Stripe polling after payment (by stripe_session_id)
+        // Requires collection group index: stripe_session_id ASC
+        ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
+        // Case 5: Guest booking view (by booking_reference)
+        // Requires collection group index: booking_reference ASC
+        ('booking_reference' in resource.data && resource.data.booking_reference != null);
       // Writes go through specific subcollection path above
     }
 
@@ -186,8 +218,13 @@ service cloud.firestore {
     }
 
     // DEPRECATED: Top-level bookings
+    // Same security rules as subcollection for consistency
     match /bookings/{bookingId} {
-      allow read: if true;
+      allow read: if
+        (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
+        ('unit_id' in resource.data && 'status' in resource.data) ||
+        ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
+        ('booking_reference' in resource.data && resource.data.booking_reference != null);
       allow create: if canCreateAsOwner();
       allow update, delete: if isResourceOwner();
     }
@@ -263,6 +300,13 @@ service cloud.firestore {
     match /securityEvents/{eventId} {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow write: if false;
+    }
+
+    // Security events - new collection for security monitoring
+    // Only Cloud Functions can write via Admin SDK
+    match /security_events/{eventId} {
+      allow read: if false; // Only accessible via Firebase Console
+      allow write: if false; // Only Cloud Functions via Admin SDK
     }
 
     // Email templates - locked for future use

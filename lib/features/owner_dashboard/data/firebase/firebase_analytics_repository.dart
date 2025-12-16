@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/models/analytics_summary.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/services/logging_service.dart';
 import 'firestore_repository_mixin.dart';
+
+// Note: DateTime objects are automatically converted to Timestamp by Firestore SDK,
+// but we use explicit Timestamp.fromDate() for consistency with other repositories.
 
 /// Firebase implementation of Analytics Repository
 class FirebaseAnalyticsRepository with FirestoreRepositoryMixin {
@@ -39,19 +43,75 @@ class FirebaseAnalyticsRepository with FirestoreRepositoryMixin {
       // SINGLE COMBINED QUERY: Get ALL bookings (including cancelled) in date range
       // NEW STRUCTURE: Use collection group query for subcollection
       final List<Map<String, dynamic>> allBookingsRaw = [];
+
+      // Convert DateTime to Timestamp for Firestore query consistency
+      final startTimestamp = Timestamp.fromDate(dateRange.startDate);
+      final endTimestamp = Timestamp.fromDate(dateRange.endDate);
+
+      // Using print() to see logs in release mode
+      // ignore: avoid_print
+      print(
+        '[AnalyticsRepo] Query starting: ${unitIds.length} units, $startTimestamp to $endTimestamp',
+      );
+
       for (int i = 0; i < unitIds.length; i += 10) {
         final batch = unitIds.skip(i).take(10).toList();
-        final bookingsSnapshot = await _firestore
-            .collectionGroup('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('check_in', isGreaterThanOrEqualTo: dateRange.startDate)
-            .where('check_in', isLessThanOrEqualTo: dateRange.endDate)
-            .get();
+        final batchNum = (i ~/ 10) + 1;
+        final totalBatches = (unitIds.length / 10).ceil();
 
-        for (final doc in bookingsSnapshot.docs) {
-          allBookingsRaw.add({...doc.data(), 'id': doc.id});
+        // ignore: avoid_print
+        print('[AnalyticsRepo] Processing batch $batchNum/$totalBatches');
+
+        try {
+          final bookingsSnapshot = await _firestore
+              .collectionGroup('bookings')
+              .where('unit_id', whereIn: batch)
+              .where('check_in', isGreaterThanOrEqualTo: startTimestamp)
+              .where('check_in', isLessThanOrEqualTo: endTimestamp)
+              .get();
+
+          // ignore: avoid_print
+          print(
+            '[AnalyticsRepo] Batch $batchNum returned ${bookingsSnapshot.docs.length} docs',
+          );
+
+          for (final doc in bookingsSnapshot.docs) {
+            allBookingsRaw.add({...doc.data(), 'id': doc.id});
+          }
+        } catch (batchError, stackTrace) {
+          // ignore: avoid_print
+          print('[AnalyticsRepo] BATCH ERROR: $batchError');
+
+          // Enhanced error logging with full context
+          await LoggingService.logError(
+            'Analytics batch query failed:\n'
+            '  - Batch $batchNum of $totalBatches\n'
+            '  - Unit IDs (${batch.length}): ${batch.join(", ")}\n'
+            '  - Date range: ${dateRange.startDate.toIso8601String()} to ${dateRange.endDate.toIso8601String()}\n'
+            '  - Start timestamp: $startTimestamp\n'
+            '  - End timestamp: $endTimestamp\n'
+            '  - Error type: ${batchError.runtimeType}\n'
+            '  - Error: ${batchError.toString()}',
+            batchError,
+            stackTrace,
+          );
+
+          // Re-throw with user-friendly message
+          throw AnalyticsException(
+            'Failed to fetch analytics data for batch $batchNum. '
+            'This may indicate a missing Firestore composite index. '
+            'Please check Firebase Console → Firestore → Indexes.\n'
+            'Technical error: ${batchError.toString()}',
+            code: 'analytics/batch-query-failed',
+            originalError: batchError,
+          );
         }
       }
+
+      // ignore: avoid_print
+      print(
+        '[AnalyticsRepo] Total: ${allBookingsRaw.length} bookings (${allBookingsRaw.where((b) => b['status'] != 'cancelled').length} active)',
+      );
 
       // Separate active and cancelled bookings (no second query needed!)
       final bookings = allBookingsRaw
@@ -250,14 +310,18 @@ class FirebaseAnalyticsRepository with FirestoreRepositoryMixin {
 
       // Get bookings within date range (in batches)
       // NEW STRUCTURE: Use collection group query for subcollection
+      // Convert DateTime to Timestamp for Firestore query consistency
+      final legacyStartTimestamp = Timestamp.fromDate(dateRange.startDate);
+      final legacyEndTimestamp = Timestamp.fromDate(dateRange.endDate);
+
       final List<Map<String, dynamic>> bookings = [];
       for (int i = 0; i < unitIds.length; i += 10) {
         final batch = unitIds.skip(i).take(10).toList();
         final bookingsSnapshot = await _firestore
             .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
-            .where('check_in', isGreaterThanOrEqualTo: dateRange.startDate)
-            .where('check_in', isLessThanOrEqualTo: dateRange.endDate)
+            .where('check_in', isGreaterThanOrEqualTo: legacyStartTimestamp)
+            .where('check_in', isLessThanOrEqualTo: legacyEndTimestamp)
             .get();
 
         for (final doc in bookingsSnapshot.docs) {
@@ -337,8 +401,8 @@ class FirebaseAnalyticsRepository with FirestoreRepositoryMixin {
         final cancelledSnapshot = await _firestore
             .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
-            .where('check_in', isGreaterThanOrEqualTo: dateRange.startDate)
-            .where('check_in', isLessThanOrEqualTo: dateRange.endDate)
+            .where('check_in', isGreaterThanOrEqualTo: legacyStartTimestamp)
+            .where('check_in', isLessThanOrEqualTo: legacyEndTimestamp)
             .where('status', isEqualTo: 'cancelled')
             .get();
 

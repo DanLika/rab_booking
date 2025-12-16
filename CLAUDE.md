@@ -121,15 +121,23 @@ ava race condition gdje 2 korisnika plate za iste datume.
 
 ---
 
-## ?? HOSTING & DOMENE
+## 🌐 HOSTING & DOMENE
 
-**Domena**: `bookbed.io` (Porkbun) ? DNS na Cloudflare
+**Domena**: `bookbed.io` (Porkbun) → DNS na Cloudflare
+
+**⚠️ KRITIČNO - Domena struktura**:
+| Domena | Svrha | Firebase Site |
+|--------|-------|---------------|
+| `bookbed.io` | **Marketing/Landing page** (NE widget!) | - (buduće) |
+| `app.bookbed.io` | Owner Dashboard | `bookbed-owner` |
+| `view.bookbed.io` | **Booking Widget** (embed iframe) | `bookbed-widget` |
+| `*.view.bookbed.io` | Klijent subdomene za widget | `bookbed-widget` |
 
 **Firebase Hosting targets** (`.firebaserc`):
 | Target | Site ID | Build folder | Custom domain |
 |--------|---------|--------------|---------------|
 | `owner` | `bookbed-owner` | `build/web_owner` | app.bookbed.io |
-| `widget` | `bookbed-widget` | `build/web_widget` | bookbed.io, *.bookbed.io |
+| `widget` | `bookbed-widget` | `build/web_widget` | view.bookbed.io, *.view.bookbed.io |
 
 **Build commands**:
 ```bash
@@ -143,8 +151,11 @@ flutter build web --release --target lib/widget_main.dart -o build/web_widget
 firebase deploy --only hosting
 ```
 
-**Klijent subdomene** (dodaju se u Firebase Console ? Hosting ? Add custom domain):
-- `jasko-rab.bookbed.io` ? widget za Jasmina
+**Klijent subdomene** (dodaju se u Firebase Console → Hosting → Add custom domain):
+- `jasko-rab.view.bookbed.io` → widget za Jasmina
+- Format: `{subdomain}.view.bookbed.io`
+
+**⚠️ NE MIJEŠATI**: `bookbed.io` je REZERVISAN za marketing sajt. Widget UVIJEK ide na `view.bookbed.io`!
 
 ---
 
@@ -321,26 +332,28 @@ Widget build(BuildContext context) {
 
 ---
 
-## ?? SUBDOMAIN & URL SLUG SYSTEM
+## 🔗 SUBDOMAIN & URL SLUG SYSTEM
 
-**URL formati** (widget):
-| Format | Primjer | Kori�tenje |
+**URL formati** (widget na `view.bookbed.io`):
+| Format | Primjer | Korištenje |
 |--------|---------|------------|
-| Query params | `jasko-rab.bookbed.io/?property=XXX&unit=YYY` | iframe embed |
-| Clean slug | `jasko-rab.bookbed.io/apartman-6` | standalone, dijeljenje |
+| Query params | `jasko-rab.view.bookbed.io/?property=XXX&unit=YYY` | iframe embed |
+| Clean slug | `jasko-rab.view.bookbed.io/apartman-6` | standalone, dijeljenje |
 
 **Rezolucija slug URL-a**:
-1. Subdomain (`jasko-rab`) ? `fetchPropertyBySubdomain()` ? property
-2. Path slug (`apartman-6`) ? `fetchUnitBySlug(propertyId, slug)` ? unit
+1. Subdomain (`jasko-rab`) → `fetchPropertyBySubdomain()` → property
+2. Path slug (`apartman-6`) → `fetchUnitBySlug(propertyId, slug)` → unit
 
-**Klju�ni fajlovi**:
-- `subdomain_service.dart` ? `resolveFullContext(urlSlug)`
-- `subdomain_provider.dart` ? `fullSlugContextProvider(slug)`
-- `router_widget.dart` ? `/:slug` route
+**Ključni fajlovi**:
+- `subdomain_service.dart` → `resolveFullContext(urlSlug)`
+- `subdomain_provider.dart` → `fullSlugContextProvider(slug)`
+- `router_widget.dart` → `/:slug` route
 
 **Slug stabilnost**: Slug se NE regenerira automatski kad se promijeni naziv unita (`_isManualSlugEdit` flag u `unit_form_screen.dart`).
 
-**Booking view URL**: `villa-marija.bookbed.io/view?ref=XXX&email=YYY`
+**Booking view URL**: `villa-marija.view.bookbed.io/view?ref=XXX&email=YYY`
+
+**⚠️ VAŽNO**: Svi widget URL-ovi koriste `view.bookbed.io` domenu, NE `bookbed.io`!
 
 ---
 
@@ -390,10 +403,20 @@ ne sekcije
 | Collection | Fields | Scope |
 |------------|--------|-------|
 | `bookings` | `unit_id` + `status` | Collection Group |
+| `bookings` | `unit_id` + `check_in` | Collection Group |
 | `daily_prices` | `unit_id` + `date` | Collection Group |
 | `daily_prices` | `unit_id` + `available` | Collection Group |
 | `ical_events` | `unit_id` + `start_date` | Collection Group |
 | `ical_events` | `unit_id` + `start_date` | Collection |
+
+### Analytics Security Rules
+Analytics koristi `collectionGroup('bookings')` sa `whereIn` na `unit_id` i range filter na `check_in`.
+Firestore security rules MORAJU dozvoliti authenticated korisnicima pristup po ovim poljima:
+```
+// firestore.rules - Case 2 u bookings collection group
+(isAuthenticated() && 'unit_id' in resource.data && 'check_in' in resource.data)
+```
+Bez ove rule, analytics query vraća `permission-denied` error.
 
 ### Deploy Indexa:
 ```bash
@@ -456,7 +479,14 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-16 | **Version**: 5.7
+**Last Updated**: 2025-12-16 | **Version**: 5.8
+
+**Changelog 5.8**: Analytics Security Rules Fix:
+- **Problem**: Analytics page vraćala `permission-denied` error za `collectionGroup('bookings')` query
+- **Uzrok**: Firestore security rules nisu dozvoljavale authenticated korisnicima query po `unit_id` + `check_in`
+- **Fix**: Dodana nova rule u `firestore.rules` za analytics queries (Case 2)
+- Dodano `print()` logging u analytics provider/repository za debug u release mode
+- Index `bookings: unit_id + check_in` (Collection Group) već postojao - problem bio samo u rules
 
 **Changelog 5.7**: Bug Fixes & Error Boundaries:
 - ErrorBoundary wrapperi dodani na Loader widgete u `router_owner.dart` (PropertyEditLoader, UnitEditLoader, UnitPricingLoader, WidgetSettingsLoader)

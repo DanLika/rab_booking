@@ -263,11 +263,18 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final scrollOffset = _horizontalScrollController.offset;
     final dayWidth = dimensions.dayWidth;
 
+    // Calculate total available days
+    final totalDays = _dynamicEndDate.difference(_dynamicStartDate).inDays;
+    if (totalDays <= 0) return; // Invalid state, skip update
+
     final firstVisibleDay = (scrollOffset / dayWidth).floor();
     final daysInViewport = dimensions.daysInViewport;
 
-    final newStartIndex = (firstVisibleDay - kTimelineBufferDays).clamp(0, double.infinity).toInt();
-    final newDayCount = daysInViewport + (2 * kTimelineBufferDays);
+    // Clamp newStartIndex to valid range [0, totalDays - 1]
+    final newStartIndex = (firstVisibleDay - kTimelineBufferDays).clamp(0, totalDays - 1);
+    // Clamp newDayCount to not exceed available days from startIndex
+    final maxDayCount = totalDays - newStartIndex;
+    final newDayCount = (daysInViewport + (2 * kTimelineBufferDays)).clamp(1, maxDayCount);
 
     // Only update if range changed significantly
     if ((newStartIndex - _visibleStartIndex).abs() > kTimelineVisibleRangeUpdateThreshold ||
@@ -306,15 +313,28 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final edgeThreshold = dayWidth * kTimelineEdgeThresholdDays;
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
 
-    // Near start edge? Prepend days
+    // Near start edge? Prepend days with scroll position compensation
     if (scrollOffset < edgeThreshold &&
         _dynamicStartDate.isAfter(DateTime.now().subtract(const Duration(days: kTimelineMaxDaysLimit)))) {
+      // Save current scroll offset before modifying date range
+      final currentOffset = _horizontalScrollController.offset;
+      final scrollCompensation = kTimelineDaysToExtend * dayWidth;
+
       setState(() {
         _dynamicStartDate = _dynamicStartDate.subtract(const Duration(days: kTimelineDaysToExtend));
       });
+
+      // Compensate scroll position after setState completes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _horizontalScrollController.hasClients) {
+          final newOffset = currentOffset + scrollCompensation;
+          final maxExtent = _horizontalScrollController.position.maxScrollExtent;
+          _horizontalScrollController.jumpTo(newOffset.clamp(0.0, maxExtent));
+        }
+      });
     }
 
-    // Near end edge? Append days
+    // Near end edge? Append days (no compensation needed for append)
     if (scrollOffset > maxScroll - edgeThreshold &&
         _dynamicEndDate.isBefore(DateTime.now().add(const Duration(days: kTimelineMaxDaysLimit)))) {
       setState(() {
@@ -341,6 +361,32 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
     final targetDate = widget.initialScrollToDate ?? DateTime.now();
+
+    // Check if target date is within current range, extend if needed
+    if (targetDate.isBefore(_dynamicStartDate)) {
+      final daysToExtend = _dynamicStartDate.difference(targetDate).inDays + kTimelineBufferDays;
+      setState(() {
+        _dynamicStartDate = _dynamicStartDate.subtract(Duration(days: daysToExtend));
+      });
+      // Wait for rebuild then scroll
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToToday();
+      });
+      return;
+    }
+
+    if (targetDate.isAfter(_dynamicEndDate)) {
+      final daysToExtend = targetDate.difference(_dynamicEndDate).inDays + kTimelineBufferDays;
+      setState(() {
+        _dynamicEndDate = _dynamicEndDate.add(Duration(days: daysToExtend));
+      });
+      // Wait for rebuild then scroll
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToToday();
+      });
+      return;
+    }
+
     final daysSinceStart = targetDate.difference(_dynamicStartDate).inDays;
     final scrollPosition = daysSinceStart * dimensions.dayWidth;
 
@@ -356,6 +402,58 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
             setState(() => _isInitialScrolling = false);
             // Restore vertical scroll position if provided (preserves position on toolbar navigation)
             _restoreVerticalScrollPosition();
+          }
+        });
+  }
+
+  /// Scroll to a specific month when month header is tapped
+  void _scrollToMonth(DateTime month) {
+    if (!_horizontalScrollController.hasClients) return;
+
+    // Target is first day of the month
+    final targetDate = DateTime(month.year, month.month);
+
+    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+
+    // Check if target date is within current range, extend if needed
+    if (targetDate.isBefore(_dynamicStartDate)) {
+      final daysToExtend = _dynamicStartDate.difference(targetDate).inDays + kTimelineBufferDays;
+      setState(() {
+        _dynamicStartDate = _dynamicStartDate.subtract(Duration(days: daysToExtend));
+      });
+      // Wait for rebuild then scroll
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToMonth(month);
+      });
+      return;
+    }
+
+    if (targetDate.isAfter(_dynamicEndDate)) {
+      final daysToExtend = targetDate.difference(_dynamicEndDate).inDays + kTimelineBufferDays;
+      setState(() {
+        _dynamicEndDate = _dynamicEndDate.add(Duration(days: daysToExtend));
+      });
+      // Wait for rebuild then scroll
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToMonth(month);
+      });
+      return;
+    }
+
+    final daysSinceStart = targetDate.difference(_dynamicStartDate).inDays;
+    final scrollPosition = daysSinceStart * dimensions.dayWidth;
+
+    final maxScroll = _horizontalScrollController.position.maxScrollExtent;
+
+    // Scroll to show the month at the left edge of the viewport
+    final targetScroll = scrollPosition.clamp(0.0, maxScroll);
+
+    _horizontalScrollController
+        .animateTo(targetScroll, duration: AppDimensions.animationSlow, curve: Curves.easeInOut)
+        .then((_) {
+          if (mounted) {
+            // Notify parent of visible date change
+            widget.onVisibleDateRangeChanged?.call(targetDate);
           }
         });
   }
@@ -708,6 +806,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
             offsetWidth: offsetWidth,
             scrollController: _headerScrollController,
             dimensions: dimensions,
+            onMonthTap: _scrollToMonth,
           ),
 
           const Divider(height: 1),

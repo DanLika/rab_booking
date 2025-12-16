@@ -18,12 +18,16 @@ class TimelineDateHeadersWidget extends StatelessWidget {
   /// Timeline dimensions (includes zoom scale)
   final TimelineDimensions dimensions;
 
+  /// Callback when a month header is tapped
+  final Function(DateTime month)? onMonthTap;
+
   const TimelineDateHeadersWidget({
     super.key,
     required this.dates,
     required this.offsetWidth,
     required this.scrollController,
     required this.dimensions,
+    this.onMonthTap,
   });
 
   @override
@@ -105,6 +109,7 @@ class TimelineDateHeadersWidget extends StatelessWidget {
               dayCount: dayCount,
               dayWidth: dimensions.dayWidth,
               screenWidth: dimensions.screenWidth,
+              onTap: onMonthTap,
             ),
           );
         }
@@ -125,6 +130,7 @@ class TimelineDateHeadersWidget extends StatelessWidget {
           dayCount: dayCount,
           dayWidth: dimensions.dayWidth,
           screenWidth: dimensions.screenWidth,
+          onTap: onMonthTap,
         ),
       );
     }

@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 /// Extracted from timeline_calendar_widget.dart for better maintainability.
 
 /// Month header cell spanning multiple days
-class TimelineMonthHeader extends StatelessWidget {
+class TimelineMonthHeader extends StatefulWidget {
   /// The date representing the month
   final DateTime date;
 
@@ -20,41 +20,66 @@ class TimelineMonthHeader extends StatelessWidget {
   /// Screen width for responsive sizing (optional)
   final double? screenWidth;
 
+  /// Callback when month header is tapped
+  final Function(DateTime month)? onTap;
+
   const TimelineMonthHeader({
     super.key,
     required this.date,
     required this.dayCount,
     required this.dayWidth,
     this.screenWidth,
+    this.onTap,
   });
+
+  @override
+  State<TimelineMonthHeader> createState() => _TimelineMonthHeaderState();
+}
+
+class _TimelineMonthHeaderState extends State<TimelineMonthHeader> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     // Responsive font size
-    final width = screenWidth ?? MediaQuery.of(context).size.width;
+    final width = widget.screenWidth ?? MediaQuery.of(context).size.width;
     final fontSize = width < 600 ? 11.0 : (width < 900 ? 12.0 : 13.0);
 
-    return Container(
-      width: dayWidth * dayCount,
-      decoration: BoxDecoration(
-        color: Colors.transparent, // Transparent to show parent gradient
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor, width: 1.5),
-          right: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6)),
-        ),
-      ),
-      child: Center(
-        child: Text(
-          DateFormat(
-            'MMMM yyyy',
-            Localizations.localeOf(context).languageCode,
-          ).format(date),
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: fontSize,
-            color: theme.colorScheme.primary,
+    return MouseRegion(
+      cursor: widget.onTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap != null ? () => widget.onTap!(widget.date) : null,
+        child: Container(
+          width: widget.dayWidth * widget.dayCount,
+          decoration: BoxDecoration(
+            color: _isHovered && widget.onTap != null
+                ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                : Colors.transparent,
+            border: Border(
+              bottom: BorderSide(color: theme.dividerColor, width: 1.5),
+              right: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6)),
+            ),
+          ),
+          child: Center(
+            child: Text(
+              DateFormat(
+                'MMMM yyyy',
+                Localizations.localeOf(context).languageCode,
+              ).format(widget.date),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: fontSize,
+                color: theme.colorScheme.primary,
+                decoration: _isHovered && widget.onTap != null
+                    ? TextDecoration.underline
+                    : TextDecoration.none,
+                decorationColor: theme.colorScheme.primary,
+              ),
+            ),
           ),
         ),
       ),

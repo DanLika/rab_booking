@@ -167,7 +167,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         // The build() method will watch this and show the dialog
         if (mounted) {
           setState(() {
-            _pendingBookingToShow = ownerBooking;
+            // CRITICAL FIX: Only set if dialog is not already shown/pending
+            if (!_dialogShownForBooking) {
+              _pendingBookingToShow = ownerBooking;
+            }
           });
         }
       } else {
@@ -265,11 +268,16 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     }
 
     if (pendingBookingId == null) {
-      if (routeBookingId != null && routeBookingId != _handledBookingId) {
+      // CRITICAL FIX: Also check _dialogShownForBooking to prevent setting provider
+      // when dialog is already shown or being shown
+      if (routeBookingId != null && routeBookingId != _handledBookingId && !_dialogShownForBooking) {
         // Use addPostFrameCallback to set provider value after build
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !context.mounted) return;
-          if (ref.read(pendingBookingIdProvider) == null && routeBookingId != _handledBookingId) {
+          // Double-check _dialogShownForBooking inside callback too
+          if (ref.read(pendingBookingIdProvider) == null &&
+              routeBookingId != _handledBookingId &&
+              !_dialogShownForBooking) {
             ref.read(pendingBookingIdProvider.notifier).state = routeBookingId;
             if (!_isLoadingInitialBooking) {
               setState(() {
@@ -288,13 +296,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // Check if we need to show booking dialog
     // Only check once per bookingId to avoid infinite loops
     // Also check that dialog is not already shown and that we haven't already handled this bookingId
-    // FIXED BUG #9: Added !_isLoadingInitialBooking check to prevent race condition
+    // NOTE: Removed !_isLoadingInitialBooking - it was blocking dialog from opening when navigating from notifications
+    // The flag is set true in initState when initialBookingId exists, creating a deadlock
     if (bookingId != null &&
         bookingId != _handledBookingId &&
         !_hasHandledInitialBooking &&
         !_bookingCheckScheduled &&
         !_dialogShownForBooking &&
-        !_isLoadingInitialBooking &&
         !windowedState.isInitialLoad &&
         !windowedState.isLoadingBottom) {
       _bookingCheckScheduled = true;
@@ -323,7 +331,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             if (mounted) {
               setState(() {
                 _isLoadingInitialBooking = false;
-                _pendingBookingToShow = booking;
+                // CRITICAL FIX: Only set if dialog is not already shown/pending
+                if (!_dialogShownForBooking) {
+                  _pendingBookingToShow = booking;
+                }
               });
             }
             return; // Successfully found and handled
@@ -347,7 +358,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // Use a flag to ensure we only show the dialog once per booking
     if (_pendingBookingToShow != null && !_dialogShownForBooking) {
       final bookingToShow = _pendingBookingToShow!;
+
+      // CRITICAL FIX: Set flag AND clear _pendingBookingToShow IMMEDIATELY
+      // This prevents build() from executing this block multiple times
+      // before addPostFrameCallback runs
       _dialogShownForBooking = true;
+      _pendingBookingToShow = null; // Clear immediately to prevent re-trigger
 
       // Show dialog after frame is built
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -366,21 +382,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               // Reset dialog-related flags immediately when dialog closes
               if (!mounted) return;
 
-              setState(() {
-                _pendingBookingToShow = null;
-                _dialogShownForBooking = false;
-                _hasHandledInitialBooking = false;
-                _bookingCheckScheduled = false;
-                _isLoadingInitialBooking = false;
-                // FIXED BUG #3: Reset _handledBookingId to allow reopening same notification
-                _handledBookingId = null;
-              });
-
-              // Clear pending booking ID provider
+              // Clear pending booking ID provider first
               ref.read(pendingBookingIdProvider.notifier).state = null;
 
-              // Clear bookingId from route query parameters
-              // Use post-frame callback to ensure UI is stable
+              // CRITICAL FIX: Clear bookingId from URL FIRST, then reset _handledBookingId
+              // If we reset _handledBookingId before URL is cleared, build() sees bookingId
+              // still in URL with _handledBookingId=null and reopens the dialog
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted || !context.mounted) return;
 
@@ -394,8 +401,30 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     // Use replace instead of go to not add to history
                     router.go(newUri.toString());
                   }
+
+                  // Only reset ALL flags AFTER URL is cleared
+                  if (mounted) {
+                    setState(() {
+                      _pendingBookingToShow = null;
+                      _dialogShownForBooking = false;
+                      _hasHandledInitialBooking = false;
+                      _bookingCheckScheduled = false;
+                      _isLoadingInitialBooking = false;
+                      _handledBookingId = null;
+                    });
+                  }
                 } catch (e) {
                   debugPrint('Error clearing bookingId from route: $e');
+                  // Even on error, reset flags to prevent stuck state
+                  if (mounted) {
+                    setState(() {
+                      _pendingBookingToShow = null;
+                      _dialogShownForBooking = false;
+                      _hasHandledInitialBooking = false;
+                      _bookingCheckScheduled = false;
+                      _isLoadingInitialBooking = false;
+                    });
+                  }
                 }
               });
             });

@@ -128,6 +128,15 @@
     },
     {
       "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "check_out", "order": "ASCENDING" },
+        { "fieldPath": "check_in", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "bookings",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "user_id", "order": "ASCENDING" },
@@ -177,6 +186,14 @@
     {
       "collectionGroup": "ical_events",
       "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "unit_id", "order": "ASCENDING" },
+        { "fieldPath": "start_date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "ical_events",
+      "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "unit_id", "order": "ASCENDING" },
         { "fieldPath": "start_date", "order": "ASCENDING" }
@@ -266,6 +283,20 @@
     {
       "collectionGroup": "bookings",
       "fieldPath": "stripe_session_id",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION"
+        },
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "bookings",
+      "fieldPath": "booking_reference",
       "indexes": [
         {
           "order": "ASCENDING",

@@ -113,6 +113,17 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   Timer? _horizontalScrollThrottleTimer;
   double _lastHorizontalScrollOffset = 0.0;
 
+  // Flag to track programmatic scrolls (prevents infinite loop with onVisibleDateRangeChanged)
+  // Problem #12 fix: When scrolling programmatically (from didUpdateWidget or month click),
+  // we don't want to notify parent which would cause another scroll
+  bool _isProgrammaticScroll = false;
+
+  // Flag to prevent concurrent prepend operations (Problem #13 fix)
+  bool _isPrepending = false;
+
+  // Timestamp of last prepend to debounce (Problem #13 fix)
+  DateTime? _lastPrependTime;
+
   @override
   void initState() {
     super.initState();
@@ -131,7 +142,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     // Without this, widget only uses initialScrollToDate in initState() and ignores changes
     if (widget.initialScrollToDate != oldWidget.initialScrollToDate &&
         widget.initialScrollToDate != null) {
-      // Scroll to the new date
+      // Problem #12 fix: Set flag to prevent infinite loop
+      // When we scroll, onVisibleDateRangeChanged would update parent, which would
+      // change initialScrollToDate again, causing another scroll
+      _isProgrammaticScroll = true;
       _scrollToDate(widget.initialScrollToDate!);
     }
   }
@@ -305,7 +319,8 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     }
 
     // Notify parent of visible date change (debounced on web for performance)
-    if (widget.onVisibleDateRangeChanged != null && !_isInitialScrolling) {
+    // Problem #12 fix: Skip notification during programmatic scroll to prevent infinite loop
+    if (widget.onVisibleDateRangeChanged != null && !_isInitialScrolling && !_isProgrammaticScroll) {
       final visibleStartDate = _dynamicStartDate.add(Duration(days: firstVisibleDay));
 
       if (kIsWeb) {
@@ -327,9 +342,22 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final edgeThreshold = dayWidth * kTimelineEdgeThresholdDays;
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
 
+    // Problem #13 fix: Add debounce and guard against concurrent prepends
+    final now = DateTime.now();
+    final canPrepend = !_isPrepending &&
+        (_lastPrependTime == null || now.difference(_lastPrependTime!).inMilliseconds > 500);
+
     // Near start edge? Prepend days with scroll position compensation
+    // Problem #13 fix: Only prepend if scroll offset > 0 (not already at absolute start)
+    // and if not already prepending, and if debounce period has passed
     if (scrollOffset < edgeThreshold &&
+        scrollOffset > 0 && // Prevent loop when at position 0
+        canPrepend &&
         _dynamicStartDate.isAfter(DateTime.now().subtract(const Duration(days: kTimelineMaxDaysLimit)))) {
+      // Set flags to prevent concurrent prepends
+      _isPrepending = true;
+      _lastPrependTime = now;
+
       // Save current scroll offset before modifying date range
       final currentOffset = _horizontalScrollController.offset;
       final scrollCompensation = kTimelineDaysToExtend * dayWidth;
@@ -345,12 +373,17 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
           final maxExtent = _horizontalScrollController.position.maxScrollExtent;
           _horizontalScrollController.jumpTo(newOffset.clamp(0.0, maxExtent));
         }
+        // Reset prepending flag after compensation is done
+        _isPrepending = false;
       });
     }
 
     // Near end edge? Append days (no compensation needed for append)
+    // Problem #14 fix: Changed limit check to use _dynamicStartDate as reference
+    // This allows scrolling to any date within 2 years of the start date,
+    // not just 1 year from today. Allows January 2026 from December 2025.
     if (scrollOffset > maxScroll - edgeThreshold &&
-        _dynamicEndDate.isBefore(DateTime.now().add(const Duration(days: kTimelineMaxDaysLimit)))) {
+        _dynamicEndDate.isBefore(_dynamicStartDate.add(const Duration(days: kTimelineMaxDaysLimit * 2)))) {
       setState(() {
         _dynamicEndDate = _dynamicEndDate.add(const Duration(days: kTimelineDaysToExtend));
       });
@@ -425,8 +458,14 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
             }
             // Restore vertical scroll position if provided (preserves position on toolbar navigation)
             _restoreVerticalScrollPosition();
-            // Notify parent of visible date change
-            widget.onVisibleDateRangeChanged?.call(targetDate);
+            // Problem #12 fix: Reset programmatic scroll flag after scroll completes
+            // Use a small delay to ensure the scroll position has settled
+            // before allowing onVisibleDateRangeChanged to fire again
+            Future.delayed(const Duration(milliseconds: 150), () {
+              if (mounted) {
+                _isProgrammaticScroll = false;
+              }
+            });
           }
         });
   }
@@ -434,6 +473,9 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   /// Scroll to a specific month when month header is tapped
   void _scrollToMonth(DateTime month) {
     if (!_horizontalScrollController.hasClients) return;
+
+    // Problem #12 fix: Set flag to prevent infinite loop when month header clicked
+    _isProgrammaticScroll = true;
 
     // Target is first day of the month
     final targetDate = DateTime(month.year, month.month);
@@ -477,6 +519,13 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         .animateTo(targetScroll, duration: AppDimensions.animationSlow, curve: Curves.easeInOut)
         .then((_) {
           if (mounted) {
+            // Problem #12 fix: Reset programmatic scroll flag after scroll completes
+            // Use a small delay to ensure the scroll position has settled
+            Future.delayed(const Duration(milliseconds: 150), () {
+              if (mounted) {
+                _isProgrammaticScroll = false;
+              }
+            });
             // Notify parent of visible date change
             widget.onVisibleDateRangeChanged?.call(targetDate);
           }

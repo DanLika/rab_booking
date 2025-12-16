@@ -479,7 +479,18 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-16 | **Version**: 5.8
+**Last Updated**: 2025-12-16 | **Version**: 5.9
+
+**Changelog 5.9**: Booking Dialog Race Condition Fix:
+- **Problem**: Booking details dialog otvarao se 2-3 puta kada korisnik navigira sa notifications page na bookings page
+- **Uzrok**: Async race condition između `setState()`, `router.go()` i `addPostFrameCallback()`
+- **Fix** (`owner_bookings_screen.dart`):
+  1. Uklonjen `!_isLoadingInitialBooking` check koji je blokirao dialog opening
+  2. URL query params čiste se PRIJE resetovanja state flags-a (ne poslije)
+  3. Dodani `!_dialogShownForBooking` checks na SVE putanje koje setuju `_pendingBookingToShow`
+  4. `_pendingBookingToShow = null` postavlja se odmah nakon što se `_dialogShownForBooking = true` setuje
+  5. Dodatni guard za `pendingBookingIdProvider` setting iz URL-a
+- **Ključni princip**: Redoslijed cleanup-a je kritičan - URL mora biti očišćen PRIJE nego što se resetuju flags-ovi
 
 **Changelog 5.8**: Analytics Security Rules Fix:
 - **Problem**: Analytics page vraćala `permission-denied` error za `collectionGroup('bookings')` query

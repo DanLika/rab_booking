@@ -19,6 +19,9 @@ abstract class IPriceCalculator {
   /// Throws [DatesNotAvailableException] if dates are not available
   /// and [checkAvailability] is true.
   ///
+  /// Throws [PriceCalculationException] if calculation fails due to
+  /// network errors, Firestore errors, or other unexpected issues.
+  ///
   /// Returns [PriceCalculationResult] with total price and breakdown.
   Future<PriceCalculationResult> calculate({
     required String unitId,

@@ -215,20 +215,32 @@ class CalendarDataBuilder {
     }
   }
 
-  /// Iterate over dates in range [start, end] inclusive.
+  /// Iterate over dates in range [start, end) exclusive of end date.
+  ///
+  /// Bug Fix #4: Changed from inclusive to exclusive end date.
+  /// For booking logic, checkout day is NOT a night - the guest leaves on checkout day.
+  /// This matches standard booking industry practice where:
+  /// - Check-in day IS included (first night)
+  /// - Check-out day is NOT included (no night spent)
+  ///
+  /// Example: Booking Jan 1-5 iterates Jan 1, 2, 3, 4 (4 nights), NOT Jan 5.
   void _iterateDates(
     DateTime start,
     DateTime end,
     void Function(DateTime date) action,
   ) {
     var current = start;
-    while (!current.isAfter(end)) {
+    while (current.isBefore(end)) {
       action(current);
       current = current.add(_oneDay);
     }
   }
 
   /// Mark a date range with appropriate status.
+  ///
+  /// Bug Fix #4: Now explicitly marks checkout day since _iterateDates
+  /// uses exclusive end date. Checkout day gets partialCheckOut status
+  /// (or pending if booking is pending) to show it's available for new check-ins.
   void _markDateRange({
     required Map<DateTime, CalendarDateInfo> calendar,
     required Map<String, DailyPriceModel> priceMap,
@@ -238,10 +250,11 @@ class CalendarDataBuilder {
     required DateTime checkOut,
     required bool isPending,
   }) {
+    // Mark all nights (check-in through day before check-out)
     _iterateDates(start, end, (current) {
       final status = _determineStatus(
         isCheckInDay: DateNormalizer.isSameDay(current, checkIn),
-        isCheckOutDay: DateNormalizer.isSameDay(current, checkOut),
+        isCheckOutDay: false, // Never true in iteration (checkout excluded)
         isPending: isPending,
       );
 
@@ -252,6 +265,18 @@ class CalendarDataBuilder {
         isPendingBooking: isPending,
       );
     });
+
+    // Bug Fix #4: Explicitly mark checkout day if within range
+    // Checkout day shows as partialCheckOut (guest leaving, available for new check-in)
+    if (!checkOut.isBefore(start) && !checkOut.isAfter(end)) {
+      final checkoutStatus = isPending ? DateStatus.pending : DateStatus.partialCheckOut;
+      calendar[checkOut] = CalendarDateInfo(
+        date: checkOut,
+        status: checkoutStatus,
+        price: priceMap[DateKeyGenerator.fromDate(checkOut)]?.price,
+        isPendingBooking: isPending,
+      );
+    }
   }
 
   /// Determine the appropriate DateStatus for a date in a booking.

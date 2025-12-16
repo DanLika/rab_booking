@@ -152,9 +152,18 @@ class BookingPriceCalculator implements IPriceCalculator {
       );
     } catch (e) {
       if (e is DatesNotAvailableException) rethrow;
+      if (e is PriceCalculationException) rethrow;
 
       unawaited(LoggingService.logError('Error calculating booking price', e));
-      return const PriceCalculationResult.zero();
+      // Bug Fix #3: Throw exception instead of returning zero to expose errors
+      // Previously returned PriceCalculationResult.zero() which masked critical issues
+      // (Firestore failures, network errors) and made debugging difficult
+      throw PriceCalculationException.failed(
+        unitId: unitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+        error: e,
+      );
     }
   }
 
@@ -179,17 +188,51 @@ class BookingPriceCalculator implements IPriceCalculator {
     checkAvailability: false,
   );
 
+  /// Find unit document to get propertyId.
+  /// Returns null if unit not found.
+  Future<DocumentSnapshot?> _findUnitDocument(String unitId) async {
+    try {
+      final snapshot = await _firestore
+          .collectionGroup('units')
+          .where(FieldPath.documentId, isEqualTo: unitId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) return null;
+      return snapshot.docs.first;
+    } catch (e) {
+      unawaited(LoggingService.logError('Error finding unit document', e));
+      return null;
+    }
+  }
+
   /// Fetch daily prices from Firestore.
-  /// NEW STRUCTURE: Use collection group query for subcollection
+  /// Uses exact subcollection path to ensure data consistency with server.
   Future<Map<String, DailyPriceModel>> _fetchDailyPrices({
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
-    // NEW STRUCTURE: Use collection group query for subcollection
+    // Find unit to get propertyId for correct subcollection path
+    final unitDoc = await _findUnitDocument(unitId);
+    if (unitDoc == null) {
+      LoggingService.log(
+        '⚠️ Unit not found for price fetch: $unitId',
+        tag: 'PRICE_CALCULATION',
+      );
+      return {};
+    }
+
+    // Extract propertyId from unit's parent path: properties/{propertyId}/units/{unitId}
+    final propertyId = unitDoc.reference.parent.parent!.id;
+
+    // Query exact subcollection path (matches server-side validation)
     final snapshot = await _firestore
-        .collectionGroup(_dailyPricesCollection)
-        .where('unit_id', isEqualTo: unitId)
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .doc(unitId)
+        .collection(_dailyPricesCollection)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(checkIn))
         .where('date', isLessThan: Timestamp.fromDate(checkOut))
         .get();
@@ -286,11 +329,27 @@ class BookingPriceCalculator implements IPriceCalculator {
       final effectiveWeekendDays =
           weekendDays ?? WidgetConstants.defaultWeekendDays;
 
-      // Try to fetch daily price
-      // NEW STRUCTURE: Use collection group query for subcollection
+      // Find unit to get propertyId for correct subcollection path
+      final unitDoc = await _findUnitDocument(unitId);
+      if (unitDoc == null) {
+        // Unit not found, fall back to base price
+        if (_isWeekendDay(normalizedDate, effectiveWeekendDays) &&
+            weekendBasePrice != null) {
+          return weekendBasePrice;
+        }
+        return basePrice;
+      }
+
+      // Extract propertyId from unit's parent path
+      final propertyId = unitDoc.reference.parent.parent!.id;
+
+      // Query exact subcollection path (matches server-side validation)
       final snapshot = await _firestore
-          .collectionGroup(_dailyPricesCollection)
-          .where('unit_id', isEqualTo: unitId)
+          .collection('properties')
+          .doc(propertyId)
+          .collection('units')
+          .doc(unitId)
+          .collection(_dailyPricesCollection)
           .where('date', isEqualTo: Timestamp.fromDate(normalizedDate))
           .limit(1)
           .get();

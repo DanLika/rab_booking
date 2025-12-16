@@ -619,6 +619,50 @@ class DatesNotAvailableException extends AppException {
   }
 }
 
+/// Exception for price calculation failures
+/// Thrown when price calculation encounters an error (network, Firestore, etc.)
+/// Bug Fix #3: Fail-safe approach - expose errors instead of returning zero price
+class PriceCalculationException extends AppException {
+  final String unitId;
+  final DateTime checkIn;
+  final DateTime checkOut;
+
+  PriceCalculationException(
+    super.message, {
+    required this.unitId,
+    required this.checkIn,
+    required this.checkOut,
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for general calculation failures
+  factory PriceCalculationException.failed({
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+    dynamic error,
+  }) {
+    return PriceCalculationException(
+      'Failed to calculate booking price',
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      code: 'price/calculation-failed',
+      userMessage: 'Unable to calculate price. Please try again.',
+      originalError: error,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'PriceCalculationException: $message '
+        '(unit: $unitId, dates: $checkIn - $checkOut, error: $originalError)';
+  }
+}
+
 // ============================================================================
 // GENERIC EXCEPTIONS
 // ============================================================================

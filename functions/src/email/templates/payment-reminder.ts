@@ -7,8 +7,8 @@
  */
 
 import {Resend} from "resend";
-import {generateEmailHtml} from "../base";
-import {getBellIcon} from "../../utils/svg-icons";
+import {generateEmailHtml} from "./base";
+import {getBellIcon} from "../utils/svg-icons";
 import {
   generateHeader,
   generateGreeting,
@@ -21,7 +21,7 @@ import {
   formatCurrency,
   formatDate,
   escapeHtml,
-} from "../../utils/template-helpers";
+} from "../utils/template-helpers";
 
 export interface PaymentReminderParams {
   guestEmail: string;

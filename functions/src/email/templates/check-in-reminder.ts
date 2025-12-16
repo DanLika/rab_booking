@@ -7,8 +7,8 @@
  */
 
 import {Resend} from "resend";
-import {generateEmailHtml} from "../base";
-import {getClockIcon} from "../../utils/svg-icons";
+import {generateEmailHtml} from "./base";
+import {getClockIcon} from "../utils/svg-icons";
 import {
   generateHeader,
   generateGreeting,
@@ -20,7 +20,7 @@ import {
   DetailRow,
   formatDate,
   escapeHtml,
-} from "../../utils/template-helpers";
+} from "../utils/template-helpers";
 
 export interface CheckInReminderParams {
   guestEmail: string;

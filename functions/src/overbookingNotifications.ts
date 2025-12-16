@@ -4,7 +4,7 @@ import {sendPushNotification} from "./fcmService";
 import {createNotification} from "./notificationService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {sendSms} from "./smsService";
-import {sendOverbookingDetectedEmailV2} from "./email/templates/version-2/overbooking-detected-v2";
+import {sendOverbookingDetectedEmailV2} from "./email";
 import {getResendClient} from "./emailService";
 
 /**

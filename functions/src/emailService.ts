@@ -19,9 +19,10 @@
  * ✅ sendEmailVerificationCode - Migrated to V2 template (Refined Premium)
  * ✅ sendPendingBookingOwnerNotification - Migrated to V2 template (Refined Premium)
  * ✅ sendBookingRejectedEmail - Migrated to V2 template (Refined Premium)
- * ✅ sendSuspiciousActivityEmail - Migrated to V2 template (Refined Premium)
  *
  * ALL EMAIL FUNCTIONS FULLY MIGRATED! 🎉
+ *
+ * TODO: Suspicious Activity Email (deferred for future implementation)
  */
 
 import { Resend } from "resend";
@@ -58,8 +59,6 @@ import {
   type PendingOwnerNotificationParams,
   sendBookingRejectedEmailV2,
   type BookingRejectedParams,
-  sendSuspiciousActivityEmailV2,
-  type SuspiciousActivityParams,
 } from "./email";
 
 // ==========================================
@@ -971,48 +970,7 @@ export async function sendCheckOutReminderEmail(
 // ADDITIONAL EMAIL FUNCTIONS
 // ==========================================
 
-/**
- * Send suspicious activity email
- * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, alert/danger theme)
- */
-export async function sendSuspiciousActivityEmail(
-  adminEmail: string,
-  activityType: string,
-  details: string,
-  timestamp?: string,
-  ipAddress?: string,
-  userAgent?: string
-): Promise<void> {
-  // Input validation
-  validateEmail(adminEmail, "adminEmail");
-  validateRequiredString(activityType, "activityType");
-  validateRequiredString(details, "details");
-
-  try {
-    // Build params for V2 template
-    const params: SuspiciousActivityParams = {
-      adminEmail,
-      activityType,
-      details,
-      timestamp,
-      ipAddress,
-      userAgent,
-    };
-
-    // Send email using V2 template (OPCIJA A: Refined Premium)
-    await sendSuspiciousActivityEmailV2(
-      getResendClient(),
-      params,
-      FROM_EMAIL(),
-      FROM_NAME()
-    );
-
-    logSuccess("Suspicious activity email sent (V2 - Refined Premium)", { email: adminEmail });
-  } catch (error) {
-    logError("Error sending suspicious activity email", error);
-    throw error;
-  }
-}
+// NOTE: sendSuspiciousActivityEmail has been removed (TODO for future implementation)
 
 /**
  * Send pending booking request email

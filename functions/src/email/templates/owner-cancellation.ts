@@ -8,8 +8,8 @@
  */
 
 import {Resend} from "resend";
-import {generateEmailHtml} from "../base";
-import {getWarningIcon} from "../../utils/svg-icons";
+import {generateEmailHtml} from "./base";
+import {getWarningIcon} from "../utils/svg-icons";
 import {
   generateHeader,
   generateIntro,
@@ -20,7 +20,7 @@ import {
   formatCurrency,
   formatDate,
   escapeHtml,
-} from "../../utils/template-helpers";
+} from "../utils/template-helpers";
 
 /**
  * Owner cancellation notification email parameters (V2)

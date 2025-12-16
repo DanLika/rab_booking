@@ -7,8 +7,8 @@
  */
 
 import {Resend} from "resend";
-import {generateEmailHtml} from "../base";
-import {getWarningIcon} from "../../utils/svg-icons";
+import {generateEmailHtml} from "./base";
+import {getWarningIcon} from "../utils/svg-icons";
 import {
   generateHeader,
   generateIntro,
@@ -16,7 +16,7 @@ import {
   generateCard,
   generateAlert,
   escapeHtml,
-} from "../../utils/template-helpers";
+} from "../utils/template-helpers";
 
 export interface PasswordResetParams {
   email: string;

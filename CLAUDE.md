@@ -6,6 +6,7 @@
 - [CLAUDE_BUGS_ARCHIVE.md](./docs/bugs-archive/CLAUDE_BUGS_ARCHIVE.md) - Detaljni bug fix-evi sa code examples
 - [CLAUDE_WIDGET_SYSTEM.md](./docs/cloud-widget-systems/CLAUDE_WIDGET_SYSTEM.md) - Widget modovi, payment logic, pricing
 - [CLAUDE_MCP_TOOLS.md](./docs/cloud-mcp-tools/CLAUDE_MCP_TOOLS.md) - MCP serveri, slash commands
+- [EMAIL_SYSTEM.md](./docs/features/email-templates/EMAIL_SYSTEM.md) - Email template-i, payment rok, reminders
 
 ---
 
@@ -280,7 +281,7 @@ Widget build(BuildContext context) {
   return KeyedSubtree(
     key: ValueKey('my_screen_$keyboardFixRebuildKey'),
     child: Scaffold(
-      resizeToAvoidBottomInset: false, // KRITI�NO!
+      resizeToAvoidBottomInset: true, // NAMJERNO true - mixin radi ZAJEDNO sa Flutter native ponašanjem
       // ...
     ),
   );
@@ -291,6 +292,8 @@ Widget build(BuildContext context) {
 ```html
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 ```
+
+**NAPOMENA o `resizeToAvoidBottomInset: true`**: Koristimo `true` (ne `false`) jer mixin NE zamjenjuje Flutter-ovo native ponašanje, već ga DOPUNJUJE. Mixin detektuje kada keyboard dismiss nije pravilno obrađen i forsira rebuild. Flutter-ov `resizeToAvoidBottomInset: true` i dalje radi normalno za većinu slučajeva.
 
 ### Fajlovi:
 | Fajl | Svrha |
@@ -314,7 +317,7 @@ Widget build(BuildContext context) {
 ### ?? KADA KREIRA� NOVI SCREEN SA INPUT POLJIMA:
 1. Dodaj `with AndroidKeyboardDismissFix` mixinu
 2. Wrap `Scaffold` u `KeyedSubtree(key: ValueKey('screen_name_$keyboardFixRebuildKey'), ...)`
-3. Postavi `resizeToAvoidBottomInset: false` na Scaffold
+3. Postavi `resizeToAvoidBottomInset: true` na Scaffold (NAMJERNO true - mixin radi zajedno sa Flutter native ponašanjem)
 
 ---
 
@@ -423,7 +426,57 @@ firebase deploy --only firestore:indexes
 
 ---
 
-**Last Updated**: 2025-12-16 | **Version**: 5.2
+## 📱 PWA (Progressive Web App)
+
+**Konfiguracija**: `web/manifest.json`, `web/index.html` (linije 306-372)
+
+**Widgeti**:
+| Widget | Fajl | Svrha |
+|--------|------|-------|
+| `PwaInstallButton` | `widgets/pwa/pwa_install_button.dart` | Custom install dugme (prikazuje se samo kad je dostupno) |
+| `ConnectivityBanner` | `widgets/pwa/connectivity_banner.dart` | Offline/online status banner |
+
+**Dart API** (`core/utils/web_utils.dart`):
+```dart
+canInstallPwa()      // true ako je install prompt dostupan
+isPwaInstalled()     // true ako je PWA već instalirana
+promptPwaInstall()   // async - pokreće install prompt
+listenToPwaInstallability(callback)  // listener za promjene
+```
+
+**JavaScript API** (`web/index.html`):
+```javascript
+window.pwaCanInstall    // bool
+window.pwaIsInstalled   // bool
+window.pwaPromptInstall()  // async function
+// Eventi: 'pwa-installable', 'pwa-installed'
+```
+
+**TODO**: Web Push Notifications (Safari iOS 16.4+ only, zahtijeva VAPID ključeve)
+
+---
+
+**Last Updated**: 2025-12-16 | **Version**: 5.6
+
+**Changelog 5.6**: PWA install button i connectivity banner widgeti, JS/Dart interop za PWA install prompt.
+
+**Changelog 5.5**: Email System Reorganization:
+- Payment deadline: 3 dana → **7 dana** (atomicBooking.ts:870)
+- Check-in reminder: 1 dan → **7 dana** prije
+- Payment reminder: **Dan 6** (1 dan prije isteka)
+- Uklonjeni `-v2` suffix iz template imena
+- Premješteni template-i iz `version-2/` u `templates/`
+- Uklonjen `suspicious-activity.ts` (TODO za budućnost)
+- Nova dokumentacija: `EMAIL_SYSTEM.md`
+
+**Changelog 5.4**: Stripe Security Improvements implementirane:
+- Rate limiting na `createStripeCheckoutSession` (10 req/5min per IP)
+- Stripe Connect account verification (`charges_enabled`, `card_payments`, `transfers`)
+- Security monitoring (`securityMonitoring.ts`) - logira kritične security evente
+- Firestore rules za bookings: selektivni pristup (owner, widget calendar, Stripe polling, booking view)
+- Error message cleanup - generičke poruke za klijente, detalji samo u logovima
+
+**Changelog 5.3**: Owner email UVIJEK se šalje za svaki booking (Bug Archive #2) - `forceIfCritical=true` u atomicBooking.ts. Dok nema push notifications, owner ne smije propustiti rezervaciju.
 
 **Changelog 5.2**: Keyboard fix threshold usklađivanje (JS/Dart 12%/15%), window.resize fallback, EPC QR validacija sa currency parametrom.
 

@@ -7,8 +7,8 @@
  */
 
 import {Resend} from "resend";
-import {generateEmailHtml} from "../base";
-import {getSuccessIcon} from "../../utils/svg-icons";
+import {generateEmailHtml} from "./base";
+import {getSuccessIcon} from "../utils/svg-icons";
 import {
   generateHeader,
   generateGreeting,
@@ -22,7 +22,7 @@ import {
   formatDate,
   calculateNights,
   escapeHtml,
-} from "../../utils/template-helpers";
+} from "../utils/template-helpers";
 
 export interface BookingConfirmationParams {
   guestEmail: string;

@@ -8,13 +8,13 @@
  */
 
 import {Resend} from "resend";
-import {generateEmailHtml} from "../base";
-import {getEmailIcon} from "../../utils/svg-icons";
+import {generateEmailHtml} from "./base";
+import {getEmailIcon} from "../utils/svg-icons";
 import {
   generateHeader,
   generateGreeting,
   escapeHtml,
-} from "../../utils/template-helpers";
+} from "../utils/template-helpers";
 
 /**
  * Custom guest email parameters (V2)

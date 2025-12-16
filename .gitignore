@@ -77,6 +77,8 @@ firebase-service-account-key.json
 !.claude/
 !.claude/*.md
 !.claude/**/*.md
+# Whitelist docs directory .md files (project documentation)
+!docs/**/*.md
 *.sql
 *.stackdump
 build_output.txt

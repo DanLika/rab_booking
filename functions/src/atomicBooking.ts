@@ -144,9 +144,10 @@ export const createBookingAtomic = onCall(async (request) => {
         paymentOption: paymentOption,
       },
     });
+    // SECURITY: Return generic message to client, details are in logs
     throw new HttpsError(
       "invalid-argument",
-      `Missing required booking fields: ${missingFields.join(', ')}`
+      "Invalid booking data. Please check all fields and try again."
     );
   }
 
@@ -866,7 +867,7 @@ export const createBookingAtomic = onCall(async (request) => {
         // SECURITY FIX: Use server timestamp for payment deadline (not client time)
         payment_deadline: paymentMethod === "bank_transfer" ?
           admin.firestore.Timestamp.fromDate(
-            new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days from server time
+            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from server time
           ) :
           null,
         // Booking lookup security
@@ -1059,9 +1060,11 @@ export const createBookingAtomic = onCall(async (request) => {
             ownerData: ownerData ? Object.keys(ownerData) : "null",
           });
         } else {
-          // NOTIFICATION PREFERENCES: Respect owner settings for instant bookings
-          // Owner can opt-out of instant booking emails in Notification Settings
-          logInfo("[AtomicBooking] Checking notification preferences for instant booking", {
+          // CRITICAL: Owner MUST receive email for every booking
+          // Until push notifications are implemented, email is the only way
+          // owner knows about new bookings. Missing this = missed revenue.
+          // Bug Archive #2: Owner email ALWAYS sent (forceIfCritical=true)
+          logInfo("[AtomicBooking] Sending owner notification (critical - always sent)", {
             ownerId,
             email: ownerData.email,
           });
@@ -1092,11 +1095,11 @@ export const createBookingAtomic = onCall(async (request) => {
                 ownerData.email
               );
             },
-            false // Respect preferences: owner can opt-out of instant booking emails
+            true // CRITICAL: Always send - owner must know about every booking
           );
 
           logSuccess(
-            "[AtomicBooking] Owner notification email processed (sent if preferences allow)",
+            "[AtomicBooking] Owner notification email sent (critical notification)",
             {
               email: ownerData.email,
             }

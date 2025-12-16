@@ -7,14 +7,14 @@
  */
 
 import {Resend} from "resend";
-import {generateEmailHtml} from "../base";
-import {getInfoIcon} from "../../utils/svg-icons";
+import {generateEmailHtml} from "./base";
+import {getInfoIcon} from "../utils/svg-icons";
 import {
   generateHeader,
   generateCard,
   generateAlert,
   escapeHtml,
-} from "../../utils/template-helpers";
+} from "../utils/template-helpers";
 
 export interface EmailVerificationParams {
   email: string;

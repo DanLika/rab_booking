@@ -460,6 +460,20 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               ],
             ),
           ),
+        if (booking.status == BookingStatus.pending)
+          PopupMenuItem(
+            value: 'reject',
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.cancel_outlined,
+                  color: AppColors.error,
+                ),
+                const SizedBox(width: 8),
+                Text(l10n.ownerBookingCardReject),
+              ],
+            ),
+          ),
         if (booking.status == BookingStatus.confirmed && booking.isPast)
           PopupMenuItem(
             value: 'complete',
@@ -527,6 +541,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         break;
       case 'confirm':
         _confirmBooking(booking.id);
+        break;
+      case 'reject':
+        _rejectBooking(booking.id);
         break;
       case 'complete':
         _completeBooking(booking.id);
@@ -611,6 +628,79 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       }
     }
+  }
+
+  Future<void> _rejectBooking(String bookingId) async {
+    final l10n = AppLocalizations.of(context);
+    final reasonController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.bookingRejectTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(dialogL10n.bookingRejectMessage),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: InputDecorationHelper.buildDecoration(
+                  labelText: dialogL10n.ownerTableRejectionReasonOptional,
+                  hintText: dialogL10n.ownerTableCancellationReasonHint,
+                  context: dialogContext,
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              child: Text(dialogL10n.bookingRejectConfirm),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+        final reason = reasonController.text.trim().isEmpty
+            ? null
+            : reasonController.text.trim();
+        await repository.rejectBooking(bookingId, reason: reason);
+
+        if (mounted) {
+          ErrorDisplayUtils.showWarningSnackBar(
+            context,
+            l10n.ownerBookingsRejected,
+          );
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .updateBookingStatus(bookingId, BookingStatus.cancelled);
+        }
+      } catch (e) {
+        if (mounted) {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.ownerBookingsRejectError,
+          );
+        }
+      }
+    }
+
+    reasonController.dispose();
   }
 
   Future<void> _completeBooking(String bookingId) async {

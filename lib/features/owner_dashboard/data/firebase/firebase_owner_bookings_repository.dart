@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/utils/async_utils.dart';
 import '../../../../shared/models/booking_model.dart';
@@ -622,22 +623,95 @@ class FirebaseOwnerBookingsRepository {
     }
   }
 
+  /// Helper method to find a booking document by ID
+  /// Uses owner_id filter for security (only owner can access their bookings)
+  /// IMPORTANT: FieldPath.documentId does NOT work with collectionGroup queries!
+  /// Firestore expects full document path, not just ID when using collectionGroup.
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _findBookingById(
+    String bookingId,
+  ) async {
+    final userId = _auth.currentUser?.uid;
+    debugPrint('[_findBookingById] Looking for booking: $bookingId, user: $userId');
+    if (userId == null) {
+      debugPrint('[_findBookingById] ERROR: User not authenticated');
+      return null;
+    }
+
+    // Strategy 1: Query by owner_id (fast, but only works if owner_id field exists)
+    debugPrint('[_findBookingById] Strategy 1: collectionGroup query by owner_id');
+    final ownerBookingsSnapshot = await _firestore
+        .collectionGroup('bookings')
+        .where('owner_id', isEqualTo: userId)
+        .get();
+    debugPrint('[_findBookingById] Strategy 1: Found ${ownerBookingsSnapshot.docs.length} bookings for owner');
+
+    for (final doc in ownerBookingsSnapshot.docs) {
+      if (doc.id == bookingId) {
+        debugPrint('[_findBookingById] Strategy 1: FOUND booking at path: ${doc.reference.path}');
+        return doc;
+      }
+    }
+    debugPrint('[_findBookingById] Strategy 1: Booking NOT found in owner bookings');
+
+    // Strategy 2: Fallback - check legacy top-level bookings collection
+    final legacyDoc = await _firestore.collection('bookings').doc(bookingId).get();
+    if (legacyDoc.exists) {
+      // Verify ownership via property lookup
+      final data = legacyDoc.data()!;
+      final propertyId = data['property_id'] as String?;
+      if (propertyId != null) {
+        final propertyDoc = await _firestore.collection('properties').doc(propertyId).get();
+        if (propertyDoc.exists && propertyDoc.data()?['owner_id'] == userId) {
+          return legacyDoc;
+        }
+      }
+    }
+
+    // Strategy 3: Last resort - search all bookings in owner's properties
+    // This handles edge cases where owner_id might not be set on the booking
+    final propertiesSnapshot = await _firestore
+        .collection('properties')
+        .where('owner_id', isEqualTo: userId)
+        .get();
+
+    for (final propDoc in propertiesSnapshot.docs) {
+      // Check units subcollection
+      final unitsSnapshot = await _firestore
+          .collection('properties')
+          .doc(propDoc.id)
+          .collection('units')
+          .get();
+
+      for (final unitDoc in unitsSnapshot.docs) {
+        // Check if booking exists in this unit's bookings subcollection
+        final bookingDoc = await _firestore
+            .collection('properties')
+            .doc(propDoc.id)
+            .collection('units')
+            .doc(unitDoc.id)
+            .collection('bookings')
+            .doc(bookingId)
+            .get();
+
+        if (bookingDoc.exists) {
+          return bookingDoc;
+        }
+      }
+    }
+
+    return null;
+  }
+
   /// Get a single booking by ID with property and unit info
   /// Used for deep-links when booking is not in current window
   Future<OwnerBooking?> getOwnerBookingById(String bookingId) async {
     try {
-      // NEW STRUCTURE: Use collection group query to find booking
-      final bookingsSnapshot = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get()
-          .withBookingFetchTimeout('getOwnerBookingById');
+      // Use helper method to find booking (avoids FieldPath.documentId bug)
+      final bookingDoc = await _findBookingById(bookingId);
 
-      if (bookingsSnapshot.docs.isEmpty) return null;
+      if (bookingDoc == null || !bookingDoc.exists) return null;
 
-      final bookingDoc = bookingsSnapshot.docs.first;
-      final bookingData = bookingDoc.data();
+      final bookingData = bookingDoc.data()!;
       final booking = BookingModel.fromJson({
         ...bookingData,
         'id': bookingDoc.id,
@@ -694,28 +768,36 @@ class FirebaseOwnerBookingsRepository {
   /// Approve pending booking (owner approval workflow)
   Future<void> approveBooking(String bookingId) async {
     try {
-      // Find booking using collection group query
-      final bookingsSnapshot = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
+      debugPrint('[approveBooking] Starting approval for booking: $bookingId');
 
-      if (bookingsSnapshot.docs.isEmpty) {
+      // Find booking using helper method (avoids FieldPath.documentId bug)
+      final bookingDoc = await _findBookingById(bookingId);
+      debugPrint('[approveBooking] _findBookingById result: ${bookingDoc != null ? 'found' : 'NOT FOUND'}');
+
+      if (bookingDoc == null) {
+        debugPrint('[approveBooking] ERROR: Booking not found in any collection');
         throw BookingException(
           'Booking not found',
           code: 'booking/not-found',
         );
       }
 
+      // Log the document path to verify correct subcollection
+      debugPrint('[approveBooking] Document path: ${bookingDoc.reference.path}');
+      debugPrint('[approveBooking] Current user: ${_auth.currentUser?.uid}');
+
       // Update using the found document reference
-      await bookingsSnapshot.docs.first.reference.update({
+      debugPrint('[approveBooking] Attempting update...');
+      await bookingDoc.reference.update({
         'status': BookingStatus.confirmed.value,
         'approved_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
+      debugPrint('[approveBooking] Update SUCCESS');
       // Email notification will be sent by onBookingStatusChange Cloud Function
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[approveBooking] ERROR: $e');
+      debugPrint('[approveBooking] Stack trace: $stackTrace');
       throw BookingException.approvalFailed(e);
     }
   }
@@ -723,29 +805,37 @@ class FirebaseOwnerBookingsRepository {
   /// Reject pending booking (owner approval workflow)
   Future<void> rejectBooking(String bookingId, {String? reason}) async {
     try {
-      // Find booking using collection group query
-      final bookingsSnapshot = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
+      debugPrint('[rejectBooking] Starting rejection for booking: $bookingId');
 
-      if (bookingsSnapshot.docs.isEmpty) {
+      // Find booking using helper method (avoids FieldPath.documentId bug)
+      final bookingDoc = await _findBookingById(bookingId);
+      debugPrint('[rejectBooking] _findBookingById result: ${bookingDoc != null ? 'found' : 'NOT FOUND'}');
+
+      if (bookingDoc == null) {
+        debugPrint('[rejectBooking] ERROR: Booking not found in any collection');
         throw BookingException(
           'Booking not found',
           code: 'booking/not-found',
         );
       }
 
+      // Log the document path to verify correct subcollection
+      debugPrint('[rejectBooking] Document path: ${bookingDoc.reference.path}');
+      debugPrint('[rejectBooking] Current user: ${_auth.currentUser?.uid}');
+
       // Update using the found document reference
-      await bookingsSnapshot.docs.first.reference.update({
+      debugPrint('[rejectBooking] Attempting update...');
+      await bookingDoc.reference.update({
         'status': BookingStatus.cancelled.value,
         'rejection_reason': reason ?? 'Rejected by owner',
         'rejected_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
+      debugPrint('[rejectBooking] Update SUCCESS');
       // Email notification will be sent by onBookingStatusChange Cloud Function
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[rejectBooking] ERROR: $e');
+      debugPrint('[rejectBooking] Stack trace: $stackTrace');
       throw BookingException(
         'Failed to reject booking',
         code: 'booking/rejection-failed',
@@ -757,14 +847,10 @@ class FirebaseOwnerBookingsRepository {
   /// Confirm pending booking
   Future<void> confirmBooking(String bookingId) async {
     try {
-      // Find booking using collection group query
-      final bookingsSnapshot = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
+      // Find booking using helper method (avoids FieldPath.documentId bug)
+      final bookingDoc = await _findBookingById(bookingId);
 
-      if (bookingsSnapshot.docs.isEmpty) {
+      if (bookingDoc == null) {
         throw BookingException(
           'Booking not found',
           code: 'booking/not-found',
@@ -772,7 +858,7 @@ class FirebaseOwnerBookingsRepository {
       }
 
       // Update using the found document reference
-      await bookingsSnapshot.docs.first.reference.update({
+      await bookingDoc.reference.update({
         'status': BookingStatus.confirmed.value,
         'updated_at': FieldValue.serverTimestamp(),
       });
@@ -793,14 +879,10 @@ class FirebaseOwnerBookingsRepository {
     bool sendEmail = true,
   }) async {
     try {
-      // Find booking using collection group query
-      final bookingsSnapshot = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
+      // Find booking using helper method (avoids FieldPath.documentId bug)
+      final bookingDoc = await _findBookingById(bookingId);
 
-      if (bookingsSnapshot.docs.isEmpty) {
+      if (bookingDoc == null) {
         throw BookingException(
           'Booking not found',
           code: 'booking/not-found',
@@ -808,7 +890,7 @@ class FirebaseOwnerBookingsRepository {
       }
 
       // Update using the found document reference
-      await bookingsSnapshot.docs.first.reference.update({
+      await bookingDoc.reference.update({
         'status': BookingStatus.cancelled.value,
         'cancellation_reason': reason,
         'cancelled_at': FieldValue.serverTimestamp(),
@@ -825,14 +907,10 @@ class FirebaseOwnerBookingsRepository {
   /// Mark booking as completed
   Future<void> completeBooking(String bookingId) async {
     try {
-      // Find booking using collection group query
-      final bookingsSnapshot = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
+      // Find booking using helper method (avoids FieldPath.documentId bug)
+      final bookingDoc = await _findBookingById(bookingId);
 
-      if (bookingsSnapshot.docs.isEmpty) {
+      if (bookingDoc == null) {
         throw BookingException(
           'Booking not found',
           code: 'booking/not-found',
@@ -840,7 +918,7 @@ class FirebaseOwnerBookingsRepository {
       }
 
       // Update using the found document reference
-      await bookingsSnapshot.docs.first.reference.update({
+      await bookingDoc.reference.update({
         'status': BookingStatus.completed.value,
         'updated_at': FieldValue.serverTimestamp(),
       });
@@ -856,14 +934,10 @@ class FirebaseOwnerBookingsRepository {
   /// Permanently delete booking
   Future<void> deleteBooking(String bookingId) async {
     try {
-      // Find booking using collection group query
-      final bookingsSnapshot = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
+      // Find booking using helper method (avoids FieldPath.documentId bug)
+      final bookingDoc = await _findBookingById(bookingId);
 
-      if (bookingsSnapshot.docs.isEmpty) {
+      if (bookingDoc == null) {
         throw BookingException(
           'Booking not found',
           code: 'booking/not-found',
@@ -871,7 +945,7 @@ class FirebaseOwnerBookingsRepository {
       }
 
       // Delete using the found document reference
-      await bookingsSnapshot.docs.first.reference.delete();
+      await bookingDoc.reference.delete();
     } catch (e) {
       throw BookingException.deletionFailed(e);
     }

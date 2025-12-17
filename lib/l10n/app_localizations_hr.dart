@@ -2065,6 +2065,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDetailsPhone => 'Telefon';
 
   @override
+  String get ownerDetailsSource => 'Izvor';
+
+  @override
   String get ownerDetailsPropertyInfo => 'Informacije o objektu';
 
   @override

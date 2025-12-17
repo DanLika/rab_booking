@@ -3948,6 +3948,12 @@ abstract class AppLocalizations {
   /// **'Phone'**
   String get ownerDetailsPhone;
 
+  /// No description provided for @ownerDetailsSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get ownerDetailsSource;
+
   /// No description provided for @ownerDetailsPropertyInfo.
   ///
   /// In en, this message translates to:

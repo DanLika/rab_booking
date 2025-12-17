@@ -295,8 +295,15 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     }
 
     // Show snackbar with conflict details
-    final guest1 = firstConflict.booking1.guestName ?? 'Unknown';
-    final guest2 = firstConflict.booking2.guestName ?? 'Unknown';
+    // Include platform source for external bookings (Booking.com, Airbnb, etc.)
+    final source1 = firstConflict.booking1.isExternalBooking
+        ? ' (${firstConflict.booking1.sourceDisplayName})'
+        : '';
+    final source2 = firstConflict.booking2.isExternalBooking
+        ? ' (${firstConflict.booking2.sourceDisplayName})'
+        : '';
+    final guest1 = '${firstConflict.booking1.guestName ?? 'Unknown'}$source1';
+    final guest2 = '${firstConflict.booking2.guestName ?? 'Unknown'}$source2';
     final l10n = AppLocalizations.of(context);
 
     ScaffoldMessenger.of(context).showSnackBar(

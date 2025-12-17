@@ -2056,6 +2056,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerDetailsPhone => 'Phone';
 
   @override
+  String get ownerDetailsSource => 'Source';
+
+  @override
   String get ownerDetailsPropertyInfo => 'Property information';
 
   @override

@@ -12,6 +12,7 @@ import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/message_box.dart';
+import '../../../../shared/widgets/platform_icon.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import 'edit_booking_dialog.dart';
@@ -121,6 +122,30 @@ class BookingDetailsDialog extends ConsumerWidget {
                     _DetailRow(label: l10n.ownerDetailsEmail, value: ownerBooking.guestEmail),
                     if (ownerBooking.guestPhone != null)
                       _DetailRow(label: l10n.ownerDetailsPhone, value: ownerBooking.guestPhone!),
+
+                    // Booking source (for external platforms like Booking.com, Airbnb)
+                    if (booking.isExternalBooking)
+                      _DetailRowWithWidget(
+                        label: l10n.ownerDetailsSource,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PlatformIcon(
+                              source: booking.source,
+                              size: 18,
+                              showTooltip: false,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              booking.sourceDisplayName,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
                     _ThemedDivider(),
 
@@ -594,6 +619,48 @@ class _DetailRow extends StatelessWidget {
                   maxLines: 3,
                 ),
               ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Detail row widget with custom child (for complex values like icons + text)
+class _DetailRowWithWidget extends StatelessWidget {
+  const _DetailRowWithWidget({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // More responsive label width based on available space
+          final isVeryNarrow = constraints.maxWidth < 320;
+          final isNarrow = constraints.maxWidth < 400;
+          final labelWidth = isVeryNarrow ? 70.0 : (isNarrow ? 85.0 : 120.0);
+          final fontSize = isVeryNarrow ? 12.0 : 14.0;
+
+          return Row(
+            children: [
+              SizedBox(
+                width: labelWidth,
+                child: AutoSizeText(
+                  label,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: context.textColorSecondary, fontSize: fontSize),
+                  maxLines: 1,
+                  minFontSize: 10,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: child),
             ],
           );
         },

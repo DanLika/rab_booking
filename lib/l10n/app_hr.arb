@@ -806,6 +806,7 @@
   "ownerDetailsName": "Ime",
   "ownerDetailsEmail": "Email",
   "ownerDetailsPhone": "Telefon",
+  "ownerDetailsSource": "Izvor",
   "ownerDetailsPropertyInfo": "Informacije o objektu",
   "ownerDetailsProperty": "Objekt",
   "ownerDetailsUnit": "Jedinica",

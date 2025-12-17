@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../../shared/models/booking_model.dart';
+import '../../../../../shared/widgets/platform_icon.dart';
 import '../../../../../core/utils/platform_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../providers/overbooking_detection_provider.dart';
@@ -163,6 +164,19 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
                             ),
                             child: const Icon(Icons.warning_rounded, size: 16, color: Colors.white),
                           ),
+                        ),
+                      ),
+
+                    // Platform icon for external bookings (Booking.com, Airbnb, etc.)
+                    // Only show for external platforms, not for widget/direct bookings
+                    if (PlatformIcon.shouldShowIcon(booking.source))
+                      Positioned(
+                        top: 2,
+                        right: hasConflict ? 28 : 4, // Offset if conflict icon present
+                        child: PlatformIcon(
+                          source: booking.source,
+                          size: 14,
+                          showTooltip: false, // Tooltip handled by SmartBookingTooltip
                         ),
                       ),
                   ],

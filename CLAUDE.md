@@ -492,7 +492,14 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-17 | **Version**: 6.3
+**Last Updated**: 2025-12-17 | **Version**: 6.4
+
+**Changelog 6.4**: Timeline Calendar Performance & Navigation Fixes:
+- **Month navigation buttons requiring 2 clicks**: Fixed by canceling animation instead of skipping
+- **FAB shadow invisible on hover**: `0.5.toInt() = 0` → `(0.5 * 255).toInt()`
+- **Excessive rebuilds during scroll**: Dynamic threshold (30 days during animation vs 10 days normally)
+- **_getDateRange() optimization**: Added `_cachedFullDateRange` caching (1460 objects generated once)
+- **Scroll retry logging**: Simplified to reduce console spam
 
 **Changelog 6.3**: Platform Connections Security Rules & Price Calendar Validation:
 - **Permission-denied bug fix za "Označi kao dostupno" bulk akciju**:

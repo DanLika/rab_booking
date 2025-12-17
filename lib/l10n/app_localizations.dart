@@ -10512,6 +10512,18 @@ abstract class AppLocalizations {
   /// **'Max. days advance must be greater than 0'**
   String get priceCalendarMaxDaysAdvanceMustBeGreaterThanZero;
 
+  /// No description provided for @priceCalendarMinNightsCannotExceedMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Min. nights cannot exceed max. nights'**
+  String get priceCalendarMinNightsCannotExceedMax;
+
+  /// No description provided for @priceCalendarMinAdvanceCannotExceedMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Min. days advance cannot exceed max. days advance'**
+  String get priceCalendarMinAdvanceCannotExceedMax;
+
   /// No description provided for @priceCalendarPriceSaved.
   ///
   /// In en, this message translates to:

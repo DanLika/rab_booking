@@ -258,6 +258,14 @@ service cloud.firestore {
       allow update, delete: if isResourceOwner();
     }
 
+    // Platform connections - external platform OAuth/API connections (Booking.com, Airbnb)
+    // Owner can read/write their own connections
+    match /platform_connections/{connectionId} {
+      allow read: if isResourceOwner();
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
+    }
+
     // iCal feeds - owner dashboard manages external calendar imports
     match /ical_feeds/{feedId} {
       allow read: if isAuthenticated() && (

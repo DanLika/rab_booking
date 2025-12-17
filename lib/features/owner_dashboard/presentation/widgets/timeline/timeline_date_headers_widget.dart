@@ -54,8 +54,10 @@ class TimelineDateHeadersWidget extends StatelessWidget {
                   SizedBox(
                     height: dimensions.monthHeaderHeight,
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (offsetWidth > 0) SizedBox(width: offsetWidth),
+                        // FIX: Use floorToDouble() for consistent positioning
+                        if (offsetWidth > 0) SizedBox(width: offsetWidth.floorToDouble()),
                         ..._buildMonthHeaders(context),
                       ],
                     ),
@@ -67,12 +69,15 @@ class TimelineDateHeadersWidget extends StatelessWidget {
                     child: SizedBox(
                       height: dimensions.dayHeaderHeight,
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (offsetWidth > 0) SizedBox(width: offsetWidth),
+                          // FIX: Use floorToDouble() for consistent positioning
+                          if (offsetWidth > 0) SizedBox(width: offsetWidth.floorToDouble()),
                           ...dates.map(
                             (date) => TimelineDayHeader(
                               date: date,
-                              dayWidth: dimensions.dayWidth,
+                              // FIX: Use floorToDouble() for consistent sizing
+                              dayWidth: dimensions.dayWidth.floorToDouble(),
                               screenWidth: dimensions.screenWidth,
                             ),
                           ),
@@ -107,7 +112,8 @@ class TimelineDateHeadersWidget extends StatelessWidget {
             TimelineMonthHeader(
               date: currentMonth,
               dayCount: dayCount,
-              dayWidth: dimensions.dayWidth,
+              // FIX: Use floorToDouble() for consistent sizing
+              dayWidth: dimensions.dayWidth.floorToDouble(),
               screenWidth: dimensions.screenWidth,
               onTap: onMonthTap,
             ),
@@ -128,7 +134,8 @@ class TimelineDateHeadersWidget extends StatelessWidget {
         TimelineMonthHeader(
           date: currentMonth,
           dayCount: dayCount,
-          dayWidth: dimensions.dayWidth,
+          // FIX: Use floorToDouble() for consistent sizing
+          dayWidth: dimensions.dayWidth.floorToDouble(),
           screenWidth: dimensions.screenWidth,
           onTap: onMonthTap,
         ),

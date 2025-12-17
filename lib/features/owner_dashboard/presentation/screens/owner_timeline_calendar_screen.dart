@@ -50,6 +50,10 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
   // When user clicks left/right arrows, widget rebuilds but we restore scroll position
   double _verticalScrollOffset = 0.0;
 
+  // Problem #19 fix: Counter to force scroll even when date hasn't changed
+  // Incremented each time Today is clicked to ensure widget scrolls to today
+  int _forceScrollKey = 0;
+
   @override
   void initState() {
     super.initState();
@@ -191,6 +195,8 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                           initialScrollToDate: _currentRange.startDate, // Scroll to selected date
                           showSummary: _showSummary,
                           showEmptyUnits: showEmptyUnits,
+                          // Problem #19 fix: Pass forceScrollKey to ensure Today button scrolls
+                          forceScrollKey: _forceScrollKey,
                           // FIXED: Preserve vertical scroll position during toolbar navigation
                           // When user clicks left/right arrows, widget rebuilds but we restore scroll position
                           initialVerticalOffset: _verticalScrollOffset,
@@ -254,7 +260,12 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
   }
 
   /// Go to today - creates new range starting from today
+  /// Problem #19 fix: Also increment _forceScrollKey to ensure widget scrolls
+  /// even if the date range hasn't changed (user might have scrolled away)
   void _goToToday() {
+    setState(() {
+      _forceScrollKey++;
+    });
     _navigateTo(DateRangeSelection.days(DateTime.now(), _visibleDays));
   }
 
@@ -359,9 +370,12 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
       _currentRange = newRange;
     });
 
-    // Reset flag after scroll animation completes (~500ms for smooth animation)
-    // This allows manual scrolling to update toolbar after programmatic navigation
-    Future.delayed(const Duration(milliseconds: 600), () {
+    // Problem #16 fix: Increased timeout from 600ms to 1000ms
+    // Timeline animation takes 500ms, then there's a 150ms delay before flag reset
+    // Total time needed: ~700-800ms. Using 1000ms for safety margin.
+    // Old value (600ms) caused race condition where onVisibleDateRangeChanged
+    // would fire after flag reset, causing toolbar to "jump back" to old position.
+    Future.delayed(const Duration(milliseconds: 1000), () {
       if (!mounted || !context.mounted) return;
       setState(() {
         _isProgrammaticNavigation = false;
@@ -485,7 +499,7 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: widget.gradient.colors.first.withAlpha((_isHovered ? 0.5 : 0.35 * 255).toInt()),
+                color: widget.gradient.colors.first.withAlpha(((_isHovered ? 0.5 : 0.35) * 255).toInt()),
                 blurRadius: _isHovered ? 20 : 12,
                 offset: Offset(0, _isHovered ? 8 : 4),
                 spreadRadius: _isHovered ? 2 : 0,

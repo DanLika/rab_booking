@@ -17,11 +17,15 @@ class TimelineGridWidget extends StatelessWidget {
   /// Bookings grouped by unit ID
   final Map<String, List<BookingModel>> bookingsByUnit;
 
-  /// List of visible dates
+  /// List of visible dates (windowed for performance)
   final List<DateTime> dates;
 
-  /// Offset width for windowing
+  /// Offset width for windowing (positions visible window in scroll area)
   final double offsetWidth;
+
+  /// Fixed start date of the full date range
+  /// Used to calculate absolute positions for bookings
+  final DateTime fixedStartDate;
 
   /// Timeline dimensions
   final TimelineDimensions dimensions;
@@ -41,6 +45,7 @@ class TimelineGridWidget extends StatelessWidget {
     required this.bookingsByUnit,
     required this.dates,
     required this.offsetWidth,
+    required this.fixedStartDate,
     required this.dimensions,
     this.onBookingTap,
     this.onBookingLongPress,
@@ -65,7 +70,7 @@ class TimelineGridWidget extends StatelessWidget {
               bookings: bookings,
               dates: dates,
               offsetWidth: offsetWidth,
-              allBookingsByUnit: bookingsByUnit,
+              fixedStartDate: fixedStartDate,
               dimensions: dimensions,
               onBookingTap: onBookingTap,
               onBookingLongPress: onBookingLongPress,
@@ -84,7 +89,7 @@ class _TimelineUnitRow extends StatelessWidget {
   final List<BookingModel> bookings;
   final List<DateTime> dates;
   final double offsetWidth;
-  final Map<String, List<BookingModel>> allBookingsByUnit;
+  final DateTime fixedStartDate;
   final TimelineDimensions dimensions;
   final Function(BookingModel booking)? onBookingTap;
   final Function(BookingModel booking)? onBookingLongPress;
@@ -95,7 +100,7 @@ class _TimelineUnitRow extends StatelessWidget {
     required this.bookings,
     required this.dates,
     required this.offsetWidth,
-    required this.allBookingsByUnit,
+    required this.fixedStartDate,
     required this.dimensions,
     this.onBookingTap,
     this.onBookingLongPress,
@@ -115,7 +120,9 @@ class _TimelineUnitRow extends StatelessWidget {
 
     // FIXED: Container needs explicit width when inside Column that's inside horizontal ScrollView
     // The width should match the content width (offsetWidth + dates.length * dayWidth)
-    final contentWidth = offsetWidth + (dates.length * dimensions.dayWidth);
+    // FIX: Use floorToDouble() to avoid floating point precision errors that cause micro-overflow
+    // Without this, we get RenderFlex overflow errors of ~1.06e-10 pixels
+    final contentWidth = (offsetWidth + (dates.length * dimensions.dayWidth)).floorToDouble();
     return SizedBox(
       width: contentWidth,
       height: unitRowHeight,
@@ -128,11 +135,17 @@ class _TimelineUnitRow extends StatelessWidget {
           alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
           children: [
             // Day cells (background)
-            Row(
-              children: [
-                if (offsetWidth > 0) SizedBox(width: offsetWidth),
-                ...dates.map((date) => _TimelineDayCell(date: date, dimensions: dimensions)),
-              ],
+            // ClipRect prevents micro-overflow from floating point precision errors
+            // mainAxisSize: MainAxisSize.min ensures Row doesn't try to expand beyond content
+            ClipRect(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // FIX: Use floorToDouble() for offsetWidth to match container width calculation
+                  if (offsetWidth > 0) SizedBox(width: offsetWidth.floorToDouble()),
+                  ...dates.map((date) => _TimelineDayCell(date: date, dimensions: dimensions)),
+                ],
+              ),
             ),
 
             // Drop zones layer (if provided)
@@ -142,12 +155,13 @@ class _TimelineUnitRow extends StatelessWidget {
                 children: dates.asMap().entries.map((entry) {
                   final index = entry.key;
                   final date = entry.value;
-                  final left = offsetWidth + (index * dimensions.dayWidth);
+                  // FIX: Use floorToDouble() for consistent positioning
+                  final left = (offsetWidth + (index * dimensions.dayWidth)).floorToDouble();
 
                   return Positioned(
                     left: left,
                     top: 0,
-                    width: dimensions.dayWidth,
+                    width: dimensions.dayWidth.floorToDouble(),
                     height: dimensions.unitRowHeight,
                     child: dropZoneBuilder!(unit, date, index),
                   );
@@ -165,29 +179,42 @@ class _TimelineUnitRow extends StatelessWidget {
   List<Widget> _buildReservationBlocks(Map<String, int> stackLevels) {
     final List<Widget> blocks = [];
 
+    // Calculate visible range boundaries for filtering
+    final visibleFirstDate = dates.isNotEmpty ? DateTime(dates.first.year, dates.first.month, dates.first.day) : null;
+    final visibleLastDate = dates.isNotEmpty ? DateTime(dates.last.year, dates.last.month, dates.last.day) : null;
+
     for (final booking in bookings) {
-      // Normalize check-in date to midnight for accurate comparison
+      // Normalize check-in/check-out dates to midnight for accurate comparison
       final checkIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
+      final checkOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
       final nights = TimelineBookingBlock.calculateNights(booking.checkIn, booking.checkOut);
 
       // Ensure nights is valid
       if (nights < 0) continue;
 
-      // Find index of check-in date in visible range
-      // Normalize dates to midnight for accurate comparison
-      final startIndex = dates.indexWhere((d) {
-        final normalizedDate = DateTime(d.year, d.month, d.day);
-        return normalizedDate.isAtSameMomentAs(checkIn);
-      });
+      // Check if booking overlaps with visible date range
+      // A booking is visible if its check-in OR any part of it falls within visible range
+      if (visibleFirstDate != null && visibleLastDate != null) {
+        // Booking ends before visible range starts OR booking starts after visible range ends
+        if (checkOut.isBefore(visibleFirstDate) || checkIn.isAfter(visibleLastDate)) {
+          // Booking is completely outside visible range - skip rendering
+          continue;
+        }
+      }
 
-      if (startIndex == -1) continue;
+      // Calculate absolute position from fixedStartDate (not from windowed dates list)
+      // This ensures correct positioning regardless of windowing
+      final daysSinceFixedStart = checkIn.difference(fixedStartDate).inDays;
 
       final dayWidth = dimensions.dayWidth;
       // Ensure dayWidth is valid
       if (!dayWidth.isFinite || dayWidth <= 0) continue;
 
-      final left = offsetWidth + (startIndex * dayWidth);
-      final width = (nights + 1) * dayWidth;
+      // Calculate absolute left position using daysSinceFixedStart
+      // This positions the booking correctly in the full scrollable area
+      // FIX: Use floorToDouble() for consistent positioning with day cells
+      final left = (daysSinceFixedStart * dayWidth).floorToDouble();
+      final width = ((nights + 1) * dayWidth).floorToDouble();
 
       // Ensure left and width are valid
       if (!left.isFinite || !width.isFinite || width <= 0) continue;
@@ -200,7 +227,7 @@ class _TimelineUnitRow extends StatelessWidget {
 
       // Use unitRowHeight for stack level offset to ensure proper vertical spacing
       // Each stack level should be offset by the full row height to prevent overlap
-      final topPosition = kTimelineBookingTopPadding + (stackLevel * unitRowHeight);
+      final topPosition = (kTimelineBookingTopPadding + (stackLevel * unitRowHeight)).floorToDouble();
       // Ensure topPosition is valid
       if (!topPosition.isFinite) continue;
 
@@ -215,7 +242,6 @@ class _TimelineUnitRow extends StatelessWidget {
               width: width,
               unitRowHeight: unitRowHeight,
               dayWidth: dayWidth,
-              allBookingsByUnit: allBookingsByUnit,
               onTap: onBookingTap != null ? () => onBookingTap!(booking) : () {},
               onLongPress: onBookingLongPress != null ? () => onBookingLongPress!(booking) : () {},
             ),
@@ -243,7 +269,8 @@ class _TimelineDayCell extends StatelessWidget {
     final isFirstDayOfMonth = date.day == 1;
 
     return Container(
-      width: dimensions.dayWidth,
+      // FIX: Use floorToDouble() to match other width calculations and prevent overflow
+      width: dimensions.dayWidth.floorToDouble(),
       decoration: BoxDecoration(
         color: CalendarCellColors.getCellBackground(context: context, isToday: isToday, isWeekend: isWeekend),
         border: Border(

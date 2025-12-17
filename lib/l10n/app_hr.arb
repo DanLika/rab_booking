@@ -2335,6 +2335,8 @@
   "priceCalendarMaxNightsMustBeGreaterThanZero": "Max. noći mora biti veće od 0",
   "priceCalendarMinDaysAdvanceMustBeZeroOrMore": "Min. dana unaprijed mora biti 0 ili više",
   "priceCalendarMaxDaysAdvanceMustBeGreaterThanZero": "Max. dana unaprijed mora biti veće od 0",
+  "priceCalendarMinNightsCannotExceedMax": "Min. noći ne može biti veće od max. noći",
+  "priceCalendarMinAdvanceCannotExceedMax": "Min. dana unaprijed ne može biti veće od max. dana unaprijed",
   "priceCalendarPriceSaved": "Cijena spremljena",
   "priceCalendarSetPriceForDays": "Postavi cijenu za {count} dana",
   "@priceCalendarSetPriceForDays": {

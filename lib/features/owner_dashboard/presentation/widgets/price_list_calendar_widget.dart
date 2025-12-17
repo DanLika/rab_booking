@@ -853,9 +853,6 @@ class _PriceListCalendarWidgetState
         0,
       ),
     );
-    final weekendPriceController = TextEditingController(
-      text: existingPrice?.weekendPrice?.toStringAsFixed(0) ?? '',
-    );
     final minNightsController = TextEditingController(
       text: existingPrice?.minNightsOnArrival?.toString() ?? '',
     );
@@ -1151,27 +1148,6 @@ class _PriceListCalendarWidgetState
                                   ),
                                 ),
                                 children: [
-                                  // Weekend price
-                                  TextField(
-                                    controller: weekendPriceController,
-                                    decoration:
-                                        InputDecorationHelper.buildDecoration(
-                                          labelText: AppLocalizations.of(
-                                            context,
-                                          ).priceCalendarWeekendPrice,
-                                          hintText: AppLocalizations.of(
-                                            context,
-                                          ).priceCalendarHintExample('120'),
-                                          prefixIcon: const Icon(Icons.weekend),
-                                          isMobile: isMobile,
-                                          context: context,
-                                        ),
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                  ),
-                                  SizedBox(height: isMobile ? 12 : 16),
                                   // Min/Max nights row
                                   Row(
                                     children: [
@@ -1454,23 +1430,6 @@ class _PriceListCalendarWidgetState
                                     }
 
                                     // Validate optional fields
-                                    final weekendPriceText =
-                                        weekendPriceController.text.trim();
-                                    if (weekendPriceText.isNotEmpty) {
-                                      final weekendPrice = double.tryParse(
-                                        weekendPriceText,
-                                      );
-                                      if (weekendPrice == null ||
-                                          weekendPrice <= 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(
-                                          context,
-                                          l10nValidation
-                                              .priceCalendarWeekendPriceMustBeGreaterThanZero,
-                                        );
-                                        return;
-                                      }
-                                    }
-
                                     final minNightsText = minNightsController
                                         .text
                                         .trim();
@@ -1539,6 +1498,44 @@ class _PriceListCalendarWidgetState
                                       }
                                     }
 
+                                    // Cross-validation: min nights must be <= max nights
+                                    if (minNightsText.isNotEmpty &&
+                                        maxNightsText.isNotEmpty) {
+                                      final minNights =
+                                          int.tryParse(minNightsText);
+                                      final maxNights =
+                                          int.tryParse(maxNightsText);
+                                      if (minNights != null &&
+                                          maxNights != null &&
+                                          minNights > maxNights) {
+                                        ErrorDisplayUtils.showWarningSnackBar(
+                                          context,
+                                          l10nValidation
+                                              .priceCalendarMinNightsCannotExceedMax,
+                                        );
+                                        return;
+                                      }
+                                    }
+
+                                    // Cross-validation: min days advance must be <= max days advance
+                                    if (minDaysAdvanceText.isNotEmpty &&
+                                        maxDaysAdvanceText.isNotEmpty) {
+                                      final minDaysAdvance =
+                                          int.tryParse(minDaysAdvanceText);
+                                      final maxDaysAdvance =
+                                          int.tryParse(maxDaysAdvanceText);
+                                      if (minDaysAdvance != null &&
+                                          maxDaysAdvance != null &&
+                                          minDaysAdvance > maxDaysAdvance) {
+                                        ErrorDisplayUtils.showWarningSnackBar(
+                                          context,
+                                          l10nValidation
+                                              .priceCalendarMinAdvanceCannotExceedMax,
+                                        );
+                                        return;
+                                      }
+                                    }
+
                                     setState(() => isProcessing = true);
 
                                     try {
@@ -1547,10 +1544,6 @@ class _PriceListCalendarWidgetState
                                       );
 
                                       // Parse optional fields after validation
-                                      final weekendPrice =
-                                          weekendPriceText.isEmpty
-                                          ? null
-                                          : double.tryParse(weekendPriceText);
                                       final minNights = minNightsText.isEmpty
                                           ? null
                                           : int.tryParse(minNightsText);
@@ -1575,7 +1568,6 @@ class _PriceListCalendarWidgetState
                                         available: available,
                                         blockCheckIn: blockCheckIn,
                                         blockCheckOut: blockCheckOut,
-                                        weekendPrice: weekendPrice,
                                         minNightsOnArrival: minNights,
                                         maxNightsOnArrival: maxNights,
                                         minDaysAdvance: minDaysAdvance,
@@ -1695,7 +1687,6 @@ class _PriceListCalendarWidgetState
         // animation takes multiple frames, not just one
         Future.delayed(const Duration(milliseconds: 350), () {
           priceController.dispose();
-          weekendPriceController.dispose();
           minNightsController.dispose();
           maxNightsController.dispose();
           minDaysAdvanceController.dispose();
@@ -2038,7 +2029,9 @@ class _PriceListCalendarWidgetState
                                             dailyPriceRepositoryProvider,
                                           );
 
-                                          await repository.bulkPartialUpdate(
+                                          await repository
+                                              .bulkPartialUpdateWithPropertyId(
+                                            propertyId: widget.unit.propertyId,
                                             unitId: widget.unit.id,
                                             dates: datesToUpdate,
                                             partialData: {'price': price},
@@ -2310,7 +2303,9 @@ class _PriceListCalendarWidgetState
 
                                       // Use PARTIAL update to preserve existing data
                                       // Only update 'available' field, keep custom prices
-                                      await repository.bulkPartialUpdate(
+                                      await repository
+                                          .bulkPartialUpdateWithPropertyId(
+                                        propertyId: widget.unit.propertyId,
                                         unitId: widget.unit.id,
                                         dates: _selectedDays.toList(),
                                         partialData: {'available': true},
@@ -2461,7 +2456,9 @@ class _PriceListCalendarWidgetState
 
                                       // Use PARTIAL update to preserve existing data
                                       // Only update 'available' field, keep custom prices
-                                      await repository.bulkPartialUpdate(
+                                      await repository
+                                          .bulkPartialUpdateWithPropertyId(
+                                        propertyId: widget.unit.propertyId,
                                         unitId: widget.unit.id,
                                         dates: _selectedDays.toList(),
                                         partialData: {
@@ -2572,7 +2569,9 @@ class _PriceListCalendarWidgetState
 
                                       // Use PARTIAL update to preserve existing data
                                       // Only update 'block_checkin' field, keep prices
-                                      await repository.bulkPartialUpdate(
+                                      await repository
+                                          .bulkPartialUpdateWithPropertyId(
+                                        propertyId: widget.unit.propertyId,
                                         unitId: widget.unit.id,
                                         dates: _selectedDays.toList(),
                                         partialData: {
@@ -2680,7 +2679,9 @@ class _PriceListCalendarWidgetState
 
                                       // Use PARTIAL update to preserve existing data
                                       // Only update 'block_checkout' field, keep prices
-                                      await repository.bulkPartialUpdate(
+                                      await repository
+                                          .bulkPartialUpdateWithPropertyId(
+                                        propertyId: widget.unit.propertyId,
                                         unitId: widget.unit.id,
                                         dates: _selectedDays.toList(),
                                         partialData: {

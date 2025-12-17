@@ -5714,6 +5714,14 @@ class AppLocalizationsHr extends AppLocalizations {
       'Max. dana unaprijed mora biti veće od 0';
 
   @override
+  String get priceCalendarMinNightsCannotExceedMax =>
+      'Min. noći ne može biti veće od max. noći';
+
+  @override
+  String get priceCalendarMinAdvanceCannotExceedMax =>
+      'Min. dana unaprijed ne može biti veće od max. dana unaprijed';
+
+  @override
   String get priceCalendarPriceSaved => 'Cijena spremljena';
 
   @override

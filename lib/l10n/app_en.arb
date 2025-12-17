@@ -2329,6 +2329,8 @@
   "priceCalendarMaxNightsMustBeGreaterThanZero": "Max. nights must be greater than 0",
   "priceCalendarMinDaysAdvanceMustBeZeroOrMore": "Min. days advance must be 0 or more",
   "priceCalendarMaxDaysAdvanceMustBeGreaterThanZero": "Max. days advance must be greater than 0",
+  "priceCalendarMinNightsCannotExceedMax": "Min. nights cannot exceed max. nights",
+  "priceCalendarMinAdvanceCannotExceedMax": "Min. days advance cannot exceed max. days advance",
   "priceCalendarPriceSaved": "Price saved",
   "priceCalendarSetPriceForDays": "Set price for {count} days",
   "@priceCalendarSetPriceForDays": {

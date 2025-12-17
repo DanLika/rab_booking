@@ -5684,6 +5684,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Max. days advance must be greater than 0';
 
   @override
+  String get priceCalendarMinNightsCannotExceedMax =>
+      'Min. nights cannot exceed max. nights';
+
+  @override
+  String get priceCalendarMinAdvanceCannotExceedMax =>
+      'Min. days advance cannot exceed max. days advance';
+
+  @override
   String get priceCalendarPriceSaved => 'Price saved';
 
   @override

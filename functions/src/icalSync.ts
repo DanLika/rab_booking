@@ -91,7 +91,12 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
 
 /**
  * Scheduled function to automatically sync all active iCal feeds
- * Runs every 30 minutes to keep external calendar data up to date
+ * Runs every 60 minutes to keep external calendar data up to date
+ *
+ * NOTE: Airbnb officially updates their iCal export every 3 hours.
+ * Booking.com has no documented frequency. Polling more frequently
+ * than 60 minutes provides no benefit as OTA feeds are stale.
+ * See: https://www.airbnb.com/help/article/99
  *
  * This syncs reservations from:
  * - Booking.com (via iCal URL)
@@ -100,7 +105,7 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
  */
 export const scheduledIcalSync = onSchedule(
   {
-    schedule: "every 15 minutes",
+    schedule: "every 60 minutes",
     timeoutSeconds: 540, // 9 minutes (max for scheduled functions)
     memory: "512MiB",
     region: "europe-west1",

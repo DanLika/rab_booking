@@ -120,7 +120,7 @@ function getFromName(): string {
     if (!fromNameRaw) {
       throw new Error(
         "FROM_NAME environment variable not configured. " +
-        "Set this to your sender display name (e.g., 'BooBed', 'Villa Marija Bookings'). " +
+        "Set this to your sender display name (e.g., 'BookBed', 'Villa Marija Bookings')." +
         "This appears as the 'From' name in emails."
       );
     }

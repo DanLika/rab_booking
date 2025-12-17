@@ -55,8 +55,7 @@
 			<string>io.bookbed.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>rabbooking</string> <!-- Legacy support -->
-				<string>bookbed</string>   <!-- New scheme -->
+				<string>bookbed</string>
 			</array>
 		</dict>
 	</array>

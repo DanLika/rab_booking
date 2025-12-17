@@ -49,10 +49,10 @@ export function generatePasswordResetEmailV2(
   const alternativeLinkCard = generateCard(
     "",
     `
-      <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 500; color: #6B7280;">
+      <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 500; color: #6B7280; line-height: 1.5;">
         Dugme ne radi? Kopirajte i zalijepite link ispod u vaš browser:
       </p>
-      <p style="margin: 0; font-size: 12px; font-weight: 400; color: #3B82F6; word-break: break-all; font-family: 'Courier New', Courier, monospace; line-height: 1.5;">
+      <p style="margin: 0; font-size: 13px; font-weight: 400; color: #3B82F6; word-break: break-all; font-family: 'Courier New', Courier, monospace; line-height: 1.6;">
         ${escapeHtml(resetLink)}
       </p>
     `

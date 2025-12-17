@@ -1,6 +1,7 @@
 import * as crypto from "crypto";
 import {admin} from "./firebase";
 import {checkRateLimit} from "./utils/rateLimit";
+import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {logWarn, logError} from "./logger";
 
 /**
@@ -118,6 +119,8 @@ export function verifyAccessToken(
   // ========================================================================
   if (clientIp && !checkRateLimit(`token_verify:${clientIp}`, 10, 60)) {
     logWarn("[Security] Token verification rate limit exceeded");
+    // Log security event (fire-and-forget)
+    logRateLimitExceeded(clientIp, "token_verify").catch(() => {});
     return false;
   }
 

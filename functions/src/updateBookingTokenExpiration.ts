@@ -3,6 +3,7 @@ import {admin} from "./firebase";
 import {logInfo, logError} from "./logger";
 import {calculateTokenExpiration} from "./bookingAccessToken";
 import {findBookingById} from "./utils/bookingLookup";
+import {setUser} from "./sentry";
 
 /**
  * Cloud Function: Update Booking Token Expiration
@@ -17,6 +18,11 @@ import {findBookingById} from "./utils/bookingLookup";
 export const updateBookingTokenExpiration = onCall(async (request) => {
   const data = request.data;
   const {bookingId} = data;
+
+  // Set user context for Sentry error tracking (if authenticated)
+  if (request.auth?.uid) {
+    setUser(request.auth.uid);
+  }
 
   // Validate required fields
   if (!bookingId) {

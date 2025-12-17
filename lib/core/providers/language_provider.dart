@@ -29,7 +29,7 @@ part 'language_provider.g.dart';
 const String _languageKey = 'selected_language';
 
 /// Default language code
-const String _defaultLanguage = 'hr'; // Croatian as default for RAB Booking
+const String _defaultLanguage = 'hr'; // Croatian as default for BookBed
 
 /// Provider for managing language preferences with persistent storage
 ///

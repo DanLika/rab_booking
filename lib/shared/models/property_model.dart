@@ -25,7 +25,7 @@ class PropertyModel with _$PropertyModel {
     String? slug,
 
     /// Unique subdomain for widget URLs (e.g., "jasko-rab")
-    /// Used for email links: {subdomain}.rabbooking.com/view?ref=XXX
+    /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
     /// Must be unique across all properties, validated by Cloud Function
     String? subdomain,
 

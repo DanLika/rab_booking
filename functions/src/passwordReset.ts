@@ -12,6 +12,7 @@ import {validateEmail} from "./utils/emailValidation";
 import {sanitizeEmail} from "./utils/inputSanitization";
 import {sendPasswordResetEmailV2} from "./email";
 import {Resend} from "resend";
+import {setUser} from "./sentry";
 
 // Lazy initialization of Resend client
 let resend: Resend | null = null;
@@ -57,6 +58,11 @@ export const sendPasswordResetEmail = onCall(
   async (request) => {
     try {
       const {email} = request.data;
+
+      // Set user context for Sentry error tracking (unauthenticated action - use email)
+      if (email) {
+        setUser(null, email);
+      }
 
       // Validate input
       if (!email || typeof email !== "string") {

@@ -1,8 +1,8 @@
-# BooBed
+# BookBed
 
 **Modern booking management platform for vacation rental property owners.**
 
-BooBed enables accommodation owners to create and manage their bookings through a centralized dashboard, while providing guests with a simple embeddable booking widget with Stripe checkout integration.
+BookBed enables accommodation owners to create and manage their bookings through a centralized dashboard, while providing guests with a simple embeddable booking widget with Stripe checkout integration.
 
 ---
 
@@ -80,7 +80,7 @@ stripe listen --forward-to localhost:5001/your-project/us-central1/handleStripeW
 ## 📁 Project Structure
 
 ```
-rab_booking/
+bookbed/
 ├── lib/
 │   ├── core/                 # Core utilities, themes, constants
 │   ├── features/

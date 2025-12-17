@@ -40,15 +40,15 @@ export function generateEmailVerificationEmailV2(
   const codeCard = generateCard(
     "",
     `
-      <p style="margin: 0 0 20px 0; font-size: 15px; font-weight: 500; line-height: 1.5; color: #374151; text-align: center;">
+      <p style="margin: 0 0 20px 0; font-size: 15px; font-weight: 500; line-height: 1.6; color: #374151; text-align: center;">
         Vaš verifikacijski kod je:
       </p>
-      <div style="background-color: #EFF6FF; border: 2px solid #3B82F6; border-radius: 8px; padding: 20px; margin-bottom: 16px; text-align: center;">
-        <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1E40AF; font-family: 'Courier New', Courier, monospace;">
+      <div style="background-color: #EFF6FF; border: 2px solid #3B82F6; border-radius: 12px; padding: 24px 20px; margin-bottom: 20px; text-align: center;">
+        <div style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #1E40AF; font-family: 'Courier New', Courier, monospace;">
           ${escapeHtml(code)}
         </div>
       </div>
-      <p style="margin: 0; font-size: 13px; font-weight: 400; color: #6B7280; text-align: center;">
+      <p style="margin: 0; font-size: 14px; font-weight: 400; color: #6B7280; text-align: center; line-height: 1.5;">
         Kod vrijedi 10 minuta
       </p>
     `

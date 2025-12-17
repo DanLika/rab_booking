@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
 import {getStripeClient, stripeSecretKey} from "./stripe";
 import {logInfo, logError} from "./logger";
+import {setUser} from "./sentry";
 
 /**
  * Cloud Function: Create or Get Stripe Connect Account
@@ -16,6 +17,9 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
 
   const ownerId = request.auth.uid;
   const {returnUrl, refreshUrl} = request.data;
+
+  // Set user context for Sentry error tracking
+  setUser(ownerId);
 
   try {
     // Get owner data
@@ -42,7 +46,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
         business_type: "individual",
         metadata: {
           owner_id: ownerId,
-          platform: "rab-booking",
+          platform: "bookbed",
         },
       });
 
@@ -91,6 +95,9 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
   }
 
   const ownerId = request.auth.uid;
+
+  // Set user context for Sentry error tracking
+  setUser(ownerId);
 
   try {
     // Get owner data
@@ -172,6 +179,9 @@ export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, asyn
   }
 
   const ownerId = request.auth.uid;
+
+  // Set user context for Sentry error tracking
+  setUser(ownerId);
 
   try {
     // Get owner data

@@ -15,10 +15,10 @@ import 'tab_communication_service.dart';
 /// localStorage events for communication.
 class TabCommunicationServiceWeb implements TabCommunicationService {
   /// Channel name - namespaced to avoid conflicts with other apps
-  static const String _channelName = 'rab-booking-stripe';
+  static const String _channelName = 'bookbed-stripe';
 
   /// localStorage key for fallback mechanism
-  static const String _localStorageKey = 'rab-booking-tab-message';
+  static const String _localStorageKey = 'bookbed-tab-message';
 
   /// BroadcastChannel instance (null if not supported)
   web.BroadcastChannel? _channel;

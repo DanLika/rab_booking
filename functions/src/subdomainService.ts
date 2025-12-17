@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { logInfo } from "./logger";
+import { setUser } from "./sentry";
 
 const db = admin.firestore();
 
@@ -305,6 +306,9 @@ export const setPropertySubdomain = onCall<{
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated");
   }
+
+  // Set user context for Sentry error tracking
+  setUser(request.auth.uid);
 
   if (!propertyId || !subdomain) {
     throw new HttpsError("invalid-argument", "Property ID and subdomain are required");

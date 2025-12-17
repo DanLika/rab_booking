@@ -2,6 +2,7 @@ import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import * as crypto from "crypto";
+import {setUser} from "./sentry";
 
 /**
  * Booking.com Calendar API Integration
@@ -74,6 +75,9 @@ export const initiateBookingComOAuth = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
+
+  // Set user context for Sentry error tracking
+  setUser(request.auth.uid);
 
   const {unitId, hotelId, roomTypeId} = request.data;
 

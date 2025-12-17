@@ -14,6 +14,7 @@
 import {admin, db} from "../firebase";
 import {HttpsError} from "firebase-functions/v2/https";
 import {logInfo, logError} from "../logger";
+import {logPriceMismatch} from "./securityMonitoring";
 
 /**
  * Price calculation result
@@ -268,6 +269,13 @@ export async function validateBookingPrice(
       clientPrice: clientTotalPrice,
       difference,
     });
+
+    // Log security event (fire-and-forget) - severity: high
+    logPriceMismatch(unitId, clientTotalPrice, serverTotalPrice, {
+      propertyId,
+      checkIn: checkInDate.toDate().toISOString(),
+      checkOut: checkOutDate.toDate().toISOString(),
+    }).catch(() => {});
 
     throw new HttpsError(
       "invalid-argument",

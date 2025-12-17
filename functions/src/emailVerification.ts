@@ -5,6 +5,7 @@ import {logError, logSuccess, logOperation} from "./logger";
 import {sendEmailVerificationCode as sendVerificationEmail} from "./emailService";
 import {validateEmail} from "./utils/emailValidation";
 import {sanitizeEmail} from "./utils/inputSanitization";
+import {setUser} from "./sentry";
 
 /**
  * Get UTC day string (YYYY-MM-DD) for consistent daily reset across timezones
@@ -55,6 +56,11 @@ export const sendEmailVerificationCode = onCall(
   async (request) => {
     try {
       const {email} = request.data;
+
+      // Set user context for Sentry error tracking (guest action - use email)
+      if (email) {
+        setUser(null, email);
+      }
 
       // Validate input
       if (!email || typeof email !== "string") {
@@ -217,6 +223,11 @@ export const verifyEmailCode = onCall(
     try {
       const {email, code} = request.data;
 
+      // Set user context for Sentry error tracking (guest action - use email)
+      if (email) {
+        setUser(null, email);
+      }
+
       // Validate input
       if (!email || typeof email !== "string") {
         throw new HttpsError("invalid-argument", "Email is required");
@@ -373,6 +384,11 @@ export const checkEmailVerificationStatus = onCall(
   async (request) => {
     try {
       const {email} = request.data;
+
+      // Set user context for Sentry error tracking (guest action - use email)
+      if (email) {
+        setUser(null, email);
+      }
 
       if (!email || typeof email !== "string") {
         throw new HttpsError("invalid-argument", "Email is required");

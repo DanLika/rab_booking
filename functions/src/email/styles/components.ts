@@ -330,24 +330,55 @@ export function getComponentStyles(): string {
 
       /* ==========================================
          RESPONSIVE DESIGN
+         Better mobile spacing - 16px minimum padding
          ========================================== */
 
       @media only screen and (max-width: 600px) {
-        .card {
-          padding: 12px !important;
+        /* Content wrapper - reduce horizontal padding on mobile */
+        .content-wrapper {
+          padding: 0 16px 20px 16px !important;
         }
 
+        /* Cards - better mobile spacing */
+        .card {
+          padding: 16px !important;  /* Increased from 12px for better mobile UX */
+          margin-bottom: 16px !important;
+        }
+
+        /* Details table - improved readability */
         .details-table .label {
-          font-size: 12px !important;
+          font-size: 13px !important;  /* Increased from 12px for readability */
         }
 
         .details-table .value {
-          font-size: 13px !important;
+          font-size: 14px !important;  /* Increased from 13px for readability */
         }
 
+        .details-table td {
+          padding: 10px 0 !important;  /* Reduced from 12px to save vertical space */
+        }
+
+        /* Buttons - more touchable on mobile */
         .button {
-          padding: 10px 20px !important;
-          font-size: 13px !important;
+          padding: 12px 24px !important;  /* Increased from 10px 20px */
+          font-size: 14px !important;  /* Increased from 13px */
+        }
+
+        .button-container {
+          margin: 20px 0 !important;  /* Reduced from 24px to save vertical space */
+        }
+
+        /* Alerts - better mobile spacing */
+        .alert {
+          padding: 14px !important;  /* Increased from 12px */
+          margin: 16px 0 !important;
+        }
+
+        /* Typography - adjust for mobile screens */
+        .greeting,
+        .intro,
+        .paragraph {
+          font-size: 14px !important;
         }
       }
     </style>

@@ -3,6 +3,7 @@ import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import * as crypto from "crypto";
 import {encryptToken, decryptToken} from "./bookingComApi"; // Reuse encryption functions
+import {setUser} from "./sentry";
 
 /**
  * Airbnb Calendar API Integration
@@ -42,6 +43,9 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
+
+  // Set user context for Sentry error tracking
+  setUser(request.auth.uid);
 
   const {unitId, listingId} = request.data;
 

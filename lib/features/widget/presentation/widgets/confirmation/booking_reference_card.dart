@@ -34,13 +34,18 @@ class BookingReferenceCard extends ConsumerWidget {
     BuildContext context,
     WidgetTranslations tr,
   ) async {
-    await Clipboard.setData(ClipboardData(text: bookingReference));
-    if (context.mounted) {
-      SnackBarHelper.showSuccess(
-        context: context,
-        message: tr.bookingReferenceCopied,
-        duration: const Duration(seconds: 2),
-      );
+    try {
+      await Clipboard.setData(ClipboardData(text: bookingReference));
+      if (context.mounted) {
+        SnackBarHelper.showSuccess(
+          context: context,
+          message: tr.bookingReferenceCopied,
+          duration: const Duration(seconds: 2),
+        );
+      }
+    } catch (e) {
+      // Clipboard API can fail on some browsers (e.g., Safari in iframe)
+      // Silently fail - user can still see the reference on screen
     }
   }
 

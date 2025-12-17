@@ -278,7 +278,7 @@ class WidgetSettings {
 class ThemeOptions {
   final String? primaryColor; // Hex color
   final String? accentColor;
-  final bool showBranding; // Show "Powered by Rab Booking" badge
+  final bool showBranding; // Show "Powered by BookBed" badge
   final String? customTitle; // Custom title text to display above calendar
   final String? customLogoUrl;
   final String? themeMode; // 'light', 'dark', 'system' (default: 'system')

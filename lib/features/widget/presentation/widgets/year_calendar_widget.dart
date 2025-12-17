@@ -206,7 +206,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             });
           },
         ),
-        const SizedBox(width: SpacingTokens.xxs),
+        // Minimal spacing - arrows close to year text
         Text(
           _currentYear.toString(),
           style: TextStyle(
@@ -215,7 +215,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             color: colors.textPrimary,
           ),
         ),
-        const SizedBox(width: SpacingTokens.xxs),
+        // Minimal spacing - arrows close to year text
         IconButton(
           icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
@@ -428,8 +428,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         selected: isRangeStart || isRangeEnd,
         child: MouseRegion(
           cursor: isInteractive ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          // hitTestBehavior prevents flickering on small cells by ensuring
+          // mouse events are captured by the exact cell, not child widgets
+          hitTestBehavior: HitTestBehavior.opaque,
           onEnter: (_) {
-            if (showTooltip) {
+            if (showTooltip && _hoveredDate != date) {
               setState(() {
                 _hoveredDate = date;
               });
@@ -437,15 +440,21 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           },
           onHover: (event) {
             if (showTooltip) {
-              setState(() {
-                _mousePosition = event.position;
-              });
+              // Only update position, don't trigger full rebuild if same date
+              _mousePosition = event.position;
+              if (_hoveredDate != date) {
+                setState(() {
+                  _hoveredDate = date;
+                });
+              }
             }
           },
           onExit: (_) {
-            setState(() {
-              _hoveredDate = null;
-            });
+            if (_hoveredDate == date) {
+              setState(() {
+                _hoveredDate = null;
+              });
+            }
           },
           child: GestureDetector(
             // In calendar_only mode (onRangeSelected is null), show helpful snackbar

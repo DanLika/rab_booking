@@ -16,6 +16,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import {logInfo, logWarn} from "./logger";
+import {setUser} from "./sentry";
 
 const db = admin.firestore();
 
@@ -60,6 +61,9 @@ export const checkPasswordHistory = onCall(
     if (!userId) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
+
+    // Set user context for Sentry error tracking
+    setUser(userId);
 
     const {password} = request.data as {password?: string};
     if (!password) {
@@ -117,6 +121,9 @@ export const savePasswordToHistory = onCall(
     if (!userId) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
+
+    // Set user context for Sentry error tracking
+    setUser(userId);
 
     const {password} = request.data as {password?: string};
     if (!password) {

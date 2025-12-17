@@ -27,6 +27,7 @@ import {
   logWebhookSignatureFailure,
   SecurityEventType,
 } from "./utils/securityMonitoring";
+import {setUser} from "./sentry";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
@@ -41,7 +42,6 @@ const ALLOWED_RETURN_DOMAINS = [
   "https://bookbed.io",           // Marketing site (for future use)
   "https://app.bookbed.io",       // Owner dashboard
   "https://view.bookbed.io",      // Booking widget (main domain)
-  "https://rab-booking-248fc.web.app",  // Legacy fallback
   "http://localhost",             // Local development
   "http://127.0.0.1",             // Local development
 ];
@@ -172,6 +172,9 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     notes,
     taxLegalAccepted,
   } = bookingData;
+
+  // Set user context for Sentry error tracking (guest email for widget bookings)
+  setUser(request.auth?.uid || null, guestEmail || null);
 
   // Validate required fields with detailed logging
   const missingFields: string[] = [];
@@ -624,8 +627,8 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
         cancelUrl,
       });
     } else {
-      successUrl = "https://rab-booking-248fc.web.app/booking-success?session_id={CHECKOUT_SESSION_ID}";
-      cancelUrl = "https://rab-booking-248fc.web.app/booking-cancelled";
+      successUrl = "https://view.bookbed.io/booking-success?session_id={CHECKOUT_SESSION_ID}";
+      cancelUrl = "https://view.bookbed.io/booking-cancelled";
     }
 
     // Use booking reference from placeholder booking (guaranteed unique)

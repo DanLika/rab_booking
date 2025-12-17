@@ -23,7 +23,9 @@ abstract class ExampleRepository {
 ```dart
 // lib/shared/repositories/firebase/firebase_example_repository.dart
 class FirebaseExampleRepository implements ExampleRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+
+  FirebaseExampleRepository(this._firestore);
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('examples');
@@ -32,47 +34,79 @@ class FirebaseExampleRepository implements ExampleRepository {
   Future<List<ExampleModel>> getAll(String ownerId) async {
     final snapshot = await _collection
         .where('owner_id', isEqualTo: ownerId)
-        .where('deleted_at', isNull: true)  // Soft delete support
         .orderBy('created_at', descending: true)
         .get();
 
     return snapshot.docs
-        .map((doc) => ExampleModel.fromFirestore(doc))
+        .map((doc) => ExampleModel.fromJson({...doc.data(), 'id': doc.id}))
         .toList();
   }
 
   @override
   Future<String> create(ExampleModel model) async {
-    final docRef = await _collection.add(model.toFirestore());
+    final docRef = await _collection.add(model.toJson());
     return docRef.id;
   }
 
   @override
   Future<void> update(ExampleModel model) async {
-    await _collection.doc(model.id).update({
-      ...model.toFirestore(),
-      'updated_at': FieldValue.serverTimestamp(),
-    });
+    await _collection.doc(model.id).update(model.toJson());
   }
 
   @override
   Future<void> delete(String id) async {
-    // Soft delete
-    await _collection.doc(id).update({
-      'deleted_at': FieldValue.serverTimestamp(),
-    });
+    // Hard delete (default) - za cascade brisanje
+    await _collection.doc(id).delete();
   }
 }
 ```
 
-### 2. Riverpod Providers
+### 2. Delete Strategije
+
+**Hard Delete (default)** - koristi za:
+- Property, Unit - cascade brisanje svih povezanih podataka
+- DailyPrice - nije potreban recovery
+
+```dart
+Future<void> delete(String id) async {
+  await _collection.doc(id).delete();
+}
+```
+
+**Soft Delete** - koristi SAMO za podatke gdje treba recovery opcija:
+- AdditionalServices - mogu se slučajno obrisati
+
+```dart
+Future<void> delete(String id) async {
+  await _collection.doc(id).update({
+    'deleted_at': Timestamp.now(),
+    'is_available': false,
+  });
+}
+
+// Pri dohvaćanju filtriraj:
+.where('deleted_at', isNull: true)
+```
+
+**Status Change (Bookings)** - NE briši, promijeni status:
+```dart
+Future<void> cancelBooking(String id, String reason) async {
+  await _collection.doc(id).update({
+    'status': 'cancelled',
+    'cancellation_reason': reason,
+    'cancelled_at': Timestamp.now(),
+  });
+}
+```
+
+### 3. Riverpod Providers
 
 **Repository Provider:**
 ```dart
 // lib/shared/providers/repository_providers.dart
 @riverpod
-ExampleRepository exampleRepository(ExampleRepositoryRef ref) {
-  return FirebaseExampleRepository();
+ExampleRepository exampleRepository(Ref ref) {
+  return FirebaseExampleRepository(FirebaseFirestore.instance);
 }
 ```
 
@@ -80,20 +114,20 @@ ExampleRepository exampleRepository(ExampleRepositoryRef ref) {
 ```dart
 // lib/features/.../providers/example_provider.dart
 @riverpod
-Future<List<ExampleModel>> examples(ExamplesRef ref, String ownerId) async {
+Future<List<ExampleModel>> examples(Ref ref, String ownerId) async {
   final repository = ref.watch(exampleRepositoryProvider);
   return repository.getAll(ownerId);
 }
 
 // Stream provider za real-time updates
 @riverpod
-Stream<List<ExampleModel>> examplesStream(ExamplesStreamRef ref, String ownerId) {
+Stream<List<ExampleModel>> examplesStream(Ref ref, String ownerId) {
   final repository = ref.watch(exampleRepositoryProvider);
   return repository.watchAll(ownerId);
 }
 ```
 
-### 3. Error Handling
+### 4. Error Handling
 
 ```dart
 Future<void> _saveData() async {
@@ -130,7 +164,7 @@ Future<void> _saveData() async {
 }
 ```
 
-### 4. Optimistic UI Updates & Provider Invalidation
+### 5. Optimistic UI Updates & Provider Invalidation
 
 **KRITIČNO:** Uvijek invalidiraj providere NAKON uspješne operacije!
 
@@ -165,11 +199,10 @@ Future<void> _deleteItem(String id) async {
 }
 ```
 
-### 5. Model sa Firestore Serialization
+### 6. Model sa Freezed (fromJson/toJson)
 
 ```dart
 // lib/features/.../domain/models/example_model.dart
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'example_model.freezed.dart';
@@ -179,45 +212,41 @@ part 'example_model.g.dart';
 class ExampleModel with _$ExampleModel {
   const factory ExampleModel({
     required String id,
-    required String ownerId,
+    @JsonKey(name: 'owner_id') required String ownerId,
     required String name,
-    @Default(false) bool isActive,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    DateTime? deletedAt,
+    @JsonKey(name: 'is_active') @Default(false) bool isActive,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _ExampleModel;
 
-  factory ExampleModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return ExampleModel(
-      id: doc.id,
-      ownerId: data['owner_id'] ?? '',
-      name: data['name'] ?? '',
-      isActive: data['is_active'] ?? false,
-      createdAt: (data['created_at'] as Timestamp?)?.toDate(),
-      updatedAt: (data['updated_at'] as Timestamp?)?.toDate(),
-      deletedAt: (data['deleted_at'] as Timestamp?)?.toDate(),
-    );
-  }
-
-  const ExampleModel._();
-
-  Map<String, dynamic> toFirestore() {
-    return {
-      'owner_id': ownerId,
-      'name': name,
-      'is_active': isActive,
-      'created_at': createdAt != null
-          ? Timestamp.fromDate(createdAt!)
-          : FieldValue.serverTimestamp(),
-      'updated_at': FieldValue.serverTimestamp(),
-      if (deletedAt != null) 'deleted_at': Timestamp.fromDate(deletedAt!),
-    };
-  }
+  factory ExampleModel.fromJson(Map<String, dynamic> json) =>
+      _$ExampleModelFromJson(json);
 }
+
+// Korištenje u repository:
+ExampleModel.fromJson({...doc.data(), 'id': doc.id})
 ```
 
-### 6. Nested Config Update Pattern
+**Za Timestamp konverziju** koristi custom converter:
+```dart
+// lib/core/utils/timestamp_converter.dart
+class TimestampConverter implements JsonConverter<DateTime, Timestamp> {
+  const TimestampConverter();
+
+  @override
+  DateTime fromJson(Timestamp timestamp) => timestamp.toDate();
+
+  @override
+  Timestamp toJson(DateTime date) => Timestamp.fromDate(date);
+}
+
+// U modelu:
+@TimestampConverter()
+@JsonKey(name: 'created_at')
+required DateTime createdAt,
+```
+
+### 7. Nested Config Update Pattern
 
 **NIKADA ne koristi konstruktor za nested objekte - koristi .copyWith()!**
 
@@ -235,7 +264,7 @@ final updated = settings.copyWith(
 );
 ```
 
-### 7. Firestore Security Rules Pattern
+### 8. Firestore Security Rules Pattern
 
 ```javascript
 // Provjeri owner_id matches authenticated user
@@ -279,4 +308,5 @@ Kreiraj Firebase CRUD implementaciju koja:
 2. Ima Riverpod providere
 3. Implementira proper error handling
 4. Koristi optimistic UI updates sa provider invalidation
-5. Ima Freezed model sa Firestore serialization
+5. Ima Freezed model sa fromJson/toJson
+6. Koristi odgovarajuću delete strategiju (hard/soft/status change)

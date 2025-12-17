@@ -6,12 +6,14 @@
  * Events are logged to:
  * 1. Firestore `security_events` collection (for analysis)
  * 2. Structured logs (for Cloud Logging)
+ * 3. Sentry (for critical/high severity events - real-time alerting)
  *
  * @module securityMonitoring
  */
 
 import {logError, logWarn, logInfo} from "../logger";
 import * as admin from "firebase-admin";
+import {captureMessage} from "../sentry";
 
 /**
  * Security Event Types
@@ -95,13 +97,20 @@ export async function logSecurityEvent(
     break;
   }
 
-  // TODO: Future enhancement - Sentry integration for critical events
-  // if (severity === "critical") {
-  //   Sentry.captureMessage(`Security Event: ${eventType}`, {
-  //     level: "error",
-  //     extra: details,
-  //   });
-  // }
+  // Sentry integration for critical/high severity events
+  // This provides real-time alerting for security incidents
+  if (severity === "critical" || severity === "high") {
+    const sentryLevel = severity === "critical" ? "fatal" : "error";
+    captureMessage(
+      `[Security] ${eventType}`,
+      sentryLevel,
+      {
+        eventType,
+        severity,
+        ...details,
+      }
+    );
+  }
 }
 
 /**

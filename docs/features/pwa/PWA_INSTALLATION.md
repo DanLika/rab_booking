@@ -1,6 +1,6 @@
 # 📱 PWA Instalacija - Uputstva za korisnike
 
-BooBed aplikacija je dostupna kao **Progressive Web App (PWA)**, što znači da je možete instalirati na svoj telefon ili tablet i koristiti je kao običnu aplikaciju.
+BookBed aplikacija je dostupna kao **Progressive Web App (PWA)**, što znači da je možete instalirati na svoj telefon ili tablet i koristiti je kao običnu aplikaciju.
 
 ## ✅ Prednosti PWA instalacije
 
@@ -18,10 +18,10 @@ BooBed aplikacija je dostupna kao **Progressive Web App (PWA)**, što znači da 
 2. Klikni na **menu ikonu** (tri tačke ⋮) u gornjem desnom uglu
 3. Izaberi **"Install app"** ili **"Add to Home Screen"**
 4. Potvrdi instalaciju
-5. Aplikacija će se pojaviti na home screen-u sa BooBed ikonom
+5. Aplikacija će se pojaviti na home screen-u sa BookBed ikonom
 
 **Alternativno:**
-- Chrome će automatski prikazati banner "Install BooBed" kada otvoriš aplikaciju
+- Chrome će automatski prikazati banner "Install BookBed" kada otvoriš aplikaciju
 - Klikni na "Install" u banneru
 
 ---
@@ -45,7 +45,7 @@ BooBed aplikacija je dostupna kao **Progressive Web App (PWA)**, što znači da 
 
 1. Otvori aplikaciju u **Chrome** ili **Microsoft Edge** browseru
 2. Klikni na **instalacijsku ikonu** (➕) u address bar-u (desno od URL-a)
-3. Ili klikni na **menu** (⋮) → **"Install BooBed"**
+3. Ili klikni na **menu** (⋮) → **"Install BookBed"**
 4. Potvrdi instalaciju
 5. Aplikacija će se otvoriti u zasebnom prozoru bez browser UI-a
 

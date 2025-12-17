@@ -178,12 +178,12 @@ export function generateHeader(options: HeaderOptions): string {
 
 export function generateCard(title: string, content: string): string {
   return `
-    <div style="
+    <div class="card" style="
       background-color: ${COLORS.cardBg};
       border: 1px solid ${COLORS.border};
       border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     ">
       <h2 style="
@@ -258,15 +258,15 @@ export function generateButton(options: ButtonOptions): string {
   const border = secondary ? `2px solid ${COLORS.border}` : "none";
 
   return `
-    <div style="text-align: center; padding: 24px 0;">
-      <a href="${escapeHtml(url)}" style="
+    <div class="button-container" style="text-align: center; margin: 24px 0;">
+      <a href="${escapeHtml(url)}" class="button" style="
         display: inline-block;
         background-color: ${bgColor};
         color: ${textColor};
         text-decoration: none;
         padding: 14px 32px;
         border-radius: 8px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
         border: ${border};
       ">${escapeHtml(text)}</a>
@@ -305,29 +305,31 @@ export function generateAlert(options: AlertOptions): string {
   const emoji = emojiMap[type];
 
   return `
-    <div style="
+    <div class="alert alert-${type}" style="
       background-color: ${colors.bg};
       border: 1px solid ${colors.border};
       border-radius: 8px;
       padding: 16px;
-      margin: 16px 0;
+      margin: 20px 0;
     ">
       <div style="display: flex; align-items: flex-start;">
-        <span style="font-size: 16px; margin-right: 12px;">${emoji}</span>
-        <div>
+        <span style="font-size: 18px; margin-right: 12px; line-height: 1;">${emoji}</span>
+        <div style="flex: 1;">
           ${title ? `
             <strong style="
               display: block;
-              font-size: 14px;
+              font-size: 15px;
               font-weight: 600;
               color: ${colors.text};
-              margin-bottom: 4px;
+              margin-bottom: 6px;
+              line-height: 1.4;
             ">${escapeHtml(title)}</strong>
           ` : ""}
           <span style="
             font-size: 14px;
             color: ${COLORS.textSecondary};
-            line-height: 1.5;
+            line-height: 1.6;
+            display: block;
           ">${escapeHtml(message)}</span>
         </div>
       </div>
@@ -444,8 +446,8 @@ export function generateFooter(options: FooterOptions = {}): string {
 
 export function generateGreeting(guestName: string): string {
   return `
-    <p style="
-      margin: 0 0 16px 0;
+    <p class="greeting" style="
+      margin: 0 0 12px 0;
       font-size: 16px;
       color: ${COLORS.textPrimary};
       line-height: 1.5;
@@ -455,13 +457,40 @@ export function generateGreeting(guestName: string): string {
 
 export function generateIntro(text: string): string {
   return `
-    <p style="
+    <p class="intro" style="
       margin: 0 0 24px 0;
       font-size: 15px;
       color: ${COLORS.textSecondary};
       line-height: 1.6;
     ">${escapeHtml(text)}</p>
   `.trim();
+}
+
+/**
+ * Generate paragraph with consistent spacing
+ */
+export function generateParagraph(text: string, options?: {marginBottom?: string}): string {
+  const marginBottom = options?.marginBottom || "16px";
+  return `
+    <p class="paragraph" style="
+      margin: 0 0 ${marginBottom} 0;
+      font-size: 15px;
+      color: ${COLORS.textPrimary};
+      line-height: 1.6;
+    ">${escapeHtml(text)}</p>
+  `.trim();
+}
+
+/**
+ * Generate vertical spacer for better section separation
+ */
+export function generateSpacer(height: "small" | "medium" | "large" = "medium"): string {
+  const heightMap = {
+    small: "12px",
+    medium: "20px",
+    large: "32px",
+  };
+  return `<div style="height: ${heightMap[height]};"></div>`;
 }
 
 // ============================================================================
@@ -537,7 +566,7 @@ export function wrapEmailContent(content: string): string {
   return `
     <div style="
       background-color: ${COLORS.pageBg};
-      padding: 40px 20px;
+      padding: 32px 16px;
       min-height: 100%;
     ">
       <div style="

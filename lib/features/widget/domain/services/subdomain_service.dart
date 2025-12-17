@@ -19,7 +19,7 @@ class SubdomainService {
   ///
   /// Priority:
   /// 1. Query parameter `?subdomain=xxx` (for testing without custom domain)
-  /// 2. Hostname subdomain (for production: `xxx.rabbooking.com`)
+  /// 2. Hostname subdomain (for production: `xxx.view.bookbed.io`)
   ///
   /// Returns null if no subdomain is found.
   String? getCurrentSubdomain() {

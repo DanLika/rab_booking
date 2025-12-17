@@ -30,7 +30,9 @@ import {
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {sendEmailWithRetry} from "./utils/emailRetry";
 import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
+import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
+import {setUser} from "./sentry";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -50,6 +52,9 @@ const MAX_BOOKING_NIGHTS = 365; // 1 year maximum (DoS protection)
 export const createBookingAtomic = onCall(async (request) => {
   const userId = request.auth?.uid || null;
   const data = request.data;
+
+  // Set user context for Sentry error tracking
+  setUser(userId, data?.email || null);
 
   // Log incoming request data for debugging (before validation)
   logInfo("[AtomicBooking] Received request", {
@@ -78,6 +83,10 @@ export const createBookingAtomic = onCall(async (request) => {
 
     // In-memory check first (fast, per-instance)
     if (!checkRateLimit(`widget_booking:${clientIp}`, 5, 300)) {
+      // Log security event (fire-and-forget)
+      const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
+      logRateLimitExceeded(ipHash, "widget_booking").catch(() => {});
+
       throw new HttpsError(
         "resource-exhausted",
         "Too many booking attempts from your location. Please wait 5 minutes before trying again."

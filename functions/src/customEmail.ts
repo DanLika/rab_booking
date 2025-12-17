@@ -5,6 +5,7 @@ import {validateEmail} from "./utils/emailValidation";
 import {enforceRateLimit} from "./utils/rateLimit";
 import {db} from "./firebase";
 import {findBookingById} from "./utils/bookingLookup";
+import {setUser} from "./sentry";
 
 /**
  * Callable Cloud Function: Send custom email to guest
@@ -26,6 +27,9 @@ export const sendCustomEmailToGuest = onCall(async (request) => {
   }
 
   const userId = request.auth.uid;
+
+  // Set user context for Sentry error tracking
+  setUser(userId);
 
   // SECURITY: Rate limiting - 10 emails per minute
   await enforceRateLimit(userId, "send_custom_email", {

@@ -684,12 +684,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final guest2 = firstConflict.booking2.guestName ?? 'Unknown';
 
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Conflict: $guest1 vs $guest2'),
+        content: Text(l10n.overbookingConflictDetails(guest1, guest2)),
         backgroundColor: Colors.red,
         action: SnackBarAction(
-          label: 'View',
+          label: l10n.overbookingViewBooking,
           textColor: Colors.white,
           onPressed: () {
             // Use helper method to show booking details (works from any context)
@@ -745,9 +746,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       debugPrint('Error showing booking details from conflict: $e');
       // Show error snackbar if dialog fails
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Error loading booking details'), backgroundColor: Colors.red));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.ownerBookingsNotFound), backgroundColor: Colors.red),
+        );
       }
     }
   }

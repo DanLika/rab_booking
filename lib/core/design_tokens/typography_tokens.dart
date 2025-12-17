@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'responsive_breakpoints.dart';
+import '../constants/breakpoints.dart';
 
 /// Typography design tokens for consistent text styles across the app
 ///
@@ -70,7 +70,7 @@ class TypographyTokens {
 
   // Responsive heading size
   static double headingSize(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
+    return Breakpoints.getValue(
       context,
       mobile: fontSizeXXL,
       tablet: fontSizeXXXL,
@@ -80,7 +80,7 @@ class TypographyTokens {
 
   // Responsive subheading size
   static double subheadingSize(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
+    return Breakpoints.getValue(
       context,
       mobile: fontSizeXL,
       tablet: fontSizeXXL,
@@ -90,7 +90,7 @@ class TypographyTokens {
 
   // Responsive body size
   static double bodySize(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
+    return Breakpoints.getValue(
       context,
       mobile: fontSizeM,
       tablet: fontSizeL,
@@ -100,7 +100,7 @@ class TypographyTokens {
 
   // Responsive caption size
   static double captionSize(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
+    return Breakpoints.getValue(
       context,
       mobile: fontSizeS,
       tablet: fontSizeM,
@@ -110,7 +110,7 @@ class TypographyTokens {
 
   // Calendar day number size
   static double calendarDaySize(BuildContext context) {
-    if (ResponsiveBreakpoints.isMobile(context)) {
+    if (Breakpoints.isMobile(context)) {
       return fontSizeM;
     } else {
       return fontSizeM;

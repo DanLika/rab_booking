@@ -4,6 +4,7 @@ import * as https from 'https';
 import * as http from 'http';
 import {admin} from "./firebase";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
+import {setUser} from "./sentry";
 
 /**
  * SECURITY: Validate iCal URL to prevent SSRF attacks
@@ -196,6 +197,9 @@ export const syncIcalFeedNow = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
+
+  // Set user context for Sentry error tracking
+  setUser(request.auth.uid);
 
   const { feedId } = request.data;
 

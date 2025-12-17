@@ -155,14 +155,26 @@ class PopupBlockedDialog extends ConsumerWidget {
     }
   }
 
-  void _handleCopyLink(BuildContext context, WidgetRef ref) {
-    Clipboard.setData(ClipboardData(text: checkoutUrl));
-    Navigator.of(context).pop();
-
-    SnackBarHelper.showSuccess(
-      context: context,
-      message: 'Payment link copied to clipboard',
-    );
+  Future<void> _handleCopyLink(BuildContext context, WidgetRef ref) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: checkoutUrl));
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        SnackBarHelper.showSuccess(
+          context: context,
+          message: 'Payment link copied to clipboard',
+        );
+      }
+    } catch (e) {
+      // Clipboard API can fail on some browsers (e.g., Safari in iframe)
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Could not copy link. Please copy manually.',
+        );
+      }
+    }
   }
 
   void _handleRetry(BuildContext context) {

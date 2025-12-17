@@ -1,8 +1,10 @@
 [
   {
     "origin": [
-      "https://rab-booking-widget.web.app",
-      "https://rab-booking-widget.firebaseapp.com",
+      "https://bookbed.io",
+      "https://www.bookbed.io",
+      "https://app.bookbed.io",
+      "https://view.bookbed.io",
       "http://localhost:5000",
       "http://localhost:3000",
       "http://localhost:8081",

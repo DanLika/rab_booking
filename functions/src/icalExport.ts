@@ -283,7 +283,7 @@ function generateEvent(booking: any, unitName: string): string[] {
   lines.push("BEGIN:VEVENT");
   
   // UID - Unique identifier
-  lines.push(`UID:booking-${booking.id}@rab-booking.com`);
+  lines.push(`UID:booking-${booking.id}@bookbed.io`);
   
   // DTSTAMP - Creation timestamp
   const created = booking.created_at?.toDate() || new Date();

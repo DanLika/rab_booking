@@ -13,7 +13,10 @@
       "mcp__stripe",
       "mcp__context7",
       "mcp__flutter-inspector",
-      "mcp__sentry"
+      "mcp__sentry",
+      "SlashCommand(/misc:code-explain)",
+      "WebSearch",
+      "SlashCommand(/misc:feature-plan)"
     ],
     "deny": []
   }

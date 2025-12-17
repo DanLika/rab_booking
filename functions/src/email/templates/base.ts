@@ -53,9 +53,10 @@ export function generateEmailHtml(options: BaseEmailOptions): string {
   const footerHtml = generateFooter(footer);
 
   // Combine all content sections with inline padding
+  // Mobile gets 16px horizontal padding, desktop gets 24px
   const emailContent = `
     ${header}
-    <div style="padding: 24px;">
+    <div class="content-wrapper" style="padding: 0 24px 24px 24px;">
       ${content}
     </div>
     ${footerHtml}

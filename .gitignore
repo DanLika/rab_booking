@@ -87,3 +87,6 @@ coverage/
 .firebase/hosting.*.cache
 *.backup
 android/build/
+
+# Cloud Functions compiled output
+functions/lib/

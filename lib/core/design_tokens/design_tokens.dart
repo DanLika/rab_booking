@@ -18,7 +18,7 @@
 /// - Constraints: Layout constraints and sizing
 library;
 
-export 'responsive_breakpoints.dart';
+// Note: For responsive breakpoints, use lib/core/constants/breakpoints.dart
 export 'color_tokens.dart';
 export 'spacing_tokens.dart';
 export 'border_tokens.dart';

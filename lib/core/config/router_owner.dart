@@ -8,6 +8,7 @@ import '../error_handling/error_boundary.dart';
 import '../utils/page_transitions.dart';
 import '../../features/auth/presentation/screens/enhanced_login_screen.dart';
 import '../services/logging_service.dart';
+import '../services/sentry_navigator_observer.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/enhanced_register_screen.dart';
 import '../../features/auth/presentation/screens/email_verification_screen.dart';
@@ -591,6 +592,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.none(key: state.pageKey, child: const NotFoundScreen()),
       ),
     ],
+    observers: [SentryNavigatorObserver()],
     errorBuilder: (context, state) => const NotFoundScreen(),
   );
 });

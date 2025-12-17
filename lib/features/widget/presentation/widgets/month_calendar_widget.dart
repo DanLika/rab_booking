@@ -213,7 +213,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             });
           },
         ),
-        const SizedBox(width: SpacingTokens.xxs),
+        // Minimal spacing - arrows close to month text
         Text(
           monthYear,
           style: TextStyle(
@@ -222,7 +222,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             color: colors.textPrimary,
           ),
         ),
-        const SizedBox(width: SpacingTokens.xxs),
+        // Minimal spacing - arrows close to month text
         IconButton(
           icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,

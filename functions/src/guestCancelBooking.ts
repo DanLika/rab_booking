@@ -4,6 +4,7 @@ import {logInfo, logError, logSuccess} from "./logger";
 import {sendBookingCancellationEmail} from "./emailService";
 import {fetchPropertyAndUnitDetails} from "./utils/bookingHelpers";
 import {findBookingById} from "./utils/bookingLookup";
+import {setUser} from "./sentry";
 import Stripe from "stripe";
 
 /**
@@ -55,11 +56,14 @@ function validateEmailConfig(emailConfig: any): {
  */
 export const guestCancelBooking = onCall(async (request) => {
   const data = request.data;
-  
+
   // Support both camelCase and snake_case for backward compatibility
   const bookingId = data.bookingId || data.booking_id;
   const bookingReference = data.bookingReference || data.booking_reference;
   const guestEmail = data.guestEmail || data.guest_email;
+
+  // Set user context for Sentry error tracking (guest action - use email)
+  setUser(null, guestEmail || null);
 
   // Validate required fields
   if (!bookingId || !bookingReference || !guestEmail) {

@@ -15,17 +15,39 @@ Kreiraj Flutter widget prema korisnikovom opisu.
 - Koristi `ref.watch()` za reactive state, `ref.read()` za one-time reads
 
 ### 3. Responsive Layout
-- Koristi `LayoutBuilder` za responsive breakpoints:
-  - Mobile: `< 600px`
-  - Tablet: `600px - 1199px`
-  - Desktop: `>= 1200px`
-- Pattern:
+
+**NAPOMENA**: Projekt ima dva breakpoint sistema namjerno:
+- `ResponsiveSpacingHelper` (za spacing/dialoge): 600 / 1200
+- `Breakpoints` class (za layoute): 600 / 1024
+
+**Preporučeni pristup - koristi postojeće klase:**
+```dart
+import '../../core/constants/breakpoints.dart';
+
+// Za layoute
+if (Breakpoints.isMobile(context)) { ... }
+if (Breakpoints.isTablet(context)) { ... }
+if (Breakpoints.isDesktop(context)) { ... }
+
+// Ili getValue helper
+final padding = Breakpoints.getValue(context, mobile: 16.0, tablet: 24.0, desktop: 32.0);
+```
+
+**Za spacing/dialoge:**
+```dart
+import '../../core/utils/responsive_spacing_helper.dart';
+
+final padding = ResponsiveSpacingHelper.getPagePadding(context, density: PageDensity.normal);
+final dialogPadding = ResponsiveSpacingHelper.getDialogPadding(context);
+```
+
+**LayoutBuilder samo ako treba custom logic:**
 ```dart
 LayoutBuilder(
   builder: (context, constraints) {
     final isMobile = constraints.maxWidth < 600;
-    final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
-    final isDesktop = constraints.maxWidth >= 1200;
+    final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+    final isDesktop = constraints.maxWidth >= 1024;
     // ...
   },
 )

@@ -107,6 +107,20 @@ if (result) {
 }
 ```
 
+**Sentry Error Tracking** - `sentry.ts`:
+```typescript
+import {captureException, captureMessage, setUser} from "./sentry";
+
+// User context - UVIJEK na početku callable funkcija:
+setUser(request.auth.uid);              // Za authenticated usera
+setUser(null, guestEmail);              // Za guest akcije (email verification, booking view)
+
+// Error capture - NE KORISTITI DIREKTNO u većini slučajeva
+// logError() iz logger.ts automatski šalje na Sentry
+// Koristi captureMessage samo za security events:
+captureMessage("Security: Price mismatch detected", "error", {unitId, clientPrice, serverPrice});
+```
+
 ---
 
 ## =? STRIPE FLOW
@@ -492,7 +506,77 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-17 | **Version**: 6.4
+**Last Updated**: 2025-12-17 | **Version**: 6.8
+
+**Changelog 6.8**: Comprehensive Sentry Integration:
+- **Flutter LoggingService** (`logging_service.dart`):
+  - `logError()` sada šalje na Sentry via `captureException()` (fire-and-forget, non-blocking)
+  - Novi `logNavigation()` method za breadcrumbs
+  - `setUser()` za user identification (owner uid + email)
+  - `clearUser()` poziva se na logout
+- **Flutter NavigatorObserver** (`sentry_navigator_observer.dart`):
+  - Automatski logira sve navigacije kao Sentry breadcrumbs
+  - Dodano u `router_owner.dart` i `router_widget.dart`
+  - Prati: push, pop, replace, remove akcije
+- **Cloud Functions logger.ts**:
+  - `logError()` automatski šalje na Sentry via `captureException()`
+  - Svi errori sada imaju user context ako je `setUser()` pozvan
+- **Cloud Functions setUser()** dodano na 17 funkcija:
+  - `atomicBooking.ts`, `stripePayment.ts`, `stripeConnect.ts`
+  - `icalSync.ts`, `guestCancelBooking.ts`, `verifyBookingAccess.ts`
+  - `customEmail.ts`, `resendBookingEmail.ts`, `updateBookingTokenExpiration.ts`
+  - `subdomainService.ts`, `emailVerification.ts` (sve 3 funkcije)
+  - `airbnbApi.ts`, `bookingComApi.ts`, `passwordHistory.ts` (2 funkcije)
+  - `passwordReset.ts`, `revokeTokens.ts`
+- Guest/unauthenticated actions koriste: `setUser(null, email)` pattern
+- **SKIP**: `authRateLimit.ts` - poziva se PRIJE autentikacije (nema user ID)
+
+**Changelog 6.7**: Clipboard API Error Handling:
+- **Problem**: Clipboard.setData() može baciti exception na nekim browserima (Safari u iframe-u)
+- **Fix**: Dodano try-catch na sve Clipboard operacije u widget fajlovima:
+  - `popup_blocked_dialog.dart`: Pokazuje error snackbar ako kopiranje ne uspije
+  - `booking_reference_card.dart`: Tihi fail (referenca je vidljiva na ekranu)
+  - `bank_transfer_instructions_card.dart`: Tihi fail (podaci su vidljivi na ekranu)
+- **Pattern za buduće Clipboard operacije**:
+  ```dart
+  try {
+    await Clipboard.setData(ClipboardData(text: value));
+    if (context.mounted) {
+      // Show success
+    }
+  } catch (e) {
+    // Clipboard API can fail on some browsers (e.g., Safari in iframe)
+    // Handle gracefully
+  }
+  ```
+
+**Changelog 6.6**: Security Helper Integration - All Helpers Now Active:
+- **logRateLimitExceeded() integration**:
+  - `authRateLimit.ts`: Login and registration rate limit events (severity: medium)
+  - `atomicBooking.ts`: Widget booking rate limit events
+  - `bookingAccessToken.ts`: Token verification rate limit events
+  - All rate limit blocks now logged to Firestore + Cloud Logging
+- **logPriceMismatch() integration**:
+  - `priceValidation.ts`: Price manipulation detection (severity: high → Sentry alert)
+  - Logs: unitId, clientPrice, serverPrice, difference, propertyId, dates
+- **Security monitoring coverage complete**:
+  - All helper functions from `securityMonitoring.ts` now actively used
+  - Events flow: Firestore `security_events` + Cloud Logging + Sentry (critical/high)
+
+**Changelog 6.5**: Cloud Functions Performance & Security Monitoring:
+- **bookingLookup.ts Strategy 2 optimization**:
+  - Problem: O(N×M) sequential queries (~5s for 100 properties × 10 units)
+  - Solution: Parallel queries using `Promise.all()` (~500ms for same data)
+  - Step 1: Fetch all units for all properties in parallel
+  - Step 2: Build list of all booking paths to check
+  - Step 3: Check all booking paths in parallel
+  - Performance improvement: ~10x faster for comprehensive search fallback
+- **Sentry integration for security monitoring**:
+  - Critical events (`severity: "critical"`) now sent to Sentry as `fatal` level
+  - High severity events (`severity: "high"`) sent as `error` level
+  - Enables real-time alerting via Sentry dashboard/email for security incidents
+  - Events tracked: webhook signature failures, price mismatch, suspicious bookings
+  - Import: `import {captureMessage} from "../sentry";`
 
 **Changelog 6.4**: Timeline Calendar Performance & Navigation Fixes:
 - **Month navigation buttons requiring 2 clicks**: Fixed by canceling animation instead of skipping

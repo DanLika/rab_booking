@@ -13,6 +13,7 @@
 
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {checkRateLimit} from "./utils/rateLimit";
+import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {logInfo, logWarn} from "./logger";
 
 /**
@@ -112,6 +113,11 @@ export const checkLoginRateLimit = onCall(
         email: email ? email.substring(0, 3) + "***" : "unknown", // Partial email for logging
       });
 
+      // Log security event (fire-and-forget)
+      logRateLimitExceeded(ipHash, "login", {
+        email: email ? email.substring(0, 3) + "***" : "unknown",
+      }).catch(() => {}); // Don't block on logging
+
       throw new HttpsError(
         "resource-exhausted",
         "Too many login attempts from your location. Please wait 15 minutes before trying again."
@@ -164,6 +170,11 @@ export const checkRegistrationRateLimit = onCall(
         ipHash,
         email: email ? email.substring(0, 3) + "***" : "unknown",
       });
+
+      // Log security event (fire-and-forget)
+      logRateLimitExceeded(ipHash, "registration", {
+        email: email ? email.substring(0, 3) + "***" : "unknown",
+      }).catch(() => {}); // Don't block on logging
 
       throw new HttpsError(
         "resource-exhausted",

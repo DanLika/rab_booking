@@ -1,4 +1,4 @@
-// Custom exception hierarchy for RabBooking app
+// Custom exception hierarchy for BookBed app
 // Replaces generic Exception objects with typed exceptions for better error handling
 //
 // Usage:

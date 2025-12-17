@@ -6,7 +6,7 @@ Generiši testove za dati kod prema korisnikovom opisu.
 
 ### 1. Unit Tests (Business Logic)
 
-**Lokacija:** `test/unit/`
+**Lokacija:** `test/features/` ili `test/core/`
 
 **Za testiranje:**
 - Models (serialization, validation)
@@ -15,25 +15,22 @@ Generiši testove za dati kod prema korisnikovom opisu.
 - Utils/Helpers (pure functions)
 
 ```dart
-// test/unit/models/example_model_test.dart
+// test/features/example/domain/models/example_model_test.dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:rab_booking/features/.../domain/models/example_model.dart';
+import 'package:bookbed/features/.../domain/models/example_model.dart';
 
 void main() {
   group('ExampleModel', () {
-    group('fromFirestore', () {
-      test('should parse valid document', () {
-        final doc = MockDocumentSnapshot(
-          id: 'test-id',
-          data: {
-            'name': 'Test Name',
-            'owner_id': 'owner-123',
-            'is_active': true,
-          },
-        );
+    group('fromJson', () {
+      test('should parse valid JSON with id', () {
+        final json = {
+          'id': 'test-id',
+          'name': 'Test Name',
+          'owner_id': 'owner-123',
+          'is_active': true,
+        };
 
-        final model = ExampleModel.fromFirestore(doc);
+        final model = ExampleModel.fromJson(json);
 
         expect(model.id, 'test-id');
         expect(model.name, 'Test Name');
@@ -42,18 +39,18 @@ void main() {
       });
 
       test('should handle missing fields with defaults', () {
-        final doc = MockDocumentSnapshot(
-          id: 'test-id',
-          data: {'name': 'Test'},
-        );
+        final json = {
+          'id': 'test-id',
+          'name': 'Test',
+        };
 
-        final model = ExampleModel.fromFirestore(doc);
+        final model = ExampleModel.fromJson(json);
 
         expect(model.isActive, false); // default value
       });
     });
 
-    group('toFirestore', () {
+    group('toJson', () {
       test('should serialize all fields', () {
         final model = ExampleModel(
           id: 'test-id',
@@ -62,7 +59,7 @@ void main() {
           isActive: true,
         );
 
-        final data = model.toFirestore();
+        final data = model.toJson();
 
         expect(data['name'], 'Test');
         expect(data['owner_id'], 'owner-123');
@@ -91,7 +88,7 @@ void main() {
 
 ### 2. Widget Tests (UI Components)
 
-**Lokacija:** `test/widget/`
+**Lokacija:** `test/features/{feature}/presentation/`
 
 **Za testiranje:**
 - Widget rendering
@@ -100,12 +97,12 @@ void main() {
 - Theme compliance
 
 ```dart
-// test/widget/features/example_screen_test.dart
+// test/features/example/presentation/screens/example_screen_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:rab_booking/features/.../presentation/screens/example_screen.dart';
+import 'package:bookbed/features/.../presentation/screens/example_screen.dart';
 
 // Mocks
 class MockExampleRepository extends Mock implements ExampleRepository {}
@@ -228,7 +225,7 @@ void main() {
 
 ### 3. Integration Tests (Firebase)
 
-**Lokacija:** `test/integration/`
+**Lokacija:** `test/integration/` ili `test/shared/repositories/`
 
 **Za testiranje:**
 - Full CRUD flows
@@ -237,10 +234,10 @@ void main() {
 - Cloud Functions triggers
 
 ```dart
-// test/integration/repositories/example_repository_test.dart
+// test/shared/repositories/firebase_example_repository_test.dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:rab_booking/shared/repositories/firebase/firebase_example_repository.dart';
+import 'package:bookbed/shared/repositories/firebase/firebase_example_repository.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -248,7 +245,7 @@ void main() {
 
   setUp(() {
     fakeFirestore = FakeFirebaseFirestore();
-    repository = FirebaseExampleRepository(firestore: fakeFirestore);
+    repository = FirebaseExampleRepository(fakeFirestore);
   });
 
   group('FirebaseExampleRepository', () {
@@ -277,41 +274,20 @@ void main() {
         await fakeFirestore.collection('examples').add({
           'name': 'Item 1',
           'owner_id': 'owner-123',
-          'deleted_at': null,
         });
         await fakeFirestore.collection('examples').add({
           'name': 'Item 2',
           'owner_id': 'owner-123',
-          'deleted_at': null,
         });
         await fakeFirestore.collection('examples').add({
           'name': 'Other Owner',
           'owner_id': 'owner-456',
-          'deleted_at': null,
         });
 
         final results = await repository.getAll('owner-123');
 
         expect(results.length, 2);
         expect(results.map((e) => e.name), containsAll(['Item 1', 'Item 2']));
-      });
-
-      test('should exclude soft-deleted documents', () async {
-        await fakeFirestore.collection('examples').add({
-          'name': 'Active',
-          'owner_id': 'owner-123',
-          'deleted_at': null,
-        });
-        await fakeFirestore.collection('examples').add({
-          'name': 'Deleted',
-          'owner_id': 'owner-123',
-          'deleted_at': Timestamp.now(),
-        });
-
-        final results = await repository.getAll('owner-123');
-
-        expect(results.length, 1);
-        expect(results.first.name, 'Active');
       });
     });
 
@@ -332,21 +308,36 @@ void main() {
 
         final doc = await docRef.get();
         expect(doc.data()?['name'], 'Updated');
-        expect(doc.data()?['updated_at'], isNotNull);
       });
     });
 
     group('delete', () {
-      test('should soft delete by setting deleted_at', () async {
+      // NAPOMENA: Default je HARD DELETE
+      test('should hard delete document', () async {
         final docRef = await fakeFirestore.collection('examples').add({
           'name': 'To Delete',
           'owner_id': 'owner-123',
-          'deleted_at': null,
         });
 
         await repository.delete(docRef.id);
 
         final doc = await docRef.get();
+        expect(doc.exists, false); // Document je obrisan
+      });
+
+      // Soft delete samo za AdditionalServices
+      test('should soft delete by setting deleted_at (samo za AdditionalServices)', () async {
+        final docRef = await fakeFirestore.collection('additional_services').add({
+          'name': 'To Delete',
+          'owner_id': 'owner-123',
+          'deleted_at': null,
+        });
+
+        // AdditionalServices koristi soft delete
+        await docRef.update({'deleted_at': FieldValue.serverTimestamp()});
+
+        final doc = await docRef.get();
+        expect(doc.exists, true);
         expect(doc.data()?['deleted_at'], isNotNull);
       });
     });
@@ -368,7 +359,6 @@ void main() {
         await fakeFirestore.collection('examples').add({
           'name': 'New Item',
           'owner_id': 'owner-123',
-          'deleted_at': null,
         });
       });
     });
@@ -379,7 +369,7 @@ void main() {
 ### 4. Provider Tests (Riverpod)
 
 ```dart
-// test/unit/providers/example_provider_test.dart
+// test/features/example/presentation/providers/example_provider_test.dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
@@ -456,20 +446,30 @@ dev_dependencies:
 
 ```
 test/
-├── unit/
-│   ├── models/
-│   │   └── example_model_test.dart
-│   ├── repositories/
-│   │   └── example_repository_test.dart
-│   └── providers/
-│       └── example_provider_test.dart
-├── widget/
-│   └── features/
-│       └── example_screen_test.dart
-├── integration/
+├── core/                          # Core utilities tests
+│   └── utils/
+│       └── nullable_test.dart
+├── features/                      # Feature tests (models, screens, providers)
+│   ├── owner/
+│   │   └── presentation/
+│   │       └── screens/
+│   │           └── owner_screen_test.dart
+│   └── widget/
+│       ├── domain/
+│       │   └── models/
+│       │       └── widget_model_test.dart
+│       └── presentation/
+│           ├── models/
+│           │   └── booking_confirmation_data_test.dart
+│           └── providers/
+│               └── widget_provider_test.dart
+├── shared/                        # Shared components tests
 │   └── repositories/
 │       └── firebase_example_repository_test.dart
-└── helpers/
+├── integration/                   # Full flow integration tests
+│   └── repositories/
+│       └── booking_flow_test.dart
+└── helpers/                       # Test utilities
     ├── mocks.dart
     └── test_helpers.dart
 ```
@@ -481,10 +481,13 @@ test/
 flutter test
 
 # Specific file
-flutter test test/unit/models/example_model_test.dart
+flutter test test/features/widget/domain/models/widget_model_test.dart
 
 # With coverage
 flutter test --coverage
+
+# All feature tests
+flutter test test/features/
 
 # Integration tests (requires emulator)
 flutter test test/integration/

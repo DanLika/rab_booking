@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'responsive_breakpoints.dart';
+import '../constants/breakpoints.dart';
 
 /// Spacing design tokens for consistent spacing across the app
 ///
@@ -36,62 +36,37 @@ class SpacingTokens {
 
   // Responsive spacing for widget container
   static double widgetPadding(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
-      context,
-      mobile: m,
-      tablet: l,
-      desktop: l,
-    );
+    return Breakpoints.getValue(context, mobile: m, tablet: l, desktop: l);
   }
 
   // Responsive spacing for calendar margins
   static double calendarMargin(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
-      context,
-      mobile: m,
-      tablet: l,
-      desktop: l,
-    );
+    return Breakpoints.getValue(context, mobile: m, tablet: l, desktop: l);
   }
 
   // Spacing between calendar and other elements
   static double calendarGap(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
-      context,
-      mobile: m,
-      tablet: l,
-      desktop: l,
-    );
+    return Breakpoints.getValue(context, mobile: m, tablet: l, desktop: l);
   }
 
   // Spacing between sections (calendar, form, summary)
   static double sectionGap(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
-      context,
-      mobile: l,
-      tablet: xl,
-      desktop: xl,
-    );
+    return Breakpoints.getValue(context, mobile: l, tablet: xl, desktop: xl);
   }
 
   // Calendar cell spacing/gap
   static double calendarCellGap(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
-      context,
-      mobile: xs,
-      tablet: s,
-      desktop: s,
-    );
+    return Breakpoints.getValue(context, mobile: xs, tablet: s, desktop: s);
   }
 
   // Responsive calendar cell size for month view
   static double monthCalendarCellSize(BuildContext context) {
-    final width = ResponsiveBreakpoints.getWidth(context);
+    final width = MediaQuery.of(context).size.width;
 
-    if (ResponsiveBreakpoints.isMobile(context)) {
+    if (Breakpoints.isMobile(context)) {
       // Mobile: optimal size (currently good)
       return (width - (m * 2) - (calendarCellGap(context) * 6)) / 7;
-    } else if (ResponsiveBreakpoints.isTablet(context)) {
+    } else if (Breakpoints.isTablet(context)) {
       // Tablet: medium cells
       return 56.0;
     } else {
@@ -102,10 +77,10 @@ class SpacingTokens {
 
   // Responsive calendar cell size for year view
   static double yearCalendarCellSize(BuildContext context) {
-    if (ResponsiveBreakpoints.isMobile(context)) {
+    if (Breakpoints.isMobile(context)) {
       // Mobile: bigger cells (was too small)
       return 32.0;
-    } else if (ResponsiveBreakpoints.isTablet(context)) {
+    } else if (Breakpoints.isTablet(context)) {
       // Tablet: medium cells
       return 28.0;
     } else {
@@ -116,12 +91,7 @@ class SpacingTokens {
 
   // Card padding
   static double cardPadding(BuildContext context) {
-    return ResponsiveBreakpoints.responsive<double>(
-      context,
-      mobile: m,
-      tablet: l,
-      desktop: l,
-    );
+    return Breakpoints.getValue(context, mobile: m, tablet: l, desktop: l);
   }
 
   // Form field spacing

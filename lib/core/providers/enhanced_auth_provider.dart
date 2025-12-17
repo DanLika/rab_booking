@@ -75,6 +75,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         _loadUserProfile(user);
       } else {
         LoggingService.log('User signed out, clearing state', tag: 'ENHANCED_AUTH');
+        // Clear user context for Sentry/Crashlytics
+        LoggingService.clearUser();
         // Set isLoading to false when no user (initial check complete)
         state = const EnhancedAuthState(isLoading: false);
       }
@@ -147,6 +149,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           requiresEmailVerification: requiresVerification,
           requiresOnboarding: requiresOnboarding,
         );
+
+        // Set user context for Sentry/Crashlytics error tracking
+        LoggingService.setUser(firebaseUser.uid, email: userModel.email);
 
         LoggingService.log(
           'State updated: isAuthenticated=${state.isAuthenticated}, requiresVerification=$requiresVerification, requiresOnboarding=$requiresOnboarding',
@@ -570,6 +575,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       await _security.logLogout(userId);
     }
 
+    // Clear user context for Sentry/Crashlytics error tracking
+    LoggingService.clearUser();
+
     await _auth.signOut();
     // Keep isLoading false after sign out (not an initial check)
     state = const EnhancedAuthState(isLoading: false);
@@ -602,6 +610,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       // Log security event locally
       await _security.logLogout(userId);
+
+      // Clear user context for Sentry/Crashlytics error tracking
+      LoggingService.clearUser();
 
       // Sign out locally after tokens are revoked
       await _auth.signOut();

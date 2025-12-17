@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Service for logging messages throughout the application.
 ///
 /// Provides tagged logging with different severity levels.
-/// In debug mode, logs to console. In production, sends errors
-/// to Firebase Crashlytics.
+/// In debug mode, logs to console. In production, sends errors to:
+/// - Firebase Crashlytics (mobile platforms)
+/// - Sentry (web platform)
 ///
 /// Usage:
 /// ```dart
@@ -17,6 +19,53 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 class LoggingService {
   // Prevent instantiation - all methods are static
   LoggingService._();
+
+  /// Current user ID for Sentry context (set when user logs in)
+  static String? _currentUserId;
+  static String? _currentUserEmail;
+
+  /// Set user context for error tracking
+  /// Call this when user logs in
+  static void setUser(String? userId, {String? email}) {
+    _currentUserId = userId;
+    _currentUserEmail = email;
+
+    // Set Sentry user context (web)
+    if (kIsWeb) {
+      if (userId != null) {
+        Sentry.configureScope((scope) {
+          scope.setUser(SentryUser(id: userId, email: email));
+        });
+      } else {
+        Sentry.configureScope((scope) {
+          scope.setUser(null);
+        });
+      }
+    }
+
+    // Set Crashlytics user context (mobile)
+    if (!kIsWeb && userId != null) {
+      FirebaseCrashlytics.instance.setUserIdentifier(userId);
+    }
+  }
+
+  /// Clear user context (call on logout)
+  static void clearUser() {
+    setUser(null);
+  }
+
+  /// Add breadcrumb for debugging context
+  /// Helps understand what user did before error
+  static void addBreadcrumb(String message, {String? category, Map<String, dynamic>? data}) {
+    if (kIsWeb && kReleaseMode) {
+      Sentry.addBreadcrumb(Breadcrumb(
+        message: message,
+        category: category ?? 'app',
+        data: data,
+        level: SentryLevel.info,
+      ));
+    }
+  }
 
   /// Log a message with an optional tag
   static void log(String message, {String? tag}) {
@@ -44,15 +93,50 @@ class LoggingService {
     }
 
     // In production, send to error tracking service
-    // NOTE: Crashlytics is NOT supported on web platform
-    if (kReleaseMode && !kIsWeb && error != null) {
-      // Send to Firebase Crashlytics
-      await FirebaseCrashlytics.instance.recordError(
-        error,
-        stackTrace,
-        reason: message,
-        information: ['source: LoggingService'],
-        printDetails: false,
+    if (kReleaseMode && error != null) {
+      if (kIsWeb) {
+        // Send to Sentry (web platform)
+        await Sentry.captureException(
+          error,
+          stackTrace: stackTrace,
+          withScope: (scope) {
+            scope.setTag('source', 'LoggingService');
+            scope.setTag('error_message', message);
+            if (_currentUserId != null) {
+              scope.setUser(SentryUser(id: _currentUserId, email: _currentUserEmail));
+            }
+          },
+        );
+      } else {
+        // Send to Firebase Crashlytics (mobile platforms)
+        await FirebaseCrashlytics.instance.recordError(
+          error,
+          stackTrace,
+          reason: message,
+          information: ['source: LoggingService'],
+          printDetails: false,
+        );
+      }
+    }
+  }
+
+  /// Log a warning to Sentry (for important warnings that should be tracked)
+  static Future<void> logWarningToSentry(String message, {Map<String, dynamic>? data}) async {
+    if (kIsWeb && kReleaseMode) {
+      await Sentry.captureMessage(
+        message,
+        level: SentryLevel.warning,
+        withScope: (scope) {
+          if (data != null) {
+            // Use tags for searchable data (limited to strings)
+            data.forEach((key, value) {
+              scope.setTag(key, value.toString());
+            });
+          }
+          if (_currentUserId != null) {
+            scope.setUser(SentryUser(id: _currentUserId, email: _currentUserEmail));
+          }
+        },
       );
     }
   }
@@ -65,13 +149,22 @@ class LoggingService {
   }
 
   /// Log a network request
+  /// Also adds breadcrumb for Sentry tracking
   static void logNetworkRequest(String method, String url, {Map<String, dynamic>? params}) {
     if (kDebugMode) {
       log('$method $url${params != null ? ' - Params: $params' : ''}', tag: 'NETWORK');
     }
+
+    // Add breadcrumb for Sentry (helps debug API-related errors)
+    addBreadcrumb('$method $url', category: 'http', data: {
+      'method': method,
+      'url': url,
+      if (params != null) 'params': params,
+    });
   }
 
   /// Log a network response
+  /// Also adds breadcrumb for Sentry tracking
   static void logNetworkResponse(String url, int statusCode, {dynamic response}) {
     if (kDebugMode) {
       log('Response from $url - Status: $statusCode', tag: 'NETWORK');
@@ -79,16 +172,30 @@ class LoggingService {
         debugPrint('Response data: $response');
       }
     }
+
+    // Add breadcrumb for Sentry (helps debug API-related errors)
+    addBreadcrumb('Response $statusCode from $url', category: 'http', data: {
+      'url': url,
+      'status_code': statusCode,
+    });
   }
 
   /// Log user action/event
+  /// Also adds breadcrumb for Sentry tracking
   static void logUserAction(String action, {Map<String, dynamic>? data}) {
     log('User action: $action${data != null ? ' - Data: $data' : ''}', tag: 'USER_ACTION');
+
+    // Add breadcrumb for Sentry (helps debug errors)
+    addBreadcrumb(action, category: 'user_action', data: data);
   }
 
   /// Log navigation event
+  /// Also adds breadcrumb for Sentry tracking
   static void logNavigation(String route, {Map<String, dynamic>? params}) {
     logDebug('Navigation to: $route${params != null ? ' - Params: $params' : ''}');
+
+    // Add breadcrumb for Sentry (helps understand user flow before error)
+    addBreadcrumb('Navigate to $route', category: 'navigation', data: params);
   }
 
   /// Log performance metrics

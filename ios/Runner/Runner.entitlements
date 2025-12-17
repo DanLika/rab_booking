@@ -5,14 +5,10 @@
 	<!-- Associated Domains for Universal Links -->
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<!-- Legacy domains (backward compatibility) -->
-		<string>applinks:rabbooking.com</string>
-		<string>applinks:www.rabbooking.com</string>
-		<string>applinks:dev.rabbooking.com</string>
-		
-		<!-- New domains -->
 		<string>applinks:bookbed.io</string>
 		<string>applinks:www.bookbed.io</string>
+		<string>applinks:app.bookbed.io</string>
+		<string>applinks:view.bookbed.io</string>
 	</array>
 </dict>
 </plist>

@@ -1,4 +1,4 @@
-# RAB Booking - Vacation Rental Booking System
+# BookBed - Vacation Rental Booking System
 
 ## Available VS Code Extensions & Tools
 

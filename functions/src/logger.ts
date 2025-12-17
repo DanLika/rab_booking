@@ -3,9 +3,11 @@
  *
  * Provides consistent logging across all Cloud Functions
  * Uses firebase-functions/logger for structured logging
+ * Integrates with Sentry for error tracking (production only)
  */
 
 import * as functions from 'firebase-functions';
+import {captureException, captureMessage, addBreadcrumb} from './sentry';
 
 /**
  * Log levels
@@ -62,6 +64,7 @@ export class Logger {
 
   /**
    * Log an error message
+   * Also sends to Sentry for error tracking
    * @param message - The message to log
    * @param error - Optional error object
    * @param data - Optional additional structured data
@@ -93,6 +96,14 @@ export class Logger {
     } else {
       functions.logger.error(message);
     }
+
+    // Send to Sentry for error tracking (fire-and-forget)
+    if (error) {
+      captureException(error, {message, ...data});
+    } else {
+      // If no error object, send as message
+      captureMessage(message, 'error', data);
+    }
   }
 
   /**
@@ -107,22 +118,30 @@ export class Logger {
 
   /**
    * Log the start of an operation
+   * Also adds breadcrumb for Sentry error context
    * @param operation - The operation name
    * @param data - Optional structured data
    */
   static operation(operation: string, data?: Record<string, any>): void {
     const logData = { ...data, operation, phase: 'start' };
     functions.logger.info(`Starting: ${operation}`, logData);
+
+    // Add breadcrumb for Sentry (helps debug errors)
+    addBreadcrumb(`Starting: ${operation}`, 'operation', data);
   }
 
   /**
    * Log the completion of an operation
+   * Also adds breadcrumb for Sentry error context
    * @param operation - The operation name
    * @param data - Optional structured data
    */
   static complete(operation: string, data?: Record<string, any>): void {
     const logData = { ...data, operation, phase: 'complete' };
     functions.logger.info(`Completed: ${operation}`, logData);
+
+    // Add breadcrumb for Sentry (helps debug errors)
+    addBreadcrumb(`Completed: ${operation}`, 'operation', data);
   }
 }
 

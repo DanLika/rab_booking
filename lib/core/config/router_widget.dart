@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../services/sentry_navigator_observer.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
 import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
@@ -22,6 +23,7 @@ import '../../shared/presentation/screens/not_found_screen.dart';
 final widgetRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     debugLogDiagnostics: true,
+    observers: [SentryNavigatorObserver()],
     // No auth redirects - all routes are public
     routes: [
       // ROOT ROUTE - Shows booking widget

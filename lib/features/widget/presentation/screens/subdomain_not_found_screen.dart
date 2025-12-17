@@ -7,7 +7,7 @@ import '../l10n/widget_translations.dart';
 /// Screen displayed when a subdomain URL doesn't match any property.
 ///
 /// This screen is shown when:
-/// - User navigates to `xxx.rabbooking.com` but "xxx" is not a valid subdomain
+/// - User navigates to `xxx.view.bookbed.io` but "xxx" is not a valid subdomain
 /// - User uses `?subdomain=xxx` query param but "xxx" doesn't exist
 ///
 /// The screen provides:

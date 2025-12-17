@@ -35,7 +35,7 @@ mixin _$PropertyModel {
   String? get slug => throw _privateConstructorUsedError;
 
   /// Unique subdomain for widget URLs (e.g., "jasko-rab")
-  /// Used for email links: {subdomain}.rabbooking.com/view?ref=XXX
+  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
   /// Must be unique across all properties, validated by Cloud Function
   String? get subdomain => throw _privateConstructorUsedError;
 
@@ -639,7 +639,7 @@ class _$PropertyModelImpl extends _PropertyModel {
   final String? slug;
 
   /// Unique subdomain for widget URLs (e.g., "jasko-rab")
-  /// Used for email links: {subdomain}.rabbooking.com/view?ref=XXX
+  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
   /// Must be unique across all properties, validated by Cloud Function
   @override
   final String? subdomain;
@@ -945,7 +945,7 @@ abstract class _PropertyModel extends PropertyModel {
   String? get slug;
 
   /// Unique subdomain for widget URLs (e.g., "jasko-rab")
-  /// Used for email links: {subdomain}.rabbooking.com/view?ref=XXX
+  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
   /// Must be unique across all properties, validated by Cloud Function
   @override
   String? get subdomain;

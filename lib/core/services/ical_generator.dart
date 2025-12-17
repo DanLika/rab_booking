@@ -22,7 +22,7 @@ class IcalGenerator {
     // Calendar header
     buffer.writeln('BEGIN:VCALENDAR');
     buffer.writeln('VERSION:2.0');
-    buffer.writeln('PRODID:-//BooBed//NONSGML Event Calendar//EN');
+    buffer.writeln('PRODID:-//BookBed//NONSGML Event Calendar//EN');
     buffer.writeln('CALSCALE:GREGORIAN');
     buffer.writeln('METHOD:PUBLISH');
     buffer.writeln('X-WR-CALNAME:${_escape(unit.name)} - Bookings');
@@ -49,7 +49,7 @@ class IcalGenerator {
     // Calendar header
     buffer.writeln('BEGIN:VCALENDAR');
     buffer.writeln('VERSION:2.0');
-    buffer.writeln('PRODID:-//Rab Booking//NONSGML Event Calendar//EN');
+    buffer.writeln('PRODID:-//BookBed//NONSGML Event Calendar//EN');
     buffer.writeln('CALSCALE:GREGORIAN');
     buffer.writeln('METHOD:PUBLISH');
 
@@ -72,7 +72,7 @@ class IcalGenerator {
     buffer.writeln('BEGIN:VEVENT');
 
     // UID - Unique identifier (required by RFC 5545)
-    buffer.writeln('UID:booking-${booking.id}@rab-booking.com');
+    buffer.writeln('UID:booking-${booking.id}@bookbed.io');
 
     // DTSTAMP - Timestamp when event was created (required)
     buffer.writeln('DTSTAMP:${_formatTimestamp(booking.createdAt)}');

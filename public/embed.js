@@ -35,7 +35,7 @@
   const WIDGET_BASE_URL = window.BOOKBED_WIDGET_URL || 'https://bookbed.io';
 
   // Find all widget containers (support both old and new selectors)
-  const containers = document.querySelectorAll('#bookbed-widget, #rab-booking-widget, [data-bookbed], [data-rab-booking]');
+  const containers = document.querySelectorAll('#bookbed-widget, [data-bookbed]');
 
   if (containers.length === 0) {
     console.warn('[BookBed] No widget container found. Add <div id="bookbed-widget" data-property-id="..." data-unit-id="..."></div> to your HTML.');

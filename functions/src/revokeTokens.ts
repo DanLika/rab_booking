@@ -15,6 +15,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {logInfo, logWarn} from "./logger";
+import {setUser} from "./sentry";
 
 const db = admin.firestore();
 
@@ -44,6 +45,9 @@ export const revokeAllRefreshTokens = onCall(
     if (!userId) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
+
+    // Set user context for Sentry error tracking
+    setUser(userId);
 
     try {
       // Revoke all refresh tokens

@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {db} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {verifyAccessToken} from "./bookingAccessToken";
+import {setUser} from "./sentry";
 
 /**
  * Cloud Function: Verify Booking Access
@@ -20,6 +21,9 @@ export const verifyBookingAccess = onCall(async (request) => {
     email,
     accessToken,
   } = data;
+
+  // Set user context for Sentry error tracking (guest action - use email)
+  setUser(null, email || null);
 
   // Validate required fields
   if (!bookingReference || !email) {

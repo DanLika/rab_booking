@@ -46,20 +46,20 @@ export function generatePendingOwnerNotificationEmailV2(
   const bookingDetailsCard = generateCard(
     "",
     `
-      <p style="margin: 0 0 16px 0; font-size: 14px; font-weight: 400; line-height: 1.5; color: #1F2937;">
+      <p style="margin: 0 0 16px 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #1F2937;">
         Gost <strong>${escapeHtml(guestName)}</strong> je poslao zahtjev za rezervaciju vaše nekretnine:
       </p>
-      <div style="background-color: #F9FAFB; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-        <div style="margin-bottom: 6px;">
-          <span style="font-size: 13px; font-weight: 400; color: #6B7280;">Nekretnina:</span>
-          <span style="font-size: 14px; font-weight: 600; color: #1F2937; margin-left: 4px;">${escapeHtml(propertyName)}</span>
+      <div style="background-color: #F9FAFB; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+        <div style="margin-bottom: 8px;">
+          <span style="font-size: 13px; font-weight: 500; color: #6B7280;">Nekretnina:</span>
+          <span style="font-size: 14px; font-weight: 600; color: #1F2937; margin-left: 8px;">${escapeHtml(propertyName)}</span>
         </div>
         <div>
-          <span style="font-size: 13px; font-weight: 400; color: #6B7280;">Gost:</span>
-          <span style="font-size: 14px; font-weight: 600; color: #1F2937; margin-left: 4px;">${escapeHtml(guestName)}</span>
+          <span style="font-size: 13px; font-weight: 500; color: #6B7280;">Gost:</span>
+          <span style="font-size: 14px; font-weight: 600; color: #1F2937; margin-left: 8px;">${escapeHtml(guestName)}</span>
         </div>
       </div>
-      <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.5; color: #1F2937;">
+      <p style="margin: 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #1F2937;">
         Molimo pregledajte detalje i potvrdite ili odbijte rezervaciju.
       </p>
     `
@@ -82,9 +82,9 @@ export function generatePendingOwnerNotificationEmailV2(
   const actionsCard = generateCard(
     "Šta možete uraditi?",
     `
-      <ul style="margin: 0; padding-left: 20px; font-size: 13px; font-weight: 400; line-height: 1.7; color: #1F2937;">
-        <li style="margin-bottom: 6px;">Pregledajte dostupnost za tražene datume</li>
-        <li style="margin-bottom: 6px;">Potvrdite rezervaciju ako su datumi slobodni</li>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; font-weight: 400; line-height: 1.7; color: #1F2937;">
+        <li style="margin-bottom: 8px;">Pregledajte dostupnost za tražene datume</li>
+        <li style="margin-bottom: 8px;">Potvrdite rezervaciju ako su datumi slobodni</li>
         <li>Ponudite alternativne datume ako je potrebno</li>
       </ul>
     `

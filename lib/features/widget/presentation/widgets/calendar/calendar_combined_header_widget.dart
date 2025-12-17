@@ -123,16 +123,14 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
               ),
             ),
 
-            // Language Switcher Button
-            SizedBox(
-              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
-            ),
+            // Language Switcher Button (minimal spacing to theme button)
             _LanguageSwitcherButton(
               colors: colors,
               isSmallScreen: isSmallScreen,
               isTinyScreen: isTinyScreen,
             ),
 
+            // Spacing before navigation widget
             SizedBox(
               width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
             ),

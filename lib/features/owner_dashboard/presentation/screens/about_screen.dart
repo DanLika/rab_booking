@@ -111,7 +111,7 @@ class AboutScreen extends StatelessWidget {
               ),
               SizedBox(height: isMobile ? 24 : 32),
 
-              // What is Rab Booking
+              // What is BookBed
               _InfoCard(
                 title: l10n.aboutWhatIs,
                 icon: Icons.info_outline,

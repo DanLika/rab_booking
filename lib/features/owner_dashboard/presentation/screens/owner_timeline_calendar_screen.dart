@@ -297,13 +297,14 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     // Show snackbar with conflict details
     final guest1 = firstConflict.booking1.guestName ?? 'Unknown';
     final guest2 = firstConflict.booking2.guestName ?? 'Unknown';
+    final l10n = AppLocalizations.of(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Conflict: $guest1 vs $guest2'),
+        content: Text(l10n.overbookingConflictDetails(guest1, guest2)),
         backgroundColor: Colors.red,
         action: SnackBarAction(
-          label: 'View',
+          label: l10n.overbookingViewBooking,
           textColor: Colors.white,
           onPressed: () {
             // Navigate to booking details

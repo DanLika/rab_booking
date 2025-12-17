@@ -7,6 +7,7 @@ import {
   calculateTokenExpiration,
 } from "./bookingAccessToken";
 import {findBookingById} from "./utils/bookingLookup";
+import {setUser} from "./sentry";
 
 /**
  * Helper to convert Firestore Timestamp or Date to Date object
@@ -46,6 +47,9 @@ export const resendBookingEmail = onCall(async (request) => {
       "You must be logged in to resend emails"
     );
   }
+
+  // Set user context for Sentry error tracking
+  setUser(request.auth.uid);
 
   const {bookingId} = request.data;
 

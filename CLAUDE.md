@@ -506,7 +506,24 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-17 | **Version**: 6.8
+**Last Updated**: 2025-12-17 | **Version**: 6.9
+
+**Changelog 6.9**: Platform Source Display for External Bookings:
+- **PlatformIcon Widget** (`lib/shared/widgets/platform_icon.dart`):
+  - Reusable widget za prikaz platforme bookinga
+  - Ikone: **B** (plava #003580) = Booking.com, **A** (crvena #FF5A5F) = Airbnb, **W** (ljubičasta #7C3AED) = Direct, **🔗** (narandžasta) = iCal/External
+  - Static helpers: `getDisplayName(source)`, `shouldShowIcon(source)`
+- **Timeline Booking Blocks** (`timeline_booking_block.dart`):
+  - Platform ikona u gornjem desnom uglu za external bookinge
+  - Automatski offset (28px) ako postoji conflict warning ikona
+- **Booking Details Dialog** (`booking_details_dialog.dart`):
+  - Dodano "Izvor/Source" polje u Guest Information sekciju
+  - Prikazuje se samo za `isExternalBooking` bookinge
+  - Nova `_DetailRowWithWidget` klasa za custom child widgets
+- **Conflict Messages**:
+  - Snackbar u `owner_timeline_calendar_screen.dart` sada prikazuje platformu: "Guest (Booking.com)"
+  - `_ConflictWarningBanner` u tooltipima već prikazuje platformu za svaki konflikt
+- **Lokalizacija**: `ownerDetailsSource` - "Source" (EN) / "Izvor" (HR)
 
 **Changelog 6.8**: Comprehensive Sentry Integration:
 - **Flutter LoggingService** (`logging_service.dart`):

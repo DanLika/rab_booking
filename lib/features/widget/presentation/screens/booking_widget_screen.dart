@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../core/services/tab_communication_service.dart';
 import '../../services/form_persistence_service.dart';
 import '../../state/booking_form_state.dart';
-import '../widgets/calendar_view_switcher.dart';
+import '../widgets/lazy_calendar_container.dart';
 import '../widgets/additional_services_widget.dart';
 import '../widgets/tax_legal_disclaimer_widget.dart';
 import '../providers/booking_price_provider.dart';
@@ -31,7 +32,7 @@ import '../../domain/models/booking_submission_result.dart';
 import '../../domain/services/booking_url_state_service.dart';
 import '../../domain/services/booking_validation_service.dart';
 import '../../domain/services/price_lock_service.dart';
-import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../theme/minimalist_colors.dart';
@@ -46,7 +47,7 @@ import '../widgets/country_code_dropdown.dart';
 import '../widgets/email_verification_dialog.dart';
 import '../../data/services/email_verification_service.dart';
 import '../widgets/common/rotate_device_overlay.dart';
-import '../widgets/common/loading_screen.dart';
+// HYBRID LOADING: loading_screen.dart import removed - UI shows immediately
 import '../widgets/booking/payment/payment_option_widget.dart';
 import '../widgets/booking/guest_form/guest_count_picker.dart';
 import '../widgets/common/info_card_widget.dart';
@@ -59,7 +60,6 @@ import '../widgets/booking/payment/payment_method_card.dart';
 import '../widgets/booking/pill_bar_content.dart';
 import '../widgets/booking/booking_pill_bar.dart';
 import '../widgets/booking/contact_pill_card_widget.dart';
-import '../widgets/popup_blocked_dialog.dart';
 // MinimalistColorSchemeAdapter is already imported via minimalist_colors.dart
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
@@ -150,8 +150,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // ============================================
   // VALIDATION STATE
   // ============================================
-  bool _isValidating = true;
+  /// HYBRID LOADING: _isValidating removed - UI shows immediately
+  /// Error state is still tracked for failed data fetches
   String? _validationError;
+
+  /// Whether background data fetch is still in progress
+  /// When true, calendar shows skeleton; when false, calendar shows real data
+  bool _dataLoading = true;
 
   // ============================================
   // FORM STATE (centralized in BookingFormState)
@@ -373,6 +378,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       });
     }
   }
+
+  // NOTE: _updateProgress removed - no longer using BookBed Loader
+  // UI shows immediately with skeleton calendar instead
 
   /// Initialize cross-tab communication service for Stripe payment notifications
   /// Only runs on web platform - uses BroadcastChannel API
@@ -1159,7 +1167,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Show loading state while we wait for webhook
     setState(() {
-      _isValidating = true;
+      _dataLoading = true;
       _validationError = null;
     });
 
@@ -1215,7 +1223,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Hide loading state
       if (mounted) {
         setState(() {
-          _isValidating = false;
+          _dataLoading = false;
         });
       }
 
@@ -1300,7 +1308,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (mounted) {
         setState(() {
-          _isValidating = false;
+          _dataLoading = false;
         });
 
         SnackBarHelper.showError(
@@ -1322,61 +1330,72 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// 1. Slug URL: subdomain -> property, slug -> unit (clean URLs)
   /// 2. Query params: direct property and unit IDs (iframe embeds)
   ///
-  /// OPTIMIZED: Uses [widgetContextProvider] to batch fetch property, unit,
-  /// and settings in parallel, reducing Firestore queries from 3 to 1 coordinated call.
+  /// HYBRID LOADING: UI shows immediately with skeleton calendar.
+  /// Data loads in background - no BookBed Loader blocking the UI.
   Future<void> _validateUnitAndProperty() async {
+    // HYBRID LOADING: Don't block UI - let it show immediately
+    // _isValidating stays false, _dataLoading tracks background fetch
     setState(() {
-      _isValidating = true;
       _validationError = null;
+      _dataLoading = true;
     });
 
     try {
       // MODE 1: Slug-based URL resolution (clean URLs for standalone pages)
       // URL format: https://jasko-rab.bookbed.io/apartman-6
       if (widget.urlSlug != null && widget.urlSlug!.isNotEmpty) {
-        final slugContext = await ref.read(fullSlugContextProvider(widget.urlSlug).future);
+        // Use optimized provider that fetches everything in parallel
+        final slugResult = await ref.read(optimizedSlugWidgetContextProvider(widget.urlSlug).future);
 
-        // No subdomain found - fallback error
-        if (slugContext == null) {
+        // HIGH: Check mounted after async operation
+        if (!mounted) return;
+
+        // No subdomain in URL - this shouldn't happen for slug URLs
+        if (slugResult == null) {
           setState(() {
             _validationError = 'Unable to determine property.\n\nSubdomain not found in URL.';
-            _isValidating = false;
+            _dataLoading = false;
           });
           return;
         }
 
-        // Property not found for subdomain
-        if (!slugContext.propertyFound) {
+        // Check for errors
+        if (slugResult.isError) {
           setState(() {
-            _validationError = 'Property not found.\n\nSubdomain: ${slugContext.subdomain}';
-            _isValidating = false;
+            _validationError = slugResult.error;
+            _dataLoading = false;
           });
           return;
         }
 
-        // Unit not found for slug
-        if (!slugContext.unitFound || slugContext.unitId == null || slugContext.unitId!.isEmpty) {
-          setState(() {
-            _validationError = 'Unit not found.\n\nSlug: ${widget.urlSlug}\nProperty: ${slugContext.displayName}';
-            _isValidating = false;
-          });
-          return;
+        // Extract context from optimized result
+        final widgetCtx = slugResult.context!;
+        _propertyId = widgetCtx.property.id;
+        _unitId = widgetCtx.unit.id;
+        _ownerId = widgetCtx.ownerId;
+        _unit = widgetCtx.unit;
+        _widgetSettings = widgetCtx.settings;
+
+        // Adjust default guest count to respect property capacity
+        final maxGuests = widgetCtx.unit.maxGuests;
+        if (maxGuests > 0) {
+          final totalGuests = _adults + _children;
+          if (totalGuests > maxGuests) {
+            _adults = maxGuests.clamp(1, maxGuests);
+            _children = 0;
+          }
         }
 
-        // Successfully resolved both property and unit from slug URL
-        // Defensive: Double-check unitId is not null before assignment
-        final resolvedUnitId = slugContext.unitId;
-        if (resolvedUnitId == null || resolvedUnitId.isEmpty) {
-          setState(() {
-            _validationError = 'Unit ID is invalid.\n\nSlug: ${widget.urlSlug}';
-            _isValidating = false;
-          });
-          return;
-        }
-        _propertyId = slugContext.propertyId;
-        _unitId = resolvedUnitId;
+        // Set default payment method based on what's enabled
+        _setDefaultPaymentMethod();
 
-        // Continue with normal validation flow below...
+        if (!mounted) return;
+
+        setState(() {
+          _dataLoading = false;
+          _validationError = null;
+        });
+        return; // Exit early - slug URL fully handled
       }
 
       // MODE 2: Query param validation (iframe embeds)
@@ -1384,7 +1403,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (_propertyId == null || _propertyId!.isEmpty) {
         setState(() {
           _validationError = 'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
-          _isValidating = false;
+          _dataLoading = false;
         });
         return;
       }
@@ -1392,7 +1411,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (_unitId.isEmpty) {
         setState(() {
           _validationError = 'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
-          _isValidating = false;
+          _dataLoading = false;
         });
         return;
       }
@@ -1405,27 +1424,30 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (!mounted) return;
 
       // Store data from batched context
-      setState(() {
-        _ownerId = widgetCtx.ownerId;
-        _unit = widgetCtx.unit;
-        _widgetSettings = widgetCtx.settings;
+      _ownerId = widgetCtx.ownerId;
+      _unit = widgetCtx.unit;
+      _widgetSettings = widgetCtx.settings;
 
-        // Adjust default guest count to respect property capacity
-        // Defensive null check: maxGuests is required but handle edge cases
-        final maxGuests = widgetCtx.unit.maxGuests;
-        if (maxGuests > 0) {
-          final totalGuests = _adults + _children;
-          if (totalGuests > maxGuests) {
-            // If default exceeds capacity, set to max allowed
-            _adults = maxGuests.clamp(1, maxGuests);
-            _children = 0;
-          }
+      // Adjust default guest count to respect property capacity
+      // Defensive null check: maxGuests is required but handle edge cases
+      final maxGuests = widgetCtx.unit.maxGuests;
+      if (maxGuests > 0) {
+        final totalGuests = _adults + _children;
+        if (totalGuests > maxGuests) {
+          // If default exceeds capacity, set to max allowed
+          _adults = maxGuests.clamp(1, maxGuests);
+          _children = 0;
         }
+      }
 
-        // Set default payment method based on what's enabled
-        _setDefaultPaymentMethod();
+      // Set default payment method based on what's enabled
+      _setDefaultPaymentMethod();
 
-        _isValidating = false;
+      // HIGH: Check mounted before setState
+      if (!mounted) return;
+
+      setState(() {
+        _dataLoading = false;
         _validationError = null;
       });
     } on WidgetContextException catch (e) {
@@ -1433,14 +1455,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (!mounted) return;
       setState(() {
         _validationError = e.message;
-        _isValidating = false;
+        _dataLoading = false;
       });
     } catch (e) {
       // HIGH: Check mounted in catch block before setState
       if (!mounted) return;
       setState(() {
         _validationError = 'Error loading unit data:\n\n$e';
-        _isValidating = false;
+        _dataLoading = false;
       });
     }
   }
@@ -1742,10 +1764,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       );
     }
 
-    // Show loading screen during validation
-    if (_isValidating) {
-      return WidgetLoadingScreen(isDarkMode: isDarkMode);
-    }
+    // HYBRID LOADING: BookBed Loader removed - UI shows immediately with skeleton calendar
+    // Calendar data loads in background via _validateUnitAndProperty()
+    // _isValidating is now always false initially to enable instant UI rendering
 
     // Show error screen if validation failed
     if (_validationError != null) {
@@ -1886,7 +1907,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   // Spacing matches header-to-legend: 24px desktop, 16px mobile
                                   if (widgetMode == WidgetMode.calendarOnly)
                                     Padding(
-                                      padding: EdgeInsets.only(bottom: screenWidth >= 1024 ? 24 : 16),
+                                      padding: EdgeInsets.only(top: 8, bottom: screenWidth >= 1024 ? 24 : 16),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                         decoration: BoxDecoration(
@@ -1919,8 +1940,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                       ),
                                     ),
 
-                                  // Calendar without fixed height - grows naturally with content
-                                  CalendarViewSwitcher(
+                                  // Calendar with lazy loading - shows skeleton first for faster perceived load
+                                  LazyCalendarContainer(
                                     propertyId: _propertyId ?? '',
                                     unitId: unitId,
                                     forceMonthView: forceMonthView,
@@ -1964,10 +1985,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   // Contact pill card (calendar only mode - inline, below calendar)
                                   if (widgetMode == WidgetMode.calendarOnly) ...[
                                     const SizedBox(height: 8),
-                                    ContactPillCardWidget(
-                                      contactOptions: _widgetSettings?.contactOptions,
-                                      isDarkMode: isDarkMode,
-                                      screenWidth: screenWidth,
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: ContactPillCardWidget(
+                                        contactOptions: _widgetSettings?.contactOptions,
+                                        isDarkMode: isDarkMode,
+                                        screenWidth: screenWidth,
+                                      ),
                                     ),
                                   ],
                                 ],
@@ -2113,16 +2137,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // Step 2: Full form - responsive based on device
           if (screenWidth < 600) {
             // Mobile
-            pillBarWidth = (screenWidth * 0.95).clamp(300.0, screenWidth);
-            maxHeight = (screenHeight * 0.9).clamp(400.0, screenHeight);
+            // Use math.max to prevent ArgumentError when screen is smaller than minimum
+            pillBarWidth = (screenWidth * 0.95).clamp(300.0, math.max(300.0, screenWidth));
+            maxHeight = (screenHeight * 0.9).clamp(400.0, math.max(400.0, screenHeight));
           } else if (screenWidth < 1024) {
             // Tablet
-            pillBarWidth = (screenWidth * 0.8).clamp(400.0, screenWidth);
-            maxHeight = (screenHeight * 0.8).clamp(500.0, screenHeight);
+            // Use math.min to prevent ArgumentError when screen is smaller than minimum
+            pillBarWidth = (screenWidth * 0.8).clamp(400.0, math.max(400.0, screenWidth));
+            maxHeight = (screenHeight * 0.8).clamp(500.0, math.max(500.0, screenHeight));
           } else {
             // Desktop
-            pillBarWidth = (screenWidth * 0.7).clamp(500.0, screenWidth);
-            maxHeight = (screenHeight * 0.7).clamp(600.0, screenHeight);
+            // Use math.max to prevent ArgumentError when screen is smaller than minimum
+            pillBarWidth = (screenWidth * 0.7).clamp(500.0, math.max(500.0, screenWidth));
+            maxHeight = (screenHeight * 0.7).clamp(600.0, math.max(600.0, screenHeight));
           }
         } else {
           // Step 1: Compact pill bar
@@ -2135,8 +2162,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
 
         // Ensure final values are finite and valid
-        pillBarWidth = pillBarWidth.isFinite ? pillBarWidth.clamp(300.0, screenWidth) : 400.0;
-        maxHeight = maxHeight.isFinite ? maxHeight.clamp(282.0, screenHeight) : 600.0;
+        // Use math.max to prevent ArgumentError when screen is smaller than minimum
+        pillBarWidth = pillBarWidth.isFinite ? pillBarWidth.clamp(300.0, math.max(300.0, screenWidth)) : 400.0;
+        maxHeight = maxHeight.isFinite ? maxHeight.clamp(282.0, math.max(282.0, screenHeight)) : 600.0;
 
         // Defensive check: safely get keyboard inset
         double keyboardInset = 0.0;
@@ -2154,7 +2182,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Bug Fix: Use format methods with currencySymbol instead of deprecated getters
         final currency = WidgetTranslations.of(context, ref).currencySymbol;
 
-        return BookingPillBar(
+        // Mobile edge inset: add horizontal padding on small screens
+        final isMobile = screenWidth < 600;
+
+        final pillBar = BookingPillBar(
           width: pillBarWidth,
           maxHeight: maxHeight,
           isDarkMode: isDarkMode,
@@ -2252,6 +2283,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             translations: WidgetTranslations.of(context, ref),
           ),
         );
+
+        // Wrap with horizontal padding on mobile for edge inset
+        if (isMobile) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s),
+            child: pillBar,
+          );
+        }
+        return pillBar;
       },
       loading: () => const SizedBox.shrink(),
       error: (error, stack) => const SizedBox.shrink(),
@@ -3231,53 +3271,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             }
             LoggingService.log('[Stripe] Loading state reset after redirect', tag: 'STRIPE');
           } else if (popupResult == 'blocked') {
-            // #region agent log
-            try {
-              final logData = {
-                'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                'location': 'booking_widget_screen.dart:2648',
-                'message': 'Timeout start decision - blocked scenario',
-                'data': {
-                  'popupResult': popupResult,
-                  'isInIframe': isInIframe,
-                  '_isProcessing': _isProcessing,
-                  'willStartTimeout': false,
-                  'reason': 'Popup blocked - user will use dialog, timeout not needed',
-                },
-                'sessionId': 'debug-session',
-                'runId': 'run1',
-                'hypothesisId': 'A',
-              };
-              // Debug logging via enhanced LoggingService (will be visible in browser console)
-              LoggingService.log(
-                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                tag: 'DEBUG_${logData['hypothesisId']}',
-              );
-            } catch (_) {}
-            // #endregion
+            // Popup was blocked - automatically redirect (better UX than showing dialog)
+            // This eliminates the extra click required to open payment page
+            LoggingService.log('[Stripe] Popup blocked - auto-redirecting to top-level window', tag: 'STRIPE');
 
-            // Popup was blocked - show dialog with options
-            LoggingService.log('[Stripe] Popup blocked - showing dialog with options', tag: 'STRIPE');
+            redirectTopLevelWindow(checkoutResult.checkoutUrl);
 
+            // Reset form state after redirect
             if (mounted) {
               setState(() {
                 _isProcessing = false;
+                _showGuestForm = false;
               });
-
-              // Show popup blocked dialog with checkout URL
-              await showDialog<void>(
-                context: context,
-                builder: (context) => PopupBlockedDialog(
-                  checkoutUrl: checkoutResult.checkoutUrl,
-                  onRetry: () {
-                    // User wants to retry - they need to click "Pay" button again
-                    // (popup can only be opened on user gesture)
-                  },
-                ),
-              );
+              _resetFormState();
             }
-            return; // Don't proceed with redirect
+            LoggingService.log('[Stripe] Loading state reset after blocked popup redirect', tag: 'STRIPE');
+            return; // Redirect initiated, don't continue
           } else {
             // Unexpected popupResult value (null, 'error', etc.) - fallback to redirect
             LoggingService.log(

@@ -40,14 +40,18 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
 
   // Layout constants
   static const _smallScreenBreakpoint = 400.0;
+  static const _tinyScreenBreakpoint = 360.0; // iPhone SE, Galaxy S small devices
   static const _smallIconSize = 16.0;
+  static const _tinyIconSize = 14.0;
   static const _smallContainerSize = 28.0;
+  static const _tinyContainerSize = 24.0;
   static const _shadowAlpha = 0.04;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < _smallScreenBreakpoint;
+    final isTinyScreen = screenWidth < _tinyScreenBreakpoint;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs),
@@ -73,6 +77,10 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Left padding for centering (matches right side spacing after navigationWidget)
+            SizedBox(
+              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
+            ),
             // View Switcher (year/month toggle)
             CalendarViewSwitcherWidget(
               colors: colors,
@@ -87,7 +95,11 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
             IconButton(
               icon: Icon(
                 isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                size: isSmallScreen ? _smallIconSize : IconSizeTokens.small,
+                size: isTinyScreen
+                    ? _tinyIconSize
+                    : isSmallScreen
+                        ? _smallIconSize
+                        : IconSizeTokens.small,
                 color: colors.textPrimary,
               ),
               onPressed: () {
@@ -98,12 +110,16 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
                   : translations.tooltipSwitchToDarkMode,
               padding: EdgeInsets.zero,
               constraints: BoxConstraints(
-                minWidth: isSmallScreen
-                    ? _smallContainerSize
-                    : ConstraintTokens.iconContainerSmall,
-                minHeight: isSmallScreen
-                    ? _smallContainerSize
-                    : ConstraintTokens.iconContainerSmall,
+                minWidth: isTinyScreen
+                    ? _tinyContainerSize
+                    : isSmallScreen
+                        ? _smallContainerSize
+                        : ConstraintTokens.iconContainerSmall,
+                minHeight: isTinyScreen
+                    ? _tinyContainerSize
+                    : isSmallScreen
+                        ? _smallContainerSize
+                        : ConstraintTokens.iconContainerSmall,
               ),
             ),
 
@@ -114,6 +130,7 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
             _LanguageSwitcherButton(
               colors: colors,
               isSmallScreen: isSmallScreen,
+              isTinyScreen: isTinyScreen,
             ),
 
             SizedBox(
@@ -122,6 +139,10 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
 
             // Custom Navigation Widget (year or month navigation)
             navigationWidget,
+            // Right padding for centering (matches left side spacing)
+            SizedBox(
+              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
+            ),
           ],
         ),
       ),
@@ -133,15 +154,19 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
 class _LanguageSwitcherButton extends ConsumerWidget {
   final WidgetColorScheme colors;
   final bool isSmallScreen;
+  final bool isTinyScreen;
 
   const _LanguageSwitcherButton({
     required this.colors,
     required this.isSmallScreen,
+    required this.isTinyScreen,
   });
 
   // Size constants
+  static const _tinyFontSize = 12.0;
   static const _smallFontSize = 14.0;
   static const _normalFontSize = 16.0;
+  static const _tinyButtonWidth = 34.0;
   static const _smallButtonWidth = 40.0;
   static const _normalButtonWidth = 48.0;
   static const _menuOffset = 40.0;
@@ -152,19 +177,33 @@ class _LanguageSwitcherButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentLanguage = ref.watch(languageProvider);
+    final fontSize = isTinyScreen
+        ? _tinyFontSize
+        : isSmallScreen
+            ? _smallFontSize
+            : _normalFontSize;
+    final buttonWidth = isTinyScreen
+        ? _tinyButtonWidth
+        : isSmallScreen
+            ? _smallButtonWidth
+            : _normalButtonWidth;
+    final containerSize = isTinyScreen
+        ? CalendarCombinedHeaderWidget._tinyContainerSize
+        : isSmallScreen
+            ? CalendarCombinedHeaderWidget._smallContainerSize
+            : ConstraintTokens.iconContainerSmall;
+
     return PopupMenuButton<String>(
       icon: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             _getFlagEmoji(currentLanguage),
-            style: TextStyle(
-              fontSize: isSmallScreen ? _smallFontSize : _normalFontSize,
-            ),
+            style: TextStyle(fontSize: fontSize),
           ),
           Icon(
             Icons.arrow_drop_down,
-            size: isSmallScreen ? _smallFontSize : _normalFontSize,
+            size: fontSize,
             color: colors.textPrimary,
           ),
         ],
@@ -172,10 +211,8 @@ class _LanguageSwitcherButton extends ConsumerWidget {
       tooltip: WidgetTranslations.of(context, ref).tooltipChangeLanguage,
       padding: EdgeInsets.zero,
       constraints: BoxConstraints(
-        minWidth: isSmallScreen ? _smallButtonWidth : _normalButtonWidth,
-        minHeight: isSmallScreen
-            ? CalendarCombinedHeaderWidget._smallContainerSize
-            : ConstraintTokens.iconContainerSmall,
+        minWidth: buttonWidth,
+        minHeight: containerSize,
       ),
       offset: const Offset(0, _menuOffset),
       shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),

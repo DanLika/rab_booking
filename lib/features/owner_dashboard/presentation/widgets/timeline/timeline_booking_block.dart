@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/utils/platform_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
-import '../../../utils/booking_overlap_detector.dart';
+import '../../providers/overbooking_detection_provider.dart';
 import '../calendar/skewed_booking_painter.dart';
 import '../calendar/smart_booking_tooltip.dart';
 import 'timeline_constants.dart';
@@ -18,8 +19,12 @@ import 'timeline_constants.dart';
 /// on turnover days (checkout + checkin same day), the diagonals meet at the
 /// center of the shared cell with a small gap between them.
 ///
+/// CONFLICT DETECTION:
+/// Uses overbookingDetectionProvider for consistent conflict detection across
+/// all calendar views (Timeline, Month, Year, Bookings page).
+///
 /// Extracted from timeline_calendar_widget.dart for better maintainability.
-class TimelineBookingBlock extends StatefulWidget {
+class TimelineBookingBlock extends ConsumerStatefulWidget {
   /// The booking to display
   final BookingModel booking;
 
@@ -31,9 +36,6 @@ class TimelineBookingBlock extends StatefulWidget {
 
   /// Width of a single day cell (used for turnover day diagonal alignment)
   final double dayWidth;
-
-  /// All bookings by unit ID (used for conflict detection)
-  final Map<String, List<BookingModel>> allBookingsByUnit;
 
   /// Callback when the booking block is tapped
   final VoidCallback onTap;
@@ -47,7 +49,6 @@ class TimelineBookingBlock extends StatefulWidget {
     required this.width,
     required this.unitRowHeight,
     required this.dayWidth,
-    required this.allBookingsByUnit,
     required this.onTap,
     required this.onLongPress,
   });
@@ -61,68 +62,11 @@ class TimelineBookingBlock extends StatefulWidget {
     return normalizedCheckOut.difference(normalizedCheckIn).inDays;
   }
 
-  /// Check if a booking has conflicts with other bookings in the same unit
-  ///
-  /// Uses BookingOverlapDetector to find overlapping bookings.
-  static bool hasBookingConflict(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
-    return getConflictingBookings(booking, allBookingsByUnit).isNotEmpty;
-  }
-
-  /// Get list of bookings that conflict with this booking
-  ///
-  /// Uses BookingOverlapDetector to find overlapping bookings.
-  static List<BookingModel> getConflictingBookings(
-    BookingModel booking,
-    Map<String, List<BookingModel>> allBookingsByUnit,
-  ) {
-    return BookingOverlapDetector.getConflictingBookings(
-      unitId: booking.unitId,
-      newCheckIn: booking.checkIn,
-      newCheckOut: booking.checkOut,
-      bookingIdToExclude: booking.id,
-      allBookings: allBookingsByUnit,
-    );
-  }
-
-  /// Get list of dates within this booking that have conflicts
-  ///
-  /// Returns a list of DateTime objects (normalized to midnight) for each day
-  /// that has an overbooking conflict.
-  static List<DateTime> getConflictDates(BookingModel booking, Map<String, List<BookingModel>> allBookingsByUnit) {
-    final conflictingBookings = getConflictingBookings(booking, allBookingsByUnit);
-
-    if (conflictingBookings.isEmpty) {
-      return [];
-    }
-
-    final conflictDates = <DateTime>{};
-
-    // For each conflicting booking, find all overlapping dates
-    for (final conflictBooking in conflictingBookings) {
-      // Find the intersection of date ranges
-      final overlapStart = booking.checkIn.isAfter(conflictBooking.checkIn) ? booking.checkIn : conflictBooking.checkIn;
-      final overlapEnd = booking.checkOut.isBefore(conflictBooking.checkOut)
-          ? booking.checkOut
-          : conflictBooking.checkOut;
-
-      // Add all dates in the overlap range (excluding checkout date)
-      var currentDate = DateTime(overlapStart.year, overlapStart.month, overlapStart.day);
-      final endDate = DateTime(overlapEnd.year, overlapEnd.month, overlapEnd.day);
-
-      while (currentDate.isBefore(endDate)) {
-        conflictDates.add(currentDate);
-        currentDate = currentDate.add(const Duration(days: 1));
-      }
-    }
-
-    return conflictDates.toList()..sort();
-  }
-
   @override
-  State<TimelineBookingBlock> createState() => _TimelineBookingBlockState();
+  ConsumerState<TimelineBookingBlock> createState() => _TimelineBookingBlockState();
 }
 
-class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
+class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
   bool _isHovered = false;
 
   @override
@@ -131,21 +75,20 @@ class _TimelineBookingBlockState extends State<TimelineBookingBlock> {
     final width = widget.width;
     final unitRowHeight = widget.unitRowHeight;
     final dayWidth = widget.dayWidth;
-    final allBookingsByUnit = widget.allBookingsByUnit;
     final blockHeight = unitRowHeight - kTimelineBookingBlockHeightPadding;
 
-    // Detect conflicts with other bookings in the same unit
-    // Add error handling for conflict detection failures
-    bool hasConflict = false;
-    List<BookingModel> conflictingBookings = [];
-    try {
-      conflictingBookings = TimelineBookingBlock.getConflictingBookings(booking, allBookingsByUnit);
-      hasConflict = conflictingBookings.isNotEmpty;
-    } catch (e) {
-      debugPrint('Error detecting booking conflicts: $e');
-      // Fallback to no conflict on error
-      hasConflict = false;
-    }
+    // Use centralized overbooking detection provider for consistent conflict detection
+    // across all calendar views (Timeline, Month, Year, Bookings page)
+    final hasConflict = ref.watch(isBookingInConflictProvider(booking.id));
+
+    // Get conflicting bookings for tooltip display
+    final conflictsAsync = ref.watch(overbookingConflictsProvider);
+    final allConflicts = conflictsAsync.valueOrNull ?? [];
+    final conflictingBookings = allConflicts
+        .where((c) => c.booking1.id == booking.id || c.booking2.id == booking.id)
+        .expand((c) => [c.booking1, c.booking2])
+        .where((b) => b.id != booking.id)
+        .toList();
 
     // Build semantic label for accessibility
     final semanticLabel = _buildSemanticLabel(booking, hasConflict);

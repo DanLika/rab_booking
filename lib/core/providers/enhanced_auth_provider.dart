@@ -153,8 +153,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           tag: 'ENHANCED_AUTH',
         );
 
-        // Update last login time
-        await _updateLastLogin(firebaseUser.uid);
+        // Update last login time (non-blocking to speed up auth)
+        unawaited(_updateLastLogin(firebaseUser.uid));
       } else {
         LoggingService.log('User profile NOT found, creating new profile...', tag: 'ENHANCED_AUTH');
         // Create user profile if it doesn't exist
@@ -193,20 +193,21 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       state = state.copyWith(isLoading: true);
 
-      // Check rate limit
-      final rateLimit = await _rateLimit.checkRateLimit(email);
-      if (rateLimit != null && rateLimit.isLocked) {
-        LoggingService.log('Rate limit exceeded for $email', tag: 'ENHANCED_AUTH');
-        throw _rateLimit.getRateLimitMessage(rateLimit);
-      }
+      // PERFORMANCE: Run rate limit check and persistence setup in PARALLEL
+      // Both are independent operations, no need to wait sequentially
+      final rateLimitFuture = _rateLimit.checkRateLimit(email);
+      final persistenceFuture = kIsWeb
+          ? _auth.setPersistence(rememberMe ? Persistence.LOCAL : Persistence.SESSION)
+          : Future<void>.value();
 
-      // Set persistence BEFORE sign in based on rememberMe (web only)
-      if (kIsWeb) {
-        if (rememberMe) {
-          await _auth.setPersistence(Persistence.LOCAL);
-        } else {
-          await _auth.setPersistence(Persistence.SESSION);
-        }
+      // Wait for both to complete
+      final results = await Future.wait([rateLimitFuture, persistenceFuture]);
+      final rateLimit = results[0] as LoginAttempt?;
+
+      // Check rate limit result
+      if (rateLimit != null && rateLimit.isLocked) {
+        LoggingService.log('Email-based rate limit exceeded for $email', tag: 'ENHANCED_AUTH');
+        throw _rateLimit.getRateLimitMessage(rateLimit);
       }
 
       // Attempt sign in
@@ -318,7 +319,23 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       state = state.copyWith(isLoading: true);
 
-      // Check rate limit
+      // SECURITY: IP-based rate limiting for registration (Cloud Function)
+      // Stricter limits for registration to prevent spam account creation
+      try {
+        final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+        final callable = functions.httpsCallable('checkRegistrationRateLimit');
+        await callable.call({'email': email});
+      } on FirebaseFunctionsException catch (e) {
+        if (e.code == 'resource-exhausted') {
+          LoggingService.log('IP-based rate limit exceeded for registration', tag: 'ENHANCED_AUTH');
+          state = state.copyWith(isLoading: false, error: e.message);
+          throw e.message ?? 'Too many registration attempts. Please wait before trying again.';
+        }
+        // Continue with registration if rate limit check fails (fail-open for availability)
+        LoggingService.log('IP rate limit check failed, continuing: ${e.message}', tag: 'AUTH_WARNING');
+      }
+
+      // Check email-based rate limit (Dart-side, Firestore-backed)
       final rateLimit = await _rateLimit.checkRateLimit(email);
       if (rateLimit != null && rateLimit.isLocked) {
         throw _rateLimit.getRateLimitMessage(rateLimit);
@@ -556,6 +573,46 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     await _auth.signOut();
     // Keep isLoading false after sign out (not an initial check)
     state = const EnhancedAuthState(isLoading: false);
+  }
+
+  /// Sign out from all devices
+  ///
+  /// Revokes all refresh tokens for the current user, effectively signing them
+  /// out from all devices. The user will need to re-authenticate on each device.
+  ///
+  /// Use this for:
+  /// - Compromised account recovery
+  /// - Security concerns after password change
+  /// - User-requested "sign out everywhere" feature
+  ///
+  /// Throws [String] error message on failure.
+  Future<void> signOutFromAllDevices() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) {
+      throw 'No user is currently signed in';
+    }
+
+    try {
+      // Call Cloud Function to revoke all refresh tokens
+      final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+      final callable = functions.httpsCallable('revokeAllRefreshTokens');
+      await callable.call();
+
+      LoggingService.log('All refresh tokens revoked for user', tag: 'ENHANCED_AUTH');
+
+      // Log security event locally
+      await _security.logLogout(userId);
+
+      // Sign out locally after tokens are revoked
+      await _auth.signOut();
+      state = const EnhancedAuthState(isLoading: false);
+    } on FirebaseFunctionsException catch (e) {
+      LoggingService.log('Failed to revoke tokens: ${e.message}', tag: 'ENHANCED_AUTH');
+      throw e.message ?? 'Failed to sign out from all devices';
+    } catch (e) {
+      LoggingService.log('Failed to sign out from all devices: $e', tag: 'ENHANCED_AUTH');
+      throw 'Failed to sign out from all devices. Please try again.';
+    }
   }
 
   /// Reset password using custom email template

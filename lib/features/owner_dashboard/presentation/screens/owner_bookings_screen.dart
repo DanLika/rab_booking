@@ -378,16 +378,24 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               context: context,
               builder: (context) => BookingDetailsDialog(ownerBooking: bookingToShow),
             ).then((_) {
-              // FIXED: Simplified cleanup logic to prevent infinite loading loop
-              // Reset dialog-related flags immediately when dialog closes
+              // Dialog closed - clean up state
               if (!mounted) return;
 
-              // Clear pending booking ID provider first
+              // Store the booking ID we just showed so we don't re-open it
+              final shownBookingId = bookingToShow.booking.id;
+
+              // Clear pending booking ID provider
               ref.read(pendingBookingIdProvider.notifier).state = null;
 
-              // CRITICAL FIX: Clear bookingId from URL FIRST, then reset _handledBookingId
-              // If we reset _handledBookingId before URL is cleared, build() sees bookingId
-              // still in URL with _handledBookingId=null and reopens the dialog
+              // CRITICAL FIX: Set _handledBookingId BEFORE clearing URL
+              // This prevents the dialog from reopening during the router.go() rebuild
+              setState(() {
+                _pendingBookingToShow = null;
+                _handledBookingId = shownBookingId; // Keep track of what we showed
+                // Keep _dialogShownForBooking = true until URL is fully cleared
+              });
+
+              // Clear bookingId from URL in next frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted || !context.mounted) return;
 
@@ -398,27 +406,25 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     final newQueryParams = Map<String, String>.from(currentUri.queryParameters);
                     newQueryParams.remove('bookingId');
                     final newUri = currentUri.replace(queryParameters: newQueryParams);
-                    // Use replace instead of go to not add to history
                     router.go(newUri.toString());
                   }
 
-                  // Only reset ALL flags AFTER URL is cleared
+                  // Reset remaining flags AFTER URL is cleared
+                  // NOTE: _handledBookingId stays set - it will be cleared when URL no longer has bookingId
+                  // (see line 261-268 where we check routeBookingId == null)
                   if (mounted) {
                     setState(() {
-                      _pendingBookingToShow = null;
                       _dialogShownForBooking = false;
                       _hasHandledInitialBooking = false;
                       _bookingCheckScheduled = false;
                       _isLoadingInitialBooking = false;
-                      _handledBookingId = null;
+                      // DO NOT reset _handledBookingId here - let line 261-268 handle it
                     });
                   }
                 } catch (e) {
                   debugPrint('Error clearing bookingId from route: $e');
-                  // Even on error, reset flags to prevent stuck state
                   if (mounted) {
                     setState(() {
-                      _pendingBookingToShow = null;
                       _dialogShownForBooking = false;
                       _hasHandledInitialBooking = false;
                       _bookingCheckScheduled = false;
@@ -1359,20 +1365,27 @@ class _BookingCard extends ConsumerWidget {
 
   /// Approve pending booking (requires owner approval workflow)
   void _approveBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+    debugPrint('[BookingsScreen._approveBooking] Called with bookingId: $bookingId');
     final confirmed = await showDialog<bool>(context: context, builder: (context) => const BookingApproveDialog());
+    debugPrint('[BookingsScreen._approveBooking] Dialog result: $confirmed');
 
     if (confirmed == true && context.mounted) {
       final l10n = AppLocalizations.of(context);
       try {
+        debugPrint('[BookingsScreen._approveBooking] Getting repository...');
         final repository = ref.read(ownerBookingsRepositoryProvider);
+        debugPrint('[BookingsScreen._approveBooking] Calling repository.approveBooking...');
         await repository.approveBooking(bookingId);
+        debugPrint('[BookingsScreen._approveBooking] SUCCESS!');
 
         if (context.mounted) {
           ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerBookingsApproved);
           // Update local state immediately (optimistic update)
           ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.confirmed);
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
+        debugPrint('[BookingsScreen._approveBooking] ERROR: $e');
+        debugPrint('[BookingsScreen._approveBooking] Stack: $stackTrace');
         if (context.mounted) {
           ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsApproveError);
         }
@@ -1382,20 +1395,27 @@ class _BookingCard extends ConsumerWidget {
 
   /// Reject pending booking
   void _rejectBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+    debugPrint('[BookingsScreen._rejectBooking] Called with bookingId: $bookingId');
     final reason = await showDialog<String?>(context: context, builder: (context) => const BookingRejectDialog());
+    debugPrint('[BookingsScreen._rejectBooking] Dialog result: $reason');
 
     if (reason != null && context.mounted) {
       final l10n = AppLocalizations.of(context);
       try {
+        debugPrint('[BookingsScreen._rejectBooking] Getting repository...');
         final repository = ref.read(ownerBookingsRepositoryProvider);
+        debugPrint('[BookingsScreen._rejectBooking] Calling repository.rejectBooking...');
         await repository.rejectBooking(bookingId, reason: reason.isEmpty ? null : reason);
+        debugPrint('[BookingsScreen._rejectBooking] SUCCESS!');
 
         if (context.mounted) {
           ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerBookingsRejected);
           // Update local state - rejection changes status to cancelled
           ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.cancelled);
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
+        debugPrint('[BookingsScreen._rejectBooking] ERROR: $e');
+        debugPrint('[BookingsScreen._rejectBooking] Stack: $stackTrace');
         if (context.mounted) {
           ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsRejectError);
         }

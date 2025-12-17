@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -440,21 +439,20 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
       final checkOutChanged = _checkOut != widget.booking.checkOut;
 
       // FIXED BUG #2: Use transaction with existence check to prevent creating new document
-      // NEW STRUCTURE: Use collection group query to find booking in subcollection
+      // FIXED: FieldPath.documentId() does NOT work with collectionGroup() queries!
+      // Firestore expects full document path, not just ID when using collectionGroup.
+      // Solution: Use direct document path since we have propertyId and unitId
       final firestore = ref.read(firestoreProvider);
 
-      // First, find the booking using collection group query
-      final bookingQuery = await firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: widget.booking.id)
-          .limit(1)
-          .get();
-
-      if (bookingQuery.docs.isEmpty) {
-        throw Exception('Booking no longer exists. It may have been deleted.');
-      }
-
-      final docRef = bookingQuery.docs.first.reference;
+      // Build direct document reference using known path
+      // Structure: properties/{propertyId}/units/{unitId}/bookings/{bookingId}
+      final docRef = firestore
+          .collection('properties')
+          .doc(widget.booking.propertyId)
+          .collection('units')
+          .doc(widget.booking.unitId)
+          .collection('bookings')
+          .doc(widget.booking.id);
 
       await firestore.runTransaction((transaction) async {
         final docSnapshot = await transaction.get(docRef);

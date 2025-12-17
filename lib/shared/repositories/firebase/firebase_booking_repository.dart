@@ -22,16 +22,47 @@ class FirebaseBookingRepository implements BookingRepository {
   }
 
   @override
-  Future<BookingModel?> fetchBookingById(String id) async {
-    // NEW STRUCTURE: Use collection group query to find booking by ID
+  Future<BookingModel?> fetchBookingById(String id, {String? unitId}) async {
+    // IMPORTANT: FieldPath.documentId does NOT work with collectionGroup queries!
+    // Firestore expects full document path, not just ID when using collectionGroup.
+    //
+    // Strategy:
+    // 1. Try legacy top-level collection first (fastest)
+    // 2. If unitId is provided, query subcollection directly
+    // 3. Fall back to collection group search (least efficient)
+
+    // Try legacy top-level collection first
+    final legacyDoc = await _firestore.collection('bookings').doc(id).get();
+    if (legacyDoc.exists) {
+      return BookingModel.fromJson({...legacyDoc.data()!, 'id': legacyDoc.id});
+    }
+
+    // If unitId provided, we can try a more targeted search
+    if (unitId != null) {
+      // Query bookings for this unit and find by ID
+      final unitBookings = await _firestore
+          .collectionGroup('bookings')
+          .where('unit_id', isEqualTo: unitId)
+          .get();
+      for (final doc in unitBookings.docs) {
+        if (doc.id == id) {
+          return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+        }
+      }
+    }
+
+    // Fall back: Search through collection group (least efficient)
+    // This queries all bookings - use sparingly
     final snapshot = await _firestore
         .collectionGroup('bookings')
-        .where(FieldPath.documentId, isEqualTo: id)
-        .limit(1)
         .get();
-    if (snapshot.docs.isEmpty) return null;
-    final doc = snapshot.docs.first;
-    return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+
+    for (final doc in snapshot.docs) {
+      if (doc.id == id) {
+        return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+      }
+    }
+    return null;
   }
 
   @override

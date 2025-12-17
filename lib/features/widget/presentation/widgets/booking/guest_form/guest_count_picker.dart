@@ -52,7 +52,9 @@ class GuestCountPicker extends ConsumerWidget {
             label: tr.adults,
             count: adults,
             canDecrement: adults > 1,
-            canIncrement: !isAtCapacity && adults < maxGuests,
+            // Bug #31 & #32 Fix: Remove redundant check - isAtCapacity already
+            // validates totalGuests >= maxGuests, so individual check is unnecessary
+            canIncrement: !isAtCapacity,
             onDecrement: () => onAdultsChanged(adults - 1),
             onIncrement: () => onAdultsChanged(adults + 1),
             colors: colors,
@@ -64,7 +66,9 @@ class GuestCountPicker extends ConsumerWidget {
             label: tr.children,
             count: children,
             canDecrement: children > 0,
-            canIncrement: !isAtCapacity && children < maxGuests,
+            // Bug #31 & #32 Fix: Remove redundant check - isAtCapacity already
+            // validates totalGuests >= maxGuests, so individual check is unnecessary
+            canIncrement: !isAtCapacity,
             onDecrement: () => onChildrenChanged(children - 1),
             onIncrement: () => onChildrenChanged(children + 1),
             colors: colors,

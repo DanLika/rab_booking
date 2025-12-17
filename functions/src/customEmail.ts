@@ -1,9 +1,10 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {sendCustomEmailToGuest as sendCustomGuestEmailService} from "./emailService";
-import {logError} from "./logger";
+import {logError, logInfo} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
 import {enforceRateLimit} from "./utils/rateLimit";
-import {admin, db} from "./firebase";
+import {db} from "./firebase";
+import {findBookingById} from "./utils/bookingLookup";
 
 /**
  * Callable Cloud Function: Send custom email to guest
@@ -45,19 +46,16 @@ export const sendCustomEmailToGuest = onCall(async (request) => {
     );
   }
 
-  // NEW STRUCTURE: Authorization - verify user owns the booking using collection group
-  const bookingQuery = await db
-    .collectionGroup("bookings")
-    .where(admin.firestore.FieldPath.documentId(), "==", bookingId)
-    .limit(1)
-    .get();
+  // Find booking using helper (avoids FieldPath.documentId bug with collectionGroup)
+  logInfo("[sendCustomEmailToGuest] Looking up booking", {bookingId, userId});
 
-  if (bookingQuery.empty) {
+  const bookingResult = await findBookingById(bookingId, userId);
+
+  if (!bookingResult) {
     throw new HttpsError("not-found", "Booking not found");
   }
 
-  const bookingDoc = bookingQuery.docs[0];
-  const bookingData = bookingDoc.data()!;
+  const bookingData = bookingResult.data;
 
   // Check: Is this user the owner of the booking?
   if (bookingData.owner_id !== userId) {

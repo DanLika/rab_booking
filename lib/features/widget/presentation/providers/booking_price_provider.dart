@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/services/logging_service.dart';
-import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../utils/date_normalizer.dart';
 import 'realtime_booking_calendar_provider.dart';
 import 'widget_context_provider.dart';

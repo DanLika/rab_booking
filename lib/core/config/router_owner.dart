@@ -226,6 +226,22 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.overview;
       }
 
+      // SECURITY: Email verification enforcement for authenticated users
+      // Block access to protected routes if email is not verified
+      final requiresEmailVerification = authState.requiresEmailVerification;
+      final isEmailVerificationRoute = state.matchedLocation == OwnerRoutes.emailVerification;
+      final isPublicAuthRoute =
+          state.matchedLocation == OwnerRoutes.privacyPolicy ||
+          state.matchedLocation == OwnerRoutes.termsConditions ||
+          state.matchedLocation == OwnerRoutes.cookiesPolicy;
+
+      if (isAuthenticated && requiresEmailVerification && !isEmailVerificationRoute && !isPublicAuthRoute) {
+        if (kDebugMode) {
+          LoggingService.log('  → Redirecting to email verification (email not verified)', tag: 'ROUTER');
+        }
+        return OwnerRoutes.emailVerification;
+      }
+
       if (kDebugMode) {
         LoggingService.log('  → No redirect needed', tag: 'ROUTER');
       }

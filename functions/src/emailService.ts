@@ -145,7 +145,8 @@ const FROM_EMAIL = (): string => getFromEmail();
 const FROM_NAME = (): string => getFromName();
 
 // Widget URL for booking lookup
-const WIDGET_URL = process.env.WIDGET_URL || "https://bookbed.io";
+// IMPORTANT: Widget lives on view.bookbed.io, NOT bookbed.io (which is for marketing)
+const WIDGET_URL = process.env.WIDGET_URL || "https://view.bookbed.io";
 const BOOKING_DOMAIN = process.env.BOOKING_DOMAIN || null;
 // View booking URL for booking details page (automatically derived from BOOKING_DOMAIN)
 // If BOOKING_DOMAIN is set, use view.{BOOKING_DOMAIN}, otherwise null

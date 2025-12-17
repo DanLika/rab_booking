@@ -21,23 +21,35 @@ import {
 import { sanitizeText, sanitizeEmail, sanitizePhone } from "./utils/inputSanitization";
 import { logInfo, logError, logWarn } from "./logger";
 import { validateBookingPrice, calculateBookingPrice } from "./utils/priceValidation";
+import { checkRateLimit } from "./utils/rateLimit";
+import {
+  logSecurityEvent,
+  logWebhookSignatureFailure,
+  SecurityEventType,
+} from "./utils/securityMonitoring";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 // Allowed domains for return URL (security whitelist)
+// DOMAIN STRUCTURE:
+// - bookbed.io = Marketing/Landing page (NOT for widget)
+// - app.bookbed.io = Owner Dashboard
+// - view.bookbed.io = Booking Widget (main domain)
+// - *.view.bookbed.io = Client subdomains (e.g., jasko-rab.view.bookbed.io)
 const ALLOWED_RETURN_DOMAINS = [
-  "https://bookbed.io",           // Main widget domain
+  "https://bookbed.io",           // Marketing site (for future use)
   "https://app.bookbed.io",       // Owner dashboard
-  "https://view.bookbed.io",      // Booking details page (from emails)
+  "https://view.bookbed.io",      // Booking widget (main domain)
   "https://rab-booking-248fc.web.app",  // Legacy fallback
   "http://localhost",             // Local development
   "http://127.0.0.1",             // Local development
 ];
 
-// Allowed wildcard domains (e.g., *.bookbed.io for custom client subdomains like jasko-rab.bookbed.io)
+// Allowed wildcard domains for custom client subdomains
+// Widget uses view.bookbed.io subdomain structure: {client}.view.bookbed.io
 const ALLOWED_WILDCARD_DOMAINS = [
-  ".bookbed.io", // Matches any subdomain of bookbed.io (e.g., jasko-rab.bookbed.io, villa-marija.bookbed.io)
+  ".view.bookbed.io", // Client subdomains (e.g., jasko-rab.view.bookbed.io, villa-marija.view.bookbed.io)
 ];
 
 /**
@@ -56,29 +68,29 @@ function isAllowedReturnUrl(returnUrl: string): boolean {
 
   if (exactMatch) return true;
 
-  // Check wildcard domain matches (e.g., *.bookbed.io)
+  // Check wildcard domain matches (e.g., *.view.bookbed.io)
   try {
     const url = new URL(returnUrl);
-    const hostname = url.hostname; // e.g., "jasko-rab.bookbed.io"
+    const hostname = url.hostname; // e.g., "jasko-rab.view.bookbed.io"
 
     return ALLOWED_WILDCARD_DOMAINS.some((wildcardDomain) => {
       // FIXED BUG #17: Secure wildcard validation using domain split
-      // wildcardDomain = ".bookbed.io" → domainWithoutDot = "bookbed.io"
+      // wildcardDomain = ".view.bookbed.io" → domainWithoutDot = "view.bookbed.io"
       const domainWithoutDot = wildcardDomain.slice(1); // Remove leading dot
 
       // Split both into parts
-      const hostnameParts = hostname.split("."); // ["jasko-rab", "bookbed", "io"]
-      const wildcardParts = domainWithoutDot.split("."); // ["bookbed", "io"]
+      const hostnameParts = hostname.split("."); // ["jasko-rab", "view", "bookbed", "io"]
+      const wildcardParts = domainWithoutDot.split("."); // ["view", "bookbed", "io"]
 
       // SECURITY: Hostname must have MORE parts than wildcard domain
-      // This blocks: "evil-bookbed.io" (2 parts) vs "bookbed.io" (2 parts)
-      // This allows: "jasko-rab.bookbed.io" (3 parts) vs "bookbed.io" (2 parts)
+      // This blocks: "evil-view.bookbed.io" (3 parts) vs "view.bookbed.io" (3 parts)
+      // This allows: "jasko-rab.view.bookbed.io" (4 parts) vs "view.bookbed.io" (3 parts)
       if (hostnameParts.length <= wildcardParts.length) {
         return false;
       }
 
       // Check if last N parts of hostname match wildcard domain
-      // ["jasko-rab", "bookbed", "io"] → last 2 parts: ["bookbed", "io"]
+      // ["jasko-rab", "view", "bookbed", "io"] → last 3 parts: ["view", "bookbed", "io"]
       const lastParts = hostnameParts.slice(-wildcardParts.length);
       const matches = lastParts.join(".") === domainWithoutDot;
 
@@ -101,6 +113,31 @@ function isAllowedReturnUrl(returnUrl: string): boolean {
  * Security: Validates return URL against whitelist
  */
 export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }, async (request) => {
+  // ========================================================================
+  // SECURITY: Rate Limiting - BEFORE any business logic
+  // ========================================================================
+  // Prevents DoS attacks and excessive Stripe API calls
+  // Limits: 10 calls per 5 minutes per IP (in-memory, per-instance)
+  const rawRequest = request.rawRequest as { ip?: string; headers?: Record<string, string> } | undefined;
+  const clientIp = rawRequest?.ip ||
+    rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    "unknown";
+
+  if (!checkRateLimit(`stripe_checkout:${clientIp}`, 10, 300)) {
+    // Log security event (fire-and-forget)
+    logSecurityEvent(
+      SecurityEventType.RATE_LIMIT_EXCEEDED,
+      { ip: clientIp, action: "stripe_checkout" },
+      "medium"
+    ).catch(() => {}); // Don't block on logging
+
+    logWarn("createStripeCheckoutSession: Rate limit exceeded", { ip: clientIp });
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many checkout attempts. Please wait a few minutes before trying again."
+    );
+  }
+
   const {
     // Booking data (from atomicBooking validation result)
     bookingData,
@@ -148,13 +185,14 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
   if (!totalPrice) missingFields.push("totalPrice");
 
   if (missingFields.length > 0) {
-    logError(`createStripeCheckoutSession: Missing required booking fields: ${missingFields.join(", ")}`, null, {
+    // SECURITY: Log details internally, return generic message to client
+    logError("createStripeCheckoutSession: Missing required booking fields", null, {
       bookingDataKeys: Object.keys(bookingData),
       missingFields: missingFields,
     });
     throw new HttpsError(
       "invalid-argument",
-      `Missing required booking fields: ${missingFields.join(", ")}`
+      "Invalid booking data. Please refresh the page and try again."
     );
   }
 
@@ -170,20 +208,32 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
         search: url.search,
       });
     } catch (urlError) {
+      // SECURITY: Log details internally, don't expose URL structure to client
       logError(`createStripeCheckoutSession: Invalid return URL format: ${returnUrl}`, urlError);
-      throw new HttpsError("invalid-argument", `Invalid return URL format: ${returnUrl}`);
+      logSecurityEvent(
+        SecurityEventType.INVALID_RETURN_URL,
+        { returnUrl, error: "Invalid format" },
+        "medium"
+      ).catch(() => {});
+      throw new HttpsError("invalid-argument", "Invalid return URL format.");
     }
 
     // FIXED BUG #15: Check against whitelist with wildcard subdomain support
     if (!isAllowedReturnUrl(returnUrl)) {
+      // SECURITY: Log details internally, generic message to client
       logError(`createStripeCheckoutSession: Invalid return URL (not in whitelist): ${returnUrl}`, null, {
         returnUrl: returnUrl,
         allowedDomains: ALLOWED_RETURN_DOMAINS,
         allowedWildcards: ALLOWED_WILDCARD_DOMAINS,
       });
+      logSecurityEvent(
+        SecurityEventType.INVALID_RETURN_URL,
+        { returnUrl, error: "Not in whitelist" },
+        "high"
+      ).catch(() => {});
       throw new HttpsError(
         "invalid-argument",
-        `Invalid return URL. Must be from allowed domain (bookbed.io, *.bookbed.io, localhost, etc.)`
+        "Invalid return URL. Please try again from the booking page."
       );
     }
   } else {
@@ -218,10 +268,81 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       );
     }
 
-    logInfo("createStripeCheckoutSession: Owner Stripe account found", {
-      ownerId: ownerId,
-      stripeAccountId: ownerStripeAccountId,
-    });
+    // ========================================================================
+    // SECURITY: Verify Stripe Connect account status before checkout
+    // ========================================================================
+    // Ensures account can receive payments and has required capabilities
+    const stripeVerifyClient = getStripeClient();
+    try {
+      const account = await stripeVerifyClient.accounts.retrieve(ownerStripeAccountId);
+
+      // Check if account is enabled for charges (can receive payments)
+      if (!account.charges_enabled) {
+        logSecurityEvent(
+          SecurityEventType.STRIPE_ACCOUNT_NOT_VERIFIED,
+          {
+            ownerId,
+            stripeAccountId: ownerStripeAccountId,
+            chargesEnabled: account.charges_enabled,
+            payoutsEnabled: account.payouts_enabled,
+            detailsSubmitted: account.details_submitted,
+          },
+          "high"
+        ).catch(() => {}); // Fire-and-forget
+
+        logError("createStripeCheckoutSession: Stripe account not enabled for charges", null, {
+          ownerId,
+          stripeAccountId: ownerStripeAccountId,
+          chargesEnabled: account.charges_enabled,
+        });
+        throw new HttpsError(
+          "failed-precondition",
+          "Property owner's payment account is not fully set up. Please contact the property owner."
+        );
+      }
+
+      // Check if account has required capabilities (card payments and transfers)
+      const hasCardPayments = account.capabilities?.card_payments === "active";
+      const hasTransfers = account.capabilities?.transfers === "active";
+
+      if (!hasCardPayments || !hasTransfers) {
+        logWarn("createStripeCheckoutSession: Stripe account missing capabilities", {
+          ownerId,
+          stripeAccountId: ownerStripeAccountId,
+          hasCardPayments,
+          hasTransfers,
+          capabilities: account.capabilities,
+        });
+        throw new HttpsError(
+          "failed-precondition",
+          "Property owner's payment account is not fully configured. Please contact the property owner."
+        );
+      }
+
+      logInfo("createStripeCheckoutSession: Stripe Connect account verified", {
+        ownerId,
+        stripeAccountId: ownerStripeAccountId,
+        chargesEnabled: account.charges_enabled,
+        payoutsEnabled: account.payouts_enabled,
+      });
+    } catch (error: unknown) {
+      // Re-throw HttpsError (our own errors)
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      // Stripe API error - log and throw generic error
+      const stripeError = error as { message?: string };
+      logError("createStripeCheckoutSession: Error verifying Stripe account", error, {
+        ownerId,
+        stripeAccountId: ownerStripeAccountId,
+        errorMessage: stripeError?.message,
+      });
+      throw new HttpsError(
+        "internal",
+        "Failed to verify payment account. Please try again later."
+      );
+    }
 
     const depositAmountInCents = Math.round(depositAmount * 100);
 
@@ -635,6 +756,13 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       webhookSecret
     );
   } catch (error: any) {
+    // SECURITY: Log webhook signature failure (potential attack)
+    logWebhookSignatureFailure(
+      error.message || "Unknown error",
+      !!sig,
+      { hasRawBody: !!req.rawBody }
+    ).catch(() => {}); // Fire-and-forget
+
     logError("Webhook signature verification failed", error);
     res.status(400).send(`Webhook Error: ${error.message}`);
     return;

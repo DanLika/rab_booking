@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../auth/presentation/widgets/auth_background.dart';
 import '../../../auth/presentation/widgets/glass_card.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
@@ -75,14 +77,49 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> wit
 
     setState(() => _isLoading = true);
 
+    final newPassword = _newPasswordController.text;
+
     try {
+      // SECURITY: Check password history (Cloud Function)
+      // Prevents users from reusing recent passwords
+      try {
+        final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+        final checkHistoryCallable = functions.httpsCallable('checkPasswordHistory');
+        await checkHistoryCallable.call({'password': newPassword});
+      } on FirebaseFunctionsException catch (e) {
+        if (e.code == 'failed-precondition') {
+          // Password was recently used
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ErrorDisplayUtils.showErrorSnackBar(
+              context,
+              e,
+              userMessage: e.message ?? l10n.passwordsMustBeDifferent,
+            );
+          }
+          return;
+        }
+        // Continue if check fails (fail-open for availability)
+        LoggingService.log('Password history check failed, continuing: ${e.message}', tag: 'AUTH_WARNING');
+      }
+
       // Re-authenticate user first
       final credential = EmailAuthProvider.credential(email: user.email!, password: _currentPasswordController.text);
 
       await user.reauthenticateWithCredential(credential);
 
       // Update password
-      await user.updatePassword(_newPasswordController.text);
+      await user.updatePassword(newPassword);
+
+      // SECURITY: Save new password to history (non-blocking)
+      try {
+        final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+        final saveHistoryCallable = functions.httpsCallable('savePasswordToHistory');
+        await saveHistoryCallable.call({'password': newPassword});
+      } catch (e) {
+        // Don't block password change if history save fails
+        LoggingService.log('Password history save failed: $e', tag: 'AUTH_WARNING');
+      }
 
       if (mounted) {
         setState(() => _isLoading = false);

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,11 +8,10 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_widget.dart';
+import 'core/utils/web_utils.dart'; // For hideNativeSplash
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
-import 'features/widget/domain/models/widget_config.dart';
-import 'features/widget/domain/models/widget_settings.dart';
-import 'shared/providers/repository_providers.dart';
+import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options.dart';
 
 // Sentry DSN for widget error tracking (same project as owner dashboard)
@@ -98,44 +95,59 @@ void main() async {
 }
 
 /// Booking Widget App - Minimalna aplikacija samo za widget
-class BookingWidgetApp extends ConsumerWidget {
+class BookingWidgetApp extends ConsumerStatefulWidget {
   const BookingWidgetApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BookingWidgetApp> createState() => _BookingWidgetAppState();
+}
+
+class _BookingWidgetAppState extends ConsumerState<BookingWidgetApp> {
+  bool _splashHidden = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // HYBRID LOADING: Hide native splash IMMEDIATELY when first frame renders
+    // This shows Flutter UI with skeleton calendar instead of waiting for data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_splashHidden) {
+        _splashHidden = true;
+        hideNativeSplash();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Use minimal widget router (NO auth, NO owner dashboard routes)
     final router = ref.watch(widgetRouterProvider);
 
     // Get widget config from URL parameters
     final widgetConfig = ref.watch(widgetConfigProvider);
 
-    // Try to load widget settings from Firestore (if unitId is available)
-    final widgetSettingsAsync =
-        widgetConfig.unitId != null && widgetConfig.propertyId != null
-        ? ref.watch(_widgetSettingsProvider(widgetConfig))
-        : null;
+    // PERFORMANCE OPTIMIZATION: Theme is generated from URL config only.
+    // Settings-based theme customization happens after widgetContextProvider loads in BookingWidgetScreen.
+    // This reduces initial queries from 4 to 3 (property + unit + settings via widgetContextProvider only).
 
-    // Get actual settings value (null if loading/error)
-    final widgetSettings = widgetSettingsAsync?.valueOrNull;
-
-    // Determine theme mode (priority: URL > Firestore > default 'system')
+    // Determine theme mode from URL (default: 'system')
     final String themeMode = widgetConfig.themeMode.isNotEmpty
         ? widgetConfig.themeMode
-        : (widgetSettings?.themeOptions?.themeMode ?? 'system');
+        : 'system';
 
     // Convert theme mode string to ThemeMode enum
     final ThemeMode themeModeEnum = _getThemeMode(themeMode);
 
-    // Generate light and dark themes using DynamicThemeService
+    // Generate light and dark themes using DynamicThemeService (URL config only)
     final lightTheme = DynamicThemeService.generateTheme(
       config: widgetConfig,
-      settings: widgetSettings,
+      // settings: null is default - loaded later by widgetContextProvider
       brightness: Brightness.light,
     );
 
     final darkTheme = DynamicThemeService.generateTheme(
       config: widgetConfig,
-      settings: widgetSettings,
+      // settings: null is default - loaded later by widgetContextProvider
       brightness: Brightness.dark,
     );
 
@@ -162,26 +174,3 @@ class BookingWidgetApp extends ConsumerWidget {
         _ => ThemeMode.system,
       };
 }
-
-/// Provider to watch widget settings from Firestore (REAL-TIME)
-///
-/// This provider uses StreamProvider to listen for real-time updates.
-/// When owner changes settings in Dashboard, the widget will automatically
-/// update without requiring a page refresh.
-final _widgetSettingsProvider =
-    StreamProvider.family<WidgetSettings?, WidgetConfig>((ref, config) {
-      if (config.propertyId == null || config.unitId == null) {
-        return Stream.value(null);
-      }
-
-      try {
-        final repository = ref.read(widgetSettingsRepositoryProvider);
-        return repository.watchWidgetSettings(
-          propertyId: config.propertyId!,
-          unitId: config.unitId!,
-        );
-      } catch (e) {
-        // If settings don't exist or error loading, return null stream (use defaults)
-        return Stream.value(null);
-      }
-    });

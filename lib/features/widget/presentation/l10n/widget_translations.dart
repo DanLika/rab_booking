@@ -553,14 +553,14 @@ class WidgetTranslations {
   String get creditCard {
     switch (locale.languageCode) {
       case 'hr':
-        return 'Kreditna kartica (Stripe)';
+        return 'Kreditna kartica';
       case 'de':
-        return 'Kreditkarte (Stripe)';
+        return 'Kreditkarte';
       case 'it':
-        return 'Carta di credito (Stripe)';
+        return 'Carta di credito';
       case 'en':
       default:
-        return 'Credit Card (Stripe)';
+        return 'Credit Card';
     }
   }
 
@@ -3061,14 +3061,14 @@ class WidgetTranslations {
   String continueToBankTransfer(String nightsText) {
     switch (locale.languageCode) {
       case 'hr':
-        return 'Nastavi na bankovni prijenos$nightsText';
+        return 'Bankovni prijenos$nightsText';
       case 'de':
-        return 'Weiter zur Banküberweisung$nightsText';
+        return 'Banküberweisung$nightsText';
       case 'it':
-        return 'Continua con bonifico bancario$nightsText';
+        return 'Bonifico$nightsText';
       case 'en':
       default:
-        return 'Continue to Bank Transfer$nightsText';
+        return 'Bank Transfer$nightsText';
     }
   }
 
@@ -3457,14 +3457,14 @@ class WidgetTranslations {
   String get verifyEmail {
     switch (locale.languageCode) {
       case 'hr':
-        return 'Potvrdi email';
+        return 'Potvrdi';
       case 'de':
-        return 'E-Mail bestätigen';
+        return 'Bestätigen';
       case 'it':
-        return 'Verifica email';
+        return 'Verifica';
       case 'en':
       default:
-        return 'Verify Email';
+        return 'Verify';
     }
   }
 
@@ -4628,14 +4628,14 @@ class WidgetTranslations {
   String get calendarOnlyBanner {
     switch (locale.languageCode) {
       case 'hr':
-        return 'Ovaj kalendar prikazuje samo dostupnost. Za rezervaciju kontaktirajte vlasnika.';
+        return 'Ovaj kalendar prikazuje samo dostupnost.';
       case 'de':
-        return 'Dieser Kalender zeigt nur die Verfügbarkeit. Kontaktieren Sie den Eigentümer für eine Reservierung.';
+        return 'Dieser Kalender zeigt nur die Verfügbarkeit.';
       case 'it':
-        return 'Questo calendario mostra solo la disponibilità. Contatta il proprietario per prenotare.';
+        return 'Questo calendario mostra solo la disponibilità.';
       case 'en':
       default:
-        return 'This calendar shows availability only. Contact the owner to make a reservation.';
+        return 'This calendar shows availability only.';
     }
   }
 

@@ -7,7 +7,8 @@ abstract class BookingRepository {
   Future<BookingModel> createBooking(BookingModel booking);
 
   /// Get booking by ID
-  Future<BookingModel?> fetchBookingById(String id);
+  /// [unitId] - optional optimization hint to narrow search scope
+  Future<BookingModel?> fetchBookingById(String id, {String? unitId});
 
   /// Get booking by Stripe session ID (for webhook-created bookings)
   /// Used when returning from Stripe checkout before bookingId is known

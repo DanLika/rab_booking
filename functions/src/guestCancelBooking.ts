@@ -3,6 +3,7 @@ import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import {sendBookingCancellationEmail} from "./emailService";
 import {fetchPropertyAndUnitDetails} from "./utils/bookingHelpers";
+import {findBookingById} from "./utils/bookingLookup";
 import Stripe from "stripe";
 
 /**
@@ -74,20 +75,17 @@ export const guestCancelBooking = onCall(async (request) => {
       guestEmail,
     });
 
-    // NEW STRUCTURE: Get booking document using collection group query
-    const bookingQuery = await db
-      .collectionGroup("bookings")
-      .where(admin.firestore.FieldPath.documentId(), "==", bookingId)
-      .limit(1)
-      .get();
+    // Find booking using helper (avoids FieldPath.documentId bug with collectionGroup)
+    // Note: Guest doesn't have owner_id, so we search comprehensively
+    const bookingResult = await findBookingById(bookingId);
 
-    if (bookingQuery.empty) {
+    if (!bookingResult) {
       throw new HttpsError("not-found", "Booking not found");
     }
 
-    const bookingDoc = bookingQuery.docs[0];
+    const bookingDoc = bookingResult.doc;
     const bookingRef = bookingDoc.ref;
-    const booking = bookingDoc.data()!;
+    const booking = bookingResult.data;
 
     // Verify booking reference matches
     if (booking.booking_reference !== bookingReference) {

@@ -201,12 +201,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .snapshots();
 
     // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
+    // NOTE: Removed start_date filter to avoid index issues - filter in code instead
     final icalEventsStream = _firestore
         .collection('properties')
         .doc(propertyId)
         .collection('ical_events')
         .where('unit_id', isEqualTo: unitId)
-        .where('start_date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
     // Stream widget settings to get minNights
@@ -429,13 +429,11 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year, month);
     final endDate = DateTime.utc(year, month + 1, 0, 23, 59, 59);
 
-    // Stream bookings (NEW STRUCTURE: subcollection path)
+    // Stream bookings (COLLECTION GROUP query - same as year calendar)
+    // Uses collection group to work with Firestore rules that require unit_id + status fields
     final bookingsStream = _firestore
-        .collection('properties')
-        .doc(propertyId)
-        .collection('units')
-        .doc(unitId)
-        .collection('bookings')
+        .collectionGroup('bookings')
+        .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
 
@@ -451,12 +449,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .snapshots();
 
     // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
+    // NOTE: Removed start_date filter to avoid index issues - filter in code instead
+    // This matches the year calendar pattern and avoids potential composite index issues
     final icalEventsStream = _firestore
         .collection('properties')
         .doc(propertyId)
         .collection('ical_events')
         .where('unit_id', isEqualTo: unitId)
-        .where('start_date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
     // Combine only 3 streams (instead of 4)
@@ -541,12 +540,26 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final daysInMonth = DateTime.utc(year, month + 1, 0).day;
 
     // Initialize all days as available with prices
+    // Check available field from daily_prices - if false, mark as blocked
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime.utc(year, month, day);
       final priceKey = DateKeyGenerator.fromDate(date);
       final priceModel = priceMap[priceKey];
 
-      calendar[date] = CalendarDateInfo(date: date, status: DateStatus.available, price: priceModel?.price);
+      // Bug fix: Check available field - if explicitly false, day is blocked
+      final isBlocked = priceModel?.available == false;
+      calendar[date] = CalendarDateInfo(
+        date: date,
+        status: isBlocked ? DateStatus.blocked : DateStatus.available,
+        price: priceModel?.price,
+        // Include restriction fields from daily_prices
+        blockCheckIn: priceModel?.blockCheckIn ?? false,
+        blockCheckOut: priceModel?.blockCheckOut ?? false,
+        minDaysAdvance: priceModel?.minDaysAdvance,
+        maxDaysAdvance: priceModel?.maxDaysAdvance,
+        minNightsOnArrival: priceModel?.minNightsOnArrival,
+        maxNightsOnArrival: priceModel?.maxNightsOnArrival,
+      );
     }
 
     // Mark booked dates
@@ -747,6 +760,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
     // Initialize all days in year as available with prices
     // Bug #65 Fix: Use UTC for DST-safe date handling (consistent with month view)
+    // Check available field from daily_prices - if false, mark as blocked
     for (int month = 1; month <= 12; month++) {
       final daysInMonth = DateTime.utc(year, month + 1, 0).day;
       for (int day = 1; day <= daysInMonth; day++) {
@@ -754,7 +768,20 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         final priceKey = DateKeyGenerator.fromDate(date);
         final priceModel = priceMap[priceKey];
 
-        calendar[date] = CalendarDateInfo(date: date, status: DateStatus.available, price: priceModel?.price);
+        // Bug fix: Check available field - if explicitly false, day is blocked
+        final isBlocked = priceModel?.available == false;
+        calendar[date] = CalendarDateInfo(
+          date: date,
+          status: isBlocked ? DateStatus.blocked : DateStatus.available,
+          price: priceModel?.price,
+          // Include restriction fields from daily_prices
+          blockCheckIn: priceModel?.blockCheckIn ?? false,
+          blockCheckOut: priceModel?.blockCheckOut ?? false,
+          minDaysAdvance: priceModel?.minDaysAdvance,
+          maxDaysAdvance: priceModel?.maxDaysAdvance,
+          minNightsOnArrival: priceModel?.minNightsOnArrival,
+          maxNightsOnArrival: priceModel?.maxNightsOnArrival,
+        );
       }
     }
 

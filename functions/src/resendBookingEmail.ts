@@ -1,12 +1,31 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {db} from "./firebase";
+import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import {sendBookingConfirmationEmail} from "./emailService";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
 } from "./bookingAccessToken";
-import * as admin from "firebase-admin";
+import {findBookingById} from "./utils/bookingLookup";
+
+/**
+ * Helper to convert Firestore Timestamp or Date to Date object
+ */
+function toDate(value: any): Date {
+  if (!value) {
+    throw new Error("Date value is null or undefined");
+  }
+  // If it's a Firestore Timestamp, convert it
+  if (typeof value.toDate === "function") {
+    return value.toDate();
+  }
+  // If it's already a Date, return it
+  if (value instanceof Date) {
+    return value;
+  }
+  // Try to parse as date string
+  return new Date(value);
+}
 
 /**
  * Cloud Function: Resend Booking Email
@@ -43,22 +62,18 @@ export const resendBookingEmail = onCall(async (request) => {
       requesterId: request.auth.uid,
     });
 
-    // NEW STRUCTURE: Get the booking using collection group query
-    const bookingQuery = await db
-      .collectionGroup("bookings")
-      .where(admin.firestore.FieldPath.documentId(), "==", bookingId)
-      .limit(1)
-      .get();
+    // Find booking using helper (avoids FieldPath.documentId bug with collectionGroup)
+    const bookingResult = await findBookingById(bookingId, request.auth.uid);
 
-    if (bookingQuery.empty) {
+    if (!bookingResult) {
       throw new HttpsError(
         "not-found",
         "Booking not found"
       );
     }
 
-    const bookingDoc = bookingQuery.docs[0];
-    const booking = bookingDoc.data()!;
+    const bookingDoc = bookingResult.doc;
+    const booking = bookingResult.data;
 
     // Get unit to verify ownership
     // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
@@ -78,7 +93,7 @@ export const resendBookingEmail = onCall(async (request) => {
         "Unit not found"
       );
     }
-    const unitData = unitDoc.data()!;
+    const unitData = unitDoc.data()!
 
     // Verify ownership - check owner_id from booking instead of unit
     if (booking.owner_id !== request.auth.uid) {
@@ -100,7 +115,7 @@ export const resendBookingEmail = onCall(async (request) => {
 
     // Generate new access token
     const {token: accessToken, hashedToken} = generateBookingAccessToken();
-    const checkOutDate = booking.check_out.toDate();
+    const checkOutDate = toDate(booking.check_out);
     const tokenExpiration = calculateTokenExpiration(checkOutDate);
 
     // Update booking with new access token
@@ -133,8 +148,8 @@ export const resendBookingEmail = onCall(async (request) => {
       booking.guest_email,
       booking.guest_name,
       booking.booking_reference,
-      booking.check_in.toDate(),
-      booking.check_out.toDate(),
+      toDate(booking.check_in),
+      toDate(booking.check_out),
       booking.total_price,
       depositAmount,
       unitData.name || "Unit",

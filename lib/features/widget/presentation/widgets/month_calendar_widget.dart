@@ -88,7 +88,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
               // Swipe right (previous month) - positive velocity
               if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
                 setState(() {
-                  _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+                  _currentMonth = _previousMonth(_currentMonth);
                   // Only clear range if BOTH dates are selected (complete selection)
                   if (_rangeStart != null && _rangeEnd != null) {
                     _rangeStart = null;
@@ -100,7 +100,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
               // Swipe left (next month) - negative velocity
               else if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
                 setState(() {
-                  _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+                  _currentMonth = _nextMonth(_currentMonth);
                   // Only clear range if BOTH dates are selected (complete selection)
                   if (_rangeStart != null && _rangeEnd != null) {
                     _rangeStart = null;
@@ -162,6 +162,24 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
+  /// Navigate to previous month with proper year boundary handling
+  DateTime _previousMonth(DateTime current) {
+    if (current.month == 1) {
+      return DateTime.utc(current.year - 1, 12);
+    } else {
+      return DateTime.utc(current.year, current.month - 1);
+    }
+  }
+
+  /// Navigate to next month with proper year boundary handling
+  DateTime _nextMonth(DateTime current) {
+    if (current.month == 12) {
+      return DateTime.utc(current.year + 1, 1);
+    } else {
+      return DateTime.utc(current.year, current.month + 1);
+    }
+  }
+
   Widget _buildCompactMonthNavigation(WidgetColorScheme colors) {
     final mediaQuery = MediaQuery.maybeOf(context);
     final screenWidth = mediaQuery?.size.width ?? 400.0;
@@ -182,7 +200,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           onPressed: () {
             setState(() {
-              _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+              _currentMonth = _previousMonth(_currentMonth);
               // Only clear range if BOTH dates are selected (complete selection)
               // Preserve _rangeStart if user is still selecting checkOut
               // This allows cross-month date range selection
@@ -214,7 +232,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           onPressed: () {
             setState(() {
-              _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+              _currentMonth = _nextMonth(_currentMonth);
               // Only clear range if BOTH dates are selected (complete selection)
               // Preserve _rangeStart if user is still selecting checkOut
               // This allows cross-month date range selection
@@ -273,7 +291,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Center(
       child: Padding(
         // No top padding - spacing handled by CalendarCompactLegend margin (consistent with year view)
-        padding: const EdgeInsets.only(left: SpacingTokens.m, right: SpacingTokens.m, bottom: SpacingTokens.s),
+        padding: const EdgeInsets.only(left: SpacingTokens.s, right: SpacingTokens.s, bottom: SpacingTokens.s),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
@@ -332,11 +350,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   Widget _buildMonthGridForMonth(DateTime month, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
-    // Get first day of month
-    final firstDay = DateTime(month.year, month.month);
+    // Get first day of month - use UTC to match CalendarDateUtils.getDateKey()
+    final firstDay = DateTime.utc(month.year, month.month);
 
-    // Get last day of month
-    final lastDay = DateTime(month.year, month.month + 1, 0);
+    // Get last day of month - use UTC for consistency
+    final lastDay = DateTime.utc(month.year, month.month + 1, 0);
 
     // Calculate how many days from previous month to show
     final firstWeekday = firstDay.weekday; // 1 = Monday, 7 = Sunday
@@ -371,7 +389,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           return _buildEmptyCell(colors);
         }
 
-        final date = DateTime(month.year, month.month, dayOffset + 1);
+        // Use UTC to match CalendarDateUtils.getDateKey() and database keys
+        final date = DateTime.utc(month.year, month.month, dayOffset + 1);
         return _buildDayCell(date, data, colors);
       },
     );
@@ -551,6 +570,29 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
+        // Get date info for both start and end dates
+        final startKey = DateFormat('yyyy-MM-dd').format(start);
+        final endKey = DateFormat('yyyy-MM-dd').format(end);
+        final startDateInfo = data[startKey];
+        final endDateInfo = data[endKey];
+
+        // CRITICAL: Re-validate blockCheckIn/blockCheckOut with FINAL date order
+        // Pre-selection validation uses click order, but we need to check actual check-in/check-out dates
+        if (startDateInfo != null && startDateInfo.blockCheckIn) {
+          SnackBarHelper.showError(
+            context: context,
+            message: WidgetTranslations.of(context, ref).errorCheckInNotAllowed,
+          );
+          return;
+        }
+        if (endDateInfo != null && endDateInfo.blockCheckOut) {
+          SnackBarHelper.showError(
+            context: context,
+            message: WidgetTranslations.of(context, ref).errorCheckOutNotAllowed,
+          );
+          return;
+        }
+
         // OPTIMIZED: Get minNights from cached widgetContext (reuses cached data)
         final validationMinNights =
             ref
@@ -560,16 +602,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 .minStayNights ??
             1;
 
-        // Get check-in date info for validation
-        final startKey = DateFormat('yyyy-MM-dd').format(start);
-        final checkInDateInfo = data[startKey];
-
         // Range validation (minNights, minNightsOnArrival, maxNightsOnArrival)
+        // Note: startDateInfo is already fetched above for blockCheckIn validation
         final rangeResult = validator.validateRange(
           start: start,
           end: end,
           minNights: validationMinNights,
-          checkInDateInfo: checkInDateInfo,
+          checkInDateInfo: startDateInfo,
         );
         if (!rangeResult.isValid) {
           // For month calendar: keep check-in selected, just show error

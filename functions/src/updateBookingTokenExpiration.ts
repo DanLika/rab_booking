@@ -1,7 +1,8 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {admin, db} from "./firebase";
+import {admin} from "./firebase";
 import {logInfo, logError} from "./logger";
 import {calculateTokenExpiration} from "./bookingAccessToken";
+import {findBookingById} from "./utils/bookingLookup";
 
 /**
  * Cloud Function: Update Booking Token Expiration
@@ -30,20 +31,15 @@ export const updateBookingTokenExpiration = onCall(async (request) => {
       bookingId,
     });
 
-    // NEW STRUCTURE: Get booking document using collection group query
-    const bookingQuery = await db
-      .collectionGroup("bookings")
-      .where(admin.firestore.FieldPath.documentId(), "==", bookingId)
-      .limit(1)
-      .get();
+    // Find booking using helper (avoids FieldPath.documentId bug with collectionGroup)
+    const bookingResult = await findBookingById(bookingId);
 
-    if (bookingQuery.empty) {
+    if (!bookingResult) {
       throw new HttpsError("not-found", "Booking not found");
     }
 
-    const bookingDoc = bookingQuery.docs[0];
-    const bookingRef = bookingDoc.ref;
-    const booking = bookingDoc.data()!;
+    const bookingRef = bookingResult.doc.ref;
+    const booking = bookingResult.data;
 
     // Check if booking has check-out date and access token
     if (!booking.check_out) {

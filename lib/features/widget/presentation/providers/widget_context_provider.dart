@@ -3,8 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
-import '../../../../shared/providers/repository_providers.dart';
-import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../domain/models/widget_context.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
@@ -42,7 +41,7 @@ typedef WidgetContextParams = ({String propertyId, String unitId});
 ///
 /// ## Query Optimization
 /// Previously, the widget made 3-4 separate queries:
-/// - propertyByIdProvider
+/// - widgetPropertyByIdProvider
 /// - unitByIdProvider
 /// - widgetSettingsOrDefaultProvider
 /// - (booking_price_provider also fetched unit separately)
@@ -59,8 +58,8 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
   try {
     // Fetch all data in parallel
     final results = await Future.wait<Object?>([
-      ref.read(propertyByIdProvider(propertyId).future),
-      ref.read(unitByIdProvider(propertyId, unitId).future),
+      ref.read(widgetPropertyByIdProvider(propertyId).future),
+      ref.read(unitByIdProvider((propertyId, unitId)).future),
       ref.read(widgetSettingsProvider((propertyId, unitId)).future),
     ]);
 

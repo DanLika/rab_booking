@@ -3,19 +3,38 @@
 library;
 
 // ============================================================================
-// INFINITE SCROLL CONFIGURATION
+// DATE RANGE CONFIGURATION (Simplified - Fixed Range)
 // ============================================================================
+// DESIGN DECISION: Use a fixed large date range instead of dynamic PREPEND/APPEND
+// This eliminates scroll compensation race conditions that caused erratic scrolling
+// (user swipes right but calendar jumps left due to scroll position compensation timing)
 
-/// Initial days before/after today for dynamic date range
+/// Days before today for the fixed date range
+/// 2 years in the past allows viewing historical bookings
+const int kTimelineDaysBefore = 365 * 2; // 730 days
+
+/// Days after today for the fixed date range
+/// 2 years in the future allows planning far ahead
+const int kTimelineDaysAfter = 365 * 2; // 730 days
+
+/// Total days in range (for reference: ~4 years = 1460 days)
+/// This is large enough that users won't hit edges during normal use
+/// Virtualization ensures only visible days are rendered (no performance impact)
+const int kTimelineTotalDays = kTimelineDaysBefore + kTimelineDaysAfter;
+
+// LEGACY: Keep old constants for backward compatibility during transition
+// TODO: Remove these after confirming new system works
+
+/// @deprecated Use kTimelineDaysBefore instead
 const int kTimelineInitialDaysOffset = 15;
 
-/// Days to prepend/append when scrolling near edge
+/// @deprecated No longer used - fixed range doesn't need extension
 const int kTimelineDaysToExtend = 30;
 
-/// Max days in past/future (1 year)
+/// @deprecated Use kTimelineDaysBefore/kTimelineDaysAfter instead
 const int kTimelineMaxDaysLimit = 365;
 
-/// Days from edge before triggering infinite scroll
+/// @deprecated No longer used - no edge detection needed
 const int kTimelineEdgeThresholdDays = 5;
 
 // ============================================================================
@@ -45,7 +64,9 @@ const int kTimelineDefaultVisibleDayCount = 90;
 const int kTimelineScrollRetryDelayMs = 100;
 
 /// Max scroll retry attempts
-const int kTimelineMaxScrollRetryAttempts = 10;
+/// Increased from 10 to 50 (5 seconds total) to handle slow data loading
+/// The grid must render before ScrollController has clients
+const int kTimelineMaxScrollRetryAttempts = 50;
 
 // ============================================================================
 // RESPONSIVE BREAKPOINTS

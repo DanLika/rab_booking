@@ -139,9 +139,13 @@ export const createBookingAtomic = onCall(async (request) => {
         guestName: !!guestName,
         guestEmail: !!guestEmail,
         totalPrice: totalPrice,
+        totalPriceType: typeof totalPrice,
         guestCount: guestCount,
+        guestCountType: typeof guestCount,
         paymentMethod: paymentMethod,
+        paymentMethodType: typeof paymentMethod,
         paymentOption: paymentOption,
+        paymentOptionType: typeof paymentOption,
       },
     });
     // SECURITY: Return generic message to client, details are in logs
@@ -200,7 +204,21 @@ export const createBookingAtomic = onCall(async (request) => {
   // Validate paymentMethod is one of the allowed values
   // NOTE: "pay_on_arrival" is the client-side value, "none" is legacy - both mean pay on arrival
   const allowedPaymentMethods = ["stripe", "bank_transfer", "none", "pay_on_arrival"];
+
+  // DEBUG: Log payment method validation
+  logInfo("[AtomicBooking] Validating payment method", {
+    paymentMethod,
+    paymentMethodType: typeof paymentMethod,
+    allowedMethods: allowedPaymentMethods,
+    isAllowed: allowedPaymentMethods.includes(paymentMethod),
+  });
+
   if (!allowedPaymentMethods.includes(paymentMethod)) {
+    logError("[AtomicBooking] Invalid payment method rejected", null, {
+      paymentMethod,
+      paymentMethodType: typeof paymentMethod,
+      paymentMethodValue: JSON.stringify(paymentMethod),
+    });
     throw new HttpsError(
       "invalid-argument",
       `Invalid payment method: "${paymentMethod}". Must be one of: ${allowedPaymentMethods.join(", ")}`

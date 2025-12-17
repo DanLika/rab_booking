@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Responsive dialog sizing utilities
@@ -29,7 +30,8 @@ class ResponsiveDialogUtils {
       return screenWidth * tabletPercent;
     } else {
       // Desktop
-      return (screenWidth * desktopPercent).clamp(minWidth, maxWidth);
+      // Use math.max to prevent ArgumentError when minWidth > maxWidth
+      return (screenWidth * desktopPercent).clamp(minWidth, math.max(minWidth, maxWidth));
     }
   }
 

@@ -224,7 +224,6 @@ class _ContactRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: ContactPillCardWidget._fontSize,
                   color: colors.textPrimary,
-                  decoration: TextDecoration.underline,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

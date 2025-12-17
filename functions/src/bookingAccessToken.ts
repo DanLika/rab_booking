@@ -60,12 +60,24 @@ export function generateBookingAccessToken(): {
  * - Past bookings: checkout + 10 years (extended access for historical records)
  *
  * This ensures guests can access old booking confirmations even years later
+ *
+ * @param checkOutDate - Can be Date or Firestore Timestamp
  */
 export function calculateTokenExpiration(
-  checkOutDate: admin.firestore.Timestamp
+  checkOutDate: Date | admin.firestore.Timestamp
 ): admin.firestore.Timestamp {
   const now = new Date();
-  const checkOut = checkOutDate.toDate();
+
+  // Handle both Date and Timestamp inputs
+  let checkOut: Date;
+  if (checkOutDate instanceof Date) {
+    checkOut = checkOutDate;
+  } else if (typeof (checkOutDate as any).toDate === "function") {
+    checkOut = (checkOutDate as admin.firestore.Timestamp).toDate();
+  } else {
+    // Fallback: try to parse as date
+    checkOut = new Date(checkOutDate as any);
+  }
 
   // Determine if this is an old booking (checkout already passed)
   const isOldBooking = checkOut < now;

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'bookbed_branded_loader.dart';
 
-/// Simple loading overlay with spinner - used for route transitions
+/// Loading overlay with BookBed branded loader
+///
+/// Shows BookBed logo with animated progress bar.
+/// Used for route transitions and async operations in owner dashboard.
 class LoadingOverlay extends StatelessWidget {
   final String? message;
   final Color? backgroundColor;
@@ -12,12 +16,8 @@ class LoadingOverlay extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    // Minimalistic: Use only black and white
-    final bgColor = backgroundColor ?? (isDarkMode ? Colors.black.withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95));
-
-    // Minimalistic: Use black in light mode, white in dark mode
-    final loaderColor = isDarkMode ? Colors.white : Colors.black;
-    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final bgColor = backgroundColor ??
+        (isDarkMode ? Colors.black.withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95));
 
     return Container(
       color: bgColor,
@@ -25,12 +25,14 @@ class LoadingOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(loaderColor)),
+            BookBedBrandedLoader(isDarkMode: isDarkMode),
             if (message != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Text(
                 message!,
-                style: theme.textTheme.bodyMedium?.copyWith(color: textColor),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? Colors.white70 : Colors.black87,
+                ),
               ),
             ],
           ],

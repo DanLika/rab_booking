@@ -7,7 +7,7 @@ import '../providers/theme_provider.dart';
 import '../providers/booking_lookup_provider.dart';
 import '../providers/subdomain_provider.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
-import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../domain/services/subdomain_service.dart' show SubdomainContext;
 import '../l10n/widget_translations.dart';
 import 'subdomain_not_found_screen.dart';

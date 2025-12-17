@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../../owner_dashboard/domain/models/ical_feed.dart';
 
 /// Model for iCal sync status information

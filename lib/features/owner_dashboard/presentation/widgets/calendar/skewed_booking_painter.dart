@@ -49,7 +49,7 @@ class SkewedBookingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Defensive check: ensure size is valid before painting
-    if (!size.width.isFinite || !size.height.isFinite || 
+    if (!size.width.isFinite || !size.height.isFinite ||
         size.width <= 0 || size.height <= 0) {
       return; // Skip painting if size is invalid
     }
@@ -61,6 +61,19 @@ class SkewedBookingPainter extends CustomPainter {
       ..color = backgroundColor
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, fillPaint);
+
+    // Draw border - red (2.5px) for conflicts, normal border otherwise
+    // This provides visual feedback for overbooking conflicts
+    final effectiveBorderColor = hasConflict ? Colors.red : borderColor;
+    final effectiveBorderWidth = hasConflict ? 2.5 : borderWidth;
+
+    final borderPaint = Paint()
+      ..color = effectiveBorderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = effectiveBorderWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.miter;
+    canvas.drawPath(path, borderPaint);
   }
 
   /// Creates parallelogram path with skewed left and right edges

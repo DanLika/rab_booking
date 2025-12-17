@@ -18,7 +18,8 @@ Ovaj folder sadrži dokumentaciju za funkcionalnosti koje su **potpuno implement
 - **WIDGET_CALENDAR_BUGS.md** - Svi calendar bugovi riješeni
 - **WIDGET_MISC_BUGS.md** - Razni widget bugovi riješeni
 - **WIDGET_MODELS_BUGS.md** - Model bugovi riješeni
-- **WIDGET_PROVIDERS_BUGS.md** - Provider bugovi riješeni
+- **WIDGET_PROVIDERS_BUGS.md** - Provider bugovi riješeni (6/6 bugova riješeno, preostali su code clarity/namjerno ponašanje)
+- **WIDGET_SECURITY_ANALYSIS.md** - Svi security problemi riješeni (8/8 stavki implementirano)
 
 ### Settings & Payment Config (2025-12-16)
 - **payment-config-bugs.md** - Svi bugovi riješeni (floating point precision, input validation)
@@ -39,7 +40,8 @@ Sve dokumentacije u ovom folderu predstavljaju **završene i implementirane** fu
 
 ---
 
-**Zadnje ažurirano:** 2025-12-16
+**Zadnje ažurirano:** 2025-12-16 (verifikacija provider/security bugova)
+
 
 
 

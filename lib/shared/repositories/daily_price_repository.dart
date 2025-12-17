@@ -63,6 +63,17 @@ abstract class DailyPriceRepository {
     required Map<String, dynamic> partialData,
   });
 
+  /// Optimized bulk PARTIAL update with direct propertyId.
+  /// Use this when propertyId is already known (e.g., from UnitModel) to avoid
+  /// expensive collectionGroup query.
+  /// This is optional - implementations may delegate to bulkPartialUpdate.
+  Future<List<DailyPriceModel>> bulkPartialUpdateWithPropertyId({
+    required String propertyId,
+    required String unitId,
+    required List<DateTime> dates,
+    required Map<String, dynamic> partialData,
+  });
+
   /// Delete price for specific date (revert to base price)
   Future<void> deletePriceForDate({
     required String unitId,

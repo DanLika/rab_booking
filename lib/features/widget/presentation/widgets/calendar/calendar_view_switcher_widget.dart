@@ -11,26 +11,34 @@ import '../../l10n/widget_translations.dart';
 /// This widget provides consistent view switching UI across
 /// MonthCalendarWidget and YearCalendarWidget.
 class CalendarViewSwitcherWidget extends ConsumerWidget {
-  // Breakpoint for small screens (iPhone SE and similar)
+  // Breakpoints for responsive sizing
   static const double _smallScreenBreakpoint = 400;
+  static const double _tinyScreenBreakpoint = 360; // iPhone SE, Galaxy S small
 
   // Spacing values
+  static const double _paddingTiny = 1;
   static const double _paddingSmall = 2;
   static const double _paddingNormal = 4;
+  static const double _gapTiny = 1;
   static const double _gapSmall = 2;
   static const double _gapNormal = 4;
+  static const double _horizontalPaddingTiny = 6;
   static const double _horizontalPaddingSmall = 8;
   static const double _horizontalPaddingNormal = 12;
+  static const double _verticalPaddingTiny = 4;
   static const double _verticalPaddingSmall = 6;
   static const double _verticalPaddingNormal = 8;
 
   // Border radius values
+  static const double _borderRadiusTiny = 10;
   static const double _borderRadiusSmall = 12;
   static const double _borderRadiusNormal = 16;
+  static const double _containerRadiusTiny = 14;
   static const double _containerRadiusSmall = 16;
   static const double _containerRadiusNormal = 20;
 
-  // Icon size for small screens
+  // Icon sizes
+  static const double _iconSizeTiny = 14;
   static const double _iconSizeSmall = 16;
 
   final WidgetColorScheme colors;
@@ -47,14 +55,26 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentView = ref.watch(calendarViewProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
+    // Bug #41 Fix: Use maybeOf with fallback for defensive null handling
+    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
     final isSmallScreen = screenWidth < _smallScreenBreakpoint;
+    final isTinyScreen = screenWidth < _tinyScreenBreakpoint;
 
-    final padding = isSmallScreen ? _paddingSmall : _paddingNormal;
-    final gap = isSmallScreen ? _gapSmall : _gapNormal;
-    final containerRadius = isSmallScreen
-        ? _containerRadiusSmall
-        : _containerRadiusNormal;
+    final padding = isTinyScreen
+        ? _paddingTiny
+        : isSmallScreen
+            ? _paddingSmall
+            : _paddingNormal;
+    final gap = isTinyScreen
+        ? _gapTiny
+        : isSmallScreen
+            ? _gapSmall
+            : _gapNormal;
+    final containerRadius = isTinyScreen
+        ? _containerRadiusTiny
+        : isSmallScreen
+            ? _containerRadiusSmall
+            : _containerRadiusNormal;
 
     return Container(
       padding: EdgeInsets.all(padding),
@@ -73,6 +93,7 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
             viewType: CalendarViewType.month,
             isSelected: currentView == CalendarViewType.month,
             isSmallScreen: isSmallScreen,
+            isTinyScreen: isTinyScreen,
           ),
           SizedBox(width: gap),
           _buildViewTab(
@@ -82,6 +103,7 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
             viewType: CalendarViewType.year,
             isSelected: currentView == CalendarViewType.year,
             isSmallScreen: isSmallScreen,
+            isTinyScreen: isTinyScreen,
           ),
         ],
       ),
@@ -95,6 +117,7 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
     required CalendarViewType viewType,
     required bool isSelected,
     required bool isSmallScreen,
+    required bool isTinyScreen,
   }) {
     // Dark theme: selected button has white background with black text
     // Light theme: selected button has black background with white text
@@ -105,16 +128,26 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
         ? ColorTokens.pureBlack
         : ColorTokens.pureWhite;
 
-    final borderRadius = isSmallScreen
-        ? _borderRadiusSmall
-        : _borderRadiusNormal;
-    final horizontalPadding = isSmallScreen
-        ? _horizontalPaddingSmall
-        : _horizontalPaddingNormal;
-    final verticalPadding = isSmallScreen
-        ? _verticalPaddingSmall
-        : _verticalPaddingNormal;
-    final iconSize = isSmallScreen ? _iconSizeSmall : IconSizeTokens.small;
+    final borderRadius = isTinyScreen
+        ? _borderRadiusTiny
+        : isSmallScreen
+            ? _borderRadiusSmall
+            : _borderRadiusNormal;
+    final horizontalPadding = isTinyScreen
+        ? _horizontalPaddingTiny
+        : isSmallScreen
+            ? _horizontalPaddingSmall
+            : _horizontalPaddingNormal;
+    final verticalPadding = isTinyScreen
+        ? _verticalPaddingTiny
+        : isSmallScreen
+            ? _verticalPaddingSmall
+            : _verticalPaddingNormal;
+    final iconSize = isTinyScreen
+        ? _iconSizeTiny
+        : isSmallScreen
+            ? _iconSizeSmall
+            : IconSizeTokens.small;
 
     return Semantics(
       label: '$label view',

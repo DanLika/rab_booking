@@ -103,12 +103,17 @@ class FirebaseWidgetSettingsRepository {
     try {
       final updatedSettings = settings.copyWith(updatedAt: DateTime.now().toUtc());
 
+      // DEBUG: Log the exact path being used
+      final docPath = 'properties/${settings.propertyId}/widget_settings/${settings.id}';
+      LoggingService.logInfo('updateWidgetSettings: Saving to path: $docPath');
+      LoggingService.logInfo('updateWidgetSettings: settings.id=${settings.id}, propertyId=${settings.propertyId}');
+
       await _settingsDocRef(
         settings.propertyId,
         settings.id,
       ).set(updatedSettings.toFirestore(), SetOptions(merge: true));
 
-      LoggingService.log('Settings updated for unit: ${settings.id}', tag: _logTag);
+      LoggingService.logSuccess('Settings updated for unit: ${settings.id}', tag: _logTag);
     } catch (e) {
       LoggingService.log('Error updating settings: $e', tag: _logTag);
       rethrow;

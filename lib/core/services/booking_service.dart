@@ -274,21 +274,34 @@ class BookingService {
     }
   }
 
+  /// Helper method to find a booking document by ID
+  /// IMPORTANT: FieldPath.documentId does NOT work with collectionGroup queries!
+  /// Firestore expects full document path, not just ID when using collectionGroup.
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _findBookingDocById(String bookingId) async {
+    // Try legacy top-level collection first (faster)
+    final legacyDoc = await _firestore.collection('bookings').doc(bookingId).get();
+    if (legacyDoc.exists) return legacyDoc;
+
+    // Search through collection group
+    final snapshot = await _firestore.collectionGroup('bookings').get();
+    for (final doc in snapshot.docs) {
+      if (doc.id == bookingId) {
+        return doc;
+      }
+    }
+    return null;
+  }
+
   /// Get booking by ID
   /// NEW STRUCTURE: Uses collection group query since we don't know propertyId/unitId
   Future<BookingModel?> getBookingById(String bookingId) async {
     try {
-      final query = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
-
-      if (query.docs.isEmpty) {
+      final doc = await _findBookingDocById(bookingId);
+      if (doc == null || !doc.exists) {
         return null;
       }
 
-      return BookingModel.fromJson({'id': query.docs.first.id, ...query.docs.first.data()});
+      return BookingModel.fromJson({'id': doc.id, ...doc.data()!});
     } catch (e) {
       await LoggingService.logError('[BookingService] Error fetching booking', e);
       throw BookingServiceException('Failed to fetch booking: $e');
@@ -320,17 +333,12 @@ class BookingService {
   /// NEW STRUCTURE: First find booking via collection group, then update
   Future<void> updateBookingStatus({required String bookingId, required BookingStatus status}) async {
     try {
-      final query = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
-
-      if (query.docs.isEmpty) {
+      final doc = await _findBookingDocById(bookingId);
+      if (doc == null || !doc.exists) {
         throw BookingServiceException('Booking not found');
       }
 
-      await query.docs.first.reference.update({
+      await doc.reference.update({
         'status': status.toString().split('.').last,
         'updated_at': FieldValue.serverTimestamp(),
       });
@@ -346,17 +354,12 @@ class BookingService {
   /// NEW STRUCTURE: First find booking via collection group, then update
   Future<void> cancelBooking({required String bookingId, required String reason, String? cancelledBy}) async {
     try {
-      final query = await _firestore
-          .collectionGroup('bookings')
-          .where(FieldPath.documentId, isEqualTo: bookingId)
-          .limit(1)
-          .get();
-
-      if (query.docs.isEmpty) {
+      final doc = await _findBookingDocById(bookingId);
+      if (doc == null || !doc.exists) {
         throw BookingServiceException('Booking not found');
       }
 
-      await query.docs.first.reference.update({
+      await doc.reference.update({
         'status': BookingStatus.cancelled.toString().split('.').last,
         'cancellation_reason': reason,
         'cancelled_at': FieldValue.serverTimestamp(),

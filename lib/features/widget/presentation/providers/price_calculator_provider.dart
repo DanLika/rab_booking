@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../domain/models/booking_price_breakdown.dart';
 import '../../utils/date_normalizer.dart';
 

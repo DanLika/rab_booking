@@ -188,18 +188,33 @@ class BookingPriceCalculator implements IPriceCalculator {
     checkAvailability: false,
   );
 
+  /// Cache for unit document references (unitId -> DocumentSnapshot)
+  final Map<String, DocumentSnapshot> _unitDocumentCache = {};
+
   /// Find unit document to get propertyId.
   /// Returns null if unit not found.
+  ///
+  /// NOTE: Cannot use collectionGroup().where(FieldPath.documentId) - Firestore bug
+  /// requires full document path for documentId queries on collection groups.
   Future<DocumentSnapshot?> _findUnitDocument(String unitId) async {
-    try {
-      final snapshot = await _firestore
-          .collectionGroup('units')
-          .where(FieldPath.documentId, isEqualTo: unitId)
-          .limit(1)
-          .get();
+    // Check cache first
+    if (_unitDocumentCache.containsKey(unitId)) {
+      return _unitDocumentCache[unitId];
+    }
 
-      if (snapshot.docs.isEmpty) return null;
-      return snapshot.docs.first;
+    try {
+      // Query all units and find the one with matching document ID
+      // Using simple collectionGroup without filter
+      final snapshot = await _firestore.collectionGroup('units').get();
+
+      for (final doc in snapshot.docs) {
+        if (doc.id == unitId) {
+          _unitDocumentCache[unitId] = doc;
+          return doc;
+        }
+      }
+
+      return null;
     } catch (e) {
       unawaited(LoggingService.logError('Error finding unit document', e));
       return null;

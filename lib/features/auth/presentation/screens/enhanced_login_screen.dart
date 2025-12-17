@@ -66,59 +66,73 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return;
     }
 
+    // Store credentials before async operation (in case fields get cleared)
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
     setState(() => _isLoading = true);
 
     try {
-      await ref
-          .read(enhancedAuthProvider.notifier)
-          .signInWithEmail(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
+      await ref.read(enhancedAuthProvider.notifier).signInWithEmail(
+            email: email,
+            password: password,
             rememberMe: _rememberMe,
           );
 
       if (!mounted) return;
 
+      // Give auth state a moment to fully update after sign in
+      await Future.delayed(const Duration(milliseconds: 100));
+
       final authState = ref.read(enhancedAuthProvider);
 
       if (authState.error != null) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
         return;
       }
 
       if (authState.requiresEmailVerification) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         context.go(OwnerRoutes.emailVerification);
         return;
       }
 
       // User is authenticated - redirect immediately to dashboard
-      // Router will handle the redirect, but explicit navigation is faster
-      setState(() => _isLoading = false);
+      if (!mounted) return;
 
-      // Show brief success message (non-blocking) and redirect immediately
-      ErrorDisplayUtils.showSuccessSnackBar(context, 'Welcome back, ${authState.userModel?.firstName ?? "User"}!');
-
-      // Redirect immediately - router will also redirect, but this is faster
+      // Keep loader visible during navigation to dashboard
+      // (will be disposed when widget unmounts)
       if (mounted) {
         context.go(OwnerRoutes.overview);
       }
     } catch (e) {
       if (!mounted) return;
 
-      final authState = ref.read(enhancedAuthProvider);
-      final errorMessage = authState.error ?? e.toString();
+      // Give auth state a moment to update after error
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Get error message from exception (prefer thrown message over state)
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
 
       if (_isPasswordError(errorMessage)) {
         setState(() {
           _passwordErrorFromServer = 'Incorrect password. Try again or reset your password.';
           _isLoading = false;
         });
-        _formKey.currentState!.validate();
+        // Use addPostFrameCallback to avoid clearing fields during rebuild
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _formKey.currentState != null) {
+            _formKey.currentState!.validate();
+          }
+        });
       } else {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        if (mounted) {
+          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        }
       }
     }
   }

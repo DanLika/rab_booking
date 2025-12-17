@@ -1055,11 +1055,17 @@ class AnalyticsSkeleton extends StatelessWidget {
 class CalendarSkeleton extends StatelessWidget {
   const CalendarSkeleton({super.key});
 
+  // Fixed row height for calendar cells (works in both bounded/unbounded contexts)
+  static const double _cellHeight = 60.0;
+  static const double _headerHeight = 30.0;
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
+      // HYBRID LOADING FIX: Use min size to work in unbounded contexts
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Calendar header (toolbar) skeleton
         Container(
@@ -1084,14 +1090,17 @@ class CalendarSkeleton extends StatelessWidget {
         const SizedBox(height: AppDimensions.spaceS),
 
         // Calendar days header skeleton
-        Row(
-          children: List.generate(
-            7,
-            (index) => Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                alignment: Alignment.center,
-                child: const SkeletonLoader(width: 40, height: 14),
+        SizedBox(
+          height: _headerHeight,
+          child: Row(
+            children: List.generate(
+              7,
+              (index) => Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  alignment: Alignment.center,
+                  child: const SkeletonLoader(width: 40, height: 14),
+                ),
               ),
             ),
           ),
@@ -1099,43 +1108,41 @@ class CalendarSkeleton extends StatelessWidget {
 
         const SizedBox(height: AppDimensions.spaceXS),
 
-        // Calendar grid skeleton (5 weeks)
-        Expanded(
-          child: Column(
-            children: List.generate(
-              5,
-              (weekIndex) => Expanded(
-                child: Row(
-                  children: List.generate(
-                    7,
-                    (dayIndex) => Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
-                          border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
+        // Calendar grid skeleton (5 weeks) - fixed heights instead of Expanded
+        ...List.generate(
+          5,
+          (weekIndex) => SizedBox(
+            height: _cellHeight,
+            child: Row(
+              children: List.generate(
+                7,
+                (dayIndex) => Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
+                      border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Day number
+                        const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: SkeletonLoader(width: 20, height: 14, borderRadius: 4),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Day number
-                            const Padding(
-                              padding: EdgeInsets.all(4),
-                              child: SkeletonLoader(width: 20, height: 14, borderRadius: 4),
+                        // Booking indicator skeleton (optional)
+                        if (weekIndex < 3 && dayIndex % 2 == 0)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: SkeletonLoader(
+                              width: double.infinity,
+                              height: 20,
+                              borderRadius: AppDimensions.radiusXS,
                             ),
-                            // Booking indicator skeleton (optional)
-                            if (weekIndex < 3 && dayIndex % 2 == 0)
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 4),
-                                child: SkeletonLoader(
-                                  width: double.infinity,
-                                  height: 20,
-                                  borderRadius: AppDimensions.radiusXS,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

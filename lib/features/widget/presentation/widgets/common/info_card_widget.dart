@@ -83,7 +83,7 @@ class InfoCardWidget extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: hasTitle ? SpacingTokens.m : SpacingTokens.s,
-          vertical: hasTitle ? SpacingTokens.m : SpacingTokens.xs,
+          vertical: hasTitle ? SpacingTokens.m : SpacingTokens.s,
         ),
         decoration: BoxDecoration(
           color: colors.backgroundTertiary,

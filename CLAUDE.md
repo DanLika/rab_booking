@@ -94,6 +94,19 @@ today.setUTCHours(0, 0, 0, 0);  // CORRECT
 sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 ```
 
+**Booking Lookup** - `utils/bookingLookup.ts`:
+```typescript
+// ⚠️ NIKADA ne koristi FieldPath.documentId() sa collectionGroup()!
+// Umjesto toga koristi helper funkcije:
+import {findBookingById, findBookingByReference} from "./utils/bookingLookup";
+
+// Primjer
+const result = await findBookingById(bookingId, ownerId); // ownerId je optional
+if (result) {
+  const {doc, data, propertyId, unitId} = result;
+}
+```
+
 ---
 
 ## =? STRIPE FLOW
@@ -479,7 +492,62 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-16 | **Version**: 5.9
+**Last Updated**: 2025-12-17 | **Version**: 6.2
+
+**Changelog 6.2**: Widget UI Polish & Form Component Alignment:
+- **Form component heights ujednačene na 50px**:
+  - Verify button: 49px → 50px
+  - Verified badge: 51px → 50px
+  - Country dropdown: 50px (već bilo OK)
+  - TextFormField: ~50px (contentPadding 14px vertical)
+- **Skraćeni tekstovi za bolji UX**:
+  - "Verify Email" → "Verify" (svi jezici)
+  - "Credit Card (Stripe)" → "Credit Card"
+  - "Continue to Bank Transfer" → "Bank Transfer"
+  - Calendar-only banner: uklonjena druga rečenica o kontaktiranju vlasnika
+- **Padding/spacing poboljšanja**:
+  - Booking pill bar: dodano 8px horizontalnog paddinga na mobile
+  - Month calendar mobile: padding smanjen sa 16px na 8px (left/right)
+  - Header content centriran sa jednakim left/right paddingom
+  - Info banner: 8px top padding, Contact pill bar: 8px bottom padding (calendar-only mode)
+- **Header ikone**: responsive sizing za tiny screens (<360px) - ikone 18px umjesto 20px
+- **Contact pill bar**: uklonjen text underline iz kontakt linka
+
+**Changelog 6.1**: Cloud Functions FieldPath.documentId Bug Fix:
+- **CRITICAL BUG FIX**: `FieldPath.documentId()` NE RADI sa `collectionGroup()` queries
+  - Error: `When querying a collection group and ordering by FieldPath.documentId(), the corresponding value must result in a valid document path`
+  - Firestore očekuje PUNI PUT dokumenta (npr. `properties/xxx/units/yyy/bookings/zzz`), ne samo ID (`zzz`)
+- **Nova helper funkcija**: `functions/src/utils/bookingLookup.ts`
+  - `findBookingById(bookingId, ownerId?)` - tri strategije:
+    1. Query po `owner_id` polju (brzo ako je owner poznat)
+    2. Comprehensive search kroz sve properties/units (sporije ali uvijek radi)
+    3. Fallback na legacy `bookings` collection
+  - `findBookingByReference(bookingReference)` - query po `booking_reference` polju
+- **Popravljene Cloud Functions**:
+  - `resendBookingEmail.ts` - koristi `findBookingById`
+  - `customEmail.ts` - koristi `findBookingById`
+  - `guestCancelBooking.ts` - koristi `findBookingById`
+  - `twoWaySync.ts` - koristi `findBookingById`
+  - `updateBookingTokenExpiration.ts` - koristi `findBookingById`
+- **Dodan Firestore index**: `owner_id` single-field index za `bookings` collection group
+- **PRAVILO**: Nikada ne koristi `FieldPath.documentId()` sa `collectionGroup()` - uvijek query po custom polju
+
+**Changelog 6.0**: Widget Hybrid Loading & Native Splash Update:
+- **Hybrid Progressive Loading**: Widget UI prikazuje se ODMAH sa skeleton kalendarom
+  - Uklonjeno: BookBed Loader iz `booking_widget_screen.dart`
+  - `LazyCalendarContainer` prikazuje skeleton dok se podaci učitavaju
+  - `hideNativeSplash()` poziva se u `widget_main.dart` initState
+  - Loading vrijeme smanjeno sa ~10-14s na ~4s
+- **Native Splash minimalistički dizajn**: Crno-bijela shema umjesto ljubičaste
+  - Light mode: `#000000` progress bar, `rgba(0,0,0,0.2)` track
+  - Dark mode: `#FFFFFF` progress bar, `rgba(255,255,255,0.2)` track
+  - Usklađeno sa BookBed Loader bojama
+- **Obrisani fajlovi** (više se ne koriste):
+  - `loading_screen.dart`, `smart_loading_screen.dart`, `smart_progress_controller.dart`
+  - `loading_screen_test.dart`
+- **InteractiveViewer (zoom) testiran i UKLONJEN**:
+  - Zoom na kalendaru (1x-2x) testirano ali odlučeno da nije potrebno
+  - Responsive dizajn + OS-level zoom već zadovoljavaju accessibility potrebe
 
 **Changelog 5.9**: Booking Dialog Race Condition Fix:
 - **Problem**: Booking details dialog otvarao se 2-3 puta kada korisnik navigira sa notifications page na bookings page

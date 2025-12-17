@@ -10,6 +10,7 @@ import {
   blockDatesOnAirbnb,
   unblockDatesOnAirbnb,
 } from "./airbnbApi";
+import {findBookingById} from "./utils/bookingLookup";
 
 /**
  * Two-Way Sync Engine
@@ -312,21 +313,16 @@ export const scheduledTwoWaySync = onSchedule(
         const failureId = failureDoc.id;
 
         try {
-          // NEW STRUCTURE: Get booking data using collection group query
-          const bookingQuery = await db
-            .collectionGroup("bookings")
-            .where(admin.firestore.FieldPath.documentId(), "==", failure.booking_id)
-            .limit(1)
-            .get();
+          // Find booking using helper (avoids FieldPath.documentId bug with collectionGroup)
+          const bookingResult = await findBookingById(failure.booking_id);
 
-          if (bookingQuery.empty) {
+          if (!bookingResult) {
             // Booking no longer exists, delete failure record
             await failureDoc.ref.delete();
             continue;
           }
 
-          const bookingDoc = bookingQuery.docs[0];
-          const bookingData = bookingDoc.data()!;
+          const bookingData = bookingResult.data;
           const checkIn = bookingData.check_in?.toDate();
           const checkOut = bookingData.check_out?.toDate();
           const status = bookingData.status;

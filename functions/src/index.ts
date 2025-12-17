@@ -86,4 +86,13 @@ export * from "./externalBookingNotifications";
 // Export sync reminders
 export * from "./syncReminders";
 
+// Export authentication rate limiting (IP-based)
+export * from "./authRateLimit";
+
+// Export password history management
+export * from "./passwordHistory";
+
+// Export token revocation (logout from all devices)
+export * from "./revokeTokens";
+
 // REMOVED: migrations/migrateToSubcollections - One-time migration complete, no longer needed

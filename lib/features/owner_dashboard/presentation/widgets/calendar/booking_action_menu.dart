@@ -5,6 +5,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/constants/enums.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
@@ -150,6 +151,31 @@ class BookingActionBottomSheet extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: [
+                      // Approve action - only for pending bookings
+                      if (booking.status == BookingStatus.pending) ...[
+                        _buildActionTile(
+                          context,
+                          icon: Icons.check_circle_outline,
+                          iconColor: AppColors.success,
+                          title: l10n.ownerBookingCardApprove,
+                          subtitle: l10n.bookingApproveMessage,
+                          onTap: () => Navigator.pop(context, 'approve'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 8),
+                        // Reject action - only for pending bookings
+                        _buildActionTile(
+                          context,
+                          icon: Icons.cancel_outlined,
+                          iconColor: AppColors.error,
+                          title: l10n.ownerBookingCardReject,
+                          subtitle: l10n.bookingRejectMessage,
+                          onTap: () => Navigator.pop(context, 'reject'),
+                          isDark: isDark,
+                          isDestructive: true,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       // Edit action
                       _buildActionTile(
                         context,
@@ -161,17 +187,19 @@ class BookingActionBottomSheet extends ConsumerWidget {
                         isDark: isDark,
                       ),
                       const SizedBox(height: 8),
-                      // Change status action
-                      _buildActionTile(
-                        context,
-                        icon: Icons.sync_alt,
-                        iconColor: AppColors.info,
-                        title: l10n.bookingActionStatusTitle,
-                        subtitle: l10n.bookingActionStatusSubtitle,
-                        onTap: () => Navigator.pop(context, 'status'),
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 8),
+                      // Cancel action - only for confirmed bookings
+                      if (booking.status == BookingStatus.confirmed) ...[
+                        _buildActionTile(
+                          context,
+                          icon: Icons.event_busy,
+                          iconColor: Colors.orange,
+                          title: l10n.ownerBookingCardCancel,
+                          subtitle: l10n.bookingCancelMessage,
+                          onTap: () => Navigator.pop(context, 'cancel'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       // Delete action
                       _buildActionTile(
                         context,

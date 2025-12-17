@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
-import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../../../shared/models/additional_service_model.dart';
 import '../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 

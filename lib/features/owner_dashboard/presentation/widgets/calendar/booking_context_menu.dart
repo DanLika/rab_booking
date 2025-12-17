@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -371,8 +372,9 @@ Future<void> showBookingContextMenu({
   }
 
   // Ensure minimum padding from edges
-  left = left.clamp(16.0, screenSize.width - menuWidth - 16);
-  top = top.clamp(16.0, screenSize.height - menuHeight - 16);
+  // Use math.max to prevent ArgumentError when screen is smaller than menu
+  left = left.clamp(16.0, math.max(16.0, screenSize.width - menuWidth - 16));
+  top = top.clamp(16.0, math.max(16.0, screenSize.height - menuHeight - 16));
 
   return showDialog(
     context: context,

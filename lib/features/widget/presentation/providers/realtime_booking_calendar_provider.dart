@@ -5,12 +5,14 @@ import 'package:rxdart/rxdart.dart';
 import '../../data/repositories/firebase_booking_calendar_repository.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../../domain/repositories/i_booking_calendar_repository.dart';
-import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 
 part 'realtime_booking_calendar_provider.g.dart';
 
 /// Debounce duration for calendar streams to reduce rapid UI updates
-const _calendarDebounceMs = 150;
+/// PERFORMANCE: Reduced from 150ms to 50ms for faster initial load.
+/// Still prevents UI thrashing from rapid booking changes while minimizing perceived latency.
+const _calendarDebounceMs = 50;
 
 /// Convert DateTime key to String key (yyyy-MM-dd format)
 ///

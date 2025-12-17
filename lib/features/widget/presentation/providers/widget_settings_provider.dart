@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
-import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/providers/widget_repository_providers.dart';
 
 // NOTE: widgetSettingsRepositoryProvider is defined in repository_providers.dart
 // Do NOT redefine it here to avoid duplicate providers and ensure consistent

@@ -633,6 +633,31 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
+        // Get date info for both start and end dates
+        final startDateInfo = data[CalendarDateUtils.getDateKey(start)];
+        final endDateInfo = data[CalendarDateUtils.getDateKey(end)];
+
+        // CRITICAL: Re-validate blockCheckIn/blockCheckOut with FINAL date order
+        // Pre-selection validation uses click order, but we need to check actual check-in/check-out dates
+        if (startDateInfo != null && startDateInfo.blockCheckIn) {
+          _rangeStart = null;
+          _rangeEnd = null;
+          SnackBarHelper.showError(
+            context: context,
+            message: WidgetTranslations.of(context, ref).errorCheckInNotAllowed,
+          );
+          return;
+        }
+        if (endDateInfo != null && endDateInfo.blockCheckOut) {
+          _rangeStart = null;
+          _rangeEnd = null;
+          SnackBarHelper.showError(
+            context: context,
+            message: WidgetTranslations.of(context, ref).errorCheckOutNotAllowed,
+          );
+          return;
+        }
+
         // OPTIMIZED: Get minNights from cached widgetContext (reuses cached data)
         final validationMinNights =
             ref
@@ -642,15 +667,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                 .minStayNights ??
             1;
 
-        // Get check-in date info for validation
-        final checkInDateInfo = data[CalendarDateUtils.getDateKey(start)];
-
         // Range validation (minNights, minNightsOnArrival, maxNightsOnArrival)
+        // Note: startDateInfo is already fetched above for blockCheckIn validation
         final rangeResult = validator.validateRange(
           start: start,
           end: end,
           minNights: validationMinNights,
-          checkInDateInfo: checkInDateInfo,
+          checkInDateInfo: startDateInfo,
         );
         if (!rangeResult.isValid) {
           _rangeStart = null;

@@ -114,6 +114,11 @@ class PendingPatternPainter extends CustomPainter with DiagonalPatternMixin {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Bug #42 Fix: Defensive check - ensure size is valid before painting
+    if (!size.width.isFinite || !size.height.isFinite ||
+        size.width <= 0 || size.height <= 0) {
+      return; // Skip painting if size is invalid
+    }
     drawDiagonalPattern(canvas, size, lineColor);
   }
 
@@ -145,6 +150,12 @@ class PartialBothPainter extends CustomPainter with DiagonalPatternMixin {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Bug #42 Fix: Defensive check - ensure size is valid before painting
+    if (!size.width.isFinite || !size.height.isFinite ||
+        size.width <= 0 || size.height <= 0) {
+      return; // Skip painting if size is invalid
+    }
+
     final paint = Paint()..style = PaintingStyle.fill;
 
     final checkoutPath = _buildCheckoutPath(size);

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'owner_app_loader.dart';
+import '../../shared/widgets/bookbed_branded_loader.dart';
 
 /// Smart progress controller for splash screen animation.
 ///
@@ -232,7 +232,12 @@ class _OwnerSplashScreenState extends State<OwnerSplashScreen> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: Center(child: OwnerAppLoader(progress: _progressController.progress)),
+      body: Center(
+        child: BookBedBrandedLoader(
+          isDarkMode: isDark,
+          progress: _progressController.progress,
+        ),
+      ),
     );
   }
 }
@@ -378,7 +383,12 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
         color: backgroundColor,
         child: Scaffold(
           backgroundColor: Colors.transparent,
-          body: Center(child: OwnerAppLoader(progress: _progressController.progress)),
+          body: Center(
+            child: BookBedBrandedLoader(
+              isDarkMode: isDark,
+              progress: _progressController.progress,
+            ),
+          ),
         ),
       ),
     );

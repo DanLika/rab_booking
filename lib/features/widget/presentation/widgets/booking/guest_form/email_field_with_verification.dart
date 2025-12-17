@@ -30,8 +30,8 @@ class EmailFieldWithVerification extends ConsumerWidget {
   });
 
   static const _verifyButtonWidth = 100.0;
-  static const _verifyButtonHeight = 49.0; // Increased by 2px (was 47.0)
-  static const _successContainerSize = 51.0; // Increased by 1px (was 50.0)
+  static const _verifyButtonHeight = 50.0;
+  static const _successContainerSize = 50.0;
   static const _maxEmailLength = 100;
 
   @override
@@ -93,7 +93,8 @@ class EmailFieldWithVerification extends ConsumerWidget {
       width: _verifyButtonWidth,
       height: _verifyButtonHeight,
       child: ElevatedButton(
-        onPressed: isLoading ? () {} : onVerifyPressed,
+        // Bug #33 Fix: Use null instead of empty function to properly disable button
+        onPressed: isLoading ? null : onVerifyPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.textPrimary,
           foregroundColor: colors.backgroundPrimary,

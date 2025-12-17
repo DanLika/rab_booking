@@ -80,72 +80,85 @@ class CalendarTopToolbar extends StatelessWidget {
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       padding: EdgeInsets.symmetric(horizontal: isCompact ? 4 : 16),
+      // Problem #18 fix: Use MainAxisAlignment.spaceBetween for proper left/right alignment
+      // Left group: navigation arrows + date picker
+      // Right group: action buttons
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Previous period - LEFT of month selector
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: onPreviousPeriod,
-            tooltip: isWeekView ? l10n.ownerCalendarPreviousWeek : l10n.ownerCalendarPreviousMonth,
-            constraints: BoxConstraints(minWidth: isCompact ? 32 : 40, minHeight: isCompact ? 32 : 40),
-            iconSize: isCompact ? 18 : 24,
-            padding: EdgeInsets.zero,
-          ),
+          // LEFT GROUP: Navigation arrows + date picker dropdown
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Previous period - LEFT of month selector
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: onPreviousPeriod,
+                tooltip: isWeekView ? l10n.ownerCalendarPreviousWeek : l10n.ownerCalendarPreviousMonth,
+                constraints: BoxConstraints(minWidth: isCompact ? 32 : 40, minHeight: isCompact ? 32 : 40),
+                iconSize: isCompact ? 18 : 24,
+                padding: EdgeInsets.zero,
+              ),
 
-          // Date range display (centered) - styled badge
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onDatePickerTap,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 6 : 8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
-                      theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
-                    ],
-                  ),
+              // Problem #18 fix: Add 4px padding between arrow and date picker
+              const SizedBox(width: 4),
+
+              // Date range display (centered) - styled badge
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onDatePickerTap,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.calendar_month, size: isCompact ? 14 : 18, color: theme.colorScheme.primary),
-                    SizedBox(width: isCompact ? 4 : 8),
-                    Text(
-                      dateRange.toDisplayString(isWeek: isWeekView),
-                      style: (isCompact ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 6 : 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                          theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
+                        ],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.clip,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())),
                     ),
-                    SizedBox(width: isCompact ? 2 : 4),
-                    Icon(Icons.arrow_drop_down, size: isCompact ? 14 : 20, color: theme.colorScheme.primary),
-                  ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_month, size: isCompact ? 14 : 18, color: theme.colorScheme.primary),
+                        SizedBox(width: isCompact ? 4 : 8),
+                        Text(
+                          dateRange.toDisplayString(isWeek: isWeekView),
+                          style: (isCompact ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.primary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.clip,
+                        ),
+                        SizedBox(width: isCompact ? 2 : 4),
+                        Icon(Icons.arrow_drop_down, size: isCompact ? 14 : 20, color: theme.colorScheme.primary),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+
+              // Problem #18 fix: Add 4px padding between date picker and arrow
+              const SizedBox(width: 4),
+
+              // Next period - RIGHT of month selector
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: onNextPeriod,
+                tooltip: isWeekView ? l10n.ownerCalendarNextWeek : l10n.ownerCalendarNextMonth,
+                constraints: BoxConstraints(minWidth: isCompact ? 32 : 40, minHeight: isCompact ? 32 : 40),
+                iconSize: isCompact ? 18 : 24,
+                padding: EdgeInsets.zero,
+              ),
+            ],
           ),
 
-          // Next period - RIGHT of month selector
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: onNextPeriod,
-            tooltip: isWeekView ? l10n.ownerCalendarNextWeek : l10n.ownerCalendarNextMonth,
-            constraints: BoxConstraints(minWidth: isCompact ? 32 : 40, minHeight: isCompact ? 32 : 40),
-            iconSize: isCompact ? 18 : 24,
-            padding: EdgeInsets.zero,
-          ),
-
-          // Spacer - push action buttons to the right
-          const Spacer(),
-
-          // Action buttons - FIXED OVERFLOW
+          // RIGHT GROUP: Action buttons
           if (isCompact)
             // COMPACT MODE: Only overflow menu with styled items
             PopupMenuButton<String>(
@@ -246,79 +259,76 @@ class CalendarTopToolbar extends StatelessWidget {
             )
           else
             // DESKTOP MODE: Show all buttons with styled containers
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Search button
-                    if (onSearchTap != null)
-                      _buildStyledIconButton(
-                        icon: Icons.search,
-                        color: AppColors.info,
-                        onPressed: onSearchTap!,
-                        tooltip: l10n.ownerCalendarSearchBookings,
-                        isDark: theme.brightness == Brightness.dark,
-                      ),
+            // Problem #18 fix: Removed Expanded + SingleChildScrollView wrapper
+            // Buttons now sit directly against the right edge via MainAxisAlignment.spaceBetween
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Search button
+                if (onSearchTap != null)
+                  _buildStyledIconButton(
+                    icon: Icons.search,
+                    color: AppColors.info,
+                    onPressed: onSearchTap!,
+                    tooltip: l10n.ownerCalendarSearchBookings,
+                    isDark: theme.brightness == Brightness.dark,
+                  ),
 
-                    // Refresh button
-                    if (onRefresh != null)
-                      _buildStyledIconButton(
-                        icon: Icons.refresh,
-                        color: AppColors.success,
-                        onPressed: onRefresh!,
-                        tooltip: l10n.ownerCalendarRefresh,
-                        isDark: theme.brightness == Brightness.dark,
-                      ),
+                // Refresh button
+                if (onRefresh != null)
+                  _buildStyledIconButton(
+                    icon: Icons.refresh,
+                    color: AppColors.success,
+                    onPressed: onRefresh!,
+                    tooltip: l10n.ownerCalendarRefresh,
+                    isDark: theme.brightness == Brightness.dark,
+                  ),
 
-                    // Filter button
-                    if (onFilterTap != null)
-                      _buildStyledIconButton(
-                        icon: Icons.tune,
-                        color: AppColors.warning,
-                        onPressed: onFilterTap!,
-                        tooltip: l10n.ownerCalendarFilters,
-                        isDark: theme.brightness == Brightness.dark,
-                      ),
+                // Filter button
+                if (onFilterTap != null)
+                  _buildStyledIconButton(
+                    icon: Icons.tune,
+                    color: AppColors.warning,
+                    onPressed: onFilterTap!,
+                    tooltip: l10n.ownerCalendarFilters,
+                    isDark: theme.brightness == Brightness.dark,
+                  ),
 
-                    // Today button
-                    _buildStyledTodayButton(theme, l10n),
+                // Today button
+                _buildStyledTodayButton(theme, l10n),
 
-                    // Overbooking conflict badge
-                    if (overbookingConflictCount != null && overbookingConflictCount! > 0)
-                      _buildOverbookingBadge(theme, l10n),
+                // Overbooking conflict badge
+                if (overbookingConflictCount != null && overbookingConflictCount! > 0)
+                  _buildOverbookingBadge(theme, l10n),
 
-                    // Notifications button
-                    if (onNotificationsTap != null)
-                      _buildStyledNotificationsButton(theme, l10n, onNotificationsTap!, notificationCount),
+                // Notifications button
+                if (onNotificationsTap != null)
+                  _buildStyledNotificationsButton(theme, l10n, onNotificationsTap!, notificationCount),
 
-                    // Analytics toggle
-                    if (showSummaryToggle && onSummaryToggleChanged != null)
-                      _buildStyledIconButton(
-                        icon: isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
-                        color: isSummaryVisible ? AppColors.primary : AppColors.info,
-                        onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
-                        tooltip: isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats,
-                        isDark: theme.brightness == Brightness.dark,
-                        isActive: isSummaryVisible,
-                      ),
+                // Analytics toggle
+                if (showSummaryToggle && onSummaryToggleChanged != null)
+                  _buildStyledIconButton(
+                    icon: isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
+                    color: isSummaryVisible ? AppColors.primary : AppColors.info,
+                    onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
+                    tooltip: isSummaryVisible ? l10n.ownerCalendarHideStats : l10n.ownerCalendarShowStats,
+                    isDark: theme.brightness == Brightness.dark,
+                    isActive: isSummaryVisible,
+                  ),
 
-                    // Show empty units toggle
-                    if (showEmptyUnitsToggle && onEmptyUnitsToggleChanged != null)
-                      _buildStyledIconButton(
-                        icon: isEmptyUnitsVisible ? Icons.visibility : Icons.visibility_off,
-                        color: isEmptyUnitsVisible ? AppColors.primary : AppColors.info,
-                        onPressed: () => onEmptyUnitsToggleChanged?.call(!isEmptyUnitsVisible),
-                        tooltip: isEmptyUnitsVisible
-                            ? l10n.ownerCalendarHideEmptyUnits
-                            : l10n.ownerCalendarShowEmptyUnits,
-                        isDark: theme.brightness == Brightness.dark,
-                        isActive: isEmptyUnitsVisible,
-                      ),
-                  ],
-                ),
-              ),
+                // Show empty units toggle
+                if (showEmptyUnitsToggle && onEmptyUnitsToggleChanged != null)
+                  _buildStyledIconButton(
+                    icon: isEmptyUnitsVisible ? Icons.visibility : Icons.visibility_off,
+                    color: isEmptyUnitsVisible ? AppColors.primary : AppColors.info,
+                    onPressed: () => onEmptyUnitsToggleChanged?.call(!isEmptyUnitsVisible),
+                    tooltip: isEmptyUnitsVisible
+                        ? l10n.ownerCalendarHideEmptyUnits
+                        : l10n.ownerCalendarShowEmptyUnits,
+                    isDark: theme.brightness == Brightness.dark,
+                    isActive: isEmptyUnitsVisible,
+                  ),
+              ],
             ),
         ],
       ),

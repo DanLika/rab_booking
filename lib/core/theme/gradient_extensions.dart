@@ -18,6 +18,9 @@ extension GradientExtension on BuildContext {
   /// Returns the [AppGradients] instance for the current theme (light/dark).
   /// Automatically switches gradients when theme changes.
   ///
+  /// If the theme doesn't have AppGradients extension (e.g., widget themes),
+  /// returns the appropriate default based on brightness to prevent crashes.
+  ///
   /// Available gradients:
   /// - `pageBackground` - For screen body backgrounds (topLeft → bottomRight)
   /// - `sectionBackground` - For cards/sections (topRight → bottomLeft)
@@ -31,5 +34,14 @@ extension GradientExtension on BuildContext {
   ///   ),
   /// )
   /// ```
-  AppGradients get gradients => Theme.of(this).extension<AppGradients>()!;
+  AppGradients get gradients {
+    final extension = Theme.of(this).extension<AppGradients>();
+    if (extension != null) {
+      return extension;
+    }
+    // Fallback for themes without AppGradients (e.g., MinimalistTheme in widget)
+    // Use default gradients based on current brightness
+    final isDark = Theme.of(this).brightness == Brightness.dark;
+    return isDark ? AppGradients.dark : AppGradients.light;
+  }
 }

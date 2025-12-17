@@ -492,7 +492,26 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-17 | **Version**: 6.2
+**Last Updated**: 2025-12-17 | **Version**: 6.3
+
+**Changelog 6.3**: Platform Connections Security Rules & Price Calendar Validation:
+- **Permission-denied bug fix za "Označi kao dostupno" bulk akciju**:
+  - Problem: Bulk update uspije ("Batch commit successful"), ali permission-denied error se pojavi
+  - Uzrok: `platformConnectionsForUnitProvider` query na `platform_connections` kolekciju PRIJE bulk update-a
+  - `platform_connections` kolekcija NIJE IMALA Firestore security rules definirana
+  - Fix: Dodana nova sekcija u `firestore.rules`:
+    ```javascript
+    match /platform_connections/{connectionId} {
+      allow read: if isResourceOwner();
+      allow create: if canCreateAsOwner();
+      allow update, delete: if isResourceOwner();
+    }
+    ```
+- **Cross-validacija za min/max polja u price calendar edit dialogu**:
+  - Min noći ne može biti veće od max noći
+  - Min dana unaprijed ne može biti veće od max dana unaprijed
+  - Pokazuje warning snackbar ako korisnik unese nelogičnu kombinaciju
+  - Nove lokalizacije: `priceCalendarMinNightsCannotExceedMax`, `priceCalendarMinAdvanceCannotExceedMax`
 
 **Changelog 6.2**: Widget UI Polish & Form Component Alignment:
 - **Form component heights ujednačene na 50px**:

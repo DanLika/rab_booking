@@ -2702,6 +2702,24 @@ abstract class AppLocalizations {
   /// **'Occupancy rate'**
   String get ownerOccupancyRate;
 
+  /// No description provided for @ownerDashboardRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue'**
+  String get ownerDashboardRevenue;
+
+  /// No description provided for @ownerDashboardBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
+  String get ownerDashboardBookings;
+
+  /// No description provided for @ownerDashboardThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get ownerDashboardThisMonth;
+
   /// No description provided for @ownerWelcomeTitle.
   ///
   /// In en, this message translates to:
@@ -2809,12 +2827,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bookings'**
   String get ownerDrawerBookings;
-
-  /// No description provided for @ownerDrawerAnalytics.
-  ///
-  /// In en, this message translates to:
-  /// **'Analytics'**
-  String get ownerDrawerAnalytics;
 
   /// No description provided for @ownerDrawerUnits.
   ///
@@ -7205,6 +7217,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manual approval'**
   String get widgetSettingsManualApproval;
+
+  /// No description provided for @widgetSettingsStripeApprovalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only applies to Stripe payments'**
+  String get widgetSettingsStripeApprovalNote;
 
   /// No description provided for @widgetSettingsAllowCancellation.
   ///

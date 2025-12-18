@@ -1389,6 +1389,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerOccupancyRate => 'Occupancy rate';
 
   @override
+  String get ownerDashboardRevenue => 'Revenue';
+
+  @override
+  String get ownerDashboardBookings => 'Bookings';
+
+  @override
+  String get ownerDashboardThisMonth => 'This Month';
+
+  @override
   String get ownerWelcomeTitle => 'Welcome to BookBed!';
 
   @override
@@ -1449,9 +1458,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerDrawerBookings => 'Bookings';
-
-  @override
-  String get ownerDrawerAnalytics => 'Analytics';
 
   @override
   String get ownerDrawerUnits => 'Accommodation Units';
@@ -3840,6 +3846,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetSettingsManualApproval => 'Manual approval';
+
+  @override
+  String get widgetSettingsStripeApprovalNote =>
+      'Only applies to Stripe payments';
 
   @override
   String get widgetSettingsAllowCancellation => 'Allow Cancellation';

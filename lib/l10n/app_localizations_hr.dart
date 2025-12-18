@@ -1396,6 +1396,15 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerOccupancyRate => 'Popunjenost';
 
   @override
+  String get ownerDashboardRevenue => 'Zarada';
+
+  @override
+  String get ownerDashboardBookings => 'Rezervacije';
+
+  @override
+  String get ownerDashboardThisMonth => 'Ovaj Mjesec';
+
+  @override
   String get ownerWelcomeTitle => 'Dobrodošli u BookBed!';
 
   @override
@@ -1456,9 +1465,6 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerDrawerBookings => 'Rezervacije';
-
-  @override
-  String get ownerDrawerAnalytics => 'Analitika';
 
   @override
   String get ownerDrawerUnits => 'Smještajne Jedinice';
@@ -3858,6 +3864,10 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get widgetSettingsManualApproval => 'Ručno odobravanje';
+
+  @override
+  String get widgetSettingsStripeApprovalNote =>
+      'Odnosi se samo na Stripe plaćanja';
 
   @override
   String get widgetSettingsAllowCancellation => 'Dopustite otkazivanje';

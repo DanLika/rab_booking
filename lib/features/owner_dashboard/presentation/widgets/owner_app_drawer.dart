@@ -66,16 +66,6 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Analytics
-            _DrawerItem(
-              icon: Icons.bar_chart_rounded,
-              title: l10n.ownerDrawerAnalytics,
-              isSelected: currentRoute == 'analytics',
-              onTap: () => context.go(OwnerRoutes.analytics),
-            ),
-
-            const SizedBox(height: 4),
-
             // Smještajne Jedinice
             _DrawerItem(
               icon: Icons.apartment_rounded,

@@ -1,33 +1,47 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'analytics_summary.freezed.dart';
-part 'analytics_summary.g.dart';
+part 'unified_dashboard_data.freezed.dart';
+part 'unified_dashboard_data.g.dart';
 
+/// Unified dashboard data model - combines metrics and chart data
+/// Used by the main Dashboard page with time period filtering
 @freezed
-class AnalyticsSummary with _$AnalyticsSummary {
-  const factory AnalyticsSummary({
-    required double totalRevenue,
-    required double monthlyRevenue,
-    required int totalBookings,
-    required int monthlyBookings,
-    required double occupancyRate,
-    required double averageNightlyRate,
-    required int totalProperties,
-    required int activeProperties,
-    required double cancellationRate,
-    required List<RevenueDataPoint> revenueHistory,
-    required List<BookingDataPoint> bookingHistory,
-    required List<PropertyPerformance> topPerformingProperties,
-    // Widget Analytics
-    required int widgetBookings,
-    required double widgetRevenue,
-    required Map<String, int> bookingsBySource,
-  }) = _AnalyticsSummary;
+class UnifiedDashboardData with _$UnifiedDashboardData {
+  const factory UnifiedDashboardData({
+    /// Total revenue in the selected period (EUR)
+    required double revenue,
 
-  factory AnalyticsSummary.fromJson(Map<String, dynamic> json) =>
-      _$AnalyticsSummaryFromJson(json);
+    /// Number of bookings in the selected period
+    required int bookings,
+
+    /// Upcoming check-ins in next 7 days (always 7 days, regardless of period)
+    required int upcomingCheckIns,
+
+    /// Occupancy rate for the selected period (0-100%)
+    required double occupancyRate,
+
+    /// Revenue data points for chart
+    required List<RevenueDataPoint> revenueHistory,
+
+    /// Booking data points for chart
+    required List<BookingDataPoint> bookingHistory,
+  }) = _UnifiedDashboardData;
+
+  factory UnifiedDashboardData.fromJson(Map<String, dynamic> json) =>
+      _$UnifiedDashboardDataFromJson(json);
+
+  /// Empty data when no bookings exist
+  static const empty = UnifiedDashboardData(
+    revenue: 0.0,
+    bookings: 0,
+    upcomingCheckIns: 0,
+    occupancyRate: 0.0,
+    revenueHistory: [],
+    bookingHistory: [],
+  );
 }
 
+/// Revenue data point for chart
 @freezed
 class RevenueDataPoint with _$RevenueDataPoint {
   const factory RevenueDataPoint({
@@ -40,6 +54,7 @@ class RevenueDataPoint with _$RevenueDataPoint {
       _$RevenueDataPointFromJson(json);
 }
 
+/// Booking data point for chart
 @freezed
 class BookingDataPoint with _$BookingDataPoint {
   const factory BookingDataPoint({
@@ -52,33 +67,29 @@ class BookingDataPoint with _$BookingDataPoint {
       _$BookingDataPointFromJson(json);
 }
 
-@freezed
-class PropertyPerformance with _$PropertyPerformance {
-  const factory PropertyPerformance({
-    required String propertyId,
-    required String propertyName,
-    required double revenue,
-    required int bookings,
-    required double occupancyRate,
-    required double rating,
-  }) = _PropertyPerformance;
-
-  factory PropertyPerformance.fromJson(Map<String, dynamic> json) =>
-      _$PropertyPerformanceFromJson(json);
-}
-
+/// Date range filter for time period selection
 @freezed
 class DateRangeFilter with _$DateRangeFilter {
   const factory DateRangeFilter({
     required DateTime startDate,
     required DateTime endDate,
-    @Default('custom')
-    String preset, // 'week', 'month', 'quarter', 'year', 'custom'
+    @Default('month') String preset, // 'week', 'month', 'quarter', 'year', 'custom'
   }) = _DateRangeFilter;
 
   factory DateRangeFilter.fromJson(Map<String, dynamic> json) =>
       _$DateRangeFilterFromJson(json);
 
+  /// Current calendar month (default)
+  factory DateRangeFilter.currentMonth() {
+    final now = DateTime.now();
+    return DateRangeFilter(
+      startDate: DateTime(now.year, now.month, 1),
+      endDate: DateTime(now.year, now.month + 1, 0, 23, 59, 59),
+      preset: 'month',
+    );
+  }
+
+  /// Last 7 days
   factory DateRangeFilter.lastWeek() {
     final now = DateTime.now();
     return DateRangeFilter(
@@ -88,15 +99,7 @@ class DateRangeFilter with _$DateRangeFilter {
     );
   }
 
-  factory DateRangeFilter.lastMonth() {
-    final now = DateTime.now();
-    return DateRangeFilter(
-      startDate: DateTime(now.year, now.month - 1, now.day),
-      endDate: now,
-      preset: 'month',
-    );
-  }
-
+  /// Last 3 months
   factory DateRangeFilter.lastQuarter() {
     final now = DateTime.now();
     return DateRangeFilter(
@@ -106,6 +109,7 @@ class DateRangeFilter with _$DateRangeFilter {
     );
   }
 
+  /// Last 12 months
   factory DateRangeFilter.lastYear() {
     final now = DateTime.now();
     return DateRangeFilter(

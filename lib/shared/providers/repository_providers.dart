@@ -20,7 +20,6 @@ import 'widget_repository_providers.dart';
 // Owner Dashboard repositories
 import '../../features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart';
 import '../../features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart';
-import '../../features/owner_dashboard/data/firebase/firebase_analytics_repository.dart';
 import '../../features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart';
 import '../../features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart';
 
@@ -54,12 +53,6 @@ final ownerBookingsRepositoryProvider = Provider<FirebaseOwnerBookingsRepository
   final firestore = ref.watch(firestoreProvider);
   final auth = ref.watch(firebaseAuthProvider);
   return FirebaseOwnerBookingsRepository(firestore, auth);
-});
-
-/// Analytics repository provider
-final analyticsRepositoryProvider = Provider<FirebaseAnalyticsRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return FirebaseAnalyticsRepository(firestore);
 });
 
 /// Revenue Analytics repository provider

@@ -876,24 +876,6 @@ class EmailNotificationService {
 ''';
   }
 
-  /// Verify email address (placeholder for future implementation)
-  ///
-  /// This would send a verification code to the guest's email
-  Future<bool> sendEmailVerification({
-    required String email,
-    required EmailNotificationConfig emailConfig,
-  }) async {
-    // TODO: Implement email verification flow
-    // - Generate verification code
-    // - Store code in Firestore with expiry
-    // - Send verification email
-    // - Provide method to verify code
-    LoggingService.logWarning(
-      '[EmailNotificationService] Email verification not yet implemented',
-    );
-    return false;
-  }
-
   /// Dispose resources
   void dispose() {
     _httpClient.close();

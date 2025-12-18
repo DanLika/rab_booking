@@ -3881,8 +3881,7 @@ class WidgetTranslations {
     }
   }
 
-  /// Currency symbol - currently EUR for all locales
-  /// TODO: In future, this could be fetched from unit/property config
+  /// Currency symbol (EUR for all locales)
   String get currencySymbol => '€';
 
   String get errorMissingBookingParams {

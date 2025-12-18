@@ -22,21 +22,6 @@ const int kTimelineDaysAfter = 365 * 2; // 730 days
 /// Virtualization ensures only visible days are rendered (no performance impact)
 const int kTimelineTotalDays = kTimelineDaysBefore + kTimelineDaysAfter;
 
-// LEGACY: Keep old constants for backward compatibility during transition
-// TODO: Remove these after confirming new system works
-
-/// @deprecated Use kTimelineDaysBefore instead
-const int kTimelineInitialDaysOffset = 15;
-
-/// @deprecated No longer used - fixed range doesn't need extension
-const int kTimelineDaysToExtend = 30;
-
-/// @deprecated Use kTimelineDaysBefore/kTimelineDaysAfter instead
-const int kTimelineMaxDaysLimit = 365;
-
-/// @deprecated No longer used - no edge detection needed
-const int kTimelineEdgeThresholdDays = 5;
-
 // ============================================================================
 // WINDOWING CONFIGURATION
 // ============================================================================

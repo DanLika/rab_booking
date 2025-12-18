@@ -50,9 +50,9 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
       final lastMonth = getLastMonthRange();
 
       // SINGLE QUERY: Fetch ALL confirmed/completed bookings for all units
-      // TODO: Consider using Firestore aggregation queries (sum()) when SDK supports it
-      // This would reduce document reads to 0 for totalRevenue calculation.
-      // See: https://firebase.google.com/docs/firestore/query-data/aggregation-queries
+      // Note: Aggregation queries (sum()) wouldn't help here - we calculate
+      // multiple metrics (total, thisMonth, lastMonth, byProperty) from same data.
+      // One fetch + in-memory calc is more efficient than multiple aggregations.
       final allBookings = await _fetchConfirmedBookings(unitIds);
 
       // Calculate ALL metrics from same dataset (no additional queries!)

@@ -329,8 +329,6 @@ class BookingPriceCalculator implements IPriceCalculator {
   /// calendar days). Each call performs a Firestore query, which would result
   /// in N queries for N days. Instead, use [calculate] or [_fetchDailyPrices]
   /// to batch-fetch prices for a date range.
-  // TODO(performance): Consider deprecating this method or adding a bulk
-  // alternative if calendar UI needs single-date prices for many dates.
   @override
   Future<double> getEffectivePriceForDate({
     required String unitId,

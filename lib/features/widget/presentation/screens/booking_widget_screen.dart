@@ -154,10 +154,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Error state is still tracked for failed data fetches
   String? _validationError;
 
-  /// Whether background data fetch is still in progress
-  /// When true, calendar shows skeleton; when false, calendar shows real data
-  bool _dataLoading = true;
-
   // ============================================
   // FORM STATE (centralized in BookingFormState)
   // ============================================
@@ -1165,9 +1161,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Track payment completion start time for analytics
     final paymentStartTime = DateTime.now().toUtc();
 
-    // Show loading state while we wait for webhook
+    // Clear any previous error
     setState(() {
-      _dataLoading = true;
       _validationError = null;
     });
 
@@ -1218,13 +1213,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // CRITICAL: Check mounted after delay - widget may be disposed during polling
           if (!mounted) return;
         }
-      }
-
-      // Hide loading state
-      if (mounted) {
-        setState(() {
-          _dataLoading = false;
-        });
       }
 
       if (booking == null) {
@@ -1307,10 +1295,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       LoggingService.log('[STRIPE_RETURN] ❌ Error: $e', tag: 'STRIPE_SESSION');
 
       if (mounted) {
-        setState(() {
-          _dataLoading = false;
-        });
-
         SnackBarHelper.showError(
           context: context,
           message: WidgetTranslations.of(context, ref).errorLoadingBooking(_safeErrorToString(e)),
@@ -1334,10 +1318,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Data loads in background - no BookBed Loader blocking the UI.
   Future<void> _validateUnitAndProperty() async {
     // HYBRID LOADING: Don't block UI - let it show immediately
-    // _isValidating stays false, _dataLoading tracks background fetch
     setState(() {
       _validationError = null;
-      _dataLoading = true;
     });
 
     try {
@@ -1354,7 +1336,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (slugResult == null) {
           setState(() {
             _validationError = 'Unable to determine property.\n\nSubdomain not found in URL.';
-            _dataLoading = false;
           });
           return;
         }
@@ -1363,7 +1344,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (slugResult.isError) {
           setState(() {
             _validationError = slugResult.error;
-            _dataLoading = false;
           });
           return;
         }
@@ -1392,7 +1372,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (!mounted) return;
 
         setState(() {
-          _dataLoading = false;
           _validationError = null;
         });
         return; // Exit early - slug URL fully handled
@@ -1403,7 +1382,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (_propertyId == null || _propertyId!.isEmpty) {
         setState(() {
           _validationError = 'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
-          _dataLoading = false;
         });
         return;
       }
@@ -1411,7 +1389,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (_unitId.isEmpty) {
         setState(() {
           _validationError = 'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
-          _dataLoading = false;
         });
         return;
       }
@@ -1447,7 +1424,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (!mounted) return;
 
       setState(() {
-        _dataLoading = false;
         _validationError = null;
       });
     } on WidgetContextException catch (e) {
@@ -1455,14 +1431,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (!mounted) return;
       setState(() {
         _validationError = e.message;
-        _dataLoading = false;
       });
     } catch (e) {
       // HIGH: Check mounted in catch block before setState
       if (!mounted) return;
       setState(() {
         _validationError = 'Error loading unit data:\n\n$e';
-        _dataLoading = false;
       });
     }
   }

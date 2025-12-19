@@ -250,12 +250,20 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
   }
 
   /// Go to previous period (moves back by visible days count)
+  /// Increment forceScrollKey to ensure widget scrolls (required after feedback loop fix)
   void _goToPreviousPeriod() {
+    setState(() {
+      _forceScrollKey++;
+    });
     _navigateTo(_currentRange.previous(isWeek: false));
   }
 
   /// Go to next period (moves forward by visible days count)
+  /// Increment forceScrollKey to ensure widget scrolls (required after feedback loop fix)
   void _goToNextPeriod() {
+    setState(() {
+      _forceScrollKey++;
+    });
     _navigateTo(_currentRange.next(isWeek: false));
   }
 
@@ -357,6 +365,10 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     );
 
     if (picked != null) {
+      // Increment forceScrollKey to ensure widget scrolls (required after feedback loop fix)
+      setState(() {
+        _forceScrollKey++;
+      });
       _navigateTo(DateRangeSelection.days(picked, _visibleDays));
     }
   }

@@ -1,9 +1,10 @@
 import 'dart:async' show Timer;
-import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -28,6 +29,8 @@ import 'timeline/timeline_date_headers_widget.dart';
 import 'timeline/timeline_unit_column_widget.dart';
 import 'timeline/timeline_grid_widget.dart';
 import 'timeline/timeline_summary_bar_widget.dart';
+import 'timeline/timeline_snap_scroll_physics.dart';
+import 'timeline/calendar_scroll_behavior.dart';
 import '../../utils/booking_overlap_detector.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -155,6 +158,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   // ignore: unused_field
   double? _savedScrollOffset;
 
+
   // Problem #7 fix: Memoization for _buildTimelineView()
   // Cache the build result to avoid rebuilding with identical data
   int? _lastBuildDataHash;
@@ -196,34 +200,23 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       },
     );
 
-    // CRITICAL FIX: React to initialScrollToDate prop changes from toolbar
-    // When user clicks toolbar arrows or changes month, parent updates initialScrollToDate
-    // Without this, widget only uses initialScrollToDate in initState() and ignores changes
+    // FEEDBACK LOOP FIX: Only scroll when user EXPLICITLY requests it via toolbar
+    // Previously: scrolled whenever initialScrollToDate changed (including from scroll updates)
+    // Problem: _updateVisibleRange → parent updates date → didUpdateWidget → scroll → loop!
     //
-    // Problem #17 fix: Compare dates by day only, not by DateTime object reference
-    // DateTime objects created at different times have different milliseconds,
-    // so two "same day" DateTimes may not be equal with ==
-    final oldDate = oldWidget.initialScrollToDate;
-    final newDate = widget.initialScrollToDate;
-    final datesAreDifferent = newDate != null &&
-        (oldDate == null ||
-            newDate.year != oldDate.year ||
-            newDate.month != oldDate.month ||
-            newDate.day != oldDate.day);
-
-    // Problem #19 fix: Also check forceScrollKey for Today button
-    // When user clicks Today, they want to scroll to today even if they're already
-    // viewing today's date range (but have scrolled away within the widget)
+    // Now: ONLY scroll when forceScrollKey changes (user clicked toolbar button)
+    // The date display in toolbar is still updated via onVisibleDateRangeChanged,
+    // but that no longer triggers a scroll back here.
     final forceScrollKeyChanged = widget.forceScrollKey != oldWidget.forceScrollKey;
 
-    if (datesAreDifferent || forceScrollKeyChanged) {
-      final targetDate = newDate ?? DateTime.now();
+    if (forceScrollKeyChanged) {
+      final targetDate = widget.initialScrollToDate ?? DateTime.now();
 
       // Problem #5 additional fix: Check if target is already visible before scrolling
       // This prevents unnecessary scroll animations when clicking Today button
       // but already viewing today's date
       bool shouldSkipScroll = false;
-      if (!datesAreDifferent && forceScrollKeyChanged && _horizontalScrollController.hasClients) {
+      if (_horizontalScrollController.hasClients) {
         try {
           final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
           final daysSinceStart = targetDate.difference(_fixedStartDate).inDays;
@@ -235,9 +228,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
           final centeredTarget = (targetScrollPos - (visibleWidth / 2) + (dimensions.dayWidth / 2))
               .clamp(0.0, _horizontalScrollController.position.maxScrollExtent);
 
-          // Skip if target is already within 1/4 of visible width from current position
+          // Skip if target is already within 1/2 of visible width from current position
+          // INCREASED from 1/4 to 1/2 to prevent feedback loop with _updateVisibleRange
           final scrollDifference = (centeredTarget - currentScroll).abs();
-          final skipThreshold = visibleWidth / 4;
+          final skipThreshold = visibleWidth / 2;
 
           if (scrollDifference < skipThreshold) {
             shouldSkipScroll = true;
@@ -256,22 +250,35 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         }
       }
 
+      // RACE CONDITION FIX: Skip if animation is already in progress
+      // When user clicks next/prev rapidly, _scrollToMonth triggers animation,
+      // then onVisibleDateRangeChanged updates parent, which triggers didUpdateWidget
+      // with the OLD target date. Without this check, we'd scroll back to the old target.
+      if (_isScrollAnimating) {
+        _timelineLog(
+          'didUpdateWidget: SKIPPING scroll - animation already in progress',
+          category: 'Lifecycle',
+        );
+        shouldSkipScroll = true;
+      }
+
       if (!shouldSkipScroll) {
         _timelineLog(
-          'didUpdateWidget: scroll triggered',
+          'didUpdateWidget: scroll triggered by forceScrollKey',
           category: 'Lifecycle',
           data: {
-            'datesAreDifferent': datesAreDifferent,
             'forceScrollKeyChanged': forceScrollKeyChanged,
-            'old': oldDate,
-            'new': newDate,
+            'oldKey': oldWidget.forceScrollKey,
+            'newKey': widget.forceScrollKey,
+            'targetDate': targetDate.toIso8601String().substring(0, 10),
           },
         );
         // Problem #12 fix: Set flag to prevent infinite loop
         // When we scroll, onVisibleDateRangeChanged would update parent, which would
         // change initialScrollToDate again, causing another scroll
         _isProgrammaticScroll = true;
-        _scrollToDate(targetDate);
+        // forceScroll=true when user explicitly selected date via toolbar (forceScrollKey changed)
+        _scrollToDate(targetDate, forceScroll: forceScrollKeyChanged);
       }
     }
   }
@@ -289,13 +296,17 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   }
 
   void _initializeDateRange() {
-    // SIMPLIFIED: Use fixed date range instead of dynamic PREPEND/APPEND
-    // This eliminates scroll compensation race conditions
+    // OPTIMIZED: Start with 1 year range instead of 4 years
+    // This significantly improves scroll performance on mobile devices
+    // Range is extended dynamically when user approaches edges
     final today = DateTime.now();
 
-    // Fixed range: 2 years before and after today
-    _fixedStartDate = DateTime(today.year - 2, today.month, today.day);
-    _fixedEndDate = DateTime(today.year + 2, today.month, today.day);
+    // Initial range: 6 months before and 6 months after today (1 year total)
+    // Much smaller scroll extent = smoother scrolling
+    // DST FIX: Use UTC to avoid off-by-one errors when DST changes between
+    // summer (UTC+2) and winter (UTC+1) cause Duration.inDays to miscalculate
+    _fixedStartDate = DateTime.utc(today.year, today.month - 6, today.day);
+    _fixedEndDate = DateTime.utc(today.year, today.month + 6, today.day);
 
     final totalDays = _fixedEndDate.difference(_fixedStartDate).inDays;
     final initialDate = widget.initialScrollToDate ?? today;
@@ -502,38 +513,125 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       });
     }
 
-    // SIMPLIFIED: No more _handleInfiniteScroll() - fixed range means no PREPEND/APPEND
-    // This eliminates the scroll compensation race condition
+    // DYNAMIC EXTENSION: Extend range when approaching edges
+    // Only extend forward (to the right) - no scroll compensation needed
+    // Extend backward (to the left) would require compensation which causes scroll issues
+    _extendDateRangeIfNeeded(firstVisibleDay, totalDays);
 
-    // Notify parent of visible date change (debounced on web for performance)
+    // Notify parent of visible date change (debounced to prevent scroll interference)
     // Problem #12 fix: Skip notification during programmatic scroll to prevent infinite loop
+    // ANDROID FIX: Debounce on ALL platforms to prevent bounce-back during user scroll
+    // Without debounce, instant parent updates trigger didUpdateWidget → _scrollToDate loop
     if (widget.onVisibleDateRangeChanged != null && !_isInitialScrolling && !_isProgrammaticScroll) {
-      final visibleStartDate = _fixedStartDate.add(Duration(days: firstVisibleDay));
+      // BUG FIX: Report CENTER of visible range instead of START
+      // Previously: reported firstVisibleDay (leftmost date)
+      // Problem: didUpdateWidget tries to CENTER that date, causing backward scroll
+      // Fix: report the center date so centering doesn't shift position
+      final centerVisibleDay = firstVisibleDay + (daysInViewport ~/ 2);
+      final visibleCenterDate = _fixedStartDate.add(Duration(days: centerVisibleDay));
 
-      if (kIsWeb) {
-        // Debounce on web to reduce setState calls in parent during scroll
-        _visibleRangeDebounceTimer?.cancel();
-        _visibleRangeDebounceTimer = Timer(const Duration(milliseconds: 100), () {
-          if (mounted) {
-            widget.onVisibleDateRangeChanged!(visibleStartDate);
-          }
-        });
-      } else {
-        // Instant feedback on native platforms
-        widget.onVisibleDateRangeChanged!(visibleStartDate);
-      }
+      // Debounce on ALL platforms to prevent scroll position "corrections" during user scroll
+      // Previously instant on Android which caused bounce-back behavior
+      _visibleRangeDebounceTimer?.cancel();
+      _visibleRangeDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+        if (mounted) {
+          widget.onVisibleDateRangeChanged!(visibleCenterDate);
+        }
+      });
     }
   }
 
-  // REMOVED: _handleInfiniteScroll()
-  // The complex PREPEND/APPEND system with scroll compensation has been removed.
-  // It caused race conditions where scroll compensation timing was unpredictable,
-  // resulting in erratic scrolling (user swipes right, calendar jumps left).
-  //
-  // NEW APPROACH: Fixed date range (±2 years) with virtualization.
-  // - No PREPEND/APPEND = No scroll compensation = No race condition
-  // - Virtualization (_visibleStartIndex, _visibleDayCount) ensures only visible days render
-  // - 4 year range is sufficient for hotel/rental booking use cases
+  /// Dynamically extend the date range when user approaches edges
+  /// Only extends forward (right) to avoid scroll compensation issues
+  /// Backward extension (left) is limited to prevent scroll jumps
+  void _extendDateRangeIfNeeded(int firstVisibleDay, int totalDays) {
+    const extensionThreshold = 30; // Days from edge to trigger extension
+    const extensionAmount = 180; // 6 months extension
+    const maxTotalDays = 1460; // Max 4 years total (2 past + 2 future)
+
+    // Check if approaching right edge (future dates)
+    final daysUntilEnd = totalDays - firstVisibleDay;
+    if (daysUntilEnd < extensionThreshold && totalDays < maxTotalDays) {
+      _timelineLog(
+        '_extendDateRangeIfNeeded: extending FORWARD',
+        category: 'DateRange',
+        data: {
+          'daysUntilEnd': daysUntilEnd,
+          'oldEndDate': _fixedEndDate.toIso8601String().substring(0, 10),
+        },
+      );
+
+      // Extend end date by 6 months (no scroll compensation needed)
+      setState(() {
+        _fixedEndDate = _fixedEndDate.add(const Duration(days: extensionAmount));
+        // Invalidate caches
+        _cachedFullDateRange = null;
+        _cachedVisibleDateRange = null;
+        _cachedTimelineContent = null;
+        _lastBuildDataHash = null;
+      });
+
+      _timelineLog(
+        '_extendDateRangeIfNeeded: extended FORWARD',
+        category: 'DateRange',
+        data: {
+          'newEndDate': _fixedEndDate.toIso8601String().substring(0, 10),
+          'newTotalDays': _fixedEndDate.difference(_fixedStartDate).inDays,
+        },
+      );
+    }
+
+    // Check if approaching left edge (past dates)
+    // Only extend if we have room and user is very close to the edge
+    if (firstVisibleDay < extensionThreshold && totalDays < maxTotalDays) {
+      _timelineLog(
+        '_extendDateRangeIfNeeded: extending BACKWARD',
+        category: 'DateRange',
+        data: {
+          'firstVisibleDay': firstVisibleDay,
+          'oldStartDate': _fixedStartDate.toIso8601String().substring(0, 10),
+        },
+      );
+
+      // Extend start date by 6 months
+      // NOTE: This will cause a visual "jump" but is necessary for viewing past dates
+      // We minimize impact by invalidating caches and recalculating positions
+      final oldStartDate = _fixedStartDate;
+      setState(() {
+        _fixedStartDate = _fixedStartDate.subtract(const Duration(days: extensionAmount));
+        // Invalidate caches
+        _cachedFullDateRange = null;
+        _cachedVisibleDateRange = null;
+        _cachedTimelineContent = null;
+        _lastBuildDataHash = null;
+        // Adjust visible start index to account for new days
+        _visibleStartIndex += extensionAmount;
+      });
+
+      // Adjust scroll position to maintain visual continuity
+      if (_horizontalScrollController.hasClients) {
+        final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+        final additionalOffset = extensionAmount * dimensions.dayWidth;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _horizontalScrollController.hasClients) {
+            _horizontalScrollController.jumpTo(
+              _horizontalScrollController.offset + additionalOffset
+            );
+          }
+        });
+      }
+
+      _timelineLog(
+        '_extendDateRangeIfNeeded: extended BACKWARD',
+        category: 'DateRange',
+        data: {
+          'newStartDate': _fixedStartDate.toIso8601String().substring(0, 10),
+          'oldStartDate': oldStartDate.toIso8601String().substring(0, 10),
+          'newTotalDays': _fixedEndDate.difference(_fixedStartDate).inDays,
+        },
+      );
+    }
+  }
 
   /// Wait for layout completion and then finalize initial scroll setup.
   ///
@@ -588,13 +686,14 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   /// - Any future date navigation needs
   ///
   /// SIMPLIFIED: With fixed date range, no more dynamic extension needed
-  void _scrollToDate(DateTime targetDate, {bool isInitialScroll = false}) {
+  void _scrollToDate(DateTime targetDate, {bool isInitialScroll = false, bool forceScroll = false}) {
     _timelineLog(
       '_scrollToDate called (SIMPLIFIED)',
       category: 'Scroll',
       data: {
         'target': targetDate.toIso8601String().substring(0, 10),
         'isInitial': isInitialScroll,
+        'forceScroll': forceScroll,
         'isProgrammatic': _isProgrammaticScroll,
         'isAnimating': _isScrollAnimating,
         'fixedStartDate': _fixedStartDate.toIso8601String().substring(0, 10),
@@ -642,11 +741,14 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final targetScroll = (scrollPosition - (visibleWidth / 2) + (dimensions.dayWidth / 2)).clamp(0.0, maxScroll);
 
     // Problem #5 fix: Skip scroll if target is already visible
-    // Use visibleWidth / 4 as threshold (~250-300px) instead of dayWidth / 2 (~30px)
-    // This prevents unnecessary scrolls when the date is already on screen
+    // INCREASED THRESHOLD to prevent feedback loop:
+    // Old: visibleWidth / 4 (~70px) - too small, 3-day difference (~147px) exceeded it
+    // New: visibleWidth / 2 (~140px) - allows for center-date reporting variance
+    // This prevents the _updateVisibleRange → didUpdateWidget → _scrollToDate loop
+    // EXCEPTION: forceScroll=true bypasses this (for explicit user date selection)
     final scrollDifference = (targetScroll - currentScroll).abs();
-    final skipThreshold = visibleWidth / 4;
-    if (scrollDifference < skipThreshold && !isInitialScroll) {
+    final skipThreshold = visibleWidth / 2;
+    if (scrollDifference < skipThreshold && !isInitialScroll && !forceScroll) {
       _timelineLog('_scrollToDate: SKIPPING - target already visible (diff: ${scrollDifference.toStringAsFixed(1)}, threshold: ${skipThreshold.toStringAsFixed(1)})', category: 'Scroll');
       return;
     }
@@ -1092,6 +1194,71 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
   Widget _buildEmptyUnitsState(WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Check if owner has ANY units (not just filtered)
+    final allUnitsAsync = ref.watch(allOwnerUnitsProvider);
+    final hasAnyUnits = allUnitsAsync.whenOrNull(data: (units) => units.isNotEmpty) ?? false;
+
+    // If owner has no units at all, redirect to Units page
+    if (!hasAnyUnits && !allUnitsAsync.isLoading) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.spaceL),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.meeting_room_outlined,
+                  size: 50,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spaceM),
+              Text(
+                l10n.ownerCalendarNoUnits,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spaceS),
+              Text(
+                l10n.unitHubNoUnitsInProperty,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.7)
+                      : Colors.black.withValues(alpha: 0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spaceL),
+              FilledButton.icon(
+                onPressed: () => context.go(OwnerRoutes.units),
+                icon: const Icon(Icons.add, size: 20),
+                label: Text(l10n.unitHubAddUnit),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Owner has units but they are filtered out - show clear filters option
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.spaceM),
@@ -1232,8 +1399,8 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
           '_buildTimelineView: sample booking',
           category: 'Build',
           data: {
-            'unitId': entry.key.substring(0, 8),
-            'bookingId': booking.id.substring(0, 8),
+            'unitId': entry.key.length >= 8 ? entry.key.substring(0, 8) : entry.key,
+            'bookingId': booking.id.length >= 8 ? booking.id.substring(0, 8) : booking.id,
             'checkIn': booking.checkIn.toIso8601String().substring(0, 10),
             'checkOut': booking.checkOut.toIso8601String().substring(0, 10),
             'status': booking.status.name,
@@ -1291,58 +1458,51 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                   showSummarySpacing: widget.showSummary,
                 ),
 
-                // Scrollable timeline grid
+                // Scrollable timeline grid with direction lock
                 Expanded(
                   child: ScrollConfiguration(
-                    // Enable mouse/trackpad drag scrolling for web
-                    behavior: ScrollConfiguration.of(context).copyWith(
-                      dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad},
-                    ),
-                    child: InteractiveViewer(
-                      transformationController: _transformationController,
-                      minScale: kTimelineMinZoomScale,
-                      panEnabled: false,
+                    // Cross-platform scroll behavior:
+                    // - Enables mouse/trackpad drag on desktop
+                    // - Removes Android overscroll glow
+                    // - Normalizes behavior across all platforms
+                    behavior: CalendarScrollBehavior(),
+                    child: SingleChildScrollView(
+                      controller: _horizontalScrollController,
+                      scrollDirection: Axis.horizontal,
+                      primary: false,
+                      // Custom snap-to-day physics handles ALL scrolling:
+                      // - Weak swipes snap to nearest day (no bounce-back)
+                      // - Strong swipes snap in velocity direction
+                      // - Critically damped spring (no oscillation)
+                      physics: TimelineSnapScrollPhysics(dayWidth: dimensions.dayWidth),
                       child: SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        // Use ClampingScrollPhysics on web for better performance
-                        // BouncingScrollPhysics causes extra rendering frames on web
-                        physics: kIsWeb
-                            ? const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
-                            : const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                        child: SingleChildScrollView(
-                          controller: _verticalScrollController,
-                          // OPTIMIZED: Android web performance - use ClampingScrollPhysics
-                          // and reduce scroll friction for smoother scrolling
-                          physics: kIsWeb
-                              ? const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
-                              : const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                          child: Column(
-                            // FIXED: Restored mainAxisSize.min from working version
-                            // This was removed during performance optimization, causing grid to disappear
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              TimelineGridWidget(
-                                units: units,
+                        controller: _verticalScrollController,
+                        primary: false,
+                        child: Column(
+                          // FIXED: Restored mainAxisSize.min from working version
+                          // This was removed during performance optimization, causing grid to disappear
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TimelineGridWidget(
+                              units: units,
+                              bookingsByUnit: bookingsByUnit,
+                              dates: dates,
+                              offsetWidth: offsetWidth,
+                              fixedStartDate: _fixedStartDate,
+                              dimensions: dimensions,
+                              onBookingTap: _showBookingActionMenu,
+                              onBookingLongPress: _showMoveToUnitMenu,
+                              dropZoneBuilder: (unit, date, index) =>
+                                  _buildDropZone(unit, date, offsetWidth, index, bookingsByUnit),
+                            ),
+                            if (widget.showSummary)
+                              TimelineSummaryBarWidget(
                                 bookingsByUnit: bookingsByUnit,
                                 dates: dates,
                                 offsetWidth: offsetWidth,
-                                fixedStartDate: _fixedStartDate,
                                 dimensions: dimensions,
-                                onBookingTap: _showBookingActionMenu,
-                                onBookingLongPress: _showMoveToUnitMenu,
-                                dropZoneBuilder: (unit, date, index) =>
-                                    _buildDropZone(unit, date, offsetWidth, index, bookingsByUnit),
                               ),
-                              if (widget.showSummary)
-                                TimelineSummaryBarWidget(
-                                  bookingsByUnit: bookingsByUnit,
-                                  dates: dates,
-                                  offsetWidth: offsetWidth,
-                                  dimensions: dimensions,
-                                ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ),
@@ -1560,3 +1720,4 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     );
   }
 }
+

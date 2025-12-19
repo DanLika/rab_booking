@@ -23,7 +23,8 @@ class SkewedBookingPainter extends CustomPainter {
   final double dayWidth;
 
   /// Gap between checkout and checkin diagonals on turnover day (in pixels)
-  static const double turnoverGap = 2.0;
+  /// Set to 4px for visible but subtle turnover separation
+  static const double turnoverGap = 4.0;
 
   /// Calculate skew offset based on day width
   /// Formula: dayWidth - turnoverGap ensures diagonals meet at center with gap
@@ -74,6 +75,28 @@ class SkewedBookingPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.miter;
     canvas.drawPath(path, borderPaint);
+
+    // Draw semi-transparent diagonal separators for turnover visibility
+    // These 50% opacity lines make the check-in/check-out diagonals more visible
+    final separatorPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+
+    // Left diagonal (check-in edge): from (skewOffset, 0) to (0, height)
+    canvas.drawLine(
+      Offset(skewOffset, 0),
+      Offset(0, size.height),
+      separatorPaint,
+    );
+
+    // Right diagonal (check-out edge): from (width, 0) to (width - skewOffset, height)
+    canvas.drawLine(
+      Offset(size.width, 0),
+      Offset(size.width - skewOffset, size.height),
+      separatorPaint,
+    );
   }
 
   /// Creates parallelogram path with skewed left and right edges

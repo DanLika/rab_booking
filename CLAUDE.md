@@ -468,6 +468,31 @@ firebase deploy --only firestore:indexes
 
 **Skeleton loaders**: `SkeletonColors.baseColor/highlightColor` iz `skeleton_loader.dart`
 
+**Animation Widgets** (`lib/shared/widgets/animations/`):
+```dart
+import 'package:bookbed/shared/widgets/animations/animations.dart';
+
+// Empty states - fade+scale entrance
+AnimatedEmptyState(icon: Icons.inbox, title: 'No items', subtitle: 'Add your first item')
+
+// Loading transitions - skeleton→content crossfade
+AnimatedContentSwitcher(
+  showContent: !isLoading,
+  skeleton: MySkeleton(),
+  content: MyContent(),
+)
+
+// Success feedback - animated checkmark with draw animation
+AnimatedCheckmark(size: 64, color: Colors.green)
+
+// Desktop hover effects
+HoverScaleCard(child: MyCard(), onTap: () => {})
+HoverListTile(title: Text('Item'), onTap: () => {})
+
+// Staggered list entrances
+AnimatedCardEntrance(delay: Duration(milliseconds: index * 100), child: MyCard())
+```
+
 **Snackbars (Widget)**: `SnackBarHelper` u `shared/utils/ui/snackbar_helper.dart`
 - Boje prate calendar status: Success=Available(zelena), Error=Booked(crvena), Warning=Pending(amber), Info=plava
 - Light: `#10B981`, `#EF4444`, `#F59E0B`, `#3B82F6`
@@ -506,7 +531,43 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-17 | **Version**: 6.9
+**Last Updated**: 2025-12-19 | **Version**: 6.11
+
+**Changelog 6.11**: Flutter Animation Widget Library:
+- **New animation widgets** (`lib/shared/widgets/animations/`):
+  - `AnimatedEmptyState`: Fade+scale entrance for empty state screens
+  - `AnimatedContentSwitcher`: Smooth skeleton→content crossfade transitions
+  - `AnimatedCheckmark`: Custom painted checkmark with draw animation
+  - `SuccessOverlay`: Full-screen success celebration overlay
+  - `HoverScaleCard`, `HoverListTile`: Desktop hover effects with scale+shadow
+  - `AnimatedCardEntrance`: Staggered fade+slide entrance for lists
+  - `AnimatedDialog`: Scale/slide-up dialog entrance helpers
+  - `AnimatedButton`: Press feedback micro-interactions
+- **Applied animations**:
+  - `owner_bookings_screen.dart`: AnimatedEmptyState for no bookings
+  - `notifications_screen.dart`: Staggered empty state with 3 animation controllers
+  - `unified_unit_hub_screen.dart`: AnimatedEmptyState for no units
+  - `dashboard_overview_tab.dart`: AnimatedEmptyState for chart empty states
+  - `lazy_calendar_container.dart`: AnimatedContentSwitcher for skeleton→calendar fade
+- **Removed unused packages**: `lottie: ^3.1.0`, `confetti: ^0.8.0` from pubspec.yaml
+- **Implementation plan**: `docs/research/ANIMATION_IMPLEMENTATION_PLAN.md`
+
+**Changelog 6.10**: iCal Export Permission-Denied Bug Fix + Missing Index:
+- **iCal Export Bug**:
+  - **Problem**: iCal export failed with `permission-denied` error when generating .ics files
+  - **Root Cause**: `fetchUnitBookings()` query used only `unit_id` filter, but Firestore security rules (Case 3) require `unit_id` + `status` for collection group queries
+  - **Fix** (`firebase_booking_repository.dart:13-35`):
+    - Added `status` whereIn filter to `fetchUnitBookings()` query
+    - Now fetches only `pending`, `confirmed`, `completed` bookings (excludes `cancelled`)
+    - Matches security rule Case 3: `('unit_id' in resource.data && 'status' in resource.data)`
+  - **Cleanup** (`ical_export_service.dart`):
+    - Removed redundant client-side status filtering (now done at query level)
+    - Removed unused `enums.dart` import
+- **Missing Firestore Index**:
+  - **Problem**: `syncReminders.ts` Cloud Function failed with `FAILED_PRECONDITION: The query requires an index`
+  - **Query**: `.where("created_at", ">=", ...).where("status", "in", [...])`
+  - **Fix**: Added composite index `status` ASC + `created_at` ASC to `firestore.indexes.json` (lines 154-160)
+  - **Note**: When combining range (`>=`) and equality/whereIn filters, equality fields must come FIRST in the index
 
 **Changelog 6.9**: Platform Source Display for External Bookings:
 - **PlatformIcon Widget** (`lib/shared/widgets/platform_icon.dart`):

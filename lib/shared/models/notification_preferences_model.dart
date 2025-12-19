@@ -66,10 +66,18 @@ class NotificationPreferences with _$NotificationPreferences {
   }
 
   /// Convert to Firestore data (exclude userId)
+  /// Note: We explicitly call toJson() on each nested object because
+  /// Freezed's generated toJson() can return custom internal objects
+  /// that Firestore doesn't recognize.
   Map<String, dynamic> toFirestore() {
     return {
       'masterEnabled': masterEnabled,
-      'categories': categories.toJson(),
+      'categories': {
+        'bookings': categories.bookings.toJson(),
+        'payments': categories.payments.toJson(),
+        'calendar': categories.calendar.toJson(),
+        'marketing': categories.marketing.toJson(),
+      },
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

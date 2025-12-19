@@ -114,6 +114,7 @@ export const createBookingAtomic = onCall(async (request) => {
     guestPhone,
     guestCount,
     totalPrice,
+    servicesTotal = 0, // Additional services total for price validation
     paymentOption, // 'deposit', 'full', or 'none'
     paymentMethod, // 'stripe', 'bank_transfer', or 'none'
     requireOwnerApproval = false,
@@ -422,7 +423,8 @@ export const createBookingAtomic = onCall(async (request) => {
           guestEmail: sanitizedGuestEmail,
           guestPhone: finalGuestPhone,
           guestCount: numericGuestCount, // Use validated numeric value
-          totalPrice: numericTotalPrice, // Use validated numeric value
+          totalPrice: numericTotalPrice, // Use validated numeric value (includes services)
+          servicesTotal, // Additional services total for price validation in stripePayment.ts
           depositAmount,
           paymentOption,
           notes: sanitizedNotes,
@@ -446,13 +448,21 @@ export const createBookingAtomic = onCall(async (request) => {
     let finalTotalPrice = numericTotalPrice;
     let finalDepositAmount = depositAmount;
 
+    // Validate servicesTotal is a valid number
+    const numericServicesTotal = (
+      typeof servicesTotal === "number" &&
+      Number.isFinite(servicesTotal) &&
+      servicesTotal >= 0
+    ) ? servicesTotal : 0;
+
     try {
       await validateBookingPrice(
         unitId,
         checkInDate,
         checkOutDate,
-        numericTotalPrice, // Use validated numeric price
-        propertyId // Pass propertyId for fallback to unit base price
+        numericTotalPrice, // Use validated numeric price (includes services)
+        propertyId, // Pass propertyId for fallback to unit base price
+        numericServicesTotal // Pass services total for accurate validation
       );
 
       logInfo("[AtomicBooking] Price validated against server calculation", {
@@ -468,28 +478,33 @@ export const createBookingAtomic = onCall(async (request) => {
           error: priceError.message,
         });
 
-        // Calculate server-side price and use it instead
-        const {totalPrice: serverPrice} = await calculateBookingPrice(
+        // Calculate server-side nightly price and add services total
+        const {totalPrice: serverNightlyPrice} = await calculateBookingPrice(
           unitId,
           checkInDate,
           checkOutDate,
           propertyId
         );
 
+        // Server total = nightly prices + services (services from client are trusted)
+        const serverTotalPrice = Math.round((serverNightlyPrice + numericServicesTotal) * 100) / 100;
+
         logInfo("[AtomicBooking] Using server-calculated price for booking", {
           unitId,
           oldPrice: numericTotalPrice,
-          newPrice: serverPrice,
+          serverNightlyPrice,
+          servicesTotal: numericServicesTotal,
+          newPrice: serverTotalPrice,
         });
 
-        // Update prices to use server-calculated price
-        finalTotalPrice = serverPrice;
+        // Update prices to use server-calculated total price
+        finalTotalPrice = serverTotalPrice;
 
         // Recalculate deposit based on new price
         if (paymentOption === "deposit") {
-          finalDepositAmount = calculateDepositAmount(serverPrice, depositPercentage);
+          finalDepositAmount = calculateDepositAmount(serverTotalPrice, depositPercentage);
         } else if (paymentOption === "full") {
-          finalDepositAmount = serverPrice;
+          finalDepositAmount = serverTotalPrice;
         }
         // paymentOption === "none" keeps depositAmount as 0
       } else {
@@ -500,24 +515,29 @@ export const createBookingAtomic = onCall(async (request) => {
 
     // Determine booking status for NON-STRIPE payments
     // pending = awaiting owner approval (BLOCKS calendar dates)
-    // confirmed = auto-confirmed (no approval needed)
+    // confirmed = auto-confirmed (only for Stripe payments via webhook)
+    //
+    // BUSINESS LOGIC: bank_transfer and pay_on_arrival ALWAYS require owner approval
+    // because there's no automatic payment verification. Owner confirmation = payment received.
+    // Only Stripe can auto-confirm because webhook provides payment verification.
     let status: string;
     let paymentStatus: string;
 
-    if (requireOwnerApproval) {
+    // Force owner approval for non-instant payment methods
+    // This ensures owner must manually confirm when payment is received
+    const forceApprovalForPaymentMethod =
+      paymentMethod === "bank_transfer" || paymentMethod === "pay_on_arrival";
+
+    if (requireOwnerApproval || forceApprovalForPaymentMethod) {
       // Requires manual owner approval
       // pending status BLOCKS calendar dates until owner approves or rejects
       status = "pending";
       paymentStatus = (paymentMethod === "none" || paymentMethod === "pay_on_arrival") ? "not_required" : "pending";
     } else {
       // Auto-confirmed (no approval needed, non-Stripe payment)
+      // Note: This branch is now only for paymentMethod === "none" with requireOwnerApproval === false
       status = "confirmed";
-
-      if (paymentMethod === "bank_transfer") {
-        paymentStatus = "pending"; // Awaiting bank transfer
-      } else {
-        paymentStatus = "not_required"; // Pay on arrival or no payment
-      }
+      paymentStatus = "not_required";
     }
 
     // ====================================================================
@@ -889,7 +909,7 @@ export const createBookingAtomic = onCall(async (request) => {
         booking_reference: bookingRef,
         source: "widget",
         notes: sanitizedNotes,
-        require_owner_approval: requireOwnerApproval,
+        require_owner_approval: requireOwnerApproval || forceApprovalForPaymentMethod,
         tax_legal_accepted: taxLegalAccepted || null,
         // SECURITY FIX: Use server timestamp for payment deadline (not client time)
         payment_deadline: paymentMethod === "bank_transfer" ?
@@ -986,6 +1006,48 @@ export const createBookingAtomic = onCall(async (request) => {
 
       if (requireOwnerApproval) {
         // Manual approval flow - send "Booking Request Received" email to guest
+        // For bank transfer: include bank details so guest knows where to pay
+
+        // Fetch bank details for bank transfer payments
+        let bankDetails: {
+          bankName?: string;
+          accountHolder?: string;
+          iban?: string;
+          swift?: string;
+        } | undefined;
+
+        if (paymentMethod === "bank_transfer" && bankTransferConfig) {
+          // Try to get bank details from owner's company details first
+          const ownerProfileDoc = await db
+            .collection("users")
+            .doc(ownerId)
+            .collection("profile")
+            .doc("company_details")
+            .get();
+
+          if (ownerProfileDoc.exists) {
+            const companyDetails = ownerProfileDoc.data();
+            if (companyDetails?.bankAccountIban) {
+              bankDetails = {
+                bankName: companyDetails.bankName,
+                accountHolder: companyDetails.accountHolder,
+                iban: companyDetails.bankAccountIban,
+                swift: companyDetails.swift,
+              };
+            }
+          }
+
+          // Fallback to legacy bank details in widget settings
+          if (!bankDetails?.iban && bankTransferConfig) {
+            bankDetails = {
+              bankName: bankTransferConfig.bank_name,
+              accountHolder: bankTransferConfig.account_holder,
+              iban: bankTransferConfig.iban,
+              swift: bankTransferConfig.swift,
+            };
+          }
+        }
+
         // Use retry mechanism for transient failures
         await sendEmailWithRetry(
           async () => {
@@ -993,7 +1055,10 @@ export const createBookingAtomic = onCall(async (request) => {
               sanitizedGuestEmail,
               sanitizedGuestName,
               result.bookingReference,
-              propertyData?.name || "Property"
+              propertyData?.name || "Property",
+              paymentMethod,
+              result.depositAmount,
+              bankDetails
             );
           },
           "Pending Booking Request",

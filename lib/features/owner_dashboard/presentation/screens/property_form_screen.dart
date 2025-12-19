@@ -11,6 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/slug_utils.dart';
@@ -133,7 +134,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
       final result = await callable.call<Map<String, dynamic>>({
         'propertyName': propertyName,
         'propertyId': _isEditing ? widget.property!.id : null,
-      });
+      }).withCloudFunctionTimeout('generateSubdomainFromName');
 
       if (mounted) {
         final data = result.data;
@@ -196,7 +197,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
       final result = await callable.call<Map<String, dynamic>>({
         'subdomain': subdomain,
         'propertyId': _isEditing ? widget.property!.id : null,
-      });
+      }).withCloudFunctionTimeout('checkSubdomainAvailability');
 
       if (mounted) {
         final data = result.data;
@@ -1250,7 +1251,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
           try {
             final functions = FirebaseFunctions.instance;
             final callable = functions.httpsCallable('setPropertySubdomain');
-            await callable.call<Map<String, dynamic>>({'propertyId': widget.property!.id, 'subdomain': subdomainValue});
+            await callable.call<Map<String, dynamic>>({'propertyId': widget.property!.id, 'subdomain': subdomainValue}).withCloudFunctionTimeout('setPropertySubdomain');
           } catch (e) {
             if (mounted) {
               final l10nSubErr = AppLocalizations.of(context);

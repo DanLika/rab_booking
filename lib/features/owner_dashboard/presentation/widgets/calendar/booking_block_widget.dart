@@ -89,7 +89,7 @@ class BookingBlockWidget extends StatelessWidget {
     final isFromExternalSource = _isFromExternalSource(booking.source);
 
     // FIXED: Add accessibility semantics
-    final semanticsLabel = _buildSemanticLabel();
+    final semanticsLabel = _buildSemanticLabel(context);
 
     final block = Semantics(
       label: semanticsLabel,
@@ -396,7 +396,7 @@ class BookingBlockWidget extends StatelessWidget {
         // Show date range for cross-month bookings
         if (isCrossMonth && width > 100) ...[
           Text(
-            _getDateRangeString(booking.checkIn, booking.checkOut),
+            _getDateRangeString(context, booking.checkIn, booking.checkOut),
             style: TextStyle(
               color: textColor.withAlpha((0.9 * 255).toInt()),
               fontSize: 9,
@@ -445,8 +445,9 @@ class BookingBlockWidget extends StatelessWidget {
   }
 
   /// Get formatted date range string (e.g., "31 Oct - 28 Nov")
-  String _getDateRangeString(DateTime checkIn, DateTime checkOut) {
-    final dateFormat = DateFormat('d MMM', 'hr_HR');
+  String _getDateRangeString(BuildContext context, DateTime checkIn, DateTime checkOut) {
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('d MMM', locale);
     return '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}';
   }
 
@@ -469,14 +470,16 @@ class BookingBlockWidget extends StatelessWidget {
   }
 
   /// FIXED: Build semantic label for screen readers
-  String _buildSemanticLabel() {
-    final checkInStr = DateFormat('d. MMM', 'hr_HR').format(booking.checkIn);
-    final checkOutStr = DateFormat('d. MMM', 'hr_HR').format(booking.checkOut);
+  String _buildSemanticLabel(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('d. MMM', locale);
+    final checkInStr = dateFormat.format(booking.checkIn);
+    final checkOutStr = dateFormat.format(booking.checkOut);
     final statusStr = _getStatusName(booking.status);
-    final guestName = booking.guestName ?? 'Nepoznati gost';
+    final guestName = booking.guestName ?? 'Guest';
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
-    return 'Rezervacija za $guestName, od $checkInStr do $checkOutStr, $nights noći, ${booking.guestCount} gostiju, status: $statusStr. Tapni za detalje.';
+    return 'Booking for $guestName, from $checkInStr to $checkOutStr, $nights nights, ${booking.guestCount} guests, status: $statusStr. Tap for details.';
   }
 
   String _getStatusName(BookingStatus status) {

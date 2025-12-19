@@ -174,7 +174,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   /// Navigate to next month with proper year boundary handling
   DateTime _nextMonth(DateTime current) {
     if (current.month == 12) {
-      return DateTime.utc(current.year + 1, 1);
+      return DateTime.utc(current.year + 1);
     } else {
       return DateTime.utc(current.year, current.month + 1);
     }
@@ -184,6 +184,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final mediaQuery = MediaQuery.maybeOf(context);
     final screenWidth = mediaQuery?.size.width ?? 400.0;
     final isSmallScreen = screenWidth < 400; // iPhone SE and similar
+    final isTinyScreen = screenWidth < 360; // Very small screens - hide month text
     final locale = Localizations.localeOf(context);
     final monthYear = DateFormat.yMMM(locale.toString()).format(_currentMonth);
 
@@ -213,16 +214,16 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             });
           },
         ),
-        // Minimal spacing - arrows close to month text
-        Text(
-          monthYear,
-          style: TextStyle(
-            fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
-            fontWeight: TypographyTokens.bold,
-            color: colors.textPrimary,
+        // On tiny screens, hide month text to save space (only show arrows)
+        if (!isTinyScreen)
+          Text(
+            monthYear,
+            style: TextStyle(
+              fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
+            ),
           ),
-        ),
-        // Minimal spacing - arrows close to month text
         IconButton(
           icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
@@ -593,21 +594,21 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           return;
         }
 
-        // OPTIMIZED: Get minNights from cached widgetContext (reuses cached data)
-        final validationMinNights =
-            ref
-                .read(widgetContextProvider((propertyId: widget.propertyId, unitId: widget.unitId)))
-                .valueOrNull
-                ?.unit
-                .minStayNights ??
-            1;
+        // OPTIMIZED: Get min/maxNights from cached widgetContext (reuses cached data)
+        final unitData = ref
+            .read(widgetContextProvider((propertyId: widget.propertyId, unitId: widget.unitId)))
+            .valueOrNull
+            ?.unit;
+        final validationMinNights = unitData?.minStayNights ?? 1;
+        final validationMaxNights = unitData?.maxStayNights;
 
-        // Range validation (minNights, minNightsOnArrival, maxNightsOnArrival)
+        // Range validation (minNights, maxNights, minNightsOnArrival, maxNightsOnArrival)
         // Note: startDateInfo is already fetched above for blockCheckIn validation
         final rangeResult = validator.validateRange(
           start: start,
           end: end,
           minNights: validationMinNights,
+          maxNights: validationMaxNights,
           checkInDateInfo: startDateInfo,
         );
         if (!rangeResult.isValid) {

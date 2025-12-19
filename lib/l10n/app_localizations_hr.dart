@@ -2923,6 +2923,21 @@ class AppLocalizationsHr extends AppLocalizations {
       'Ovdje ćete vidjeti sva vaša obavještenja';
 
   @override
+  String get notificationsEmptyHint => 'Primit ćete obavijesti za:';
+
+  @override
+  String get notificationsHintNewBookings => 'Nove zahtjeve za rezervaciju';
+
+  @override
+  String get notificationsHintPayments => 'Potvrde plaćanja';
+
+  @override
+  String get notificationsHintCancellations => 'Otkazivanja rezervacija';
+
+  @override
+  String get notificationsHintReminders => 'Podsjetnike za check-in';
+
+  @override
   String get notificationsLoadError => 'Greška pri učitavanju obavještenja';
 
   @override

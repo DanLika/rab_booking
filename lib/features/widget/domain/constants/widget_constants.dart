@@ -29,11 +29,17 @@ abstract final class WidgetConstants {
   /// Default weekend days using ISO weekday format.
   ///
   /// - Monday = 1
+  /// - Friday = 5
   /// - Saturday = 6
   /// - Sunday = 7
   ///
-  /// Used for weekend pricing calculations.
-  static const List<int> defaultWeekendDays = [6, 7];
+  /// For hotel pricing, "weekend night" means the night you SLEEP on that day:
+  /// - Friday night (sleep Fri→Sat) = weekend price
+  /// - Saturday night (sleep Sat→Sun) = weekend price
+  /// - Sunday night (sleep Sun→Mon) = weekday price
+  ///
+  /// Therefore default is [5, 6] (Friday, Saturday), NOT [6, 7] (Sat, Sun).
+  static const List<int> defaultWeekendDays = [5, 6];
 
   // ============================================================
   // BOOKING DEFAULTS

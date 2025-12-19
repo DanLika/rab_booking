@@ -667,21 +667,21 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           return;
         }
 
-        // OPTIMIZED: Get minNights from cached widgetContext (reuses cached data)
-        final validationMinNights =
-            ref
-                .read(widgetContextProvider((propertyId: widget.propertyId, unitId: widget.unitId)))
-                .valueOrNull
-                ?.unit
-                .minStayNights ??
-            1;
+        // OPTIMIZED: Get min/maxNights from cached widgetContext (reuses cached data)
+        final unitData = ref
+            .read(widgetContextProvider((propertyId: widget.propertyId, unitId: widget.unitId)))
+            .valueOrNull
+            ?.unit;
+        final validationMinNights = unitData?.minStayNights ?? 1;
+        final validationMaxNights = unitData?.maxStayNights;
 
-        // Range validation (minNights, minNightsOnArrival, maxNightsOnArrival)
+        // Range validation (minNights, maxNights, minNightsOnArrival, maxNightsOnArrival)
         // Note: startDateInfo is already fetched above for blockCheckIn validation
         final rangeResult = validator.validateRange(
           start: start,
           end: end,
           minNights: validationMinNights,
+          maxNights: validationMaxNights,
           checkInDateInfo: startDateInfo,
         );
         if (!rangeResult.isValid) {

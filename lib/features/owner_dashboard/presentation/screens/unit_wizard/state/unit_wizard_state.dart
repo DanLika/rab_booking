@@ -27,9 +27,9 @@ class UnitWizardDraft with _$UnitWizardDraft {
 
     // Step 3: Pricing (REQUIRED)
     double? pricePerNight,
-    double? weekendBasePrice, // Weekend price (Sat-Sun by default)
-    @Default([6, 7])
-    List<int> weekendDays, // Days considered weekend (1=Mon...7=Sun)
+    double? weekendBasePrice, // Weekend price (Fri-Sat nights by default)
+    @Default([5, 6])
+    List<int> weekendDays, // Days considered weekend (1=Mon...7=Sun) - Fri=5, Sat=6 for hotel nights
     int? minStayNights,
     int? maxStayNights, // Maximum nights per booking (null = no limit)
     @Default([])
@@ -77,7 +77,7 @@ class UnitWizardDraft with _$UnitWizardDraft {
       areaSqm: unit.areaSqm,
       pricePerNight: unit.pricePerNight,
       weekendBasePrice: unit.weekendBasePrice,
-      weekendDays: unit.weekendDays ?? [6, 7],
+      weekendDays: unit.weekendDays ?? [5, 6],
       minStayNights: unit.minStayNights,
       maxStayNights: unit.maxStayNights,
       images: unit.images,

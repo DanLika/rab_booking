@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import '../../../../../core/utils/async_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../shared/providers/repository_providers.dart';
@@ -373,18 +374,45 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.06),
+                  ),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.sync_disabled, size: 48, color: theme.colorScheme.outline),
-                    const SizedBox(height: 12),
-                    Text(l10n.icalNoFeedsTitle, style: theme.textTheme.titleSmall),
-                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.rss_feed_rounded,
+                        size: 32,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.icalNoFeedsTitle,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       l10n.icalNoFeedsSubtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.6)
+                            : Colors.black.withValues(alpha: 0.55),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -729,7 +757,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     try {
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('syncIcalFeedNow');
-      final result = await callable.call({'feedId': feed.id});
+      final result = await callable.call({'feedId': feed.id}).withCloudFunctionTimeout('syncIcalFeedNow');
 
       // Invalidate providers to refresh UI after sync
       ref.invalidate(icalFeedsStreamProvider);
@@ -969,7 +997,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                                   )
                                   .toList(),
                               onChanged: (value) {
-                                final unit = units.firstWhere((u) => u.id == value);
+                                final unit = units.firstWhere(
+                                  (u) => u.id == value,
+                                  orElse: () => units.first, // Fallback (value always comes from dropdown items)
+                                );
                                 setState(() {
                                   _selectedUnitId = value;
                                   _selectedPropertyId = unit.propertyId;

@@ -5502,6 +5502,36 @@ abstract class AppLocalizations {
   /// **'You will see all your notifications here'**
   String get notificationsEmptyDesc;
 
+  /// No description provided for @notificationsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll receive alerts for:'**
+  String get notificationsEmptyHint;
+
+  /// No description provided for @notificationsHintNewBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'New booking requests'**
+  String get notificationsHintNewBookings;
+
+  /// No description provided for @notificationsHintPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmations'**
+  String get notificationsHintPayments;
+
+  /// No description provided for @notificationsHintCancellations.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking cancellations'**
+  String get notificationsHintCancellations;
+
+  /// No description provided for @notificationsHintReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in reminders'**
+  String get notificationsHintReminders;
+
   /// No description provided for @notificationsLoadError.
   ///
   /// In en, this message translates to:

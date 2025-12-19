@@ -4477,6 +4477,23 @@ class WidgetTranslations {
     }
   }
 
+  /// Global maximum nights error (from UnitModel.maxStayNights)
+  String errorMaxNights(int maxNights, int selectedNights) {
+    final maxWord = _nightWord(maxNights);
+    final selectedWord = _nightWord(selectedNights);
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Maksimalni boravak je $maxNights $maxWord. Odabrali ste $selectedNights $selectedWord.';
+      case 'de':
+        return 'Maximaler Aufenthalt ist $maxNights $maxWord. Sie haben $selectedNights $selectedWord ausgewählt.';
+      case 'it':
+        return 'Il soggiorno massimo è di $maxNights $maxWord. Hai selezionato $selectedNights $selectedWord.';
+      case 'en':
+      default:
+        return 'Maximum stay is $maxNights $maxWord. You selected $selectedNights $selectedWord.';
+    }
+  }
+
   String errorMinNightsOnArrival(int minNights, int selectedNights) {
     final minWord = _nightWord(minNights);
     final selectedWord = _nightWord(selectedNights);
@@ -4764,6 +4781,70 @@ class WidgetTranslations {
       case 'en':
       default:
         return 'Back online';
+    }
+  }
+
+  // ============================================================================
+  // BANK TRANSFER DETAILS (Booking Details Page)
+  // ============================================================================
+
+  /// Bank transfer details card title
+  String get bankTransferDetails {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Podaci za uplatu';
+      case 'de':
+        return 'Zahlungsdaten';
+      case 'it':
+        return 'Dati per il pagamento';
+      case 'en':
+      default:
+        return 'Payment Details';
+    }
+  }
+
+  /// Payment reference label
+  String get paymentReference {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Poziv na broj';
+      case 'de':
+        return 'Verwendungszweck';
+      case 'it':
+        return 'Causale';
+      case 'en':
+      default:
+        return 'Reference';
+    }
+  }
+
+  /// Amount to pay label
+  String get amountToPay {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Iznos za uplatu';
+      case 'de':
+        return 'Zu zahlender Betrag';
+      case 'it':
+        return 'Importo da pagare';
+      case 'en':
+      default:
+        return 'Amount to Pay';
+    }
+  }
+
+  /// Copied to clipboard success message
+  String get copiedToClipboard {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kopirano u međuspremnik';
+      case 'de':
+        return 'In die Zwischenablage kopiert';
+      case 'it':
+        return 'Copiato negli appunti';
+      case 'en':
+      default:
+        return 'Copied to clipboard';
     }
   }
 }

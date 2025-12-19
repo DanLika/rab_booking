@@ -1097,14 +1097,34 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
               ),
               const SizedBox(height: 16),
 
-              // Stripe Payment - Collapsible (no deposit slider)
+              // Stripe Payment - Collapsible with approval option
               _buildPaymentMethodExpansionTile(
                 icon: Icons.credit_card,
                 title: l10n.widgetSettingsStripePayment,
                 subtitle: l10n.widgetSettingsCardPayment,
                 enabled: _stripeEnabled,
                 onToggle: (val) => setState(() => _stripeEnabled = val),
-                child: const SizedBox.shrink(), // No additional settings needed
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    // Require Approval switch - Only applies to Stripe
+                    // Bank transfer and Pay on Arrival always require approval
+                    Builder(
+                      builder: (context) {
+                        final l10nInner = AppLocalizations.of(context);
+                        return _buildCompactSwitchCard(
+                          icon: Icons.approval,
+                          label: l10nInner.widgetSettingsRequireApproval,
+                          subtitle: l10nInner.widgetSettingsStripeApprovalNote,
+                          value: _requireApproval,
+                          onChanged: (val) =>
+                              setState(() => _requireApproval = val),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 12),
@@ -1533,17 +1553,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              // Responsive Grid for Switches
-              // Note: For bookingPending mode, approval is ALWAYS required (hidden toggle)
-              // Only show approval toggle for bookingInstant mode
+              // Booking Behavior: Cancellation switch + deadline slider
+              // Note: Require Approval is now in Stripe section (only applies to Stripe)
+              // Bank transfer and Pay on Arrival always require approval
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isDesktop = constraints.maxWidth >= 600;
-                  final isBookingPending =
-                      _selectedMode == WidgetMode.bookingPending;
                   final l10nInner = AppLocalizations.of(context);
 
-                  // Build cancellation card (always shown)
+                  // Build cancellation switch card
                   final cancellationCard = _buildBehaviorSwitchCard(
                     icon: Icons.event_busy,
                     label: l10nInner.widgetSettingsAllowCancellation,
@@ -1553,159 +1571,132 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                         setState(() => _allowCancellation = val),
                   );
 
-                  // Build approval card (only for bookingInstant)
-                  final approvalCard = _buildBehaviorSwitchCard(
-                    icon: Icons.approval,
-                    label: l10nInner.widgetSettingsRequireApproval,
-                    subtitle: l10nInner.widgetSettingsManualApproval,
-                    value: _requireApproval,
-                    onChanged: (val) => setState(() => _requireApproval = val),
-                  );
-
-                  // For bookingPending: only show cancellation (approval is always true)
-                  if (isBookingPending) {
-                    return Column(
-                      children: [
-                        // Info banner explaining approval is automatic
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
+                  // Build cancellation deadline card (only shown when cancellation is enabled)
+                  final deadlineCard = Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _allowCancellation
+                          ? Theme.of(context)
+                              .colorScheme
+                              .primaryContainer
+                              .withValues(alpha: 0.3)
+                          : Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _allowCancellation
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context)
                                 .colorScheme
-                                .primaryContainer
+                                .outline
                                 .withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.5),
+                        width: _allowCancellation ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 20,
+                              color: _allowCancellation
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  l10nInner.widgetSettingsPendingModeInfo,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
-                                  ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                l10nInner.widgetSettingsCancellationDeadline(
+                                  _cancellationHours,
+                                ),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: _allowCancellation
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
-                        cancellationCard,
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: _allowCancellation
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant
+                                    .withValues(alpha: 0.3),
+                            inactiveTrackColor: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.2),
+                            thumbColor: _allowCancellation
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                            overlayColor: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.12),
+                            valueIndicatorColor:
+                                Theme.of(context).colorScheme.primary,
+                            valueIndicatorTextStyle: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: Slider(
+                            value: _cancellationHours.toDouble(),
+                            max: 360, // 15 days
+                            divisions: 60,
+                            label: '$_cancellationHours h',
+                            onChanged: _allowCancellation
+                                ? (value) {
+                                    setState(
+                                      () =>
+                                          _cancellationHours = value.round(),
+                                    );
+                                  }
+                                : null,
+                          ),
+                        ),
                       ],
-                    );
-                  }
+                    ),
+                  );
 
-                  // For bookingInstant: show both cards
+                  // Desktop: cancellation switch left, deadline slider right
                   if (isDesktop) {
-                    // Desktop: 2 columns
                     return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: approvalCard),
-                        const SizedBox(width: 12),
                         Expanded(child: cancellationCard),
+                        const SizedBox(width: 12),
+                        Expanded(child: deadlineCard),
                       ],
                     );
                   } else {
-                    // Mobile: Vertical
+                    // Mobile: Vertical layout
                     return Column(
                       children: [
-                        approvalCard,
-                        const SizedBox(height: 12),
                         cancellationCard,
+                        const SizedBox(height: 12),
+                        deadlineCard,
                       ],
                     );
                   }
                 },
               ),
-
-              // Cancellation deadline slider (conditional)
-              if (_allowCancellation) ...[
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outline.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.widgetSettingsCancellationDeadline(
-                                _cancellationHours,
-                              ),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          inactiveTrackColor: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.2),
-                          thumbColor: Theme.of(context).colorScheme.primary,
-                          overlayColor: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.12),
-                          valueIndicatorColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          valueIndicatorTextStyle: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        child: Slider(
-                          value: _cancellationHours.toDouble(),
-                          max: 168, // 7 days
-                          divisions: 28,
-                          label: '$_cancellationHours h',
-                          onChanged: (value) {
-                            setState(() => _cancellationHours = value.round());
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ],
           ),
         ),

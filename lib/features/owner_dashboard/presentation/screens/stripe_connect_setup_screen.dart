@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -38,12 +41,13 @@ class _StripeConnectSetupScreenState
   }
 
   Future<void> _loadStripeAccountInfo() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('getStripeAccountStatus');
-      final result = await callable.call();
+      final result = await callable.call().withCloudFunctionTimeout('getStripeAccountStatus');
       final data = result.data as Map<String, dynamic>;
 
       if (mounted) {
@@ -59,10 +63,20 @@ class _StripeConnectSetupScreenState
           _isLoading = false;
         });
       }
-    } catch (e) {
-      LoggingService.log(
-        'Error loading Stripe account info',
-        tag: 'StripeConnect',
+    } on TimeoutException {
+      // Timeout already logged by withCloudFunctionTimeout
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          'Request timed out. Please check your connection and try again.',
+        );
+      }
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'Failed to load Stripe account info',
+        e,
+        stackTrace,
       );
       if (mounted) {
         setState(() => _isLoading = false);
@@ -85,7 +99,7 @@ class _StripeConnectSetupScreenState
       final result = await callable.call({
         'returnUrl': returnUrl,
         'refreshUrl': refreshUrl,
-      });
+      }).withCloudFunctionTimeout('createStripeConnectAccount');
       final data = result.data as Map<String, dynamic>;
       final success = data['success'] == true;
       final onboardingUrl = data['onboardingUrl'] as String?;
@@ -111,10 +125,18 @@ class _StripeConnectSetupScreenState
           l10n.stripeCreateAccountError,
         );
       }
-    } catch (e) {
-      LoggingService.log(
-        'Error connecting Stripe account',
-        tag: 'StripeConnect',
+    } on TimeoutException {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          'Request timed out. Please check your connection and try again.',
+        );
+      }
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'Failed to connect Stripe account',
+        e,
+        stackTrace,
       );
       if (mounted) {
         final l10n = AppLocalizations.of(context);
@@ -174,7 +196,7 @@ class _StripeConnectSetupScreenState
     try {
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('disconnectStripeAccount');
-      final result = await callable.call();
+      final result = await callable.call().withCloudFunctionTimeout('disconnectStripeAccount');
       final data = result.data as Map<String, dynamic>;
       final success = data['success'] == true;
 
@@ -195,10 +217,18 @@ class _StripeConnectSetupScreenState
           );
         }
       }
-    } catch (e) {
-      LoggingService.log(
-        'Error disconnecting Stripe account: $e',
-        tag: 'StripeConnect',
+    } on TimeoutException {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          'Request timed out. Please check your connection and try again.',
+        );
+      }
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'Failed to disconnect Stripe account',
+        e,
+        stackTrace,
       );
       if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(

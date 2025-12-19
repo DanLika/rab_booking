@@ -129,10 +129,11 @@ class DateNormalizer {
         !normalized.isAfter(normalizedEnd);
   }
 
-  /// Checks if [date] is a weekend day.
+  /// Checks if [date] is a weekend day (for hotel pricing).
   ///
-  /// [weekendDays] defaults to Saturday (6) and Sunday (7) using ISO weekday.
-  static bool isWeekend(DateTime date, {List<int> weekendDays = const [6, 7]}) {
+  /// [weekendDays] defaults to Friday (5) and Saturday (6) using ISO weekday.
+  /// This represents nights slept on Friday→Saturday and Saturday→Sunday.
+  static bool isWeekend(DateTime date, {List<int> weekendDays = const [5, 6]}) {
     return weekendDays.contains(date.weekday);
   }
 

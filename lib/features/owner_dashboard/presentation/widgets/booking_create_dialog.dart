@@ -619,7 +619,12 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   }
 
   bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    // RFC 5322 compliant email regex - supports:
+    // - Plus signs (user+tag@example.com)
+    // - Long TLDs (.photography, .technology)
+    // - Subdomains (user@mail.example.co.uk)
+    return RegExp(r'^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$')
+        .hasMatch(email);
   }
 
   void _showError(String message) {

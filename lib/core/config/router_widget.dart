@@ -54,11 +54,32 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
         },
         routes: [
           // Booking details sub-route
-          // Navigated to after successful booking lookup
+          // URL: /view/details?ref=BOOKING_REF&email=EMAIL
+          // Navigated to after successful booking lookup OR accessed directly via refresh
           GoRoute(
             path: 'details',
             builder: (context, state) {
               final extra = state.extra;
+
+              // Check if we have query params (for page refresh scenario)
+              final ref = state.uri.queryParameters['ref'];
+              final email = state.uri.queryParameters['email'];
+              final token = state.uri.queryParameters['token'];
+
+              // If extra is null but we have query params, redirect to /view to re-lookup
+              // This handles the page refresh case
+              // Use navigateToDetails flag to tell BookingViewScreen to show details inline
+              // instead of navigating (which would cause infinite loop)
+              if (extra == null && ref != null && email != null) {
+                // Return BookingViewScreen in "show details inline" mode
+                return BookingViewScreen(
+                  bookingRef: ref,
+                  email: email,
+                  token: token,
+                  showDetailsInline: true, // Prevents navigation loop on refresh
+                );
+              }
+
               if (extra == null) {
                 return const NotFoundScreen();
               }

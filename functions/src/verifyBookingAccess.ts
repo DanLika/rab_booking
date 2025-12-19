@@ -131,6 +131,30 @@ export const verifyBookingAccess = onCall(async (request) => {
       .get();
     const unit = unitDoc.data();
 
+    // Fetch owner company details for bank transfer payments
+    let bankDetails = null;
+    if (booking.payment_method === "bank_transfer" && booking.owner_id) {
+      const companyDoc = await db
+        .collection("users")
+        .doc(booking.owner_id)
+        .collection("data")
+        .doc("company")
+        .get();
+
+      if (companyDoc.exists) {
+        const company = companyDoc.data();
+        // Only include bank details if owner has configured them
+        if (company?.bankAccountIban) {
+          bankDetails = {
+            bankName: company.bankName || null,
+            accountHolder: company.accountHolder || null,
+            iban: company.bankAccountIban,
+            swift: company.swift || null,
+          };
+        }
+      }
+    }
+
     // Calculate nights
     const checkIn = booking.check_in.toDate();
     const checkOut = booking.check_out.toDate();
@@ -170,6 +194,7 @@ export const verifyBookingAccess = onCall(async (request) => {
       paymentDeadline: booking.payment_deadline ?
         booking.payment_deadline.toDate().toISOString() :
         null,
+      bankDetails: bankDetails,
     };
 
     logInfo("[VerifyBookingAccess] Access verified successfully", {

@@ -13,7 +13,7 @@
 
 import {admin, db} from "../firebase";
 import {HttpsError} from "firebase-functions/v2/https";
-import {logInfo, logError} from "../logger";
+import {logInfo, logWarn, logError} from "../logger";
 import {logPriceMismatch} from "./securityMonitoring";
 
 /**
@@ -221,11 +221,18 @@ export async function calculateBookingPrice(
  * SECURITY: Prevents price manipulation attacks.
  * Call this BEFORE creating any booking.
  *
+ * The validation formula is:
+ *   serverNightlyPrice + servicesTotal ≈ clientTotalPrice (within tolerance)
+ *
+ * This accounts for additional services (cleaning, pets, etc.) that are
+ * calculated on the client and passed separately for validation.
+ *
  * @param unitId - The unit ID
  * @param checkInDate - Check-in date (Firestore Timestamp)
  * @param checkOutDate - Check-out date (Firestore Timestamp)
- * @param clientTotalPrice - Price provided by client
+ * @param clientTotalPrice - Total price provided by client (nightly + services)
  * @param propertyId - The property ID (REQUIRED for subcollection path)
+ * @param servicesTotal - Additional services total from client (default 0)
  * @param transaction - Optional Firestore transaction for atomic validation
  * @throws HttpsError if price mismatch detected
  */
@@ -235,6 +242,7 @@ export async function validateBookingPrice(
   checkOutDate: admin.firestore.Timestamp,
   clientTotalPrice: number,
   propertyId: string,
+  servicesTotal: number = 0,
   transaction?: admin.firestore.Transaction
 ): Promise<void> {
   // Validate clientTotalPrice is a valid number
@@ -249,8 +257,15 @@ export async function validateBookingPrice(
     );
   }
 
-  // Calculate server-side price (with fallback support)
-  const {totalPrice: serverTotalPrice} = await calculateBookingPrice(
+  // Validate servicesTotal is a valid number (default 0 if not provided)
+  const validatedServicesTotal = (
+    typeof servicesTotal === "number" &&
+    Number.isFinite(servicesTotal) &&
+    servicesTotal >= 0
+  ) ? servicesTotal : 0;
+
+  // Calculate server-side nightly price (with fallback support)
+  const {totalPrice: serverNightlyPrice} = await calculateBookingPrice(
     unitId,
     checkInDate,
     checkOutDate,
@@ -258,34 +273,45 @@ export async function validateBookingPrice(
     transaction
   );
 
+  // Server expected total = nightly prices + additional services
+  const serverExpectedTotal = Math.round((serverNightlyPrice + validatedServicesTotal) * 100) / 100;
+
   // Allow small tolerance for floating point rounding (max €0.01)
   const tolerance = 0.01;
-  const difference = Math.abs(serverTotalPrice - clientTotalPrice);
+  const difference = Math.abs(serverExpectedTotal - clientTotalPrice);
 
   if (difference > tolerance) {
-    logError("[PriceValidation] Price mismatch detected - possible manipulation", null, {
+    // Log security event (fire-and-forget) - severity: high
+    // NOTE: Only logPriceMismatch sends to Sentry - don't duplicate with logError here
+    logWarn("[PriceValidation] Price mismatch detected - possible manipulation", {
       unitId,
-      serverPrice: serverTotalPrice,
+      serverNightlyPrice,
+      servicesTotal: validatedServicesTotal,
+      serverExpectedTotal,
       clientPrice: clientTotalPrice,
       difference,
     });
 
-    // Log security event (fire-and-forget) - severity: high
-    logPriceMismatch(unitId, clientTotalPrice, serverTotalPrice, {
+    // Log security event to Firestore + Sentry (fire-and-forget)
+    logPriceMismatch(unitId, clientTotalPrice, serverExpectedTotal, {
       propertyId,
       checkIn: checkInDate.toDate().toISOString(),
       checkOut: checkOutDate.toDate().toISOString(),
+      serverNightlyPrice,
+      servicesTotal: validatedServicesTotal,
     }).catch(() => {});
 
     throw new HttpsError(
       "invalid-argument",
-      `Price mismatch. Expected €${serverTotalPrice.toFixed(2)}, received €${clientTotalPrice.toFixed(2)}. ` +
+      `Price mismatch. Expected €${serverExpectedTotal.toFixed(2)}, received €${clientTotalPrice.toFixed(2)}. ` +
       `Please refresh the page to see current pricing.`
     );
   }
 
   logInfo("[PriceValidation] Price validated successfully", {
     unitId,
-    price: serverTotalPrice,
+    nightlyPrice: serverNightlyPrice,
+    servicesTotal: validatedServicesTotal,
+    totalPrice: serverExpectedTotal,
   });
 }

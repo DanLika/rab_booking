@@ -9,6 +9,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/services/logging_service.dart';
@@ -477,7 +478,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           final callable = functions.httpsCallable('updateBookingTokenExpiration');
           await callable.call({
             'bookingId': widget.booking.id,
-          });
+          }).withCloudFunctionTimeout('updateBookingTokenExpiration');
         } catch (e) {
           // Log error but don't block booking update
           LoggingService.logWarning('Failed to update token expiration: $e');

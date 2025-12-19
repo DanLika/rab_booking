@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
@@ -522,7 +523,8 @@ class BookingDetailsDialog extends ConsumerWidget {
       final functions = ref.read(firebaseFunctionsProvider);
       final callable = functions.httpsCallable('resendBookingEmail');
 
-      await callable.call({'bookingId': ownerBooking.booking.id});
+      await callable.call({'bookingId': ownerBooking.booking.id})
+          .withCloudFunctionTimeout('resendBookingEmail');
 
       if (context.mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerDetailsSendSuccess(ownerBooking.guestEmail));

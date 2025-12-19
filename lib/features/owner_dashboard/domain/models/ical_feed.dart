@@ -187,8 +187,10 @@ class IcalEvent with _$IcalEvent {
       id: doc.id,
       unitId: data['unit_id'] as String? ?? '',
       feedId: data['feed_id'] as String? ?? '',
-      startDate: (data['start_date'] as Timestamp).toDate(),
-      endDate: (data['end_date'] as Timestamp).toDate(),
+      startDate: (data['start_date'] as Timestamp?)?.toDate() ??
+          DateTime.now(),
+      endDate: (data['end_date'] as Timestamp?)?.toDate() ??
+          DateTime.now().add(const Duration(days: 1)),
       guestName: data['guest_name'] as String? ?? 'Gost',
       source: data['source'] as String? ?? 'other',
       externalId: data['external_id'] as String? ?? '',

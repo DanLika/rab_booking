@@ -429,7 +429,14 @@ void _handleWheelEvent(web.WheelEvent event) {
   final target = event.target;
   if (target == null) return;
 
-  final scrollableElement = _findScrollableParent(target as web.Element);
+  // FIX #16: Safe cast with try-catch - target can be Document, Window, etc.
+  web.Element? scrollableElement;
+  try {
+    scrollableElement = _findScrollableParent(target as web.Element);
+  } catch (e) {
+    // Cast failed - target is not an Element, ignore this event
+    return;
+  }
 
   if (scrollableElement != null) {
     final scrollTop = scrollableElement.scrollTop;

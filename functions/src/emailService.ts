@@ -974,14 +974,35 @@ export async function sendCheckOutReminderEmail(
 // NOTE: sendSuspiciousActivityEmail has been removed (TODO for future implementation)
 
 /**
+ * Bank details for bank transfer payments
+ */
+export interface BankDetails {
+  bankName?: string;
+  accountHolder?: string;
+  iban?: string;
+  swift?: string;
+}
+
+/**
  * Send pending booking request email
  * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, warning theme)
+ *
+ * @param guestEmail - Guest's email address
+ * @param guestName - Guest's name
+ * @param bookingReference - Booking reference code
+ * @param propertyName - Property name
+ * @param paymentMethod - Optional payment method (if 'bank_transfer', includes bank details)
+ * @param depositAmount - Optional deposit amount for bank transfer
+ * @param bankDetails - Optional bank details (required if paymentMethod is 'bank_transfer')
  */
 export async function sendPendingBookingRequestEmail(
   guestEmail: string,
   guestName: string,
   bookingReference: string,
-  propertyName: string
+  propertyName: string,
+  paymentMethod?: string,
+  depositAmount?: number,
+  bankDetails?: BankDetails
 ): Promise<void> {
   // Input validation
   validateEmail(guestEmail, "guestEmail");
@@ -996,6 +1017,9 @@ export async function sendPendingBookingRequestEmail(
       guestName,
       bookingReference,
       propertyName,
+      paymentMethod,
+      depositAmount,
+      bankDetails,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
@@ -1006,7 +1030,11 @@ export async function sendPendingBookingRequestEmail(
       FROM_NAME()
     );
 
-    logSuccess("Pending booking request email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Pending booking request email sent (V2 - Refined Premium)", {
+      email: guestEmail,
+      paymentMethod,
+      hasBankDetails: !!bankDetails?.iban,
+    });
   } catch (error) {
     logError("Error sending pending booking request email", error);
     throw error;

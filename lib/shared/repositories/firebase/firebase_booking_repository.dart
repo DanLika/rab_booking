@@ -12,9 +12,22 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<List<BookingModel>> fetchUnitBookings(String unitId) async {
     // NEW STRUCTURE: Use collection group query to find bookings across all units
+    // SECURITY: Must include 'status' filter to match Firestore rules Case 3
+    // (rules require unit_id + status for widget/export queries)
+    //
+    // Fetches confirmed, pending, and completed bookings (excludes cancelled)
+    // This covers all "active" bookings needed for:
+    // - iCal export (visible to external calendars)
+    // - Availability checking
+    // - Calendar display
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
+        .where('status', whereIn: [
+          BookingStatus.pending.value,
+          BookingStatus.confirmed.value,
+          BookingStatus.completed.value,
+        ])
         .get();
     return snapshot.docs
         .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))

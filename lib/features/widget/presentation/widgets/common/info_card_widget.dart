@@ -51,6 +51,9 @@ class InfoCardWidget extends StatelessWidget {
   /// When true, Row uses mainAxisSize.min and text is centered
   final bool useMinimalWidth;
 
+  /// Custom background color (defaults to backgroundTertiary)
+  final Color? backgroundColor;
+
   const InfoCardWidget({
     super.key,
     required this.message,
@@ -60,6 +63,7 @@ class InfoCardWidget extends StatelessWidget {
     this.iconSize,
     this.centerContent = false,
     this.useMinimalWidth = false,
+    this.backgroundColor,
   });
 
   @override
@@ -86,7 +90,7 @@ class InfoCardWidget extends StatelessWidget {
           vertical: hasTitle ? SpacingTokens.m : SpacingTokens.s,
         ),
         decoration: BoxDecoration(
-          color: colors.backgroundTertiary,
+          color: backgroundColor ?? colors.backgroundTertiary,
           borderRadius: BorderTokens.circularMedium,
           border: Border.all(color: colors.borderDefault),
         ),

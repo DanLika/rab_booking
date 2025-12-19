@@ -16,7 +16,9 @@
       "mcp__sentry",
       "SlashCommand(/misc:code-explain)",
       "WebSearch",
-      "SlashCommand(/misc:feature-plan)"
+      "SlashCommand(/misc:feature-plan)",
+      "Skill(misc:code-explain)",
+      "Skill(misc:feature-plan)"
     ],
     "deny": []
   }

@@ -207,7 +207,8 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    final dateFormat = DateFormat('d. MMM yyyy', 'hr_HR');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('d. MMM yyyy', locale);
 
     return InkWell(
       onTap: onTap,
@@ -262,7 +263,7 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
               },
             ),
             Text(
-              DateFormat('MMMM yyyy', 'hr_HR').format(_focusedMonth),
+              DateFormat('MMMM yyyy', Localizations.localeOf(context).toString()).format(_focusedMonth),
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             IconButton(

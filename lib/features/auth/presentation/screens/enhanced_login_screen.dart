@@ -86,8 +86,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       final authState = ref.read(enhancedAuthProvider);
 
+      debugPrint('[LOGIN_SCREEN] After signIn - isAuthenticated: ${authState.isAuthenticated}, error: ${authState.error}, requiresEmailVerification: ${authState.requiresEmailVerification}');
+
       if (authState.error != null) {
         if (!mounted) return;
+        debugPrint('[LOGIN_SCREEN] Auth state has error, showing snackbar');
         setState(() => _isLoading = false);
         ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
         return;
@@ -95,6 +98,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       if (authState.requiresEmailVerification) {
         if (!mounted) return;
+        debugPrint('[LOGIN_SCREEN] Email verification required, redirecting');
         setState(() => _isLoading = false);
         context.go(OwnerRoutes.emailVerification);
         return;
@@ -105,29 +109,48 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       // Keep loader visible during navigation to dashboard
       // (will be disposed when widget unmounts)
+      debugPrint('[LOGIN_SCREEN] Login successful, navigating to dashboard');
       if (mounted) {
         context.go(OwnerRoutes.overview);
       }
     } catch (e) {
+      debugPrint('[LOGIN_SCREEN] Caught exception: ${e.runtimeType} = $e');
       if (!mounted) return;
 
       // Give auth state a moment to update after error
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Get error message from exception (prefer thrown message over state)
+      // When a string is thrown directly, toString() returns the string itself
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      debugPrint('[LOGIN_SCREEN] Error message after processing: $errorMessage');
 
-      if (_isPasswordError(errorMessage)) {
+      final isPassError = _isPasswordError(errorMessage);
+      debugPrint('[LOGIN_SCREEN] Is password error: $isPassError');
+
+      if (isPassError) {
+        // Set the server error and trigger rebuild
+        debugPrint('[LOGIN_SCREEN] Setting _passwordErrorFromServer: $errorMessage');
         setState(() {
-          _passwordErrorFromServer = 'Incorrect password. Try again or reset your password.';
+          _passwordErrorFromServer = errorMessage;
           _isLoading = false;
         });
-        // Use addPostFrameCallback to avoid clearing fields during rebuild
+        // Use TWO nested postFrameCallbacks to ensure:
+        // 1. First callback: widget has rebuilt with new _passwordErrorFromServer
+        // 2. Second callback: form validation runs AFTER rebuild is fully complete
+        // This fixes Chrome timing issue where single callback runs before rebuild
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _formKey.currentState != null) {
-            _formKey.currentState!.validate();
-          }
+          if (!mounted) return;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _formKey.currentState != null) {
+              _formKey.currentState!.validate();
+            }
+          });
         });
+        // Also show snackbar for better visibility (belt and suspenders approach)
+        if (mounted) {
+          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        }
       } else {
         setState(() => _isLoading = false);
         if (mounted) {

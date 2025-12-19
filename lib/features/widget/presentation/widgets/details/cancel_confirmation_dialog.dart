@@ -46,12 +46,17 @@ class CancelConfirmationDialog extends ConsumerWidget {
     // Use pure black background for dark theme
     final dialogBg = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
 
+    // Use calendar status colors for consistency
+    // Red from booked days, green from available days
+    final cancelColor = colors.statusBookedBorder; // #ef4444 - calendar booked red
+    final keepColor = colors.statusAvailableBorder; // #83e6bf/#15b8a6 - calendar available green
+
     return AlertDialog(
       backgroundColor: dialogBg,
       shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularLarge),
       title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: colors.error, size: 28),
+          Icon(Icons.warning_amber_rounded, color: cancelColor, size: 28),
           const SizedBox(width: SpacingTokens.s),
           Text(
             tr.cancelBooking,
@@ -103,13 +108,13 @@ class CancelConfirmationDialog extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(SpacingTokens.s),
             decoration: BoxDecoration(
-              color: colors.error.withValues(alpha: 0.08),
+              color: cancelColor.withValues(alpha: 0.08),
               borderRadius: BorderTokens.circularSmall,
-              border: Border.all(color: colors.error.withValues(alpha: 0.2)),
+              border: Border.all(color: cancelColor.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, color: colors.error, size: 18),
+                Icon(Icons.info_outline, color: cancelColor, size: 18),
                 const SizedBox(width: SpacingTokens.xs),
                 Expanded(
                   child: Text(
@@ -127,13 +132,13 @@ class CancelConfirmationDialog extends ConsumerWidget {
           onPressed: () => Navigator.pop(context, false),
           child: Text(
             tr.keepBooking,
-            style: TextStyle(color: colors.textSecondary, fontWeight: TypographyTokens.medium),
+            style: TextStyle(color: keepColor, fontWeight: TypographyTokens.medium),
           ),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: colors.error,
+            backgroundColor: cancelColor,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),

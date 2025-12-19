@@ -83,9 +83,8 @@ class DateRangeFilter with _$DateRangeFilter {
   factory DateRangeFilter.currentMonth() {
     final now = DateTime.now();
     return DateRangeFilter(
-      startDate: DateTime(now.year, now.month, 1),
+      startDate: DateTime(now.year, now.month),
       endDate: DateTime(now.year, now.month + 1, 0, 23, 59, 59),
-      preset: 'month',
     );
   }
 

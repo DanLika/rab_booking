@@ -155,5 +155,8 @@ mixin FirestoreRepositoryMixin {
   ];
 
   /// Get month label (1-indexed)
-  String getMonthLabel(int month) => monthLabels[month - 1];
+  String getMonthLabel(int month) {
+    if (month < 1 || month > 12) return 'Invalid';
+    return monthLabels[month - 1];
+  }
 }

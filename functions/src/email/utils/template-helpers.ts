@@ -217,10 +217,12 @@ export function generateDetailsTable(rows: DetailRow[]): string {
       <tr>
         <td style="
           padding: 10px 0;
+          padding-right: 12px;
           font-size: 14px;
           color: ${COLORS.textSecondary};
           border-bottom: 1px solid ${COLORS.borderLight};
           vertical-align: top;
+          white-space: nowrap;
         ">${escapeHtml(row.label)}</td>
         <td style="
           padding: 10px 0;
@@ -228,13 +230,15 @@ export function generateDetailsTable(rows: DetailRow[]): string {
           text-align: right;
           border-bottom: 1px solid ${COLORS.borderLight};
           vertical-align: top;
+          word-break: break-word;
+          overflow-wrap: break-word;
         ">${escapeHtml(row.value)}</td>
       </tr>
     `;
   }).join("");
 
   return `
-    <table style="width: 100%; border-collapse: collapse;">
+    <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
       ${rowsHtml}
     </table>
   `.trim();
@@ -566,7 +570,7 @@ export function wrapEmailContent(content: string): string {
   return `
     <div style="
       background-color: ${COLORS.pageBg};
-      padding: 32px 16px;
+      padding: 8px;
       min-height: 100%;
     ">
       <div style="
@@ -577,6 +581,8 @@ export function wrapEmailContent(content: string): string {
         border: 1px solid ${COLORS.border};
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
         overflow: hidden;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
       ">
         ${content}
       </div>

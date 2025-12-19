@@ -31,6 +31,7 @@ class SubmitBookingParams {
 
   // Payment
   final double totalPrice;
+  final double servicesTotal; // Additional services total (for server-side validation)
   final String paymentMethod; // 'stripe', 'bank_transfer', 'pay_on_arrival', 'none'
   final String paymentOption; // 'deposit', 'full', 'none'
 
@@ -53,6 +54,7 @@ class SubmitBookingParams {
     required this.adults,
     required this.children,
     required this.totalPrice,
+    this.servicesTotal = 0.0,
     required this.paymentMethod,
     required this.paymentOption,
     required this.taxLegalAccepted,
@@ -136,6 +138,7 @@ class SubmitBookingUseCase {
         guestPhone: sanitizedPhone ?? params.phoneWithCountryCode,
         guestCount: params.totalGuests,
         totalPrice: params.totalPrice,
+        servicesTotal: params.servicesTotal,
         paymentOption: 'none', // No payment for pending bookings
         paymentMethod: 'none',
         requireOwnerApproval: true, // Always requires approval in bookingPending mode
@@ -169,6 +172,7 @@ class SubmitBookingUseCase {
       guestPhone: sanitizedPhone ?? params.phoneWithCountryCode,
       guestCount: params.totalGuests,
       totalPrice: params.totalPrice,
+      servicesTotal: params.servicesTotal,
       paymentOption: params.paymentOption, // 'deposit' or 'full'
       paymentMethod: params.paymentMethod, // 'stripe', 'bank_transfer', 'pay_on_arrival'
       requireOwnerApproval: params.widgetSettings?.requireOwnerApproval ?? false,

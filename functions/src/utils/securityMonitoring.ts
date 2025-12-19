@@ -11,7 +11,7 @@
  * @module securityMonitoring
  */
 
-import {logError, logWarn, logInfo} from "../logger";
+import {logWarn, logInfo} from "../logger";
 import * as admin from "firebase-admin";
 import {captureMessage} from "../sentry";
 
@@ -82,12 +82,15 @@ export async function logSecurityEvent(
   }
 
   // Always log to structured logs based on severity
+  // NOTE: For critical/high, we use logWarn (not logError) because Sentry
+  // is handled separately via captureMessage below - avoids duplicate alerts
   const logMessage = `[Security:${severity.toUpperCase()}] ${eventType}`;
 
   switch (severity) {
   case "critical":
   case "high":
-    logError(logMessage, null, details);
+    // Use logWarn here - Sentry alert is sent via captureMessage below
+    logWarn(logMessage, details);
     break;
   case "medium":
     logWarn(logMessage, details);
@@ -98,11 +101,11 @@ export async function logSecurityEvent(
   }
 
   // Sentry integration for critical/high severity events
-  // This provides real-time alerting for security incidents
+  // This is the ONLY path that sends to Sentry for security events
   if (severity === "critical" || severity === "high") {
     const sentryLevel = severity === "critical" ? "fatal" : "error";
     captureMessage(
-      `[Security] ${eventType}`,
+      `[Security:${severity.toUpperCase()}] ${eventType}`,
       sentryLevel,
       {
         eventType,

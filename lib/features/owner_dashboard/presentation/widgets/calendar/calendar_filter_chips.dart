@@ -80,6 +80,11 @@ class CalendarFilterChips extends ConsumerWidget {
               return GestureDetector(
                 onTap: () {
                   ref.read(calendarFiltersProvider.notifier).clearFilters();
+                  // CRITICAL: Force refresh of calendar data after clearing filters
+                  // Without this, cached data from filtered state persists
+                  ref.invalidate(filteredUnitsProvider);
+                  ref.invalidate(filteredCalendarBookingsProvider);
+                  ref.invalidate(timelineCalendarBookingsProvider);
                 },
                 child: Text(
                   l10n.ownerFilterClearAll,

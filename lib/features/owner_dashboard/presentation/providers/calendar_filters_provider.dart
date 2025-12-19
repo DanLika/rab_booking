@@ -119,10 +119,19 @@ Map<String, List<BookingModel>> _applyFiltersInBackground(
       }
 
       // Filter by source
-      if (filters.sources.isNotEmpty &&
-          booking.source != null &&
-          !filters.sources.contains(booking.source)) {
-        return false;
+      // FIX: Previously, null source bookings would ALWAYS pass through filters
+      // Now: If source filter is active, exclude bookings with null source
+      // (unless "direct" is explicitly in the filter list for null/direct bookings)
+      if (filters.sources.isNotEmpty) {
+        final bookingSource = booking.source;
+        if (bookingSource == null) {
+          // Null source = direct booking. Only include if "direct" is in filter
+          if (!filters.sources.contains('direct')) {
+            return false;
+          }
+        } else if (!filters.sources.contains(bookingSource)) {
+          return false;
+        }
       }
 
       // Filter by date range (check-in dates)

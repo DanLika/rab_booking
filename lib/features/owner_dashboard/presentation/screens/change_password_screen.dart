@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -85,7 +86,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> wit
       try {
         final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
         final checkHistoryCallable = functions.httpsCallable('checkPasswordHistory');
-        await checkHistoryCallable.call({'password': newPassword});
+        await checkHistoryCallable.call({'password': newPassword}).withCloudFunctionTimeout('checkPasswordHistory');
       } on FirebaseFunctionsException catch (e) {
         if (e.code == 'failed-precondition') {
           // Password was recently used
@@ -115,7 +116,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> wit
       try {
         final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
         final saveHistoryCallable = functions.httpsCallable('savePasswordToHistory');
-        await saveHistoryCallable.call({'password': newPassword});
+        await saveHistoryCallable.call({'password': newPassword}).withCloudFunctionTimeout('savePasswordToHistory');
       } catch (e) {
         // Don't block password change if history save fails
         LoggingService.log('Password history save failed: $e', tag: 'AUTH_WARNING');

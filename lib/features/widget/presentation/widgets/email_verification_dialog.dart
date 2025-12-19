@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -184,7 +185,7 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
     // Responsive padding and max width
     final screenWidth = MediaQuery.of(context).size.width;
     final dialogPadding = screenWidth < 600 ? 16.0 : 32.0;
-    final maxWidth = screenWidth < 600 ? screenWidth * 0.95 : 450.0;
+    final maxWidth = screenWidth < 600 ? screenWidth * 0.95 : 500.0;
 
     // Responsive font sizes
     final titleFontSize = screenWidth < 600 ? 20.0 : 24.0;
@@ -239,8 +240,10 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                       Icon(Icons.email_outlined, color: widget.colors.textSecondary, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
+                        child: AutoSizeText(
                           widget.email,
+                          maxLines: 1,
+                          minFontSize: 10,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             color: widget.colors.textPrimary,
@@ -379,16 +382,15 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
                 // Verify button
                 SizedBox(
-                  height: 44, // Increased by 2px (was 42)
+                  height: 44,
                   child: ElevatedButton(
                     onPressed: _isVerifying ? null : _verifyCode,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: widget.colors.primary,
                       foregroundColor: widget.colors.backgroundCard,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 35,
-                      ), // Increased horizontal padding for wider button
+                      disabledBackgroundColor: widget.colors.primary,
+                      disabledForegroundColor: widget.colors.backgroundCard,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 35),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                       minimumSize: const Size(double.infinity, 44),

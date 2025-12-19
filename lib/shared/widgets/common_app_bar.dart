@@ -66,15 +66,11 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        leadingWidth: 72, // Increased from default 56 to add more left padding
         leading: Builder(
-          builder: (context) => Padding(
-            padding: const EdgeInsets.only(left: 8.0), // Additional left padding
-            child: IconButton(
-              icon: Icon(leadingIcon, color: iconColor),
-              onPressed: () => onLeadingIconTap(context),
-              tooltip: 'Menu',
-            ),
+          builder: (context) => IconButton(
+            icon: Icon(leadingIcon, color: iconColor),
+            onPressed: () => onLeadingIconTap(context),
+            tooltip: 'Menu',
           ),
         ),
         systemOverlayStyle: const SystemUiOverlayStyle(

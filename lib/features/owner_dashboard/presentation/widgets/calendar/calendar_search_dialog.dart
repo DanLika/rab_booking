@@ -302,7 +302,8 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
   Widget _buildResultCard(BookingModel booking, UnitModel? unit) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final dateFormat = DateFormat('d.M.yyyy', 'hr_HR');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('d.M.yyyy', locale);
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
     return Container(

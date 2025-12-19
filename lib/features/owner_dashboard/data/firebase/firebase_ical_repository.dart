@@ -22,10 +22,15 @@ class FirebaseIcalRepository {
 
       if (propertyIds.isEmpty) return [];
 
-      // Get all feeds for these properties
-      final feedsSnapshot = await _firestore.collection('ical_feeds').where('property_id', whereIn: propertyIds).get();
+      // Firestore whereIn limit is 10, so we need to batch queries
+      final List<IcalFeed> allFeeds = [];
+      for (int i = 0; i < propertyIds.length; i += 10) {
+        final batch = propertyIds.skip(i).take(10).toList();
+        final feedsSnapshot = await _firestore.collection('ical_feeds').where('property_id', whereIn: batch).get();
+        allFeeds.addAll(feedsSnapshot.docs.map(IcalFeed.fromFirestore));
+      }
 
-      return feedsSnapshot.docs.map(IcalFeed.fromFirestore).toList();
+      return allFeeds;
     } catch (e) {
       LoggingService.log('Error getting owner feeds: $e', tag: 'IcalRepository');
       return [];

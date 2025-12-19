@@ -37,7 +37,7 @@ class BookingBehaviorConfig {
 
   /// Days considered as weekend for pricing purposes.
   /// Uses ISO weekday format: 1=Monday, 7=Sunday.
-  /// Default: [6, 7] (Saturday, Sunday)
+  /// Default: [5, 6] (Friday, Saturday nights for hotel pricing)
   final List<int> weekendDays;
 
   /// Minimum days in advance required for booking.

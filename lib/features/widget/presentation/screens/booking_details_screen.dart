@@ -18,6 +18,7 @@ import '../widgets/details/contact_owner_card.dart';
 import '../widgets/details/cancellation_policy_card.dart';
 import '../widgets/details/booking_notes_card.dart';
 import '../widgets/details/cancel_confirmation_dialog.dart';
+import '../widgets/details/bank_transfer_details_card.dart';
 import '../l10n/widget_translations.dart';
 
 /// Booking Details Screen
@@ -254,54 +255,69 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
               Divider(height: 1, thickness: 1, color: colors.borderDefault),
               // Content
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(SpacingTokens.l),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 600),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Status banner - full width
-                          // Uses _currentStatus which updates after cancellation
-                          BookingStatusBanner(status: _currentStatus, colors: colors),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Responsive padding - smaller on mobile
+                    final screenWidth = constraints.maxWidth;
+                    final horizontalPadding = screenWidth < 600 ? SpacingTokens.m : SpacingTokens.l;
+                    final verticalPadding = SpacingTokens.l;
 
-                          const SizedBox(height: SpacingTokens.l),
-
-                          // Booking reference - full width, prominent
-                          DetailsReferenceCard(bookingReference: widget.booking.bookingReference, colors: colors),
-
-                          const SizedBox(height: SpacingTokens.l),
-
-                          // Single column layout
-                          _buildContentCards(colors, isDarkMode),
-
-                          const SizedBox(height: SpacingTokens.xl),
-
-                          // Action buttons - full width
-                          _buildActionButtons(colors, isDarkMode),
-
-                          const SizedBox(height: SpacingTokens.m),
-
-                          // Help text
-                          Builder(
-                            builder: (context) {
-                              final tr = WidgetTranslations.of(context, ref);
-                              return Text(
-                                tr.needHelpContactOwner,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textTertiary),
-                              );
-                            },
-                          ),
-
-                          // Extra bottom padding for safe area
-                          const SizedBox(height: SpacingTokens.xl),
-                        ],
+                    return SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
                       ),
-                    ),
-                  ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          // On mobile (<600px), use full width; on desktop, limit to 600px
+                          constraints: BoxConstraints(
+                            maxWidth: screenWidth < 600 ? double.infinity : 600,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Status banner - full width
+                              // Uses _currentStatus which updates after cancellation
+                              BookingStatusBanner(status: _currentStatus, colors: colors),
+
+                              const SizedBox(height: SpacingTokens.l),
+
+                              // Booking reference - full width, prominent
+                              DetailsReferenceCard(bookingReference: widget.booking.bookingReference, colors: colors),
+
+                              const SizedBox(height: SpacingTokens.l),
+
+                              // Single column layout
+                              _buildContentCards(colors, isDarkMode),
+
+                              const SizedBox(height: SpacingTokens.xl),
+
+                              // Action buttons - full width
+                              _buildActionButtons(colors, isDarkMode),
+
+                              const SizedBox(height: SpacingTokens.m),
+
+                              // Help text
+                              Builder(
+                                builder: (context) {
+                                  final tr = WidgetTranslations.of(context, ref);
+                                  return Text(
+                                    tr.needHelpContactOwner,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textTertiary),
+                                  );
+                                },
+                              ),
+
+                              // Extra bottom padding for safe area
+                              const SizedBox(height: SpacingTokens.xl),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -311,32 +327,43 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     );
   }
 
-  /// Custom header with centered title and language switcher
+  /// Custom header with centered title and theme/language switchers
   Widget _buildHeader(WidgetColorScheme colors) {
     final tr = WidgetTranslations.of(context, ref);
+    final isDarkMode = ref.watch(themeProvider);
+
+    // Icon size for theme/language buttons (larger for better tap targets)
+    const double iconSize = 28;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Spacer to center title
-          const Spacer(),
-          // Title
-          Expanded(
-            child: Center(
-              child: Text(
-                tr.myBooking,
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeXL,
-                  fontWeight: TypographyTokens.bold,
-                  color: colors.textPrimary,
-                ),
-              ),
+          // Theme toggle button (left side for symmetry)
+          IconButton(
+            icon: Icon(
+              isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              color: colors.textPrimary,
+              size: iconSize,
+            ),
+            onPressed: () => ref.read(themeProvider.notifier).state = !isDarkMode,
+            tooltip: isDarkMode ? tr.tooltipSwitchToLightMode : tr.tooltipSwitchToDarkMode,
+          ),
+          const SizedBox(width: SpacingTokens.s),
+          // Title (centered)
+          Text(
+            tr.myBooking,
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeXL,
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
             ),
           ),
-          // Language switcher button
+          const SizedBox(width: SpacingTokens.s),
+          // Language switcher button (right side)
           IconButton(
-            icon: Icon(Icons.language, color: colors.textPrimary, size: 24),
+            icon: Icon(Icons.language, color: colors.textPrimary, size: iconSize),
             onPressed: () => _showLanguageDialog(colors),
             tooltip: tr.tooltipChangeLanguage,
           ),
@@ -421,6 +448,18 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           paymentDeadline: widget.booking.paymentDeadline,
           colors: colors,
         ),
+        // Bank transfer details (only shown when payment method is bank_transfer and details are available)
+        if (widget.booking.paymentMethod == 'bank_transfer' &&
+            widget.booking.bankDetails != null &&
+            widget.booking.remainingAmount > 0) ...[
+          const SizedBox(height: SpacingTokens.l),
+          BankTransferDetailsCard(
+            bankDetails: widget.booking.bankDetails!,
+            bookingReference: widget.booking.bookingReference,
+            amount: widget.booking.remainingAmount,
+            colors: colors,
+          ),
+        ],
         // Contact info
         if (widget.booking.ownerEmail != null || widget.booking.ownerPhone != null) ...[
           const SizedBox(height: SpacingTokens.l),

@@ -157,6 +157,26 @@ class CalendarDateSelectionValidator {
     return const ValidationResult.valid();
   }
 
+  /// Validates global maximum nights requirement.
+  ValidationResult validateMaxNights({
+    required int selectedNights,
+    required int? maxNights,
+  }) {
+    // null or 0 means no limit
+    if (maxNights == null || maxNights <= 0) {
+      return const ValidationResult.valid();
+    }
+    if (selectedNights > maxNights) {
+      return ValidationResult.invalid(
+        WidgetTranslations.of(
+          context,
+          ref,
+        ).errorMaxNights(maxNights, selectedNights),
+      );
+    }
+    return const ValidationResult.valid();
+  }
+
   /// Validates per-date minNightsOnArrival requirement.
   ValidationResult validateMinNightsOnArrival({
     required int selectedNights,
@@ -251,11 +271,12 @@ class CalendarDateSelectionValidator {
   }
 
   /// Full range validation (after determining start/end).
-  /// Validates: minNights, minNightsOnArrival, maxNightsOnArrival.
+  /// Validates: minNights, maxNights, minNightsOnArrival, maxNightsOnArrival.
   ValidationResult validateRange({
     required DateTime start,
     required DateTime end,
     required int minNights,
+    int? maxNights,
     required CalendarDateInfo? checkInDateInfo,
   }) {
     // Bug #1 Fix: Use DateNormalizer for consistent date calculation
@@ -283,6 +304,16 @@ class CalendarDateSelectionValidator {
       final result = validateMinNights(
         selectedNights: selectedNights,
         minNights: minNights,
+      );
+      if (!result.isValid) return result;
+    }
+
+    // 4. Validate global maxNights (only if no per-date maxNightsOnArrival)
+    final maxNightsOnArrival = checkInDateInfo?.maxNightsOnArrival;
+    if (maxNightsOnArrival == null || maxNightsOnArrival == 0) {
+      final result = validateMaxNights(
+        selectedNights: selectedNights,
+        maxNights: maxNights,
       );
       if (!result.isValid) return result;
     }

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -54,7 +55,9 @@ class _NotificationSettingsScreenState
               : l10n.notificationSettingsDisabled,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      LoggingService.log('Error toggling master switch: $e', tag: 'NotificationSettings');
+      await LoggingService.logError('Failed to toggle master switch', e, stackTrace);
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
@@ -80,9 +83,7 @@ class _NotificationSettingsScreenState
 
     try {
       final updatedCategories = switch (category) {
-        'bookings' => _currentPreferences!.categories.copyWith(
-          bookings: channels,
-        ),
+        // 'bookings' removed - owner always receives booking emails
         'payments' => _currentPreferences!.categories.copyWith(
           payments: channels,
         ),
@@ -120,7 +121,9 @@ class _NotificationSettingsScreenState
           l10n.notificationSettingsUpdated(category),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      LoggingService.log('Error updating category $category: $e', tag: 'NotificationSettings');
+      await LoggingService.logError('Failed to update notification category', e, stackTrace);
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
@@ -311,20 +314,10 @@ class _NotificationSettingsScreenState
                   ),
                 ),
 
-                // Bookings Category
-                _buildCategoryCard(
-                  context: context,
-                  theme: theme,
-                  isDark: isDark,
-                  title: l10n.notificationSettingsBookings,
-                  description: l10n.notificationSettingsBookingsDesc,
-                  icon: Icons.event_note,
-                  iconColor: theme.colorScheme.secondary,
-                  channels: categories.bookings,
-                  enabled: masterEnabled,
-                  onChanged: (channels) =>
-                      _updateCategory('bookings', channels),
-                ),
+                // Bookings Category - REMOVED
+                // Owner always receives booking emails (pending and instant)
+                // This setting was never functional - emails are sent via
+                // forceIfCritical=true in atomicBooking.ts
 
                 // Payments Category
                 _buildCategoryCard(

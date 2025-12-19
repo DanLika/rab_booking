@@ -3,7 +3,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../../shared/models/booking_model.dart';
 import '../../shared/models/unit_model.dart';
 import '../../shared/repositories/booking_repository.dart';
-import '../constants/enums.dart';
 import 'ical_generator.dart';
 import 'logging_service.dart';
 
@@ -143,23 +142,15 @@ class IcalExportService {
   /// Fetch all confirmed bookings for a unit
   Future<List<BookingModel>> _fetchUnitBookings(String unitId) async {
     try {
-      final allBookings = await _bookingRepository.fetchUnitBookings(unitId);
-
-      // Filter to only include confirmed and pending bookings
-      // Exclude cancelled bookings
-      final activeBookings = allBookings
-          .where(
-            (booking) =>
-                booking.status == BookingStatus.confirmed ||
-                booking.status == BookingStatus.pending ||
-                booking.status == BookingStatus.completed,
-          )
-          .toList();
+      // Repository now returns only confirmed, pending, completed bookings
+      // (cancelled bookings are excluded at the query level for security rules compliance)
+      final bookings = await _bookingRepository.fetchUnitBookings(unitId);
 
       // Sort by check-in date
-      activeBookings.sort((a, b) => a.checkIn.compareTo(b.checkIn));
+      final sortedBookings = List<BookingModel>.from(bookings)
+        ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
-      return activeBookings;
+      return sortedBookings;
     } catch (e) {
       LoggingService.log('Error fetching unit bookings: $e', tag: 'IcalExportService');
       rethrow;

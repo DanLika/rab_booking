@@ -43,7 +43,7 @@ class WidgetSettings {
   final bool allowGuestCancellation;
   final int? cancellationDeadlineHours; // Hours before check-in
   final int minNights; // Minimum nights required for booking (default: 1)
-  final List<int> weekendDays; // Days considered as weekend (1=Mon...7=Sun). Default: [6,7] (Sat, Sun)
+  final List<int> weekendDays; // Days considered as weekend (1=Mon...7=Sun). Default: [5,6] (Fri, Sat nights)
 
   // Contact Information (for calendar_only mode)
   final ContactOptions contactOptions;
@@ -77,7 +77,7 @@ class WidgetSettings {
     this.allowGuestCancellation = true,
     this.cancellationDeadlineHours = 48,
     this.minNights = 1,
-    this.weekendDays = const [6, 7], // Default: Saturday (6) and Sunday (7)
+    this.weekendDays = const [5, 6], // Default: Friday (5) and Saturday (6) nights
     required this.contactOptions,
     required this.emailConfig,
     this.externalCalendarConfig,
@@ -107,8 +107,8 @@ class WidgetSettings {
     final taxLegalConfigData = safeCastMap(data['tax_legal_config']) ?? {};
     final themeOptionsData = safeCastMap(data['theme_options']);
 
-    // Safely cast weekendDays list
-    final weekendDaysList = safeCastList<int>(data['weekend_days']) ?? const [6, 7];
+    // Safely cast weekendDays list (default: Fri/Sat nights for hotel pricing)
+    final weekendDaysList = safeCastList<int>(data['weekend_days']) ?? const [5, 6];
 
     return WidgetSettings(
       id: doc.id,

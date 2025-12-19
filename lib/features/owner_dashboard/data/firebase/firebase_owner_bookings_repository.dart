@@ -1410,7 +1410,7 @@ class FirebaseOwnerBookingsRepository {
     final results = await Future.wait([
       confirmedBookingsFuture,
       upcomingCheckInsFuture,
-    ]);
+    ]).withListFetchTimeout('getDashboardStatsData');
 
     return DashboardStatsData(
       confirmedBookings: results[0],
@@ -1443,7 +1443,7 @@ class FirebaseOwnerBookingsRepository {
           .orderBy('created_at', descending: true)
           .limit(limit);
 
-      final snapshot = await query.get();
+      final snapshot = await query.get().withBookingFetchTimeout('_queryBookingsForStats');
       for (final doc in snapshot.docs) {
         try {
           final booking = BookingModel.fromJson({
@@ -1488,7 +1488,7 @@ class FirebaseOwnerBookingsRepository {
           .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
           .limit(limit);
 
-      final snapshot = await query.get();
+      final snapshot = await query.get().withBookingFetchTimeout('_queryUpcomingCheckIns');
       for (final doc in snapshot.docs) {
         try {
           final booking = BookingModel.fromJson({

@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -182,7 +183,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
         await FirebaseAuth.instance.currentUser?.updatePhotoURL(avatarUrl);
 
         // Update avatarUrl in Firestore users collection
-        await FirebaseFirestore.instance.collection('users').doc(userId).update({'avatar_url': avatarUrl});
+        // Use set with merge to handle case where document doesn't exist
+        await FirebaseFirestore.instance.collection('users').doc(userId).set(
+          {'avatar_url': avatarUrl},
+          SetOptions(merge: true),
+        );
       }
 
       // Create updated profile
@@ -221,11 +226,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
         ),
       );
 
-      // Save profile to Firestore
-      await ref.read(userProfileNotifierProvider.notifier).updateProfile(updatedProfile);
+      // Save profile and company details to Firestore (combined to avoid state race condition)
+      await ref.read(userProfileNotifierProvider.notifier).updateProfileAndCompany(
+        updatedProfile,
+        updatedCompany,
+      );
 
-      // Save company details to Firestore
-      await ref.read(userProfileNotifierProvider.notifier).updateCompany(userId, updatedCompany);
+      // Also update first_name/last_name in root users document
+      // (enhancedAuthProvider reads from there for dashboard display)
+      final displayName = _displayNameController.text.trim();
+      final nameParts = displayName.split(' ');
+      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+      await FirebaseFirestore.instance.collection('users').doc(userId).set(
+        {
+          'first_name': firstName,
+          'last_name': lastName,
+          'phone': _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+          'updated_at': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
 
       if (mounted) {
         setState(() {
@@ -233,7 +255,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
           _isSaving = false;
         });
 
-        // Refresh auth provider to update avatarUrl
+        // Refresh auth provider to update name and avatarUrl
         ref.invalidate(enhancedAuthProvider);
 
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.editProfileSaveSuccess);
@@ -245,7 +267,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
           context.go('/owner/profile');
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // Log the actual error for debugging
+      LoggingService.log(
+        'Error saving profile: $e',
+        tag: 'EditProfileScreen',
+      );
+      await LoggingService.logError(
+        'Failed to save profile',
+        e,
+        stackTrace,
+      );
+
       if (mounted) {
         setState(() => _isSaving = false);
 

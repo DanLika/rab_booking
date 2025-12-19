@@ -32,6 +32,9 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   /// Subscription for localStorage events (fallback)
   StreamSubscription? _storageSubscription;
 
+  /// FIX #58: DOM event listener reference for storage events (needed for cleanup)
+  JSFunction? _storageEventListener;
+
   /// Last processed message timestamp (for deduplication)
   int _lastMessageTimestamp = 0;
 
@@ -74,13 +77,13 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
     // Convert web.Event to Stream using StreamController
     final storageController = StreamController<web.StorageEvent>.broadcast();
 
-    web.window.addEventListener(
-      'storage',
-      ((web.Event event) {
-        // Storage event listener only fires for StorageEvent, safe to cast
-        storageController.add(event as web.StorageEvent);
-      }).toJS,
-    );
+    // FIX #58: Store listener reference for cleanup in dispose()
+    _storageEventListener = ((web.Event event) {
+      // Storage event listener only fires for StorageEvent, safe to cast
+      storageController.add(event as web.StorageEvent);
+    }).toJS;
+
+    web.window.addEventListener('storage', _storageEventListener);
 
     _storageSubscription = storageController.stream.listen((event) {
       if (event.key == _localStorageKey && event.newValue != null) {
@@ -200,6 +203,13 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   void dispose() {
     _channel?.close();
     _channel = null;
+
+    // FIX #58: Remove DOM event listener to prevent memory leak
+    if (_storageEventListener != null) {
+      web.window.removeEventListener('storage', _storageEventListener);
+      _storageEventListener = null;
+    }
+
     _storageSubscription?.cancel();
     _messageController.close();
 

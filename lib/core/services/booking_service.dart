@@ -82,6 +82,7 @@ class BookingService {
     required String guestPhone,
     required int guestCount,
     required double totalPrice,
+    double servicesTotal = 0.0, // Additional services total for server-side validation
     required String paymentOption, // 'deposit', 'full', or 'none'
     required String paymentMethod, // 'stripe', 'bank_transfer', or 'none'
     bool requireOwnerApproval = false,
@@ -111,6 +112,7 @@ class BookingService {
         'guestPhone': guestPhone,
         'guestCount': guestCount,
         'totalPrice': totalPrice,
+        'servicesTotal': servicesTotal,
         'paymentOption': paymentOption,
         'paymentMethod': paymentMethod,
         'requireOwnerApproval': requireOwnerApproval,

@@ -531,12 +531,14 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     final theme = Theme.of(context);
 
     // Sources must match actual booking.source values in Firestore:
+    // - 'direct' = null source (legacy bookings or direct bookings without source)
     // - 'widget' = website widget bookings
     // - 'admin' = manually created bookings
     // - 'booking_com' = Booking.com iCal imports
     // - 'airbnb' = Airbnb iCal imports
     // - 'other' = generic iCal imports (non-recognized platforms)
     final sources = [
+      ('direct', 'Direktno', Icons.bookmark, Colors.blue),
       ('widget', 'Widget', Icons.web, Colors.green),
       ('admin', 'Manualno', Icons.person, Colors.grey),
       ('booking_com', 'Booking.com', Icons.public, Colors.orange),

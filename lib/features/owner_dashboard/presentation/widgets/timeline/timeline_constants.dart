@@ -117,8 +117,9 @@ const double kTimelineStackedRowPadding = 16.0;
 const double kTimelineBookingBlockHeightPadding = 8.0;
 
 /// Horizontal margin for booking blocks (gap on each side)
-/// Set to 0.5 to create 1px total gap between adjacent bookings
-const double kTimelineBookingBlockHorizontalMargin = 0.5;
+/// Set to 1.5 to create 3px total gap between adjacent bookings
+/// Increased from 0.5 for better visual separation on turnover days
+const double kTimelineBookingBlockHorizontalMargin = 1.5;
 
 /// Hover scale transform (1.02 = 2% larger on hover)
 const double kTimelineBookingBlockHoverScale = 1.02;

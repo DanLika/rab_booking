@@ -83,8 +83,11 @@ class FirebasePropertyPerformanceRepository with FirestoreRepositoryMixin {
 
       for (final doc in bookingsSnapshot.docs) {
         final data = doc.data();
-        final checkIn = (data['check_in'] as Timestamp).toDate();
-        final checkOut = (data['check_out'] as Timestamp).toDate();
+        final checkInValue = data['check_in'];
+        final checkOutValue = data['check_out'];
+        if (checkInValue is! Timestamp || checkOutValue is! Timestamp) continue;
+        final checkIn = checkInValue.toDate();
+        final checkOut = checkOutValue.toDate();
         totalBookedNights += checkOut.difference(checkIn).inDays;
       }
     }

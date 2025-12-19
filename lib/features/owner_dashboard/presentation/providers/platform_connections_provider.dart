@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../domain/models/platform_connection.dart';
 import '../../../../shared/providers/repository_providers.dart';
 
@@ -54,7 +55,7 @@ Future<Map<String, dynamic>> connectBookingCom(
   final functions = FirebaseFunctions.instance;
   final callable = functions.httpsCallable('initiateBookingComOAuth');
 
-  final result = await callable.call({'unitId': unitId, 'hotelId': hotelId, 'roomTypeId': roomTypeId});
+  final result = await callable.call({'unitId': unitId, 'hotelId': hotelId, 'roomTypeId': roomTypeId}).withCloudFunctionTimeout('initiateBookingComOAuth');
 
   return result.data as Map<String, dynamic>;
 }
@@ -65,7 +66,7 @@ Future<Map<String, dynamic>> connectAirbnb(Ref ref, {required String unitId, req
   final functions = FirebaseFunctions.instance;
   final callable = functions.httpsCallable('initiateAirbnbOAuth');
 
-  final result = await callable.call({'unitId': unitId, 'listingId': listingId});
+  final result = await callable.call({'unitId': unitId, 'listingId': listingId}).withCloudFunctionTimeout('initiateAirbnbOAuth');
 
   return result.data as Map<String, dynamic>;
 }

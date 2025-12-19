@@ -177,6 +177,7 @@ class DateRangeSelection with _$DateRangeSelection {
       'Nov',
       'Dec',
     ];
+    if (month < 1 || month > 12) return 'Invalid';
     return months[month - 1];
   }
 }

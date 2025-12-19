@@ -171,7 +171,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     try {
       final prices = await getPricesForDateRange(unitId: unitId, startDate: checkIn, endDate: checkOut);
 
-      final effectiveWeekendDays = weekendDays ?? [6, 7]; // Default: Sat=6, Sun=7
+      final effectiveWeekendDays = weekendDays ?? [5, 6]; // Default: Fri=5, Sat=6 (hotel nights)
 
       // Normalize dates to ensure consistency with getPricesForDateRange and other methods
       final normalizedCheckIn = _normalizeDate(checkIn);

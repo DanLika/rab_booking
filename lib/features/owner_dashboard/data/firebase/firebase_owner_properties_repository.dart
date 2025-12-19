@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/services/logging_service.dart';
@@ -20,6 +21,7 @@ class FirebaseOwnerPropertiesRepository {
   );
 
   /// Get all properties for current owner with units count
+  /// OPTIMIZED: Uses parallel queries instead of sequential N+1 pattern
   Future<List<PropertyModel>> getOwnerProperties(String ownerId) async {
     try {
       // Get properties for owner
@@ -29,22 +31,31 @@ class FirebaseOwnerPropertiesRepository {
           .orderBy('created_at', descending: true)
           .get();
 
-      // For each property, get units count
-      final properties = <PropertyModel>[];
-      for (final doc in propertiesSnapshot.docs) {
-        final propertyData = {...doc.data(), 'id': doc.id};
+      if (propertiesSnapshot.docs.isEmpty) {
+        return [];
+      }
 
-        // Get units count for this property from subcollection
+      // PERFORMANCE FIX: Fetch all unit counts in parallel instead of sequential
+      final unitCountFutures = propertiesSnapshot.docs.map((doc) async {
         final unitsSnapshot = await _firestore
             .collection('properties')
             .doc(doc.id)
             .collection('units')
+            .count()
             .get();
+        return MapEntry(doc.id, unitsSnapshot.count ?? 0);
+      }).toList();
 
-        propertyData['units_count'] = unitsSnapshot.docs.length;
+      final unitCounts = Map.fromEntries(
+        await Future.wait(unitCountFutures).withListFetchTimeout('getOwnerProperties'),
+      );
 
-        properties.add(PropertyModel.fromJson(propertyData));
-      }
+      // Build properties with cached unit counts
+      final properties = propertiesSnapshot.docs.map((doc) {
+        final propertyData = {...doc.data(), 'id': doc.id};
+        propertyData['units_count'] = unitCounts[doc.id] ?? 0;
+        return PropertyModel.fromJson(propertyData);
+      }).toList();
 
       return properties;
     } catch (e) {

@@ -13,6 +13,20 @@ class GuestCount with _$GuestCount {
       _$GuestCountFromJson(json);
 }
 
+/// Bank details for bank transfer payments
+@freezed
+class BankDetails with _$BankDetails {
+  const factory BankDetails({
+    String? bankName,
+    String? accountHolder,
+    String? iban,
+    String? swift,
+  }) = _BankDetails;
+
+  factory BankDetails.fromJson(Map<String, dynamic> json) =>
+      _$BankDetailsFromJson(json);
+}
+
 /// Booking details model for guest booking lookup
 /// Matches the response from verifyBookingAccess Cloud Function
 @freezed
@@ -43,6 +57,7 @@ class BookingDetailsModel with _$BookingDetailsModel {
     String? notes,
     String? createdAt, // ISO 8601 string
     String? paymentDeadline, // ISO 8601 string
+    BankDetails? bankDetails, // Bank transfer payment details
   }) = _BookingDetailsModel;
 
   factory BookingDetailsModel.fromJson(Map<String, dynamic> json) =>

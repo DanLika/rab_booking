@@ -180,13 +180,16 @@ class _TimelineUnitRow extends StatelessWidget {
     final List<Widget> blocks = [];
 
     // Calculate visible range boundaries for filtering
-    final visibleFirstDate = dates.isNotEmpty ? DateTime(dates.first.year, dates.first.month, dates.first.day) : null;
-    final visibleLastDate = dates.isNotEmpty ? DateTime(dates.last.year, dates.last.month, dates.last.day) : null;
+    // DST FIX: Use UTC for consistency with fixedStartDate and booking positions
+    final visibleFirstDate = dates.isNotEmpty ? DateTime.utc(dates.first.year, dates.first.month, dates.first.day) : null;
+    final visibleLastDate = dates.isNotEmpty ? DateTime.utc(dates.last.year, dates.last.month, dates.last.day) : null;
 
     for (final booking in bookings) {
-      // Normalize check-in/check-out dates to midnight for accurate comparison
-      final checkIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-      final checkOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
+      // Normalize check-in/check-out dates to midnight UTC for accurate comparison
+      // DST FIX: Use UTC to match fixedStartDate (also UTC) and avoid off-by-one
+      // errors when Duration.inDays miscalculates due to DST timezone changes
+      final checkIn = DateTime.utc(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
+      final checkOut = DateTime.utc(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
       final nights = TimelineBookingBlock.calculateNights(booking.checkIn, booking.checkOut);
 
       // Ensure nights is valid

@@ -11,6 +11,7 @@ import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../domain/services/subdomain_service.dart' show SubdomainContext;
 import '../l10n/widget_translations.dart';
 import 'subdomain_not_found_screen.dart';
+import 'booking_details_screen.dart';
 import '../../../../../core/services/logging_service.dart';
 
 /// Safely convert error to string, handling null and edge cases
@@ -35,7 +36,17 @@ class BookingViewScreen extends ConsumerStatefulWidget {
   final String? email;
   final String? token;
 
-  const BookingViewScreen({super.key, this.bookingRef, this.email, this.token});
+  /// When true, shows BookingDetailsScreen inline after lookup instead of navigating.
+  /// Used for page refresh scenario to prevent navigation loop.
+  final bool showDetailsInline;
+
+  const BookingViewScreen({
+    super.key,
+    this.bookingRef,
+    this.email,
+    this.token,
+    this.showDetailsInline = false,
+  });
 
   @override
   ConsumerState<BookingViewScreen> createState() => _BookingViewScreenState();
@@ -49,6 +60,10 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
 
   // Theme detection flag (prevents override after initial detection)
   bool _hasDetectedSystemTheme = false;
+
+  // For inline details display (page refresh scenario)
+  dynamic _loadedBooking;
+  dynamic _loadedWidgetSettings;
 
   @override
   void initState() {
@@ -223,10 +238,30 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
+          // If showDetailsInline is true (page refresh scenario), show details inline
+          // instead of navigating to prevent infinite loop
+          if (widget.showDetailsInline) {
+            setState(() {
+              _isLoading = false;
+              _loadedBooking = booking;
+              _loadedWidgetSettings = widgetSettings;
+            });
+            return;
+          }
+
           // Defensive check: ensure GoRouter is available before navigation
           try {
             // Navigate to booking details screen with both booking and settings
-            context.go('/view/details', extra: {'booking': booking, 'widgetSettings': widgetSettings});
+            // Include query params in URL for page refresh support
+            final detailsUrl = Uri(
+              path: '/view/details',
+              queryParameters: {
+                'ref': widget.bookingRef,
+                'email': widget.email,
+                if (widget.token != null) 'token': widget.token,
+              },
+            ).toString();
+            context.go(detailsUrl, extra: {'booking': booking, 'widgetSettings': widgetSettings});
           } catch (navError) {
             // If navigation fails, show error instead of crashing
             if (mounted) {
@@ -240,10 +275,29 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
+          // If showDetailsInline is true (page refresh scenario), show details inline
+          if (widget.showDetailsInline) {
+            setState(() {
+              _isLoading = false;
+              _loadedBooking = booking;
+              _loadedWidgetSettings = null;
+            });
+            return;
+          }
+
           // If widget settings fail to load, still show booking details
           // Defensive check: ensure GoRouter is available before navigation
           try {
-            context.go('/view/details', extra: {'booking': booking, 'widgetSettings': null});
+            // Include query params in URL for page refresh support
+            final detailsUrl = Uri(
+              path: '/view/details',
+              queryParameters: {
+                'ref': widget.bookingRef,
+                'email': widget.email,
+                if (widget.token != null) 'token': widget.token,
+              },
+            ).toString();
+            context.go(detailsUrl, extra: {'booking': booking, 'widgetSettings': null});
           } catch (navError) {
             // If navigation fails, show error instead of crashing
             if (mounted) {
@@ -275,6 +329,14 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
     // Show SubdomainNotFoundScreen if subdomain was present but not found
     if (_subdomainNotFound && _subdomainContext != null) {
       return SubdomainNotFoundScreen(subdomain: _subdomainContext!.subdomain);
+    }
+
+    // If booking was loaded inline (page refresh scenario), show BookingDetailsScreen directly
+    if (_loadedBooking != null) {
+      return BookingDetailsScreen(
+        booking: _loadedBooking,
+        widgetSettings: _loadedWidgetSettings,
+      );
     }
 
     return Scaffold(

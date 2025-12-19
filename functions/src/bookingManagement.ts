@@ -76,12 +76,19 @@ export const autoCancelExpiredBookings = onSchedule(
     const now = admin.firestore.Timestamp.now();
 
     try {
-      // NEW STRUCTURE: Use collection group query to find expired bookings across all units
+      // Only cancel PENDING bookings (awaiting owner approval or payment)
+      // Confirmed bookings are NOT auto-cancelled - owner confirmation = payment received
+      // This is intentional: bank_transfer and pay_on_arrival always require owner approval,
+      // so they stay pending until owner confirms (which means payment was received)
       const expiredBookings = await db
         .collectionGroup("bookings")
         .where("status", "==", "pending")
         .where("payment_deadline", "<", now)
         .get();
+
+      logInfo("Auto-cancel check completed", {
+        expiredCount: expiredBookings.size,
+      });
 
       const cancelPromises = expiredBookings.docs.map(async (doc) => {
         const booking = doc.data();

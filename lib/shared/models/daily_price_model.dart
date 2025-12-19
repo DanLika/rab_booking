@@ -116,9 +116,10 @@ class DailyPriceModel with _$DailyPriceModel {
   }
 
   /// Check if date is a weekend using custom weekend days
-  /// [weekendDays] - list of weekday numbers (1=Mon, 2=Tue, ..., 6=Sat, 7=Sun)
+  /// [weekendDays] - list of weekday numbers (1=Mon, 2=Tue, ..., 5=Fri, 6=Sat, 7=Sun)
+  /// Default: [5, 6] (Friday, Saturday nights for hotel pricing)
   bool isWeekendDay(List<int>? weekendDays) {
-    final effectiveWeekendDays = weekendDays ?? const [6, 7]; // Default: Sat, Sun
+    final effectiveWeekendDays = weekendDays ?? const [5, 6]; // Default: Fri, Sat nights
     return effectiveWeekendDays.contains(date.weekday);
   }
 

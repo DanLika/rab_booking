@@ -155,6 +155,14 @@
       "collectionGroup": "bookings",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
         { "fieldPath": "owner_id", "order": "ASCENDING" },
         { "fieldPath": "check_in", "order": "ASCENDING" }
       ]
@@ -254,6 +262,25 @@
       "fields": [
         { "fieldPath": "next_retry_at", "order": "ASCENDING" },
         { "fieldPath": "retry_count", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "additional_services",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "owner_id", "order": "ASCENDING" },
+        { "fieldPath": "deleted_at", "order": "ASCENDING" },
+        { "fieldPath": "sort_order", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "additional_services",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "owner_id", "order": "ASCENDING" },
+        { "fieldPath": "is_available", "order": "ASCENDING" },
+        { "fieldPath": "deleted_at", "order": "ASCENDING" },
+        { "fieldPath": "sort_order", "order": "ASCENDING" }
       ]
     }
   ],

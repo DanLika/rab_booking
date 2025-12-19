@@ -96,8 +96,9 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final totalDaysInRange =
           dateRange.endDate.difference(dateRange.startDate).inDays;
       final bookedDays = bookings.fold<int>(0, (total, b) {
-        final checkIn = (b['check_in'] as Timestamp).toDate();
-        final checkOut = (b['check_out'] as Timestamp).toDate();
+        final checkIn = _parseCheckIn(b);
+        final checkOut = _parseCheckOut(b);
+        if (checkIn == null || checkOut == null) return total; // Skip invalid
 
         // Calculate overlap with date range
         final overlapStart =
@@ -249,7 +250,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     final Map<String, double> dailyRevenue = {};
 
     for (final booking in bookings) {
-      final checkIn = (booking['check_in'] as Timestamp).toDate();
+      final checkIn = _parseCheckIn(booking);
+      if (checkIn == null) continue; // Skip invalid
       final dayKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}-${checkIn.day.toString().padLeft(2, '0')}';
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       dailyRevenue[dayKey] = (dailyRevenue[dayKey] ?? 0.0) + revenue;
@@ -278,7 +280,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     final Map<String, double> weeklyRevenue = {};
 
     for (final booking in bookings) {
-      final checkIn = (booking['check_in'] as Timestamp).toDate();
+      final checkIn = _parseCheckIn(booking);
+      if (checkIn == null) continue; // Skip invalid
       // Get week number (ISO week)
       final weekStart = checkIn.subtract(Duration(days: checkIn.weekday - 1));
       final weekKey = '${weekStart.year}-W${_getWeekNumber(weekStart).toString().padLeft(2, '0')}';
@@ -291,7 +294,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final year = int.parse(parts[0]);
       final week = int.parse(parts[1]);
       // Approximate date for week start
-      final date = DateTime(year, 1, 1).add(Duration(days: (week - 1) * 7));
+      final date = DateTime(year, 1).add(Duration(days: (week - 1) * 7));
       return RevenueDataPoint(
         date: date,
         amount: entry.value,
@@ -307,7 +310,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     final Map<String, double> monthlyRevenue = {};
 
     for (final booking in bookings) {
-      final checkIn = (booking['check_in'] as Timestamp).toDate();
+      final checkIn = _parseCheckIn(booking);
+      if (checkIn == null) continue; // Skip invalid
       final monthKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] ?? 0.0) + revenue;
@@ -349,7 +353,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     final Map<String, int> dailyBookings = {};
 
     for (final booking in bookings) {
-      final checkIn = (booking['check_in'] as Timestamp).toDate();
+      final checkIn = _parseCheckIn(booking);
+      if (checkIn == null) continue; // Skip invalid
       final dayKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}-${checkIn.day.toString().padLeft(2, '0')}';
       dailyBookings[dayKey] = (dailyBookings[dayKey] ?? 0) + 1;
     }
@@ -376,7 +381,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     final Map<String, int> weeklyBookings = {};
 
     for (final booking in bookings) {
-      final checkIn = (booking['check_in'] as Timestamp).toDate();
+      final checkIn = _parseCheckIn(booking);
+      if (checkIn == null) continue; // Skip invalid
       final weekStart = checkIn.subtract(Duration(days: checkIn.weekday - 1));
       final weekKey = '${weekStart.year}-W${_getWeekNumber(weekStart).toString().padLeft(2, '0')}';
       weeklyBookings[weekKey] = (weeklyBookings[weekKey] ?? 0) + 1;
@@ -386,7 +392,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final parts = entry.key.split('-W');
       final year = int.parse(parts[0]);
       final week = int.parse(parts[1]);
-      final date = DateTime(year, 1, 1).add(Duration(days: (week - 1) * 7));
+      final date = DateTime(year, 1).add(Duration(days: (week - 1) * 7));
       return BookingDataPoint(
         date: date,
         count: entry.value,
@@ -402,7 +408,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     final Map<String, int> monthlyBookings = {};
 
     for (final booking in bookings) {
-      final checkIn = (booking['check_in'] as Timestamp).toDate();
+      final checkIn = _parseCheckIn(booking);
+      if (checkIn == null) continue; // Skip invalid
       final monthKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
       monthlyBookings[monthKey] = (monthlyBookings[monthKey] ?? 0) + 1;
     }
@@ -422,12 +429,13 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   }
 
   int _getWeekNumber(DateTime date) {
-    final firstDayOfYear = DateTime(date.year, 1, 1);
+    final firstDayOfYear = DateTime(date.year, 1);
     final dayOfYear = date.difference(firstDayOfYear).inDays;
     return ((dayOfYear + firstDayOfYear.weekday - 1) / 7).ceil();
   }
 
   String _getMonthLabel(int month) {
+    if (month < 1 || month > 12) return 'Invalid';
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -444,5 +452,24 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
 
     // Trigger rebuild
     ref.invalidateSelf();
+  }
+
+  /// Safely parse check_in from booking data
+  /// Handles Timestamp, DateTime, or null values gracefully
+  DateTime? _parseCheckIn(Map<String, dynamic> booking) {
+    final value = booking['check_in'];
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return null;
+  }
+
+  /// Safely parse check_out from booking data
+  DateTime? _parseCheckOut(Map<String, dynamic> booking) {
+    final value = booking['check_out'];
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return null;
   }
 }

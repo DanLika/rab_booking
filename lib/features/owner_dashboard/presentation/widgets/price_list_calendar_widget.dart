@@ -721,6 +721,7 @@ class _PriceListCalendarWidgetState
                                   onTap: () => _onDayCellTap(date),
                                   isMobile: isMobile,
                                   isSmallMobile: isSmallMobile,
+                                  weekendDays: widget.unit.weekendDays,
                                 );
                               },
                             );

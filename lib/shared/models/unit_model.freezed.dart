@@ -46,11 +46,11 @@ mixin _$UnitModel {
   @JsonKey(name: 'base_price')
   double get pricePerNight => throw _privateConstructorUsedError;
 
-  /// Weekend base price in EUR (optional, for Sat-Sun by default)
+  /// Weekend base price in EUR (optional, for Fri-Sat nights by default)
   @JsonKey(name: 'weekend_base_price')
   double? get weekendBasePrice => throw _privateConstructorUsedError;
 
-  /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+  /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
   @JsonKey(name: 'weekend_days')
   List<int>? get weekendDays => throw _privateConstructorUsedError;
 
@@ -515,15 +515,15 @@ class _$UnitModelImpl extends _UnitModel {
   @JsonKey(name: 'base_price')
   final double pricePerNight;
 
-  /// Weekend base price in EUR (optional, for Sat-Sun by default)
+  /// Weekend base price in EUR (optional, for Fri-Sat nights by default)
   @override
   @JsonKey(name: 'weekend_base_price')
   final double? weekendBasePrice;
 
-  /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+  /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
   final List<int>? _weekendDays;
 
-  /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+  /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
   @override
   @JsonKey(name: 'weekend_days')
   List<int>? get weekendDays {
@@ -768,12 +768,12 @@ abstract class _UnitModel extends UnitModel {
   @JsonKey(name: 'base_price')
   double get pricePerNight;
 
-  /// Weekend base price in EUR (optional, for Sat-Sun by default)
+  /// Weekend base price in EUR (optional, for Fri-Sat nights by default)
   @override
   @JsonKey(name: 'weekend_base_price')
   double? get weekendBasePrice;
 
-  /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+  /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
   @override
   @JsonKey(name: 'weekend_days')
   List<int>? get weekendDays;

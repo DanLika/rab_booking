@@ -51,7 +51,7 @@ final bookingPriceProvider = FutureProvider.family<BookingPriceBreakdown?, (Stri
   );
 
   // Build nightly prices list with fallback using weekend pricing
-  final effectiveWeekendDays = weekendDays ?? [6, 7]; // Default: Sat=6, Sun=7
+  final effectiveWeekendDays = weekendDays ?? [5, 6]; // Default: Fri=5, Sat=6 (hotel nights)
   final List<NightlyPrice> nightlyPrices = [];
   DateTime current = normalizedCheckIn;
   while (current.isBefore(normalizedCheckOut)) {

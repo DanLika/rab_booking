@@ -14,6 +14,11 @@ class CalendarDayCell extends StatelessWidget {
   final bool isMobile;
   final bool isSmallMobile;
 
+  /// Days considered as weekend for pricing purposes.
+  /// Uses ISO weekday format: 1=Monday, 5=Friday, 6=Saturday, 7=Sunday.
+  /// Default: [5, 6] (Friday, Saturday nights for hotel pricing)
+  final List<int>? weekendDays;
+
   const CalendarDayCell({
     super.key,
     required this.date,
@@ -24,6 +29,7 @@ class CalendarDayCell extends StatelessWidget {
     required this.onTap,
     required this.isMobile,
     required this.isSmallMobile,
+    this.weekendDays,
   });
 
   @override
@@ -32,8 +38,9 @@ class CalendarDayCell extends StatelessWidget {
         DateTime.now().year == date.year &&
         DateTime.now().month == date.month &&
         DateTime.now().day == date.day;
-    final isWeekend =
-        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    // Use configurable weekend days (default: Fri=5, Sat=6 for hotel pricing)
+    final effectiveWeekendDays = weekendDays ?? const [5, 6];
+    final isWeekend = effectiveWeekendDays.contains(date.weekday);
 
     final regularPrice = priceData?.price;
     final weekendPrice = priceData?.weekendPrice;

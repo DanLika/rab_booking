@@ -173,7 +173,8 @@ class _TooltipContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final dateFormat = DateFormat('d MMM yyyy', 'hr_HR');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('d MMM yyyy', locale);
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -360,7 +361,8 @@ class _ConflictWarningBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('d.MM', 'hr_HR');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('d.MM', locale);
 
     return Container(
       padding: EdgeInsets.all(isCompact ? 8 : 12),

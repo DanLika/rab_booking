@@ -112,9 +112,12 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
 class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
   // FIXED: Store ALL subscriptions to prevent memory leak
   final List<StreamSubscription<QuerySnapshot>> _allSubscriptions = [];
+  // FIXED: Track disposed state to prevent race conditions in async setup
+  bool _isDisposed = false;
 
   @override
   void build() {
+    _isDisposed = false;
     final auth = FirebaseAuth.instance;
     final userId = auth.currentUser?.uid;
 
@@ -124,6 +127,7 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
 
     // FIXED: Cancel ALL subscriptions on dispose
     ref.onDispose(() {
+      _isDisposed = true;
       for (final subscription in _allSubscriptions) {
         subscription.cancel();
       }
@@ -137,11 +141,17 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
   /// OPTIMIZED: Uses cached unitIds from allOwnerUnitsProvider
   /// Saves 1 + N queries (properties + units) per setup
   void _setupRealtimeSubscription({required String userId}) async {
+    // FIXED: Check if disposed before starting async setup
+    if (_isDisposed) return;
+
     // FIXED: Cancel ALL previous subscriptions
     for (final subscription in _allSubscriptions) {
       await subscription.cancel();
     }
     _allSubscriptions.clear();
+
+    // FIXED: Check again after async cancel operations
+    if (_isDisposed) return;
 
     final firestore = FirebaseFirestore.instance;
 
@@ -158,6 +168,10 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
     try {
       // OPTIMIZED: Get unitIds from cached provider instead of re-fetching
       final units = await ref.read(allOwnerUnitsProvider.future);
+
+      // FIXED: Check if disposed after async operation
+      if (_isDisposed) return;
+
       final unitIdsToWatch = units.map((u) => u.id).toList();
 
       if (unitIdsToWatch.isEmpty) return;

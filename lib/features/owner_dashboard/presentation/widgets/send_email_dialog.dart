@@ -6,6 +6,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/widgets/message_box.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
@@ -505,7 +506,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
         'guestName': widget.booking.guestName,
         'subject': _subjectController.text.trim(),
         'message': _messageController.text.trim(),
-      });
+      }).withCloudFunctionTimeout('sendCustomEmailToGuest');
 
       if (mounted) {
         // FIXED BUG #5: Note - Provider invalidation NOT needed here because

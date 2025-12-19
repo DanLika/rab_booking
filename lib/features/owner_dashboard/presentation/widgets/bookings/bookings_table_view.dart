@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -574,6 +575,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     // Find booking in the list
     final ownerBooking = widget.bookings.firstWhere(
       (b) => b.booking.id == bookingId,
+      orElse: () => widget.bookings.first, // Fallback if booking not found (rare race condition)
     );
     _showBookingDetails(ownerBooking);
   }
@@ -852,9 +854,15 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   }
 
   void _editBooking(String bookingId) async {
-    final ownerBooking = widget.bookings.firstWhere(
+    final ownerBooking = widget.bookings.firstWhereOrNull(
       (b) => b.booking.id == bookingId,
     );
+    if (ownerBooking == null) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(context, 'Booking not found. Please refresh.');
+      }
+      return;
+    }
     await showEditBookingDialog(context, ref, ownerBooking.booking);
   }
 
@@ -1135,9 +1143,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   void _triggerIcalRegeneration(String bookingId) async {
     try {
       // Find booking in the list
-      final ownerBooking = widget.bookings.firstWhere(
+      final ownerBooking = widget.bookings.firstWhereOrNull(
         (b) => b.booking.id == bookingId,
       );
+      if (ownerBooking == null) return; // Booking not found, skip regeneration
 
       // Get iCal export service
       final icalService = ref.read(icalExportServiceProvider);

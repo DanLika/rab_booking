@@ -167,6 +167,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     guestPhone,
     guestCount,
     totalPrice,
+    servicesTotal = 0, // Additional services total for price validation
     depositAmount,
     paymentOption,
     notes,
@@ -405,17 +406,26 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     // CRITICAL: Client may send locked price (€102.00) but server calculates
     // current price (€200.00). We must validate to prevent price manipulation.
     // However, if price changed, we should use server-calculated price, not client's locked price.
+    // Validate servicesTotal is a valid number
+    const numericServicesTotal = (
+      typeof servicesTotal === "number" &&
+      Number.isFinite(servicesTotal) &&
+      servicesTotal >= 0
+    ) ? servicesTotal : 0;
+
     try {
       await validateBookingPrice(
         unitId,
         checkInDate,
         checkOutDate,
         Number(totalPrice),
-        propertyId
+        propertyId,
+        numericServicesTotal // Pass services total for accurate validation
       );
       logInfo("createStripeCheckoutSession: Price validated successfully", {
         unitId,
         clientPrice: totalPrice,
+        servicesTotal: numericServicesTotal,
       });
     } catch (priceError: any) {
       // If price mismatch, use server-calculated price instead of client's locked price
@@ -425,28 +435,33 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
           clientPrice: totalPrice,
           error: priceError.message,
         });
-        
-        // Calculate server-side price and use it instead
-        const { totalPrice: serverPrice } = await calculateBookingPrice(
+
+        // Calculate server-side nightly price and add services total
+        const { totalPrice: serverNightlyPrice } = await calculateBookingPrice(
           unitId,
           checkInDate,
           checkOutDate,
           propertyId
         );
-        
+
+        // Server total = nightly prices + services (services from client are trusted)
+        const serverTotalPrice = Math.round((serverNightlyPrice + numericServicesTotal) * 100) / 100;
+
         logInfo("createStripeCheckoutSession: Using server-calculated price", {
           unitId,
           oldPrice: totalPrice,
-          newPrice: serverPrice,
+          serverNightlyPrice,
+          servicesTotal: numericServicesTotal,
+          newPrice: serverTotalPrice,
         });
-        
+
         // Update totalPrice and depositAmount to use server-calculated price
-        totalPrice = serverPrice;
+        totalPrice = serverTotalPrice;
         if (paymentOption === "deposit") {
           const depositPercentage = 20; // Default, should match config
-          depositAmount = Math.round(serverPrice * (depositPercentage / 100) * 100) / 100;
+          depositAmount = Math.round(serverTotalPrice * (depositPercentage / 100) * 100) / 100;
         } else {
-          depositAmount = serverPrice;
+          depositAmount = serverTotalPrice;
         }
       } else {
         // Other validation errors - rethrow

@@ -275,22 +275,24 @@ class ErrorDisplayUtils {
     if (errorString.contains('already exists')) {
       return 'Podaci već postoje u sustavu.';
     }
-    if (errorString.contains('invalid')) {
-      return 'Neispravni podaci. Provjerite unesene vrijednosti.';
-    }
 
-    // Authentication errors
+    // Authentication errors (MUST come BEFORE generic 'invalid' check)
     if (errorString.contains('email-already-in-use')) {
       return 'Email adresa je već u upotrebi.';
     }
     if (errorString.contains('user-not-found')) {
       return 'Korisnik nije pronađen.';
     }
-    if (errorString.contains('wrong-password')) {
-      return 'Neispravna lozinka.';
+    if (errorString.contains('wrong-password') || errorString.contains('invalid-credential') || errorString.contains('incorrect password')) {
+      return 'Neispravna lozinka. Pokušajte ponovo ili resetujte lozinku.';
     }
     if (errorString.contains('too-many-requests')) {
       return 'Previše pokušaja. Pokušajte kasnije.';
+    }
+
+    // Generic invalid (AFTER specific auth errors to avoid catching 'invalid-credential')
+    if (errorString.contains('invalid')) {
+      return 'Neispravni podaci. Provjerite unesene vrijednosti.';
     }
 
     // Booking errors

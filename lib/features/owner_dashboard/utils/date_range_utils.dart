@@ -130,6 +130,7 @@ class DateRangeUtils {
       'Nov',
       'Dec',
     ];
+    if (month < 1 || month > 12) return 'Invalid';
     return months[month - 1];
   }
 
@@ -149,12 +150,14 @@ class DateRangeUtils {
       'November',
       'December',
     ];
+    if (month < 1 || month > 12) return 'Invalid';
     return months[month - 1];
   }
 
   /// Get short weekday name (3 letters)
   static String _getWeekdayShortName(int weekday) {
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    if (weekday < 1 || weekday > 7) return 'Invalid';
     return weekdays[weekday - 1];
   }
 

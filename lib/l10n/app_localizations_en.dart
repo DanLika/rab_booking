@@ -2909,6 +2909,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'You will see all your notifications here';
 
   @override
+  String get notificationsEmptyHint => 'You\'ll receive alerts for:';
+
+  @override
+  String get notificationsHintNewBookings => 'New booking requests';
+
+  @override
+  String get notificationsHintPayments => 'Payment confirmations';
+
+  @override
+  String get notificationsHintCancellations => 'Booking cancellations';
+
+  @override
+  String get notificationsHintReminders => 'Check-in reminders';
+
+  @override
   String get notificationsLoadError => 'Error loading notifications';
 
   @override

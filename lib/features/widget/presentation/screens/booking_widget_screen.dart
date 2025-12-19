@@ -2505,7 +2505,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           Builder(
             builder: (context) {
               final tr = WidgetTranslations.of(context, ref);
-              return InfoCardWidget(message: tr.bookingPendingUntilConfirmed, isDarkMode: isDarkMode);
+              return InfoCardWidget(
+                message: tr.bookingPendingUntilConfirmed,
+                isDarkMode: isDarkMode,
+                backgroundColor: minimalistColors.backgroundPrimary,
+              );
             },
           ),
           const SizedBox(height: SpacingTokens.m),
@@ -2908,6 +2912,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         adults: _adults,
         children: _children,
         totalPrice: finalCalculation.totalPrice, // Use final calculation (locked or current)
+        servicesTotal: finalCalculation.additionalServicesTotal, // For server-side validation
         paymentMethod: widgetMode == WidgetMode.bookingPending
             ? 'none'
             : (_selectedPaymentMethod.isEmpty ? 'stripe' : _selectedPaymentMethod), // Fallback to 'stripe' if empty

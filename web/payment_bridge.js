@@ -71,9 +71,9 @@
     },
 
     /**
-     * Pre-open popup with placeholder URL (CRITICAL: call synchronously on user click)
+     * Pre-open popup with loading page (CRITICAL: call synchronously on user click)
      * Then update URL after async checkout session creation
-     * 
+     *
      * @returns {string} 'popup', 'redirect', or 'blocked'
      */
     preOpenPaymentPopup: function() {
@@ -84,15 +84,96 @@
 
       // Mobile (non-Safari): try popup first
       if (this.isMobile()) {
-        const popup = this._openPopup('about:blank');
+        const popup = this._openPopup(this._getLoadingPageUrl());
         if (popup === 'blocked') {
           return 'redirect';
         }
         return 'popup';
       }
 
-      // Desktop: open popup with placeholder
-      return this._openPopup('about:blank');
+      // Desktop: open popup with loading page
+      return this._openPopup(this._getLoadingPageUrl());
+    },
+
+    /**
+     * Generate a data URL for a loading page to show while checkout session is being created
+     * @returns {string} Data URL with loading spinner
+     */
+    _getLoadingPageUrl: function() {
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preparing Payment...</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+    }
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 30px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 16px;
+      opacity: 0.9;
+      max-width: 300px;
+    }
+    .stripe-badge {
+      margin-top: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    .lock-icon {
+      width: 16px;
+      height: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <h1>Preparing Payment</h1>
+    <p>Setting up secure checkout with Stripe...</p>
+    <div class="stripe-badge">
+      <svg class="lock-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+      </svg>
+      Secured by Stripe
+    </div>
+  </div>
+</body>
+</html>`;
+      return 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
     },
 
     /**
@@ -253,10 +334,27 @@
 
     /**
      * Notify payment completion (called from payment success page)
+     * Uses multiple methods for cross-origin reliability:
+     * 1. postMessage to opener (popup -> iframe parent)
+     * 2. postMessage to parent (iframe -> parent)
+     * 3. BroadcastChannel (same-origin tabs)
+     * 4. localStorage (Safari fallback)
+     *
+     * PRIORITY: postMessage is tried first as it works across origins
      */
     notifyComplete: function(sessionId, status) {
       const message = {
         type: 'PAYMENT_COMPLETE',
+        source: 'bookbed-widget',
+        sessionId: sessionId,
+        status: status,
+        timestamp: Date.now()
+      };
+
+      // Also send as 'stripe-payment-complete' for Flutter widget compatibility
+      const flutterMessage = {
+        type: 'stripe-payment-complete',
+        source: 'bookbed-widget',
         sessionId: sessionId,
         status: status,
         timestamp: Date.now()
@@ -265,9 +363,46 @@
       console.log('[PaymentBridge] Notifying payment complete:', message);
 
       let successCount = 0;
-      const totalMethods = 4;
 
-      // Method 1: BroadcastChannel (same-origin)
+      // Method 1: postMessage to opener (PRIORITY - works cross-origin)
+      // This is the primary method for popup -> iframe communication
+      if (window.opener && !window.opener.closed) {
+        try {
+          // Send both message formats for compatibility
+          window.opener.postMessage(message, '*');
+          window.opener.postMessage(flutterMessage, '*');
+          console.log('[PaymentBridge] Sent via postMessage to opener');
+          successCount++;
+        } catch (e) {
+          console.error('[PaymentBridge] postMessage to opener error:', e);
+        }
+      }
+
+      // Method 2: postMessage to parent (for nested iframe scenarios)
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage(message, '*');
+          window.parent.postMessage(flutterMessage, '*');
+          console.log('[PaymentBridge] Sent via postMessage to parent');
+          successCount++;
+        } catch (e) {
+          console.error('[PaymentBridge] postMessage to parent error:', e);
+        }
+      }
+
+      // Method 3: postMessage to top (for deeply nested iframes)
+      try {
+        if (window.top && window.top !== window && window.top !== window.parent) {
+          window.top.postMessage(message, '*');
+          window.top.postMessage(flutterMessage, '*');
+          console.log('[PaymentBridge] Sent via postMessage to top');
+          successCount++;
+        }
+      } catch (e) {
+        // Cross-origin top - ignore silently (expected)
+      }
+
+      // Method 4: BroadcastChannel (same-origin backup)
       if (this.channel) {
         try {
           this.channel.postMessage(message);
@@ -278,29 +413,7 @@
         }
       }
 
-      // Method 2: postMessage to opener (for popup scenarios)
-      if (window.opener && !window.opener.closed) {
-        try {
-          window.opener.postMessage(message, '*');
-          console.log('[PaymentBridge] Sent via postMessage to opener');
-          successCount++;
-        } catch (e) {
-          console.error('[PaymentBridge] postMessage to opener error:', e);
-        }
-      }
-
-      // Method 3: postMessage to parent (for iframe scenarios)
-      if (window.parent && window.parent !== window) {
-        try {
-          window.parent.postMessage(message, '*');
-          console.log('[PaymentBridge] Sent via postMessage to parent');
-          successCount++;
-        } catch (e) {
-          console.error('[PaymentBridge] postMessage to parent error:', e);
-        }
-      }
-
-      // Method 4: localStorage fallback (for Safari)
+      // Method 5: localStorage fallback (for Safari)
       try {
         localStorage.setItem('payment_complete', JSON.stringify(message));
         // Remove immediately to trigger storage event
@@ -313,50 +426,44 @@
         console.error('[PaymentBridge] localStorage error:', e);
       }
 
-      // Retry mechanism: if no methods succeeded, retry after short delay
-      if (successCount === 0) {
-        console.warn('[PaymentBridge] No methods succeeded, retrying after 500ms...');
-        setTimeout(function() {
-          // Retry BroadcastChannel
-          if (this.channel) {
-            try {
-              this.channel.postMessage(message);
-              console.log('[PaymentBridge] Retry sent via BroadcastChannel');
-            } catch (e) {
-              console.error('[PaymentBridge] BroadcastChannel retry error:', e);
-            }
-          }
-          // Retry postMessage to opener
-          if (window.opener && !window.opener.closed) {
-            try {
-              window.opener.postMessage(message, '*');
-              console.log('[PaymentBridge] Retry sent via postMessage to opener');
-            } catch (e) {
-              console.error('[PaymentBridge] postMessage retry error:', e);
-            }
-          }
-          // Retry postMessage to parent
-          if (window.parent && window.parent !== window) {
-            try {
-              window.parent.postMessage(message, '*');
-              console.log('[PaymentBridge] Retry sent via postMessage to parent');
-            } catch (e) {
-              console.error('[PaymentBridge] postMessage to parent retry error:', e);
-            }
-          }
-        }.bind(this), 500);
-      }
+      // Retry postMessage multiple times for reliability
+      // Cross-origin messages can be lost if receiver isn't ready
+      var retryCount = 0;
+      var maxRetries = 3;
+      var retryInterval = setInterval(function() {
+        retryCount++;
+        if (retryCount > maxRetries) {
+          clearInterval(retryInterval);
+          return;
+        }
+
+        console.log('[PaymentBridge] Retry #' + retryCount + ' postMessage...');
+
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage(message, '*');
+            window.opener.postMessage(flutterMessage, '*');
+          } catch (e) {}
+        }
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage(message, '*');
+            window.parent.postMessage(flutterMessage, '*');
+          } catch (e) {}
+        }
+      }, 500);
 
       // Close popup after delay (if we're in a popup)
       if (window.opener) {
         setTimeout(function() {
+          clearInterval(retryInterval); // Stop retries before closing
           try {
             window.close();
             console.log('[PaymentBridge] Popup closed');
           } catch (e) {
             console.log('[PaymentBridge] Could not close popup:', e);
           }
-        }, 1500);
+        }, 2000);
       }
     },
 
@@ -411,6 +518,12 @@
     // Track processed session IDs to avoid duplicate handling
     _processedSessions: {},
 
+    // FIX #60: Track cleanup timeouts for proper disposal
+    _cleanupTimeouts: [],
+
+    // FIX #61: Maximum number of tracked sessions to prevent unbounded growth
+    _maxProcessedSessions: 100,
+
     /**
      * Handle payment result (with deduplication)
      */
@@ -425,11 +538,28 @@
 
       // Mark as processed (with TTL of 60 seconds)
       if (data.sessionId) {
+        // FIX #61: Cap at max size to prevent unbounded growth
+        var sessionIds = Object.keys(this._processedSessions);
+        if (sessionIds.length >= this._maxProcessedSessions) {
+          // Remove oldest entry
+          var oldest = sessionIds.reduce(function(min, id) {
+            return this._processedSessions[id] < this._processedSessions[min] ? id : min;
+          }.bind(this));
+          delete this._processedSessions[oldest];
+        }
+
         this._processedSessions[data.sessionId] = Date.now();
-        // Cleanup old entries after 60 seconds
-        setTimeout(function() {
+
+        // FIX #60: Store timeout ID for cleanup in dispose()
+        var timeoutId = setTimeout(function() {
           delete this._processedSessions[data.sessionId];
+          // Remove from cleanup array
+          var index = this._cleanupTimeouts.indexOf(timeoutId);
+          if (index > -1) {
+            this._cleanupTimeouts.splice(index, 1);
+          }
         }.bind(this), 60000);
+        this._cleanupTimeouts.push(timeoutId);
       }
 
       if (this._paymentCallback) {
@@ -450,12 +580,23 @@
         clearInterval(this._popupPollInterval);
         this._popupPollInterval = null;
       }
-      
+
       if (this.channel) {
         this.channel.close();
         this.channel = null;
       }
-      
+
+      // FIX #60: Clear all pending cleanup timeouts
+      if (this._cleanupTimeouts && this._cleanupTimeouts.length > 0) {
+        this._cleanupTimeouts.forEach(function(timeoutId) {
+          clearTimeout(timeoutId);
+        });
+        this._cleanupTimeouts = [];
+      }
+
+      // Clear processed sessions
+      this._processedSessions = {};
+
       this._paymentCallback = null;
     }
   };

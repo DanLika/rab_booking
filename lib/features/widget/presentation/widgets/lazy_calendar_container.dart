@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/animations/animated_content_switcher.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import 'calendar_view_switcher.dart';
 
@@ -80,20 +81,22 @@ class _LazyCalendarContainerState extends State<LazyCalendarContainer> {
 
   @override
   Widget build(BuildContext context) {
-    // Show skeleton until calendar is ready AND we have valid IDs
-    // HYBRID LOADING: Skeleton visible while data loads in background
-    if (!_isCalendarReady ||
-        widget.propertyId.isEmpty ||
-        widget.unitId.isEmpty) {
-      return const CalendarSkeleton();
-    }
+    final isReady = _isCalendarReady &&
+        widget.propertyId.isNotEmpty &&
+        widget.unitId.isNotEmpty;
 
-    // Show real calendar
-    return CalendarViewSwitcher(
-      propertyId: widget.propertyId,
-      unitId: widget.unitId,
-      onRangeSelected: widget.onRangeSelected,
-      forceMonthView: widget.forceMonthView,
+    // Animated crossfade between skeleton and calendar
+    return AnimatedContentSwitcher(
+      showContent: isReady,
+      skeleton: const CalendarSkeleton(),
+      content: isReady
+          ? CalendarViewSwitcher(
+              propertyId: widget.propertyId,
+              unitId: widget.unitId,
+              onRangeSelected: widget.onRangeSelected,
+              forceMonthView: widget.forceMonthView,
+            )
+          : const SizedBox.shrink(),
     );
   }
 }

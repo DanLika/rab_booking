@@ -14,6 +14,7 @@ import '../../domain/models/notification_model.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../core/design_tokens/animation_tokens.dart';
 
 /// Notifications screen for owner dashboard
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -464,60 +465,42 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  /// Build empty state
+  /// Build empty state with entrance animation
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
+    final hintColor = isDark
+        ? Colors.white.withValues(alpha: 0.5)
+        : Colors.black.withValues(alpha: 0.45);
+
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Premium icon container with gradient
-            Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                color: context.gradients.cardBackground,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: context.gradients.sectionBorder,
-                  width: 2,
-                ),
-                boxShadow: isDark
-                    ? AppShadows.elevation2Dark
-                    : AppShadows.elevation2,
-              ),
-              child: Icon(
-                Icons.notifications_none_rounded,
-                size: 70,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              l10n.notificationsEmpty,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.notificationsEmptyDesc,
-              style: TextStyle(
-                fontSize: 15,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: _AnimatedEmptyStateContent(
+          theme: theme,
+          isDark: isDark,
+          l10n: l10n,
+          hintColor: hintColor,
+          buildHintRow: _buildHintRow,
         ),
       ),
+    );
+  }
+
+  Widget _buildHintRow(IconData icon, String text, Color color) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 13, color: color),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1063,6 +1046,224 @@ class _PremiumAlertDialog extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Animated empty state content with staggered entrance
+class _AnimatedEmptyStateContent extends StatefulWidget {
+  final ThemeData theme;
+  final bool isDark;
+  final AppLocalizations l10n;
+  final Color hintColor;
+  final Widget Function(IconData, String, Color) buildHintRow;
+
+  const _AnimatedEmptyStateContent({
+    required this.theme,
+    required this.isDark,
+    required this.l10n,
+    required this.hintColor,
+    required this.buildHintRow,
+  });
+
+  @override
+  State<_AnimatedEmptyStateContent> createState() => _AnimatedEmptyStateContentState();
+}
+
+class _AnimatedEmptyStateContentState extends State<_AnimatedEmptyStateContent>
+    with TickerProviderStateMixin {
+  late final AnimationController _iconController;
+  late final AnimationController _textController;
+  late final AnimationController _hintsController;
+
+  late final Animation<double> _iconScale;
+  late final Animation<double> _iconFade;
+  late final Animation<double> _textFade;
+  late final Animation<Offset> _textSlide;
+  late final Animation<double> _hintsFade;
+  late final Animation<Offset> _hintsSlide;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Icon animation
+    _iconController = AnimationController(
+      duration: AnimationTokens.normal,
+      vsync: this,
+    );
+    _iconScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _iconController, curve: AnimationTokens.fastOutSlowIn),
+    );
+    _iconFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _iconController, curve: AnimationTokens.easeOut),
+    );
+
+    // Text animation
+    _textController = AnimationController(
+      duration: AnimationTokens.fast,
+      vsync: this,
+    );
+    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _textController, curve: AnimationTokens.easeOut),
+    );
+    _textSlide = Tween<Offset>(begin: const Offset(0, 20), end: Offset.zero).animate(
+      CurvedAnimation(parent: _textController, curve: AnimationTokens.easeOut),
+    );
+
+    // Hints animation
+    _hintsController = AnimationController(
+      duration: AnimationTokens.normal,
+      vsync: this,
+    );
+    _hintsFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _hintsController, curve: AnimationTokens.easeOut),
+    );
+    _hintsSlide = Tween<Offset>(begin: const Offset(0, 30), end: Offset.zero).animate(
+      CurvedAnimation(parent: _hintsController, curve: AnimationTokens.easeOut),
+    );
+
+    // Start staggered animations
+    _iconController.forward();
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (mounted) _textController.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _hintsController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _iconController.dispose();
+    _textController.dispose();
+    _hintsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final isDark = widget.isDark;
+    final l10n = widget.l10n;
+    final hintColor = widget.hintColor;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Animated icon
+        AnimatedBuilder(
+          animation: _iconController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _iconFade.value,
+              child: Transform.scale(
+                scale: _iconScale.value,
+                child: child,
+              ),
+            );
+          },
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.notifications_none_rounded,
+              size: 60,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Animated text
+        AnimatedBuilder(
+          animation: _textController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _textFade.value,
+              child: Transform.translate(
+                offset: _textSlide.value,
+                child: child,
+              ),
+            );
+          },
+          child: Column(
+            children: [
+              Text(
+                l10n.notificationsEmpty,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.notificationsEmptyDesc,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+
+        // Animated hints
+        AnimatedBuilder(
+          animation: _hintsController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _hintsFade.value,
+              child: Transform.translate(
+                offset: _hintsSlide.value,
+                child: child,
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.06),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.notificationsEmptyHint,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                widget.buildHintRow(Icons.calendar_today_rounded, l10n.notificationsHintNewBookings, hintColor),
+                const SizedBox(height: 8),
+                widget.buildHintRow(Icons.payment_rounded, l10n.notificationsHintPayments, hintColor),
+                const SizedBox(height: 8),
+                widget.buildHintRow(Icons.cancel_outlined, l10n.notificationsHintCancellations, hintColor),
+                const SizedBox(height: 8),
+                widget.buildHintRow(Icons.access_time_rounded, l10n.notificationsHintReminders, hintColor),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

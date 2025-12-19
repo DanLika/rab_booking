@@ -17,6 +17,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
@@ -1048,24 +1049,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
     final l10n = AppLocalizations.of(context);
     return Center(
       child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.home_work_outlined, size: 80, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
-            const SizedBox(height: 24),
-            Text(
-              l10n.unitHubSelectUnit,
-              style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.unitHubSelectUnitDesc,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: AnimatedEmptyState(
+            icon: Icons.home_work_outlined,
+            title: l10n.unitHubSelectUnit,
+            subtitle: l10n.unitHubSelectUnitDesc,
+            iconSize: 80,
+            iconColor: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
         ),
       ),
     );

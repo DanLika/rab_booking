@@ -18,6 +18,7 @@ import '../../domain/models/overbooking_conflict.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -1041,42 +1042,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.spaceL),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Enhanced icon with background circle
-              Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                ),
-                child: Icon(Icons.event_available_outlined, size: 70, color: Theme.of(context).colorScheme.primary),
-              ),
-              const SizedBox(height: AppDimensions.spaceL),
-
-              // Main title
-              Text(
-                l10n.ownerBookingsNoBookings,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: AppDimensions.spaceS),
-
-              // Description
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceL),
-                child: Text(
-                  l10n.ownerBookingsNoBookingsDescription,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                ),
-              ),
-            ],
+          child: AnimatedEmptyState(
+            icon: Icons.event_available_outlined,
+            title: l10n.ownerBookingsNoBookings,
+            subtitle: l10n.ownerBookingsNoBookingsDescription,
+            iconSize: 70,
+            iconColor: Theme.of(context).colorScheme.primary,
           ),
         ),
       ),

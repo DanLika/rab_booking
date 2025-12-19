@@ -70,8 +70,6 @@ dependencies:
   # Animations & Scroll Effects (2025 UX)
   visibility_detector: ^0.4.0+2
   flutter_animate: ^4.5.0
-  lottie: ^3.1.0
-  confetti: ^0.8.0
   auto_size_text: ^3.0.0
   step_progress_indicator: ^1.0.2
 
@@ -124,8 +122,8 @@ dev_dependencies:
 
   # Testing
   mocktail: ^1.0.4
-  integration_test:
-    sdk: flutter
+  # integration_test removed - was causing Android release build issues
+  # (Flutter bug: dev_dependencies included in GeneratedPluginRegistrant.java)
   golden_toolkit: ^0.15.0
 
   # Sentry source maps upload (for better error tracking)

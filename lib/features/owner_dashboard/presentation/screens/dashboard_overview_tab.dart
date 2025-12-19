@@ -13,6 +13,7 @@ import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../../../shared/widgets/app_filter_chip.dart';
@@ -197,21 +198,23 @@ class DashboardOverviewTab extends ConsumerWidget {
             ),
           ),
 
-          // Charts section
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              context.horizontalPadding,
-              isMobile ? 12 : 16,
-              context.horizontalPadding,
-              isMobile ? 12 : 16,
-            ),
-            child: dashboardAsync.when(
-              data: (data) => isDesktop
-                  ? _buildDesktopChartsRow(data, l10n)
-                  : _buildStackedCharts(data, isMobile, l10n),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
+          // Charts section - only show when there are bookings
+          dashboardAsync.when(
+            data: (data) => data.bookings == 0
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      context.horizontalPadding,
+                      isMobile ? 12 : 16,
+                      context.horizontalPadding,
+                      isMobile ? 12 : 16,
+                    ),
+                    child: isDesktop
+                        ? _buildDesktopChartsRow(data, l10n)
+                        : _buildStackedCharts(data, isMobile, l10n),
+                  ),
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
 
           // Recent activity section
@@ -327,8 +330,10 @@ class DashboardOverviewTab extends ConsumerWidget {
           activities: activities,
           onViewAll: () => context.go(OwnerRoutes.bookings),
           onActivityTap: (bookingId) {
+            if (bookings.isEmpty) return; // Safety check
             final ownerBooking = bookings.firstWhere(
               (b) => b.booking.id == bookingId,
+              orElse: () => bookings.first,
             );
             showDialog(
               context: context,
@@ -956,7 +961,7 @@ Widget _buildChartHeader(
   );
 }
 
-/// Helper for empty chart state
+/// Helper for empty chart state with animation
 Widget _buildEmptyState(
   BuildContext context,
   AppLocalizations l10n,
@@ -966,22 +971,11 @@ Widget _buildEmptyState(
   return SizedBox(
     height: 200,
     child: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 40,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.ownerAnalyticsNoData,
-            style: AppTypography.bodyMedium.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+      child: AnimatedEmptyState(
+        icon: icon,
+        title: l10n.ownerAnalyticsNoData,
+        iconSize: 40,
+        iconColor: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
       ),
     ),
   );

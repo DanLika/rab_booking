@@ -531,7 +531,30 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-19 | **Version**: 6.11
+**Last Updated**: 2025-12-19 | **Version**: 6.12
+
+**Changelog 6.12**: Timeline Calendar Scroll Fixes & Turnover Visibility:
+- **Scroll Bounce-Back Fix** (Android weak swipe issue):
+  - **Problem**: Weak swipes on Timeline Calendar would bounce back instead of scrolling
+  - **Root Cause**: `ClampingScrollPhysics.createBallisticSimulation()` returns `null` for low-velocity gestures
+  - **Fix**: New `TimelineSnapScrollPhysics` class (`timeline_snap_scroll_physics.dart`):
+    - Custom `createBallisticSimulation()` that ALWAYS returns a snap simulation
+    - Critically damped spring (no oscillation) for smooth stop at day boundary
+    - Low `minFlingVelocity` (10.0) to capture weak Android swipes
+- **Feedback Loop Fix** (auto-scroll backwards/forwards):
+  - **Problem**: Calendar auto-scrolled continuously after user swipe
+  - **Root Cause**: `_updateVisibleRange` → parent updates → `didUpdateWidget` → scroll → loop
+  - **Fix** (`timeline_calendar_widget.dart`):
+    - Report CENTER of visible range instead of START (prevents position drift)
+    - `didUpdateWidget` only scrolls when `forceScrollKey` changes (explicit user action)
+    - Increased skip threshold from `visibleWidth/4` to `visibleWidth/2`
+- **Toolbar Navigation Fix**:
+  - Previous/Next/DatePicker buttons now increment `forceScrollKey++`
+  - Required after feedback loop fix to trigger scroll in `didUpdateWidget`
+- **Turnover Day Visibility** (`skewed_booking_painter.dart`):
+  - Increased `turnoverGap` from 2px to 4px
+  - Added 50% opacity diagonal separator lines on check-in/check-out edges
+  - Turnover days now clearly visible in Timeline Calendar
 
 **Changelog 6.11**: Flutter Animation Widget Library:
 - **New animation widgets** (`lib/shared/widgets/animations/`):

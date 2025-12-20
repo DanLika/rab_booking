@@ -19,6 +19,10 @@ class SkewedBookingPainter extends CustomPainter {
   final double borderWidth;
   final bool hasConflict;
 
+  /// Color for the diagonal separator lines (should match theme)
+  /// Light theme: use darker color, Dark theme: use lighter color
+  final Color separatorColor;
+
   /// The width of a single day cell - used to calculate skew for turnover alignment
   final double dayWidth;
 
@@ -45,6 +49,7 @@ class SkewedBookingPainter extends CustomPainter {
     required this.dayWidth,
     this.borderWidth = 1.5,
     this.hasConflict = false,
+    this.separatorColor = const Color(0x80000000), // Default: black 50% opacity
   });
 
   @override
@@ -77,9 +82,9 @@ class SkewedBookingPainter extends CustomPainter {
     canvas.drawPath(path, borderPaint);
 
     // Draw semi-transparent diagonal separators for turnover visibility
-    // These 50% opacity lines make the check-in/check-out diagonals more visible
+    // Color adapts to theme: darker on light theme, lighter on dark theme
     final separatorPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.5)
+      ..color = separatorColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
@@ -149,7 +154,8 @@ class SkewedBookingPainter extends CustomPainter {
         oldDelegate.borderColor != borderColor ||
         oldDelegate.borderWidth != borderWidth ||
         oldDelegate.hasConflict != hasConflict ||
-        oldDelegate.dayWidth != dayWidth;
+        oldDelegate.dayWidth != dayWidth ||
+        oldDelegate.separatorColor != separatorColor;
   }
 }
 

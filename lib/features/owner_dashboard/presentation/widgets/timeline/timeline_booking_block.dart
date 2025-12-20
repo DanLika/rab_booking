@@ -146,6 +146,10 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
                         borderColor: booking.status.color,
                         dayWidth: dayWidth,
                         hasConflict: hasConflict,
+                        // Theme-aware separator color for diagonal lines
+                        separatorColor: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.3)
+                            : Colors.black.withValues(alpha: 0.2),
                       ),
                       size: Size(width - 2, blockHeight),
                     ),

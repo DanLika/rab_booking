@@ -136,6 +136,10 @@ class BookingBlockWidget extends StatelessWidget {
                         dayWidth ?? (width / (booking.numberOfNights + 1)),
                     borderWidth: hasConflict ? 2.5 : 1.5,
                     hasConflict: hasConflict,
+                    // Theme-aware separator color for diagonal lines
+                    separatorColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : Colors.black.withValues(alpha: 0.2),
                   ),
                   size: Size(width, height),
                 ),

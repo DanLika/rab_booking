@@ -574,12 +574,47 @@ double getScreenHeight() {
 }
 
 /// Check if physical device is in landscape mode
-/// Uses window.screen API to detect actual device orientation,
-/// not iframe dimensions which may differ in embedded contexts
+/// Uses multiple strategies for reliable cross-browser detection:
+/// 1. Screen Orientation API (most reliable, not supported on older iOS Safari)
+/// 2. matchMedia orientation query (works on most browsers including Safari)
+/// 3. Fallback to screen dimensions comparison
 bool isDeviceLandscape() {
-  final screenWidth = web.window.screen.width;
-  final screenHeight = web.window.screen.height;
-  return screenWidth > screenHeight;
+  try {
+    // Strategy 1: Use Screen Orientation API (Chrome, Firefox, modern browsers)
+    // Returns 'landscape-primary', 'landscape-secondary', 'portrait-primary', 'portrait-secondary'
+    final orientation = web.window.screen.orientation;
+    final orientationType = orientation.type;
+    if (orientationType.contains('landscape')) {
+      return true;
+    }
+    if (orientationType.contains('portrait')) {
+      return false;
+    }
+  } catch (e) {
+    // Screen Orientation API not available or failed
+  }
+
+  try {
+    // Strategy 2: Use matchMedia orientation query (works on Safari iOS)
+    // This is more reliable than screen.width/height on iOS
+    final landscapeQuery = web.window.matchMedia('(orientation: landscape)');
+    if (landscapeQuery.matches) {
+      return true;
+    }
+    final portraitQuery = web.window.matchMedia('(orientation: portrait)');
+    if (portraitQuery.matches) {
+      return false;
+    }
+  } catch (e) {
+    // matchMedia not available
+  }
+
+  // Strategy 3: Fallback to window dimensions (more reliable than screen dimensions in iframe)
+  // On iOS Safari, screen.width/height are FIXED and don't reflect rotation
+  // window.innerWidth/innerHeight DO change with rotation
+  final windowWidth = web.window.innerWidth;
+  final windowHeight = web.window.innerHeight;
+  return windowWidth > windowHeight;
 }
 
 /// Calculate keyboard height by comparing window height to visual viewport

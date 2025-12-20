@@ -40,11 +40,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   bool _rememberMe = true;
   bool _isLoading = false;
   String? _passwordErrorFromServer;
+  String? _emailErrorFromServer;
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   @override
   void initState() {
     super.initState();
     _passwordController.addListener(_clearServerError);
+    _emailController.addListener(_clearServerError);
   }
 
   @override
@@ -55,8 +58,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   }
 
   void _clearServerError() {
-    if (_passwordErrorFromServer != null) {
-      setState(() => _passwordErrorFromServer = null);
+    if (_passwordErrorFromServer != null || _emailErrorFromServer != null) {
+      setState(() {
+        _passwordErrorFromServer = null;
+        _emailErrorFromServer = null;
+      });
     }
   }
 
@@ -126,36 +132,38 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       debugPrint('[LOGIN_SCREEN] Error message after processing: $errorMessage');
 
       final isPassError = _isPasswordError(errorMessage);
-      debugPrint('[LOGIN_SCREEN] Is password error: $isPassError');
+      final isEmailErr = _isEmailError(errorMessage);
+      debugPrint('[LOGIN_SCREEN] Is password error: $isPassError, Is email error: $isEmailErr');
 
-      if (isPassError) {
-        // Set the server error and trigger rebuild
-        debugPrint('[LOGIN_SCREEN] Setting _passwordErrorFromServer: $errorMessage');
-        setState(() {
+      // Set appropriate field error and enable autovalidate mode
+      setState(() {
+        _isLoading = false;
+        _autovalidateMode = AutovalidateMode.onUserInteraction;
+        if (isPassError) {
           _passwordErrorFromServer = errorMessage;
-          _isLoading = false;
-        });
-        // Use TWO nested postFrameCallbacks to ensure:
-        // 1. First callback: widget has rebuilt with new _passwordErrorFromServer
-        // 2. Second callback: form validation runs AFTER rebuild is fully complete
-        // This fixes Chrome timing issue where single callback runs before rebuild
+        } else if (isEmailErr) {
+          _emailErrorFromServer = errorMessage;
+        }
+      });
+
+      // Force form validation to show inline errors
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _formKey.currentState != null) {
-              _formKey.currentState!.validate();
-            }
-          });
+          if (mounted && _formKey.currentState != null) {
+            _formKey.currentState!.validate();
+          }
         });
-        // Also show snackbar for better visibility (belt and suspenders approach)
-        if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
-        }
-      } else {
-        setState(() => _isLoading = false);
-        if (mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
-        }
+      });
+
+      // ALWAYS show snackbar for visibility - this is the primary user feedback
+      // Use longer duration (6 seconds) so user has time to read
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          errorMessage,
+          duration: const Duration(seconds: 6),
+        );
       }
     }
   }
@@ -163,6 +171,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   bool _isPasswordError(String message) {
     const passwordErrorPatterns = ['Incorrect password', 'Invalid password', 'wrong-password', 'invalid-credential'];
     return passwordErrorPatterns.any(message.contains);
+  }
+
+  bool _isEmailError(String message) {
+    const emailErrorPatterns = ['user-not-found', 'No account found', 'invalid-email', 'Invalid email'];
+    return emailErrorPatterns.any(message.contains);
   }
 
   Future<void> _handleOAuthSignIn(Future<void> Function() signInMethod) async {
@@ -229,6 +242,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                           child: GlassCard(
                             child: Form(
                               key: _formKey,
+                              autovalidateMode: _autovalidateMode,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -304,7 +318,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.email,
       prefixIcon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
-      validator: ProfileValidators.validateEmail,
+      validator: (value) {
+        // Show server error if present (e.g., "No account found with this email")
+        if (_emailErrorFromServer != null) {
+          return _emailErrorFromServer;
+        }
+        return ProfileValidators.validateEmail(value);
+      },
     );
   }
 

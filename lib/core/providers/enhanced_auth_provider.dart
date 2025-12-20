@@ -4,6 +4,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants/auth_feature_flags.dart';
 import '../../core/exceptions/app_exceptions.dart';
 import '../../core/services/rate_limit_service.dart';
 import '../../core/services/security_events_service.dart';
@@ -135,8 +136,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           }
         }
 
-        // Check email verification status
-        final requiresVerification = !firebaseUser.emailVerified && !userModel.emailVerified;
+        // Check email verification status (respects feature flag)
+        final requiresVerification = AuthFeatureFlags.requireEmailVerification &&
+            !firebaseUser.emailVerified &&
+            !userModel.emailVerified;
 
         // Check onboarding status
         final requiresOnboarding = userModel.needsOnboarding;
@@ -437,7 +440,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         LoggingService.log('Security event logging failed during registration: $e', tag: 'AUTH_WARNING');
       }
 
-      state = EnhancedAuthState(firebaseUser: credential.user, userModel: userModel, requiresEmailVerification: true);
+      state = EnhancedAuthState(
+        firebaseUser: credential.user,
+        userModel: userModel,
+        requiresEmailVerification: AuthFeatureFlags.requireEmailVerification,
+      );
     } on FirebaseAuthException catch (e) {
       // Determine error message, with rate limit check wrapped in try-catch
       // to ensure isLoading is ALWAYS reset even if rate limit operations fail
@@ -835,7 +842,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       LoggingService.log('Email updated successfully!', tag: 'ENHANCED_AUTH');
 
       // Reload state to reflect changes
-      state = state.copyWith(requiresEmailVerification: true);
+      state = state.copyWith(requiresEmailVerification: AuthFeatureFlags.requireEmailVerification);
     } on FirebaseAuthException catch (e) {
       unawaited(LoggingService.logError('Email update failed: ${e.code}', e));
       throw _getAuthErrorMessage(e);

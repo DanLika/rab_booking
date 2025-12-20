@@ -17,5 +17,16 @@ abstract final class AuthFeatureFlags {
   /// 3. OAuth redirect URLs are configured
   // TODO: Enable when Apple Developer Portal is configured
   static const bool isAppleSignInEnabled = false;
+
+  /// Whether email verification is required after registration/login.
+  ///
+  /// When false, users can access the dashboard immediately without
+  /// verifying their email. Set to false during development/testing
+  /// or if email verification is not critical for your use case.
+  ///
+  /// IMPORTANT: Set to true in production for security!
+  static const bool requireEmailVerification = false;
 }
+
+
 

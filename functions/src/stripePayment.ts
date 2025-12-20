@@ -17,6 +17,7 @@ import { generateBookingReference } from "./utils/bookingReferenceGenerator";
 import {
   validateAndConvertBookingDates,
   calculateBookingNights,
+  safeToDate,
 } from "./utils/dateValidation";
 import { sanitizeText, sanitizeEmail, sanitizePhone } from "./utils/inputSanitization";
 import { logInfo, logError, logWarn } from "./logger";
@@ -909,8 +910,8 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       const guestPhone = placeholderData.guest_phone;
       const guestCount = placeholderData.guest_count;
       const bookingReference = placeholderData.booking_reference;
-      const checkIn = placeholderData.check_in.toDate();
-      const checkOut = placeholderData.check_out.toDate();
+      const checkIn = safeToDate(placeholderData.check_in, "check_in");
+      const checkOut = safeToDate(placeholderData.check_out, "check_out");
       const totalPrice = placeholderData.total_price;
       const depositAmount = placeholderData.deposit_amount;
 

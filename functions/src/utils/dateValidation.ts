@@ -2,6 +2,70 @@ import {HttpsError} from "firebase-functions/v2/https";
 import {admin} from "../firebase";
 
 /**
+ * Safely convert any date-like value to JavaScript Date
+ *
+ * Handles:
+ * - Firestore Timestamp (has .toDate() method)
+ * - JavaScript Date objects
+ * - ISO date strings
+ * - Unix timestamps (milliseconds)
+ *
+ * @param value - Date-like value to convert
+ * @param fieldName - Name of field for error messages
+ * @returns JavaScript Date object
+ * @throws Error if value cannot be converted
+ */
+export function safeToDate(
+  value: unknown,
+  fieldName = "date"
+): Date {
+  if (!value) {
+    throw new Error(`${fieldName} is required but was ${value}`);
+  }
+
+  // Handle Firestore Timestamp (has .toDate() method)
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "toDate" in value &&
+    typeof (value as {toDate: () => Date}).toDate === "function"
+  ) {
+    return (value as {toDate: () => Date}).toDate();
+  }
+
+  // Handle Date object
+  if (value instanceof Date) {
+    if (isNaN(value.getTime())) {
+      throw new Error(`${fieldName} is an invalid Date object`);
+    }
+    return value;
+  }
+
+  // Handle string (ISO format)
+  if (typeof value === "string") {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) {
+      throw new Error(`${fieldName} string "${value}" is not a valid date`);
+    }
+    return date;
+  }
+
+  // Handle number (Unix timestamp in milliseconds)
+  if (typeof value === "number") {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) {
+      throw new Error(`${fieldName} timestamp ${value} is not a valid date`);
+    }
+    return date;
+  }
+
+  throw new Error(
+    `${fieldName} has unsupported type: ${typeof value}. ` +
+    `Expected Timestamp, Date, string, or number.`
+  );
+}
+
+/**
  * Validate and convert booking dates to Firestore Timestamps
  *
  * VALIDATES:

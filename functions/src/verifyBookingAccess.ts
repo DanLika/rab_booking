@@ -3,6 +3,7 @@ import {db} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {verifyAccessToken} from "./bookingAccessToken";
 import {setUser} from "./sentry";
+import {safeToDate} from "./utils/dateValidation";
 
 /**
  * Cloud Function: Verify Booking Access
@@ -156,8 +157,8 @@ export const verifyBookingAccess = onCall(async (request) => {
     }
 
     // Calculate nights
-    const checkIn = booking.check_in.toDate();
-    const checkOut = booking.check_out.toDate();
+    const checkIn = safeToDate(booking.check_in, "check_in");
+    const checkOut = safeToDate(booking.check_out, "check_out");
     const nights = Math.ceil(
       (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -173,8 +174,8 @@ export const verifyBookingAccess = onCall(async (request) => {
       guestName: booking.guest_name,
       guestEmail: booking.guest_email,
       guestPhone: booking.guest_phone || null,
-      checkIn: booking.check_in.toDate().toISOString(),
-      checkOut: booking.check_out.toDate().toISOString(),
+      checkIn: checkIn.toISOString(),
+      checkOut: checkOut.toISOString(),
       nights: nights,
       // Handle both formats: int (legacy) or object {adults, children}
       guestCount: typeof booking.guest_count === "number"
@@ -190,9 +191,10 @@ export const verifyBookingAccess = onCall(async (request) => {
       ownerEmail: property?.owner_email || null,
       ownerPhone: property?.owner_phone || null,
       notes: booking.notes || null,
-      createdAt: booking.created_at?.toDate().toISOString() || null,
+      createdAt: booking.created_at ?
+        safeToDate(booking.created_at, "created_at").toISOString() : null,
       paymentDeadline: booking.payment_deadline ?
-        booking.payment_deadline.toDate().toISOString() :
+        safeToDate(booking.payment_deadline, "payment_deadline").toISOString() :
         null,
       bankDetails: bankDetails,
     };

@@ -16,6 +16,7 @@ import {
   fetchPropertyAndUnitDetails,
   BookingEmailTracking,
 } from "./utils/bookingHelpers";
+import {safeToDate} from "./utils/dateValidation";
 
 // ==========================================
 // EMAIL ERROR TRACKING
@@ -118,8 +119,8 @@ export const autoCancelExpiredBookings = onSchedule(
                   booking.booking_reference,
                   propertyName,
                   unitName,
-                  booking.check_in.toDate(),
-                  booking.check_out.toDate(),
+                  safeToDate(booking.check_in, "check_in"),
+                  safeToDate(booking.check_out, "check_out"),
                   undefined, // refundAmount
                   booking.property_id, // propertyId
                   booking.cancellation_reason || "Payment not received within deadline", // cancellationReason
@@ -299,8 +300,8 @@ export const onBookingStatusChange = onDocumentUpdated(
                 after.guest_email || "",
                 after.guest_name || "Guest",
                 after.booking_reference || "",
-                after.check_in.toDate(),
-                after.check_out.toDate(),
+                safeToDate(after.check_in, "check_in"),
+                safeToDate(after.check_out, "check_out"),
                 propertyData?.name || "Property",
                 propertyData?.contact_email,
                 after.property_id
@@ -446,8 +447,8 @@ export const onBookingStatusChange = onDocumentUpdated(
                   booking.booking_reference || `ERR-${event.params.bookingId}`,
                   propertyName,
                   unitName,
-                  booking.check_in.toDate(),
-                  booking.check_out.toDate(),
+                  safeToDate(booking.check_in, "check_in"),
+                  safeToDate(booking.check_out, "check_out"),
                   undefined, // refundAmount
                   booking.property_id,
                   cancellationReason,

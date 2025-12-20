@@ -5,6 +5,7 @@ import {sendBookingCancellationEmail} from "./emailService";
 import {fetchPropertyAndUnitDetails} from "./utils/bookingHelpers";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
+import {safeToDate} from "./utils/dateValidation";
 import Stripe from "stripe";
 
 /**
@@ -203,7 +204,7 @@ export const guestCancelBooking = onCall(async (request) => {
       }
 
       // Step 6: Re-check cancellation deadline using fresh booking data
-      const freshCheckInDate = freshBooking.check_in.toDate();
+      const freshCheckInDate = safeToDate(freshBooking.check_in, "check_in");
       const hoursUntilCheckIn =
         (freshCheckInDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
@@ -351,8 +352,8 @@ export const guestCancelBooking = onCall(async (request) => {
           bookingReference,
           propertyName,
           unitName,
-          booking.check_in.toDate(),
-          booking.check_out.toDate(),
+          safeToDate(booking.check_in, "check_in"),
+          safeToDate(booking.check_out, "check_out"),
           cancellationResult.refundAmount, // Actual refund amount
           propertyId
         );

@@ -86,6 +86,14 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     // Automatically rejects pending bookings when they conflict with confirmed bookings
     ref.watch(overbookingAutoResolverProvider);
 
+    // Check if owner has any units - hide toolbar and FAB if empty
+    final unitsAsync = ref.watch(allOwnerUnitsProvider);
+    final hasUnits = unitsAsync.when(
+      data: (units) => units.isNotEmpty,
+      loading: () => true, // Show toolbar while loading to avoid flicker
+      error: (_, _) => false, // Hide toolbar on error
+    );
+
     // Safely get localizations - use try-catch to prevent errors if context is not ready
     String calendarTitle;
     try {
@@ -121,66 +129,69 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
               child: Column(
                 children: [
                   // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
-                      final multiSelectState = ref.watch(multiSelectProvider);
-                      final conflictCount = ref.watch(overbookingConflictCountProvider);
-                      final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
+                  // CONDITIONAL: Hide toolbar when owner has no units
+                  if (hasUnits)
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+                        final multiSelectState = ref.watch(multiSelectProvider);
+                        final conflictCount = ref.watch(overbookingConflictCountProvider);
+                        final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
 
-                      return CalendarTopToolbar(
-                        dateRange: _currentRange,
-                        isWeekView: false,
-                        onPreviousPeriod: _goToPreviousPeriod,
-                        onNextPeriod: _goToNextPeriod,
-                        onToday: _goToToday,
-                        onDatePickerTap: _showDatePicker,
-                        onSearchTap: showSearchDialog,
-                        onRefresh: refreshCalendarData,
-                        onFilterTap: _showFiltersAndNavigateToToday,
-                        notificationCount: unreadCountAsync.when(
-                          data: (count) => count,
-                          loading: () => 0,
-                          error: (error, stackTrace) => 0,
-                        ),
-                        onNotificationsTap: showNotificationsPanel,
-                        // Show all icons on screens >= 600px
-                        isCompact: MediaQuery.of(context).size.width < 600,
-                        // ENHANCED: Analytics toggle integrated in single row
-                        showSummaryToggle: true,
-                        isSummaryVisible: _showSummary,
-                        onSummaryToggleChanged: (value) {
-                          setState(() {
-                            _showSummary = value;
-                          });
-                        },
-                        // Show empty units toggle (persisted via provider)
-                        showEmptyUnitsToggle: true,
-                        isEmptyUnitsVisible: showEmptyUnits,
-                        onEmptyUnitsToggleChanged: (value) {
-                          ref.read(showEmptyUnitsProvider.notifier).setValue(value);
-                        },
-                        // ENHANCED: Multi-select mode toggle
-                        showMultiSelectToggle: true,
-                        isMultiSelectActive: multiSelectState.isEnabled,
-                        onMultiSelectToggle: () {
-                          if (multiSelectState.isEnabled) {
-                            ref.read(multiSelectProvider.notifier).disableMultiSelect();
-                          } else {
-                            ref.read(multiSelectProvider.notifier).enableMultiSelect();
-                          }
-                        },
-                        // Overbooking conflict badge
-                        overbookingConflictCount: conflictCount,
-                        onOverbookingBadgeTap: () {
-                          _handleOverbookingBadgeTap(ref);
-                        },
-                      );
-                    },
-                  ),
+                        return CalendarTopToolbar(
+                          dateRange: _currentRange,
+                          isWeekView: false,
+                          onPreviousPeriod: _goToPreviousPeriod,
+                          onNextPeriod: _goToNextPeriod,
+                          onToday: _goToToday,
+                          onDatePickerTap: _showDatePicker,
+                          onSearchTap: showSearchDialog,
+                          onRefresh: refreshCalendarData,
+                          onFilterTap: _showFiltersAndNavigateToToday,
+                          notificationCount: unreadCountAsync.when(
+                            data: (count) => count,
+                            loading: () => 0,
+                            error: (error, stackTrace) => 0,
+                          ),
+                          onNotificationsTap: showNotificationsPanel,
+                          // Show all icons on screens >= 600px
+                          isCompact: MediaQuery.of(context).size.width < 600,
+                          // ENHANCED: Analytics toggle integrated in single row
+                          showSummaryToggle: true,
+                          isSummaryVisible: _showSummary,
+                          onSummaryToggleChanged: (value) {
+                            setState(() {
+                              _showSummary = value;
+                            });
+                          },
+                          // Show empty units toggle (persisted via provider)
+                          showEmptyUnitsToggle: true,
+                          isEmptyUnitsVisible: showEmptyUnits,
+                          onEmptyUnitsToggleChanged: (value) {
+                            ref.read(showEmptyUnitsProvider.notifier).setValue(value);
+                          },
+                          // ENHANCED: Multi-select mode toggle
+                          showMultiSelectToggle: true,
+                          isMultiSelectActive: multiSelectState.isEnabled,
+                          onMultiSelectToggle: () {
+                            if (multiSelectState.isEnabled) {
+                              ref.read(multiSelectProvider.notifier).disableMultiSelect();
+                            } else {
+                              ref.read(multiSelectProvider.notifier).enableMultiSelect();
+                            }
+                          },
+                          // Overbooking conflict badge
+                          overbookingConflictCount: conflictCount,
+                          onOverbookingBadgeTap: () {
+                            _handleOverbookingBadgeTap(ref);
+                          },
+                        );
+                      },
+                    ),
 
                   // Filter chips (from shared widget)
-                  const CalendarFilterChips(),
+                  // CONDITIONAL: Hide filter chips when owner has no units
+                  if (hasUnits) const CalendarFilterChips(),
 
                   // Timeline calendar widget (it fetches its own data via providers)
                   Expanded(
@@ -231,8 +242,8 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
               builder: (context, ref, child) {
                 final multiSelectState = ref.watch(multiSelectProvider);
 
-                // Hide FAB when multi-select is active
-                if (multiSelectState.isEnabled) {
+                // Hide FAB when multi-select is active OR when owner has no units
+                if (multiSelectState.isEnabled || !hasUnits) {
                   return const SizedBox.shrink();
                 }
 

@@ -91,8 +91,16 @@ class _StripeConnectSetupScreenState
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('createStripeConnectAccount');
 
+      // On mobile apps, Uri.base returns empty/invalid URL
+      // Use hardcoded production URL as fallback
+      String baseUrl;
       final currentUri = Uri.base;
-      final baseUrl = '${currentUri.scheme}://${currentUri.authority}';
+      if (currentUri.scheme.isNotEmpty && currentUri.authority.isNotEmpty) {
+        baseUrl = '${currentUri.scheme}://${currentUri.authority}';
+      } else {
+        // Mobile app fallback - use production owner dashboard URL
+        baseUrl = 'https://app.bookbed.io';
+      }
       final returnUrl = '$baseUrl/owner/stripe-return';
       final refreshUrl = '$baseUrl/owner/stripe-refresh';
 

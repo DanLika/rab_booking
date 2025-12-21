@@ -531,7 +531,36 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-19 | **Version**: 6.12
+**Last Updated**: 2025-12-21 | **Version**: 6.15
+
+**Changelog 6.15**: Stripe Live Mode Setup & Mobile URL Fix:
+- **Stripe Live Mode Activated**:
+  - Firebase secrets updated: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (Live keys)
+  - Webhook endpoint: `https://us-central1-rab-booking-248fc.cloudfunctions.net/handleStripeWebhook`
+  - Events: `checkout.session.completed`, `checkout.session.expired`
+  - Platform profile completed in Stripe Dashboard
+- **Mobile App URL Fix** (`stripe_connect_setup_screen.dart`):
+  - **Problem**: `Uri.base` returns empty string on native Android/iOS apps
+  - **Error**: "Not a valid URL" when connecting Stripe account from mobile app
+  - **Fix**: Added fallback to `https://app.bookbed.io` for Stripe Connect return/refresh URLs
+  - Mobile apps now correctly redirect back to owner dashboard after Stripe onboarding
+
+**Changelog 6.14**: Smart Price Mismatch Alerting - completed above
+
+**Changelog 6.13**: Widget Embed Code & Month Display Fix:
+- **Iframe Embed Code Improvement**:
+  - Embed kod sada koristi `view.bookbed.io` domenu (ne `bookbed.io`)
+  - Direktan iframe umjesto script-based embed.js
+  - Responsive visina sa `aspect-ratio: 1/1.4; min-height: 500px; max-height: 850px;`
+  - Owner samo kopira i zalijepi - radi na bilo kojem sajtu
+  - Fajlovi: `embed_code_generator_dialog.dart`, `embed_widget_guide_screen.dart`
+- **Month/Year Display Always Visible**:
+  - **Problem**: U embedded widgetu, mjesec/godina ("Dec 2025") se nije prikazivalo na uskim iframe-ovima
+  - **Uzrok**: `isTinyScreen < 360px` check sakrivao tekst, ali iframe može biti uži od device-a
+  - **Fix** (`month_calendar_widget.dart:217-230`):
+    - Mjesec/godina se UVIJEK prikazuje (uklonjen `if (!isTinyScreen)` check)
+    - Na malim ekranima koristi manji font (`fontSizeXS`) umjesto skrivanja
+    - Korisnik uvijek zna koji mjesec gleda
 
 **Changelog 6.12**: Timeline Calendar Scroll Fixes & Turnover Visibility:
 - **Scroll Bounce-Back Fix** (Android weak swipe issue):
@@ -650,6 +679,21 @@ window.pwaPromptInstall()  // async function
     // Handle gracefully
   }
   ```
+
+**Changelog 6.14**: Smart Price Mismatch Alerting (False Positive Fix):
+- **Problem**: Sentry dobivao HIGH severity alert za SVAKI price mismatch, čak i za benigne scenarije:
+  - Cached prices na klijentu (€2-5 razlika je normalna)
+  - Floating-point rounding (< €0.10 je bezopasno)
+  - Owner promijenio cijenu dok je korisnik bio na stranici
+- **Rješenje**: Smart threshold u `priceValidation.ts` (line 287-325):
+  - Sentry alert SAMO za sumnjive mismatche: `difference > €10` ILI `percentageDifference > 5%`
+  - Male razlike (€0.01-10) se loguju u Cloud Logs, ali NE šalju na Sentry
+  - Booking i dalje USPIJEVA sa server-calculated cijenom u oba slučaja
+- **Stripe Fee clarification**:
+  - Stripe fee (1.4% + €0.25) se **SKIDA SA OWNER-A**, ne dodaje se na cijenu
+  - Korisnik plaća: `totalPrice = roomPrice + servicesTotal`
+  - Owner dobija: `totalPrice - stripeFee` (npr. 170€ → 167.73€)
+  - `servicesTotal` parametar se UVIJEK šalje sa klijenta na server za validaciju
 
 **Changelog 6.6**: Security Helper Integration - All Helpers Now Active:
 - **logRateLimitExceeded() integration**:

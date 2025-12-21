@@ -21,21 +21,26 @@ const _emptyDashboardData = UnifiedDashboardData(
 );
 
 /// Date range notifier for Dashboard time period selection
-/// Default: Current calendar month
+/// Default: Last 7 days (rolling window)
 @riverpod
 class DashboardDateRangeNotifier extends _$DashboardDateRangeNotifier {
   @override
   DateRangeFilter build() {
-    return DateRangeFilter.currentMonth();
+    return DateRangeFilter.last7Days();
   }
 
   void setPreset(String preset) {
     state = switch (preset) {
-      'week' => DateRangeFilter.lastWeek(),
-      'month' => DateRangeFilter.currentMonth(),
-      'quarter' => DateRangeFilter.lastQuarter(),
-      'year' => DateRangeFilter.lastYear(),
-      _ => DateRangeFilter.currentMonth(),
+      'last7' => DateRangeFilter.last7Days(),
+      'last30' => DateRangeFilter.last30Days(),
+      'last90' => DateRangeFilter.last90Days(),
+      'last365' => DateRangeFilter.last365Days(),
+      // Legacy support (backward compatibility)
+      'week' => DateRangeFilter.last7Days(),
+      'month' => DateRangeFilter.last30Days(),
+      'quarter' => DateRangeFilter.last90Days(),
+      'year' => DateRangeFilter.last365Days(),
+      _ => DateRangeFilter.last7Days(),
     };
   }
 

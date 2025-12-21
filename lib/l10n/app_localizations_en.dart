@@ -162,6 +162,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authRememberMe => 'Remember me';
 
   @override
+  String get authRememberMeHint => 'Keep me logged in on this device';
+
+  @override
+  String get authErrorWrongPassword => 'Incorrect password. Please try again.';
+
+  @override
+  String get authErrorUserNotFound => 'No account found with this email.';
+
+  @override
+  String get authErrorInvalidEmail => 'Invalid email address.';
+
+  @override
+  String get authErrorUserDisabled => 'This account has been disabled.';
+
+  @override
+  String get authErrorTooManyRequests =>
+      'Too many failed attempts. Please try again later.';
+
+  @override
+  String get authErrorGeneric =>
+      'Login failed. Please check your credentials and try again.';
+
+  @override
   String get authForgotPassword => 'Forgot password?';
 
   @override
@@ -2360,6 +2383,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerAnalyticsLast30Days => 'Last 30 days';
+
+  @override
+  String get ownerAnalyticsLast90Days => 'Last 90 days';
+
+  @override
+  String get ownerAnalyticsLast365Days => 'Last 365 days';
 
   @override
   String ownerAnalyticsPropertiesActive(int active, int total) {

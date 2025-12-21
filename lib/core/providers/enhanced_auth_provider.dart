@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/auth_feature_flags.dart';
 import '../../core/exceptions/app_exceptions.dart';
 import '../../core/services/rate_limit_service.dart';
+import '../../core/services/secure_storage_service.dart';
 import '../../core/services/security_events_service.dart';
 import '../../core/services/ip_geolocation_service.dart';
 import '../../core/services/logging_service.dart';
@@ -182,8 +183,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       email: firebaseUser.email!,
       firstName: firebaseUser.displayName?.split(' ').first ?? '',
       lastName: firebaseUser.displayName?.split(' ').last ?? '',
-      role: UserRole.guest,
+      role: UserRole.owner, // Default to owner (was guest before)
       emailVerified: firebaseUser.emailVerified,
+      onboardingCompleted: true, // Skip onboarding for OAuth users
       displayName: firebaseUser.displayName,
       phone: firebaseUser.phoneNumber,
       avatarUrl: firebaseUser.photoURL,
@@ -229,6 +231,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       LoggingService.log('Explicitly loading user profile...', tag: 'ENHANCED_AUTH');
       await _loadUserProfile(credential.user!);
       LoggingService.log('User profile loaded, isLoading should be false now', tag: 'ENHANCED_AUTH');
+
+      // Save or clear credentials based on Remember Me setting (non-blocking)
+      unawaited(() async {
+        try {
+          if (rememberMe) {
+            await SecureStorageService().saveCredentials(email, password);
+            LoggingService.log('Credentials saved to secure storage', tag: 'ENHANCED_AUTH');
+          } else {
+            await SecureStorageService().clearCredentials();
+            LoggingService.log('Credentials cleared from secure storage', tag: 'ENHANCED_AUTH');
+          }
+        } catch (e) {
+          // Don't block login if secure storage fails
+          LoggingService.log('Secure storage operation failed: $e', tag: 'AUTH_WARNING');
+        }
+      }());
 
       // Reset rate limit on success (non-blocking)
       unawaited(
@@ -399,11 +417,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       await _rateLimit.resetAttempts(email);
 
       // Send email verification (non-blocking - user can resend from verification screen)
-      try {
-        await user.sendEmailVerification();
-      } catch (e) {
-        // Don't block registration if email verification fails
-        LoggingService.log('Failed to send verification email: $e', tag: 'AUTH_WARNING');
+      // DISABLED: Only send verification email if flag is enabled
+      if (AuthFeatureFlags.requireEmailVerification) {
+        try {
+          await user.sendEmailVerification();
+        } catch (e) {
+          // Don't block registration if email verification fails
+          LoggingService.log('Failed to send verification email: $e', tag: 'AUTH_WARNING');
+        }
       }
 
       // Get geolocation (with timeout to avoid blocking registration)
@@ -583,6 +604,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
     // Clear user context for Sentry/Crashlytics error tracking
     LoggingService.clearUser();
+
+    // Clear saved credentials from secure storage (non-blocking)
+    unawaited(() async {
+      try {
+        await SecureStorageService().clearCredentials();
+        LoggingService.log('Credentials cleared on sign out', tag: 'ENHANCED_AUTH');
+      } catch (e) {
+        LoggingService.log('Failed to clear credentials: $e', tag: 'AUTH_WARNING');
+      }
+    }());
 
     await _auth.signOut();
     // Keep isLoading false after sign out (not an initial check)

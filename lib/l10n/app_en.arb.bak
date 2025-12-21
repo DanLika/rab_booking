@@ -55,14 +55,6 @@
   "authOwnerLogin": "Owner Login",
   "authManageProperties": "Manage your properties and bookings",
   "authRememberMe": "Remember me",
-  "authRememberMeHint": "Keep me logged in on this device",
-
-  "authErrorWrongPassword": "Incorrect password. Please try again.",
-  "authErrorUserNotFound": "No account found with this email.",
-  "authErrorInvalidEmail": "Invalid email address.",
-  "authErrorUserDisabled": "This account has been disabled.",
-  "authErrorTooManyRequests": "Too many failed attempts. Please try again later.",
-  "authErrorGeneric": "Login failed. Please check your credentials and try again.",
   "authForgotPassword": "Forgot password?",
   "authOrContinueWith": "or continue with",
   "authPreviewDemo": "Preview Demo (Anonymous)",
@@ -929,8 +921,6 @@
     }
   },
   "ownerAnalyticsLast30Days": "Last 30 days",
-  "ownerAnalyticsLast90Days": "Last 90 days",
-  "ownerAnalyticsLast365Days": "Last 365 days",
   "ownerAnalyticsPropertiesActive": "{active}/{total} properties active",
   "@ownerAnalyticsPropertiesActive": {
     "placeholders": {

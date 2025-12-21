@@ -55,14 +55,6 @@
   "authOwnerLogin": "Prijava vlasnika",
   "authManageProperties": "Upravljajte nekretninama i rezervacijama",
   "authRememberMe": "Zapamti me",
-  "authRememberMeHint": "Drži me prijavljenim na ovom uređaju",
-
-  "authErrorWrongPassword": "Pogrešna lozinka. Molimo pokušajte ponovo.",
-  "authErrorUserNotFound": "Nije pronađen račun sa ovim emailom.",
-  "authErrorInvalidEmail": "Nevažeća email adresa.",
-  "authErrorUserDisabled": "Ovaj račun je onemogućen.",
-  "authErrorTooManyRequests": "Previše neuspješnih pokušaja. Pokušajte kasnije.",
-  "authErrorGeneric": "Prijava nije uspjela. Provjerite podatke i pokušajte ponovo.",
   "authForgotPassword": "Zaboravili lozinku?",
   "authOrContinueWith": "ili nastavite s",
   "authPreviewDemo": "Pregled demo (Anonimno)",
@@ -929,8 +921,6 @@
     }
   },
   "ownerAnalyticsLast30Days": "Zadnjih 30 dana",
-  "ownerAnalyticsLast90Days": "Zadnjih 90 dana",
-  "ownerAnalyticsLast365Days": "Zadnjih 365 dana",
   "ownerAnalyticsPropertiesActive": "{active}/{total} aktivnih objekata",
   "@ownerAnalyticsPropertiesActive": {
     "placeholders": {

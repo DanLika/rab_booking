@@ -552,7 +552,60 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-21 | **Version**: 6.16
+**Last Updated**: 2025-12-21 | **Version**: 6.18
+
+**Changelog 6.18**: Dashboard Rolling Window Periods & Chart Improvements:
+- **Period Calculations Changed to Rolling Windows**:
+  - **Problem**: Period računanja bila kalendarska (1. dec - 21. dec), što daje nekonzistentne rezultate
+    - "Prošlo tromjesečje" pokazivalo MANJE podataka nego "Ovaj mjesec" (nelogično)
+    - Periodi nisu bili dinamički - morali se ručno mijenjati svaki dan
+  - **Fix**: Rolling windows sa `today minus X dana` logikom
+    - `last7Days()`: zadnjih 7 dana (bilo: prošli tjedan)
+    - `last30Days()`: zadnjih 30 dana (bilo: kalendarski mjesec)
+    - `last90Days()`: zadnjih 90 dana (bilo: kalendarski tromjesečje)
+    - `last365Days()`: zadnjih 365 dana (bilo: kalendarskih 12 mjeseci)
+  - **Rezultat**: Period sa više dana UVIJEK ima više/jednako podataka
+- **Default Period**: Promijenjen sa `currentMonth()` na `last7Days()`
+- **Choice Chip Labele Ažurirane**:
+  - "Prošli tjedan" → "Zadnjih 7 dana" / "Last 7 days"
+  - "Ovaj mjesec" → "Zadnjih 30 dana" / "Last 30 days"
+  - "Prošlo tromjesečje" → "Zadnjih 90 dana" / "Last 90 days"
+  - "Prošla godina" → "Zadnjih 365 dana" / "Last 365 days"
+- **Chart Interakcije Pojednostavljene**:
+  - Uklonjen zoom (scroll to zoom) - `horizontalRangeUpdater` removed iz `RectCoord`
+  - Dodane vrijednosti na chartovima:
+    - Revenue chart: €XXX prikazano iznad svake tačke
+    - Bookings chart: broj rezervacija prikazano iznad svakog bara
+  - Zadržani hover tooltips za detalje
+- **Modified Files**:
+  - `unified_dashboard_data.dart`: novi factory methods za rolling windows
+  - `unified_dashboard_provider.dart`: `setPreset()` ažuriran za nove periode
+  - `dashboard_overview_tab.dart`: chart labels sa vrijednostima, uklonjeni zoom eventi
+  - `app_en.arb`, `app_hr.arb`: nove lokalizacije za choice chips
+
+**Changelog 6.17**: Calendar Provider Cache Security Fix & Remember Me Feature:
+- **CRITICAL SECURITY FIX - Calendar showing other owner's units**:
+  - **Problem**: Owner A logs out, Owner B logs in → sees Owner A's units in Calendar Timeline
+  - **Root Cause**: `keepAlive: true` providers cached previous user's data
+    - `ownerPropertiesCalendarProvider` and `allOwnerUnitsProvider` used `FirebaseAuth.instance.currentUser`
+    - Provider never invalidated on user change because `keepAlive: true` prevents disposal
+  - **Fix** (`owner_calendar_provider.dart:20-24`):
+    - Changed from `FirebaseAuth.instance.currentUser?.uid` to `ref.watch(enhancedAuthProvider)`
+    - Now watches auth state changes → auto-invalidates on login/logout
+    - New user gets fresh data, not cached data from previous user
+  - **Key Learning**: `keepAlive: true` providers MUST watch auth state if they depend on current user
+- **Remember Me / Auto-fill Feature** (AUTH_LOADING_STATES_PLAN.md):
+  - Added `flutter_secure_storage: ^9.0.0` dependency
+  - New `SecureStorageService` singleton (`lib/core/services/secure_storage_service.dart`)
+  - New `SavedCredentials` freezed model (`lib/features/auth/models/saved_credentials.dart`)
+  - Login screen auto-fills credentials if "Remember Me" was enabled
+  - Credentials saved on successful login (if Remember Me checked)
+  - Credentials cleared on logout
+  - Platform-specific encryption: Android EncryptedSharedPreferences, iOS Keychain
+- **Improved Auth Error Messages**:
+  - New localization keys: `authErrorWrongPassword`, `authErrorUserNotFound`, `authErrorInvalidEmail`, etc.
+  - Croatian and English translations
+  - Generic fallback: `authErrorGeneric` for unmapped errors
 
 **Changelog 6.16**: Stripe Live Payment Tested & Payment Method Display:
 - **Stripe Live Payment Successfully Tested**:

@@ -6,6 +6,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/constants/auth_feature_flags.dart';
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/services/secure_storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
@@ -61,6 +62,26 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     _shakeAnimation = Tween<double>(begin: 0, end: 10).animate(
       CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
     );
+
+    // Auto-fill saved credentials if "Remember Me" was enabled
+    _loadSavedCredentials();
+  }
+
+  /// Load saved credentials from secure storage
+  Future<void> _loadSavedCredentials() async {
+    try {
+      final credentials = await SecureStorageService().getCredentials();
+      if (credentials != null && mounted) {
+        setState(() {
+          _emailController.text = credentials.email;
+          _passwordController.text = credentials.password;
+          _rememberMe = true;
+        });
+      }
+    } catch (e) {
+      // Silently fail - secure storage might not be available
+      debugPrint('[LOGIN_SCREEN] Failed to load saved credentials: $e');
+    }
   }
 
   @override
@@ -207,23 +228,23 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   String _getLocalizedError(String error, AppLocalizations l10n) {
     final errorLower = error.toLowerCase();
 
-    // Authentication errors
+    // Authentication errors - use new auth-specific keys
     if (errorLower.contains('user-not-found') || errorLower.contains('no account found')) {
-      return l10n.errorUserNotFound;
+      return l10n.authErrorUserNotFound;
     }
     if (errorLower.contains('wrong-password') ||
         errorLower.contains('invalid-credential') ||
         errorLower.contains('incorrect password')) {
-      return l10n.errorWrongPassword;
+      return l10n.authErrorWrongPassword;
     }
     if (errorLower.contains('invalid-email') || errorLower.contains('invalid email')) {
-      return l10n.errorInvalidEmail;
+      return l10n.authErrorInvalidEmail;
     }
     if (errorLower.contains('user-disabled') || errorLower.contains('account has been disabled')) {
-      return l10n.errorUserDisabled;
+      return l10n.authErrorUserDisabled;
     }
     if (errorLower.contains('too-many-requests') || errorLower.contains('too many')) {
-      return l10n.errorTooManyRequests;
+      return l10n.authErrorTooManyRequests;
     }
     if (errorLower.contains('network') || errorLower.contains('connection')) {
       return l10n.errorNetworkFailed;
@@ -241,9 +262,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return l10n.errorEmailInUse;
     }
 
-    // If no specific match, return the original error message
-    // (Provider messages are already user-friendly)
-    return error;
+    // Fallback to generic auth error for unmapped errors
+    return l10n.authErrorGeneric;
   }
 
   bool _isPasswordError(String message) {

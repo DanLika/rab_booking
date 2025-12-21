@@ -404,6 +404,48 @@ abstract class AppLocalizations {
   /// **'Remember me'**
   String get authRememberMe;
 
+  /// No description provided for @authRememberMeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep me logged in on this device'**
+  String get authRememberMeHint;
+
+  /// No description provided for @authErrorWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password. Please try again.'**
+  String get authErrorWrongPassword;
+
+  /// No description provided for @authErrorUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email.'**
+  String get authErrorUserNotFound;
+
+  /// No description provided for @authErrorInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address.'**
+  String get authErrorInvalidEmail;
+
+  /// No description provided for @authErrorUserDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been disabled.'**
+  String get authErrorUserDisabled;
+
+  /// No description provided for @authErrorTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many failed attempts. Please try again later.'**
+  String get authErrorTooManyRequests;
+
+  /// No description provided for @authErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed. Please check your credentials and try again.'**
+  String get authErrorGeneric;
+
   /// No description provided for @authForgotPassword.
   ///
   /// In en, this message translates to:
@@ -4529,6 +4571,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last 30 days'**
   String get ownerAnalyticsLast30Days;
+
+  /// No description provided for @ownerAnalyticsLast90Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 90 days'**
+  String get ownerAnalyticsLast90Days;
+
+  /// No description provided for @ownerAnalyticsLast365Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 365 days'**
+  String get ownerAnalyticsLast365Days;
 
   /// No description provided for @ownerAnalyticsPropertiesActive.
   ///

@@ -162,6 +162,30 @@ class AppLocalizationsHr extends AppLocalizations {
   String get authRememberMe => 'Zapamti me';
 
   @override
+  String get authRememberMeHint => 'Drži me prijavljenim na ovom uređaju';
+
+  @override
+  String get authErrorWrongPassword =>
+      'Pogrešna lozinka. Molimo pokušajte ponovo.';
+
+  @override
+  String get authErrorUserNotFound => 'Nije pronađen račun sa ovim emailom.';
+
+  @override
+  String get authErrorInvalidEmail => 'Nevažeća email adresa.';
+
+  @override
+  String get authErrorUserDisabled => 'Ovaj račun je onemogućen.';
+
+  @override
+  String get authErrorTooManyRequests =>
+      'Previše neuspješnih pokušaja. Pokušajte kasnije.';
+
+  @override
+  String get authErrorGeneric =>
+      'Prijava nije uspjela. Provjerite podatke i pokušajte ponovo.';
+
+  @override
   String get authForgotPassword => 'Zaboravili lozinku?';
 
   @override
@@ -2372,6 +2396,12 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerAnalyticsLast30Days => 'Zadnjih 30 dana';
+
+  @override
+  String get ownerAnalyticsLast90Days => 'Zadnjih 90 dana';
+
+  @override
+  String get ownerAnalyticsLast365Days => 'Zadnjih 365 dana';
 
   @override
   String ownerAnalyticsPropertiesActive(int active, int total) {

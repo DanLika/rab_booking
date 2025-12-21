@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
@@ -15,11 +16,13 @@ part 'owner_calendar_provider.g.dart';
 
 /// Owner properties provider - returns ALL properties for owner
 /// keepAlive: Prevents re-fetching when filters dialog opens
+/// SECURITY: Watches enhancedAuthProvider to invalidate cache on user change
 @Riverpod(keepAlive: true)
 Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
-  final repository = ref.watch(ownerPropertiesRepositoryProvider);
-  final auth = FirebaseAuth.instance;
-  final userId = auth.currentUser?.uid;
+  // SECURITY FIX: Watch auth state to invalidate cache when user changes
+  // This ensures a new user doesn't see the previous user's data
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.firebaseUser?.uid;
 
   if (userId == null) {
     throw AuthException(
@@ -28,6 +31,7 @@ Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
     );
   }
 
+  final repository = ref.watch(ownerPropertiesRepositoryProvider);
   return repository.getOwnerProperties(userId);
 }
 

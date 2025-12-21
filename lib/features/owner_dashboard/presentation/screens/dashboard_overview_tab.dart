@@ -607,42 +607,42 @@ class _DateRangeSelector extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AppFilterChip(
-                label: l10n.ownerAnalyticsLastWeek,
-                selected: dateRange.preset == 'week',
+                label: l10n.ownerAnalyticsLast7Days,
+                selected: dateRange.preset == 'last7',
                 onSelected: () {
                   ref
                       .read(dashboardDateRangeNotifierProvider.notifier)
-                      .setPreset('week');
+                      .setPreset('last7');
                 },
               ),
               const SizedBox(width: 8),
               AppFilterChip(
-                label: l10n.ownerDashboardThisMonth,
-                selected: dateRange.preset == 'month',
+                label: l10n.ownerAnalyticsLast30Days,
+                selected: dateRange.preset == 'last30',
                 onSelected: () {
                   ref
                       .read(dashboardDateRangeNotifierProvider.notifier)
-                      .setPreset('month');
+                      .setPreset('last30');
                 },
               ),
               const SizedBox(width: 8),
               AppFilterChip(
-                label: l10n.ownerAnalyticsLastQuarter,
-                selected: dateRange.preset == 'quarter',
+                label: l10n.ownerAnalyticsLast90Days,
+                selected: dateRange.preset == 'last90',
                 onSelected: () {
                   ref
                       .read(dashboardDateRangeNotifierProvider.notifier)
-                      .setPreset('quarter');
+                      .setPreset('last90');
                 },
               ),
               const SizedBox(width: 8),
               AppFilterChip(
-                label: l10n.ownerAnalyticsLastYear,
-                selected: dateRange.preset == 'year',
+                label: l10n.ownerAnalyticsLast365Days,
+                selected: dateRange.preset == 'last365',
                 onSelected: () {
                   ref
                       .read(dashboardDateRangeNotifierProvider.notifier)
-                      .setPreset('year');
+                      .setPreset('last365');
                 },
               ),
               const SizedBox(width: 8),
@@ -759,8 +759,9 @@ class _RevenueChart extends StatelessWidget {
                               accessor: (Map map) => map['amount'] as num,
                               scale: LinearScale(min: 0),
                             ),
+                            'label': Variable(accessor: (Map map) => map['label'] as String),
                           },
-                          coord: RectCoord(horizontalRangeUpdater: Defaults.horizontalRangeEvent),
+                          coord: RectCoord(), // Removed horizontalRangeUpdater to disable zoom
                           marks: [
                             AreaMark(
                               shape: ShapeEncode(value: BasicAreaShape(smooth: true)),
@@ -778,6 +779,22 @@ class _RevenueChart extends StatelessWidget {
                               size: SizeEncode(value: 8),
                               color: ColorEncode(value: theme.colorScheme.primary),
                               entrance: {MarkEntrance.opacity},
+                              label: LabelEncode(
+                                encoder: (tuple) {
+                                  final amount = tuple['amount'] as num;
+                                  return Label(
+                                    '€${amount.toStringAsFixed(0)}',
+                                    LabelStyle(
+                                      textStyle: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                      ),
+                                      offset: const Offset(0, -12),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ],
                           axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
@@ -872,8 +889,9 @@ class _BookingsChart extends StatelessWidget {
                               accessor: (Map map) => map['count'] as num,
                               scale: LinearScale(min: 0),
                             ),
+                            'label': Variable(accessor: (Map map) => map['label'] as String),
                           },
-                          coord: RectCoord(horizontalRangeUpdater: Defaults.horizontalRangeEvent),
+                          coord: RectCoord(), // Removed horizontalRangeUpdater to disable zoom
                           marks: [
                             IntervalMark(
                               shape: ShapeEncode(value: RectShape(borderRadius: BorderRadius.circular(8))),
@@ -889,6 +907,23 @@ class _BookingsChart extends StatelessWidget {
                                 ),
                               ),
                               entrance: {MarkEntrance.y},
+                              label: LabelEncode(
+                                encoder: (tuple) {
+                                  final count = tuple['count'] as num;
+                                  // Only show label if count > 0, otherwise show empty label
+                                  return Label(
+                                    count > 0 ? count.toString() : '',
+                                    LabelStyle(
+                                      textStyle: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                      ),
+                                      offset: const Offset(0, -8),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ],
                           axes: [Defaults.horizontalAxis, Defaults.verticalAxis],

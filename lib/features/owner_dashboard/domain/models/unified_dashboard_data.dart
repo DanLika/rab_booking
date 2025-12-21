@@ -73,48 +73,61 @@ class DateRangeFilter with _$DateRangeFilter {
   const factory DateRangeFilter({
     required DateTime startDate,
     required DateTime endDate,
-    @Default('month') String preset, // 'week', 'month', 'quarter', 'year', 'custom'
+    @Default('last7') String preset, // 'last7', 'last30', 'last90', 'last365', 'custom'
   }) = _DateRangeFilter;
 
   factory DateRangeFilter.fromJson(Map<String, dynamic> json) =>
       _$DateRangeFilterFromJson(json);
 
-  /// Current calendar month (default)
-  factory DateRangeFilter.currentMonth() {
-    final now = DateTime.now();
-    return DateRangeFilter(
-      startDate: DateTime(now.year, now.month),
-      endDate: DateTime(now.year, now.month + 1, 0, 23, 59, 59),
-    );
-  }
-
-  /// Last 7 days
-  factory DateRangeFilter.lastWeek() {
+  /// Last 7 days (rolling window)
+  factory DateRangeFilter.last7Days() {
     final now = DateTime.now();
     return DateRangeFilter(
       startDate: now.subtract(const Duration(days: 7)),
       endDate: now,
-      preset: 'week',
     );
   }
 
-  /// Last 3 months
-  factory DateRangeFilter.lastQuarter() {
+  /// Last 30 days (rolling window)
+  factory DateRangeFilter.last30Days() {
     final now = DateTime.now();
     return DateRangeFilter(
-      startDate: DateTime(now.year, now.month - 3, now.day),
+      startDate: now.subtract(const Duration(days: 30)),
       endDate: now,
-      preset: 'quarter',
+      preset: 'last30',
     );
   }
 
-  /// Last 12 months
-  factory DateRangeFilter.lastYear() {
+  /// Last 90 days (rolling window)
+  factory DateRangeFilter.last90Days() {
     final now = DateTime.now();
     return DateRangeFilter(
-      startDate: DateTime(now.year - 1, now.month, now.day),
+      startDate: now.subtract(const Duration(days: 90)),
       endDate: now,
-      preset: 'year',
+      preset: 'last90',
     );
   }
+
+  /// Last 365 days (rolling window)
+  factory DateRangeFilter.last365Days() {
+    final now = DateTime.now();
+    return DateRangeFilter(
+      startDate: now.subtract(const Duration(days: 365)),
+      endDate: now,
+      preset: 'last365',
+    );
+  }
+
+  // Legacy aliases for backward compatibility (can be removed later)
+  /// @deprecated Use last7Days() instead
+  factory DateRangeFilter.lastWeek() => DateRangeFilter.last7Days();
+
+  /// @deprecated Use last30Days() instead
+  factory DateRangeFilter.currentMonth() => DateRangeFilter.last30Days();
+
+  /// @deprecated Use last90Days() instead
+  factory DateRangeFilter.lastQuarter() => DateRangeFilter.last90Days();
+
+  /// @deprecated Use last365Days() instead
+  factory DateRangeFilter.lastYear() => DateRangeFilter.last365Days();
 }

@@ -15,7 +15,6 @@ import '../widgets/booking_details_dialog.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../../../shared/widgets/app_filter_chip.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_bookings_provider.dart';
@@ -644,47 +643,6 @@ class _DateRangeSelector extends ConsumerWidget {
                       .read(dashboardDateRangeNotifierProvider.notifier)
                       .setPreset('last365');
                 },
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: 40,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final picked = await showCustomDateRangePicker(
-                      context: context,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                      initialDateRange: DateTimeRange(
-                        start: dateRange.startDate,
-                        end: dateRange.endDate,
-                      ),
-                    );
-                    if (picked != null) {
-                      ref
-                          .read(dashboardDateRangeNotifierProvider.notifier)
-                          .setCustomRange(picked.start, picked.end);
-                    }
-                  },
-                  icon: const Icon(Icons.calendar_today, size: 16),
-                  label: Text(l10n.ownerAnalyticsCustomRange),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    side: BorderSide(
-                      color: context.gradients.sectionBorder,
-                      width: 1.5,
-                    ),
-                  ),
-                ),
               ),
             ],
           ),

@@ -108,7 +108,44 @@ class FirebaseBookingRepository implements BookingRepository {
 
   @override
   Future<BookingModel> updateBooking(BookingModel booking) async {
-    // NEW STRUCTURE: Update in subcollection path
+    // First, fetch the existing booking to check if unit changed
+    final existingBooking = await fetchBookingById(booking.id);
+
+    if (existingBooking == null) {
+      throw BookingException('Booking not found', code: 'booking/not-found');
+    }
+
+    // Check if unit has changed (move to different unit)
+    if (existingBooking.unitId != booking.unitId) {
+      // UNIT CHANGED: Need to delete from old path and create at new path
+      // Use a batch to ensure atomicity
+      final batch = _firestore.batch();
+
+      // Delete from old location
+      final oldRef = _firestore
+          .collection('properties')
+          .doc(existingBooking.propertyId)
+          .collection('units')
+          .doc(existingBooking.unitId)
+          .collection('bookings')
+          .doc(booking.id);
+      batch.delete(oldRef);
+
+      // Create at new location (keeping same document ID)
+      final newRef = _firestore
+          .collection('properties')
+          .doc(booking.propertyId)
+          .collection('units')
+          .doc(booking.unitId)
+          .collection('bookings')
+          .doc(booking.id);
+      batch.set(newRef, booking.toJson());
+
+      await batch.commit();
+      return booking;
+    }
+
+    // SAME UNIT: Simple update in place
     await _firestore
         .collection('properties')
         .doc(booking.propertyId)

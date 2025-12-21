@@ -189,6 +189,17 @@ class BookingDetailsDialog extends ConsumerWidget {
                       value: booking.formattedRemainingBalance,
                       valueColor: booking.isFullyPaid ? theme.colorScheme.primary : theme.colorScheme.error,
                     ),
+                    // Payment Method (stripe, bank_transfer, cash, etc.)
+                    _DetailRow(
+                      label: l10n.ownerDetailsPaymentMethod,
+                      value: _getPaymentMethodDisplay(booking.paymentMethod, l10n),
+                    ),
+                    // Payment Option (deposit vs full_payment)
+                    if (booking.paymentOption != null)
+                      _DetailRow(
+                        label: l10n.ownerDetailsPaymentOption,
+                        value: _getPaymentOptionDisplay(booking.paymentOption!, l10n),
+                      ),
                     if (booking.paymentIntentId != null)
                       _DetailRow(label: 'Payment Intent ID', value: booking.paymentIntentId!),
 
@@ -345,6 +356,34 @@ class BookingDetailsDialog extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Get localized display string for payment method
+  String _getPaymentMethodDisplay(String? paymentMethod, AppLocalizations l10n) {
+    switch (paymentMethod) {
+      case 'stripe':
+        return l10n.paymentMethodStripe;
+      case 'bank_transfer':
+        return l10n.paymentMethodBankTransfer;
+      case 'cash':
+        return l10n.paymentMethodCash;
+      case 'other':
+        return l10n.paymentMethodOther;
+      default:
+        return l10n.paymentMethodUnknown;
+    }
+  }
+
+  /// Get localized display string for payment option
+  String _getPaymentOptionDisplay(String paymentOption, AppLocalizations l10n) {
+    switch (paymentOption) {
+      case 'deposit':
+        return l10n.paymentOptionDeposit;
+      case 'full_payment':
+        return l10n.paymentOptionFullPayment;
+      default:
+        return paymentOption;
+    }
   }
 
   /// Resend the original booking confirmation email with View My Booking link

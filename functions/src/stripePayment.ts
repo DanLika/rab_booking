@@ -169,11 +169,14 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     guestCount,
     totalPrice,
     servicesTotal = 0, // Additional services total for price validation
-    depositAmount,
+    depositAmount: initialDepositAmount,
     paymentOption,
     notes,
     taxLegalAccepted,
   } = bookingData;
+
+  // Use let for depositAmount as it may be adjusted to meet Stripe minimum
+  let depositAmount = initialDepositAmount;
 
   // Set user context for Sentry error tracking (guest email for widget bookings)
   setUser(request.auth?.uid || null, guestEmail || null);
@@ -349,7 +352,23 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       );
     }
 
-    const depositAmountInCents = Math.round(depositAmount * 100);
+    // STRIPE MINIMUM: Checkout session total must be at least €0.50 (50 cents)
+    // If deposit is below minimum, use the minimum amount
+    const STRIPE_MINIMUM_CENTS = 50; // €0.50
+    const rawDepositCents = Math.round(depositAmount * 100);
+    const depositAmountInCents = Math.max(rawDepositCents, STRIPE_MINIMUM_CENTS);
+
+    // If we had to adjust the deposit, log it for debugging
+    if (rawDepositCents < STRIPE_MINIMUM_CENTS) {
+      logInfo("createStripeCheckoutSession: Adjusted deposit to Stripe minimum", {
+        originalDepositAmount: depositAmount,
+        originalCents: rawDepositCents,
+        adjustedCents: depositAmountInCents,
+        minimumCents: STRIPE_MINIMUM_CENTS,
+      });
+      // Also update the depositAmount variable for metadata
+      depositAmount = depositAmountInCents / 100;
+    }
 
     // ========================================================================
     // CRITICAL SECURITY FIX: Create placeholder booking BEFORE Stripe redirect

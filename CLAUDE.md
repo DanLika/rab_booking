@@ -123,7 +123,28 @@ captureMessage("Security: Price mismatch detected", "error", {unitId, clientPric
 
 ---
 
-## =? STRIPE FLOW
+## =? STRIPE FLOW (LIVE MODE ✅)
+
+**⚠️ KRITIČNO - PRODUKCIJA**: Stripe je u LIVE MODE. Ne mijenjaj bez testiranja!
+
+**Ključni fajlovi - NE DIRATI bez razloga:**
+| Fajl | Svrha |
+|------|-------|
+| `stripePayment.ts` | Checkout session kreiranje, minimum €0.50 validacija |
+| `stripeConnect.ts` | Owner Stripe Connect onboarding |
+| `handleStripeWebhook` | Webhook handler za `checkout.session.completed/expired` |
+
+**Firebase Secrets (LIVE ključevi):**
+- `STRIPE_SECRET_KEY` - Live secret key
+- `STRIPE_WEBHOOK_SECRET` - Live webhook signing secret
+
+**Stripe Connect Model:** Standard (Direct charges)
+- Owner ima nezavisan Stripe račun
+- Novac ide DIREKTNO owner-u
+- Platforma trenutno NE uzima fee (application_fee_amount = 0)
+- Owner je merchant of record (odgovoran za porez)
+
+**Minimum iznos:** €0.50 (Stripe zahtjev) - validacija u `stripePayment.ts`
 
 ```
 1. User klikne "Pay with Stripe"
@@ -531,7 +552,32 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-21 | **Version**: 6.15
+**Last Updated**: 2025-12-21 | **Version**: 6.16
+
+**Changelog 6.16**: Stripe Live Payment Tested & Payment Method Display:
+- **Stripe Live Payment Successfully Tested**:
+  - First live transaction: €0.60 deposit payment
+  - Webhook correctly updated booking status to `confirmed`
+  - Email confirmation sent to guest
+  - Stripe Connect Standard model working: money goes directly to owner
+- **Payment Method Display in Booking Details** (`booking_details_dialog.dart`):
+  - Added "Payment Method" row: Stripe, Bank Transfer, Cash, Other, Not specified
+  - Added "Payment Option" row: Deposit, Full Payment
+  - New localization strings in `app_en.arb`, `app_hr.arb`
+  - Owners can now see how guests attempted to pay
+- **Stripe Minimum Amount Fix** (`stripePayment.ts`):
+  - Stripe requires minimum €0.50 for Checkout Sessions
+  - Added validation: `Math.max(rawDepositCents, 50)`
+  - Small deposits auto-adjusted to €0.50 minimum
+- **iCal Import Testing**:
+  - Created test iCal files for Booking.com and Airbnb formats
+  - Overbooking detection confirmed working (33 conflicts displayed)
+- **Timeline Calendar Position Fix**:
+  - Fixed UTC vs LOCAL timezone mismatch in booking position calculation
+  - `timeline_grid_widget.dart`, `timeline_booking_block.dart` now use `DateTime.utc()`
+- **Booking Move Feature Fix** (`firebase_booking_repository.dart`):
+  - Fixed `updateBooking()` to handle unit changes with atomic Firestore batch
+  - Delete from old path + create at new path in single transaction
 
 **Changelog 6.15**: Stripe Live Mode Setup & Mobile URL Fix:
 - **Stripe Live Mode Activated**:

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/models/unified_dashboard_data.dart';
@@ -294,7 +293,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final year = int.parse(parts[0]);
       final week = int.parse(parts[1]);
       // Approximate date for week start
-      final date = DateTime(year, 1).add(Duration(days: (week - 1) * 7));
+      final date = DateTime(year).add(Duration(days: (week - 1) * 7));
       return RevenueDataPoint(
         date: date,
         amount: entry.value,
@@ -392,7 +391,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final parts = entry.key.split('-W');
       final year = int.parse(parts[0]);
       final week = int.parse(parts[1]);
-      final date = DateTime(year, 1).add(Duration(days: (week - 1) * 7));
+      final date = DateTime(year).add(Duration(days: (week - 1) * 7));
       return BookingDataPoint(
         date: date,
         count: entry.value,
@@ -429,7 +428,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   }
 
   int _getWeekNumber(DateTime date) {
-    final firstDayOfYear = DateTime(date.year, 1);
+    final firstDayOfYear = DateTime(date.year);
     final dayOfYear = date.difference(firstDayOfYear).inDays;
     return ((dayOfYear + firstDayOfYear.weekday - 1) / 7).ceil();
   }

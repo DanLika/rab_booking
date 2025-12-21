@@ -184,7 +184,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final mediaQuery = MediaQuery.maybeOf(context);
     final screenWidth = mediaQuery?.size.width ?? 400.0;
     final isSmallScreen = screenWidth < 400; // iPhone SE and similar
-    final isTinyScreen = screenWidth < 360; // Very small screens - hide month text
+    final isTinyScreen = screenWidth < 360; // Very small screens
     final locale = Localizations.localeOf(context);
     final monthYear = DateFormat.yMMM(locale.toString()).format(_currentMonth);
 
@@ -214,16 +214,20 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             });
           },
         ),
-        // On tiny screens, hide month text to save space (only show arrows)
-        if (!isTinyScreen)
-          Text(
-            monthYear,
-            style: TextStyle(
-              fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
-              fontWeight: TypographyTokens.bold,
-              color: colors.textPrimary,
-            ),
+        // Always show month/year - essential for user orientation
+        // Use smaller font on tiny screens instead of hiding
+        Text(
+          monthYear,
+          style: TextStyle(
+            fontSize: isTinyScreen
+                ? TypographyTokens.fontSizeXS
+                : isSmallScreen
+                    ? TypographyTokens.fontSizeS
+                    : TypographyTokens.fontSizeM,
+            fontWeight: TypographyTokens.bold,
+            color: colors.textPrimary,
           ),
+        ),
         IconButton(
           icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,

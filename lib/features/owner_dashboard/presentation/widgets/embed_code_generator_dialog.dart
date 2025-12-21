@@ -35,8 +35,8 @@ class EmbedCodeGeneratorDialog extends StatefulWidget {
 }
 
 class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
-  static const String _defaultWidgetBaseUrl = 'https://bookbed.io';
-  static const String _subdomainBaseDomain = 'bookbed.io';
+  static const String _defaultWidgetBaseUrl = 'https://view.bookbed.io';
+  static const String _subdomainBaseDomain = 'view.bookbed.io';
 
   /// Get the base URL - use subdomain if available, otherwise default
   String get _widgetBaseUrl {
@@ -70,13 +70,15 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
     return 'https://${widget.propertySubdomain}.$_subdomainBaseDomain/${widget.unitSlug}';
   }
 
-  /// Embed.js code - auto-resize, loading indicator, responsive
-  String get _embedJsCode {
-    return '''<div id="bookbed-widget"
-     data-property-id="${widget.propertyId}"
-     data-unit-id="${widget.unitId}">
-</div>
-<script src="https://bookbed.io/embed.js"></script>''';
+  /// Direct iframe embed code - works on any website without modifications
+  /// Responsive height using aspect-ratio with min/max constraints
+  String get _iframeEmbedCode {
+    final url = '$_widgetBaseUrl/?property=${widget.propertyId}&unit=${widget.unitId}&embed=true';
+    return '''<iframe
+  src="$url"
+  style="width: 100%; border: none; aspect-ratio: 1/1.4; min-height: 500px; max-height: 850px;"
+  title="${widget.unitName ?? 'Booking Widget'}"
+></iframe>''';
   }
 
   void _copyToClipboard(String text, String label) {
@@ -169,8 +171,8 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
 
                       // Embed code card
                       _buildSimpleEmbedCard(
-                        code: _embedJsCode,
-                        onCopy: () => _copyToClipboard(_embedJsCode, 'Embed kod'),
+                        code: _iframeEmbedCode,
+                        onCopy: () => _copyToClipboard(_iframeEmbedCode, 'Embed kod'),
                       ),
 
                       const SizedBox(height: 24),

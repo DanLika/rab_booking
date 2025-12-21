@@ -281,25 +281,48 @@ export async function validateBookingPrice(
   const difference = Math.abs(serverExpectedTotal - clientTotalPrice);
 
   if (difference > tolerance) {
-    // Log security event (fire-and-forget) - severity: high
-    // NOTE: Only logPriceMismatch sends to Sentry - don't duplicate with logError here
-    logWarn("[PriceValidation] Price mismatch detected - possible manipulation", {
+    // Calculate percentage difference for smart alerting
+    const percentageDifference = (difference / serverExpectedTotal) * 100;
+
+    // SMART THRESHOLD: Only send Sentry alert for SUSPICIOUS mismatches
+    // - Absolute difference > €10 (prevents small price changes from spamming)
+    // - OR percentage difference > 5% (catches relative manipulation)
+    // This avoids false positives from:
+    // - Cached prices (€2-5 difference is normal)
+    // - Floating-point rounding (< €0.10 is benign)
+    // - Price updates while user was on page
+    const isSuspicious = difference > 10 || percentageDifference > 5;
+
+    logWarn("[PriceValidation] Price mismatch detected", {
       unitId,
       serverNightlyPrice,
       servicesTotal: validatedServicesTotal,
       serverExpectedTotal,
       clientPrice: clientTotalPrice,
       difference,
+      percentageDifference: percentageDifference.toFixed(2),
+      isSuspicious,
     });
 
     // Log security event to Firestore + Sentry (fire-and-forget)
-    logPriceMismatch(unitId, clientTotalPrice, serverExpectedTotal, {
-      propertyId,
-      checkIn: checkInDate.toDate().toISOString(),
-      checkOut: checkOutDate.toDate().toISOString(),
-      serverNightlyPrice,
-      servicesTotal: validatedServicesTotal,
-    }).catch(() => {});
+    // IMPORTANT: Only send to Sentry if truly suspicious (prevents false positive spam)
+    if (isSuspicious) {
+      logPriceMismatch(unitId, clientTotalPrice, serverExpectedTotal, {
+        propertyId,
+        checkIn: checkInDate.toDate().toISOString(),
+        checkOut: checkOutDate.toDate().toISOString(),
+        serverNightlyPrice,
+        servicesTotal: validatedServicesTotal,
+        percentageDifference: percentageDifference.toFixed(2),
+      }).catch(() => {});
+    } else {
+      // Small mismatch - log to Cloud Logs only (no Sentry spam)
+      logInfo("[PriceValidation] Small price mismatch (cached/floating-point) - using server price", {
+        unitId,
+        difference,
+        percentageDifference: percentageDifference.toFixed(2),
+      });
+    }
 
     throw new HttpsError(
       "invalid-argument",

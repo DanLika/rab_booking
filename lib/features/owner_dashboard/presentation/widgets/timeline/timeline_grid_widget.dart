@@ -190,7 +190,10 @@ class _TimelineUnitRow extends StatelessWidget {
       // errors when Duration.inDays miscalculates due to DST timezone changes
       final checkIn = DateTime.utc(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
       final checkOut = DateTime.utc(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
-      final nights = TimelineBookingBlock.calculateNights(booking.checkIn, booking.checkOut);
+      // FIX: Use already UTC-normalized dates for nights calculation
+      // Previously used booking.checkIn/checkOut which went through LOCAL normalization
+      // in calculateNights(), causing position mismatch with UTC-based left offset
+      final nights = checkOut.difference(checkIn).inDays;
 
       // Ensure nights is valid
       if (nights < 0) continue;

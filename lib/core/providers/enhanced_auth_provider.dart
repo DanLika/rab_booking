@@ -443,7 +443,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       state = EnhancedAuthState(
         firebaseUser: credential.user,
         userModel: userModel,
-        requiresEmailVerification: AuthFeatureFlags.requireEmailVerification,
       );
     } on FirebaseAuthException catch (e) {
       // Determine error message, with rate limit check wrapped in try-catch
@@ -854,29 +853,33 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   }
 
   /// Get user-friendly error message
+  /// Note: These are English-only fallbacks. The login screen should use
+  /// AppLocalizations for proper multi-language support.
   String _getAuthErrorMessage(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
-        return 'No account found with this email.';
+        return 'No account found with this email';
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Incorrect password. Try again or reset your password.';
+        return 'Incorrect password. Try again or reset your password';
       case 'email-already-in-use':
-        return 'An account already exists with this email.';
+        return 'An account already exists with this email';
       case 'invalid-email':
-        return 'Invalid email address.';
+        return 'Invalid email address';
       case 'weak-password':
-        return 'Password must be at least 8 characters with uppercase, lowercase, number, and special character.';
+        return 'Password must be at least 8 characters with uppercase, lowercase, number, and special character';
       case 'operation-not-allowed':
-        return 'Operation not allowed. Contact support.';
+        return 'Operation not allowed. Contact support';
       case 'user-disabled':
-        return 'Your account has been disabled. Contact support.';
+        return 'Your account has been disabled. Contact support';
       case 'too-many-requests':
-        return 'Too many attempts. Try again later.';
+        return 'Too many login attempts. Please try again later';
       case 'requires-recent-login':
-        return 'This operation requires recent authentication. Please log in again.';
+        return 'This operation requires recent authentication. Please log in again';
+      case 'network-request-failed':
+        return 'Network error. Please check your internet connection';
       default:
-        return e.message ?? 'An error occurred. Please try again.';
+        return e.message ?? 'An error occurred. Please try again';
     }
   }
 }

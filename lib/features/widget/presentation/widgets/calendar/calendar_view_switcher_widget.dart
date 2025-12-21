@@ -12,7 +12,8 @@ import '../../l10n/widget_translations.dart';
 /// MonthCalendarWidget and YearCalendarWidget.
 class CalendarViewSwitcherWidget extends ConsumerWidget {
   // Breakpoints for responsive sizing
-  static const double _smallScreenBreakpoint = 400;
+  // Note: 450px covers most phones in portrait mode (iPhone 14 Pro Max is 430px)
+  static const double _smallScreenBreakpoint = 450;
   static const double _tinyScreenBreakpoint = 360; // iPhone SE, Galaxy S small
 
   // Spacing values

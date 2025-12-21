@@ -599,99 +599,96 @@ class _DateRangeSelector extends ConsumerWidget {
         vertical: isMobile ? 12 : 16,
       ),
       color: Colors.transparent,
-      child: Row(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: PlatformScrollPhysics.adaptive,
-              child: Row(
-                children: [
-                  AppFilterChip(
-                    label: l10n.ownerAnalyticsLastWeek,
-                    selected: dateRange.preset == 'week',
-                    onSelected: () {
-                      ref
-                          .read(dashboardDateRangeNotifierProvider.notifier)
-                          .setPreset('week');
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  AppFilterChip(
-                    label: l10n.ownerDashboardThisMonth,
-                    selected: dateRange.preset == 'month',
-                    onSelected: () {
-                      ref
-                          .read(dashboardDateRangeNotifierProvider.notifier)
-                          .setPreset('month');
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  AppFilterChip(
-                    label: l10n.ownerAnalyticsLastQuarter,
-                    selected: dateRange.preset == 'quarter',
-                    onSelected: () {
-                      ref
-                          .read(dashboardDateRangeNotifierProvider.notifier)
-                          .setPreset('quarter');
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  AppFilterChip(
-                    label: l10n.ownerAnalyticsLastYear,
-                    selected: dateRange.preset == 'year',
-                    onSelected: () {
-                      ref
-                          .read(dashboardDateRangeNotifierProvider.notifier)
-                          .setPreset('year');
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    height: 40,
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        final picked = await showCustomDateRangePicker(
-                          context: context,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2030),
-                          initialDateRange: DateTimeRange(
-                            start: dateRange.startDate,
-                            end: dateRange.endDate,
-                          ),
-                        );
-                        if (picked != null) {
-                          ref
-                              .read(dashboardDateRangeNotifierProvider.notifier)
-                              .setCustomRange(picked.start, picked.end);
-                        }
-                      },
-                      icon: const Icon(Icons.calendar_today, size: 16),
-                      label: Text(l10n.ownerAnalyticsCustomRange),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        side: BorderSide(
-                          color: context.gradients.sectionBorder,
-                          width: 1.5,
-                        ),
+      child: Center(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: PlatformScrollPhysics.adaptive,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AppFilterChip(
+                label: l10n.ownerAnalyticsLastWeek,
+                selected: dateRange.preset == 'week',
+                onSelected: () {
+                  ref
+                      .read(dashboardDateRangeNotifierProvider.notifier)
+                      .setPreset('week');
+                },
+              ),
+              const SizedBox(width: 8),
+              AppFilterChip(
+                label: l10n.ownerDashboardThisMonth,
+                selected: dateRange.preset == 'month',
+                onSelected: () {
+                  ref
+                      .read(dashboardDateRangeNotifierProvider.notifier)
+                      .setPreset('month');
+                },
+              ),
+              const SizedBox(width: 8),
+              AppFilterChip(
+                label: l10n.ownerAnalyticsLastQuarter,
+                selected: dateRange.preset == 'quarter',
+                onSelected: () {
+                  ref
+                      .read(dashboardDateRangeNotifierProvider.notifier)
+                      .setPreset('quarter');
+                },
+              ),
+              const SizedBox(width: 8),
+              AppFilterChip(
+                label: l10n.ownerAnalyticsLastYear,
+                selected: dateRange.preset == 'year',
+                onSelected: () {
+                  ref
+                      .read(dashboardDateRangeNotifierProvider.notifier)
+                      .setPreset('year');
+                },
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 40,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final picked = await showCustomDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                      initialDateRange: DateTimeRange(
+                        start: dateRange.startDate,
+                        end: dateRange.endDate,
                       ),
+                    );
+                    if (picked != null) {
+                      ref
+                          .read(dashboardDateRangeNotifierProvider.notifier)
+                          .setCustomRange(picked.start, picked.end);
+                    }
+                  },
+                  icon: const Icon(Icons.calendar_today, size: 16),
+                  label: Text(l10n.ownerAnalyticsCustomRange),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    side: BorderSide(
+                      color: context.gradients.sectionBorder,
+                      width: 1.5,
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

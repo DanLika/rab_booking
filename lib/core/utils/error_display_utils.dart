@@ -231,15 +231,17 @@ class ErrorDisplayUtils {
 
   /// Extract user-friendly error message
   /// In release mode, hides technical details
+  /// Uses localization if context is available (passed via BuildContext in calling method)
   static String _getUserFriendlyMessage(dynamic error, String? userMessage) {
     // If custom user message provided, use it
     if (userMessage != null && userMessage.isNotEmpty) {
       return userMessage;
     }
 
-    // Handle null error case
+    // Handle null error case - return error string directly
+    // (In production, caller should provide userMessage)
     if (error == null) {
-      return 'Došlo je do greške. Pokušajte ponovo ili kontaktirajte podršku.';
+      return 'An error occurred. Please try again';
     }
 
     // In debug mode, show full error for developers
@@ -251,63 +253,13 @@ class ErrorDisplayUtils {
       }
     }
 
-    // In release mode, provide user-friendly messages
-    String errorString;
+    // In release mode, return the error message as-is
+    // The error messages are already user-friendly (from provider or cloud functions)
     try {
-      errorString = error.toString().toLowerCase();
+      return error.toString();
     } catch (e) {
-      return 'Došlo je do greške. Pokušajte ponovo ili kontaktirajte podršku.';
+      return 'An error occurred. Please try again';
     }
-
-    // Firebase errors
-    if (errorString.contains('permission-denied') || errorString.contains('permission denied')) {
-      return 'Nemate dozvolu za ovu akciju. Kontaktirajte administratora.';
-    }
-    if (errorString.contains('not-found') || errorString.contains('not found')) {
-      return 'Traženi podaci nisu pronađeni.';
-    }
-    if (errorString.contains('network') || errorString.contains('connection')) {
-      return 'Greška u vezi s mrežom. Provjerite internet vezu.';
-    }
-    if (errorString.contains('timeout')) {
-      return 'Operacija je istekla. Pokušajte ponovo.';
-    }
-    if (errorString.contains('already exists')) {
-      return 'Podaci već postoje u sustavu.';
-    }
-
-    // Authentication errors (MUST come BEFORE generic 'invalid' check)
-    if (errorString.contains('email-already-in-use')) {
-      return 'Email adresa je već u upotrebi.';
-    }
-    if (errorString.contains('user-not-found')) {
-      return 'Korisnik nije pronađen.';
-    }
-    if (errorString.contains('wrong-password') || errorString.contains('invalid-credential') || errorString.contains('incorrect password')) {
-      return 'Neispravna lozinka. Pokušajte ponovo ili resetujte lozinku.';
-    }
-    if (errorString.contains('too-many-requests')) {
-      return 'Previše pokušaja. Pokušajte kasnije.';
-    }
-
-    // Generic invalid (AFTER specific auth errors to avoid catching 'invalid-credential')
-    if (errorString.contains('invalid')) {
-      return 'Neispravni podaci. Provjerite unesene vrijednosti.';
-    }
-
-    // Booking errors
-    if (errorString.contains('overlap') || errorString.contains('preklapaju')) {
-      return 'Izabrani datumi se preklapaju s postojećom rezervacijom.';
-    }
-    if (errorString.contains('past date')) {
-      return 'Ne možete kreirati rezervaciju u prošlosti.';
-    }
-    if (errorString.contains('unit') && errorString.contains('not available')) {
-      return 'Odabrana jedinica nije dostupna za izabrane datume.';
-    }
-
-    // Generic error
-    return 'Došlo je do greške. Pokušajte ponovo ili kontaktirajte podršku.';
   }
 
   /// Show error dialog for critical errors

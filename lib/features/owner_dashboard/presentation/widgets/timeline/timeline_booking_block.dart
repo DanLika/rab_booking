@@ -56,10 +56,12 @@ class TimelineBookingBlock extends ConsumerStatefulWidget {
 
   /// Calculate number of nights between check-in and check-out
   ///
-  /// Normalizes dates to midnight for accurate day difference calculation.
+  /// Normalizes dates to midnight UTC for accurate day difference calculation.
+  /// IMPORTANT: Uses UTC to match timeline position calculations and avoid
+  /// timezone-related off-by-one errors.
   static int calculateNights(DateTime checkIn, DateTime checkOut) {
-    final normalizedCheckIn = DateTime(checkIn.year, checkIn.month, checkIn.day);
-    final normalizedCheckOut = DateTime(checkOut.year, checkOut.month, checkOut.day);
+    final normalizedCheckIn = DateTime.utc(checkIn.year, checkIn.month, checkIn.day);
+    final normalizedCheckOut = DateTime.utc(checkOut.year, checkOut.month, checkOut.day);
     return normalizedCheckOut.difference(normalizedCheckIn).inDays;
   }
 

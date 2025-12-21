@@ -680,6 +680,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requiredField => 'This field is required';
 
   @override
+  String get errorUserNotFound => 'No account found with this email';
+
+  @override
+  String get errorWrongPassword =>
+      'Incorrect password. Try again or reset your password';
+
+  @override
+  String get errorInvalidEmail => 'Invalid email address';
+
+  @override
+  String get errorUserDisabled =>
+      'Your account has been disabled. Contact support';
+
+  @override
+  String get errorTooManyRequests =>
+      'Too many login attempts. Please try again later';
+
+  @override
+  String get errorNetworkFailed =>
+      'Network error. Please check your internet connection';
+
+  @override
+  String get errorGeneric => 'An error occurred. Please try again';
+
+  @override
+  String get errorPermissionDenied =>
+      'Permission denied. Contact administrator';
+
+  @override
+  String get errorNotFound => 'Requested data not found';
+
+  @override
+  String get errorTimeout => 'Operation timed out. Please try again';
+
+  @override
+  String get errorAlreadyExists => 'Data already exists';
+
+  @override
+  String get errorEmailInUse => 'Email address is already in use';
+
+  @override
+  String get errorInvalidData => 'Invalid data. Please check your input';
+
+  @override
+  String get errorOverlap => 'Selected dates overlap with existing booking';
+
+  @override
+  String get errorPastDate => 'Cannot create booking in the past';
+
+  @override
+  String get errorUnitNotAvailable =>
+      'Unit is not available for selected dates';
+
+  @override
+  String get pleaseFixErrors => 'Please fix the errors above';
+
+  @override
   String get savedSuccessfully => 'Saved successfully';
 
   @override
@@ -2102,6 +2159,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerDetailsRemaining => 'Remaining';
+
+  @override
+  String get ownerDetailsPaymentMethod => 'Payment method';
+
+  @override
+  String get ownerDetailsPaymentOption => 'Payment option';
+
+  @override
+  String get paymentMethodStripe => 'Credit Card (Stripe)';
+
+  @override
+  String get paymentMethodBankTransfer => 'Bank Transfer';
+
+  @override
+  String get paymentMethodCash => 'Cash';
+
+  @override
+  String get paymentMethodOther => 'Other';
+
+  @override
+  String get paymentMethodUnknown => 'Not specified';
+
+  @override
+  String get paymentOptionDeposit => 'Deposit';
+
+  @override
+  String get paymentOptionFullPayment => 'Full Payment';
 
   @override
   String get ownerDetailsNotes => 'Notes';

@@ -680,6 +680,64 @@ class AppLocalizationsHr extends AppLocalizations {
   String get requiredField => 'Ovo polje je obavezno';
 
   @override
+  String get errorUserNotFound => 'Nije pronađen račun s ovom email adresom';
+
+  @override
+  String get errorWrongPassword =>
+      'Neispravna lozinka. Pokušajte ponovo ili resetujte lozinku';
+
+  @override
+  String get errorInvalidEmail => 'Neispravna email adresa';
+
+  @override
+  String get errorUserDisabled =>
+      'Vaš račun je onemogućen. Kontaktirajte podršku';
+
+  @override
+  String get errorTooManyRequests =>
+      'Previše pokušaja prijave. Pokušajte ponovo kasnije';
+
+  @override
+  String get errorNetworkFailed =>
+      'Greška u mreži. Provjerite internetsku vezu';
+
+  @override
+  String get errorGeneric => 'Došlo je do greške. Pokušajte ponovo';
+
+  @override
+  String get errorPermissionDenied =>
+      'Pristup odbijen. Kontaktirajte administratora';
+
+  @override
+  String get errorNotFound => 'Traženi podaci nisu pronađeni';
+
+  @override
+  String get errorTimeout => 'Operacija je istekla. Pokušajte ponovo';
+
+  @override
+  String get errorAlreadyExists => 'Podaci već postoje';
+
+  @override
+  String get errorEmailInUse => 'Email adresa je već u upotrebi';
+
+  @override
+  String get errorInvalidData => 'Neispravni podaci. Provjerite unos';
+
+  @override
+  String get errorOverlap =>
+      'Odabrani datumi se preklapaju s postojećom rezervacijom';
+
+  @override
+  String get errorPastDate => 'Ne možete kreirati rezervaciju u prošlosti';
+
+  @override
+  String get errorUnitNotAvailable =>
+      'Jedinica nije dostupna za odabrane datume';
+
+  @override
+  String get pleaseFixErrors => 'Molimo ispravite greške iznad';
+
+  @override
   String get savedSuccessfully => 'Uspješno spremljeno';
 
   @override
@@ -2111,6 +2169,33 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerDetailsRemaining => 'Preostalo';
+
+  @override
+  String get ownerDetailsPaymentMethod => 'Način plaćanja';
+
+  @override
+  String get ownerDetailsPaymentOption => 'Opcija plaćanja';
+
+  @override
+  String get paymentMethodStripe => 'Kreditna kartica (Stripe)';
+
+  @override
+  String get paymentMethodBankTransfer => 'Bankovna uplata';
+
+  @override
+  String get paymentMethodCash => 'Gotovina';
+
+  @override
+  String get paymentMethodOther => 'Ostalo';
+
+  @override
+  String get paymentMethodUnknown => 'Nije navedeno';
+
+  @override
+  String get paymentOptionDeposit => 'Polog';
+
+  @override
+  String get paymentOptionFullPayment => 'Puna cijena';
 
   @override
   String get ownerDetailsNotes => 'Napomene';

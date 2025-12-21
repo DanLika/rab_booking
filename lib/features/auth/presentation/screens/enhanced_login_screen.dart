@@ -31,7 +31,7 @@ class EnhancedLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
-    with AndroidKeyboardDismissFixApproach1<EnhancedLoginScreen> {
+    with AndroidKeyboardDismissFixApproach1<EnhancedLoginScreen>, SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -43,18 +43,38 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   String? _emailErrorFromServer;
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
+  // Shake animation controller
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
+
   @override
   void initState() {
     super.initState();
     _passwordController.addListener(_clearServerError);
     _emailController.addListener(_clearServerError);
+
+    // Initialize shake animation
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _shakeAnimation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
+    );
   }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _shakeController.dispose();
     super.dispose();
+  }
+
+  /// Trigger shake animation on validation error
+  void _shakeForm() {
+    _shakeController.reset();
+    _shakeController.forward().then((_) => _shakeController.reverse());
   }
 
   void _clearServerError() {
@@ -67,8 +87,15 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   }
 
   Future<void> _handleLogin() async {
+    final l10n = AppLocalizations.of(context);
+
     if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showErrorSnackBar(context, 'Please fix the errors above');
+      _shakeForm(); // Shake animation on validation error
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        l10n.pleaseFixErrors,
+        duration: const Duration(seconds: 10),
+      );
       return;
     }
 
@@ -98,7 +125,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         if (!mounted) return;
         debugPrint('[LOGIN_SCREEN] Auth state has error, showing snackbar');
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
+        _shakeForm(); // Shake on error
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          _getLocalizedError(authState.error!, l10n),
+          duration: const Duration(seconds: 10),
+        );
         return;
       }
 
@@ -140,11 +172,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         _isLoading = false;
         _autovalidateMode = AutovalidateMode.onUserInteraction;
         if (isPassError) {
-          _passwordErrorFromServer = errorMessage;
+          _passwordErrorFromServer = _getLocalizedError(errorMessage, l10n);
         } else if (isEmailErr) {
-          _emailErrorFromServer = errorMessage;
+          _emailErrorFromServer = _getLocalizedError(errorMessage, l10n);
         }
       });
+
+      // Shake animation on error
+      _shakeForm();
 
       // Force form validation to show inline errors
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -157,15 +192,58 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       });
 
       // ALWAYS show snackbar for visibility - this is the primary user feedback
-      // Use longer duration (6 seconds) so user has time to read
+      // Use longer duration (10 seconds) so user has time to read
       if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
           context,
-          errorMessage,
-          duration: const Duration(seconds: 6),
+          _getLocalizedError(errorMessage, l10n),
+          duration: const Duration(seconds: 10),
         );
       }
     }
+  }
+
+  /// Map error messages to localized strings
+  String _getLocalizedError(String error, AppLocalizations l10n) {
+    final errorLower = error.toLowerCase();
+
+    // Authentication errors
+    if (errorLower.contains('user-not-found') || errorLower.contains('no account found')) {
+      return l10n.errorUserNotFound;
+    }
+    if (errorLower.contains('wrong-password') ||
+        errorLower.contains('invalid-credential') ||
+        errorLower.contains('incorrect password')) {
+      return l10n.errorWrongPassword;
+    }
+    if (errorLower.contains('invalid-email') || errorLower.contains('invalid email')) {
+      return l10n.errorInvalidEmail;
+    }
+    if (errorLower.contains('user-disabled') || errorLower.contains('account has been disabled')) {
+      return l10n.errorUserDisabled;
+    }
+    if (errorLower.contains('too-many-requests') || errorLower.contains('too many')) {
+      return l10n.errorTooManyRequests;
+    }
+    if (errorLower.contains('network') || errorLower.contains('connection')) {
+      return l10n.errorNetworkFailed;
+    }
+    if (errorLower.contains('permission-denied') || errorLower.contains('permission denied')) {
+      return l10n.errorPermissionDenied;
+    }
+    if (errorLower.contains('not-found') || errorLower.contains('not found')) {
+      return l10n.errorNotFound;
+    }
+    if (errorLower.contains('timeout')) {
+      return l10n.errorTimeout;
+    }
+    if (errorLower.contains('already exists') || errorLower.contains('email-already-in-use')) {
+      return l10n.errorEmailInUse;
+    }
+
+    // If no specific match, return the original error message
+    // (Provider messages are already user-friendly)
+    return error;
   }
 
   bool _isPasswordError(String message) {
@@ -255,11 +333,20 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                   SizedBox(height: isCompact ? 12 : 14),
                                   _buildRememberMeRow(theme, l10n),
                                   SizedBox(height: isCompact ? 20 : 24),
-                                  GradientAuthButton(
-                                    text: l10n.login,
-                                    onPressed: _handleLogin,
-                                    isLoading: _isLoading,
-                                    icon: Icons.login_rounded,
+                                  AnimatedBuilder(
+                                    animation: _shakeAnimation,
+                                    builder: (context, child) {
+                                      return Transform.translate(
+                                        offset: Offset(_shakeAnimation.value, 0),
+                                        child: child,
+                                      );
+                                    },
+                                    child: GradientAuthButton(
+                                      text: l10n.login,
+                                      onPressed: _handleLogin,
+                                      isLoading: _isLoading,
+                                      icon: Icons.login_rounded,
+                                    ),
                                   ),
                                   if (AuthFeatureFlags.isGoogleSignInEnabled || AuthFeatureFlags.isAppleSignInEnabled) ...[
                                     SizedBox(height: isCompact ? 16 : 20),

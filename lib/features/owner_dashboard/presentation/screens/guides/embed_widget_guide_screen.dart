@@ -27,15 +27,21 @@ class EmbedWidgetGuideScreen extends ConsumerStatefulWidget {
 
 class _EmbedWidgetGuideScreenState
     extends ConsumerState<EmbedWidgetGuideScreen> {
-  static const String _subdomainBaseDomain = 'bookbed.io';
+  static const String _subdomainBaseDomain = 'view.bookbed.io';
 
-  /// Generate embed.js code for a unit
-  String _generateEmbedCode(String propertyId, UnitModel unit) {
-    return '''<div id="bookbed-widget"
-     data-property-id="$propertyId"
-     data-unit-id="${unit.id}">
-</div>
-<script src="https://bookbed.io/embed.js"></script>''';
+  /// Generate direct iframe embed code for a unit
+  /// Works on any website - just copy and paste
+  /// Responsive height using aspect-ratio with min/max constraints
+  String _generateEmbedCode(String propertyId, UnitModel unit, String? subdomain) {
+    final baseUrl = (subdomain != null && subdomain.isNotEmpty)
+        ? 'https://$subdomain.$_subdomainBaseDomain'
+        : 'https://$_subdomainBaseDomain';
+    final url = '$baseUrl/?property=$propertyId&unit=${unit.id}&embed=true';
+    return '''<iframe
+  src="$url"
+  style="width: 100%; border: none; aspect-ratio: 1/1.4; min-height: 500px; max-height: 850px;"
+  title="${unit.name}"
+></iframe>''';
   }
 
   @override
@@ -569,18 +575,18 @@ class _EmbedWidgetGuideScreenState
           ),
 
           // Units list
-          ...units.map((unit) => _buildUnitEmbedCard(property.id, unit)),
+          ...units.map((unit) => _buildUnitEmbedCard(property.id, unit, property.subdomain)),
         ],
       ),
     );
   }
 
   /// Build embed card for a single unit
-  Widget _buildUnitEmbedCard(String propertyId, UnitModel unit) {
+  Widget _buildUnitEmbedCard(String propertyId, UnitModel unit, String? subdomain) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final embedCode = _generateEmbedCode(propertyId, unit);
+    final embedCode = _generateEmbedCode(propertyId, unit, subdomain);
 
     return Container(
       padding: const EdgeInsets.all(12),

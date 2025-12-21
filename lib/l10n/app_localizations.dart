@@ -1412,6 +1412,108 @@ abstract class AppLocalizations {
   /// **'This field is required'**
   String get requiredField;
 
+  /// No description provided for @errorUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email'**
+  String get errorUserNotFound;
+
+  /// No description provided for @errorWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password. Try again or reset your password'**
+  String get errorWrongPassword;
+
+  /// No description provided for @errorInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address'**
+  String get errorInvalidEmail;
+
+  /// No description provided for @errorUserDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been disabled. Contact support'**
+  String get errorUserDisabled;
+
+  /// No description provided for @errorTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many login attempts. Please try again later'**
+  String get errorTooManyRequests;
+
+  /// No description provided for @errorNetworkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Please check your internet connection'**
+  String get errorNetworkFailed;
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred. Please try again'**
+  String get errorGeneric;
+
+  /// No description provided for @errorPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied. Contact administrator'**
+  String get errorPermissionDenied;
+
+  /// No description provided for @errorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested data not found'**
+  String get errorNotFound;
+
+  /// No description provided for @errorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation timed out. Please try again'**
+  String get errorTimeout;
+
+  /// No description provided for @errorAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Data already exists'**
+  String get errorAlreadyExists;
+
+  /// No description provided for @errorEmailInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address is already in use'**
+  String get errorEmailInUse;
+
+  /// No description provided for @errorInvalidData.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid data. Please check your input'**
+  String get errorInvalidData;
+
+  /// No description provided for @errorOverlap.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected dates overlap with existing booking'**
+  String get errorOverlap;
+
+  /// No description provided for @errorPastDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot create booking in the past'**
+  String get errorPastDate;
+
+  /// No description provided for @errorUnitNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit is not available for selected dates'**
+  String get errorUnitNotAvailable;
+
+  /// No description provided for @pleaseFixErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fix the errors above'**
+  String get pleaseFixErrors;
+
   /// No description provided for @savedSuccessfully.
   ///
   /// In en, this message translates to:
@@ -4043,6 +4145,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remaining'**
   String get ownerDetailsRemaining;
+
+  /// No description provided for @ownerDetailsPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get ownerDetailsPaymentMethod;
+
+  /// No description provided for @ownerDetailsPaymentOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment option'**
+  String get ownerDetailsPaymentOption;
+
+  /// No description provided for @paymentMethodStripe.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Card (Stripe)'**
+  String get paymentMethodStripe;
+
+  /// No description provided for @paymentMethodBankTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Transfer'**
+  String get paymentMethodBankTransfer;
+
+  /// No description provided for @paymentMethodCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get paymentMethodCash;
+
+  /// No description provided for @paymentMethodOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get paymentMethodOther;
+
+  /// No description provided for @paymentMethodUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get paymentMethodUnknown;
+
+  /// No description provided for @paymentOptionDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get paymentOptionDeposit;
+
+  /// No description provided for @paymentOptionFullPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Payment'**
+  String get paymentOptionFullPayment;
 
   /// No description provided for @ownerDetailsNotes.
   ///

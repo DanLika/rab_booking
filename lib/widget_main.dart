@@ -74,7 +74,39 @@ void main() async {
         options.tracesSampleRate = 0.2;
         options.environment = 'production';
         // Tag as widget to distinguish from owner dashboard
+        // Filter non-critical errors before sending
         options.beforeSend = (event, hint) {
+          final exception = event.throwable;
+          final exceptionString = exception?.toString().toLowerCase() ?? '';
+          final message = event.message?.formatted.toLowerCase() ?? '';
+
+          // Downgrade geolocation errors to info level
+          // These are expected failures when ip-api.com is unreachable or slow
+          if (exceptionString.contains('ip-api.com') ||
+              exceptionString.contains('geolocation') ||
+              message.contains('ip-api.com') ||
+              message.contains('geolocation')) {
+            return event.copyWith(
+              level: SentryLevel.info,
+              tags: {...?event.tags, 'app_type': 'booking_widget'},
+            );
+          }
+
+          // Downgrade WebGL/CanvasKit errors to info level
+          // These are expected on some browsers (e.g., Chrome iOS) with automatic fallback
+          if (exceptionString.contains('getparameter') ||
+              exceptionString.contains('webgl') ||
+              exceptionString.contains('canvaskit') ||
+              message.contains('getparameter') ||
+              message.contains('webgl') ||
+              message.contains('canvaskit')) {
+            return event.copyWith(
+              level: SentryLevel.info,
+              tags: {...?event.tags, 'app_type': 'booking_widget'},
+            );
+          }
+
+          // All other errors - add app_type tag
           return event.copyWith(
             tags: {...?event.tags, 'app_type': 'booking_widget'},
           );

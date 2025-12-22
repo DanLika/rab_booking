@@ -59,7 +59,7 @@ class WizardProgressBar extends StatelessWidget {
     }
   }
 
-  /// Full progress bar for desktop/tablet (shows all 8 steps)
+  /// Full progress bar for desktop/tablet (shows all 5 steps)
   Widget _buildFullProgressBar(
     BuildContext context,
     ThemeData theme,
@@ -67,7 +67,7 @@ class WizardProgressBar extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       decoration: BoxDecoration(
         gradient: context.gradients.pageBackground,
         // Border removed for seamless gradient flow with content below
@@ -84,7 +84,7 @@ class WizardProgressBar extends StatelessWidget {
     );
   }
 
-  /// Compact progress bar for mobile (shows "Step X of 8")
+  /// Compact progress bar for mobile (shows "Step X of 5")
   Widget _buildCompactProgressBar(
     BuildContext context,
     ThemeData theme,
@@ -94,7 +94,7 @@ class WizardProgressBar extends StatelessWidget {
     final completedCount = completedSteps.values.where((v) => v).length;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         gradient: context.gradients.pageBackground,
         // Border removed for seamless gradient flow with content below
@@ -181,10 +181,10 @@ class WizardProgressBar extends StatelessWidget {
         // Circle with icon/checkmark
         InkWell(
           onTap: onStepTap != null ? () => onStepTap!(step) : null,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           child: Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: backgroundColor,
               shape: BoxShape.circle,
@@ -192,13 +192,13 @@ class WizardProgressBar extends StatelessWidget {
             ),
             child: Center(
               child: isCompleted
-                  ? const Icon(Icons.check, size: 20, color: Colors.white)
-                  : Icon(stepIcon, size: 20, color: iconColor),
+                  ? const Icon(Icons.check, size: 18, color: Colors.white)
+                  : Icon(stepIcon, size: 18, color: iconColor),
             ),
           ),
         ),
 
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
 
         // Step label (single word)
         Text(

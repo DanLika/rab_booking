@@ -821,7 +821,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get termsCancellationBody =>
-      'Politike otkazivanja variraju po objektu. Molimo vas da pregledate specifičnu politiku otkazivanja za svaki objekat prije rezervacije. Povrati novca, ako su primjenjivi, bit će obrađeni u skladu sa politikom otkazivanja objekta i mogu trajati 5-10 radnih dana.';
+      'Politike otkazivanja variraju po objektu. Molimo vas da pregledate specifičnu politiku otkazivanja za svaki objekt prije rezervacije. Povrati novca, ako su primjenjivi, bit će obrađeni u skladu sa politikom otkazivanja objekta i mogu trajati 5-10 radnih dana.';
 
   @override
   String get termsPropertyOwnersTitle => '6. Odgovornosti Vlasnika Nekretnina';
@@ -842,7 +842,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get termsReviewsRatingsBody =>
-      'Korisnici mogu ostavljati recenzije i ocjene za objekte koje su rezervirali. Recenzije moraju biti iskrene, točne i relevantne za objekat. Zadržavamo pravo da uklonimo recenzije koje krše naše smjernice.';
+      'Korisnici mogu ostavljati recenzije i ocjene za objekte koje su rezervirali. Recenzije moraju biti iskrene, točne i relevantne za objekt. Zadržavamo pravo da uklonimo recenzije koje krše naše smjernice.';
 
   @override
   String get termsLimitationLiabilityTitle => '9. Ograničenje Odgovornosti';
@@ -1013,21 +1013,21 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get faqWhenChargedAnswer =>
-      'Plaćanje se obrađuje odmah kada potvrdite rezervaciju. Puni iznos, uključujući cenu objekta, servisne naknade i sve primenjive poreze, biće naplaćen na vašu metodu plaćanja.\n\nZa određene objekte ili dugoročne rezervacije, opcije plaćanja na rate mogu biti dostupne.';
+      'Plaćanje se obrađuje odmah kada potvrdite rezervaciju. Puni iznos, uključujući cijenu objekta, servisne naknade i sve primjenjive poreze, biće naplaćen na vašu metodu plaćanja.\n\nZa određene objekte ili dugoročne rezervacije, opcije plaćanja na rate mogu biti dostupne.';
 
   @override
   String get faqAdditionalFees => 'Postoje li dodatne naknade?';
 
   @override
   String get faqAdditionalFeesAnswer =>
-      'Pored cene objekta, možete biti naplaćeni:\n\n• Servisna naknada (obično 10-15% od subtotala rezervacije)\n• Naknada za čišćenje (ako je primenjivo, postavlja vlasnik objekta)\n• Lokalni porezi (varira po lokaciji)\n\nSve naknade su jasno prikazane pre nego što potvrdite rezervaciju. Nema skrivenih troškova.';
+      'Pored cijene objekta, možete biti naplaćeni:\n\n• Servisna naknada (obično 10-15% od subtotala rezervacije)\n• Naknada za čišćenje (ako je primjenjivo, postavlja vlasnik objekta)\n• Lokalni porezi (varira po lokaciji)\n\nSve naknade su jasno prikazane pre nego što potvrdite rezervaciju. Nema skrivenih troškova.';
 
   @override
   String get faqCancellationPolicy => 'Šta je politika otkazivanja?';
 
   @override
   String get faqCancellationPolicyAnswer =>
-      'Politike otkazivanja variraju po objektu. Uobičajene politike uključuju:\n\n• Fleksibilna: Pun povraćaj ako se otkaže 24-48 sati pre prijave\n• Umerena: 50% povraćaj ako se otkaže 5-7 dana pre prijave\n• Stroga: Bez povraćaja ako se otkaže u roku od 14 dana pre prijave\n\nUvek proverite specifičnu politiku otkazivanja za svaki objekat pre rezervacije. Politika je prikazana na stranici sa detaljima objekta i u vašoj potvrdi rezervacije.';
+      'Politike otkazivanja variraju po objektu. Uobičajene politike uključuju:\n\n• Fleksibilna: Pun povraćaj ako se otkaže 24-48 sati pre prijave\n• Umerena: 50% povraćaj ako se otkaže 5-7 dana pre prijave\n• Stroga: Bez povraćaja ako se otkaže u roku od 14 dana pre prijave\n\nUvek proverite specifičnu politiku otkazivanja za svaki objekt pre rezervacije. Politika je prikazana na stranici sa detaljima objekta i u vašoj potvrdi rezervacije.';
 
   @override
   String get faqHowToCancel => 'Kako da otkažem rezervaciju?';
@@ -1051,11 +1051,11 @@ class AppLocalizationsHr extends AppLocalizations {
       'Nakon što je vaša rezervacija potvrđena, možete kontaktirati vlasnika objekta kroz:\n\n1. Sistem za poruke u detaljima vaše rezervacije\n2. Kontakt informacije u vašem email-u sa potvrdom\n3. Dugme \"Kontaktiraj Domaćina\" na stranici objekta\n\nSve poruke se prate radi bezbednosti i osiguranja kvaliteta.';
 
   @override
-  String get faqPropertyMismatch => 'Šta ako objekat ne odgovara opisu?';
+  String get faqPropertyMismatch => 'Šta ako objekt ne odgovara opisu?';
 
   @override
   String get faqPropertyMismatchAnswer =>
-      'Ako objekat ne odgovara opisu ili fotografijama:\n\n1. Dokumentujte probleme sa fotografijama\n2. Odmah kontaktirajte vlasnika objekta\n3. Ako nije rešeno, kontaktirajte našu korisničku podršku u roku od 24 sata od prijave\n\nMožemo ponuditi delimični povraćaj, pomoći vam da pronađete alternativni smeštaj ili pružiti druga rešenja u zavisnosti od situacije.';
+      'Ako objekt ne odgovara opisu ili fotografijama:\n\n1. Dokumentujte probleme sa fotografijama\n2. Odmah kontaktirajte vlasnika objekta\n3. Ako nije rešeno, kontaktirajte našu korisničku podršku u roku od 24 sata od prijave\n\nMožemo ponuditi delimični povraćaj, pomoći vam da pronađete alternativni smeštaj ili pružiti druga rešenja u zavisnosti od situacije.';
 
   @override
   String get faqLeaveReview => 'Kako da ostavim recenziju?';
@@ -3365,7 +3365,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get onboardingSkipDesc =>
-      'Ako preskočite vodič, nećete naučiti osnove podešavanja sistema. Uvijek možete dodati objekat i jedinice kasnije kroz postavke.\n\nŽelite li nastaviti?';
+      'Ako preskočite vodič, nećete naučiti osnove podešavanja sistema. Uvijek možete dodati objekt i jedinice kasnije kroz postavke.\n\nŽelite li nastaviti?';
 
   @override
   String get onboardingSkip => 'Preskoči';
@@ -3379,7 +3379,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get onboardingSuccessDesc =>
-      'Vaš objekat je kreiran i spreman za korištenje.';
+      'Vaš objekt je kreiran i spreman za korištenje.';
 
   @override
   String get onboardingSuccessNextSteps => 'Sljedeći koraci:';
@@ -5047,11 +5047,11 @@ class AppLocalizationsHr extends AppLocalizations {
       'Ove informacije pomažu gostima da odaberu odgovarajući smještaj';
 
   @override
-  String get unitWizardStep3Title => 'Cena i Dostupnost';
+  String get unitWizardStep3Title => 'Cijena i Dostupnost';
 
   @override
   String get unitWizardStep3Subtitle =>
-      'Postavite cenu, minimalan boravak i dostupnost';
+      'Postavite cijenu, minimalan boravak i dostupnost';
 
   @override
   String get unitWizardStep3PriceInfo => 'Informacije o Cijeni';
@@ -5067,7 +5067,8 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitWizardStep3PricePerNightHint => '50';
 
   @override
-  String get unitWizardStep3PricePerNightHelper => 'Osnovna cena za jednu noć';
+  String get unitWizardStep3PricePerNightHelper =>
+      'Osnovna cijena za jednu noć';
 
   @override
   String get unitWizardStep3PriceRequired => 'Cijena je obavezna';
@@ -5076,14 +5077,14 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitWizardStep3PriceInvalid => 'Unesite ispravnu cijenu';
 
   @override
-  String get unitWizardStep3WeekendPrice => 'Vikend Cena (€)';
+  String get unitWizardStep3WeekendPrice => 'Vikend Cijena (€)';
 
   @override
   String get unitWizardStep3WeekendPriceHint => '70';
 
   @override
   String get unitWizardStep3WeekendPriceHelper =>
-      'Cena za Sub-Ned (opcionalno)';
+      'Cijena za Sub-Ned (opcionalno)';
 
   @override
   String get unitWizardStep3MinStay => 'Minimalan Boravak (noći) *';
@@ -5270,7 +5271,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitWizardProgressCapacity => 'Kapacitet';
 
   @override
-  String get unitWizardProgressPrice => 'Cena';
+  String get unitWizardProgressPrice => 'Cijena';
 
   @override
   String get unitWizardProgressPhotos => 'Fotografije';

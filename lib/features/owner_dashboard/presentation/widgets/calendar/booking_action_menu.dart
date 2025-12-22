@@ -538,9 +538,8 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                 }
 
                 return ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+                  constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
                   child: ListView.builder(
-                    shrinkWrap: true,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: otherUnits.length,
                     itemBuilder: (context, index) {
@@ -637,9 +636,28 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
       if (!context.mounted) return;
       ErrorDisplayUtils.showLoadingSnackBar(context, l10n.bookingActionMoving);
 
+      // Check for conflicts in target unit
+      final bookingRepo = ref.read(bookingRepositoryProvider);
+      final hasConflict = await bookingRepo.areDatesAvailable(
+        unitId: targetUnit.id,
+        checkIn: widget.booking.checkIn,
+        checkOut: widget.booking.checkOut,
+        excludeBookingId: widget.booking.id,
+      );
+
+      if (!hasConflict) {
+        // Conflict detected - show error
+        if (!context.mounted) return;
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          'Cannot move booking: ${targetUnit.name} already has a booking during these dates',
+          userMessage: 'Cannot move: unit is already booked for these dates',
+        );
+        return;
+      }
+
       // Update booking with new unit
       final updatedBooking = widget.booking.copyWith(unitId: targetUnit.id);
-      final bookingRepo = ref.read(bookingRepositoryProvider);
       await bookingRepo.updateBooking(updatedBooking);
 
       // Refresh calendar

@@ -184,6 +184,14 @@
       ]
     },
     {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "check_out", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "booking_services",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
@@ -338,6 +346,20 @@
     {
       "collectionGroup": "bookings",
       "fieldPath": "owner_id",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION"
+        },
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "bookings",
+      "fieldPath": "unit_id",
       "indexes": [
         {
           "order": "ASCENDING",

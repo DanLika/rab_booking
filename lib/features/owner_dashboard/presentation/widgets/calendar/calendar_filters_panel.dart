@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
@@ -464,7 +465,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
               ),
               child: FilterChip(
                 selected: isSelected,
-                label: Text(status.displayName),
+                label: Text(status.displayNameLocalized(context)),
                 selectedColor: theme.colorScheme.primary,
                 backgroundColor: isSelected
                     ? theme.colorScheme.primary

@@ -231,24 +231,22 @@ final filteredCalendarBookingsProvider =
     });
 
 /// Timeline calendar bookings provider
-/// Shows ALL booking statuses (ignores status filter) for proper overlap visualization
-/// Applies other filters (property, unit, date range, search)
+/// Applies all filters including status filter
+/// Note: Conflict detection uses calendarBookingsProvider (unfiltered), so filtering
+/// statuses here does NOT affect overbooking detection
 final timelineCalendarBookingsProvider =
     FutureProvider<Map<String, List<BookingModel>>>((ref) async {
       final allBookingsAsync = await ref.watch(calendarBookingsProvider.future);
       final filters = ref.watch(calendarFiltersProvider);
       final units = await ref.watch(allOwnerUnitsProvider.future);
 
-      // Create filter WITHOUT status filter (timeline shows all statuses)
-      final timelineFilters = filters.copyWith(statuses: []);
-
-      if (!timelineFilters.hasActiveFilters) {
+      if (!filters.hasActiveFilters) {
         return allBookingsAsync;
       }
 
       return _applyFiltersOptimized(
         bookingsMap: allBookingsAsync,
-        filters: timelineFilters,
+        filters: filters,
         units: units,
       );
     });

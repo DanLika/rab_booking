@@ -552,7 +552,55 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-21 | **Version**: 6.18
+**Last Updated**: 2025-12-22 | **Version**: 6.20
+
+**Changelog 6.20**: Bank Account Routing Fix & Bottom Sheet Standardization:
+- **Bank Account 404 Routing Fix** (`bank_account_screen.dart`):
+  - **Problem**: Navigating Unit Hub → Widget Settings → Bank Transfer → Bank Account → Save caused 404 error
+  - **Root Cause**: Hardcoded route string `/owner/integrations/payments` instead of route constant
+  - **Fix**: Added `router_owner.dart` import and changed all 3 navigation points to use `OwnerRoutes.unitHub`
+  - Lines affected: 121 (after save), 271 (cancel button), 319 (discard dialog)
+  - Uses `context.canPop() ? context.pop() : context.go(OwnerRoutes.unitHub)` pattern
+- **Bottom Sheet Height Standardization** (`notification_settings_bottom_sheet.dart`):
+  - **Problem**: Notification Settings used fixed 600px height while Language/Theme used dynamic percentage
+  - **Fix**: Changed to use `ResponsiveSpacingHelper.getBottomSheetMaxHeightPercent(context)`
+  - All bottom sheets now use consistent responsive heights:
+    - Landscape Mobile: 80% of screen
+    - Portrait Mobile: 70% of screen
+    - Tablet/Desktop: 60% of screen
+- **Serbian to Croatian Localization Fixes** (`app_hr.arb`):
+  - Fixed remaining Ekavian (Serbian) words to Ijekavian (Croatian)
+  - Examples: "Ocene"→"Ocjene", "Sinhronizuj"→"Sinkroniziraj", "nalog"→"račun", etc.
+- **SelectableText for Booking Details**:
+  - Booking ID, guest email, and phone number now copyable via long-press
+  - Added to `booking_card_header.dart` and `booking_card_guest_info.dart`
+
+**Changelog 6.19**: Bookings Page UX Improvements & Automatic Status Updates:
+- **Booking ID Display Fix** (`booking_card_header.dart`, `booking_details_dialog.dart`):
+  - Changed from truncated document ID (`#abc123xy`) to user-friendly `booking_reference` (e.g., `BK-2024-001234`)
+  - Fallback to document ID if `booking_reference` is null
+  - Booking ID now copyable via SelectableText (from previous changelog)
+- **iCal Bookings Already Displayed**:
+  - Confirmed: NO source filter in repository - iCal bookings automatically shown
+  - Table View already has "Source" column with platform badges (Widget, Booking.com, Airbnb, iCal)
+  - Timeline Calendar already has platform icon in top-right corner
+  - No changes needed - feature already works correctly
+- **Email Template Duplicate Greeting Fixed** (`send_email_dialog.dart`):
+  - **Problem**: "Poštovani {name}," appeared TWICE - once in Flutter template, once in Cloud Functions
+  - **Fix**: Removed greeting from Flutter `getMessage()` method (lines 50-95)
+  - Cloud Functions `generateGreeting()` already adds "Poštovani/a {name}," automatically
+  - Affects all email templates: confirmation, reminder, cancellation, custom
+- **Automatic Booking Status Updates** - NEW scheduled Cloud Function:
+  - **Created**: `completeCheckedOutBookings.ts` - auto-completes bookings after checkout
+  - **Schedule**: Daily at 2:00 AM (Zagreb timezone) - configurable via `AUTOCOMPLETE_SCHEDULE` env var
+  - **Query**: `.where("status", "in", ["confirmed", "pending"]).where("check_out", "<", today)`
+  - **Filters OUT**: External/iCal bookings (source: booking_com, airbnb, ical, external) and ID prefix `ical_`
+  - **Batch Processing**: 400 docs/batch, max 5000 docs/run, error recovery with individual fallback
+  - **Updates**: Sets `status: "completed"` and `updated_at: now()`
+  - **Export**: Added to `index.ts` for deployment
+  - **Firestore Index**: Added composite index `status` (ASC) + `check_out` (ASC) for collection group query
+  - **Logging**: Structured logs with success/failure counts, duration tracking
+  - **Benefits**: Owners get accurate historical data without manual status updates
 
 **Changelog 6.18**: Dashboard Rolling Window Periods & Chart Improvements:
 - **Period Calculations Changed to Rolling Windows**:

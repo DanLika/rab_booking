@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -113,8 +114,12 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
 
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.bankAccountSaveSuccess);
 
-        // Use go instead of pop - this page is accessed directly via URL
-        context.go('/owner/integrations/payments');
+        // Navigate back to previous page (widget settings embedded in unit-hub)
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(OwnerRoutes.unitHub);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -259,12 +264,11 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
           height: 52,
           child: TextButton(
             onPressed: () {
-              // Use go instead of pop - this page is accessed directly via URL
-              // and may not have a previous route in the navigation stack
+              // Navigate back to previous page (widget settings embedded in unit-hub)
               if (context.canPop()) {
                 context.pop();
               } else {
-                context.go('/owner/integrations/payments');
+                context.go(OwnerRoutes.unitHub);
               }
             },
             style: TextButton.styleFrom(
@@ -308,8 +312,12 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
             ),
           );
           if (shouldPop == true && context.mounted) {
-            // Use go instead of pop - this page is accessed directly via URL
-            context.go('/owner/integrations/payments');
+            // Navigate back to previous page (widget settings embedded in unit-hub)
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(OwnerRoutes.unitHub);
+            }
           }
         }
       },

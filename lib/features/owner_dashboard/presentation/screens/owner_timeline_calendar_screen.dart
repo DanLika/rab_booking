@@ -12,7 +12,6 @@ import '../widgets/timeline_calendar_widget.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/calendar/calendar_top_toolbar.dart';
-import '../widgets/calendar/calendar_filter_chips.dart';
 import '../widgets/calendar/multi_select_action_bar.dart';
 import '../widgets/calendar/unit_future_bookings_dialog.dart';
 import '../widgets/booking_create_dialog.dart';
@@ -20,6 +19,8 @@ import '../widgets/owner_app_drawer.dart';
 import '../mixins/calendar_common_methods_mixin.dart';
 import '../providers/multi_select_provider.dart';
 import '../providers/show_empty_units_provider.dart';
+import '../providers/calendar_filters_provider.dart';
+import '../../domain/models/calendar_filter_options.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -137,6 +138,8 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                         final multiSelectState = ref.watch(multiSelectProvider);
                         final conflictCount = ref.watch(overbookingConflictCountProvider);
                         final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
+                        final filters = ref.watch(calendarFiltersProvider);
+                        final activeFilterCount = filters.activeFilterCount;
 
                         return CalendarTopToolbar(
                           dateRange: _currentRange,
@@ -185,13 +188,18 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                           onOverbookingBadgeTap: () {
                             _handleOverbookingBadgeTap(ref);
                           },
+                          // Active filters inline display
+                          activeFilterCount: activeFilterCount > 0 ? activeFilterCount : null,
+                          onClearFilters: () {
+                            ref.read(calendarFiltersProvider.notifier).clearFilters();
+                            // Force refresh of calendar data after clearing filters
+                            ref.invalidate(filteredUnitsProvider);
+                            ref.invalidate(filteredCalendarBookingsProvider);
+                            ref.invalidate(timelineCalendarBookingsProvider);
+                          },
                         );
                       },
                     ),
-
-                  // Filter chips (from shared widget)
-                  // CONDITIONAL: Hide filter chips when owner has no units
-                  if (hasUnits) const CalendarFilterChips(),
 
                   // Timeline calendar widget (it fetches its own data via providers)
                   Expanded(

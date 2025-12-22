@@ -39,6 +39,10 @@ class CalendarTopToolbar extends StatelessWidget {
   final int? overbookingConflictCount;
   final VoidCallback? onOverbookingBadgeTap;
 
+  // Active filters inline display
+  final int? activeFilterCount;
+  final VoidCallback? onClearFilters;
+
   const CalendarTopToolbar({
     super.key,
     required this.dateRange,
@@ -64,6 +68,8 @@ class CalendarTopToolbar extends StatelessWidget {
     this.onMultiSelectToggle,
     this.overbookingConflictCount,
     this.onOverbookingBadgeTap,
+    this.activeFilterCount,
+    this.onClearFilters,
   });
 
   @override
@@ -171,6 +177,9 @@ class CalendarTopToolbar extends StatelessWidget {
               elevation: 8,
               onSelected: (value) {
                 switch (value) {
+                  case 'conflicts':
+                    onOverbookingBadgeTap?.call();
+                    break;
                   case 'today':
                     onToday();
                     break;
@@ -198,6 +207,43 @@ class CalendarTopToolbar extends StatelessWidget {
                 final l10n = AppLocalizations.of(context);
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 return [
+                  // Conflict badge (if any conflicts exist)
+                  if (overbookingConflictCount != null && overbookingConflictCount! > 0)
+                    PopupMenuItem<String>(
+                      value: 'conflicts',
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Badge(
+                                label: Text('$overbookingConflictCount', style: const TextStyle(fontSize: 10)),
+                                backgroundColor: Colors.red.shade700,
+                                child: Icon(Icons.warning_amber_rounded, size: 20, color: Colors.red.shade700),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                '$overbookingConflictCount ${overbookingConflictCount == 1 ? 'conflict' : 'conflicts'}',
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.red.shade700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   _buildStyledMenuItem(
                     value: 'today',
                     icon: Icons.today,
@@ -259,11 +305,22 @@ class CalendarTopToolbar extends StatelessWidget {
             )
           else
             // DESKTOP MODE: Show all buttons with styled containers
-            // Problem #18 fix: Removed Expanded + SingleChildScrollView wrapper
-            // Buttons now sit directly against the right edge via MainAxisAlignment.spaceBetween
+            // Order: Filters → Conflicts → Action buttons
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // 1. FILTERS SECTION (if active)
+                if (activeFilterCount != null && activeFilterCount! > 0) ...[
+                  _buildFilterBadge(theme, l10n),
+                  if (onClearFilters != null)
+                    _buildClearFiltersButton(theme, l10n),
+                ],
+
+                // 2. CONFLICTS SECTION (if any)
+                if (overbookingConflictCount != null && overbookingConflictCount! > 0)
+                  _buildCompactConflictBadge(theme, l10n),
+
+                // 3. ACTION BUTTONS
                 // Search button
                 if (onSearchTap != null)
                   _buildStyledIconButton(
@@ -296,10 +353,6 @@ class CalendarTopToolbar extends StatelessWidget {
 
                 // Today button
                 _buildStyledTodayButton(theme, l10n),
-
-                // Overbooking conflict badge
-                if (overbookingConflictCount != null && overbookingConflictCount! > 0)
-                  _buildOverbookingBadge(theme, l10n),
 
                 // Notifications button
                 if (onNotificationsTap != null)
@@ -417,30 +470,91 @@ class CalendarTopToolbar extends StatelessWidget {
     );
   }
 
-  /// Build styled Notifications button with badge
-  Widget _buildOverbookingBadge(ThemeData theme, AppLocalizations l10n) {
+  /// Build filter badge (icon + count)
+  Widget _buildFilterBadge(ThemeData theme, AppLocalizations l10n) {
+    final count = activeFilterCount ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: SmartTooltip(
+        message: '$count ${count == 1 ? l10n.ownerFilterActiveFilter : l10n.ownerFilterActiveFilters}',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onFilterTap,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withAlpha((0.2 * 255).toInt()),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.warning.withAlpha((0.4 * 255).toInt())),
+              ),
+              child: Badge(
+                label: Text('$count', style: const TextStyle(fontSize: 10)),
+                backgroundColor: AppColors.warning,
+                child: const Icon(Icons.filter_list, size: 20, color: AppColors.warning),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build clear filters button (small X button)
+  Widget _buildClearFiltersButton(ThemeData theme, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2, right: 8),
+      child: SmartTooltip(
+        message: l10n.ownerFilterClearAll,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onClearFilters,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error.withAlpha((0.15 * 255).toInt()),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt())),
+              ),
+              child: Icon(Icons.clear, size: 16, color: theme.colorScheme.error),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build compact conflict badge (icon + number only, no text)
+  Widget _buildCompactConflictBadge(ThemeData theme, AppLocalizations l10n) {
     final count = overbookingConflictCount ?? 0;
 
-    return GestureDetector(
-      onTap: onOverbookingBadgeTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.red.shade100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.red.shade300),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 16),
-            const SizedBox(width: 4),
-            Text(
-              count == 1 ? '1 conflict' : '$count conflicts',
-              style: TextStyle(color: Colors.red.shade700, fontSize: 12, fontWeight: FontWeight.w600),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: SmartTooltip(
+        message: '$count ${count == 1 ? 'conflict' : 'conflicts'} detected',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onOverbookingBadgeTap,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade100,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.red.shade300),
+              ),
+              child: Badge(
+                label: Text('$count', style: const TextStyle(fontSize: 10)),
+                backgroundColor: Colors.red.shade700,
+                child: Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 20),
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/constants/enums.dart';
@@ -47,8 +45,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
 
   PropertyType _selectedType = PropertyType.apartment;
   Set<PropertyAmenity> _selectedAmenities = {};
-  final List<XFile> _selectedImages = [];
-  List<String> _existingImages = [];
   bool _isPublished = false;
   bool _isLoading = false;
   bool _isManualSlugEdit = false;
@@ -81,7 +77,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
     _locationController.text = property.location;
     _addressController.text = property.address ?? '';
     _selectedAmenities = property.amenities.toSet();
-    _existingImages = property.images.toList();
     _isPublished = property.isActive;
     _isManualSlugEdit = property.slug != null;
     _isManualSubdomainEdit = property.subdomain != null && property.subdomain!.isNotEmpty;
@@ -585,15 +580,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
                       ),
                       const SizedBox(height: AppDimensions.spaceL),
 
-                      // Images Section
-                      _buildSection(
-                        context,
-                        title: _isEditing ? l10n.propertyFormPhotos : l10n.propertyFormPhotosMin,
-                        icon: Icons.photo_library,
-                        children: [_buildImagesSection()],
-                      ),
-                      const SizedBox(height: AppDimensions.spaceL),
-
                       // Settings Section
                       _buildSection(
                         context,
@@ -912,257 +898,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
     );
   }
 
-  Widget _buildImagesSection() {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final totalImages = _existingImages.length + _selectedImages.length;
-
-    // Build the images grid (combines existing and new images)
-    Widget buildImagesGrid() {
-      if (totalImages == 0) {
-        return Center(
-          child: Column(
-            children: [
-              Icon(
-                Icons.photo_library_outlined,
-                size: 48,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.propertyFormNoPhotos,
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        );
-      }
-
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          // Existing images
-          ..._existingImages.asMap().entries.map((entry) {
-            final index = entry.key;
-            final imageUrl = entry.value;
-            return _buildExistingImageCard(imageUrl, index);
-          }),
-          // New images
-          ..._selectedImages.asMap().entries.map((entry) {
-            final index = entry.key;
-            final image = entry.value;
-            return _buildNewImageCard(image, index);
-          }),
-        ],
-      );
-    }
-
-    // Left controls widget
-    Widget buildLeftControls() {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Add images button
-          Builder(
-            builder: (context) {
-              final l10n = AppLocalizations.of(context);
-              return ElevatedButton.icon(
-                onPressed: _pickImages,
-                icon: const Icon(Icons.add_photo_alternate, size: 20),
-                label: Text(totalImages == 0 ? l10n.propertyFormAddPhotos : l10n.propertyFormAddMore),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-
-          // Photo count
-          Builder(
-            builder: (context) {
-              final l10n = AppLocalizations.of(context);
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  l10n.propertyFormPhotoCount(totalImages),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      );
-    }
-
-    if (isMobile) {
-      // Mobile: Vertical layout
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [buildLeftControls(), const SizedBox(height: 16), buildImagesGrid()],
-      );
-    }
-
-    // Desktop: Horizontal layout - Left controls, Right images
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildLeftControls(),
-        const SizedBox(width: 24),
-        Expanded(child: buildImagesGrid()),
-      ],
-    );
-  }
-
-  Widget _buildExistingImageCard(String imageUrl, int index) {
-    final theme = Theme.of(context);
-
-    return Stack(
-      children: [
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(Icons.broken_image, color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt())),
-                );
-              },
-            ),
-          ),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: IconButton.filled(
-            onPressed: () {
-              setState(() => _existingImages.removeAt(index));
-            },
-            icon: const Icon(Icons.close, size: 16),
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(24, 24),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNewImageCard(XFile image, int index) {
-    final theme = Theme.of(context);
-
-    return Stack(
-      children: [
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
-            color: theme.colorScheme.surfaceContainerHighest,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: FutureBuilder<Uint8List>(
-              future: image.readAsBytes(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  // Minimalistic: Use black in light mode, white in dark mode
-                  final loaderColor = theme.brightness == Brightness.dark ? Colors.white : Colors.black;
-                  return Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: loaderColor),
-                    ),
-                  );
-                }
-                if (snapshot.hasError || !snapshot.hasData) {
-                  return Icon(
-                    Icons.broken_image,
-                    size: 40,
-                    color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
-                  );
-                }
-                return Image.memory(
-                  snapshot.data!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.broken_image,
-                      size: 40,
-                      color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: IconButton.filled(
-            onPressed: () {
-              setState(() => _selectedImages.removeAt(index));
-            },
-            icon: const Icon(Icons.close, size: 16),
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(24, 24),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _pickImages() async {
-    final ImagePicker picker = ImagePicker();
-    final List<XFile> images = await picker.pickMultiImage();
-
-    if (images.isNotEmpty) {
-      setState(() {
-        _selectedImages.addAll(images);
-      });
-    }
-  }
-
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) {
       return;
-    }
-
-    final totalImages = _existingImages.length + _selectedImages.length;
-    if (!_isEditing && totalImages < 3) {
-      // Soft warning - allow save without blocking
-      final l10nSnack = AppLocalizations.of(context);
-      ErrorDisplayUtils.showWarningSnackBar(context, l10nSnack.propertyFormPhotoRecommendation);
-      // Continue with save (no return)
     }
 
     setState(() => _isLoading = true);
@@ -1177,46 +915,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
       }
 
       final repository = ref.read(ownerPropertiesRepositoryProvider);
-
-      // Upload new images to Firebase Storage
-      final List<String> uploadedImageUrls = [];
-      if (_selectedImages.isNotEmpty) {
-        try {
-          final propertyId = _isEditing ? widget.property!.id : 'temp-${DateTime.now().millisecondsSinceEpoch}';
-
-          for (int i = 0; i < _selectedImages.length; i++) {
-            final image = _selectedImages[i];
-
-            final bytes = await image.readAsBytes();
-
-            final imageUrl = await repository.uploadPropertyImage(
-              propertyId: propertyId,
-              filePath: image.path,
-              bytes: bytes,
-            );
-
-            uploadedImageUrls.add(imageUrl);
-
-            if (mounted) {
-              final l10nUpload = AppLocalizations.of(context);
-              ErrorDisplayUtils.showInfoSnackBar(
-                context,
-                l10nUpload.propertyFormUploadProgress(i + 1, _selectedImages.length),
-                duration: const Duration(milliseconds: 500),
-              );
-            }
-          }
-        } catch (e) {
-          if (mounted) {
-            final l10nErr = AppLocalizations.of(context);
-            ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10nErr.propertyFormUploadErrorGeneric);
-          }
-          setState(() => _isLoading = false);
-          return;
-        }
-      }
-
-      final allImages = [..._existingImages, ...uploadedImageUrls];
 
       // Get subdomain value (only if available or empty string)
       final subdomainValue = _subdomainController.text.trim().isEmpty
@@ -1273,8 +971,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
           location: _locationController.text,
           address: _addressController.text.isEmpty ? null : _addressController.text,
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
-          images: allImages,
-          coverImage: allImages.isNotEmpty ? allImages.first : null,
           isActive: _isPublished,
         );
       } else {
@@ -1289,8 +985,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> with An
           location: _locationController.text,
           address: _addressController.text.isEmpty ? null : _addressController.text,
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
-          images: allImages,
-          coverImage: allImages.isNotEmpty ? allImages.first : null,
           isActive: _isPublished,
         );
       }

@@ -1495,13 +1495,21 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                               dropZoneBuilder: (unit, date, index) =>
                                   _buildDropZone(unit, date, offsetWidth, index, bookingsByUnit),
                             ),
-                            if (widget.showSummary)
-                              TimelineSummaryBarWidget(
-                                bookingsByUnit: bookingsByUnit,
-                                dates: dates,
-                                offsetWidth: offsetWidth,
-                                dimensions: dimensions,
-                              ),
+                            // AnimatedSize ensures smooth appearance/disappearance of summary bar
+                            // This prevents the 7-8 second delay issue where summary wouldn't appear
+                            // until user scrolled or performed another action
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeInOut,
+                              child: widget.showSummary
+                                  ? TimelineSummaryBarWidget(
+                                      bookingsByUnit: bookingsByUnit,
+                                      dates: dates,
+                                      offsetWidth: offsetWidth,
+                                      dimensions: dimensions,
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
                           ],
                         ),
                       ),

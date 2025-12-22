@@ -166,6 +166,15 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                             setState(() {
                               _showSummary = value;
                             });
+                            // Force immediate rebuild to prevent 7-8 second delay
+                            // Without this, summary bar wouldn't appear until user scrolled
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  // Trigger second rebuild to ensure AnimatedSize processes
+                                });
+                              }
+                            });
                           },
                           // Show empty units toggle (persisted via provider)
                           showEmptyUnitsToggle: true,

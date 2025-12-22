@@ -479,10 +479,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
           itemCount: filteredProperties.length,
           itemBuilder: (context, index) {
             final property = filteredProperties[index];
-            final propertyUnits = unitsByProperty[property.id] ?? [];
+            final propertyUnits = (unitsByProperty[property.id] ?? [])
+              ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())); // Ascending A-Z sort
 
             // Filter units by search
-            final filteredUnits = _searchQuery.isEmpty
+            final filteredUnits = (_searchQuery.isEmpty
                 ? propertyUnits
                 : propertyUnits
                       .where(
@@ -490,7 +491,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                             unit.name.toLowerCase().contains(_searchQuery) ||
                             (unit.description?.toLowerCase().contains(_searchQuery) ?? false),
                       )
-                      .toList();
+                      .toList())
+              ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())); // Ascending A-Z sort
 
             return _buildPropertySection(
               theme,

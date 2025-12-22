@@ -1297,12 +1297,14 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
   Widget _buildTimelineView(List<UnitModel> units, Map<String, List<BookingModel>> bookingsByUnit) {
     // FILTER: Optionally hide units without bookings based on toggle
-    final visibleUnits = widget.showEmptyUnits
+    // SORT: Ascending order (A-Z) for consistent UX with End Drawer
+    final visibleUnits = (widget.showEmptyUnits
         ? units
         : units.where((unit) {
             final bookings = bookingsByUnit[unit.id] ?? [];
             return bookings.isNotEmpty;
-          }).toList();
+          }).toList())
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
     // Use windowed date range for performance (only render ~90 days instead of 1461)

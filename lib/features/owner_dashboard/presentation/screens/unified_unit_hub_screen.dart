@@ -1191,50 +1191,50 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         const SizedBox(height: 24),
 
         // Unit Details Cards - Layout based on screen size
-        // Order: Capacity → Price → Information → Photos (if any)
+        // Order: Information → Capacity → Pricing → Photos (matches Unit Wizard flow)
         if (isDesktop) ...[
-          // Desktop: Row 1: Capacity + Price (compact sections side by side)
+          // Desktop: Row 1: Information (Basic Info) + Capacity
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: kapacitetCard),
+              Expanded(child: informacijeCard),
               const SizedBox(width: 14),
-              Expanded(child: cijenaCard),
+              Expanded(child: kapacitetCard),
             ],
           ),
           const SizedBox(height: 14),
-          // Desktop: Row 2: Information + Photos (or full-width if no photos)
+          // Desktop: Row 2: Pricing + Photos (or full-width if no photos)
           if (hasPhotos)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: informacijeCard),
+                Expanded(child: cijenaCard),
                 const SizedBox(width: 14),
                 Expanded(child: photosCard!),
               ],
             )
           else
-            informacijeCard,
+            cijenaCard,
         ] else if (isTablet) ...[
-          // Tablet (800-900px): Capacity + Price side by side, then stacked
+          // Tablet (800-900px): Information + Capacity side by side, then stacked
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: kapacitetCard),
+              Expanded(child: informacijeCard),
               const SizedBox(width: 14),
-              Expanded(child: cijenaCard),
+              Expanded(child: kapacitetCard),
             ],
           ),
           const SizedBox(height: 14),
-          informacijeCard,
+          cijenaCard,
           if (hasPhotos) ...[const SizedBox(height: 14), photosCard!],
         ] else ...[
-          // Mobile (<800px): All stacked
+          // Mobile (<800px): All stacked in wizard order
+          informacijeCard,
+          const SizedBox(height: 14),
           kapacitetCard,
           const SizedBox(height: 14),
           cijenaCard,
-          const SizedBox(height: 14),
-          informacijeCard,
           if (hasPhotos) ...[const SizedBox(height: 14), photosCard!],
         ],
       ],

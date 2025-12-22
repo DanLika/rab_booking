@@ -6,6 +6,7 @@ import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
@@ -108,7 +109,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                booking.status.displayName,
+                                booking.status.displayNameLocalized(context),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,

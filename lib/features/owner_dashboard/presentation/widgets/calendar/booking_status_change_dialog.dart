@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
@@ -103,7 +104,7 @@ class BookingStatusChangeDialog extends StatelessWidget {
           final isCurrentStatus = status == booking.status;
           return ListTile(
             title: Text(
-              status.displayName,
+              status.displayNameLocalized(context),
               style: TextStyle(fontWeight: isCurrentStatus ? FontWeight.bold : FontWeight.normal),
             ),
             leading: Container(

@@ -4206,6 +4206,12 @@ abstract class AppLocalizations {
   /// **'Credit Card (Stripe)'**
   String get paymentMethodStripe;
 
+  /// No description provided for @paymentMethodCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get paymentMethodCard;
+
   /// No description provided for @paymentMethodBankTransfer.
   ///
   /// In en, this message translates to:
@@ -11889,7 +11895,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsScreenSection3Body.
   ///
   /// In en, this message translates to:
-  /// **'All bookings made through this platform are subject to the following terms:\n\n• A deposit of 20% is required at the time of booking\n• The remaining 80% is due upon arrival at the property\n• Cancellation policies vary by property and will be clearly displayed before booking\n• You must be at least 18 years old to make a booking'**
+  /// **'All bookings made through the BookBed platform are subject to the following terms:\n\n• Guests select payment option: Deposit (20-50% customizable by owner), Full Payment, or payment at property\n• Online payments (Stripe): Payment deadline is 7 days from booking confirmation, or until check-in date (whichever comes first)\n• Bank transfer/Cash: Payment terms set by property owner\n• Unpaid bookings after deadline are automatically cancelled\n• You must be at least 18 years old to make a booking\n• Confirmed bookings hold dates and prevent double-bookings'**
   String get termsScreenSection3Body;
 
   /// No description provided for @termsScreenSection4Title.
@@ -11901,7 +11907,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsScreenSection4Body.
   ///
   /// In en, this message translates to:
-  /// **'We accept the following payment methods:\n\n• Credit/Debit Cards (processed securely via Stripe)\n• Bank Transfer\n\nAll payments are processed securely. We do not store your payment card information.'**
+  /// **'BookBed supports the following payment methods:\n\n• Credit/Debit Cards (Stripe) - processed securely with 3D Secure authentication\n• Bank Transfer - IBAN details provided in booking confirmation email\n• Cash - payment at property\n\nStripe payments: Money goes directly to property owner via Stripe Connect (Standard model). BookBed currently charges 0% platform fee (subject to change). Stripe transaction fees apply (approximately 1.4% + €0.25 per transaction, deducted from owner\'s payout).\n\nWe do NOT store your payment card information - all payment processing is handled by Stripe (PCI DSS Level 1 certified).'**
   String get termsScreenSection4Body;
 
   /// No description provided for @termsScreenSection5Title.
@@ -11913,7 +11919,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsScreenSection5Body.
   ///
   /// In en, this message translates to:
-  /// **'Cancellation policies are set by individual property owners. Please review the specific cancellation policy for your booking before confirming. Refunds will be processed according to the property\'s cancellation policy.'**
+  /// **'Cancellation policies are set by individual property owners and displayed before booking confirmation.\n\n• Guest cancellations: Processed via booking view link (email) or by contacting property owner\n• Refund eligibility: Depends on owner\'s cancellation policy\n• Automatic cancellation: Bookings unpaid after 7-day deadline are cancelled automatically\n• Refund processing time: 5-10 business days to original payment method\n\nFor cancellation requests, contact the property owner directly or use the \"Cancel Booking\" option in your booking confirmation email.'**
   String get termsScreenSection5Body;
 
   /// No description provided for @termsScreenSection6Title.
@@ -11973,7 +11979,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsScreenSection10Body.
   ///
   /// In en, this message translates to:
-  /// **'For questions about these Terms, please contact us at:\n\nEmail: duskolicanin1234@gmail.com\nAddress: [Your Company Address]\n\n⚠️ NOTE: Update this contact information with your actual details.'**
+  /// **'For questions about these Terms & Conditions, please contact us at:\n\n**General Support:**\nEmail: info@bookbed.io\n\n**Platform Website:**\napp.bookbed.io (Owner Dashboard)\nview.bookbed.io (Booking Widget)\n\n**Legal Entity:**\nBookBed is currently operating as a pre-registration platform. Full company registration details will be added upon business incorporation.'**
   String get termsScreenSection10Body;
 
   /// No description provided for @termsScreenLegalNotice.
@@ -12033,7 +12039,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyScreenSection2Body.
   ///
   /// In en, this message translates to:
-  /// **'We collect the following types of information:\n\n**Personal Information:**\n• Name and contact information (email, phone number)\n• Billing and payment information\n• Booking history and preferences\n• Communication records\n\n**Technical Information:**\n• IP address and browser type\n• Device information\n• Cookies and usage data\n• Location data (if you enable it)'**
+  /// **'We collect the following types of information:\n\n**For Property Owners (Hosts):**\n• Name, email, phone number\n• Property address and business address\n• Bank account information (IBAN) for receiving payments\n• Stripe Connect account details (managed by Stripe)\n• Property and unit details (descriptions, photos, pricing)\n\n**For Guests:**\n• Name, email, phone number\n• Booking details (check-in/out dates, number of guests)\n• Payment information (processed by Stripe, not stored by BookBed)\n\n**Technical Information (All Users):**\n• IP address, browser type, device information\n• Cookies and usage data\n• Login activity (planned: device info, login date/time for security)'**
   String get privacyScreenSection2Body;
 
   /// No description provided for @privacyScreenSection3Title.
@@ -12069,7 +12075,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyScreenSection5Body.
   ///
   /// In en, this message translates to:
-  /// **'We share your information only in the following circumstances:\n\n• **Property Owners:** To facilitate your booking\n• **Payment Processors:** Stripe for secure payment processing\n• **Email Service:** Resend for transactional emails\n• **Legal Requirements:** When required by law\n\nWe do NOT sell your personal information to third parties.'**
+  /// **'We share your information only in the following circumstances:\n\n• **Property Owners:** Guest details shared to facilitate bookings\n• **Stripe:** Payment processing via Stripe Connect (Standard model) - processes payments directly to owners\n• **Firebase (Google Cloud):** Authentication, database hosting, and cloud functions\n• **Sentry:** Error tracking and crash reporting (anonymized where possible)\n• **Cloudflare:** DNS management and content delivery network (CDN)\n• **Legal Requirements:** When required by law or to protect rights and safety\n\nWe do NOT sell your personal information to third parties for marketing purposes.'**
   String get privacyScreenSection5Body;
 
   /// No description provided for @privacyScreenSection6Title.
@@ -12081,7 +12087,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyScreenSection6Body.
   ///
   /// In en, this message translates to:
-  /// **'Your data is stored securely using Firebase (Google Cloud Platform) with servers located in the EU. We implement industry-standard security measures including:\n\n• Encryption in transit and at rest\n• Regular security audits\n• Access controls and authentication\n• Secure payment processing via Stripe (PCI DSS compliant)'**
+  /// **'Your data is stored securely using Firebase (Google Cloud Platform) with servers primarily located in EU regions (likely europe-west, Frankfurt). We implement industry-standard security measures including:\n\n• Encryption in transit (TLS/SSL) and at rest\n• Firebase Authentication with secure password hashing\n• Firestore security rules to prevent unauthorized access\n• Access controls and role-based permissions\n• Secure payment processing via Stripe (PCI DSS Level 1 certified)\n• Error monitoring via Sentry with data minimization\n\nNote: Exact Firebase region can be verified in Firebase Console project settings.'**
   String get privacyScreenSection6Body;
 
   /// No description provided for @privacyScreenSection7Title.
@@ -12093,7 +12099,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyScreenSection7Body.
   ///
   /// In en, this message translates to:
-  /// **'We retain your personal data for as long as necessary to:\n\n• Fulfill the purposes outlined in this policy\n• Comply with legal obligations (tax records: 7 years)\n• Resolve disputes and enforce agreements\n\nAfter this period, your data will be securely deleted or anonymized.'**
+  /// **'We retain your personal data according to the following principles:\n\n• **Active Accounts:** Data retained while account is active\n• **GDPR Right to Erasure:** Users can request account deletion at any time\n• **Booking Records:** Retained for legal/accounting compliance (minimum 1 year for financial records in Croatia)\n• **Anonymization:** After deletion request, personal identifiers are removed while preserving aggregated statistics\n\nYou have the right to request deletion of your account and associated data at any time by contacting info@bookbed.io.'**
   String get privacyScreenSection7Body;
 
   /// No description provided for @privacyScreenSection8Title.
@@ -12105,7 +12111,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyScreenSection8Body.
   ///
   /// In en, this message translates to:
-  /// **'Under GDPR, you have the right to:\n\n• **Access:** Request a copy of your personal data\n• **Rectification:** Correct inaccurate data\n• **Erasure:** Request deletion of your data (\"right to be forgotten\")\n• **Restriction:** Limit how we process your data\n• **Portability:** Receive your data in a structured format\n• **Object:** Object to processing based on legitimate interests\n• **Withdraw Consent:** Opt-out of marketing communications\n\nTo exercise these rights, contact us at: duskolicanin1234@gmail.com'**
+  /// **'Under GDPR, you have the following rights:\n\n• **Access:** Request a copy of your personal data (contact info@bookbed.io)\n• **Rectification:** ✅ Update your profile information directly in account settings\n• **Erasure:** Request deletion of your account (\"right to be forgotten\") - planned feature, contact info@bookbed.io\n• **Restriction:** Limit how we process your data\n• **Object:** Object to processing based on legitimate interests\n• **Withdraw Consent:** Opt-out of marketing communications\n\n**Note:** Data portability (downloading data in machine-readable format) is not currently offered due to the minimal amount of data collected. We prioritize data minimization.\n\nTo exercise these rights, contact us at: info@bookbed.io'**
   String get privacyScreenSection8Body;
 
   /// No description provided for @privacyScreenSection9Title.
@@ -12165,7 +12171,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyScreenSection13Body.
   ///
   /// In en, this message translates to:
-  /// **'If you have questions about this Privacy Policy or wish to exercise your GDPR rights, contact:\n\n**Data Protection Officer**\nEmail: duskolicanin1234@gmail.com\nAddress: [Your Company Address]\n\n⚠️ NOTE: Update this contact information with your actual DPO details.'**
+  /// **'If you have questions about this Privacy Policy or wish to exercise your GDPR rights, contact:\n\n**General Support & Privacy Inquiries:**\nEmail: info@bookbed.io\n\n**Platform:**\napp.bookbed.io (Owner Dashboard)\nview.bookbed.io (Booking Widget)\n\n**Legal Entity:**\nBookBed is currently operating as a pre-registration platform. Full company registration details (including formal Data Protection Officer, if required) will be added upon business incorporation.'**
   String get privacyScreenSection13Body;
 
   /// No description provided for @privacyScreenSection14Title.
@@ -12237,7 +12243,7 @@ abstract class AppLocalizations {
   /// No description provided for @cookiesScreenSection2Body.
   ///
   /// In en, this message translates to:
-  /// **'We use cookies for the following purposes:\n\n• **Essential Cookies:** Required for the website to function properly (e.g., authentication, security)\n• **Preference Cookies:** Remember your settings and preferences (e.g., language, theme)\n• **Analytics Cookies:** Help us understand how visitors interact with our website (e.g., Google Analytics)\n• **Marketing Cookies:** Used to track visitors across websites to display relevant advertisements\n\nCurrently, we primarily use essential and preference cookies to ensure the basic functionality of our booking platform.'**
+  /// **'We use cookies for the following purposes:\n\n• **Strictly Necessary Cookies (Essential):** Required for the website to function - authentication (Firebase Auth tokens), session management, security. These cannot be disabled.\n\n• **Functional Cookies (Preferences):** Remember your settings - language preference, theme (dark/light mode), timezone, currency. These enhance your experience.\n\n• **Analytics Cookies:** Help us understand usage patterns - Firebase Analytics tracks page views, feature usage, and performance metrics. May include Google Analytics for web traffic analysis.\n\n• **Advertising/Marketing Cookies:** Third-party cookies for tracking and advertising purposes (if enabled).\n\nYou can control non-essential cookies through your browser settings or our cookie consent banner (if implemented).'**
   String get cookiesScreenSection2Body;
 
   /// No description provided for @cookiesScreenSection3Title.
@@ -12273,7 +12279,7 @@ abstract class AppLocalizations {
   /// No description provided for @cookiesScreenSection5Body.
   ///
   /// In en, this message translates to:
-  /// **'We use the following third-party services that may set cookies:\n\n• **Firebase (Google):** For authentication and database services\n• **Stripe:** For secure payment processing\n• **Resend:** For email delivery\n\nThese services have their own privacy policies and cookie policies. We recommend reviewing their policies for more information.'**
+  /// **'We use the following third-party services that may set cookies:\n\n• **Firebase (Google Cloud):** Authentication cookies, session management, Firebase Analytics\n• **Stripe:** Payment processing cookies for secure checkout sessions\n• **Sentry:** Error tracking cookies (minimal, anonymized)\n• **Cloudflare:** CDN and DNS cookies for security and performance\n• **Google Analytics:** (if enabled) Web traffic analytics and user behavior tracking\n\nThese services have their own privacy policies and cookie policies:\n- Firebase/Google: policies.google.com\n- Stripe: stripe.com/privacy\n- Sentry: sentry.io/privacy\n- Cloudflare: cloudflare.com/privacypolicy'**
   String get cookiesScreenSection5Body;
 
   /// No description provided for @cookiesScreenSection6Title.
@@ -12297,7 +12303,7 @@ abstract class AppLocalizations {
   /// No description provided for @cookiesScreenSection7Body.
   ///
   /// In en, this message translates to:
-  /// **'For more detailed information about how we handle your personal data, including cookies, please review our full Privacy Policy.\n\nIf you have questions about our use of cookies, please contact us at:\n\nEmail: duskolicanin1234@gmail.com'**
+  /// **'For more detailed information about how we handle your personal data, including cookies, please review our full Privacy Policy.\n\nIf you have questions about our use of cookies, please contact us at:\n\n**General Support:**\nEmail: info@bookbed.io\n\n**Platform:**\napp.bookbed.io (Owner Dashboard)\nview.bookbed.io (Booking Widget)'**
   String get cookiesScreenSection7Body;
 
   /// No description provided for @cookiesScreenPrivacyLinkTitle.

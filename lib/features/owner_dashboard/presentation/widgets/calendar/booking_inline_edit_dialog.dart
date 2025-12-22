@@ -12,6 +12,7 @@ import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../../utils/booking_overlap_detector.dart';
 

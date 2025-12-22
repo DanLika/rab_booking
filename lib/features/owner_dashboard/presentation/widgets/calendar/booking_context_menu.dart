@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/design_tokens/border_tokens.dart';
 
@@ -332,7 +333,7 @@ class BookingContextMenu extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                status.displayName,
+                status.displayNameLocalized(context),
                 style: const TextStyle(fontSize: 13),
               ),
             ),

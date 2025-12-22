@@ -2204,6 +2204,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get paymentMethodStripe => 'Kreditna kartica (Stripe)';
 
   @override
+  String get paymentMethodCard => 'Kartica';
+
+  @override
   String get paymentMethodBankTransfer => 'Bankovna uplata';
 
   @override
@@ -6542,21 +6545,21 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get termsScreenSection3Body =>
-      'Sve rezervacije izvršene putem ove platforme podliježu sljedećim uvjetima:\n\n• Depozit od 20% potreban je prilikom rezervacije\n• Preostalih 80% dospijeva po dolasku u objekt\n• Politike otkazivanja variraju ovisno o objektu i bit će jasno prikazane prije rezervacije\n• Morate imati najmanje 18 godina da biste izvršili rezervaciju';
+      'Sve rezervacije putem BookBed platforme podliježu sljedećim uvjetima:\n\n• Gosti biraju opciju plaćanja: Depozit (20-50% prilagodljivo od strane vlasnika), Potpuna uplata, ili plaćanje na objektu\n• Online plaćanja (Stripe): Rok za plaćanje je 7 dana od potvrde rezervacije, ili do datuma prijave (što god dođe prvo)\n• Bankovni prijenos/Gotovina: Uvjeti plaćanja postavljeni od strane vlasnika objekta\n• Neplaćene rezervacije nakon roka se automatski otkazuju\n• Morate imati najmanje 18 godina za kreiranje rezervacije\n• Potvrđene rezervacije blokiraju datume i sprječavaju dvostruke rezervacije';
 
   @override
   String get termsScreenSection4Title => '4. Uvjeti plaćanja';
 
   @override
   String get termsScreenSection4Body =>
-      'Prihvaćamo sljedeće načine plaćanja:\n\n• Kreditne/debitne kartice (sigurno obrađene putem Stripe-a)\n• Bankovni prijenos\n\nSva plaćanja se obrađuju sigurno. Ne pohranjujemo podatke o vašoj platnoj kartici.';
+      'BookBed podržava sljedeće načine plaćanja:\n\n• Kreditne/debitne kartice (Stripe) - sigurno obrađeno sa 3D Secure autentikacijom\n• Bankovni prijenos - IBAN detalji dostavljeni u emailu potvrde rezervacije\n• Gotovina - plaćanje na objektu\n\nStripe plaćanja: Novac ide direktno vlasniku objekta putem Stripe Connect (Standard model). BookBed trenutno naplaćuje 0% provizije platforme (podložno promjenama). Stripe transakcijske naknade se primjenjuju (približno 1.4% + €0.25 po transakciji, oduzeto od isplate vlasnika).\n\nNE pohranjujemo podatke vaše platne kartice - svu obradu plaćanja vrši Stripe (PCI DSS Level 1 certificiran).';
 
   @override
   String get termsScreenSection5Title => '5. Politika otkazivanja i povrata';
 
   @override
   String get termsScreenSection5Body =>
-      'Politike otkazivanja postavljaju pojedinačni vlasnici objekata. Molimo pregledajte specifičnu politiku otkazivanja za vašu rezervaciju prije potvrde. Povrati će se obraditi prema politici otkazivanja objekta.';
+      'Politike otkazivanja postavljaju pojedinačni vlasnici objekata i prikazane su prije potvrde rezervacije.\n\n• Gostinjska otkazivanja: Obrađuju se putem linka za pregled rezervacije (email) ili kontaktiranjem vlasnika objekta\n• Pravo na povrat novca: Ovisi o politici otkazivanja vlasnika\n• Automatsko otkazivanje: Rezervacije neplaćene nakon 7-dnevnog roka se automatski otkazuju\n• Vrijeme obrade povrata: 5-10 radnih dana na originalni način plaćanja\n\nZa zahtjeve za otkazivanje, kontaktirajte vlasnika objekta direktno ili koristite opciju \"Otkaži rezervaciju\" u emailu potvrde rezervacije.';
 
   @override
   String get termsScreenSection6Title => '6. Odgovornosti korisnika';
@@ -6591,7 +6594,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get termsScreenSection10Body =>
-      'Za pitanja o ovim Uvjetima, kontaktirajte nas na:\n\nEmail: duskolicanin1234@gmail.com\nAdresa: [Adresa vaše tvrtke]\n\n⚠️ NAPOMENA: Ažurirajte ove kontakt informacije sa stvarnim podacima.';
+      'Za pitanja o ovim Uvjetima korištenja, kontaktirajte nas na:\n\n**Opća podrška:**\nEmail: info@bookbed.io\n\n**Web platforma:**\napp.bookbed.io (Dashboard za vlasnike)\nview.bookbed.io (Widget za rezervacije)\n\n**Pravni entitet:**\nBookBed trenutno posluje kao platforma u fazi prije registracije. Potpuni detalji registracije tvrtke bit će dodani nakon osnivanja biznisa.';
 
   @override
   String get termsScreenLegalNotice => 'Pravna napomena';
@@ -6626,7 +6629,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get privacyScreenSection2Body =>
-      'Prikupljamo sljedeće vrste podataka:\n\n**Osobni podaci:**\n• Ime i kontakt podaci (email, broj telefona)\n• Podaci za naplatu i plaćanje\n• Povijest rezervacija i preferencije\n• Zapisi komunikacije\n\n**Tehnički podaci:**\n• IP adresa i vrsta preglednika\n• Podaci o uređaju\n• Kolačići i podaci o korištenju\n• Podaci o lokaciji (ako ih omogućite)';
+      'Prikupljamo sljedeće vrste podataka:\n\n**Za vlasnike objekata (Domaćini):**\n• Ime, email, broj telefona\n• Adresa objekta i poslovna adresa\n• Podaci bankovnog računa (IBAN) za primanje plaćanja\n• Detalji Stripe Connect računa (upravlja Stripe)\n• Detalji objekta i jedinica (opisi, fotografije, cijene)\n\n**Za goste:**\n• Ime, email, broj telefona\n• Detalji rezervacije (datumi prijave/odjave, broj gostiju)\n• Podaci o plaćanju (obrađuje Stripe, ne pohranjuje BookBed)\n\n**Tehnički podaci (svi korisnici):**\n• IP adresa, vrsta preglednika, podaci o uređaju\n• Kolačići i podaci o korištenju\n• Aktivnost prijave (planirano: info o uređaju, datum/vrijeme za sigurnost)';
 
   @override
   String get privacyScreenSection3Title => '3. Pravna osnova za obradu (GDPR)';
@@ -6647,28 +6650,28 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get privacyScreenSection5Body =>
-      'Dijelimo vaše podatke samo u sljedećim okolnostima:\n\n• **Vlasnici objekata:** Za olakšavanje vaše rezervacije\n• **Procesori plaćanja:** Stripe za sigurnu obradu plaćanja\n• **Email usluga:** Resend za transakcijske emailove\n• **Zakonski zahtjevi:** Kada to zahtijeva zakon\n\nNE prodajemo vaše osobne podatke trećim stranama.';
+      'Dijelimo vaše podatke samo u sljedećim okolnostima:\n\n• **Vlasnici objekata:** Detalji gostiju dijeljeni za olakšavanje rezervacija\n• **Stripe:** Obrada plaćanja putem Stripe Connect (Standard model) - procesira plaćanja direktno vlasniku\n• **Firebase (Google Cloud):** Autentikacija, hosting baze podataka i cloud funkcije\n• **Sentry:** Praćenje grešaka i izvještavanje o padovima (anonimizirano gdje je moguće)\n• **Cloudflare:** DNS upravljanje i mreža za dostavu sadržaja (CDN)\n• **Zakonski zahtjevi:** Kada to zahtijeva zakon ili za zaštitu prava i sigurnosti\n\nNE prodajemo vaše osobne podatke trećim stranama u marketinške svrhe.';
 
   @override
   String get privacyScreenSection6Title => '6. Pohrana i sigurnost podataka';
 
   @override
   String get privacyScreenSection6Body =>
-      'Vaši podaci se sigurno pohranjuju koristeći Firebase (Google Cloud Platform) sa serverima smještenim u EU. Implementiramo sigurnosne mjere industrijskih standarda uključujući:\n\n• Enkripciju u prijenosu i u mirovanju\n• Redovite sigurnosne revizije\n• Kontrole pristupa i autentifikaciju\n• Sigurnu obradu plaćanja putem Stripe-a (PCI DSS usklađeno)';
+      'Vaši podaci se sigurno pohranjuju koristeći Firebase (Google Cloud Platform) sa serverima primarno smještenim u EU regijama (vjerojatno europe-west, Frankfurt). Implementiramo sigurnosne mjere industrijskih standarda uključujući:\n\n• Enkripciju u prijenosu (TLS/SSL) i u mirovanju\n• Firebase autentifikaciju sa sigurnim hashiranjem lozinki\n• Firestore sigurnosna pravila za sprječavanje neovlaštenog pristupa\n• Kontrole pristupa i dozvole temeljene na ulozi\n• Sigurnu obradu plaćanja putem Stripe-a (PCI DSS Level 1 certificiran)\n• Praćenje grešaka putem Sentry-ja sa minimizacijom podataka\n\nNapomena: Točna Firebase regija može se provjeriti u postavkama Firebase Console projekta.';
 
   @override
   String get privacyScreenSection7Title => '7. Zadržavanje podataka';
 
   @override
   String get privacyScreenSection7Body =>
-      'Zadržavamo vaše osobne podatke onoliko dugo koliko je potrebno za:\n\n• Ispunjenje svrha navedenih u ovoj politici\n• Usklađenost sa zakonskim obvezama (porezni zapisi: 7 godina)\n• Rješavanje sporova i provođenje ugovora\n\nNakon tog razdoblja, vaši podaci će biti sigurno izbrisani ili anonimizirani.';
+      'Zadržavamo vaše osobne podatke prema sljedećim principima:\n\n• **Aktivni računi:** Podaci se zadržavaju dok je račun aktivan\n• **GDPR pravo na brisanje:** Korisnici mogu zatražiti brisanje računa u bilo kojem trenutku\n• **Zapisi rezervacija:** Zadržani za zakonsku/računovodstvenu usklađenost (minimum 1 godina za financijske zapise u Hrvatskoj)\n• **Anonimizacija:** Nakon zahtjeva za brisanje, osobni identifikatori se uklanjaju uz zadržavanje agregirane statistike\n\nImate pravo zatražiti brisanje svog računa i povezanih podataka u bilo kojem trenutku kontaktiranjem info@bookbed.io.';
 
   @override
   String get privacyScreenSection8Title => '8. Vaša GDPR prava';
 
   @override
   String get privacyScreenSection8Body =>
-      'Prema GDPR-u, imate pravo na:\n\n• **Pristup:** Zatražiti kopiju vaših osobnih podataka\n• **Ispravak:** Ispraviti netočne podatke\n• **Brisanje:** Zatražiti brisanje vaših podataka (\"pravo na zaborav\")\n• **Ograničenje:** Ograničiti kako obrađujemo vaše podatke\n• **Prenosivost:** Primiti vaše podatke u strukturiranom formatu\n• **Prigovor:** Prigovoriti obradi temeljenoj na legitimnim interesima\n• **Povlačenje privole:** Odjava od marketinških komunikacija\n\nZa ostvarivanje ovih prava, kontaktirajte nas na: duskolicanin1234@gmail.com';
+      'Prema GDPR-u, imate sljedeća prava:\n\n• **Pristup:** Zatražiti kopiju vaših osobnih podataka (kontakt info@bookbed.io)\n• **Ispravak:** ✅ Ažurirajte informacije profila direktno u postavkama računa\n• **Brisanje:** Zatražite brisanje računa (\"pravo na zaborav\") - planirana funkcionalnost, kontakt info@bookbed.io\n• **Ograničenje:** Ograničite kako obrađujemo vaše podatke\n• **Prigovor:** Prigovorite obradi temeljenoj na legitimnim interesima\n• **Povlačenje privole:** Odjavite se od marketinških komunikacija\n\n**Napomena:** Prenosivost podataka (preuzimanje podataka u formatu čitljivom za strojeve) trenutno nije ponuđena zbog minimalne količine prikupljenih podataka. Prioritiziramo minimizaciju podataka.\n\nZa ostvarivanje ovih prava, kontaktirajte nas na: info@bookbed.io';
 
   @override
   String get privacyScreenSection9Title => '9. Kolačići';
@@ -6704,7 +6707,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get privacyScreenSection13Body =>
-      'Ako imate pitanja o ovoj Politici privatnosti ili želite ostvariti svoja GDPR prava, kontaktirajte:\n\n**Službenik za zaštitu podataka**\nEmail: duskolicanin1234@gmail.com\nAdresa: [Adresa vaše tvrtke]\n\n⚠️ NAPOMENA: Ažurirajte ove kontakt informacije sa stvarnim podacima vašeg DPO-a.';
+      'Ako imate pitanja o ovoj Politici privatnosti ili želite ostvariti svoja GDPR prava, kontaktirajte:\n\n**Opća podrška i upiti o privatnosti:**\nEmail: info@bookbed.io\n\n**Platforma:**\napp.bookbed.io (Dashboard za vlasnike)\nview.bookbed.io (Widget za rezervacije)\n\n**Pravni entitet:**\nBookBed trenutno posluje kao platforma u fazi prije registracije. Potpuni detalji registracije tvrtke (uključujući formalnog Službenika za zaštitu podataka, ako je potrebno) bit će dodani nakon osnivanja biznisa.';
 
   @override
   String get privacyScreenSection14Title => '14. Nadzorno tijelo';
@@ -6746,7 +6749,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get cookiesScreenSection2Body =>
-      'Koristimo kolačiće u sljedeće svrhe:\n\n• **Neophodni kolačići:** Potrebni za pravilno funkcioniranje web stranice (npr. autentifikacija, sigurnost)\n• **Kolačići postavki:** Pamte vaše postavke i preferencije (npr. jezik, tema)\n• **Analitički kolačići:** Pomažu nam razumjeti kako posjetitelji koriste našu web stranicu (npr. Google Analytics)\n• **Marketinški kolačići:** Koriste se za praćenje posjetitelja na web stranicama radi prikazivanja relevantnih oglasa\n\nTrenutno primarno koristimo neophodne kolačiće i kolačiće postavki kako bismo osigurali osnovnu funkcionalnost naše platforme za rezervacije.';
+      'Koristimo kolačiće u sljedeće svrhe:\n\n• **Strogo neophodni kolačići (Esencijalni):** Potrebni za funkcioniranje stranice - autentifikacija (Firebase Auth tokeni), upravljanje sesijom, sigurnost. Ovi se ne mogu onemogućiti.\n\n• **Funkcionalni kolačići (Postavke):** Pamte vaše postavke - preferencija jezika, tema (tamni/svjetli mod), vremenska zona, valuta. Poboljšavaju vaše iskustvo.\n\n• **Analitički kolačići:** Pomažu nam razumjeti obrasce korištenja - Firebase Analytics prati preglede stranica, korištenje funkcija i metrike performansi. Može uključivati Google Analytics za analizu web prometa.\n\n• **Oglašivački/Marketinški kolačići:** Kolačići trećih strana za praćenje i oglašavanje (ako je omogućeno).\n\nMožete kontrolirati neesencijalne kolačiće putem postavki preglednika ili našeg bannera za pristanak na kolačiće (ako je implementiran).';
 
   @override
   String get cookiesScreenSection3Title => '3. Vrste kolačića koje koristimo';
@@ -6767,7 +6770,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get cookiesScreenSection5Body =>
-      'Koristimo sljedeće usluge trećih strana koje mogu postavljati kolačiće:\n\n• **Firebase (Google):** Za autentifikaciju i usluge baze podataka\n• **Stripe:** Za sigurnu obradu plaćanja\n• **Resend:** Za dostavu emailova\n\nOve usluge imaju vlastite politike privatnosti i politike kolačića. Preporučujemo pregled njihovih politika za više informacija.';
+      'Koristimo sljedeće usluge trećih strana koje mogu postavljati kolačiće:\n\n• **Firebase (Google Cloud):** Kolačići autentifikacije, upravljanje sesijom, Firebase Analytics\n• **Stripe:** Kolačići obrade plaćanja za sigurne checkout sesije\n• **Sentry:** Kolačići praćenja grešaka (minimalni, anonimizirani)\n• **Cloudflare:** CDN i DNS kolačići za sigurnost i performanse\n• **Google Analytics:** (ako je omogućen) Analitika web prometa i praćenje ponašanja korisnika\n\nOve usluge imaju vlastite politike privatnosti i kolačića:\n- Firebase/Google: policies.google.com\n- Stripe: stripe.com/privacy\n- Sentry: sentry.io/privacy\n- Cloudflare: cloudflare.com/privacypolicy';
 
   @override
   String get cookiesScreenSection6Title => '6. Ažuriranja ove politike';
@@ -6781,7 +6784,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get cookiesScreenSection7Body =>
-      'Za detaljnije informacije o tome kako postupamo s vašim osobnim podacima, uključujući kolačiće, molimo pregledajte našu potpunu Politiku privatnosti.\n\nAko imate pitanja o našem korištenju kolačića, kontaktirajte nas na:\n\nEmail: duskolicanin1234@gmail.com';
+      'Za detaljnije informacije o tome kako postupamo s vašim osobnim podacima, uključujući kolačiće, molimo pregledajte našu potpunu Politiku privatnosti.\n\nAko imate pitanja o našem korištenju kolačića, kontaktirajte nas na:\n\n**Opća podrška:**\nEmail: info@bookbed.io\n\n**Platforma:**\napp.bookbed.io (Dashboard za vlasnike)\nview.bookbed.io (Widget za rezervacije)';
 
   @override
   String get cookiesScreenPrivacyLinkTitle => 'Potpuna Politika privatnosti';

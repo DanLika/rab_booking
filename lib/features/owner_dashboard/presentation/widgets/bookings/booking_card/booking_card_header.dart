@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../../../../shared/models/booking_model.dart';
 
 /// Header section for booking card showing status badge and booking ID
@@ -52,7 +53,7 @@ class BookingCardHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  booking.status.displayName,
+                  booking.status.displayNameLocalized(context),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -63,7 +64,7 @@ class BookingCardHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          // Booking ID - Minimalist
+          // Booking Reference - User-friendly ID
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -76,7 +77,7 @@ class BookingCardHeader extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '#${booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id}',
+                booking.bookingReference ?? '#${booking.id.substring(0, 8)}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withAlpha(
                     (0.65 * 255).toInt(),

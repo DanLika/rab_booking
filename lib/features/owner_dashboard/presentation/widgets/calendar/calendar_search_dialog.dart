@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/utils/error_display_utils.dart';
@@ -326,10 +327,12 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
               children: [
                 // Header with status
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       width: 12,
                       height: 12,
+                      margin: const EdgeInsets.only(top: 4),
                       decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
                     ),
                     const SizedBox(width: 8),
@@ -337,10 +340,13 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                       child: Text(
                         booking.guestName ?? 'N/A',
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
-                      booking.status.displayName,
+                      booking.status.displayNameLocalized(context),
                       style: TextStyle(fontSize: 12, color: booking.status.color, fontWeight: FontWeight.w600),
                     ),
                   ],

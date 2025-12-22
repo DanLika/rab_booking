@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
@@ -20,7 +21,8 @@ class BookingsFiltersDialog extends ConsumerStatefulWidget {
   const BookingsFiltersDialog({super.key});
 
   @override
-  ConsumerState<BookingsFiltersDialog> createState() => _BookingsFiltersDialogState();
+  ConsumerState<BookingsFiltersDialog> createState() =>
+      _BookingsFiltersDialogState();
 }
 
 class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
@@ -44,6 +46,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -52,12 +55,18 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
       child: Container(
         width: isMobile ? screenWidth * 0.9 : 700,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
         ),
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
           boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
@@ -65,10 +74,12 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           children: [
             // Header with gradient (matching CommonAppBar)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
+                ),
               ),
               child: Row(
                 children: [
@@ -77,7 +88,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                   Expanded(
                     child: AutoSizeText(
                       l10n.ownerFiltersTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       minFontSize: 14,
                     ),
@@ -117,9 +131,15 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.dialogFooterDark : AppColors.dialogFooterLight,
+                color: isDark
+                    ? AppColors.dialogFooterDark
+                    : AppColors.dialogFooterLight,
                 border: Border(
-                  top: BorderSide(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                  top: BorderSide(
+                    color: isDark
+                        ? AppColors.sectionDividerDark
+                        : AppColors.sectionDividerLight,
+                  ),
                 ),
               ),
               child: isMobile
@@ -159,15 +179,23 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                color: theme.colorScheme.primary.withAlpha(
+                  (0.12 * 255).toInt(),
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.info_outline, size: 18, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.info_outline,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(width: 12),
             Text(
               l10n.ownerFiltersStatusSection,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -180,7 +208,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           borderRadius: InputDecorationHelper.dropdownBorderRadius,
           decoration: InputDecorationHelper.buildDecoration(
             labelText: l10n.ownerFiltersStatusLabel,
-            prefixIcon: Icon(Icons.label_outline, color: theme.colorScheme.primary),
+            prefixIcon: Icon(
+              Icons.label_outline,
+              color: theme.colorScheme.primary,
+            ),
             context: context,
           ),
           items: [
@@ -201,7 +232,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                         Container(
                           width: 12,
                           height: 12,
-                          decoration: BoxDecoration(color: status.color, shape: BoxShape.circle),
+                          decoration: BoxDecoration(
+                            color: status.color,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Text(status.displayName),
@@ -212,7 +246,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           ],
           onChanged: (status) {
             setState(() {
-              _filters = _filters.copyWith(status: status, clearStatus: status == null);
+              _filters = _filters.copyWith(
+                status: status,
+                clearStatus: status == null,
+              );
             });
           },
         ),
@@ -220,7 +257,11 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     );
   }
 
-  Widget _buildPropertyFilter(ThemeData theme, AsyncValue<List<PropertyModel>> propertiesAsync, AppLocalizations l10n) {
+  Widget _buildPropertyFilter(
+    ThemeData theme,
+    AsyncValue<List<PropertyModel>> propertiesAsync,
+    AppLocalizations l10n,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -230,15 +271,23 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondary.withAlpha((0.12 * 255).toInt()),
+                color: theme.colorScheme.secondary.withAlpha(
+                  (0.12 * 255).toInt(),
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.home_outlined, size: 18, color: theme.colorScheme.secondary),
+              child: Icon(
+                Icons.home_outlined,
+                size: 18,
+                color: theme.colorScheme.secondary,
+              ),
             ),
             const SizedBox(width: 12),
             Text(
               l10n.ownerFiltersPropertySection,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -253,7 +302,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
               borderRadius: InputDecorationHelper.dropdownBorderRadius,
               decoration: InputDecorationHelper.buildDecoration(
                 labelText: l10n.ownerFiltersPropertyLabel,
-                prefixIcon: Icon(Icons.apartment, color: theme.colorScheme.secondary),
+                prefixIcon: Icon(
+                  Icons.apartment,
+                  color: theme.colorScheme.secondary,
+                ),
                 context: context,
               ),
               items: [
@@ -267,7 +319,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
               ],
               onChanged: (propertyId) {
                 setState(() {
-                  _filters = _filters.copyWith(propertyId: propertyId, clearProperty: propertyId == null);
+                  _filters = _filters.copyWith(
+                    propertyId: propertyId,
+                    clearProperty: propertyId == null,
+                  );
                 });
               },
             );
@@ -275,12 +330,20 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           loading: () => Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
+              border: Border.all(
+                color: context.gradients.sectionBorder.withAlpha(
+                  (0.3 * 255).toInt(),
+                ),
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
                 const SizedBox(width: 12),
                 Text(l10n.ownerFiltersLoadingProperties),
               ],
@@ -289,7 +352,9 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           error: (error, _) => Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt())),
+              border: Border.all(
+                color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -297,7 +362,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 Icon(Icons.error_outline, color: theme.colorScheme.error),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text('${l10n.ownerCalendarError}: $error', style: TextStyle(color: theme.colorScheme.error)),
+                  child: Text(
+                    '${l10n.ownerCalendarError}: $error',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
                 ),
               ],
             ),
@@ -317,15 +385,23 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.tertiary.withAlpha((0.12 * 255).toInt()),
+                color: theme.colorScheme.tertiary.withAlpha(
+                  (0.12 * 255).toInt(),
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.date_range, size: 18, color: theme.colorScheme.tertiary),
+              child: Icon(
+                Icons.date_range,
+                size: 18,
+                color: theme.colorScheme.tertiary,
+              ),
             ),
             const SizedBox(width: 12),
             Text(
               l10n.ownerFiltersDateSection,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -334,8 +410,12 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         // Date range picker button - styled to match dropdown fields
         InkWell(
           onTap: () async {
-            final DateTimeRange? initialRange = (_selectedStartDate != null && _selectedEndDate != null)
-                ? DateTimeRange(start: _selectedStartDate!, end: _selectedEndDate!)
+            final DateTimeRange? initialRange =
+                (_selectedStartDate != null && _selectedEndDate != null)
+                ? DateTimeRange(
+                    start: _selectedStartDate!,
+                    end: _selectedEndDate!,
+                  )
                 : null;
 
             final picked = await showCustomDateRangePicker(
@@ -349,7 +429,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
               setState(() {
                 _selectedStartDate = picked.start;
                 _selectedEndDate = picked.end;
-                _filters = _filters.copyWith(startDate: picked.start, endDate: picked.end);
+                _filters = _filters.copyWith(
+                  startDate: picked.start,
+                  endDate: picked.end,
+                );
               });
             }
           },
@@ -375,12 +458,19 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 ),
                 if (_selectedStartDate != null && _selectedEndDate != null)
                   IconButton(
-                    icon: Icon(Icons.close, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                    icon: Icon(
+                      Icons.close,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     onPressed: () {
                       setState(() {
                         _selectedStartDate = null;
                         _selectedEndDate = null;
-                        _filters = _filters.copyWith(clearStartDate: true, clearEndDate: true);
+                        _filters = _filters.copyWith(
+                          clearStartDate: true,
+                          clearEndDate: true,
+                        );
                       });
                     },
                     tooltip: l10n.ownerFiltersClear,
@@ -395,7 +485,11 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     );
   }
 
-  Widget _buildApplyButton(ThemeData theme, bool isFullWidth, AppLocalizations l10n) {
+  Widget _buildApplyButton(
+    ThemeData theme,
+    bool isFullWidth,
+    AppLocalizations l10n,
+  ) {
     return Container(
       decoration: BoxDecoration(
         gradient: context.gradients.brandPrimary,
@@ -427,7 +521,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 const SizedBox(width: 8),
                 Text(
                   l10n.ownerFiltersApply,
-                  style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -437,7 +534,11 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
     );
   }
 
-  Widget _buildClearButton(ThemeData theme, bool isFullWidth, AppLocalizations l10n) {
+  Widget _buildClearButton(
+    ThemeData theme,
+    bool isFullWidth,
+    AppLocalizations l10n,
+  ) {
     return OutlinedButton.icon(
       onPressed: () {
         // Clear local state
@@ -455,7 +556,9 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
       label: Text(l10n.ownerFiltersClear),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        side: BorderSide(color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt())),
+        side: BorderSide(
+          color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );

@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
-import '../../../../shared/widgets/message_box.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -46,7 +46,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   late DateTime _checkInDate;
   late DateTime _checkOutDate;
   final BookingStatus _status = BookingStatus.confirmed;
-  final String _paymentMethod = 'cash';
+  String _paymentMethod = 'cash'; // Mutable - owner can select payment method
   bool _isSaving = false;
 
   @override
@@ -391,8 +391,42 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                       const SizedBox(height: 16),
 
-                      // Info card - default values (standardized)
-                      MessageBox.info(message: AppLocalizations.of(context).bookingCreateStatusInfo),
+                      // Payment Method Selector
+                      Builder(
+                        builder: (ctx) => DropdownButtonFormField<String>(
+                          initialValue: _paymentMethod,
+                          decoration: InputDecorationHelper.buildDecoration(
+                            labelText: AppLocalizations.of(context).ownerDetailsPaymentMethod,
+                            prefixIcon: const Icon(Icons.payment),
+                            context: ctx,
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'cash',
+                              child: Text(AppLocalizations.of(context).paymentMethodCash),
+                            ),
+                            DropdownMenuItem(
+                              value: 'card',
+                              child: Text(AppLocalizations.of(context).paymentMethodCard),
+                            ),
+                            DropdownMenuItem(
+                              value: 'bank_transfer',
+                              child: Text(AppLocalizations.of(context).paymentMethodBankTransfer),
+                            ),
+                            DropdownMenuItem(
+                              value: 'other',
+                              child: Text(AppLocalizations.of(context).paymentMethodOther),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _paymentMethod = value;
+                              });
+                            }
+                          },
+                        ),
+                      ),
 
                       const SizedBox(height: 16),
 

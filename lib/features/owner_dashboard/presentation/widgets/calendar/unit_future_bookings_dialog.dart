@@ -324,7 +324,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   border: Border.all(color: booking.status.color.withAlpha((0.3 * 255).toInt())),
                 ),
                 child: Text(
-                  booking.status.displayName,
+                  booking.status.displayNameLocalized(context),
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: booking.status.color),
                 ),
               ),

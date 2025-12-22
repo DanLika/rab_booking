@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/utils/error_display_utils.dart';
@@ -335,7 +336,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               border: Border.all(color: booking.status.color),
             ),
             child: Text(
-              booking.status.displayName,
+              booking.status.displayNameLocalized(context),
               style: TextStyle(
                 color: booking.status.color,
                 fontWeight: FontWeight.bold,

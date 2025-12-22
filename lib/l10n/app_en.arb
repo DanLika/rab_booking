@@ -1624,6 +1624,8 @@
   "widgetSettingsPhone": "Phone",
   "widgetSettingsEmail": "Email",
   "widgetSettingsBookingWithoutPayment": "Booking without payment",
+  "widgetSettingsCopyFromProfile": "Copy from Owner Profile",
+  "widgetSettingsCopiedFromProfile": "Contact info copied from your profile",
   "widgetSettingsBookingWithoutPaymentDesc": "In this mode, guests can create a reservation but CANNOT pay online. You arrange payment privately after confirming the reservation.",
 
   "bookingCreateTitle": "New Booking",

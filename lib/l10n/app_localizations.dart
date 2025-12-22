@@ -7554,6 +7554,18 @@ abstract class AppLocalizations {
   /// **'Booking without payment'**
   String get widgetSettingsBookingWithoutPayment;
 
+  /// No description provided for @widgetSettingsCopyFromProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from Owner Profile'**
+  String get widgetSettingsCopyFromProfile;
+
+  /// No description provided for @widgetSettingsCopiedFromProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact info copied from your profile'**
+  String get widgetSettingsCopiedFromProfile;
+
   /// No description provided for @widgetSettingsBookingWithoutPaymentDesc.
   ///
   /// In en, this message translates to:

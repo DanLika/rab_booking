@@ -4051,6 +4051,13 @@ class AppLocalizationsHr extends AppLocalizations {
   String get widgetSettingsBookingWithoutPayment => 'Rezervacija bez plaćanja';
 
   @override
+  String get widgetSettingsCopyFromProfile => 'Kopiraj iz profila vlasnika';
+
+  @override
+  String get widgetSettingsCopiedFromProfile =>
+      'Kontakt podaci kopirani iz vašeg profila';
+
+  @override
   String get widgetSettingsBookingWithoutPaymentDesc =>
       'U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.';
 

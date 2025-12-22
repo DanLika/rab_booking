@@ -4031,6 +4031,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetSettingsBookingWithoutPayment => 'Booking without payment';
 
   @override
+  String get widgetSettingsCopyFromProfile => 'Copy from Owner Profile';
+
+  @override
+  String get widgetSettingsCopiedFromProfile =>
+      'Contact info copied from your profile';
+
+  @override
   String get widgetSettingsBookingWithoutPaymentDesc =>
       'In this mode, guests can create a reservation but CANNOT pay online. You arrange payment privately after confirming the reservation.';
 

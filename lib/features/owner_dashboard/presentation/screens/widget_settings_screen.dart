@@ -1875,6 +1875,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                   ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
+              const SizedBox(height: 12),
+
+              // Copy from Profile button
+              _buildCopyFromProfileButton(),
               const SizedBox(height: 16),
 
               // Compact inline layout
@@ -1940,6 +1944,53 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
           ),
         ),
       ),
+    );
+  }
+
+  /// Copy from Profile button - automatically fills contact fields from user profile
+  Widget _buildCopyFromProfileButton() {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final userProfileAsync = ref.watch(watchUserProfileProvider);
+
+    return userProfileAsync.when(
+      data: (profile) {
+        if (profile == null) return const SizedBox.shrink();
+
+        final hasPhone = profile.phoneE164.isNotEmpty;
+        final hasEmail = profile.emailContact.isNotEmpty;
+
+        // Don't show button if profile has no contact info
+        if (!hasPhone && !hasEmail) return const SizedBox.shrink();
+
+        return OutlinedButton.icon(
+          onPressed: () {
+            setState(() {
+              if (hasPhone) {
+                _phoneController.text = profile.phoneE164;
+                _showPhone = true;
+              }
+              if (hasEmail) {
+                _emailController.text = profile.emailContact;
+                _showEmail = true;
+              }
+            });
+            ErrorDisplayUtils.showSuccessSnackBar(
+              context,
+              l10n.widgetSettingsCopiedFromProfile,
+            );
+          },
+          icon: const Icon(Icons.person_outline, size: 18),
+          label: Text(l10n.widgetSettingsCopyFromProfile),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: theme.colorScheme.primary,
+            side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 

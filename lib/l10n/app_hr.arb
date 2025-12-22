@@ -1624,6 +1624,8 @@
   "widgetSettingsPhone": "Telefon",
   "widgetSettingsEmail": "Email",
   "widgetSettingsBookingWithoutPayment": "Rezervacija bez plaćanja",
+  "widgetSettingsCopyFromProfile": "Kopiraj iz profila vlasnika",
+  "widgetSettingsCopiedFromProfile": "Kontakt podaci kopirani iz vašeg profila",
   "widgetSettingsBookingWithoutPaymentDesc": "U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.",
 
   "bookingCreateTitle": "Nova rezervacija",

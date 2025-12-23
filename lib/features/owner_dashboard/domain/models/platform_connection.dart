@@ -137,8 +137,7 @@ class PlatformConnection with _$PlatformConnection {
 
   /// Check if connection is expired
   bool get isExpired =>
-      status == ConnectionStatus.expired ||
-      expiresAt.isBefore(DateTime.now());
+      status == ConnectionStatus.expired || expiresAt.isBefore(DateTime.now());
 
   /// Check if connection has error
   bool get hasError => status == ConnectionStatus.error;
@@ -161,4 +160,3 @@ class PlatformConnection with _$PlatformConnection {
     }
   }
 }
-

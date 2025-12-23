@@ -110,10 +110,7 @@ void main() {
         ),
       );
 
-      expect(
-        find.text('Reply to the confirmation email'),
-        findsOneWidget,
-      );
+      expect(find.text('Reply to the confirmation email'), findsOneWidget);
     });
 
     testWidgets('renders fromEmail when provided', (tester) async {
@@ -130,10 +127,7 @@ void main() {
         ),
       );
 
-      expect(
-        find.text('Or email: bookings@example.com'),
-        findsOneWidget,
-      );
+      expect(find.text('Or email: bookings@example.com'), findsOneWidget);
     });
 
     testWidgets('does not render fromEmail when null', (tester) async {
@@ -372,10 +366,7 @@ void main() {
           ),
         );
 
-        expect(
-          find.textContaining('cash or card accepted'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('cash or card accepted'), findsOneWidget);
         expect(
           find.text('Check-in instructions will be sent 24h before arrival'),
           findsOneWidget,
@@ -440,10 +431,7 @@ void main() {
           find.text('Confirmation email sent with all booking details'),
           findsOneWidget,
         );
-        expect(
-          find.text('Your booking is being processed'),
-          findsOneWidget,
-        );
+        expect(find.text('Your booking is being processed'), findsOneWidget);
       });
     });
 

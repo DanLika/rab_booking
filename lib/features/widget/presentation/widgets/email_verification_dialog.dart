@@ -18,13 +18,19 @@ class EmailVerificationDialog extends ConsumerStatefulWidget {
   final String email;
   final WidgetColorScheme colors;
 
-  const EmailVerificationDialog({super.key, required this.email, required this.colors});
+  const EmailVerificationDialog({
+    super.key,
+    required this.email,
+    required this.colors,
+  });
 
   @override
-  ConsumerState<EmailVerificationDialog> createState() => _EmailVerificationDialogState();
+  ConsumerState<EmailVerificationDialog> createState() =>
+      _EmailVerificationDialogState();
 }
 
-class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialog> {
+class _EmailVerificationDialogState
+    extends ConsumerState<EmailVerificationDialog> {
   final _codeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -56,7 +62,9 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
     });
 
     try {
-      LoggingService.logOperation('[EmailVerification] Sending code to ${widget.email}');
+      LoggingService.logOperation(
+        '[EmailVerification] Sending code to ${widget.email}',
+      );
 
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('sendEmailVerificationCode');
@@ -67,7 +75,10 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
       if (mounted) {
         // Show success message inside dialog instead of Snackbar to avoid z-index issues
-        final successText = WidgetTranslations.of(context, ref).verificationCodeSent;
+        final successText = WidgetTranslations.of(
+          context,
+          ref,
+        ).verificationCodeSent;
         setState(() {
           _successMessage = successText;
           _resendCooldown = 60;
@@ -101,7 +112,9 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
       if (mounted) {
         setState(() {
-          _errorMessage = e.message ?? WidgetTranslations.of(context, ref).emailVerificationFailedToSend;
+          _errorMessage =
+              e.message ??
+              WidgetTranslations.of(context, ref).emailVerificationFailedToSend;
         });
       }
     } catch (e) {
@@ -109,7 +122,8 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
       if (mounted) {
         setState(() {
-          _errorMessage = '${WidgetTranslations.of(context, ref).emailVerificationFailedToSend}: $e';
+          _errorMessage =
+              '${WidgetTranslations.of(context, ref).emailVerificationFailedToSend}: $e';
         });
       }
     } finally {
@@ -137,7 +151,10 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('verifyEmailCode');
 
-      final result = await callable.call({'email': widget.email, 'code': _codeController.text.trim()});
+      final result = await callable.call({
+        'email': widget.email,
+        'code': _codeController.text.trim(),
+      });
 
       final data = result.data as Map<String, dynamic>;
 
@@ -151,14 +168,22 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
           return; // Exit early to skip finally block
         }
       } else {
-        throw BookingException('Email verification failed', code: 'booking/verification-failed');
+        throw BookingException(
+          'Email verification failed',
+          code: 'booking/verification-failed',
+        );
       }
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError('[EmailVerification] Verification failed', e);
+      await LoggingService.logError(
+        '[EmailVerification] Verification failed',
+        e,
+      );
 
       if (mounted) {
         setState(() {
-          _errorMessage = e.message ?? WidgetTranslations.of(context, ref).emailVerificationInvalidCode;
+          _errorMessage =
+              e.message ??
+              WidgetTranslations.of(context, ref).emailVerificationInvalidCode;
         });
       }
     } catch (e) {
@@ -166,7 +191,8 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
       if (mounted) {
         setState(() {
-          _errorMessage = '${WidgetTranslations.of(context, ref).emailVerificationFailed}: $e';
+          _errorMessage =
+              '${WidgetTranslations.of(context, ref).emailVerificationFailed}: $e';
         });
       }
     } finally {
@@ -207,7 +233,11 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                 // Header
                 Row(
                   children: [
-                    Icon(Icons.verified_user, color: widget.colors.primary, size: 32),
+                    Icon(
+                      Icons.verified_user,
+                      color: widget.colors.primary,
+                      size: 32,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -220,7 +250,10 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: widget.colors.textSecondary),
+                      icon: Icon(
+                        Icons.close,
+                        color: widget.colors.textSecondary,
+                      ),
                       onPressed: () => Navigator.of(context).pop(false),
                     ),
                   ],
@@ -237,7 +270,11 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.email_outlined, color: widget.colors.textSecondary, size: 20),
+                      Icon(
+                        Icons.email_outlined,
+                        color: widget.colors.textSecondary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: AutoSizeText(
@@ -258,8 +295,14 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
                 // Instructions
                 Text(
-                  WidgetTranslations.of(context, ref).emailVerificationEnterCode,
-                  style: GoogleFonts.inter(fontSize: 14, color: widget.colors.textSecondary),
+                  WidgetTranslations.of(
+                    context,
+                    ref,
+                  ).emailVerificationEnterCode,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: widget.colors.textSecondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -276,7 +319,10 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                     color: widget.colors.textPrimary,
                   ),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(6),
+                  ],
                   decoration: InputDecoration(
                     hintText: '000000',
                     hintStyle: GoogleFonts.robotoMono(
@@ -289,28 +335,49 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                     fillColor: widget.colors.backgroundPrimary,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: widget.colors.borderDefault, width: 2),
+                      borderSide: BorderSide(
+                        color: widget.colors.borderDefault,
+                        width: 2,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: widget.colors.borderDefault, width: 2),
+                      borderSide: BorderSide(
+                        color: widget.colors.borderDefault,
+                        width: 2,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: widget.colors.primary, width: 2),
+                      borderSide: BorderSide(
+                        color: widget.colors.primary,
+                        width: 2,
+                      ),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: widget.colors.error, width: 2),
+                      borderSide: BorderSide(
+                        color: widget.colors.error,
+                        width: 2,
+                      ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 16,
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return WidgetTranslations.of(context, ref).emailVerificationPleaseEnterCode;
+                      return WidgetTranslations.of(
+                        context,
+                        ref,
+                      ).emailVerificationPleaseEnterCode;
                     }
                     if (value.length != 6) {
-                      return WidgetTranslations.of(context, ref).emailVerificationCodeMustBe6Digits;
+                      return WidgetTranslations.of(
+                        context,
+                        ref,
+                      ).emailVerificationCodeMustBe6Digits;
                     }
                     return null;
                   },
@@ -337,16 +404,25 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                     decoration: BoxDecoration(
                       color: widget.colors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: widget.colors.primary.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: widget.colors.primary.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle_outline, color: widget.colors.primary, size: 20),
+                        Icon(
+                          Icons.check_circle_outline,
+                          color: widget.colors.primary,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _successMessage!,
-                            style: GoogleFonts.inter(fontSize: 14, color: widget.colors.primary),
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: widget.colors.primary,
+                            ),
                           ),
                         ),
                       ],
@@ -362,16 +438,25 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                     decoration: BoxDecoration(
                       color: widget.colors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: widget.colors.error.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: widget.colors.error.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: widget.colors.error, size: 20),
+                        Icon(
+                          Icons.error_outline,
+                          color: widget.colors.error,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _errorMessage!,
-                            style: GoogleFonts.inter(fontSize: 14, color: widget.colors.error),
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: widget.colors.error,
+                            ),
                           ),
                         ),
                       ],
@@ -390,8 +475,13 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                       foregroundColor: widget.colors.backgroundCard,
                       disabledBackgroundColor: widget.colors.primary,
                       disabledForegroundColor: widget.colors.backgroundCard,
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 35),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 35,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                       minimumSize: const Size(double.infinity, 44),
                     ),
@@ -401,12 +491,17 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Text(
                             WidgetTranslations.of(context, ref).verifyEmail,
-                            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                   ),
                 ),
@@ -414,7 +509,9 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
 
                 // Resend button
                 TextButton(
-                  onPressed: _resendCooldown > 0 || _isResending ? null : _sendVerificationCode,
+                  onPressed: _resendCooldown > 0 || _isResending
+                      ? null
+                      : _sendVerificationCode,
                   child: _isResending
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -424,23 +521,39 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                               width: 16,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(widget.colors.primary),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  widget.colors.primary,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              WidgetTranslations.of(context, ref).emailVerificationSending,
-                              style: GoogleFonts.inter(fontSize: 14, color: widget.colors.textSecondary),
+                              WidgetTranslations.of(
+                                context,
+                                ref,
+                              ).emailVerificationSending,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: widget.colors.textSecondary,
+                              ),
                             ),
                           ],
                         )
                       : Text(
                           _resendCooldown > 0
-                              ? WidgetTranslations.of(context, ref).emailVerificationResendIn(_resendCooldown)
-                              : WidgetTranslations.of(context, ref).emailVerificationDidntReceive,
+                              ? WidgetTranslations.of(
+                                  context,
+                                  ref,
+                                ).emailVerificationResendIn(_resendCooldown)
+                              : WidgetTranslations.of(
+                                  context,
+                                  ref,
+                                ).emailVerificationDidntReceive,
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                            color: _resendCooldown > 0 ? widget.colors.textDisabled : widget.colors.primary,
+                            color: _resendCooldown > 0
+                                ? widget.colors.textDisabled
+                                : widget.colors.primary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -457,12 +570,22 @@ class _EmailVerificationDialogState extends ConsumerState<EmailVerificationDialo
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: widget.colors.primary, size: 16),
+                      Icon(
+                        Icons.info_outline,
+                        color: widget.colors.primary,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          WidgetTranslations.of(context, ref).verificationCodeExpiresInfo,
-                          style: GoogleFonts.inter(fontSize: 12, color: widget.colors.textSecondary),
+                          WidgetTranslations.of(
+                            context,
+                            ref,
+                          ).verificationCodeExpiresInfo,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: widget.colors.textSecondary,
+                          ),
                         ),
                       ),
                     ],

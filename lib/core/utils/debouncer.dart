@@ -13,9 +13,7 @@ import 'package:flutter/foundation.dart';
 /// });
 /// ```
 class Debouncer {
-  Debouncer({
-    required this.delay,
-  });
+  Debouncer({required this.delay});
 
   final Duration delay;
   Timer? _timer;
@@ -49,9 +47,7 @@ class Debouncer {
 /// });
 /// ```
 class Throttler {
-  Throttler({
-    required this.duration,
-  });
+  Throttler({required this.duration});
 
   final Duration duration;
   Timer? _timer;

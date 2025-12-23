@@ -74,7 +74,8 @@ class AppTheme {
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
           statusBarColor: AppColors.primary, // Match AppBar color
           statusBarBrightness: Brightness.dark, // For iOS (light icons)
-          statusBarIconBrightness: Brightness.light, // For Android (light icons)
+          statusBarIconBrightness:
+              Brightness.light, // For Android (light icons)
         ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
           color: Colors.white, // White title text
@@ -94,7 +95,9 @@ class AppTheme {
         elevation: 4, // Modern elevated shadow
         shadowColor: AppColors.primary.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
         margin: const EdgeInsets.all(16), // 16px padding
       ),
@@ -107,7 +110,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           elevation: 0,
           textStyle: AppTypography.buttonText,
@@ -121,7 +126,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           side: const BorderSide(color: AppColors.primary, width: 1.5),
           textStyle: AppTypography.buttonText,
@@ -160,7 +167,9 @@ class AppTheme {
         fillColor: AppColors.surfaceLight,
         constraints: const BoxConstraints(minHeight: 48), // 48px height
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius
           borderSide: const BorderSide(color: AppColors.borderWarmLight),
         ),
         enabledBorder: OutlineInputBorder(
@@ -169,7 +178,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2), // Accent color border
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 2,
+          ), // Accent color border
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
@@ -179,27 +191,42 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        labelStyle: AppTypography.textTheme.bodyLarge?.copyWith(color: AppColors.textSecondaryLight),
-        hintStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textTertiaryLight),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        labelStyle: AppTypography.textTheme.bodyLarge?.copyWith(
+          color: AppColors.textSecondaryLight,
+        ),
+        hintStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textTertiaryLight,
+        ),
       ),
 
       // Chip theme - selected chips have white text
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceVariantLight,
         selectedColor: AppColors.primary,
-        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(color: AppColors.textPrimaryLight),
+        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: AppColors.textPrimaryLight,
+        ),
         secondaryLabelStyle: AppTypography.textTheme.labelMedium?.copyWith(
           color: Colors.white, // White text when selected
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
       ),
 
       // Divider theme - using sectionDivider for better visibility
-      dividerTheme: const DividerThemeData(color: AppColors.sectionDividerLight, thickness: 1, space: 1),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.sectionDividerLight,
+        thickness: 1,
+        space: 1,
+      ),
 
       // Bottom navigation bar theme
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -217,24 +244,36 @@ class AppTheme {
         backgroundColor: AppColors.surfaceLight,
         elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius (upgraded from 16)
         ),
-        titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(color: AppColors.textPrimaryLight),
-        contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondaryLight),
+        titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
+          color: AppColors.textPrimaryLight,
+        ),
+        contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textSecondaryLight,
+        ),
       ),
 
       // Snackbar theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.textPrimaryLight,
-        contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: Colors.white),
+        contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: Colors.white,
+        ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius (upgraded from 8)
         ),
         behavior: SnackBarBehavior.floating,
       ),
 
       // Progress indicator theme
-      progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.primary),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.primary,
+      ),
 
       // Switch theme - Primary Purple selected, warm beige unselected
       switchTheme: SwitchThemeData(
@@ -246,9 +285,13 @@ class AppTheme {
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.primary.withValues(alpha: 0.3); // Purple track when selected
+            return AppColors.primary.withValues(
+              alpha: 0.3,
+            ); // Purple track when selected
           }
-          return AppColors.borderWarmLight.withValues(alpha: 0.5); // Warm beige track
+          return AppColors.borderWarmLight.withValues(
+            alpha: 0.5,
+          ); // Warm beige track
         }),
         trackOutlineColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -325,7 +368,9 @@ class AppTheme {
           return Colors.transparent;
         }),
         todayForegroundColor: WidgetStateProperty.all(AppColors.primary),
-        todayBackgroundColor: WidgetStateProperty.all(AppColors.primary.withAlpha((0.1 * 255).toInt())),
+        todayBackgroundColor: WidgetStateProperty.all(
+          AppColors.primary.withAlpha((0.1 * 255).toInt()),
+        ),
         todayBorder: const BorderSide(color: AppColors.primary),
         yearStyle: AppTypography.textTheme.bodyLarge,
         yearForegroundColor: WidgetStateProperty.resolveWith((states) {
@@ -339,10 +384,16 @@ class AppTheme {
         rangePickerBackgroundColor: AppColors.surfaceLight,
         rangePickerHeaderBackgroundColor: AppColors.primary,
         rangePickerHeaderForegroundColor: Colors.white,
-        rangeSelectionBackgroundColor: AppColors.primary.withAlpha((0.2 * 255).toInt()),
+        rangeSelectionBackgroundColor: AppColors.primary.withAlpha(
+          (0.2 * 255).toInt(),
+        ),
         dividerColor: AppColors.sectionDividerLight,
-        cancelButtonStyle: TextButton.styleFrom(foregroundColor: AppColors.textSecondaryLight),
-        confirmButtonStyle: TextButton.styleFrom(foregroundColor: AppColors.primary),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.textSecondaryLight,
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+        ),
       ),
     );
   }
@@ -396,7 +447,8 @@ class AppTheme {
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
           statusBarColor: AppColors.surfaceDark, // Match AppBar color
           statusBarBrightness: Brightness.dark, // For iOS (light icons)
-          statusBarIconBrightness: Brightness.light, // For Android (light icons)
+          statusBarIconBrightness:
+              Brightness.light, // For Android (light icons)
         ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
           color: AppColors.textPrimaryDark,
@@ -410,7 +462,9 @@ class AppTheme {
         elevation: 4, // Modern elevated shadow
         shadowColor: AppColors.primaryLight.withValues(alpha: 0.12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
         margin: const EdgeInsets.all(16), // 16px padding
       ),
@@ -423,7 +477,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           elevation: 0,
           textStyle: AppTypography.buttonText,
@@ -437,7 +493,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           side: const BorderSide(color: AppColors.primaryLight, width: 1.5),
           textStyle: AppTypography.buttonText,
@@ -474,10 +532,13 @@ class AppTheme {
       // FIXED: Lighter fill color for better contrast and readability
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: darkInputFill, // Lighter than surfaceVariantDark for better contrast
+        fillColor:
+            darkInputFill, // Lighter than surfaceVariantDark for better contrast
         constraints: const BoxConstraints(minHeight: 48), // 48px height
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius
           borderSide: const BorderSide(color: AppColors.borderWarmDark),
         ),
         enabledBorder: OutlineInputBorder(
@@ -486,7 +547,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.primaryLight, width: 2), // Accent color border
+          borderSide: const BorderSide(
+            color: AppColors.primaryLight,
+            width: 2,
+          ), // Accent color border
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
@@ -496,27 +560,42 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
           borderSide: const BorderSide(color: AppColors.errorLight, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        labelStyle: AppTypography.textTheme.bodyLarge?.copyWith(color: AppColors.textSecondaryDark),
-        hintStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textTertiaryDark),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        labelStyle: AppTypography.textTheme.bodyLarge?.copyWith(
+          color: AppColors.textSecondaryDark,
+        ),
+        hintStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textTertiaryDark,
+        ),
       ),
 
       // Chip theme - selected chips have white text
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceVariantDark,
         selectedColor: AppColors.primaryLight,
-        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(color: AppColors.textPrimaryDark),
+        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
         secondaryLabelStyle: AppTypography.textTheme.labelMedium?.copyWith(
           color: Colors.white, // White text when selected
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
       ),
 
       // Divider theme - using sectionDivider for better visibility
-      dividerTheme: const DividerThemeData(color: AppColors.sectionDividerDark, thickness: 1, space: 1),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.sectionDividerDark,
+        thickness: 1,
+        space: 1,
+      ),
 
       // Bottom navigation bar theme
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -534,24 +613,36 @@ class AppTheme {
         backgroundColor: AppColors.surfaceDark,
         elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius (upgraded from 16)
         ),
-        titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(color: AppColors.textPrimaryDark),
-        contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondaryDark),
+        titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
+        contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textSecondaryDark,
+        ),
       ),
 
       // Snackbar theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.surfaceVariantDark,
-        contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimaryDark),
+        contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius (upgraded from 8)
         ),
         behavior: SnackBarBehavior.floating,
       ),
 
       // Progress indicator theme
-      progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.primaryLight),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.primaryLight,
+      ),
 
       // Switch theme - Primary Purple selected, warm gray unselected
       switchTheme: SwitchThemeData(
@@ -563,9 +654,13 @@ class AppTheme {
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.primaryLight.withValues(alpha: 0.4); // Purple track when selected
+            return AppColors.primaryLight.withValues(
+              alpha: 0.4,
+            ); // Purple track when selected
           }
-          return AppColors.borderWarmDark.withValues(alpha: 0.5); // Warm gray track
+          return AppColors.borderWarmDark.withValues(
+            alpha: 0.5,
+          ); // Warm gray track
         }),
         trackOutlineColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -584,12 +679,16 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: AppColors.sectionDividerDark),
         ),
-        textStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimaryDark),
+        textStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
       ),
 
       // Dropdown menu theme - Modern styling (dark mode)
       dropdownMenuTheme: DropdownMenuThemeData(
-        textStyle: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimaryDark),
+        textStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
         menuStyle: MenuStyle(
           backgroundColor: WidgetStateProperty.all(darkMenuBackground),
           elevation: WidgetStateProperty.all(12),
@@ -644,7 +743,9 @@ class AppTheme {
           return Colors.transparent;
         }),
         todayForegroundColor: WidgetStateProperty.all(AppColors.primaryLight),
-        todayBackgroundColor: WidgetStateProperty.all(AppColors.primaryLight.withAlpha((0.15 * 255).toInt())),
+        todayBackgroundColor: WidgetStateProperty.all(
+          AppColors.primaryLight.withAlpha((0.15 * 255).toInt()),
+        ),
         todayBorder: const BorderSide(color: AppColors.primaryLight),
         yearStyle: AppTypography.textTheme.bodyLarge,
         yearForegroundColor: WidgetStateProperty.resolveWith((states) {
@@ -660,10 +761,16 @@ class AppTheme {
         rangePickerBackgroundColor: darkDatePickerBackground,
         rangePickerHeaderBackgroundColor: AppColors.primary,
         rangePickerHeaderForegroundColor: Colors.white,
-        rangeSelectionBackgroundColor: AppColors.primaryLight.withAlpha((0.25 * 255).toInt()),
+        rangeSelectionBackgroundColor: AppColors.primaryLight.withAlpha(
+          (0.25 * 255).toInt(),
+        ),
         dividerColor: AppColors.sectionDividerDark,
-        cancelButtonStyle: TextButton.styleFrom(foregroundColor: AppColors.textSecondaryDark),
-        confirmButtonStyle: TextButton.styleFrom(foregroundColor: AppColors.primaryLight),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.textSecondaryDark,
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.primaryLight,
+        ),
       ),
     );
   }

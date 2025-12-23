@@ -13,7 +13,10 @@ class SocialLoginButton extends StatefulWidget {
     this.customIcon,
     required this.label,
     required this.onPressed,
-  }) : assert(icon != null || customIcon != null, 'Either icon or customIcon must be provided');
+  }) : assert(
+         icon != null || customIcon != null,
+         'Either icon or customIcon must be provided',
+       );
 
   @override
   State<SocialLoginButton> createState() => _SocialLoginButtonState();
@@ -34,7 +37,9 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.outline,
+            color: _isHovered
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline,
             width: 1.5,
           ),
           color: _isHovered
@@ -57,7 +62,9 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
                     Icon(
                       widget.icon,
                       size: 22,
-                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      color: _isHovered
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface,
                     ),
                   const SizedBox(width: 8),
                   Text(
@@ -65,7 +72,9 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      color: _isHovered
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -190,7 +199,9 @@ class AppleBrandIcon extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: _AppleLogoPainter(color: theme.colorScheme.onSurface)),
+      child: CustomPaint(
+        painter: _AppleLogoPainter(color: theme.colorScheme.onSurface),
+      ),
     );
   }
 }
@@ -214,33 +225,47 @@ class _AppleLogoPainter extends CustomPainter {
     final path = Path()
       ..moveTo(centerX, centerY - 7 * scale)
       ..cubicTo(
-        centerX + 6 * scale, centerY - 7 * scale,
-        centerX + 8 * scale, centerY - 4 * scale,
-        centerX + 8 * scale, centerY + 2 * scale,
+        centerX + 6 * scale,
+        centerY - 7 * scale,
+        centerX + 8 * scale,
+        centerY - 4 * scale,
+        centerX + 8 * scale,
+        centerY + 2 * scale,
       )
       ..cubicTo(
-        centerX + 8 * scale, centerY + 6 * scale,
-        centerX + 5 * scale, centerY + 8 * scale,
-        centerX, centerY + 8 * scale,
+        centerX + 8 * scale,
+        centerY + 6 * scale,
+        centerX + 5 * scale,
+        centerY + 8 * scale,
+        centerX,
+        centerY + 8 * scale,
       )
       ..cubicTo(
-        centerX - 5 * scale, centerY + 8 * scale,
-        centerX - 8 * scale, centerY + 6 * scale,
-        centerX - 8 * scale, centerY + 2 * scale,
+        centerX - 5 * scale,
+        centerY + 8 * scale,
+        centerX - 8 * scale,
+        centerY + 6 * scale,
+        centerX - 8 * scale,
+        centerY + 2 * scale,
       )
       ..cubicTo(
-        centerX - 8 * scale, centerY - 4 * scale,
-        centerX - 6 * scale, centerY - 7 * scale,
-        centerX, centerY - 7 * scale,
+        centerX - 8 * scale,
+        centerY - 4 * scale,
+        centerX - 6 * scale,
+        centerY - 7 * scale,
+        centerX,
+        centerY - 7 * scale,
       )
       ..close();
 
     // Bite cutout
     final bitePath = Path()
-      ..addOval(Rect.fromCircle(
-        center: Offset(centerX + 5 * scale, centerY - 3 * scale),
-        radius: 2.5 * scale,
-      ));
+      ..addOval(
+        Rect.fromCircle(
+          center: Offset(centerX + 5 * scale, centerY - 3 * scale),
+          radius: 2.5 * scale,
+        ),
+      );
 
     final applePath = Path.combine(PathOperation.difference, path, bitePath);
     canvas.drawPath(applePath, paint);
@@ -249,14 +274,20 @@ class _AppleLogoPainter extends CustomPainter {
     final leafPath = Path()
       ..moveTo(centerX + scale, centerY - 7 * scale)
       ..cubicTo(
-        centerX + 2 * scale, centerY - 9 * scale,
-        centerX + 4 * scale, centerY - 10 * scale,
-        centerX + 5 * scale, centerY - 10 * scale,
+        centerX + 2 * scale,
+        centerY - 9 * scale,
+        centerX + 4 * scale,
+        centerY - 10 * scale,
+        centerX + 5 * scale,
+        centerY - 10 * scale,
       )
       ..cubicTo(
-        centerX + 4 * scale, centerY - 9.5 * scale,
-        centerX + 3 * scale, centerY - 8.5 * scale,
-        centerX + scale, centerY - 7 * scale,
+        centerX + 4 * scale,
+        centerY - 9.5 * scale,
+        centerX + 3 * scale,
+        centerY - 8.5 * scale,
+        centerX + scale,
+        centerY - 7 * scale,
       )
       ..close();
 

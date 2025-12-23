@@ -27,7 +27,9 @@ void main() {
       // HR translations
       expect(find.text('Okrenite uređaj'), findsOneWidget);
       expect(
-        find.text('Za najbolji prikaz godišnjeg kalendara, molimo okrenite uređaj u pejzažni način.'),
+        find.text(
+          'Za najbolji prikaz godišnjeg kalendara, molimo okrenite uređaj u pejzažni način.',
+        ),
         findsOneWidget,
       );
     });
@@ -53,7 +55,9 @@ void main() {
       expect(find.byType(ElevatedButton), findsOneWidget);
     });
 
-    testWidgets('calls onSwitchToMonthView when button is pressed', (tester) async {
+    testWidgets('calls onSwitchToMonthView when button is pressed', (
+      tester,
+    ) async {
       var wasCalled = false;
 
       await tester.pumpWidget(
@@ -98,7 +102,9 @@ void main() {
       expect(find.byIcon(Icons.screen_rotation), findsOneWidget);
     });
 
-    testWidgets('applies dark mode styling when isDarkMode is true', (tester) async {
+    testWidgets('applies dark mode styling when isDarkMode is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Stack(

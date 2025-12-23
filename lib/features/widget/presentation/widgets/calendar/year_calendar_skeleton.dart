@@ -59,11 +59,16 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
           child: LayoutBuilder(
             builder: (context, constraints) {
               // Defensive check: ensure constraints are bounded and finite
-              final maxWidth = constraints.maxWidth.isFinite && constraints.maxWidth != double.infinity
+              final maxWidth =
+                  constraints.maxWidth.isFinite &&
+                      constraints.maxWidth != double.infinity
                   ? constraints.maxWidth
                   : 1200.0; // Fallback to reasonable default
               // Calculate cell size same as real calendar
-              final availableWidth = (maxWidth - (padding * 2)).clamp(300.0, maxWidth);
+              final availableWidth = (maxWidth - (padding * 2)).clamp(
+                300.0,
+                maxWidth,
+              );
               final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
                 availableWidth,
               );

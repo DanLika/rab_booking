@@ -36,11 +36,8 @@ class CalendarHoverTooltip extends ConsumerWidget {
     // Format price: "€85 / night" (localized with proper number formatting)
     String formattedPrice;
     if (price case final priceValue?) {
-      formattedPrice = '${NumberFormat.currency(
-        symbol: t.currencySymbol,
-        locale: t.locale.toString(),
-        decimalDigits: 0,
-      ).format(priceValue)} / ${t.perNightShort}';
+      formattedPrice =
+          '${NumberFormat.currency(symbol: t.currencySymbol, locale: t.locale.toString(), decimalDigits: 0).format(priceValue)} / ${t.perNightShort}';
     } else {
       formattedPrice = t.notAvailableShort;
     }

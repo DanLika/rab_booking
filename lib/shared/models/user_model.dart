@@ -7,11 +7,7 @@ part 'user_model.freezed.dart';
 part 'user_model.g.dart';
 
 /// Account type for subscription management
-enum AccountType {
-  trial,
-  premium,
-  enterprise,
-}
+enum AccountType { trial, premium, enterprise }
 
 /// Employee permission roles
 enum EmployeeRole {
@@ -149,10 +145,14 @@ class UserModel with _$UserModel {
     DateTime? stripeDisconnectedAt,
 
     /// Account creation timestamp
-    @TimestampConverter() @JsonKey(name: 'created_at') required DateTime createdAt,
+    @TimestampConverter()
+    @JsonKey(name: 'created_at')
+    required DateTime createdAt,
 
     /// Last update timestamp
-    @NullableTimestampConverter() @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'updated_at')
+    DateTime? updatedAt,
 
     /// Devices (for session management)
     @Default([]) List<DeviceInfo> devices,
@@ -179,9 +179,7 @@ class UserModel with _$UserModel {
 
   /// Check if user has completed profile
   bool get hasCompletedProfile {
-    return firstName.isNotEmpty &&
-        lastName.isNotEmpty &&
-        email.isNotEmpty;
+    return firstName.isNotEmpty && lastName.isNotEmpty && email.isNotEmpty;
   }
 
   /// Check if user is a property owner
@@ -194,7 +192,8 @@ class UserModel with _$UserModel {
   bool get isEmployee => employeeOf != null;
 
   /// Check if user has connected Stripe account
-  bool get hasStripeConnected => stripeAccountId != null && stripeAccountId!.isNotEmpty;
+  bool get hasStripeConnected =>
+      stripeAccountId != null && stripeAccountId!.isNotEmpty;
 
   /// Check if user needs onboarding
   bool get needsOnboarding => isOwner && !onboardingCompleted;

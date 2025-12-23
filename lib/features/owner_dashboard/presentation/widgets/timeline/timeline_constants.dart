@@ -131,4 +131,6 @@ const double kTimelineBookingBlockNormalOpacity = 0.92;
 const double kTimelineBookingBlockHoverOpacity = 1.0;
 
 /// Animation duration for hover effects
-const Duration kTimelineBookingBlockHoverAnimationDuration = Duration(milliseconds: 150);
+const Duration kTimelineBookingBlockHoverAnimationDuration = Duration(
+  milliseconds: 150,
+);

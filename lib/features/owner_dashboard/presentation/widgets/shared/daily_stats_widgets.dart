@@ -30,11 +30,20 @@ class DailyStats {
     for (final bookings in bookingsByUnit.values) {
       for (final booking in bookings) {
         // Normalize booking dates to midnight for accurate comparison
-        final normalizedCheckIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-        final normalizedCheckOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
+        final normalizedCheckIn = DateTime(
+          booking.checkIn.year,
+          booking.checkIn.month,
+          booking.checkIn.day,
+        );
+        final normalizedCheckOut = DateTime(
+          booking.checkOut.year,
+          booking.checkOut.month,
+          booking.checkOut.day,
+        );
 
         // Count guests currently in property (checkIn <= date < checkOut)
-        if (!normalizedCheckIn.isAfter(normalizedDate) && normalizedCheckOut.isAfter(normalizedDate)) {
+        if (!normalizedCheckIn.isAfter(normalizedDate) &&
+            normalizedCheckOut.isAfter(normalizedDate)) {
           totalGuests += booking.guestCount;
         }
 

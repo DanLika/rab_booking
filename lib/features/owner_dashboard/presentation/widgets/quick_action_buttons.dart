@@ -7,7 +7,7 @@ import '../../domain/models/platform_connection.dart';
 import '../providers/platform_connections_provider.dart';
 
 /// Quick Action Buttons Widget
-/// 
+///
 /// Displays action buttons for:
 /// - Blocking dates on external platforms
 /// - Viewing in app
@@ -23,9 +23,9 @@ class QuickActionButtons extends ConsumerWidget {
     this.booking,
     this.unitId,
   }) : assert(
-          conflict != null || booking != null,
-          'Either conflict or booking must be provided',
-        );
+         conflict != null || booking != null,
+         'Either conflict or booking must be provided',
+       );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +35,9 @@ class QuickActionButtons extends ConsumerWidget {
     }
 
     // Get platform connections for this unit
-    final connectionsAsync = ref.watch(platformConnectionsForUnitProvider(effectiveUnitId));
+    final connectionsAsync = ref.watch(
+      platformConnectionsForUnitProvider(effectiveUnitId),
+    );
 
     if (connectionsAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -85,12 +87,8 @@ class QuickActionButtons extends ConsumerWidget {
               context,
               label: 'Block on Airbnb',
               icon: Icons.home,
-              onTap: () => _handleBlockAirbnb(
-                context,
-                connection,
-                checkIn!,
-                checkOut!,
-              ),
+              onTap: () =>
+                  _handleBlockAirbnb(context, connection, checkIn!, checkOut!),
             );
           }
           return const SizedBox.shrink();
@@ -133,20 +131,17 @@ class QuickActionButtons extends ConsumerWidget {
     return OutlinedButton.icon(
       onPressed: () {
         if (conflictId != null) {
-          Navigator.of(context).pushNamed(
-            '/owner/bookings',
-            arguments: {'conflict': conflictId},
-          );
+          Navigator.of(
+            context,
+          ).pushNamed('/owner/bookings', arguments: {'conflict': conflictId});
         } else if (bookingId != null) {
-          Navigator.of(context).pushNamed(
-            '/owner/bookings',
-            arguments: {'booking': bookingId},
-          );
+          Navigator.of(
+            context,
+          ).pushNamed('/owner/bookings', arguments: {'booking': bookingId});
         } else if (effectiveUnitId != null) {
-          Navigator.of(context).pushNamed(
-            '/owner/calendar',
-            arguments: {'unit': effectiveUnitId},
-          );
+          Navigator.of(
+            context,
+          ).pushNamed('/owner/calendar', arguments: {'unit': effectiveUnitId});
         }
       },
       icon: const Icon(Icons.visibility, size: 20),
@@ -188,4 +183,3 @@ class QuickActionButtons extends ConsumerWidget {
     await DeepLinkService().handleDeepLink(url, context);
   }
 }
-

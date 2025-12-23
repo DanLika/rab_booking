@@ -8,7 +8,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(icon: Icons.credit_card, title: 'Credit Card', isDarkMode: false),
+            body: PaymentMethodCard(
+              icon: Icons.credit_card,
+              title: 'Credit Card',
+              isDarkMode: false,
+            ),
           ),
         ),
       );
@@ -20,7 +24,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(icon: Icons.credit_card, title: 'Credit Card', isDarkMode: false),
+            body: PaymentMethodCard(
+              icon: Icons.credit_card,
+              title: 'Credit Card',
+              isDarkMode: false,
+            ),
           ),
         ),
       );
@@ -32,7 +40,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(icon: Icons.credit_card, title: 'Credit Card', isDarkMode: false),
+            body: PaymentMethodCard(
+              icon: Icons.credit_card,
+              title: 'Credit Card',
+              isDarkMode: false,
+            ),
           ),
         ),
       );
@@ -61,7 +73,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(icon: Icons.credit_card, title: 'Credit Card', isDarkMode: false),
+            body: PaymentMethodCard(
+              icon: Icons.credit_card,
+              title: 'Credit Card',
+              isDarkMode: false,
+            ),
           ),
         ),
       );
@@ -92,7 +108,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PaymentMethodCard(icon: Icons.home_outlined, title: 'Pay on Arrival', isDarkMode: false),
+            body: PaymentMethodCard(
+              icon: Icons.home_outlined,
+              title: 'Pay on Arrival',
+              isDarkMode: false,
+            ),
           ),
         ),
       );

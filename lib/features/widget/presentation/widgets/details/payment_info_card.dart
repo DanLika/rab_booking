@@ -65,7 +65,9 @@ class PaymentInfoCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -96,7 +98,9 @@ class PaymentInfoCard extends ConsumerWidget {
           _buildPaymentRow(
             tr.remaining,
             remainingAmount,
-            color: remainingAmount.abs() > WidgetConstants.priceTolerance ? colors.error : colors.success,
+            color: remainingAmount.abs() > WidgetConstants.priceTolerance
+                ? colors.error
+                : colors.success,
           ),
           const SizedBox(height: SpacingTokens.s),
           Divider(color: colors.borderDefault),
@@ -104,7 +108,10 @@ class PaymentInfoCard extends ConsumerWidget {
           _buildStatusRow(tr),
           const SizedBox(height: SpacingTokens.xs),
           _buildMethodRow(tr),
-          if (paymentDeadline != null) ...[const SizedBox(height: SpacingTokens.xs), _buildDeadlineRow(tr)],
+          if (paymentDeadline != null) ...[
+            const SizedBox(height: SpacingTokens.xs),
+            _buildDeadlineRow(tr),
+          ],
         ],
       ),
     );
@@ -119,14 +126,21 @@ class PaymentInfoCard extends ConsumerWidget {
     return '€${amount.toStringAsFixed(2)}';
   }
 
-  Widget _buildPaymentRow(String label, double amount, {bool bold = false, Color? color}) {
+  Widget _buildPaymentRow(
+    String label,
+    double amount, {
+    bool bold = false,
+    Color? color,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
-            fontSize: bold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
+            fontSize: bold
+                ? TypographyTokens.fontSizeM
+                : TypographyTokens.fontSizeS,
             fontWeight: bold ? TypographyTokens.bold : TypographyTokens.regular,
             color: color ?? colors.textSecondary,
           ),
@@ -134,8 +148,12 @@ class PaymentInfoCard extends ConsumerWidget {
         Text(
           _formatAmount(amount),
           style: TextStyle(
-            fontSize: bold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
-            fontWeight: bold ? TypographyTokens.bold : TypographyTokens.semiBold,
+            fontSize: bold
+                ? TypographyTokens.fontSizeL
+                : TypographyTokens.fontSizeM,
+            fontWeight: bold
+                ? TypographyTokens.bold
+                : TypographyTokens.semiBold,
             color: color ?? colors.textPrimary,
           ),
         ),
@@ -149,7 +167,10 @@ class PaymentInfoCard extends ConsumerWidget {
       children: [
         Text(
           tr.paymentStatusLabel,
-          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeS,
+            color: colors.textSecondary,
+          ),
         ),
         _buildPaymentStatusChip(tr),
       ],
@@ -162,7 +183,10 @@ class PaymentInfoCard extends ConsumerWidget {
       children: [
         Text(
           tr.paymentMethodLabel,
-          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeS,
+            color: colors.textSecondary,
+          ),
         ),
         Text(
           _formatPaymentMethod(tr),
@@ -181,7 +205,10 @@ class PaymentInfoCard extends ConsumerWidget {
     if (deadline == null || deadline.isEmpty) return '';
 
     try {
-      final date = DateTimeParser.parseOrThrow(deadline, context: 'PaymentInfoCard.paymentDeadline');
+      final date = DateTimeParser.parseOrThrow(
+        deadline,
+        context: 'PaymentInfoCard.paymentDeadline',
+      );
       return DateFormat('MMM d, yyyy').format(date);
     } catch (e) {
       debugPrint('Error formatting deadline: $deadline, error: $e');
@@ -196,7 +223,10 @@ class PaymentInfoCard extends ConsumerWidget {
       children: [
         Text(
           tr.paymentDeadline,
-          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeS,
+            color: colors.textSecondary,
+          ),
         ),
         Text(
           _formatDeadline(paymentDeadline, tr),
@@ -219,7 +249,10 @@ class PaymentInfoCard extends ConsumerWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xxs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.s,
+        vertical: SpacingTokens.xxs,
+      ),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderTokens.circularRounded,
@@ -236,10 +269,11 @@ class PaymentInfoCard extends ConsumerWidget {
     );
   }
 
-  String _formatPaymentMethod(WidgetTranslations tr) => switch (paymentMethod.toLowerCase()) {
-    'bank_transfer' => tr.bankTransfer,
-    'stripe' => tr.creditCard,
-    'cash' => tr.cash,
-    _ => paymentMethod,
-  };
+  String _formatPaymentMethod(WidgetTranslations tr) =>
+      switch (paymentMethod.toLowerCase()) {
+        'bank_transfer' => tr.bankTransfer,
+        'stripe' => tr.creditCard,
+        'cash' => tr.cash,
+        _ => paymentMethod,
+      };
 }

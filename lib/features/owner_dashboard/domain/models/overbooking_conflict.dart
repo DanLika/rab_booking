@@ -36,5 +36,3 @@ class OverbookingConflict with _$OverbookingConflict {
   factory OverbookingConflict.fromJson(Map<String, dynamic> json) =>
       _$OverbookingConflictFromJson(json);
 }
-
-

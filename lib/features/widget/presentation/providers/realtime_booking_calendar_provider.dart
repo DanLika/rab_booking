@@ -56,9 +56,17 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
 ) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository
-      .watchYearCalendarDataOptimized(propertyId: propertyId, unitId: unitId, year: year, minNights: minNights)
+      .watchYearCalendarDataOptimized(
+        propertyId: propertyId,
+        unitId: unitId,
+        year: year,
+        minNights: minNights,
+      )
       .debounceTime(const Duration(milliseconds: _calendarDebounceMs))
-      .map((dateTimeMap) => dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)));
+      .map(
+        (dateTimeMap) =>
+            dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)),
+      );
 }
 
 /// Realtime calendar data provider for month view.
@@ -92,7 +100,10 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
         minNights: minNights,
       )
       .debounceTime(const Duration(milliseconds: _calendarDebounceMs))
-      .map((dateTimeMap) => dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)));
+      .map(
+        (dateTimeMap) =>
+            dateTimeMap.map((date, info) => MapEntry(_dateToKey(date), info)),
+      );
 }
 
 /// Check date availability
@@ -104,5 +115,9 @@ Future<bool> checkDateAvailability(
   required DateTime checkOut,
 }) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
-  return repository.checkAvailability(unitId: unitId, checkIn: checkIn, checkOut: checkOut);
+  return repository.checkAvailability(
+    unitId: unitId,
+    checkIn: checkIn,
+    checkOut: checkOut,
+  );
 }

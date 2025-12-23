@@ -80,9 +80,7 @@ void main() {
       });
 
       test('preserves explicit null for cancellationDeadlineHours', () {
-        final map = {
-          'cancellation_deadline_hours': null,
-        };
+        final map = {'cancellation_deadline_hours': null};
 
         final config = BookingBehaviorConfig.fromMap(map);
 
@@ -153,28 +151,19 @@ void main() {
       });
 
       test('returns false when maxNights is less than minNights', () {
-        const config = BookingBehaviorConfig(
-          minNights: 5,
-          maxNights: 3,
-        );
+        const config = BookingBehaviorConfig(minNights: 5, maxNights: 3);
 
         expect(config.isValidConfig, false);
       });
 
       test('returns true when maxNights is null (no limit)', () {
-        const config = BookingBehaviorConfig(
-          minNights: 5,
-          maxNights: null,
-        );
+        const config = BookingBehaviorConfig(minNights: 5, maxNights: null);
 
         expect(config.isValidConfig, true);
       });
 
       test('returns true when maxNights is 0 (no limit)', () {
-        const config = BookingBehaviorConfig(
-          minNights: 5,
-          maxNights: 0,
-        );
+        const config = BookingBehaviorConfig(minNights: 5, maxNights: 0);
 
         expect(config.isValidConfig, true);
       });
@@ -208,10 +197,7 @@ void main() {
 
     group('isValidDuration', () {
       test('returns true for valid duration within range', () {
-        final config = BookingBehaviorConfig(
-          minNights: 2,
-          maxNights: 7,
-        );
+        final config = BookingBehaviorConfig(minNights: 2, maxNights: 7);
 
         expect(config.isValidDuration(2), true);
         expect(config.isValidDuration(5), true);
@@ -219,39 +205,28 @@ void main() {
       });
 
       test('returns false for duration below minimum', () {
-        final config = BookingBehaviorConfig(
-          minNights: 3,
-        );
+        final config = BookingBehaviorConfig(minNights: 3);
 
         expect(config.isValidDuration(1), false);
         expect(config.isValidDuration(2), false);
       });
 
       test('returns false for duration above maximum', () {
-        final config = BookingBehaviorConfig(
-          minNights: 1,
-          maxNights: 5,
-        );
+        final config = BookingBehaviorConfig(minNights: 1, maxNights: 5);
 
         expect(config.isValidDuration(6), false);
         expect(config.isValidDuration(10), false);
       });
 
       test('allows any duration when maxNights is null', () {
-        final config = BookingBehaviorConfig(
-          minNights: 1,
-          maxNights: null,
-        );
+        final config = BookingBehaviorConfig(minNights: 1, maxNights: null);
 
         expect(config.isValidDuration(100), true);
         expect(config.isValidDuration(365), true);
       });
 
       test('allows any duration when maxNights is 0', () {
-        final config = BookingBehaviorConfig(
-          minNights: 1,
-          maxNights: 0,
-        );
+        final config = BookingBehaviorConfig(minNights: 1, maxNights: 0);
 
         expect(config.isValidDuration(100), true);
       });
@@ -292,18 +267,14 @@ void main() {
       });
 
       test('returns false for too short advance notice', () {
-        final config = BookingBehaviorConfig(
-          minDaysAdvance: 3,
-        );
+        final config = BookingBehaviorConfig(minDaysAdvance: 3);
 
         expect(config.isValidAdvanceNotice(0), false);
         expect(config.isValidAdvanceNotice(2), false);
       });
 
       test('returns false for too long advance notice', () {
-        final config = BookingBehaviorConfig(
-          maxDaysAdvance: 30,
-        );
+        final config = BookingBehaviorConfig(maxDaysAdvance: 30);
 
         expect(config.isValidAdvanceNotice(31), false);
         expect(config.isValidAdvanceNotice(100), false);
@@ -322,9 +293,7 @@ void main() {
 
     group('canCancelForCheckIn', () {
       test('returns false when cancellation not allowed', () {
-        final config = BookingBehaviorConfig(
-          allowGuestCancellation: false,
-        );
+        final config = BookingBehaviorConfig(allowGuestCancellation: false);
 
         final futureCheckIn = DateTime.now().add(const Duration(days: 30));
         expect(config.canCancelForCheckIn(futureCheckIn), false);
@@ -363,10 +332,7 @@ void main() {
 
     group('copyWith', () {
       test('creates copy with updated fields', () {
-        const original = BookingBehaviorConfig(
-          minNights: 1,
-          maxNights: 7,
-        );
+        const original = BookingBehaviorConfig(minNights: 1, maxNights: 7);
 
         final copy = original.copyWith(
           minNights: 3,

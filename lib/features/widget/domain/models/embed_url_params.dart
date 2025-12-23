@@ -132,8 +132,10 @@ class EmbedUrlParams {
 
     // Parse payment methods
     final bool enableStripe = params['enableStripe']?.toLowerCase() == 'true';
-    final bool enableBank = params['enableBankTransfer']?.toLowerCase() != 'false'; // default: true
-    final bool enablePayOnPlace = params['enablePayOnPlace']?.toLowerCase() == 'true';
+    final bool enableBank =
+        params['enableBankTransfer']?.toLowerCase() != 'false'; // default: true
+    final bool enablePayOnPlace =
+        params['enablePayOnPlace']?.toLowerCase() == 'true';
 
     // Parse number of months (1-4)
     int? months;
@@ -163,11 +165,13 @@ class EmbedUrlParams {
     }
 
     // Parse transparent mode
-    final bool isTransparent = params['transparentMode']?.toLowerCase() == 'true';
+    final bool isTransparent =
+        params['transparentMode']?.toLowerCase() == 'true';
 
     // Parse preset (only accept valid values)
     final rawPreset = params['preset']?.toLowerCase();
-    final String? themePreset = rawPreset != null && ['neutral', 'flat', 'material'].contains(rawPreset)
+    final String? themePreset =
+        rawPreset != null && ['neutral', 'flat', 'material'].contains(rawPreset)
         ? rawPreset
         : null;
 

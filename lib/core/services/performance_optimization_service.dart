@@ -185,7 +185,9 @@ class PerformanceOptimizationService {
       LoggingService.logDebug('=== Performance Report ===');
       LoggingService.logDebug('Cache size: ${report['cache_size']}');
       LoggingService.logDebug('Widgets tracked: ${report['widgets_tracked']}');
-      LoggingService.logDebug('API endpoints tracked: ${report['api_endpoints_tracked']}');
+      LoggingService.logDebug(
+        'API endpoints tracked: ${report['api_endpoints_tracked']}',
+      );
 
       LoggingService.logDebug('\nAverage Build Times:');
       final buildTimes = report['average_build_times'] as Map;

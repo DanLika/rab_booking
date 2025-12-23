@@ -103,8 +103,9 @@ class MessageBox extends StatelessWidget {
         border: Border.all(color: colors.border),
       ),
       child: Row(
-        crossAxisAlignment:
-            title != null ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: title != null
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.all(6),
@@ -112,11 +113,7 @@ class MessageBox extends StatelessWidget {
               color: colors.iconBackground,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: colors.iconColor,
-            ),
+            child: Icon(icon, size: 16, color: colors.iconColor),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -135,7 +132,9 @@ class MessageBox extends StatelessWidget {
                       Text(
                         message,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.textColor.withAlpha((0.85 * 255).toInt()),
+                          color: colors.textColor.withAlpha(
+                            (0.85 * 255).toInt(),
+                          ),
                           height: 1.4,
                         ),
                       ),
@@ -179,7 +178,9 @@ class MessageBox extends StatelessWidget {
               ? infoDark.withAlpha((0.2 * 255).toInt())
               : infoLight.withAlpha((0.15 * 255).toInt()),
           iconColor: isDark ? infoDark : infoLight,
-          textColor: isDark ? ColorTokens.slate100 : const Color(0xFF1E3A8A), // Blue 900
+          textColor: isDark
+              ? ColorTokens.slate100
+              : const Color(0xFF1E3A8A), // Blue 900
         );
       case MessageBoxType.warning:
         return _MessageBoxColors(

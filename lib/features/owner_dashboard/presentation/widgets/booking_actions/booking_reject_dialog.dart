@@ -38,10 +38,7 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
         children: [
           Text(
             l10n.bookingRejectMessage,
-            style: TextStyle(
-              fontSize: 15,
-              color: theme.colorScheme.onSurface,
-            ),
+            style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface),
           ),
           const SizedBox(height: 12),
           TextField(

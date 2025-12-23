@@ -16,7 +16,8 @@ class BookingPriceCalculation {
   final double remainingAmount; // 80% preostalo (of total)
   final int nights;
   final DateTime? priceLockTimestamp; // Bug #64: When price was locked
-  final double? lockedTotalPrice; // Bug #64: Original locked price for comparison
+  final double?
+  lockedTotalPrice; // Bug #64: Original locked price for comparison
 
   BookingPriceCalculation({
     required this.roomPrice,
@@ -33,11 +34,16 @@ class BookingPriceCalculation {
 
   /// Format price with currency symbol
   /// Multi-currency support: use currencySymbol from WidgetTranslations
-  String formatRoomPrice(String currency) => '$currency${roomPrice.toStringAsFixed(2)}';
-  String formatAdditionalServices(String currency) => '$currency${additionalServicesTotal.toStringAsFixed(2)}';
-  String formatTotal(String currency) => '$currency${totalPrice.toStringAsFixed(2)}';
-  String formatDeposit(String currency) => '$currency${depositAmount.toStringAsFixed(2)}';
-  String formatRemaining(String currency) => '$currency${remainingAmount.toStringAsFixed(2)}';
+  String formatRoomPrice(String currency) =>
+      '$currency${roomPrice.toStringAsFixed(2)}';
+  String formatAdditionalServices(String currency) =>
+      '$currency${additionalServicesTotal.toStringAsFixed(2)}';
+  String formatTotal(String currency) =>
+      '$currency${totalPrice.toStringAsFixed(2)}';
+  String formatDeposit(String currency) =>
+      '$currency${depositAmount.toStringAsFixed(2)}';
+  String formatRemaining(String currency) =>
+      '$currency${remainingAmount.toStringAsFixed(2)}';
 
   // Bug #64: Check if price has changed since lock
   bool get hasPriceChanged {
@@ -64,7 +70,10 @@ class BookingPriceCalculation {
   }
 
   // Copy with method for updating additional services
-  BookingPriceCalculation copyWithServices(double servicesTotal, int depositPercentage) {
+  BookingPriceCalculation copyWithServices(
+    double servicesTotal,
+    int depositPercentage,
+  ) {
     final newTotal = roomPrice + servicesTotal;
     // Bug Fix: Use integer multiplication for precise rounding instead of toStringAsFixed
     final newDeposit = (depositPercentage == 0 || depositPercentage == 100)
@@ -96,7 +105,8 @@ Future<BookingPriceCalculation?> bookingPrice(
   required String unitId,
   required DateTime? checkIn,
   required DateTime? checkOut,
-  String? propertyId, // Optional: enables cache reuse from widgetContextProvider
+  String?
+  propertyId, // Optional: enables cache reuse from widgetContextProvider
   int depositPercentage = 20, // Configurable deposit percentage (0-100)
 }) async {
   // Return null if dates not selected
@@ -116,7 +126,9 @@ Future<BookingPriceCalculation?> bookingPrice(
   if (propertyId != null) {
     // Try to get unit from cached context (no additional query)
     try {
-      final context = await ref.read(widgetContextProvider((propertyId: propertyId, unitId: unitId)).future);
+      final context = await ref.read(
+        widgetContextProvider((propertyId: propertyId, unitId: unitId)).future,
+      );
       // Defensive null checks: properties are required but handle edge cases
       final unit = context.unit;
       basePrice = unit.pricePerNight;

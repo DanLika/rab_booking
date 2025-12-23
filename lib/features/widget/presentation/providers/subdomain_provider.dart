@@ -172,7 +172,10 @@ Future<FullSlugContext?> fullSlugContext(Ref ref, String? urlSlug) async {
 /// );
 /// ```
 @Riverpod(keepAlive: true)
-Future<OptimizedSlugResult?> optimizedSlugWidgetContext(Ref ref, String? urlSlug) async {
+Future<OptimizedSlugResult?> optimizedSlugWidgetContext(
+  Ref ref,
+  String? urlSlug,
+) async {
   final service = ref.watch(subdomainServiceProvider);
 
   // Step 1: Get subdomain synchronously (no query)
@@ -185,7 +188,9 @@ Future<OptimizedSlugResult?> optimizedSlugWidgetContext(Ref ref, String? urlSlug
   // Step 2: Fetch property by subdomain (1 query)
   final property = await service.getPropertyBySubdomain(subdomain);
   if (property == null) {
-    return OptimizedSlugResult.error('Property not found for subdomain: $subdomain');
+    return OptimizedSlugResult.error(
+      'Property not found for subdomain: $subdomain',
+    );
   }
 
   // If no slug provided, we need at least unit ID
@@ -212,25 +217,31 @@ Future<OptimizedSlugResult?> optimizedSlugWidgetContext(Ref ref, String? urlSlug
   ]);
 
   final unit = results[0] is UnitModel ? results[0] as UnitModel : null;
-  final settings = results[1] is WidgetSettings ? results[1] as WidgetSettings : null;
+  final settings = results[1] is WidgetSettings
+      ? results[1] as WidgetSettings
+      : null;
 
   if (unit == null) {
     return OptimizedSlugResult.error('Unit details not found: $unitId');
   }
 
   // Create default settings if none exist
-  final effectiveSettings = settings ?? WidgetSettings(
-    id: unitId,
-    propertyId: property.id,
-    ownerId: property.ownerId,
-    widgetMode: WidgetMode.bookingPending,
-    contactOptions: const ContactOptions(customMessage: 'Contact us for booking!'),
-    emailConfig: const EmailNotificationConfig(),
-    taxLegalConfig: const TaxLegalConfig(),
-    requireOwnerApproval: true,
-    createdAt: DateTime.now().toUtc(),
-    updatedAt: DateTime.now().toUtc(),
-  );
+  final effectiveSettings =
+      settings ??
+      WidgetSettings(
+        id: unitId,
+        propertyId: property.id,
+        ownerId: property.ownerId,
+        widgetMode: WidgetMode.bookingPending,
+        contactOptions: const ContactOptions(
+          customMessage: 'Contact us for booking!',
+        ),
+        emailConfig: const EmailNotificationConfig(),
+        taxLegalConfig: const TaxLegalConfig(),
+        requireOwnerApproval: true,
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
+      );
 
   return OptimizedSlugResult.success(
     WidgetContext(

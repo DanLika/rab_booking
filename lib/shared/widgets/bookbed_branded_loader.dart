@@ -66,7 +66,9 @@ class BookBedBrandedLoader extends StatelessWidget {
 
   Widget _buildProgressBar() {
     // Branded: Use primary colors
-    final progressColor = isDarkMode ? AppColors.primaryLight : AppColors.primary;
+    final progressColor = isDarkMode
+        ? AppColors.primaryLight
+        : AppColors.primary;
     final backgroundColor = progressColor.withValues(alpha: _backgroundOpacity);
 
     return ClipRRect(
@@ -116,10 +118,12 @@ class _BrandedIndeterminateProgress extends StatefulWidget {
   const _BrandedIndeterminateProgress({required this.color});
 
   @override
-  State<_BrandedIndeterminateProgress> createState() => _BrandedIndeterminateProgressState();
+  State<_BrandedIndeterminateProgress> createState() =>
+      _BrandedIndeterminateProgressState();
 }
 
-class _BrandedIndeterminateProgressState extends State<_BrandedIndeterminateProgress>
+class _BrandedIndeterminateProgressState
+    extends State<_BrandedIndeterminateProgress>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _animation;

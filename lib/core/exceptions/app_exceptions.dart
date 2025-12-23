@@ -470,7 +470,10 @@ class ValidationException extends AppException {
 
   /// Factory for field validation failure
   factory ValidationException.fieldInvalid(
-      String field, String reason, [dynamic error]) {
+    String field,
+    String reason, [
+    dynamic error,
+  ]) {
     return ValidationException(
       'Validation failed for $field: $reason',
       fieldErrors: {field: reason},
@@ -585,7 +588,9 @@ class ConflictException extends AppException {
 
   /// Factory for resource conflict
   factory ConflictException.resourceConflict(
-      String resourceType, [dynamic error]) {
+    String resourceType, [
+    dynamic error,
+  ]) {
     return ConflictException(
       'Conflict occurred for $resourceType',
       code: 'conflict/$resourceType',

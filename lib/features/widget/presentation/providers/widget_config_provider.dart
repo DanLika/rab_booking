@@ -47,7 +47,9 @@ final widgetLightThemeProvider = Provider<ThemeData>((ref) {
   }
 
   if (config.accentColor != null) {
-    theme = theme.copyWith(colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor));
+    theme = theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor),
+    );
   }
 
   if (config.backgroundColor != null) {
@@ -56,7 +58,10 @@ final widgetLightThemeProvider = Provider<ThemeData>((ref) {
 
   if (config.textColor != null) {
     theme = theme.copyWith(
-      textTheme: theme.textTheme.apply(bodyColor: config.textColor, displayColor: config.textColor),
+      textTheme: theme.textTheme.apply(
+        bodyColor: config.textColor,
+        displayColor: config.textColor,
+      ),
     );
   }
 
@@ -79,7 +84,9 @@ final widgetDarkThemeProvider = Provider<ThemeData>((ref) {
   }
 
   if (config.accentColor != null) {
-    theme = theme.copyWith(colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor));
+    theme = theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor),
+    );
   }
 
   if (config.backgroundColor != null) {
@@ -88,7 +95,10 @@ final widgetDarkThemeProvider = Provider<ThemeData>((ref) {
 
   if (config.textColor != null) {
     theme = theme.copyWith(
-      textTheme: theme.textTheme.apply(bodyColor: config.textColor, displayColor: config.textColor),
+      textTheme: theme.textTheme.apply(
+        bodyColor: config.textColor,
+        displayColor: config.textColor,
+      ),
     );
   }
 

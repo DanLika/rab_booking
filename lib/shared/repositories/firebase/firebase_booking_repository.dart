@@ -23,11 +23,14 @@ class FirebaseBookingRepository implements BookingRepository {
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
-        .where('status', whereIn: [
-          BookingStatus.pending.value,
-          BookingStatus.confirmed.value,
-          BookingStatus.completed.value,
-        ])
+        .where(
+          'status',
+          whereIn: [
+            BookingStatus.pending.value,
+            BookingStatus.confirmed.value,
+            BookingStatus.completed.value,
+          ],
+        )
         .get();
     return snapshot.docs
         .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
@@ -66,9 +69,7 @@ class FirebaseBookingRepository implements BookingRepository {
 
     // Fall back: Search through collection group (least efficient)
     // This queries all bookings - use sparingly
-    final snapshot = await _firestore
-        .collectionGroup('bookings')
-        .get();
+    final snapshot = await _firestore.collectionGroup('bookings').get();
 
     for (final doc in snapshot.docs) {
       if (doc.id == id) {
@@ -200,15 +201,16 @@ class FirebaseBookingRepository implements BookingRepository {
   }
 
   @override
-  Future<BookingModel> updateBookingStatus(String id, BookingStatus status) async {
+  Future<BookingModel> updateBookingStatus(
+    String id,
+    BookingStatus status,
+  ) async {
     // NEW STRUCTURE: Fetch booking first to get path
     final booking = await fetchBookingById(id);
-    if (booking == null) throw BookingException('Booking not found', code: 'booking/not-found');
+    if (booking == null)
+      throw BookingException('Booking not found', code: 'booking/not-found');
 
-    final updated = booking.copyWith(
-      status: status,
-      updatedAt: DateTime.now(),
-    );
+    final updated = booking.copyWith(status: status, updatedAt: DateTime.now());
 
     await _firestore
         .collection('properties')
@@ -225,7 +227,8 @@ class FirebaseBookingRepository implements BookingRepository {
   Future<BookingModel> cancelBooking(String id, String reason) async {
     // NEW STRUCTURE: Fetch booking first to get path
     final booking = await fetchBookingById(id);
-    if (booking == null) throw BookingException('Booking not found', code: 'booking/not-found');
+    if (booking == null)
+      throw BookingException('Booking not found', code: 'booking/not-found');
 
     final cancelled = booking.copyWith(
       status: BookingStatus.cancelled,
@@ -275,11 +278,14 @@ class FirebaseBookingRepository implements BookingRepository {
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
-        .where('status', whereIn: [
-          BookingStatus.pending.value,
-          BookingStatus.confirmed.value,
-          BookingStatus.completed.value,
-        ])
+        .where(
+          'status',
+          whereIn: [
+            BookingStatus.pending.value,
+            BookingStatus.confirmed.value,
+            BookingStatus.completed.value,
+          ],
+        )
         .get();
 
     final bookings = snapshot.docs
@@ -419,7 +425,8 @@ class FirebaseBookingRepository implements BookingRepository {
   }) async {
     // NEW STRUCTURE: Fetch booking first to get path
     final booking = await fetchBookingById(bookingId);
-    if (booking == null) throw BookingException('Booking not found', code: 'booking/not-found');
+    if (booking == null)
+      throw BookingException('Booking not found', code: 'booking/not-found');
 
     final updated = booking.copyWith(
       paidAmount: paidAmount,
@@ -442,7 +449,8 @@ class FirebaseBookingRepository implements BookingRepository {
   Future<BookingModel> completeBookingPayment(String bookingId) async {
     // NEW STRUCTURE: Fetch booking first to get path
     final booking = await fetchBookingById(bookingId);
-    if (booking == null) throw BookingException('Booking not found', code: 'booking/not-found');
+    if (booking == null)
+      throw BookingException('Booking not found', code: 'booking/not-found');
 
     final completed = booking.copyWith(
       paidAmount: booking.totalPrice,

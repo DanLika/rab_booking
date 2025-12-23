@@ -123,7 +123,9 @@ void main() {
           createdAt: DateTime(2025, 1, 15),
         );
 
-        const newEmailConfig = EmailNotificationConfig(sendBookingConfirmation: false);
+        const newEmailConfig = EmailNotificationConfig(
+          sendBookingConfirmation: false,
+        );
 
         final updated = baseData.copyWith(
           unitName: 'Unit B',

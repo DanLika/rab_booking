@@ -29,7 +29,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color iconColor;
 
   /// App bar height
-  /// Default: 56 (standard AppBar height)
+  /// Default: 52 (compact height for better screen real estate)
   final double height;
 
   const CommonAppBar({
@@ -40,7 +40,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.gradientColors,
     this.titleColor = Colors.white,
     this.iconColor = Colors.white,
-    this.height = 56.0,
+    this.height = 52.0,
   });
 
   @override
@@ -49,29 +49,45 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Title padding: Minimal to keep header compact
+    // Leading icon uses Flutter's default IconButton padding (8px)
+    final titlePadding = screenWidth > 600 ? 4.0 : 0.0;
 
     // Use custom colors or brand gradient (Purple 100% → 70%)
-    final effectiveColors = gradientColors ?? [GradientTokens.brandPrimaryStart, GradientTokens.brandPrimaryEnd];
+    final effectiveColors =
+        gradientColors ??
+        [GradientTokens.brandPrimaryStart, GradientTokens.brandPrimaryEnd];
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: effectiveColors),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: effectiveColors,
+        ),
       ),
       child: AppBar(
-        title: Text(
-          title,
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: titleColor, letterSpacing: 0),
+        title: Padding(
+          padding: EdgeInsets.only(left: titlePadding),
+          child: Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: titleColor,
+              letterSpacing: 0,
+            ),
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(leadingIcon, color: iconColor),
-            onPressed: () => onLeadingIconTap(context),
-            tooltip: 'Menu',
-          ),
+        leading: IconButton(
+          icon: Icon(leadingIcon, color: iconColor),
+          onPressed: () => onLeadingIconTap(context),
+          tooltip: 'Menu',
         ),
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,

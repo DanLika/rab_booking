@@ -68,9 +68,10 @@ class BookingDetailsDialog extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Gradient Header
+            // Gradient Header - matches CommonAppBar height (52px)
             Container(
-              padding: EdgeInsets.all(headerPadding),
+              height: ResponsiveDialogUtils.kHeaderHeight,
+              padding: EdgeInsets.symmetric(horizontal: headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(
@@ -80,23 +81,23 @@ class BookingDetailsDialog extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     child: const Icon(
                       Icons.receipt_long,
                       color: Colors.white,
-                      size: 24,
+                      size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       l10n.ownerDetailsTitle,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -127,7 +128,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     // Booking Reference (user-friendly ID)
                     _DetailRow(
                       label: l10n.ownerDetailsBookingId,
-                      value: booking.bookingReference ?? '#${booking.id}',
+                      value: booking.bookingReference ?? booking.id,
                     ),
                     _DetailRow(
                       label: l10n.ownerDetailsStatus,

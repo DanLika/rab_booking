@@ -23,7 +23,8 @@ class BankAccountScreen extends ConsumerStatefulWidget {
   ConsumerState<BankAccountScreen> createState() => _BankAccountScreenState();
 }
 
-class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with AndroidKeyboardDismissFixApproach1<BankAccountScreen> {
+class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
+    with AndroidKeyboardDismissFixApproach1<BankAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isDirty = false;
   bool _isSaving = false;
@@ -77,7 +78,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, l10n.bankAccountFillFieldsError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          l10n.bankAccountFillFieldsError,
+        );
       }
       return;
     }
@@ -101,7 +105,9 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
       );
 
       // Save company details to Firestore
-      await ref.read(userProfileNotifierProvider.notifier).updateCompany(userId, updatedCompany);
+      await ref
+          .read(userProfileNotifierProvider.notifier)
+          .updateCompany(userId, updatedCompany);
 
       // Invalidate provider to refresh UI with new data
       ref.invalidate(companyDetailsProvider);
@@ -112,7 +118,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
           _isSaving = false;
         });
 
-        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.bankAccountSaveSuccess);
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.bankAccountSaveSuccess,
+        );
 
         // Navigate back to previous page (widget settings embedded in unit-hub)
         if (context.canPop()) {
@@ -125,7 +134,11 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.bankAccountSaveError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.bankAccountSaveError,
+        );
       }
     }
   }
@@ -154,23 +167,36 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
               initiallyExpanded: true,
               iconColor: theme.colorScheme.primary,
               collapsedIconColor: theme.colorScheme.primary,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
               childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.12 * 255).toInt(),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.account_balance_outlined, color: theme.colorScheme.primary, size: 18),
+                child: Icon(
+                  Icons.account_balance_outlined,
+                  color: theme.colorScheme.primary,
+                  size: 18,
+                ),
               ),
               title: Text(
                 l10n.bankAccountBankDetails,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               subtitle: Text(
                 l10n.bankAccountBankDetailsSubtitle,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               children: [
                 PremiumInputField(
@@ -228,10 +254,15 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ],
                     )
                   : null,
-              color: (_isDirty && !_isSaving) ? null : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
+              color: (_isDirty && !_isSaving)
+                  ? null
+                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: ElevatedButton.icon(
@@ -242,16 +273,25 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
                 shadowColor: Colors.transparent,
                 disabledBackgroundColor: Colors.transparent,
                 disabledForegroundColor: theme.disabledColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               icon: _isSaving
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.save_rounded),
-              label: Text(_isSaving ? l10n.bankAccountSaving : l10n.bankAccountSaveChanges),
+              label: Text(
+                _isSaving
+                    ? l10n.bankAccountSaving
+                    : l10n.bankAccountSaveChanges,
+              ),
             ),
           ),
         ),
@@ -272,7 +312,9 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
               }
             },
             style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+              foregroundColor: theme.colorScheme.onSurface.withAlpha(
+                (0.7 * 255).toInt(),
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(color: theme.dividerColor),
@@ -302,7 +344,10 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
               title: Text(l10n.bankAccountDiscardTitle),
               content: Text(l10n.bankAccountDiscardDesc),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l10n.cancel),
+                ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -325,18 +370,23 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
         key: ValueKey('bank_account_$keyboardFixRebuildKey'),
         child: Scaffold(
           resizeToAvoidBottomInset: true,
-          drawer: const OwnerAppDrawer(currentRoute: 'integrations/payments/bank-account'),
+          drawer: const OwnerAppDrawer(
+            currentRoute: 'integrations/payments/bank-account',
+          ),
           appBar: CommonAppBar(
             title: l10n.bankAccountTitle,
             leadingIcon: Icons.menu,
             onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
           ),
           body: Container(
-            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
             child: companyDetailsAsync.when(
               data: (companyDetails) {
                 // Create default company if null
-                final effectiveCompany = companyDetails ?? const CompanyDetails();
+                final effectiveCompany =
+                    companyDetails ?? const CompanyDetails();
 
                 _loadData(effectiveCompany);
 
@@ -346,22 +396,31 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
                   builder: (context, constraints) {
                     // Get keyboard height to adjust padding dynamically (with null safety)
                     final mediaQuery = MediaQuery.maybeOf(context);
-                    final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
+                    final keyboardHeight =
+                        (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
+                          0.0,
+                          double.infinity,
+                        );
                     final isKeyboardOpen = keyboardHeight > 0;
 
                     // Calculate minHeight safely - ensure it's always finite and valid
                     double minHeight;
-                    if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
+                    if (isKeyboardOpen &&
+                        constraints.maxHeight.isFinite &&
+                        constraints.maxHeight > 0) {
                       final calculated = constraints.maxHeight - keyboardHeight;
                       minHeight = calculated.clamp(0.0, constraints.maxHeight);
                     } else {
-                      minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
+                      minHeight = constraints.maxHeight.isFinite
+                          ? constraints.maxHeight
+                          : 0.0;
                     }
                     // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
                     return SingleChildScrollView(
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: EdgeInsets.all(isCompact ? 16 : 24),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
@@ -370,14 +429,17 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
                             constraints: const BoxConstraints(maxWidth: 600),
                             child: Form(
                               key: _formKey,
-                              autovalidateMode: AutovalidateMode.onUserInteraction,
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   // Top content
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: [
                                       // Info Card
                                       _buildInfoCard(l10n),
@@ -400,7 +462,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> with Andr
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
+              error: (error, stack) =>
+                  Center(child: Text('${l10n.error}: $error')),
             ),
           ),
         ),

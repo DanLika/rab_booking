@@ -73,8 +73,12 @@ class BookingBehaviorConfig {
       cancellationDeadlineHours: map.containsKey('cancellation_deadline_hours')
           ? map['cancellation_deadline_hours'] as int?
           : 48,
-      minNights: (map['min_nights'] ?? WidgetConstants.defaultMinStayNights)
-          .clamp(1, 365) as int,
+      minNights:
+          (map['min_nights'] ?? WidgetConstants.defaultMinStayNights).clamp(
+                1,
+                365,
+              )
+              as int,
       maxNights: map['max_nights'],
       weekendDays:
           (map['weekend_days'] as List<dynamic>?)
@@ -84,10 +88,12 @@ class BookingBehaviorConfig {
       // Clamp to valid range to prevent negative values
       minDaysAdvance:
           (map['min_days_advance'] ?? WidgetConstants.defaultMinDaysAdvance)
-              .clamp(0, 365) as int,
+                  .clamp(0, 365)
+              as int,
       maxDaysAdvance:
           (map['max_days_advance'] ?? WidgetConstants.defaultMaxDaysAdvance)
-              .clamp(0, 730) as int,
+                  .clamp(0, 730)
+              as int,
     );
   }
 

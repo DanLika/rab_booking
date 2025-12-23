@@ -196,6 +196,7 @@ class BookingContextMenu extends StatelessWidget {
 
                     if (booking.status != BookingStatus.confirmed)
                       _buildStatusMenuItem(
+                        context: context,
                         status: BookingStatus.confirmed,
                         onTap: () {
                           Navigator.of(context).pop();
@@ -205,6 +206,7 @@ class BookingContextMenu extends StatelessWidget {
 
                     if (booking.status != BookingStatus.pending)
                       _buildStatusMenuItem(
+                        context: context,
                         status: BookingStatus.pending,
                         onTap: () {
                           Navigator.of(context).pop();
@@ -214,6 +216,7 @@ class BookingContextMenu extends StatelessWidget {
 
                     if (booking.status != BookingStatus.completed)
                       _buildStatusMenuItem(
+                        context: context,
                         status: BookingStatus.completed,
                         onTap: () {
                           Navigator.of(context).pop();
@@ -223,6 +226,7 @@ class BookingContextMenu extends StatelessWidget {
 
                     if (booking.status != BookingStatus.cancelled)
                       _buildStatusMenuItem(
+                        context: context,
                         status: BookingStatus.cancelled,
                         onTap: () {
                           Navigator.of(context).pop();
@@ -312,6 +316,7 @@ class BookingContextMenu extends StatelessWidget {
   }
 
   Widget _buildStatusMenuItem({
+    required BuildContext context,
     required BookingStatus status,
     required VoidCallback onTap,
   }) {

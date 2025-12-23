@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/constants/enums.dart';
+import '../../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../shared/models/booking_model.dart';
@@ -116,7 +117,9 @@ class CalendarBookingActions {
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
                   Text(
-                    l10n.calendarActionsChangingStatus(newStatus.displayName),
+                    l10n.calendarActionsChangingStatus(
+                      newStatus.displayNameLocalized(context),
+                    ),
                   ),
                 ],
               ),
@@ -140,7 +143,9 @@ class CalendarBookingActions {
         final l10nSuccess = AppLocalizations.of(context);
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          l10nSuccess.calendarActionsStatusChanged(newStatus.displayName),
+          l10nSuccess.calendarActionsStatusChanged(
+            newStatus.displayNameLocalized(context),
+          ),
         );
       }
     } catch (e) {

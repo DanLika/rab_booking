@@ -22,10 +22,12 @@ class TaxLegalDisclaimerWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TaxLegalDisclaimerWidget> createState() => _TaxLegalDisclaimerWidgetState();
+  ConsumerState<TaxLegalDisclaimerWidget> createState() =>
+      _TaxLegalDisclaimerWidgetState();
 }
 
-class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWidget> {
+class _TaxLegalDisclaimerWidgetState
+    extends ConsumerState<TaxLegalDisclaimerWidget> {
   bool _isExpanded = false;
   bool _isAccepted = false;
 
@@ -35,7 +37,9 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Get tax/legal config from Firestore (Sync Point 1 integration)
-    final widgetSettingsAsync = ref.watch(widgetSettingsProvider((widget.propertyId, widget.unitId)));
+    final widgetSettingsAsync = ref.watch(
+      widgetSettingsProvider((widget.propertyId, widget.unitId)),
+    );
 
     return widgetSettingsAsync.when(
       data: (widgetSettings) {
@@ -49,7 +53,8 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
         return _buildDisclaimerUI(context, taxConfig, isDarkMode, colors);
       },
       loading: () => const SizedBox.shrink(), // Don't show while loading
-      error: (error, stackTrace) => const SizedBox.shrink(), // Don't show on error
+      error: (error, stackTrace) =>
+          const SizedBox.shrink(), // Don't show on error
     );
   }
 
@@ -72,7 +77,9 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
         color: colors.backgroundPrimary,
         border: Border.all(color: colors.borderDefault),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        boxShadow: isDarkMode ? MinimalistShadows.medium : MinimalistShadows.light,
+        boxShadow: isDarkMode
+            ? MinimalistShadows.medium
+            : MinimalistShadows.light,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -86,7 +93,11 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
               padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xs),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: colors.textSecondary, size: 24),
+                  Icon(
+                    Icons.info_outline,
+                    color: colors.textSecondary,
+                    size: 24,
+                  ),
                   const SizedBox(width: SpacingTokens.m),
                   Expanded(
                     child: Text(
@@ -99,7 +110,11 @@ class _TaxLegalDisclaimerWidgetState extends ConsumerState<TaxLegalDisclaimerWid
                       ),
                     ),
                   ),
-                  Icon(_isExpanded ? Icons.expand_less : Icons.expand_more, color: colors.textSecondary, size: 24),
+                  Icon(
+                    _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: colors.textSecondary,
+                    size: 24,
+                  ),
                 ],
               ),
             ),

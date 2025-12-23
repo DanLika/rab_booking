@@ -109,14 +109,17 @@ class PageTransitions {
       reverseTransitionDuration: duration,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         // Slide in from right
-        final slideAnimation = Tween<Offset>(
-          begin: const Offset(1.0, 0.0),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: animation,
-          curve: curveForward,
-          reverseCurve: curveReverse,
-        ));
+        final slideAnimation =
+            Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: curveForward,
+                reverseCurve: curveReverse,
+              ),
+            );
 
         // Fade in for smoothness
         final fadeAnimation = CurvedAnimation(
@@ -160,14 +163,17 @@ class PageTransitions {
       reverseTransitionDuration: duration,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         // Slide in from bottom (only 30% of screen height for subtlety)
-        final slideAnimation = Tween<Offset>(
-          begin: const Offset(0.0, 0.15),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: animation,
-          curve: curveModal,
-          reverseCurve: curveReverse,
-        ));
+        final slideAnimation =
+            Tween<Offset>(
+              begin: const Offset(0.0, 0.15),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: curveModal,
+                reverseCurve: curveReverse,
+              ),
+            );
 
         // Fade in
         final fadeAnimation = CurvedAnimation(
@@ -177,10 +183,7 @@ class PageTransitions {
 
         return SlideTransition(
           position: slideAnimation,
-          child: FadeTransition(
-            opacity: fadeAnimation,
-            child: child,
-          ),
+          child: FadeTransition(opacity: fadeAnimation, child: child),
         );
       },
     );
@@ -211,14 +214,13 @@ class PageTransitions {
       reverseTransitionDuration: duration,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         // Scale from 95% to 100%
-        final scaleAnimation = Tween<double>(
-          begin: 0.95,
-          end: 1.0,
-        ).animate(CurvedAnimation(
-          parent: animation,
-          curve: curveForward,
-          reverseCurve: curveReverse,
-        ));
+        final scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: curveForward,
+            reverseCurve: curveReverse,
+          ),
+        );
 
         // Fade in
         final fadeAnimation = CurvedAnimation(
@@ -228,10 +230,7 @@ class PageTransitions {
 
         return ScaleTransition(
           scale: scaleAnimation,
-          child: FadeTransition(
-            opacity: fadeAnimation,
-            child: child,
-          ),
+          child: FadeTransition(opacity: fadeAnimation, child: child),
         );
       },
     );
@@ -292,10 +291,7 @@ class PageTransitions {
         final slideIn = Tween<Offset>(
           begin: const Offset(0.3, 0.0),
           end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: animation,
-          curve: curveForward,
-        ));
+        ).animate(CurvedAnimation(parent: animation, curve: curveForward));
 
         final fadeIn = CurvedAnimation(
           parent: animation,
@@ -303,21 +299,20 @@ class PageTransitions {
         );
 
         // Outgoing page slides and fades out
-        final slideOut = Tween<Offset>(
-          begin: Offset.zero,
-          end: const Offset(-0.3, 0.0),
-        ).animate(CurvedAnimation(
-          parent: secondaryAnimation,
-          curve: curveForward,
-        ));
+        final slideOut =
+            Tween<Offset>(
+              begin: Offset.zero,
+              end: const Offset(-0.3, 0.0),
+            ).animate(
+              CurvedAnimation(parent: secondaryAnimation, curve: curveForward),
+            );
 
-        final fadeOut = Tween<double>(
-          begin: 1.0,
-          end: 0.0,
-        ).animate(CurvedAnimation(
-          parent: secondaryAnimation,
-          curve: const Interval(0.0, 0.75, curve: Curves.easeIn),
-        ));
+        final fadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(
+          CurvedAnimation(
+            parent: secondaryAnimation,
+            curve: const Interval(0.0, 0.75, curve: Curves.easeIn),
+          ),
+        );
 
         return SlideTransition(
           position: slideOut,
@@ -325,10 +320,7 @@ class PageTransitions {
             opacity: fadeOut,
             child: SlideTransition(
               position: slideIn,
-              child: FadeTransition(
-                opacity: fadeIn,
-                child: child,
-              ),
+              child: FadeTransition(opacity: fadeIn, child: child),
             ),
           ),
         );

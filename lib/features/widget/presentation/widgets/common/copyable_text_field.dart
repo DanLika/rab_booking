@@ -64,7 +64,9 @@ class CopyableTextField extends StatelessWidget {
     final lowerLabel = label.toLowerCase();
 
     // Banking codes (IBAN, SWIFT, BIC)
-    if (lowerLabel.contains('iban') || lowerLabel.contains('swift') || lowerLabel.contains('bic')) {
+    if (lowerLabel.contains('iban') ||
+        lowerLabel.contains('swift') ||
+        lowerLabel.contains('bic')) {
       return true;
     }
 
@@ -137,14 +139,20 @@ class CopyableTextField extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.content_copy, size: IconSizeTokens.small, color: colors.buttonPrimary),
+            icon: Icon(
+              Icons.content_copy,
+              size: IconSizeTokens.small,
+              color: colors.buttonPrimary,
+            ),
             onPressed: () async {
               try {
                 await onCopy();
               } catch (e) {
                 // Bug #42 Fix: Handle clipboard errors gracefully
                 if (context.mounted) {
-                  final errorMessage = translations?.errorOccurred ?? 'Failed to copy to clipboard';
+                  final errorMessage =
+                      translations?.errorOccurred ??
+                      'Failed to copy to clipboard';
                   SnackBarHelper.showError(
                     context: context,
                     message: errorMessage,
@@ -154,7 +162,8 @@ class CopyableTextField extends StatelessWidget {
                 debugPrint('Error copying to clipboard: $e');
               }
             },
-            tooltip: translations?.copy ?? 'Copy', // Bug #40 Fix: Localized tooltip
+            tooltip:
+                translations?.copy ?? 'Copy', // Bug #40 Fix: Localized tooltip
           ),
         ],
       ),

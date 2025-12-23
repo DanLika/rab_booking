@@ -47,7 +47,9 @@ class _StripeConnectSetupScreenState
     try {
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('getStripeAccountStatus');
-      final result = await callable.call().withCloudFunctionTimeout('getStripeAccountStatus');
+      final result = await callable.call().withCloudFunctionTimeout(
+        'getStripeAccountStatus',
+      );
       final data = result.data as Map<String, dynamic>;
 
       if (mounted) {
@@ -104,10 +106,9 @@ class _StripeConnectSetupScreenState
       final returnUrl = '$baseUrl/owner/stripe-return';
       final refreshUrl = '$baseUrl/owner/stripe-refresh';
 
-      final result = await callable.call({
-        'returnUrl': returnUrl,
-        'refreshUrl': refreshUrl,
-      }).withCloudFunctionTimeout('createStripeConnectAccount');
+      final result = await callable
+          .call({'returnUrl': returnUrl, 'refreshUrl': refreshUrl})
+          .withCloudFunctionTimeout('createStripeConnectAccount');
       final data = result.data as Map<String, dynamic>;
       final success = data['success'] == true;
       final onboardingUrl = data['onboardingUrl'] as String?;
@@ -204,7 +205,9 @@ class _StripeConnectSetupScreenState
     try {
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('disconnectStripeAccount');
-      final result = await callable.call().withCloudFunctionTimeout('disconnectStripeAccount');
+      final result = await callable.call().withCloudFunctionTimeout(
+        'disconnectStripeAccount',
+      );
       final data = result.data as Map<String, dynamic>;
       final success = data['success'] == true;
 
@@ -959,21 +962,17 @@ class _MoneyLoadingAnimationState extends State<_MoneyLoadingAnimation>
     );
 
     _bounceAnimations = _controllers.map((controller) {
-      return Tween<double>(begin: 0, end: -20).animate(
-        CurvedAnimation(
-          parent: controller,
-          curve: Curves.easeInOut,
-        ),
-      );
+      return Tween<double>(
+        begin: 0,
+        end: -20,
+      ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
     }).toList();
 
     _fadeAnimations = _controllers.map((controller) {
-      return Tween<double>(begin: 0.4, end: 1.0).animate(
-        CurvedAnimation(
-          parent: controller,
-          curve: Curves.easeInOut,
-        ),
-      );
+      return Tween<double>(
+        begin: 0.4,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
     }).toList();
 
     // Start animations with staggered delays

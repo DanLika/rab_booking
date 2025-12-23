@@ -98,14 +98,21 @@ class PersistedFormData {
       notes: safeCastString(json['notes']) ?? '',
       paymentMethod: safeCastString(json['paymentMethod']) ?? 'stripe',
       pillBarDismissed: safeCastBool(json['pillBarDismissed']) ?? false,
-      hasInteractedWithBookingFlow: safeCastBool(json['hasInteractedWithBookingFlow']) ?? false,
-      timestamp: DateTimeParser.parseOrDefault(safeCastString(json['timestamp']), DateTime.now().toUtc()),
+      hasInteractedWithBookingFlow:
+          safeCastBool(json['hasInteractedWithBookingFlow']) ?? false,
+      timestamp: DateTimeParser.parseOrDefault(
+        safeCastString(json['timestamp']),
+        DateTime.now().toUtc(),
+      ),
     );
   }
 
   /// Get country from country code
   Country get country {
-    return countries.firstWhere((c) => c.dialCode == countryCode, orElse: () => defaultCountry);
+    return countries.firstWhere(
+      (c) => c.dialCode == countryCode,
+      orElse: () => defaultCountry,
+    );
   }
 
   /// Check if data is expired (older than 24 hours)
@@ -128,16 +135,25 @@ class FormPersistenceService {
   ///
   /// [unitId] - The unit ID to scope the saved data
   /// [data] - The form data to save
-  static Future<void> saveFormData(String unitId, PersistedFormData data) async {
+  static Future<void> saveFormData(
+    String unitId,
+    PersistedFormData data,
+  ) async {
     if (unitId.isEmpty) return; // Don't save if no unit selected
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('${_formDataKey}_$unitId', jsonEncode(data.toJson()));
+      await prefs.setString(
+        '${_formDataKey}_$unitId',
+        jsonEncode(data.toJson()),
+      );
     } catch (e) {
       // Silent fail - persistence is not critical
       // This can happen if SharedPreferences is not initialized (e.g., on web)
-      LoggingService.log('Failed to save form data: $e', tag: 'FORM_PERSISTENCE');
+      LoggingService.log(
+        'Failed to save form data: $e',
+        tag: 'FORM_PERSISTENCE',
+      );
     }
   }
 
@@ -159,7 +175,10 @@ class FormPersistenceService {
       final jsonMap = safeCastMap(decoded);
 
       if (jsonMap == null) {
-        LoggingService.log('Invalid JSON format in saved form data (not a Map)', tag: 'FORM_PERSISTENCE');
+        LoggingService.log(
+          'Invalid JSON format in saved form data (not a Map)',
+          tag: 'FORM_PERSISTENCE',
+        );
         await clearFormData(unitId); // Clear invalid data
         return null;
       }
@@ -185,13 +204,19 @@ class FormPersistenceService {
       return formData;
     } on FormatException catch (e) {
       // Specific handling for JSON decode errors
-      LoggingService.log('Invalid JSON format in saved form data: $e', tag: 'FORM_PERSISTENCE');
+      LoggingService.log(
+        'Invalid JSON format in saved form data: $e',
+        tag: 'FORM_PERSISTENCE',
+      );
       await clearFormData(unitId); // Clear corrupt data
       return null;
     } catch (e) {
       // Other errors
       // This can happen if SharedPreferences is not initialized (e.g., on web)
-      LoggingService.log('Failed to load form data: $e', tag: 'FORM_PERSISTENCE');
+      LoggingService.log(
+        'Failed to load form data: $e',
+        tag: 'FORM_PERSISTENCE',
+      );
       return null;
     }
   }
@@ -208,7 +233,10 @@ class FormPersistenceService {
       LoggingService.log('🗑️ Form data cleared', tag: 'FORM_PERSISTENCE');
     } catch (e) {
       // Silent fail - this can happen if SharedPreferences is not initialized
-      LoggingService.log('Failed to clear form data: $e', tag: 'FORM_PERSISTENCE');
+      LoggingService.log(
+        'Failed to clear form data: $e',
+        tag: 'FORM_PERSISTENCE',
+      );
     }
   }
 }

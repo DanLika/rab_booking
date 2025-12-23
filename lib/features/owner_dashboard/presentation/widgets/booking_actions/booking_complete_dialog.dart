@@ -18,10 +18,7 @@ class BookingCompleteDialog extends StatelessWidget {
       title: l10n.bookingCompleteDialogTitle,
       content: Text(
         l10n.bookingCompleteDialogMessage,
-        style: TextStyle(
-          fontSize: 15,
-          color: theme.colorScheme.onSurface,
-        ),
+        style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface),
       ),
       cancelLabel: l10n.bookingCompleteDialogCancel,
       confirmLabel: l10n.bookingCompleteDialogConfirm,

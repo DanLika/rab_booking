@@ -114,7 +114,11 @@ class WidgetShellSkeleton extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SkeletonLoader(width: double.infinity, height: 14, borderRadius: 4),
+                  SkeletonLoader(
+                    width: double.infinity,
+                    height: 14,
+                    borderRadius: 4,
+                  ),
                   SizedBox(height: 4),
                   SkeletonLoader(width: 200, height: 12, borderRadius: 4),
                 ],

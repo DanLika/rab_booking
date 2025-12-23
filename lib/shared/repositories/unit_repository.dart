@@ -52,5 +52,9 @@ abstract class UnitRepository {
   Future<UnitModel?> fetchUnitBySlug(String propertyId, String slug);
 
   /// Check if slug is unique within property (for validation)
-  Future<bool> isSlugUniqueInProperty(String propertyId, String slug, {String? excludeUnitId});
+  Future<bool> isSlugUniqueInProperty(
+    String propertyId,
+    String slug, {
+    String? excludeUnitId,
+  });
 }

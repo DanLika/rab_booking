@@ -97,18 +97,21 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final bookingsCount = bookings.length;
 
       // Calculate occupancy rate based on UNITS (not properties)
-      final totalDaysInRange =
-          dateRange.endDate.difference(dateRange.startDate).inDays;
+      final totalDaysInRange = dateRange.endDate
+          .difference(dateRange.startDate)
+          .inDays;
       final bookedDays = bookings.fold<int>(0, (total, b) {
         final checkIn = _parseCheckIn(b);
         final checkOut = _parseCheckOut(b);
         if (checkIn == null || checkOut == null) return total; // Skip invalid
 
         // Calculate overlap with date range
-        final overlapStart =
-            checkIn.isAfter(dateRange.startDate) ? checkIn : dateRange.startDate;
-        final overlapEnd =
-            checkOut.isBefore(dateRange.endDate) ? checkOut : dateRange.endDate;
+        final overlapStart = checkIn.isAfter(dateRange.startDate)
+            ? checkIn
+            : dateRange.startDate;
+        final overlapEnd = checkOut.isBefore(dateRange.endDate)
+            ? checkOut
+            : dateRange.endDate;
 
         final nights = overlapEnd.difference(overlapStart).inDays;
         return total + (nights > 0 ? nights : 0);
@@ -116,8 +119,9 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
 
       // Use units count (not properties) for accurate occupancy
       final availableDays = totalDaysInRange * units.length;
-      var occupancyRate =
-          availableDays > 0 ? (bookedDays / availableDays) * 100 : 0.0;
+      var occupancyRate = availableDays > 0
+          ? (bookedDays / availableDays) * 100
+          : 0.0;
       if (occupancyRate > 100) occupancyRate = 100;
 
       // Generate chart data
@@ -256,7 +260,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
-      final dayKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}-${checkIn.day.toString().padLeft(2, '0')}';
+      final dayKey =
+          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}-${checkIn.day.toString().padLeft(2, '0')}';
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       dailyRevenue[dayKey] = (dailyRevenue[dayKey] ?? 0.0) + revenue;
     }
@@ -273,8 +278,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         amount: entry.value,
         label: '${date.day}/${date.month}',
       );
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+    }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
 
   List<RevenueDataPoint> _generateWeeklyRevenue(
@@ -288,7 +292,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       if (checkIn == null) continue; // Skip invalid
       // Get week number (ISO week)
       final weekStart = checkIn.subtract(Duration(days: checkIn.weekday - 1));
-      final weekKey = '${weekStart.year}-W${_getWeekNumber(weekStart).toString().padLeft(2, '0')}';
+      final weekKey =
+          '${weekStart.year}-W${_getWeekNumber(weekStart).toString().padLeft(2, '0')}';
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       weeklyRevenue[weekKey] = (weeklyRevenue[weekKey] ?? 0.0) + revenue;
     }
@@ -299,13 +304,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final week = int.parse(parts[1]);
       // Approximate date for week start
       final date = DateTime(year).add(Duration(days: (week - 1) * 7));
-      return RevenueDataPoint(
-        date: date,
-        amount: entry.value,
-        label: 'W$week',
-      );
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+      return RevenueDataPoint(date: date, amount: entry.value, label: 'W$week');
+    }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
 
   List<RevenueDataPoint> _generateMonthlyRevenue(
@@ -316,7 +316,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
-      final monthKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
+      final monthKey =
+          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
       monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] ?? 0.0) + revenue;
     }
@@ -331,8 +332,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         amount: entry.value,
         label: _getMonthLabel(month),
       );
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+    }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
 
   /// Generate booking history for chart
@@ -359,7 +359,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
-      final dayKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}-${checkIn.day.toString().padLeft(2, '0')}';
+      final dayKey =
+          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}-${checkIn.day.toString().padLeft(2, '0')}';
       dailyBookings[dayKey] = (dailyBookings[dayKey] ?? 0) + 1;
     }
 
@@ -375,8 +376,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         count: entry.value,
         label: '${date.day}/${date.month}',
       );
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+    }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
 
   List<BookingDataPoint> _generateWeeklyBookings(
@@ -388,7 +388,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
       final weekStart = checkIn.subtract(Duration(days: checkIn.weekday - 1));
-      final weekKey = '${weekStart.year}-W${_getWeekNumber(weekStart).toString().padLeft(2, '0')}';
+      final weekKey =
+          '${weekStart.year}-W${_getWeekNumber(weekStart).toString().padLeft(2, '0')}';
       weeklyBookings[weekKey] = (weeklyBookings[weekKey] ?? 0) + 1;
     }
 
@@ -397,13 +398,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final year = int.parse(parts[0]);
       final week = int.parse(parts[1]);
       final date = DateTime(year).add(Duration(days: (week - 1) * 7));
-      return BookingDataPoint(
-        date: date,
-        count: entry.value,
-        label: 'W$week',
-      );
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+      return BookingDataPoint(date: date, count: entry.value, label: 'W$week');
+    }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
 
   List<BookingDataPoint> _generateMonthlyBookings(
@@ -414,7 +410,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     for (final booking in bookings) {
       final checkIn = _parseCheckIn(booking);
       if (checkIn == null) continue; // Skip invalid
-      final monthKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
+      final monthKey =
+          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
       monthlyBookings[monthKey] = (monthlyBookings[monthKey] ?? 0) + 1;
     }
 
@@ -428,8 +425,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         count: entry.value,
         label: _getMonthLabel(month),
       );
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+    }).toList()..sort((a, b) => a.date.compareTo(b.date));
   }
 
   int _getWeekNumber(DateTime date) {
@@ -441,8 +437,18 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   String _getMonthLabel(int month) {
     if (month < 1 || month > 12) return 'Invalid';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return months[month - 1];
   }

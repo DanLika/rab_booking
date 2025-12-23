@@ -131,10 +131,15 @@ Map<String, dynamic>? safeCastMap(dynamic value) {
 /// validateRequiredKeys(data, ['id', 'name']);
 /// // Throws if 'id' or 'name' is missing from data
 /// ```
-void validateRequiredKeys(Map<String, dynamic> data, List<String> requiredKeys) {
+void validateRequiredKeys(
+  Map<String, dynamic> data,
+  List<String> requiredKeys,
+) {
   for (final key in requiredKeys) {
     if (!data.containsKey(key) || data[key] == null) {
-      throw ArgumentError('Required key "$key" is missing or null in data: $data');
+      throw ArgumentError(
+        'Required key "$key" is missing or null in data: $data',
+      );
     }
   }
 }

@@ -14,7 +14,10 @@ void main() {
     });
 
     test('handles special characters and removes them', () {
-      expect(generateSlug('Studio Apartment - Luxury!'), 'studio-apartment-luxury');
+      expect(
+        generateSlug('Studio Apartment - Luxury!'),
+        'studio-apartment-luxury',
+      );
       expect(generateSlug('Suite #5 (Déluxe)'), 'suite-5-deluxe');
     });
 
@@ -23,7 +26,8 @@ void main() {
     });
 
     test('truncates to max length', () {
-      final longName = 'This is a very long property name that exceeds the maximum length';
+      final longName =
+          'This is a very long property name that exceeds the maximum length';
       final slug = generateSlug(longName, maxLength: 30);
       expect(slug.length, lessThanOrEqualTo(30));
       expect(slug, 'this-is-a-very-long-property');

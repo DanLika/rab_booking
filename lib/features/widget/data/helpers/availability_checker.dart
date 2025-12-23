@@ -71,55 +71,67 @@ class AvailabilityCheckResult {
       icalSource = null;
 
   /// Factory for booking conflict.
-  factory AvailabilityCheckResult.bookingConflict(String bookingId) => AvailabilityCheckResult(
-    isAvailable: false,
-    conflictType: ConflictType.booking,
-    errorCode: AvailabilityErrorCode.bookingConflict,
-    conflictingDocId: bookingId,
-  );
+  factory AvailabilityCheckResult.bookingConflict(String bookingId) =>
+      AvailabilityCheckResult(
+        isAvailable: false,
+        conflictType: ConflictType.booking,
+        errorCode: AvailabilityErrorCode.bookingConflict,
+        conflictingDocId: bookingId,
+      );
 
   /// Factory for iCal conflict.
-  factory AvailabilityCheckResult.icalConflict(String eventId, String source) => AvailabilityCheckResult(
-    isAvailable: false,
-    conflictType: ConflictType.icalEvent,
-    errorCode: AvailabilityErrorCode.icalConflict,
-    conflictingDocId: eventId,
-    icalSource: source,
-  );
+  factory AvailabilityCheckResult.icalConflict(String eventId, String source) =>
+      AvailabilityCheckResult(
+        isAvailable: false,
+        conflictType: ConflictType.icalEvent,
+        errorCode: AvailabilityErrorCode.icalConflict,
+        conflictingDocId: eventId,
+        icalSource: source,
+      );
 
   /// Factory for blocked date conflict.
-  factory AvailabilityCheckResult.blockedDateConflict(String priceDocId, DateTime blockedDate) =>
-      AvailabilityCheckResult(
-        isAvailable: false,
-        conflictType: ConflictType.blockedDate,
-        errorCode: AvailabilityErrorCode.blockedDate,
-        conflictingDocId: priceDocId,
-        conflictDate: blockedDate,
-      );
+  factory AvailabilityCheckResult.blockedDateConflict(
+    String priceDocId,
+    DateTime blockedDate,
+  ) => AvailabilityCheckResult(
+    isAvailable: false,
+    conflictType: ConflictType.blockedDate,
+    errorCode: AvailabilityErrorCode.blockedDate,
+    conflictingDocId: priceDocId,
+    conflictDate: blockedDate,
+  );
 
   /// Factory for blocked check-in conflict.
-  factory AvailabilityCheckResult.blockedCheckInConflict(String priceDocId, DateTime checkInDate) =>
-      AvailabilityCheckResult(
-        isAvailable: false,
-        conflictType: ConflictType.blockedCheckIn,
-        errorCode: AvailabilityErrorCode.blockedCheckIn,
-        conflictingDocId: priceDocId,
-        conflictDate: checkInDate,
-      );
+  factory AvailabilityCheckResult.blockedCheckInConflict(
+    String priceDocId,
+    DateTime checkInDate,
+  ) => AvailabilityCheckResult(
+    isAvailable: false,
+    conflictType: ConflictType.blockedCheckIn,
+    errorCode: AvailabilityErrorCode.blockedCheckIn,
+    conflictingDocId: priceDocId,
+    conflictDate: checkInDate,
+  );
 
   /// Factory for blocked check-out conflict.
-  factory AvailabilityCheckResult.blockedCheckOutConflict(String priceDocId, DateTime checkOutDate) =>
-      AvailabilityCheckResult(
-        isAvailable: false,
-        conflictType: ConflictType.blockedCheckOut,
-        errorCode: AvailabilityErrorCode.blockedCheckOut,
-        conflictingDocId: priceDocId,
-        conflictDate: checkOutDate,
-      );
+  factory AvailabilityCheckResult.blockedCheckOutConflict(
+    String priceDocId,
+    DateTime checkOutDate,
+  ) => AvailabilityCheckResult(
+    isAvailable: false,
+    conflictType: ConflictType.blockedCheckOut,
+    errorCode: AvailabilityErrorCode.blockedCheckOut,
+    conflictingDocId: priceDocId,
+    conflictDate: checkOutDate,
+  );
 
   /// Factory for error state (fails safe - unavailable).
   factory AvailabilityCheckResult.error(ConflictType type) =>
-      AvailabilityCheckResult(isAvailable: false, conflictType: type, errorCode: AvailabilityErrorCode.checkError);
+      AvailabilityCheckResult(
+        isAvailable: false,
+        conflictType: type,
+        errorCode: AvailabilityErrorCode.checkError,
+      );
 }
 
 /// Checks availability for bookings against multiple sources.
@@ -171,30 +183,57 @@ class AvailabilityChecker implements IAvailabilityChecker {
     final normalizedCheckOut = DateNormalizer.normalize(checkOut);
 
     // Check bookings first (most common conflict)
-    var result = await _checkBookings(unitId: unitId, checkIn: normalizedCheckIn, checkOut: normalizedCheckOut);
+    var result = await _checkBookings(
+      unitId: unitId,
+      checkIn: normalizedCheckIn,
+      checkOut: normalizedCheckOut,
+    );
     if (!result.isAvailable) return result;
 
     // Check iCal events (external calendar sync)
-    result = await _checkIcalEvents(unitId: unitId, checkIn: normalizedCheckIn, checkOut: normalizedCheckOut);
+    result = await _checkIcalEvents(
+      unitId: unitId,
+      checkIn: normalizedCheckIn,
+      checkOut: normalizedCheckOut,
+    );
     if (!result.isAvailable) return result;
 
     // Check blocked dates
-    result = await _checkBlockedDates(unitId: unitId, checkIn: normalizedCheckIn, checkOut: normalizedCheckOut);
+    result = await _checkBlockedDates(
+      unitId: unitId,
+      checkIn: normalizedCheckIn,
+      checkOut: normalizedCheckOut,
+    );
     if (!result.isAvailable) return result;
 
     // Check blocked check-in/check-out
-    result = await _checkBlockedCheckInOut(unitId: unitId, checkIn: normalizedCheckIn, checkOut: normalizedCheckOut);
+    result = await _checkBlockedCheckInOut(
+      unitId: unitId,
+      checkIn: normalizedCheckIn,
+      checkOut: normalizedCheckOut,
+    );
     if (!result.isAvailable) return result;
 
-    LoggingService.log('✅ No conflicts found for $normalizedCheckIn to $normalizedCheckOut', tag: 'AVAILABILITY_CHECK');
+    LoggingService.log(
+      '✅ No conflicts found for $normalizedCheckIn to $normalizedCheckOut',
+      tag: 'AVAILABILITY_CHECK',
+    );
 
     return const AvailabilityCheckResult.available();
   }
 
   /// Simple boolean check for backward compatibility.
   @override
-  Future<bool> isAvailable({required String unitId, required DateTime checkIn, required DateTime checkOut}) async {
-    final result = await check(unitId: unitId, checkIn: checkIn, checkOut: checkOut);
+  Future<bool> isAvailable({
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  }) async {
+    final result = await check(
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+    );
     return result.isAvailable;
   }
 
@@ -221,12 +260,22 @@ class AvailabilityChecker implements IAvailabilityChecker {
           final bookingCheckIn = DateNormalizer.normalize(booking.checkIn);
           final bookingCheckOut = DateNormalizer.normalize(booking.checkOut);
 
-          if (_hasDateOverlap(start1: bookingCheckIn, end1: bookingCheckOut, start2: checkIn, end2: checkOut)) {
-            LoggingService.log('❌ Booking conflict found: ${booking.id}', tag: 'AVAILABILITY_CHECK');
+          if (_hasDateOverlap(
+            start1: bookingCheckIn,
+            end1: bookingCheckOut,
+            start2: checkIn,
+            end2: checkOut,
+          )) {
+            LoggingService.log(
+              '❌ Booking conflict found: ${booking.id}',
+              tag: 'AVAILABILITY_CHECK',
+            );
             return AvailabilityCheckResult.bookingConflict(booking.id);
           }
         } catch (e) {
-          unawaited(LoggingService.logError('Error parsing booking document', e));
+          unawaited(
+            LoggingService.logError('Error parsing booking document', e),
+          );
         }
       }
 
@@ -255,14 +304,23 @@ class AvailabilityChecker implements IAvailabilityChecker {
       for (final doc in snapshot.docs) {
         try {
           final data = doc.data();
-          final eventStart = DateNormalizer.fromTimestamp(data['start_date'] as Timestamp?);
-          final eventEnd = DateNormalizer.fromTimestamp(data['end_date'] as Timestamp?);
+          final eventStart = DateNormalizer.fromTimestamp(
+            data['start_date'] as Timestamp?,
+          );
+          final eventEnd = DateNormalizer.fromTimestamp(
+            data['end_date'] as Timestamp?,
+          );
 
           if (eventStart == null || eventEnd == null) continue;
 
           final source = data['source'] as String? ?? 'iCal';
 
-          if (_hasDateOverlap(start1: eventStart, end1: eventEnd, start2: checkIn, end2: checkOut)) {
+          if (_hasDateOverlap(
+            start1: eventStart,
+            end1: eventEnd,
+            start2: checkIn,
+            end2: checkOut,
+          )) {
             LoggingService.log(
               '❌ iCal conflict found: $source event from $eventStart to $eventEnd',
               tag: 'AVAILABILITY_CHECK',
@@ -270,7 +328,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
             return AvailabilityCheckResult.icalConflict(doc.id, source);
           }
         } catch (e) {
-          unawaited(LoggingService.logError('Error parsing iCal event document', e));
+          unawaited(
+            LoggingService.logError('Error parsing iCal event document', e),
+          );
         }
       }
 
@@ -299,19 +359,30 @@ class AvailabilityChecker implements IAvailabilityChecker {
       for (final doc in snapshot.docs) {
         try {
           final data = doc.data();
-          final blockedDate = DateNormalizer.fromTimestamp(data['date'] as Timestamp?);
+          final blockedDate = DateNormalizer.fromTimestamp(
+            data['date'] as Timestamp?,
+          );
 
           if (blockedDate == null) continue;
 
           // Blocked date conflicts if within stay nights: checkIn <= blockedDate < checkOut
-          final isWithinStay = !blockedDate.isBefore(checkIn) && blockedDate.isBefore(checkOut);
+          final isWithinStay =
+              !blockedDate.isBefore(checkIn) && blockedDate.isBefore(checkOut);
 
           if (isWithinStay) {
-            LoggingService.log('❌ Blocked date conflict found: $blockedDate', tag: 'AVAILABILITY_CHECK');
-            return AvailabilityCheckResult.blockedDateConflict(doc.id, blockedDate);
+            LoggingService.log(
+              '❌ Blocked date conflict found: $blockedDate',
+              tag: 'AVAILABILITY_CHECK',
+            );
+            return AvailabilityCheckResult.blockedDateConflict(
+              doc.id,
+              blockedDate,
+            );
           }
         } catch (e) {
-          unawaited(LoggingService.logError('Error parsing blocked date document', e));
+          unawaited(
+            LoggingService.logError('Error parsing blocked date document', e),
+          );
         }
       }
 
@@ -349,7 +420,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
 
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        final docDate = DateNormalizer.fromTimestamp(data['date'] as Timestamp?);
+        final docDate = DateNormalizer.fromTimestamp(
+          data['date'] as Timestamp?,
+        );
 
         if (docDate == null) continue;
 
@@ -360,8 +433,14 @@ class AvailabilityChecker implements IAvailabilityChecker {
         if (DateNormalizer.isSameDay(docDate, checkIn)) {
           final isBlockedCheckIn = data['block_checkin'] as bool? ?? false;
           if (isBlockedCheckIn) {
-            LoggingService.log('❌ Check-in blocked on $checkIn', tag: 'AVAILABILITY_CHECK');
-            return AvailabilityCheckResult.blockedCheckInConflict(doc.id, checkIn);
+            LoggingService.log(
+              '❌ Check-in blocked on $checkIn',
+              tag: 'AVAILABILITY_CHECK',
+            );
+            return AvailabilityCheckResult.blockedCheckInConflict(
+              doc.id,
+              checkIn,
+            );
           }
         }
 
@@ -369,15 +448,23 @@ class AvailabilityChecker implements IAvailabilityChecker {
         if (DateNormalizer.isSameDay(docDate, checkOut)) {
           final isBlockedCheckOut = data['block_checkout'] as bool? ?? false;
           if (isBlockedCheckOut) {
-            LoggingService.log('❌ Check-out blocked on $checkOut', tag: 'AVAILABILITY_CHECK');
-            return AvailabilityCheckResult.blockedCheckOutConflict(doc.id, checkOut);
+            LoggingService.log(
+              '❌ Check-out blocked on $checkOut',
+              tag: 'AVAILABILITY_CHECK',
+            );
+            return AvailabilityCheckResult.blockedCheckOutConflict(
+              doc.id,
+              checkOut,
+            );
           }
         }
       }
 
       return const AvailabilityCheckResult.available();
     } catch (e) {
-      unawaited(LoggingService.logError('Error checking blockCheckIn/blockCheckOut', e));
+      unawaited(
+        LoggingService.logError('Error checking blockCheckIn/blockCheckOut', e),
+      );
       // Bug Fix: Fail-safe approach - return error to prevent potential overbooking
       // Previously returned available() which could allow bookings on blocked dates
       return AvailabilityCheckResult.error(ConflictType.blockedCheckIn);

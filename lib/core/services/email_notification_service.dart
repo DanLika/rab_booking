@@ -439,7 +439,8 @@ class EmailNotificationService {
             </div>
         </div>
 
-        ${paymentMethod == 'none' ? '''
+        ${paymentMethod == 'none'
+        ? '''
         <div class="info-box">
             <strong>💳 Plaćanje pri dolasku</strong><br>
             <p>Vaša rezervacija je potvrđena! Plaćanje ćete izvršiti po dolasku na smještaj.</p>
@@ -452,7 +453,9 @@ class EmailNotificationService {
                 Molimo donesite ID/putovnicu za registraciju pri dolasku.
             </p>
         </div>
-        ''' : paymentMethod == 'bank_transfer' && bankTransferConfig != null ? '''
+        '''
+        : paymentMethod == 'bank_transfer' && bankTransferConfig != null
+        ? '''
         <div class="info-box">
             <strong>🏦 Upute za bankovni prijenos</strong><br>
             <p>Molimo izvršite plaćanje na sljedeći račun:</p>
@@ -470,12 +473,15 @@ class EmailNotificationService {
                 Važno: Molimo unesite broj rezervacije (<strong>$bookingReference</strong>) kao poziv na broj ili opis uplate kako bismo mogli identificirati Vašu uplatu.
             </p>
         </div>
-        ''' : paymentDeadline != null ? '''
+        '''
+        : paymentDeadline != null
+        ? '''
         <div class="info-box">
             <strong>Rok za plaćanje:</strong> $paymentDeadline<br>
             Molimo izvršite plaćanje do navedenog roka kako bi Vaša rezervacija bila potvrđena.
         </div>
-        ''' : ''}
+        '''
+        : ''}
 
         ${allowGuestCancellation && cancellationDeadlineHours != null ? '''
         <div class="cancellation-box">

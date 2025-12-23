@@ -23,10 +23,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: InfoCardWidget(
-              message: 'Test message',
-              isDarkMode: false,
-            ),
+            body: InfoCardWidget(message: 'Test message', isDarkMode: false),
           ),
         ),
       );
@@ -86,10 +83,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: InfoCardWidget(
-              message: 'Test',
-              isDarkMode: false,
-            ),
+            body: InfoCardWidget(message: 'Test', isDarkMode: false),
           ),
         ),
       );
@@ -101,10 +95,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: InfoCardWidget(
-              message: 'Test',
-              isDarkMode: false,
-            ),
+            body: InfoCardWidget(message: 'Test', isDarkMode: false),
           ),
         ),
       );

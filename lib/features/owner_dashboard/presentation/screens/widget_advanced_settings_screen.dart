@@ -31,10 +31,12 @@ class WidgetAdvancedSettingsScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<WidgetAdvancedSettingsScreen> createState() => _WidgetAdvancedSettingsScreenState();
+  ConsumerState<WidgetAdvancedSettingsScreen> createState() =>
+      _WidgetAdvancedSettingsScreenState();
 }
 
-class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSettingsScreen>
+class _WidgetAdvancedSettingsScreenState
+    extends ConsumerState<WidgetAdvancedSettingsScreen>
     with AndroidKeyboardDismissFixApproach1<WidgetAdvancedSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
 
@@ -73,7 +75,10 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
   Future<void> _saveSettings(WidgetSettings currentSettings) async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showWarningSnackBar(context, l10n.widgetPleaseCheckFormErrors);
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        l10n.widgetPleaseCheckFormErrors,
+      );
       return;
     }
 
@@ -91,7 +96,8 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
 
       // Check if email verification setting changed
       final emailVerificationChanged =
-          currentSettings.emailConfig.requireEmailVerification != _requireEmailVerification;
+          currentSettings.emailConfig.requireEmailVerification !=
+          _requireEmailVerification;
 
       // Email verification is a PROPERTY-WIDE setting - update all units
       if (emailVerificationChanged) {
@@ -105,7 +111,9 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
       final updatedSettings = currentSettings.copyWith(
         // Ensure owner_id is set for legacy document migration
         ownerId: currentSettings.ownerId ?? currentUserId,
-        emailConfig: currentSettings.emailConfig.copyWith(requireEmailVerification: _requireEmailVerification),
+        emailConfig: currentSettings.emailConfig.copyWith(
+          requireEmailVerification: _requireEmailVerification,
+        ),
         taxLegalConfig: currentSettings.taxLegalConfig.copyWith(
           enabled: _taxLegalEnabled,
           useDefaultText: _useDefaultText,
@@ -123,7 +131,10 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         // Also invalidate all property settings provider in case it's used elsewhere
         ref.invalidate(allPropertyWidgetSettingsProvider);
 
-        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.advancedSettingsSaveSuccess);
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.advancedSettingsSaveSuccess,
+        );
 
         // Only pop if opened as standalone screen (with app bar)
         // When embedded in tab (showAppBar = false), don't navigate
@@ -135,14 +146,20 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.advancedSettingsSaveError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.advancedSettingsSaveError,
+        );
       }
     }
   }
 
   void _showDisclaimerPreview() {
     final l10n = AppLocalizations.of(context);
-    final text = _useDefaultText ? const TaxLegalConfig().disclaimerText : _customDisclaimerController.text.trim();
+    final text = _useDefaultText
+        ? const TaxLegalConfig().disclaimerText
+        : _customDisclaimerController.text.trim();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -158,7 +175,11 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
         child: Container(
           width: isMobile ? screenWidth * 0.90 : 600,
           constraints: BoxConstraints(
-            maxHeight: screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(dialogContext),
+            maxHeight:
+                screenHeight *
+                ResponsiveSpacingHelper.getDialogMaxHeightPercent(
+                  dialogContext,
+                ),
           ),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -185,7 +206,11 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.preview, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.preview,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -212,7 +237,11 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                   padding: EdgeInsets.all(isMobile ? 16 : 20),
                   child: Text(
                     text.isEmpty ? l10n.advancedSettingsNoDisclaimer : text,
-                    style: TextStyle(fontSize: 14, height: 1.6, color: isDark ? Colors.grey[300] : Colors.grey[800]),
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.6,
+                      color: isDark ? Colors.grey[300] : Colors.grey[800],
+                    ),
                   ),
                 ),
               ),
@@ -221,7 +250,12 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                 padding: EdgeInsets.all(isMobile ? 12 : 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: [TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: Text(l10n.close))],
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(l10n.close),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -233,13 +267,17 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
 
   @override
   Widget build(BuildContext context) {
-    final settingsAsync = ref.watch(widgetSettingsProvider((widget.propertyId, widget.unitId)));
+    final settingsAsync = ref.watch(
+      widgetSettingsProvider((widget.propertyId, widget.unitId)),
+    );
     final l10n = AppLocalizations.of(context);
 
     return settingsAsync.when(
       data: (settings) {
         if (settings == null) {
-          final errorContent = Center(child: Text(l10n.advancedSettingsNotFound));
+          final errorContent = Center(
+            child: Text(l10n.advancedSettingsNotFound),
+          );
           if (!widget.showAppBar) return errorContent;
 
           return Scaffold(
@@ -276,7 +314,8 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                 padding: EdgeInsets.fromLTRB(padding, padding, padding, gap),
                 child: EmailVerificationCard(
                   requireEmailVerification: _requireEmailVerification,
-                  onChanged: (val) => setState(() => _requireEmailVerification = val),
+                  onChanged: (val) =>
+                      setState(() => _requireEmailVerification = val),
                   isMobile: isMobile,
                 ),
               ),
@@ -288,11 +327,14 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                   taxLegalEnabled: _taxLegalEnabled,
                   useDefaultText: _useDefaultText,
                   customDisclaimerController: _customDisclaimerController,
-                  onEnabledChanged: (val) => setState(() => _taxLegalEnabled = val),
-                  onUseDefaultChanged: (val) => setState(() => _useDefaultText = val),
+                  onEnabledChanged: (val) =>
+                      setState(() => _taxLegalEnabled = val),
+                  onUseDefaultChanged: (val) =>
+                      setState(() => _useDefaultText = val),
                   onPreview: _showDisclaimerPreview,
                   customTextValidator: (value) {
-                    if (!_useDefaultText && (value == null || value.trim().isEmpty)) {
+                    if (!_useDefaultText &&
+                        (value == null || value.trim().isEmpty)) {
                       return l10n.advancedSettingsCustomTextRequired;
                     }
                     return null;
@@ -315,7 +357,10 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                       onTap: _isSaving ? null : () => _saveSettings(settings),
                       borderRadius: BorderRadius.circular(10),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 15,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -325,14 +370,25 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   )
-                                : const Icon(Icons.check, size: 18, color: Colors.white),
+                                : const Icon(
+                                    Icons.check,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
                             const SizedBox(width: 8),
                             Text(
-                              _isSaving ? l10n.advancedSettingsSaving : l10n.advancedSettingsSave,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                              _isSaving
+                                  ? l10n.advancedSettingsSaving
+                                  : l10n.advancedSettingsSave,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -364,7 +420,9 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
             }
           },
           child: KeyedSubtree(
-            key: ValueKey('widget_advanced_settings_screen_$keyboardFixRebuildKey'),
+            key: ValueKey(
+              'widget_advanced_settings_screen_$keyboardFixRebuildKey',
+            ),
             child: Scaffold(
               resizeToAvoidBottomInset: true,
               appBar: AppBar(
@@ -374,11 +432,19 @@ class _WidgetAdvancedSettingsScreenState extends ConsumerState<WidgetAdvancedSet
                     const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       ),
                     )
                   else
-                    IconButton(icon: const Icon(Icons.save), onPressed: () => _saveSettings(settings), tooltip: l10n.save),
+                    IconButton(
+                      icon: const Icon(Icons.save),
+                      onPressed: () => _saveSettings(settings),
+                      tooltip: l10n.save,
+                    ),
                 ],
               ),
               body: SafeArea(

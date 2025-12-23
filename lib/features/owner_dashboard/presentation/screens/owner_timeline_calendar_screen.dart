@@ -31,17 +31,20 @@ class OwnerTimelineCalendarScreen extends ConsumerStatefulWidget {
   const OwnerTimelineCalendarScreen({super.key});
 
   @override
-  ConsumerState<OwnerTimelineCalendarScreen> createState() => _OwnerTimelineCalendarScreenState();
+  ConsumerState<OwnerTimelineCalendarScreen> createState() =>
+      _OwnerTimelineCalendarScreenState();
 }
 
-class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalendarScreen>
+class _OwnerTimelineCalendarScreenState
+    extends ConsumerState<OwnerTimelineCalendarScreen>
     with CalendarCommonMethodsMixin {
   late DateRangeSelection _currentRange;
 
   // GlobalKey for accessing TimelineCalendarWidget's scroll methods
   final GlobalKey timelineKey = GlobalKey();
   bool _showSummary = false;
-  int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
+  int _visibleDays =
+      30; // Default to 30 days, will be updated based on screen size
 
   // FIXED: Flag to prevent onVisibleDateRangeChanged from overwriting _currentRange
   // during programmatic navigation (Today, Previous, Next, DatePicker)
@@ -67,12 +70,17 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Update visible days based on screen width
-    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(context);
+    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(
+      context,
+    );
     if (newVisibleDays != _visibleDays) {
       setState(() {
         _visibleDays = newVisibleDays;
         // Recreate range with new day count
-        _currentRange = DateRangeSelection.days(_currentRange.startDate, _visibleDays);
+        _currentRange = DateRangeSelection.days(
+          _currentRange.startDate,
+          _visibleDays,
+        );
       });
     }
   }
@@ -105,20 +113,28 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
 
     return Shortcuts(
       shortcuts: <ShortcutActivator, Intent>{
-        LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _PreviousPeriodIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowLeft):
+            const _PreviousPeriodIntent(),
         LogicalKeySet(LogicalKeyboardKey.arrowRight): const _NextPeriodIntent(),
         LogicalKeySet(LogicalKeyboardKey.keyT): const _TodayIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
-          _PreviousPeriodIntent: CallbackAction<_PreviousPeriodIntent>(onInvoke: (_) => _goToPreviousPeriod()),
-          _NextPeriodIntent: CallbackAction<_NextPeriodIntent>(onInvoke: (_) => _goToNextPeriod()),
-          _TodayIntent: CallbackAction<_TodayIntent>(onInvoke: (_) => _goToToday()),
+          _PreviousPeriodIntent: CallbackAction<_PreviousPeriodIntent>(
+            onInvoke: (_) => _goToPreviousPeriod(),
+          ),
+          _NextPeriodIntent: CallbackAction<_NextPeriodIntent>(
+            onInvoke: (_) => _goToNextPeriod(),
+          ),
+          _TodayIntent: CallbackAction<_TodayIntent>(
+            onInvoke: (_) => _goToToday(),
+          ),
         },
         child: Focus(
           autofocus: true,
           child: Scaffold(
-            backgroundColor: Colors.transparent, // Transparent to show gradient background
+            backgroundColor:
+                Colors.transparent, // Transparent to show gradient background
             appBar: CommonAppBar(
               title: calendarTitle,
               leadingIcon: Icons.menu,
@@ -126,7 +142,9 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
             ),
             drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
             body: Container(
-              decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+              decoration: BoxDecoration(
+                gradient: context.gradients.pageBackground,
+              ),
               child: Column(
                 children: [
                   // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
@@ -134,10 +152,16 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                   if (hasUnits)
                     Consumer(
                       builder: (context, ref, child) {
-                        final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+                        final unreadCountAsync = ref.watch(
+                          unreadNotificationsCountProvider,
+                        );
                         final multiSelectState = ref.watch(multiSelectProvider);
-                        final conflictCount = ref.watch(overbookingConflictCountProvider);
-                        final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
+                        final conflictCount = ref.watch(
+                          overbookingConflictCountProvider,
+                        );
+                        final showEmptyUnits = ref.watch(
+                          showEmptyUnitsProvider,
+                        );
                         final filters = ref.watch(calendarFiltersProvider);
                         final activeFilterCount = filters.activeFilterCount;
 
@@ -166,30 +190,29 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                             setState(() {
                               _showSummary = value;
                             });
-                            // Force immediate rebuild to prevent 7-8 second delay
-                            // Without this, summary bar wouldn't appear until user scrolled
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) {
-                                setState(() {
-                                  // Trigger second rebuild to ensure AnimatedSize processes
-                                });
-                              }
-                            });
+                            // AnimatedContainer with explicit height handles animation reliably
+                            // No additional rebuild needed
                           },
                           // Show empty units toggle (persisted via provider)
                           showEmptyUnitsToggle: true,
                           isEmptyUnitsVisible: showEmptyUnits,
                           onEmptyUnitsToggleChanged: (value) {
-                            ref.read(showEmptyUnitsProvider.notifier).setValue(value);
+                            ref
+                                .read(showEmptyUnitsProvider.notifier)
+                                .setValue(value);
                           },
                           // ENHANCED: Multi-select mode toggle
                           showMultiSelectToggle: true,
                           isMultiSelectActive: multiSelectState.isEnabled,
                           onMultiSelectToggle: () {
                             if (multiSelectState.isEnabled) {
-                              ref.read(multiSelectProvider.notifier).disableMultiSelect();
+                              ref
+                                  .read(multiSelectProvider.notifier)
+                                  .disableMultiSelect();
                             } else {
-                              ref.read(multiSelectProvider.notifier).enableMultiSelect();
+                              ref
+                                  .read(multiSelectProvider.notifier)
+                                  .enableMultiSelect();
                             }
                           },
                           // Overbooking conflict badge
@@ -198,9 +221,13 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                             _handleOverbookingBadgeTap(ref);
                           },
                           // Active filters inline display
-                          activeFilterCount: activeFilterCount > 0 ? activeFilterCount : null,
+                          activeFilterCount: activeFilterCount > 0
+                              ? activeFilterCount
+                              : null,
                           onClearFilters: () {
-                            ref.read(calendarFiltersProvider.notifier).clearFilters();
+                            ref
+                                .read(calendarFiltersProvider.notifier)
+                                .clearFilters();
                             // Force refresh of calendar data after clearing filters
                             ref.invalidate(filteredUnitsProvider);
                             ref.invalidate(filteredCalendarBookingsProvider);
@@ -214,13 +241,16 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                   Expanded(
                     child: Consumer(
                       builder: (context, ref, child) {
-                        final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
+                        final showEmptyUnits = ref.watch(
+                          showEmptyUnitsProvider,
+                        );
                         return TimelineCalendarWidget(
                           // FIXED: Only use counter in key, NOT startDate
                           // Including startDate caused infinite rebuild loop:
                           // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
                           key: timelineKey,
-                          initialScrollToDate: _currentRange.startDate, // Scroll to selected date
+                          initialScrollToDate: _currentRange
+                              .startDate, // Scroll to selected date
                           showSummary: _showSummary,
                           showEmptyUnits: showEmptyUnits,
                           // Problem #19 fix: Pass forceScrollKey to ensure Today button scrolls
@@ -232,7 +262,11 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
                             // Track vertical scroll position (don't call setState to avoid rebuild)
                             _verticalScrollOffset = offset;
                           },
-                          onCellLongPress: (date, unit) => _showCreateBookingDialog(initialCheckIn: date, unitId: unit.id),
+                          onCellLongPress: (date, unit) =>
+                              _showCreateBookingDialog(
+                                initialCheckIn: date,
+                                unitId: unit.id,
+                              ),
                           onUnitNameTap: _showUnitFutureBookings,
                           onVisibleDateRangeChanged: (startDate) {
                             // FIXED: Only update toolbar when user scrolls MANUALLY
@@ -242,7 +276,10 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
 
                             // Update toolbar date range when user scrolls manually
                             setState(() {
-                              _currentRange = DateRangeSelection.days(startDate, _visibleDays);
+                              _currentRange = DateRangeSelection.days(
+                                startDate,
+                                _visibleDays,
+                              );
                             });
                           },
                         );
@@ -323,7 +360,10 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
       final conflictDate = firstConflict.conflictDates.first;
       // Use dynamic call since we can't import private class
       try {
-        (timelineState as dynamic).scrollToConflict(firstConflict.unitId, conflictDate);
+        (timelineState as dynamic).scrollToConflict(
+          firstConflict.unitId,
+          conflictDate,
+        );
       } catch (e) {
         // If scroll fails, just show snackbar
         debugPrint('Failed to scroll to conflict: $e');
@@ -360,25 +400,34 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
   }
 
   /// Show booking details dialog for a conflict
-  void _showBookingDetailsFromConflict(WidgetRef ref, OverbookingConflict conflict) async {
+  void _showBookingDetailsFromConflict(
+    WidgetRef ref,
+    OverbookingConflict conflict,
+  ) async {
     // Try to get booking from repository
     try {
       final repository = ref.read(ownerBookingsRepositoryProvider);
-      final ownerBooking = await repository.getOwnerBookingById(conflict.booking1.id);
+      final ownerBooking = await repository.getOwnerBookingById(
+        conflict.booking1.id,
+      );
 
       if (ownerBooking != null && mounted) {
         await showDialog(
           context: context,
-          builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+          builder: (context) =>
+              BookingDetailsDialog(ownerBooking: ownerBooking),
         );
       }
     } catch (e) {
       // If booking not found, show error
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.ownerBookingsNotFound), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.ownerBookingsNotFound),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -456,23 +505,33 @@ class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalen
     if (mounted) {
       await showDialog(
         context: context,
-        builder: (context) =>
-            UnitFutureBookingsDialog(unit: unit, bookings: futureBookings, onBookingTap: showBookingDetailsDialog),
+        builder: (context) => UnitFutureBookingsDialog(
+          unit: unit,
+          bookings: futureBookings,
+          onBookingTap: showBookingDetailsDialog,
+        ),
       );
     }
   }
 
   /// Show create booking dialog
   /// ENHANCED: Now accepts optional initialCheckIn date and unitId for auto-fill
-  void _showCreateBookingDialog({DateTime? initialCheckIn, String? unitId}) async {
+  void _showCreateBookingDialog({
+    DateTime? initialCheckIn,
+    String? unitId,
+  }) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => BookingCreateDialog(initialCheckIn: initialCheckIn, unitId: unitId),
+      builder: (context) =>
+          BookingCreateDialog(initialCheckIn: initialCheckIn, unitId: unitId),
     );
 
     // If booking was created successfully, refresh calendar
     if (result == true && mounted) {
-      await Future.wait([ref.refresh(calendarBookingsProvider.future), ref.refresh(allOwnerUnitsProvider.future)]);
+      await Future.wait([
+        ref.refresh(calendarBookingsProvider.future),
+        ref.refresh(allOwnerUnitsProvider.future),
+      ]);
     }
   }
 
@@ -547,7 +606,9 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: widget.gradient.colors.first.withAlpha(((_isHovered ? 0.5 : 0.35) * 255).toInt()),
+                color: widget.gradient.colors.first.withAlpha(
+                  ((_isHovered ? 0.5 : 0.35) * 255).toInt(),
+                ),
                 blurRadius: _isHovered ? 20 : 12,
                 offset: Offset(0, _isHovered ? 8 : 4),
                 spreadRadius: _isHovered ? 2 : 0,

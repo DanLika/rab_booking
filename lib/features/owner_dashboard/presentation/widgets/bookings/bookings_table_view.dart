@@ -268,6 +268,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       },
       cells: [
         // Guest name - clickable to open details
+        // Email is selectable for easy copying
         DataCell(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,13 +279,13 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                 style: const TextStyle(fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
               ),
-              Text(
+              SelectableText(
                 ownerBooking.guestEmail,
                 style: TextStyle(
                   fontSize: 12,
                   color: context.textColorSecondary,
                 ),
-                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ],
           ),
@@ -467,10 +468,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             value: 'reject',
             child: Row(
               children: [
-                const Icon(
-                  Icons.cancel_outlined,
-                  color: AppColors.error,
-                ),
+                const Icon(Icons.cancel_outlined, color: AppColors.error),
                 const SizedBox(width: 8),
                 Text(l10n.ownerBookingCardReject),
               ],
@@ -576,7 +574,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     // Find booking in the list
     final ownerBooking = widget.bookings.firstWhere(
       (b) => b.booking.id == bookingId,
-      orElse: () => widget.bookings.first, // Fallback if booking not found (rare race condition)
+      orElse: () => widget
+          .bookings
+          .first, // Fallback if booking not found (rare race condition)
     );
     _showBookingDetails(ownerBooking);
   }
@@ -860,7 +860,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     );
     if (ownerBooking == null) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, 'Booking not found. Please refresh.');
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          'Booking not found. Please refresh.',
+        );
       }
       return;
     }

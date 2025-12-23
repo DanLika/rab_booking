@@ -72,9 +72,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient (matching CommonAppBar)
+            // Header with gradient - matches CommonAppBar height (52px)
             Container(
-              padding: EdgeInsets.all(headerPadding),
+              height: ResponsiveDialogUtils.kHeaderHeight,
+              padding: EdgeInsets.symmetric(horizontal: headerPadding),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(
@@ -83,14 +84,15 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.filter_list, color: Colors.white),
-                  const SizedBox(width: 12),
+                  const Icon(Icons.filter_list, color: Colors.white, size: 22),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: AutoSizeText(
                       l10n.ownerFiltersTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                       maxLines: 1,
                       minFontSize: 14,
@@ -238,7 +240,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text(status.displayName),
+                        Text(status.displayNameLocalized(context)),
                       ],
                     ),
                   );

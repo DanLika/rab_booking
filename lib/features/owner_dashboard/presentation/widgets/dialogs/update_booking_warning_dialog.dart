@@ -161,16 +161,20 @@ class UpdateBookingWarningDialog extends StatelessWidget {
     required bool isDark,
   }) {
     final backgroundColor = isOld
-        ? (isDark ? AppColors.errorDark : AppColors.errorLight)
-            .withAlpha((0.1 * 255).toInt())
-        : (isDark ? AppColors.successDark : AppColors.successLight)
-            .withAlpha((0.1 * 255).toInt());
+        ? (isDark ? AppColors.errorDark : AppColors.errorLight).withAlpha(
+            (0.1 * 255).toInt(),
+          )
+        : (isDark ? AppColors.successDark : AppColors.successLight).withAlpha(
+            (0.1 * 255).toInt(),
+          );
 
     final borderColor = isOld
-        ? (isDark ? AppColors.errorDark : AppColors.errorLight)
-            .withAlpha((0.3 * 255).toInt())
-        : (isDark ? AppColors.successDark : AppColors.successLight)
-            .withAlpha((0.3 * 255).toInt());
+        ? (isDark ? AppColors.errorDark : AppColors.errorLight).withAlpha(
+            (0.3 * 255).toInt(),
+          )
+        : (isDark ? AppColors.successDark : AppColors.successLight).withAlpha(
+            (0.3 * 255).toInt(),
+          );
 
     final iconColor = isOld
         ? (isDark ? AppColors.errorDark : AppColors.errorLight)
@@ -189,7 +193,9 @@ class UpdateBookingWarningDialog extends StatelessWidget {
           Row(
             children: [
               Icon(
-                isOld ? Icons.event_busy_rounded : Icons.event_available_rounded,
+                isOld
+                    ? Icons.event_busy_rounded
+                    : Icons.event_available_rounded,
                 size: 18,
                 color: iconColor,
               ),
@@ -214,7 +220,10 @@ class UpdateBookingWarningDialog extends StatelessWidget {
   }
 
   String _formatDateRange(
-      BuildContext context, DateTime checkIn, DateTime checkOut) {
+    BuildContext context,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
     final locale = Localizations.localeOf(context).toString();
     final dateFormat = DateFormat('d. MMM yyyy', locale);
     return '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}';

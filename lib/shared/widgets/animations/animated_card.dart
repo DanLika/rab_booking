@@ -83,8 +83,24 @@ class _HoverScaleCardState extends State<HoverScaleCard> {
           duration: widget.duration,
           curve: AnimationTokens.easeOut,
           transform: Matrix4.identity()
-            ..setEntry(0, 0, _isPressed ? 0.98 : _isHovered ? widget.hoverScale : 1.0)
-            ..setEntry(1, 1, _isPressed ? 0.98 : _isHovered ? widget.hoverScale : 1.0),
+            ..setEntry(
+              0,
+              0,
+              _isPressed
+                  ? 0.98
+                  : _isHovered
+                  ? widget.hoverScale
+                  : 1.0,
+            )
+            ..setEntry(
+              1,
+              1,
+              _isPressed
+                  ? 0.98
+                  : _isHovered
+                  ? widget.hoverScale
+                  : 1.0,
+            ),
           transformAlignment: Alignment.center,
           child: AnimatedContainer(
             duration: widget.duration,
@@ -100,8 +116,13 @@ class _HoverScaleCardState extends State<HoverScaleCard> {
                   color: Colors.black.withAlpha(
                     ((_isHovered ? 0.12 : 0.06) * 255).toInt(),
                   ),
-                  blurRadius: _isHovered ? widget.hoverElevation * 2 : widget.baseElevation * 2,
-                  offset: Offset(0, _isHovered ? widget.hoverElevation : widget.baseElevation),
+                  blurRadius: _isHovered
+                      ? widget.hoverElevation * 2
+                      : widget.baseElevation * 2,
+                  offset: Offset(
+                    0,
+                    _isHovered ? widget.hoverElevation : widget.baseElevation,
+                  ),
                 ),
               ],
             ),
@@ -238,21 +259,19 @@ class _AnimatedCardEntranceState extends State<AnimatedCardEntrance>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(0, widget.slideOffset),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
-    );
+    _slideAnimation =
+        Tween<Offset>(
+          begin: Offset(0, widget.slideOffset),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
+        );
 
     Future.delayed(widget.delay, () {
       if (mounted) {

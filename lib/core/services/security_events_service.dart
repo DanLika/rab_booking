@@ -30,7 +30,7 @@ class SecurityEventsService {
   final FirebaseFirestore _firestore;
 
   SecurityEventsService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Log a security event
   Future<void> logEvent({
@@ -57,13 +57,13 @@ class SecurityEventsService {
           .doc(userId)
           .collection('securityEvents')
           .add({
-        'type': event.type.name,
-        'timestamp': Timestamp.fromDate(event.timestamp),
-        'deviceId': event.deviceId,
-        'ipAddress': event.ipAddress,
-        'location': event.location,
-        'metadata': event.metadata,
-      });
+            'type': event.type.name,
+            'timestamp': Timestamp.fromDate(event.timestamp),
+            'deviceId': event.deviceId,
+            'ipAddress': event.ipAddress,
+            'location': event.location,
+            'metadata': event.metadata,
+          });
 
       // Update recent events in main user document (keep last 10)
       await _updateRecentEvents(userId, event);
@@ -137,7 +137,8 @@ class SecurityEventsService {
           .where((id) => id != null)
           .toSet();
 
-      final isNewDevice = deviceId != null && !previousDevices.contains(deviceId);
+      final isNewDevice =
+          deviceId != null && !previousDevices.contains(deviceId);
 
       // Check for new location
       final previousLocations = recentLogins.docs
@@ -145,7 +146,8 @@ class SecurityEventsService {
           .where((loc) => loc != null)
           .toSet();
 
-      final isNewLocation = location != null && !previousLocations.contains(location);
+      final isNewLocation =
+          location != null && !previousLocations.contains(location);
 
       // Log suspicious activity if detected
       if (isNewDevice || isNewLocation) {
@@ -170,7 +172,9 @@ class SecurityEventsService {
         );
       }
     } catch (e) {
-      unawaited(LoggingService.logError('Failed to check suspicious activity', e));
+      unawaited(
+        LoggingService.logError('Failed to check suspicious activity', e),
+      );
     }
   }
 
@@ -208,10 +212,7 @@ class SecurityEventsService {
 
   /// Log email verification
   Future<void> logEmailVerification(String userId) async {
-    await logEvent(
-      userId: userId,
-      type: SecurityEventType.emailVerification,
-    );
+    await logEvent(userId: userId, type: SecurityEventType.emailVerification);
   }
 
   /// Get security events for user
@@ -258,11 +259,11 @@ class SecurityEventsService {
           .collection('devices')
           .doc(deviceId)
           .set({
-        'deviceId': deviceInfo.deviceId,
-        'platform': deviceInfo.platform,
-        'fcmToken': deviceInfo.fcmToken,
-        'lastSeenAt': Timestamp.fromDate(deviceInfo.lastSeenAt),
-      }, SetOptions(merge: true));
+            'deviceId': deviceInfo.deviceId,
+            'platform': deviceInfo.platform,
+            'fcmToken': deviceInfo.fcmToken,
+            'lastSeenAt': Timestamp.fromDate(deviceInfo.lastSeenAt),
+          }, SetOptions(merge: true));
     } catch (e) {
       unawaited(LoggingService.logError('Failed to track device', e));
     }
@@ -312,7 +313,9 @@ class SecurityEventsService {
       final userDoc = await _firestore.collection('users').doc(userId).get();
 
       if (!userDoc.exists) {
-        LoggingService.logWarning('User not found for suspicious activity email: $userId');
+        LoggingService.logWarning(
+          'User not found for suspicious activity email: $userId',
+        );
         return;
       }
 
@@ -337,10 +340,15 @@ class SecurityEventsService {
         'reason': reason,
       });
 
-      LoggingService.log('Suspicious activity email sent to $userEmail', tag: 'SECURITY');
+      LoggingService.log(
+        'Suspicious activity email sent to $userEmail',
+        tag: 'SECURITY',
+      );
     } catch (e) {
       // Don't throw - email failure should not break security logging
-      unawaited(LoggingService.logError('Failed to send suspicious activity email', e));
+      unawaited(
+        LoggingService.logError('Failed to send suspicious activity email', e),
+      );
     }
   }
 }

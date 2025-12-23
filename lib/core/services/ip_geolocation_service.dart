@@ -63,7 +63,7 @@ class IpGeolocationService {
   final http.Client _client;
 
   IpGeolocationService({http.Client? client})
-      : _client = client ?? http.Client();
+    : _client = client ?? http.Client();
 
   /// Get geolocation for current IP (automatic detection)
   Future<GeoLocationResult?> getCurrentLocation() async {
@@ -99,9 +99,9 @@ class IpGeolocationService {
         : 'https://ipapi.co/json/';
 
     // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
-    final response = await _client.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 1),
-        );
+    final response = await _client
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 1));
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -131,9 +131,9 @@ class IpGeolocationService {
         : 'http://ip-api.com/json/';
 
     // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
-    final response = await _client.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 1),
-        );
+    final response = await _client
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 1));
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -163,9 +163,9 @@ class IpGeolocationService {
         : 'https://ipwhois.app/json/';
 
     // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
-    final response = await _client.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 1),
-        );
+    final response = await _client
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 1));
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;

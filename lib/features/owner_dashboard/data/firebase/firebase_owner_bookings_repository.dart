@@ -202,15 +202,12 @@ class FirebaseOwnerBookingsRepository {
         query = query.where('check_out', isLessThanOrEqualTo: endDate);
       }
 
-      final bookingsSnapshot = await query
-          .get()
-          .withListFetchTimeout('getOwnerBookings');
+      final bookingsSnapshot = await query.get().withListFetchTimeout(
+        'getOwnerBookings',
+      );
       for (final doc in bookingsSnapshot.docs) {
         try {
-          final booking = BookingModel.fromJson({
-            ...doc.data(),
-            'id': doc.id,
-          });
+          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
           // Filter by property/unit if specified
           if (propertyId != null && booking.propertyId != propertyId) continue;
           if (unitId != null && booking.unitId != unitId) continue;
@@ -631,36 +628,52 @@ class FirebaseOwnerBookingsRepository {
     String bookingId,
   ) async {
     final userId = _auth.currentUser?.uid;
-    debugPrint('[_findBookingById] Looking for booking: $bookingId, user: $userId');
+    debugPrint(
+      '[_findBookingById] Looking for booking: $bookingId, user: $userId',
+    );
     if (userId == null) {
       debugPrint('[_findBookingById] ERROR: User not authenticated');
       return null;
     }
 
     // Strategy 1: Query by owner_id (fast, but only works if owner_id field exists)
-    debugPrint('[_findBookingById] Strategy 1: collectionGroup query by owner_id');
+    debugPrint(
+      '[_findBookingById] Strategy 1: collectionGroup query by owner_id',
+    );
     final ownerBookingsSnapshot = await _firestore
         .collectionGroup('bookings')
         .where('owner_id', isEqualTo: userId)
         .get();
-    debugPrint('[_findBookingById] Strategy 1: Found ${ownerBookingsSnapshot.docs.length} bookings for owner');
+    debugPrint(
+      '[_findBookingById] Strategy 1: Found ${ownerBookingsSnapshot.docs.length} bookings for owner',
+    );
 
     for (final doc in ownerBookingsSnapshot.docs) {
       if (doc.id == bookingId) {
-        debugPrint('[_findBookingById] Strategy 1: FOUND booking at path: ${doc.reference.path}');
+        debugPrint(
+          '[_findBookingById] Strategy 1: FOUND booking at path: ${doc.reference.path}',
+        );
         return doc;
       }
     }
-    debugPrint('[_findBookingById] Strategy 1: Booking NOT found in owner bookings');
+    debugPrint(
+      '[_findBookingById] Strategy 1: Booking NOT found in owner bookings',
+    );
 
     // Strategy 2: Fallback - check legacy top-level bookings collection
-    final legacyDoc = await _firestore.collection('bookings').doc(bookingId).get();
+    final legacyDoc = await _firestore
+        .collection('bookings')
+        .doc(bookingId)
+        .get();
     if (legacyDoc.exists) {
       // Verify ownership via property lookup
       final data = legacyDoc.data()!;
       final propertyId = data['property_id'] as String?;
       if (propertyId != null) {
-        final propertyDoc = await _firestore.collection('properties').doc(propertyId).get();
+        final propertyDoc = await _firestore
+            .collection('properties')
+            .doc(propertyId)
+            .get();
         if (propertyDoc.exists && propertyDoc.data()?['owner_id'] == userId) {
           return legacyDoc;
         }
@@ -772,18 +785,21 @@ class FirebaseOwnerBookingsRepository {
 
       // Find booking using helper method (avoids FieldPath.documentId bug)
       final bookingDoc = await _findBookingById(bookingId);
-      debugPrint('[approveBooking] _findBookingById result: ${bookingDoc != null ? 'found' : 'NOT FOUND'}');
+      debugPrint(
+        '[approveBooking] _findBookingById result: ${bookingDoc != null ? 'found' : 'NOT FOUND'}',
+      );
 
       if (bookingDoc == null) {
-        debugPrint('[approveBooking] ERROR: Booking not found in any collection');
-        throw BookingException(
-          'Booking not found',
-          code: 'booking/not-found',
+        debugPrint(
+          '[approveBooking] ERROR: Booking not found in any collection',
         );
+        throw BookingException('Booking not found', code: 'booking/not-found');
       }
 
       // Log the document path to verify correct subcollection
-      debugPrint('[approveBooking] Document path: ${bookingDoc.reference.path}');
+      debugPrint(
+        '[approveBooking] Document path: ${bookingDoc.reference.path}',
+      );
       debugPrint('[approveBooking] Current user: ${_auth.currentUser?.uid}');
 
       // Update using the found document reference
@@ -809,14 +825,15 @@ class FirebaseOwnerBookingsRepository {
 
       // Find booking using helper method (avoids FieldPath.documentId bug)
       final bookingDoc = await _findBookingById(bookingId);
-      debugPrint('[rejectBooking] _findBookingById result: ${bookingDoc != null ? 'found' : 'NOT FOUND'}');
+      debugPrint(
+        '[rejectBooking] _findBookingById result: ${bookingDoc != null ? 'found' : 'NOT FOUND'}',
+      );
 
       if (bookingDoc == null) {
-        debugPrint('[rejectBooking] ERROR: Booking not found in any collection');
-        throw BookingException(
-          'Booking not found',
-          code: 'booking/not-found',
+        debugPrint(
+          '[rejectBooking] ERROR: Booking not found in any collection',
         );
+        throw BookingException('Booking not found', code: 'booking/not-found');
       }
 
       // Log the document path to verify correct subcollection
@@ -851,10 +868,7 @@ class FirebaseOwnerBookingsRepository {
       final bookingDoc = await _findBookingById(bookingId);
 
       if (bookingDoc == null) {
-        throw BookingException(
-          'Booking not found',
-          code: 'booking/not-found',
-        );
+        throw BookingException('Booking not found', code: 'booking/not-found');
       }
 
       // Update using the found document reference
@@ -883,10 +897,7 @@ class FirebaseOwnerBookingsRepository {
       final bookingDoc = await _findBookingById(bookingId);
 
       if (bookingDoc == null) {
-        throw BookingException(
-          'Booking not found',
-          code: 'booking/not-found',
-        );
+        throw BookingException('Booking not found', code: 'booking/not-found');
       }
 
       // Update using the found document reference
@@ -911,10 +922,7 @@ class FirebaseOwnerBookingsRepository {
       final bookingDoc = await _findBookingById(bookingId);
 
       if (bookingDoc == null) {
-        throw BookingException(
-          'Booking not found',
-          code: 'booking/not-found',
-        );
+        throw BookingException('Booking not found', code: 'booking/not-found');
       }
 
       // Update using the found document reference
@@ -938,10 +946,7 @@ class FirebaseOwnerBookingsRepository {
       final bookingDoc = await _findBookingById(bookingId);
 
       if (bookingDoc == null) {
-        throw BookingException(
-          'Booking not found',
-          code: 'booking/not-found',
-        );
+        throw BookingException('Booking not found', code: 'booking/not-found');
       }
 
       // Delete using the found document reference
@@ -1063,9 +1068,9 @@ class FirebaseOwnerBookingsRepository {
         query = query.startAfterDocument(startAfterDocument);
       }
 
-      final snapshot = await query
-          .get()
-          .withListFetchTimeout('getOwnerBookingsPaginated');
+      final snapshot = await query.get().withListFetchTimeout(
+        'getOwnerBookingsPaginated',
+      );
 
       // Check if there are more pages
       final hasMore = snapshot.docs.length > limit;
@@ -1084,7 +1089,8 @@ class FirebaseOwnerBookingsRepository {
           // Client-side filtering by unit IDs, property, and dates
           if (!filteredUnitIds.contains(booking.unitId)) continue;
           if (propertyId != null && booking.propertyId != propertyId) continue;
-          if (startDate != null && booking.checkIn.isBefore(startDate)) continue;
+          if (startDate != null && booking.checkIn.isBefore(startDate))
+            continue;
           if (endDate != null && booking.checkOut.isAfter(endDate)) continue;
 
           bookings.add(booking);
@@ -1195,7 +1201,8 @@ class FirebaseOwnerBookingsRepository {
           // Client-side filtering
           if (!filteredUnitIds.contains(booking.unitId)) continue;
           if (propertyId != null && booking.propertyId != propertyId) continue;
-          if (startDate != null && booking.checkIn.isBefore(startDate)) continue;
+          if (startDate != null && booking.checkIn.isBefore(startDate))
+            continue;
           if (endDate != null && booking.checkOut.isAfter(endDate)) continue;
 
           bookings.add(booking);
@@ -1443,7 +1450,9 @@ class FirebaseOwnerBookingsRepository {
           .orderBy('created_at', descending: true)
           .limit(limit);
 
-      final snapshot = await query.get().withBookingFetchTimeout('_queryBookingsForStats');
+      final snapshot = await query.get().withBookingFetchTimeout(
+        '_queryBookingsForStats',
+      );
       for (final doc in snapshot.docs) {
         try {
           final booking = BookingModel.fromJson({
@@ -1488,7 +1497,9 @@ class FirebaseOwnerBookingsRepository {
           .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
           .limit(limit);
 
-      final snapshot = await query.get().withBookingFetchTimeout('_queryUpcomingCheckIns');
+      final snapshot = await query.get().withBookingFetchTimeout(
+        '_queryUpcomingCheckIns',
+      );
       for (final doc in snapshot.docs) {
         try {
           final booking = BookingModel.fromJson({

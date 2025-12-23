@@ -391,20 +391,14 @@ void main() {
         final friday = DateTime(2024, 6, 14); // Friday = 5
 
         // Custom weekend: Friday + Saturday (not Sunday)
-        expect(
-          DateNormalizer.isWeekend(friday, weekendDays: [5, 6]),
-          isTrue,
-        );
+        expect(DateNormalizer.isWeekend(friday, weekendDays: [5, 6]), isTrue);
       });
 
       test('returns false when day not in custom weekend', () {
         final sunday = DateTime(2024, 6, 16); // Sunday = 7
 
         // Custom weekend: Friday + Saturday only
-        expect(
-          DateNormalizer.isWeekend(sunday, weekendDays: [5, 6]),
-          isFalse,
-        );
+        expect(DateNormalizer.isWeekend(sunday, weekendDays: [5, 6]), isFalse);
       });
     });
 

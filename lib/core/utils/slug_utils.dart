@@ -6,12 +6,31 @@ library;
 
 /// Cached character replacements for slug generation (Croatian/European characters)
 const _charReplacements = {
-  'č': 'c', 'ć': 'c', 'đ': 'd', 'š': 's', 'ž': 'z',
-  'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a',
-  'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-  'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-  'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o',
-  'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+  'č': 'c',
+  'ć': 'c',
+  'đ': 'd',
+  'š': 's',
+  'ž': 'z',
+  'á': 'a',
+  'à': 'a',
+  'â': 'a',
+  'ä': 'a',
+  'é': 'e',
+  'è': 'e',
+  'ê': 'e',
+  'ë': 'e',
+  'í': 'i',
+  'ì': 'i',
+  'î': 'i',
+  'ï': 'i',
+  'ó': 'o',
+  'ò': 'o',
+  'ô': 'o',
+  'ö': 'o',
+  'ú': 'u',
+  'ù': 'u',
+  'û': 'u',
+  'ü': 'u',
   'ñ': 'n',
 };
 
@@ -82,11 +101,7 @@ String generateSlug(String input, {int maxLength = 50}) {
 /// [slug] - Generated slug from unit/property name
 /// [unitId] - Full Firestore document ID (e.g., "gMIOos56siO74VkCsSwY")
 /// [shortIdLength] - Number of characters from unit ID to include (default: 6)
-String generateHybridSlug(
-  String slug,
-  String unitId, {
-  int shortIdLength = 6,
-}) {
+String generateHybridSlug(String slug, String unitId, {int shortIdLength = 6}) {
   if (slug.isEmpty || unitId.isEmpty) {
     throw ArgumentError('Slug and unitId cannot be empty');
   }

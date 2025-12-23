@@ -35,7 +35,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BankDetailsSection(isDarkMode: false, bankConfig: createConfig(accountHolder: 'Test User')),
+            body: BankDetailsSection(
+              isDarkMode: false,
+              bankConfig: createConfig(accountHolder: 'Test User'),
+            ),
           ),
         ),
       );
@@ -49,7 +52,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BankDetailsSection(isDarkMode: false, bankConfig: createConfig(accountHolder: 'John Doe')),
+            body: BankDetailsSection(
+              isDarkMode: false,
+              bankConfig: createConfig(accountHolder: 'John Doe'),
+            ),
           ),
         ),
       );
@@ -63,7 +69,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BankDetailsSection(isDarkMode: false, bankConfig: createConfig(bankName: 'Test Bank')),
+            body: BankDetailsSection(
+              isDarkMode: false,
+              bankConfig: createConfig(bankName: 'Test Bank'),
+            ),
           ),
         ),
       );
@@ -77,7 +86,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BankDetailsSection(isDarkMode: false, bankConfig: createConfig(iban: 'HR1234567890123456789')),
+            body: BankDetailsSection(
+              isDarkMode: false,
+              bankConfig: createConfig(iban: 'HR1234567890123456789'),
+            ),
           ),
         ),
       );
@@ -90,7 +102,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BankDetailsSection(isDarkMode: false, bankConfig: createConfig(swift: 'TESTHR2X')),
+            body: BankDetailsSection(
+              isDarkMode: false,
+              bankConfig: createConfig(swift: 'TESTHR2X'),
+            ),
           ),
         ),
       );
@@ -103,7 +118,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BankDetailsSection(isDarkMode: false, bankConfig: createConfig(accountNumber: '1234567890')),
+            body: BankDetailsSection(
+              isDarkMode: false,
+              bankConfig: createConfig(accountNumber: '1234567890'),
+            ),
           ),
         ),
       );
@@ -116,7 +134,12 @@ void main() {
     testWidgets('does not render fields when null', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: BankDetailsSection(isDarkMode: false, bankConfig: BankTransferConfig(enabled: true))),
+          home: Scaffold(
+            body: BankDetailsSection(
+              isDarkMode: false,
+              bankConfig: BankTransferConfig(enabled: true),
+            ),
+          ),
         ),
       );
 
@@ -160,7 +183,10 @@ void main() {
         MaterialApp(
           theme: ThemeData.dark(),
           home: Scaffold(
-            body: BankDetailsSection(isDarkMode: true, bankConfig: createConfig(accountHolder: 'Test User')),
+            body: BankDetailsSection(
+              isDarkMode: true,
+              bankConfig: createConfig(accountHolder: 'Test User'),
+            ),
           ),
         ),
       );
@@ -281,7 +307,9 @@ void main() {
       expect(find.byIcon(Icons.info_outline), findsOneWidget);
     });
 
-    testWidgets('renders default notes when bankConfig is null', (tester) async {
+    testWidgets('renders default notes when bankConfig is null', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -301,7 +329,9 @@ void main() {
       expect(find.byType(ImportantNotesSection), findsOneWidget);
     });
 
-    testWidgets('renders default notes when useCustomNotes is false', (tester) async {
+    testWidgets('renders default notes when useCustomNotes is false', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -341,7 +371,9 @@ void main() {
       expect(find.text('Ovo je prilagođena poruka za kupce.'), findsOneWidget);
     });
 
-    testWidgets('renders default notes when custom notes empty', (tester) async {
+    testWidgets('renders default notes when custom notes empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -390,7 +422,12 @@ void main() {
       String? swift = 'TESTHR2X',
       String? accountHolder = 'Test User',
     }) {
-      return BankTransferConfig(enabled: true, iban: iban, swift: swift, accountHolder: accountHolder);
+      return BankTransferConfig(
+        enabled: true,
+        iban: iban,
+        swift: swift,
+        accountHolder: accountHolder,
+      );
     }
 
     testWidgets('renders header with title', (tester) async {
@@ -477,7 +514,9 @@ void main() {
       expect(find.text('QR Kod za Uplatu'), findsOneWidget);
     });
 
-    testWidgets('renders with different amounts and references', (tester) async {
+    testWidgets('renders with different amounts and references', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

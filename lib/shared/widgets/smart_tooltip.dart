@@ -67,7 +67,9 @@ class SmartTooltip extends StatelessWidget {
     return Tooltip(
       message: message,
       waitDuration: waitDuration ?? const Duration(milliseconds: 500),
-      constraints: minHeight != null ? BoxConstraints(minHeight: minHeight) : null,
+      constraints: minHeight != null
+          ? BoxConstraints(minHeight: minHeight)
+          : null,
       showDuration: showDuration,
       textStyle: textStyle,
       decoration: decoration,
@@ -125,7 +127,7 @@ class _SmartTooltipOverlayState extends State<_SmartTooltipOverlay> {
 
   void _showOverlay() {
     if (_overlayEntry != null) return;
-    
+
     // Defensive check: ensure widget is still mounted before accessing context
     if (!mounted) return;
 
@@ -138,12 +140,15 @@ class _SmartTooltipOverlayState extends State<_SmartTooltipOverlay> {
 
       // Defensive check: ensure size is valid and finite
       final size = renderBox.size;
-      if (!size.width.isFinite || !size.height.isFinite || size.width <= 0 || size.height <= 0) {
+      if (!size.width.isFinite ||
+          !size.height.isFinite ||
+          size.width <= 0 ||
+          size.height <= 0) {
         return;
       }
 
       final position = renderBox.localToGlobal(Offset.zero);
-      
+
       // Defensive check: ensure position is valid
       if (!position.dx.isFinite || !position.dy.isFinite) {
         return;
@@ -151,12 +156,14 @@ class _SmartTooltipOverlayState extends State<_SmartTooltipOverlay> {
 
       final mediaQuery = MediaQuery.maybeOf(context);
       if (mediaQuery == null) return;
-      
+
       final screenSize = mediaQuery.size;
-      
+
       // Defensive check: ensure screen size is valid
-      if (!screenSize.width.isFinite || !screenSize.height.isFinite || 
-          screenSize.width <= 0 || screenSize.height <= 0) {
+      if (!screenSize.width.isFinite ||
+          !screenSize.height.isFinite ||
+          screenSize.width <= 0 ||
+          screenSize.height <= 0) {
         return;
       }
 
@@ -198,11 +205,14 @@ class _SmartTooltipOverlayState extends State<_SmartTooltipOverlay> {
     return MouseRegion(
       onEnter: (_) {
         setState(() => _isHovering = true);
-        Future.delayed(widget.waitDuration ?? const Duration(milliseconds: 500), () {
-          if (_isHovering && mounted) {
-            _showOverlay();
-          }
-        });
+        Future.delayed(
+          widget.waitDuration ?? const Duration(milliseconds: 500),
+          () {
+            if (_isHovering && mounted) {
+              _showOverlay();
+            }
+          },
+        );
       },
       onExit: (_) {
         setState(() => _isHovering = false);
@@ -212,11 +222,14 @@ class _SmartTooltipOverlayState extends State<_SmartTooltipOverlay> {
         onLongPress: () {
           if (!_isHovering && mounted) {
             _showOverlay();
-            Future.delayed(widget.showDuration ?? const Duration(seconds: 2), () {
-              if (mounted) {
-                _removeOverlay();
-              }
-            });
+            Future.delayed(
+              widget.showDuration ?? const Duration(seconds: 2),
+              () {
+                if (mounted) {
+                  _removeOverlay();
+                }
+              },
+            );
           }
         },
         child: widget.child,
@@ -257,7 +270,8 @@ class _TooltipPositioner extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     // Calculate tooltip size (approximate)
-    final tooltipPadding = padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
+    final tooltipPadding =
+        padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
     final tooltipMargin = margin ?? const EdgeInsets.all(8);
     final maxWidth = screenSize.width * 0.7; // Max 70% of screen width
     final estimatedHeight = height ?? 32.0;
@@ -286,9 +300,15 @@ class _TooltipPositioner extends StatelessWidget {
         ),
         // Tooltip
         Positioned(
-          left: bestPosition.alignment == _TooltipAlignment.left ? null : bestPosition.offset.dx,
-          right: bestPosition.alignment == _TooltipAlignment.right ? null : screenSize.width - bestPosition.offset.dx,
-          top: bestPosition.alignment == _TooltipAlignment.top ? null : bestPosition.offset.dy,
+          left: bestPosition.alignment == _TooltipAlignment.left
+              ? null
+              : bestPosition.offset.dx,
+          right: bestPosition.alignment == _TooltipAlignment.right
+              ? null
+              : screenSize.width - bestPosition.offset.dx,
+          top: bestPosition.alignment == _TooltipAlignment.top
+              ? null
+              : bestPosition.offset.dy,
           bottom: bestPosition.alignment == _TooltipAlignment.bottom
               ? null
               : screenSize.height - bestPosition.offset.dy,
@@ -302,7 +322,9 @@ class _TooltipPositioner extends StatelessWidget {
                 decoration:
                     decoration ??
                     BoxDecoration(
-                      color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFF424242),
+                      color: isDark
+                          ? const Color(0xFF2D2D3A)
+                          : const Color(0xFF424242),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
@@ -314,7 +336,12 @@ class _TooltipPositioner extends StatelessWidget {
                     ),
                 child: Text(
                   message,
-                  style: textStyle ?? theme.textTheme.bodySmall?.copyWith(color: Colors.white, fontSize: 12),
+                  style:
+                      textStyle ??
+                      theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -339,7 +366,10 @@ class _TooltipPositioner extends StatelessWidget {
     final positions = <_TooltipPosition>[];
 
     // Calculate center of target
-    final targetCenter = Offset(targetPosition.dx + targetSize.width / 2, targetPosition.dy + targetSize.height / 2);
+    final targetCenter = Offset(
+      targetPosition.dx + targetSize.width / 2,
+      targetPosition.dy + targetSize.height / 2,
+    );
 
     // Try bottom (preferred)
     final bottomY = targetPosition.dy + targetSize.height + marginInsets.top;
@@ -417,7 +447,10 @@ class _TooltipPositioner extends StatelessWidget {
     if (positions.isEmpty) {
       positions.add(
         _TooltipPosition(
-          offset: Offset(marginInsets.left, screenSize.height - tooltipHeight - marginInsets.bottom - 50),
+          offset: Offset(
+            marginInsets.left,
+            screenSize.height - tooltipHeight - marginInsets.bottom - 50,
+          ),
           alignment: _TooltipAlignment.bottom,
           score: 1,
         ),
@@ -438,5 +471,9 @@ class _TooltipPosition {
   final _TooltipAlignment alignment;
   final int score;
 
-  _TooltipPosition({required this.offset, required this.alignment, required this.score});
+  _TooltipPosition({
+    required this.offset,
+    required this.alignment,
+    required this.score,
+  });
 }

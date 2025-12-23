@@ -14,6 +14,7 @@ class QrCodePaymentSection extends StatelessWidget {
   final double amount;
   final String bookingReference;
   final WidgetTranslations translations;
+
   /// Currency code (ISO 4217, e.g., 'EUR', 'HRK', 'USD')
   /// Defaults to 'EUR' for SEPA compatibility
   final String currency;
@@ -167,10 +168,16 @@ class QrCodePaymentSection extends StatelessWidget {
     // Prepare and validate field values
     final String iban = bankConfig.iban!.replaceAll(' ', '');
     final String bic = bankConfig.swift?.trim() ?? '';
-    final String beneficiaryName = _truncateField(bankConfig.accountHolder!, 70);
+    final String beneficiaryName = _truncateField(
+      bankConfig.accountHolder!,
+      70,
+    );
     final String amountStr = amount.toStringAsFixed(2);
     final String reference = _truncateField(bookingReference, 25);
-    final String remittanceInfo = _truncateField(translations.bookingDeposit, 140);
+    final String remittanceInfo = _truncateField(
+      translations.bookingDeposit,
+      140,
+    );
     final String currencyCode = _validateCurrencyCode(currency);
 
     // Validate EPC format constraints

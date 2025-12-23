@@ -16,8 +16,11 @@ class LoadingOverlay extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    final bgColor = backgroundColor ??
-        (isDarkMode ? Colors.black.withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95));
+    final bgColor =
+        backgroundColor ??
+        (isDarkMode
+            ? Colors.black.withValues(alpha: 0.95)
+            : Colors.white.withValues(alpha: 0.95));
 
     return Container(
       color: bgColor,

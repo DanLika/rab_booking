@@ -21,9 +21,17 @@ class InputDecorationHelper {
     return BoxDecoration(
       color: getDropdownColor(context),
       borderRadius: dropdownBorderRadius,
-      border: Border.all(color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+      border: Border.all(
+        color: isDark
+            ? AppColors.sectionDividerDark
+            : AppColors.sectionDividerLight,
+      ),
       boxShadow: [
-        BoxShadow(color: Colors.black.withAlpha((0.15 * 255).toInt()), blurRadius: 12, offset: const Offset(0, 4)),
+        BoxShadow(
+          color: Colors.black.withAlpha((0.15 * 255).toInt()),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
       ],
     );
   }
@@ -60,7 +68,10 @@ class InputDecorationHelper {
       ),
       filled: true,
       fillColor: context.gradients.inputFillColor,
-      contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 12 : 16),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: isMobile ? 12 : 16,
+      ),
     );
   }
 
@@ -71,6 +82,11 @@ class InputDecorationHelper {
     bool isMobile = false,
     required BuildContext context,
   }) {
-    return buildDecoration(labelText: labelText, prefixIcon: prefixIcon, isMobile: isMobile, context: context);
+    return buildDecoration(
+      labelText: labelText,
+      prefixIcon: prefixIcon,
+      isMobile: isMobile,
+      context: context,
+    );
   }
 }

@@ -38,10 +38,12 @@ class BankTransferConfig with PaymentConfigBase {
   final String? ownerId;
 
   // Widget-specific options (NOT bank details)
-  final int paymentDeadlineDays; // Days until payment deadline (1-14, default: 3)
+  final int
+  paymentDeadlineDays; // Days until payment deadline (1-14, default: 3)
   final bool enableQrCode; // Show EPC QR code for bank transfer
   final String? customNotes; // Custom notes from owner (max 500 chars)
-  final bool useCustomNotes; // If true, show customNotes; if false, show default legal notes
+  final bool
+  useCustomNotes; // If true, show customNotes; if false, show default legal notes
 
   // LEGACY FIELDS - For backward compatibility with existing widgets
   // New widgets should NOT write these fields, but still read them
@@ -110,11 +112,16 @@ class BankTransferConfig with PaymentConfigBase {
   ///
   /// Widget should first check [hasOwnerId], then fall back to legacy fields.
   bool get hasCompleteDetails =>
-      hasOwnerId || (bankName != null && accountHolder != null && (iban != null || accountNumber != null));
+      hasOwnerId ||
+      (bankName != null &&
+          accountHolder != null &&
+          (iban != null || accountNumber != null));
 
   /// Whether this config has legacy bank details (for backward compatibility).
   bool get hasLegacyBankDetails =>
-      (bankName?.isNotEmpty ?? false) && (accountHolder?.isNotEmpty ?? false) && (iban?.isNotEmpty ?? false);
+      (bankName?.isNotEmpty ?? false) &&
+      (accountHolder?.isNotEmpty ?? false) &&
+      (iban?.isNotEmpty ?? false);
 
   /// Creates a copy with modified fields.
   ///
@@ -148,10 +155,14 @@ class BankTransferConfig with PaymentConfigBase {
       customNotes: customNotes != null ? customNotes.value : this.customNotes,
       useCustomNotes: useCustomNotes ?? this.useCustomNotes,
       bankName: bankName != null ? bankName.value : this.bankName,
-      accountNumber: accountNumber != null ? accountNumber.value : this.accountNumber,
+      accountNumber: accountNumber != null
+          ? accountNumber.value
+          : this.accountNumber,
       iban: iban != null ? iban.value : this.iban,
       swift: swift != null ? swift.value : this.swift,
-      accountHolder: accountHolder != null ? accountHolder.value : this.accountHolder,
+      accountHolder: accountHolder != null
+          ? accountHolder.value
+          : this.accountHolder,
     );
   }
 }

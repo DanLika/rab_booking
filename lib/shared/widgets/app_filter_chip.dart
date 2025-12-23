@@ -24,7 +24,13 @@ class AppFilterChip extends StatefulWidget {
   final VoidCallback onSelected;
   final IconData? icon;
 
-  const AppFilterChip({super.key, required this.label, required this.selected, required this.onSelected, this.icon});
+  const AppFilterChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+    this.icon,
+  });
 
   @override
   State<AppFilterChip> createState() => _AppFilterChipState();
@@ -50,7 +56,9 @@ class _AppFilterChipState extends State<AppFilterChip> {
         ? theme.colorScheme.primary.withValues(alpha: 0.4)
         : context.gradients.sectionBorder;
 
-    final textColor = widget.selected ? Colors.white : theme.colorScheme.onSurface;
+    final textColor = widget.selected
+        ? Colors.white
+        : theme.colorScheme.onSurface;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -69,10 +77,20 @@ class _AppFilterChipState extends State<AppFilterChip> {
                     children: [
                       Icon(widget.icon, size: 16, color: textColor),
                       const SizedBox(width: 6),
-                      Flexible(child: Text(widget.label, overflow: TextOverflow.ellipsis, maxLines: 1)),
+                      Flexible(
+                        child: Text(
+                          widget.label,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
                     ],
                   )
-                : Text(widget.label, overflow: TextOverflow.ellipsis, maxLines: 1),
+                : Text(
+                    widget.label,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
             selected: widget.selected,
             onSelected: (_) => widget.onSelected(),
             selectedColor: bgColor,
@@ -85,7 +103,9 @@ class _AppFilterChipState extends State<AppFilterChip> {
             ),
             checkmarkColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             elevation: widget.selected ? 2 : 0,
             shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
           ),

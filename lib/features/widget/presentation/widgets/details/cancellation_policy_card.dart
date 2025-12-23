@@ -17,12 +17,20 @@ class CancellationPolicyCard extends ConsumerWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
-  const CancellationPolicyCard({super.key, required this.deadlineHours, required this.checkIn, required this.colors});
+  const CancellationPolicyCard({
+    super.key,
+    required this.deadlineHours,
+    required this.checkIn,
+    required this.colors,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
-    final checkInDate = DateTimeParser.parseOrThrow(checkIn, context: 'CancellationPolicyCard.checkIn');
+    final checkInDate = DateTimeParser.parseOrThrow(
+      checkIn,
+      context: 'CancellationPolicyCard.checkIn',
+    );
     // Bug #64 Fix: Use UTC consistently for timezone-safe comparison
     // Cloud Function returns ISO 8601 string in UTC format (with 'Z' suffix)
     // DateTime.parse() preserves timezone, so checkInDate might already be UTC
@@ -36,7 +44,9 @@ class CancellationPolicyCard extends ConsumerWidget {
 
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -51,7 +61,11 @@ class CancellationPolicyCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(canCancel ? Icons.event_available : Icons.event_busy, size: 20, color: statusColor),
+              Icon(
+                canCancel ? Icons.event_available : Icons.event_busy,
+                size: 20,
+                color: statusColor,
+              ),
               const SizedBox(width: SpacingTokens.xs),
               Text(
                 tr.cancellationPolicy,
@@ -75,7 +89,9 @@ class CancellationPolicyCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  canCancel ? tr.freeCancellationAvailable : tr.cancellationDeadlinePassedShort,
+                  canCancel
+                      ? tr.freeCancellationAvailable
+                      : tr.cancellationDeadlinePassedShort,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeS,
                     fontWeight: TypographyTokens.semiBold,
@@ -85,7 +101,10 @@ class CancellationPolicyCard extends ConsumerWidget {
                 const SizedBox(height: SpacingTokens.xs),
                 Text(
                   _formatCancellationDeadline(deadlineHours, tr),
-                  style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeS,
+                    color: colors.textSecondary,
+                  ),
                 ),
                 if (!canCancel) ...[
                   const SizedBox(height: SpacingTokens.xs),

@@ -47,7 +47,9 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'check_out_time') String? checkOutTime,
 
     /// Check-out date
-    @TimestampConverter() @JsonKey(name: 'check_out') required DateTime checkOut,
+    @TimestampConverter()
+    @JsonKey(name: 'check_out')
+    required DateTime checkOut,
 
     /// Booking status
     required BookingStatus status,
@@ -101,16 +103,22 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'booking_reference') String? bookingReference,
 
     /// Booking creation timestamp
-    @TimestampConverter() @JsonKey(name: 'created_at') required DateTime createdAt,
+    @TimestampConverter()
+    @JsonKey(name: 'created_at')
+    required DateTime createdAt,
 
     /// Last update timestamp
-    @NullableTimestampConverter() @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'updated_at')
+    DateTime? updatedAt,
 
     /// Cancellation reason (if cancelled)
     @JsonKey(name: 'cancellation_reason') String? cancellationReason,
 
     /// Cancelled at timestamp
-    @NullableTimestampConverter() @JsonKey(name: 'cancelled_at') DateTime? cancelledAt,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'cancelled_at')
+    DateTime? cancelledAt,
 
     /// User ID who cancelled the booking
     @JsonKey(name: 'cancelled_by') String? cancelledBy,
@@ -119,7 +127,8 @@ class BookingModel with _$BookingModel {
   const BookingModel._();
 
   /// Create from JSON
-  factory BookingModel.fromJson(Map<String, dynamic> json) => _$BookingModelFromJson(json);
+  factory BookingModel.fromJson(Map<String, dynamic> json) =>
+      _$BookingModelFromJson(json);
 
   /// Calculate number of nights
   int get numberOfNights {
@@ -157,7 +166,8 @@ class BookingModel with _$BookingModel {
     final today = DateNormalizer.normalize(DateTime.now());
     final normalizedCheckIn = DateNormalizer.normalize(checkIn);
     final normalizedCheckOut = DateNormalizer.normalize(checkOut);
-    return !normalizedCheckIn.isAfter(today) && normalizedCheckOut.isAfter(today);
+    return !normalizedCheckIn.isAfter(today) &&
+        normalizedCheckOut.isAfter(today);
   }
 
   /// Check if booking is upcoming
@@ -182,7 +192,10 @@ class BookingModel with _$BookingModel {
     // Check by source field
     if (source != null) {
       final src = source!.toLowerCase();
-      return src == 'booking_com' || src == 'airbnb' || src == 'ical' || src == 'external';
+      return src == 'booking_com' ||
+          src == 'airbnb' ||
+          src == 'ical' ||
+          src == 'external';
     }
 
     // Check by payment method
@@ -235,7 +248,21 @@ class BookingModel with _$BookingModel {
 
   /// Get formatted date range (e.g., "Jan 15 - Jan 20, 2024")
   String get dateRangeFormatted {
-    final months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
     final checkInMonth = months[checkIn.month];
     final checkOutMonth = months[checkOut.month];
@@ -257,7 +284,8 @@ class BookingModel with _$BookingModel {
   String get formattedPaidAmount => '€${paidAmount.toStringAsFixed(2)}';
 
   /// Get formatted remaining balance
-  String get formattedRemainingBalance => '€${remainingBalance.toStringAsFixed(2)}';
+  String get formattedRemainingBalance =>
+      '€${remainingBalance.toStringAsFixed(2)}';
 
   /// Get night count label
   String get nightsLabel {
@@ -291,6 +319,11 @@ class BookingModel with _$BookingModel {
 
   /// Check if this booking overlaps with given dates
   bool overlapsWithDates(DateTime start, DateTime end) {
-    return datesOverlap(start1: checkIn, end1: checkOut, start2: start, end2: end);
+    return datesOverlap(
+      start1: checkIn,
+      end1: checkOut,
+      start2: start,
+      end2: end,
+    );
   }
 }

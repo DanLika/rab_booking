@@ -63,10 +63,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: AnimationTokens.easeOut,
-      ),
+      CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
     );
 
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
@@ -92,7 +89,8 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveIconColor = widget.iconColor ??
+    final effectiveIconColor =
+        widget.iconColor ??
         theme.colorScheme.onSurfaceVariant.withAlpha((0.5 * 255).toInt());
 
     return AnimatedBuilder(
@@ -100,20 +98,13 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
       builder: (context, child) {
         return Opacity(
           opacity: _fadeAnimation.value,
-          child: Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          ),
+          child: Transform.scale(scale: _scaleAnimation.value, child: child),
         );
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            widget.icon,
-            size: widget.iconSize,
-            color: effectiveIconColor,
-          ),
+          Icon(widget.icon, size: widget.iconSize, color: effectiveIconColor),
           const SizedBox(height: 16),
           Text(
             widget.title,
@@ -197,7 +188,9 @@ class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
   late final List<Animation<double>> _slideAnimations;
 
   int get _elementCount =>
-      2 + (widget.subtitle != null ? 1 : 0) + (widget.actionButton != null ? 1 : 0);
+      2 +
+      (widget.subtitle != null ? 1 : 0) +
+      (widget.actionButton != null ? 1 : 0);
 
   @override
   void initState() {
@@ -205,10 +198,8 @@ class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
 
     _controllers = List.generate(
       _elementCount,
-      (index) => AnimationController(
-        duration: AnimationTokens.fast,
-        vsync: this,
-      ),
+      (index) =>
+          AnimationController(duration: AnimationTokens.fast, vsync: this),
     );
 
     _fadeAnimations = _controllers.map((controller) {
@@ -259,7 +250,8 @@ class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveIconColor = widget.iconColor ??
+    final effectiveIconColor =
+        widget.iconColor ??
         theme.colorScheme.onSurfaceVariant.withAlpha((0.5 * 255).toInt());
 
     int elementIndex = 0;
@@ -269,11 +261,7 @@ class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
       children: [
         _buildAnimatedElement(
           elementIndex++,
-          Icon(
-            widget.icon,
-            size: widget.iconSize,
-            color: effectiveIconColor,
-          ),
+          Icon(widget.icon, size: widget.iconSize, color: effectiveIconColor),
         ),
         const SizedBox(height: 16),
         _buildAnimatedElement(
@@ -302,10 +290,7 @@ class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
         ],
         if (widget.actionButton != null) ...[
           const SizedBox(height: 24),
-          _buildAnimatedElement(
-            elementIndex,
-            widget.actionButton!,
-          ),
+          _buildAnimatedElement(elementIndex, widget.actionButton!),
         ],
       ],
     );

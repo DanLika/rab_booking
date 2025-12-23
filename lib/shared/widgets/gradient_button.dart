@@ -60,10 +60,7 @@ class _GradientButtonState extends State<GradientButton>
   Widget build(BuildContext context) {
     final gradientColors =
         widget.gradientColors ??
-        [
-          GradientTokens.brandPrimaryStart,
-          GradientTokens.brandPrimaryEnd,
-        ];
+        [GradientTokens.brandPrimaryStart, GradientTokens.brandPrimaryEnd];
 
     final borderRadius = widget.borderRadius ?? BorderRadius.circular(16);
 

@@ -30,7 +30,7 @@ final languageProvider = StateProvider<String>((ref) {
     if (langParam != null && supportedLanguages.contains(langParam)) {
       return langParam;
     }
-    
+
     // Priority 2: Browser language detection
     final browserLang = PlatformDispatcher.instance.locale.languageCode;
     if (supportedLanguages.contains(browserLang)) {

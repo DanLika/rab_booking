@@ -55,7 +55,10 @@ class BookingActionBottomSheet extends ConsumerWidget {
               ),
 
               // OVERBOOKING WARNING - shown at top if there's a conflict
-              if (hasConflict) ...[_buildConflictWarningBanner(context, l10n), const SizedBox(height: 8)],
+              if (hasConflict) ...[
+                _buildConflictWarningBanner(context, l10n),
+                const SizedBox(height: 8),
+              ],
 
               // Gradient header with booking info
               Container(
@@ -76,7 +79,11 @@ class BookingActionBottomSheet extends ConsumerWidget {
                             color: Colors.white.withAlpha((0.2 * 255).toInt()),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.person, color: Colors.white, size: 24),
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -84,28 +91,47 @@ class BookingActionBottomSheet extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                booking.guestName ?? l10n.bookingActionUnknownGuest,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                booking.guestName ??
+                                    l10n.bookingActionUnknownGuest,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '${_formatDate(booking.checkIn)} - ${_formatDate(booking.checkOut)}',
-                                style: TextStyle(fontSize: 14, color: Colors.white.withAlpha((0.9 * 255).toInt())),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withAlpha(
+                                    (0.9 * 255).toInt(),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
                         // Status badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
                                 width: 8,
                                 height: 8,
-                                decoration: BoxDecoration(color: booking.status.color, shape: BoxShape.circle),
+                                decoration: BoxDecoration(
+                                  color: booking.status.color,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                               const SizedBox(width: 6),
                               Text(
@@ -126,12 +152,18 @@ class BookingActionBottomSheet extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildInfoChip(Icons.nights_stay, l10n.tooltipNightsCount(nights)),
+                        _buildInfoChip(
+                          Icons.nights_stay,
+                          l10n.tooltipNightsCount(nights),
+                        ),
                         _buildInfoChip(
                           Icons.people_outline,
                           l10n.tooltipGuestsCount(booking.guestCount),
                         ),
-                        _buildInfoChip(Icons.euro, '${booking.totalPrice.toStringAsFixed(0)} €'),
+                        _buildInfoChip(
+                          Icons.euro,
+                          '${booking.totalPrice.toStringAsFixed(0)} €',
+                        ),
                       ],
                     ),
                   ],
@@ -238,7 +270,11 @@ class BookingActionBottomSheet extends ConsumerWidget {
           const SizedBox(width: 6),
           Text(
             text,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ],
       ),
@@ -268,7 +304,9 @@ class BookingActionBottomSheet extends ConsumerWidget {
             border: Border.all(
               color: isDestructive
                   ? AppColors.error.withAlpha((0.3 * 255).toInt())
-                  : (isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+                  : (isDark
+                        ? AppColors.sectionDividerDark
+                        : AppColors.sectionDividerLight),
             ),
           ),
           child: Row(
@@ -297,12 +335,18 @@ class BookingActionBottomSheet extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -315,7 +359,10 @@ class BookingActionBottomSheet extends ConsumerWidget {
   }
 
   /// Build conflict warning banner showing overbooking alert
-  Widget _buildConflictWarningBanner(BuildContext context, AppLocalizations l10n) {
+  Widget _buildConflictWarningBanner(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
@@ -334,16 +381,25 @@ class BookingActionBottomSheet extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'OVERBOOKING!',
-                  style: TextStyle(color: Colors.red.shade800, fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(
+                    color: Colors.red.shade800,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ],
           ),
-          if (conflictingBookings != null && conflictingBookings!.isNotEmpty) ...[
+          if (conflictingBookings != null &&
+              conflictingBookings!.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               l10n.tooltipConflictWith,
-              style: TextStyle(color: Colors.red.shade700, fontSize: 12, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 4),
             ...conflictingBookings!
@@ -353,12 +409,19 @@ class BookingActionBottomSheet extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       children: [
-                        Icon(Icons.person, size: 14, color: Colors.red.shade600),
+                        Icon(
+                          Icons.person,
+                          size: 14,
+                          color: Colors.red.shade600,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             '${conflict.guestName ?? l10n.bookingActionUnknownGuest} (${_formatDate(conflict.checkIn)} - ${_formatDate(conflict.checkOut)})',
-                            style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontSize: 12,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -366,14 +429,21 @@ class BookingActionBottomSheet extends ConsumerWidget {
                         if (conflict.isExternalBooking)
                           Container(
                             margin: const EdgeInsets.only(left: 4),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red.shade100,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               conflict.sourceDisplayName,
-                              style: TextStyle(fontSize: 10, color: Colors.red.shade800, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.red.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                       ],
@@ -383,7 +453,11 @@ class BookingActionBottomSheet extends ConsumerWidget {
             if (conflictingBookings!.length > 3)
               Text(
                 l10n.tooltipMoreConflicts(conflictingBookings!.length - 3),
-                style: TextStyle(color: Colors.red.shade600, fontSize: 11, fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  color: Colors.red.shade600,
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
           ],
         ],
@@ -392,14 +466,21 @@ class BookingActionBottomSheet extends ConsumerWidget {
   }
 
   /// Build external booking info banner (iCal imports are read-only)
-  Widget _buildExternalBookingBanner(BuildContext context, bool isDark, AppLocalizations l10n) {
+  Widget _buildExternalBookingBanner(
+    BuildContext context,
+    bool isDark,
+    AppLocalizations l10n,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.orange.withAlpha((0.1 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withAlpha((0.4 * 255).toInt()), width: 1.5),
+        border: Border.all(
+          color: Colors.orange.withAlpha((0.4 * 255).toInt()),
+          width: 1.5,
+        ),
       ),
       child: Row(
         children: [
@@ -418,7 +499,11 @@ class BookingActionBottomSheet extends ConsumerWidget {
               children: [
                 Text(
                   l10n.tooltipImportedBooking,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -442,7 +527,8 @@ class BookingMoveToUnitMenu extends ConsumerStatefulWidget {
   const BookingMoveToUnitMenu({super.key, required this.booking});
 
   @override
-  ConsumerState<BookingMoveToUnitMenu> createState() => _BookingMoveToUnitMenuState();
+  ConsumerState<BookingMoveToUnitMenu> createState() =>
+      _BookingMoveToUnitMenuState();
 }
 
 class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
@@ -491,7 +577,11 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.swap_horiz, color: Colors.white, size: 24),
+                    child: const Icon(
+                      Icons.swap_horiz,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -500,12 +590,20 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                       children: [
                         Text(
                           l10n.bookingActionMoveTitle,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.booking.guestName ?? l10n.bookingActionUnknownGuest,
-                          style: TextStyle(fontSize: 14, color: Colors.white.withAlpha((0.9 * 255).toInt())),
+                          widget.booking.guestName ??
+                              l10n.bookingActionUnknownGuest,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                          ),
                         ),
                       ],
                     ),
@@ -520,18 +618,26 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
             unitsAsync.when(
               data: (units) {
                 // Filter out current unit
-                final otherUnits = units.where((u) => u.id != widget.booking.unitId).toList();
+                final otherUnits = units
+                    .where((u) => u.id != widget.booking.unitId)
+                    .toList();
 
                 if (otherUnits.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
-                        Icon(Icons.info_outline, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                        Icon(
+                          Icons.info_outline,
+                          size: 48,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           l10n.bookingActionNoOtherUnits,
-                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -539,7 +645,9 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                 }
 
                 return ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.6,
+                  ),
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: otherUnits.length,
@@ -554,16 +662,24 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                                 ? null
                                 : () async {
                                     Navigator.pop(context);
-                                    await _moveBookingToUnit(context, unit, l10n);
+                                    await _moveBookingToUnit(
+                                      context,
+                                      unit,
+                                      l10n,
+                                    );
                                   },
                             borderRadius: BorderRadius.circular(12),
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF252530) : const Color(0xFFF8F8FA),
+                                color: isDark
+                                    ? const Color(0xFF252530)
+                                    : const Color(0xFFF8F8FA),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                                  color: isDark
+                                      ? AppColors.sectionDividerDark
+                                      : AppColors.sectionDividerLight,
                                 ),
                               ),
                               child: Row(
@@ -571,29 +687,50 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                                   Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withAlpha((0.15 * 255).toInt()),
+                                      color: AppColors.primary.withAlpha(
+                                        (0.15 * 255).toInt(),
+                                      ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Icon(_getUnitIcon(unit), color: AppColors.primary, size: 22),
+                                    child: Icon(
+                                      _getUnitIcon(unit),
+                                      color: AppColors.primary,
+                                      size: 22,
+                                    ),
                                   ),
                                   const SizedBox(width: 14),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           unit.name,
-                                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          l10n.bookingActionGuestsRooms(unit.maxGuests, unit.bedrooms),
-                                          style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+                                          l10n.bookingActionGuestsRooms(
+                                            unit.maxGuests,
+                                            unit.bedrooms,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ],
                               ),
                             ),
@@ -610,7 +747,11 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
               ),
               error: (error, stack) => Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(l10n.bookingActionError(LoggingService.safeErrorToString(error))),
+                child: Text(
+                  l10n.bookingActionError(
+                    LoggingService.safeErrorToString(error),
+                  ),
+                ),
               ),
             ),
 
@@ -627,7 +768,11 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
     return Icons.hotel;
   }
 
-  Future<void> _moveBookingToUnit(BuildContext context, UnitModel targetUnit, AppLocalizations l10n) async {
+  Future<void> _moveBookingToUnit(
+    BuildContext context,
+    UnitModel targetUnit,
+    AppLocalizations l10n,
+  ) async {
     if (_isProcessing) return; // Prevent double-tap
 
     setState(() => _isProcessing = true);
@@ -666,13 +811,18 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
 
       // Show success
       if (!context.mounted) return;
-      ErrorDisplayUtils.showSuccessSnackBar(context, l10n.bookingActionMovedTo(targetUnit.name));
+      ErrorDisplayUtils.showSuccessSnackBar(
+        context,
+        l10n.bookingActionMovedTo(targetUnit.name),
+      );
     } catch (e) {
       if (!context.mounted) return;
       ErrorDisplayUtils.showErrorSnackBar(
         context,
         e,
-        userMessage: l10n.bookingActionError(LoggingService.safeErrorToString(e)),
+        userMessage: l10n.bookingActionError(
+          LoggingService.safeErrorToString(e),
+        ),
       );
     } finally {
       if (mounted) {

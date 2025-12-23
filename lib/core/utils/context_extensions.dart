@@ -70,11 +70,7 @@ extension ResponsiveExtension on BuildContext {
   ///   desktop: 3,
   /// );
   /// ```
-  T responsiveValue<T>({
-    required T mobile,
-    T? tablet,
-    required T desktop,
-  }) {
+  T responsiveValue<T>({required T mobile, T? tablet, required T desktop}) {
     if (isMobile) return mobile;
     if (isTablet) return tablet ?? mobile;
     return desktop;

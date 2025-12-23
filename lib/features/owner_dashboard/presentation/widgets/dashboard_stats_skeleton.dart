@@ -31,7 +31,12 @@ class DashboardStatsSkeleton extends StatelessWidget {
     );
   }
 
-  Widget _buildSkeletonCard(BuildContext context, int animationDelay, bool isMobile, bool isTablet) {
+  Widget _buildSkeletonCard(
+    BuildContext context,
+    int animationDelay,
+    bool isMobile,
+    bool isTablet,
+  ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -63,7 +68,10 @@ class DashboardStatsSkeleton extends StatelessWidget {
       builder: (context, value, child) {
         return Opacity(
           opacity: value,
-          child: Transform.translate(offset: Offset(0, 10 * (1 - value)), child: child),
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - value)),
+            child: child,
+          ),
         );
       },
       child: Container(
@@ -74,7 +82,11 @@ class DashboardStatsSkeleton extends StatelessWidget {
           color: bgColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: Colors.grey.withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 8)),
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
         padding: EdgeInsets.all(isMobile ? 14 : 18),

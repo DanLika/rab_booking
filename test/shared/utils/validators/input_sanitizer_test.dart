@@ -72,8 +72,7 @@ void main() {
       });
 
       test('removes multiple script tags', () {
-        final input =
-            '<script>alert(1)</script>Hello<script>alert(2)</script>';
+        final input = '<script>alert(1)</script>Hello<script>alert(2)</script>';
         final result = InputSanitizer.sanitizeText(input);
         expect(result, isNot(contains('script')));
         expect(result, contains('Hello'));
@@ -203,12 +202,15 @@ void main() {
         expect(result, input);
       });
 
-      test('removes dots (only allows letters, spaces, apostrophes, hyphens)', () {
-        final input = 'John M. Smith';
-        final result = InputSanitizer.sanitizeName(input);
-        // Dots are removed, only Unicode letters, spaces, apostrophes, hyphens allowed
-        expect(result, 'John M Smith');
-      });
+      test(
+        'removes dots (only allows letters, spaces, apostrophes, hyphens)',
+        () {
+          final input = 'John M. Smith';
+          final result = InputSanitizer.sanitizeName(input);
+          // Dots are removed, only Unicode letters, spaces, apostrophes, hyphens allowed
+          expect(result, 'John M Smith');
+        },
+      );
 
       test('handles null input', () {
         final result = InputSanitizer.sanitizeName(null);

@@ -28,7 +28,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with AndroidKeyboardDismissFixApproach1<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
+    with AndroidKeyboardDismissFixApproach1<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isDirty = false;
   bool _isSaving = false;
@@ -157,7 +158,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
     // Validate form and show error if validation fails
     if (!_formKey.currentState!.validate()) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, l10n.editProfileValidationError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          l10n.editProfileValidationError,
+        );
       }
       return;
     }
@@ -184,10 +188,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
 
         // Update avatarUrl in Firestore users collection
         // Use set with merge to handle case where document doesn't exist
-        await FirebaseFirestore.instance.collection('users').doc(userId).set(
-          {'avatar_url': avatarUrl},
-          SetOptions(merge: true),
-        );
+        await FirebaseFirestore.instance.collection('users').doc(userId).set({
+          'avatar_url': avatarUrl,
+        }, SetOptions(merge: true));
       }
 
       // Create updated profile
@@ -202,7 +205,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
           street: _streetController.text.trim(),
           postalCode: _postalCodeController.text.trim(),
         ),
-        social: SocialLinks(website: _websiteController.text.trim(), facebook: _facebookController.text.trim()),
+        social: SocialLinks(
+          website: _websiteController.text.trim(),
+          facebook: _facebookController.text.trim(),
+        ),
         propertyType: _propertyTypeController.text.trim(),
         logoUrl: _originalProfile?.logoUrl ?? '',
       );
@@ -227,27 +233,27 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
       );
 
       // Save profile and company details to Firestore (combined to avoid state race condition)
-      await ref.read(userProfileNotifierProvider.notifier).updateProfileAndCompany(
-        updatedProfile,
-        updatedCompany,
-      );
+      await ref
+          .read(userProfileNotifierProvider.notifier)
+          .updateProfileAndCompany(updatedProfile, updatedCompany);
 
       // Also update first_name/last_name in root users document
       // (enhancedAuthProvider reads from there for dashboard display)
       final displayName = _displayNameController.text.trim();
       final nameParts = displayName.split(' ');
       final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      final lastName = nameParts.length > 1
+          ? nameParts.sublist(1).join(' ')
+          : '';
 
-      await FirebaseFirestore.instance.collection('users').doc(userId).set(
-        {
-          'first_name': firstName,
-          'last_name': lastName,
-          'phone': _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
-          'updated_at': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'first_name': firstName,
+        'last_name': lastName,
+        'phone': _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : null,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       if (mounted) {
         setState(() {
@@ -258,7 +264,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
         // Refresh auth provider to update name and avatarUrl
         ref.invalidate(enhancedAuthProvider);
 
-        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.editProfileSaveSuccess);
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.editProfileSaveSuccess,
+        );
 
         // Use canPop check - page may be accessed directly via URL
         if (context.canPop()) {
@@ -269,20 +278,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
       }
     } catch (e, stackTrace) {
       // Log the actual error for debugging
-      LoggingService.log(
-        'Error saving profile: $e',
-        tag: 'EditProfileScreen',
-      );
-      await LoggingService.logError(
-        'Failed to save profile',
-        e,
-        stackTrace,
-      );
+      LoggingService.log('Error saving profile: $e', tag: 'EditProfileScreen');
+      await LoggingService.logError('Failed to save profile', e, stackTrace);
 
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.editProfileSaveError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.editProfileSaveError,
+        );
       }
     }
   }
@@ -310,7 +316,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+        boxShadow: AppShadows.getElevation(
+          1,
+          isDark: theme.brightness == Brightness.dark,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -318,7 +327,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
           decoration: BoxDecoration(
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: theme.dividerColor.withAlpha((0.4 * 255).toInt()), width: 1.5),
+            border: Border.all(
+              color: theme.dividerColor.withAlpha((0.4 * 255).toInt()),
+              width: 1.5,
+            ),
           ),
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
@@ -326,23 +338,36 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
               initiallyExpanded: initiallyExpanded,
               iconColor: theme.colorScheme.primary,
               collapsedIconColor: theme.colorScheme.primary,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
               childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.12 * 255).toInt(),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: theme.colorScheme.primary, size: 18),
               ),
               title: Row(
                 children: [
-                  Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   if (isOptional) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
@@ -366,7 +391,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
               subtitle: subtitle != null
                   ? Text(
                       subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     )
                   : null,
               children: children,
@@ -386,7 +413,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
           Container(
             width: 3,
             height: 16,
-            decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
           const SizedBox(width: 8),
           Text(
@@ -417,10 +447,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ],
                     )
                   : null,
-              color: (_isDirty && !_isSaving) ? null : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
+              color: (_isDirty && !_isSaving)
+                  ? null
+                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: ElevatedButton.icon(
@@ -431,19 +466,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                 shadowColor: Colors.transparent,
                 disabledBackgroundColor: Colors.transparent,
                 disabledForegroundColor: theme.disabledColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               icon: _isSaving
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.save_rounded),
               label: Builder(
                 builder: (context) {
                   final l10n = AppLocalizations.of(context);
-                  return Text(_isSaving ? l10n.editProfileSaving : l10n.editProfileSaveChanges);
+                  return Text(
+                    _isSaving
+                        ? l10n.editProfileSaving
+                        : l10n.editProfileSaveChanges,
+                  );
                 },
               ),
             ),
@@ -465,7 +509,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
               }
             },
             style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+              foregroundColor: theme.colorScheme.onSurface.withAlpha(
+                (0.7 * 255).toInt(),
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(color: theme.dividerColor),
@@ -499,7 +545,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
               title: Text(l10n.editProfileDiscardTitle),
               content: Text(l10n.editProfileDiscardMessage),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.cancel)),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: Text(l10n.cancel),
+                ),
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, true),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -547,22 +596,35 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                     builder: (context, constraints) {
                       // Get keyboard height to adjust padding dynamically (with null safety)
                       final mediaQuery = MediaQuery.maybeOf(context);
-                      final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
+                      final keyboardHeight =
+                          (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
+                            0.0,
+                            double.infinity,
+                          );
                       final isKeyboardOpen = keyboardHeight > 0;
 
                       // Calculate minHeight safely - ensure it's always finite and valid
                       double minHeight;
-                      if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
-                        final calculated = constraints.maxHeight - keyboardHeight;
-                        minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                      if (isKeyboardOpen &&
+                          constraints.maxHeight.isFinite &&
+                          constraints.maxHeight > 0) {
+                        final calculated =
+                            constraints.maxHeight - keyboardHeight;
+                        minHeight = calculated.clamp(
+                          0.0,
+                          constraints.maxHeight,
+                        );
                       } else {
-                        minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
+                        minHeight = constraints.maxHeight.isFinite
+                            ? constraints.maxHeight
+                            : 0.0;
                       }
                       // Ensure minHeight is always finite (never infinity)
                       minHeight = minHeight.isFinite ? minHeight : 0.0;
 
                       return SingleChildScrollView(
-                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: EdgeInsets.all(isCompact ? 16 : 24),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(minHeight: minHeight),
@@ -571,10 +633,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                               maxWidth: 600,
                               child: Form(
                                 key: _formKey,
-                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                autovalidateMode:
+                                    AutovalidateMode.onUserInteraction,
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     // Back Button
                                     Align(
@@ -610,11 +674,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                     // Title
                                     Text(
                                       l10n.editProfileTitle,
-                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 28,
-                                        color: Theme.of(context).colorScheme.onSurface,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 28,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
+                                          ),
                                       textAlign: TextAlign.center,
                                     ),
                                     const SizedBox(height: 8),
@@ -622,10 +691,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                     // Subtitle
                                     Text(
                                       l10n.editProfileSubtitle,
-                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                        fontSize: 15,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                            fontSize: 15,
+                                          ),
                                       textAlign: TextAlign.center,
                                     ),
                                     const SizedBox(height: 32),
@@ -635,21 +709,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                       title: l10n.editProfilePersonalData,
                                       icon: Icons.person_outline,
                                       initiallyExpanded: true,
-                                      subtitle: l10n.editProfilePersonalDataSubtitle,
+                                      subtitle:
+                                          l10n.editProfilePersonalDataSubtitle,
                                       children: [
                                         PremiumInputField(
                                           controller: _displayNameController,
                                           labelText: l10n.editProfileFullName,
                                           prefixIcon: Icons.person_outline,
-                                          validator: ProfileValidators.validateName,
+                                          validator:
+                                              ProfileValidators.validateName,
                                         ),
                                         const SizedBox(height: 16),
                                         PremiumInputField(
                                           controller: _emailContactController,
                                           labelText: l10n.editProfileEmail,
                                           prefixIcon: Icons.email_outlined,
-                                          keyboardType: TextInputType.emailAddress,
-                                          validator: ProfileValidators.validateEmail,
+                                          keyboardType:
+                                              TextInputType.emailAddress,
+                                          validator:
+                                              ProfileValidators.validateEmail,
                                         ),
                                         const SizedBox(height: 16),
                                         PremiumInputField(
@@ -657,7 +735,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                           labelText: l10n.editProfilePhone,
                                           prefixIcon: Icons.phone_outlined,
                                           keyboardType: TextInputType.phone,
-                                          validator: ProfileValidators.validatePhone,
+                                          validator:
+                                              ProfileValidators.validatePhone,
                                         ),
                                       ],
                                     ),
@@ -679,7 +758,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                         PremiumInputField(
                                           controller: _streetController,
                                           labelText: l10n.editProfileStreet,
-                                          prefixIcon: Icons.location_on_outlined,
+                                          prefixIcon:
+                                              Icons.location_on_outlined,
                                         ),
                                         const SizedBox(height: 16),
                                         Row(
@@ -694,9 +774,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: PremiumInputField(
-                                                controller: _postalCodeController,
-                                                labelText: l10n.editProfilePostalCode,
-                                                prefixIcon: Icons.markunread_mailbox,
+                                                controller:
+                                                    _postalCodeController,
+                                                labelText:
+                                                    l10n.editProfilePostalCode,
+                                                prefixIcon:
+                                                    Icons.markunread_mailbox,
                                               ),
                                             ),
                                           ],
@@ -716,7 +799,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                         // Company Info
                                         PremiumInputField(
                                           controller: _companyNameController,
-                                          labelText: l10n.editProfileCompanyName,
+                                          labelText:
+                                              l10n.editProfileCompanyName,
                                           prefixIcon: Icons.business,
                                         ),
                                         const SizedBox(height: 16),
@@ -734,7 +818,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                         const SizedBox(height: 20),
 
                                         // Company Address
-                                        _buildSectionDivider(l10n.editProfileCompanyAddress),
+                                        _buildSectionDivider(
+                                          l10n.editProfileCompanyAddress,
+                                        ),
                                         PremiumInputField(
                                           controller: _companyCountryController,
                                           labelText: l10n.editProfileCountry,
@@ -744,14 +830,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                         PremiumInputField(
                                           controller: _companyStreetController,
                                           labelText: l10n.editProfileStreet,
-                                          prefixIcon: Icons.location_on_outlined,
+                                          prefixIcon:
+                                              Icons.location_on_outlined,
                                         ),
                                         const SizedBox(height: 16),
                                         Row(
                                           children: [
                                             Expanded(
                                               child: PremiumInputField(
-                                                controller: _companyCityController,
+                                                controller:
+                                                    _companyCityController,
                                                 labelText: l10n.editProfileCity,
                                                 prefixIcon: Icons.location_city,
                                               ),
@@ -759,9 +847,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: PremiumInputField(
-                                                controller: _companyPostalCodeController,
-                                                labelText: l10n.editProfilePostalCode,
-                                                prefixIcon: Icons.markunread_mailbox,
+                                                controller:
+                                                    _companyPostalCodeController,
+                                                labelText:
+                                                    l10n.editProfilePostalCode,
+                                                prefixIcon:
+                                                    Icons.markunread_mailbox,
                                               ),
                                             ),
                                           ],
@@ -769,7 +860,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                         const SizedBox(height: 20),
 
                                         // Online Presence
-                                        _buildSectionDivider(l10n.editProfileOnlinePresence),
+                                        _buildSectionDivider(
+                                          l10n.editProfileOnlinePresence,
+                                        ),
                                         PremiumInputField(
                                           controller: _websiteController,
                                           labelText: l10n.editProfileWebsite,
@@ -786,7 +879,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                                         const SizedBox(height: 16),
                                         PremiumInputField(
                                           controller: _propertyTypeController,
-                                          labelText: l10n.editProfilePropertyType,
+                                          labelText:
+                                              l10n.editProfilePropertyType,
                                           prefixIcon: Icons.home_work_outlined,
                                         ),
                                       ],
@@ -809,7 +903,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> with Andr
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) {
                   final l10n = AppLocalizations.of(context);
-                  return Center(child: Text(l10n.errorWithMessage(error.toString())));
+                  return Center(
+                    child: Text(l10n.errorWithMessage(error.toString())),
+                  );
                 },
               ),
             ),

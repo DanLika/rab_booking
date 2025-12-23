@@ -60,13 +60,22 @@ class TimelineBookingBlock extends ConsumerStatefulWidget {
   /// IMPORTANT: Uses UTC to match timeline position calculations and avoid
   /// timezone-related off-by-one errors.
   static int calculateNights(DateTime checkIn, DateTime checkOut) {
-    final normalizedCheckIn = DateTime.utc(checkIn.year, checkIn.month, checkIn.day);
-    final normalizedCheckOut = DateTime.utc(checkOut.year, checkOut.month, checkOut.day);
+    final normalizedCheckIn = DateTime.utc(
+      checkIn.year,
+      checkIn.month,
+      checkIn.day,
+    );
+    final normalizedCheckOut = DateTime.utc(
+      checkOut.year,
+      checkOut.month,
+      checkOut.day,
+    );
     return normalizedCheckOut.difference(normalizedCheckIn).inDays;
   }
 
   @override
-  ConsumerState<TimelineBookingBlock> createState() => _TimelineBookingBlockState();
+  ConsumerState<TimelineBookingBlock> createState() =>
+      _TimelineBookingBlockState();
 }
 
 class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
@@ -88,7 +97,9 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
     final conflictsAsync = ref.watch(overbookingConflictsProvider);
     final allConflicts = conflictsAsync.valueOrNull ?? [];
     final conflictingBookings = allConflicts
-        .where((c) => c.booking1.id == booking.id || c.booking2.id == booking.id)
+        .where(
+          (c) => c.booking1.id == booking.id || c.booking2.id == booking.id,
+        )
         .expand((c) => [c.booking1, c.booking2])
         .where((b) => b.id != booking.id)
         .toList();
@@ -129,16 +140,25 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
               curve: Curves.easeOut,
               width: width - (kTimelineBookingBlockHorizontalMargin * 2),
               height: blockHeight,
-              margin: const EdgeInsets.symmetric(horizontal: kTimelineBookingBlockHorizontalMargin),
+              margin: const EdgeInsets.symmetric(
+                horizontal: kTimelineBookingBlockHorizontalMargin,
+              ),
               transform: _isHovered
-                  ? Matrix4.diagonal3Values(kTimelineBookingBlockHoverScale, kTimelineBookingBlockHoverScale, 1.0)
+                  ? Matrix4.diagonal3Values(
+                      kTimelineBookingBlockHoverScale,
+                      kTimelineBookingBlockHoverScale,
+                      1.0,
+                    )
                   : Matrix4.identity(),
               transformAlignment: Alignment.center,
               child: AnimatedOpacity(
                 duration: kTimelineBookingBlockHoverAnimationDuration,
-                opacity: _isHovered ? kTimelineBookingBlockHoverOpacity : kTimelineBookingBlockNormalOpacity,
+                opacity: _isHovered
+                    ? kTimelineBookingBlockHoverOpacity
+                    : kTimelineBookingBlockNormalOpacity,
                 child: Stack(
-                  alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+                  alignment: Alignment
+                      .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
                   children: [
                     // Background layer with skewed parallelogram
                     // dayWidth is used to calculate skewOffset for turnover day alignment
@@ -149,7 +169,8 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
                         dayWidth: dayWidth,
                         hasConflict: hasConflict,
                         // Theme-aware separator color for diagonal lines
-                        separatorColor: Theme.of(context).brightness == Brightness.dark
+                        separatorColor:
+                            Theme.of(context).brightness == Brightness.dark
                             ? Colors.white.withValues(alpha: 0.3)
                             : Colors.black.withValues(alpha: 0.2),
                       ),
@@ -166,9 +187,19 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
                             decoration: BoxDecoration(
                               color: Colors.red.shade700,
                               shape: BoxShape.circle,
-                              boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 2))],
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black54,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            child: const Icon(Icons.warning_rounded, size: 16, color: Colors.white),
+                            child: const Icon(
+                              Icons.warning_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -178,11 +209,14 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
                     if (PlatformIcon.shouldShowIcon(booking.source))
                       Positioned(
                         top: 2,
-                        right: hasConflict ? 28 : 4, // Offset if conflict icon present
+                        right: hasConflict
+                            ? 28
+                            : 4, // Offset if conflict icon present
                         child: PlatformIcon(
                           source: booking.source,
                           size: 14,
-                          showTooltip: false, // Tooltip handled by SmartBookingTooltip
+                          showTooltip:
+                              false, // Tooltip handled by SmartBookingTooltip
                         ),
                       ),
                   ],
@@ -199,12 +233,25 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
   String _buildSemanticLabel(BookingModel booking, bool hasConflict) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
-    final checkInStr = DateFormat('d. MMM', locale.toString()).format(booking.checkIn);
-    final checkOutStr = DateFormat('d. MMM', locale.toString()).format(booking.checkOut);
+    final checkInStr = DateFormat(
+      'd. MMM',
+      locale.toString(),
+    ).format(booking.checkIn);
+    final checkOutStr = DateFormat(
+      'd. MMM',
+      locale.toString(),
+    ).format(booking.checkOut);
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
     final guestName = booking.guestName ?? l10n.bookingActionUnknownGuest;
     final conflictText = hasConflict ? ', ${l10n.bookingBlockHasConflict}' : '';
 
-    return l10n.bookingBlockSemanticLabel(guestName, checkInStr, checkOutStr, nights, booking.guestCount, conflictText);
+    return l10n.bookingBlockSemanticLabel(
+      guestName,
+      checkInStr,
+      checkOutStr,
+      nights,
+      booking.guestCount,
+      conflictText,
+    );
   }
 }

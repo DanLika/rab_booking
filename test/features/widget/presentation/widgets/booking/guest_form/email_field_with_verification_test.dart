@@ -14,45 +14,51 @@ void main() {
       controller.dispose();
     });
 
-    testWidgets('renders email field without verification button when not required', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: EmailFieldWithVerification(
-              controller: controller,
-              isDarkMode: false,
-              requireVerification: false,
-              emailVerified: false,
-              onEmailChanged: (_) {},
-              onVerifyPressed: () {},
+    testWidgets(
+      'renders email field without verification button when not required',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: EmailFieldWithVerification(
+                controller: controller,
+                isDarkMode: false,
+                requireVerification: false,
+                emailVerified: false,
+                onEmailChanged: (_) {},
+                onVerifyPressed: () {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(TextFormField), findsOneWidget);
-      expect(find.text('Verify'), findsNothing);
-    });
+        expect(find.byType(TextFormField), findsOneWidget);
+        expect(find.text('Verify'), findsNothing);
+      },
+    );
 
-    testWidgets('renders verify button when verification required and not verified', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: EmailFieldWithVerification(
-              controller: controller,
-              isDarkMode: false,
-              requireVerification: true,
-              emailVerified: false,
-              onEmailChanged: (_) {},
-              onVerifyPressed: () {},
+    testWidgets(
+      'renders verify button when verification required and not verified',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: EmailFieldWithVerification(
+                controller: controller,
+                isDarkMode: false,
+                requireVerification: true,
+                emailVerified: false,
+                onEmailChanged: (_) {},
+                onVerifyPressed: () {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(TextFormField), findsOneWidget);
-      expect(find.text('Verify'), findsOneWidget);
-    });
+        expect(find.byType(TextFormField), findsOneWidget);
+        expect(find.text('Verify'), findsOneWidget);
+      },
+    );
 
     testWidgets('renders verified icon when email is verified', (tester) async {
       await tester.pumpWidget(
@@ -96,7 +102,9 @@ void main() {
       expect(changedValue, 'test@example.com');
     });
 
-    testWidgets('calls onVerifyPressed when verify button tapped', (tester) async {
+    testWidgets('calls onVerifyPressed when verify button tapped', (
+      tester,
+    ) async {
       bool verifyPressed = false;
       controller.text = 'test@example.com';
 

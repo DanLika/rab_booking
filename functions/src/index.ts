@@ -65,6 +65,9 @@ export * from "./subdomainService";
 // Export cleanup scheduled functions (Stripe pending bookings)
 export * from "./cleanupExpiredPendingBookings";
 
+// Export auto-complete scheduled function (Checked-out bookings)
+export * from "./completeCheckedOutBookings";
+
 // Export Booking.com API integration functions
 export * from "./bookingComApi";
 

@@ -75,7 +75,8 @@ class InfoCardWidget extends StatelessWidget {
 
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final hasTitle = title != null && title!.isNotEmpty;
-    final effectiveIconSize = iconSize ?? (hasTitle ? _iconSizeWithTitle : _iconSizeSimple);
+    final effectiveIconSize =
+        iconSize ?? (hasTitle ? _iconSizeWithTitle : _iconSizeSimple);
     final iconSpacing = hasTitle ? SpacingTokens.s : _iconToTextSpacingSimple;
 
     // Bug #51 Fix: Add Semantics for accessibility
@@ -96,11 +97,19 @@ class InfoCardWidget extends StatelessWidget {
         ),
         child: Row(
           mainAxisSize: useMinimalWidth ? MainAxisSize.min : MainAxisSize.max,
-          crossAxisAlignment: centerContent ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+          crossAxisAlignment: centerContent
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.only(top: (hasTitle || centerContent) ? 0 : 1),
-              child: Icon(icon, color: colors.textSecondary, size: effectiveIconSize),
+              padding: EdgeInsets.only(
+                top: (hasTitle || centerContent) ? 0 : 1,
+              ),
+              child: Icon(
+                icon,
+                color: colors.textSecondary,
+                size: effectiveIconSize,
+              ),
             ),
             SizedBox(width: iconSpacing),
             _buildContent(colors, hasTitle),
@@ -111,7 +120,10 @@ class InfoCardWidget extends StatelessWidget {
   }
 
   Widget _buildContent(MinimalistColorSchemeAdapter colors, bool hasTitle) {
-    final messageStyle = TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary);
+    final messageStyle = TextStyle(
+      fontSize: TypographyTokens.fontSizeS,
+      color: colors.textSecondary,
+    );
 
     if (useMinimalWidth) {
       return Flexible(
@@ -119,10 +131,17 @@ class InfoCardWidget extends StatelessWidget {
       );
     }
 
-    return Expanded(child: hasTitle ? _buildTitleAndMessage(colors, messageStyle) : Text(message, style: messageStyle));
+    return Expanded(
+      child: hasTitle
+          ? _buildTitleAndMessage(colors, messageStyle)
+          : Text(message, style: messageStyle),
+    );
   }
 
-  Widget _buildTitleAndMessage(MinimalistColorSchemeAdapter colors, TextStyle messageStyle) {
+  Widget _buildTitleAndMessage(
+    MinimalistColorSchemeAdapter colors,
+    TextStyle messageStyle,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

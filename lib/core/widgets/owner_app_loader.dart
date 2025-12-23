@@ -30,7 +30,11 @@ class OwnerAppLoader extends StatelessWidget {
   /// Logo size
   final double logoSize;
 
-  const OwnerAppLoader({super.key, this.progress, this.logoSize = _defaultLogoSize});
+  const OwnerAppLoader({
+    super.key,
+    this.progress,
+    this.logoSize = _defaultLogoSize,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -113,14 +117,18 @@ class _IndeterminateProgress extends StatefulWidget {
   State<_IndeterminateProgress> createState() => _IndeterminateProgressState();
 }
 
-class _IndeterminateProgressState extends State<_IndeterminateProgress> with SingleTickerProviderStateMixin {
+class _IndeterminateProgressState extends State<_IndeterminateProgress>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(duration: _IndeterminateProgress._animationDuration, vsync: this)..repeat();
+    _controller = AnimationController(
+      duration: _IndeterminateProgress._animationDuration,
+      vsync: this,
+    )..repeat();
 
     _animation = Tween<double>(
       begin: -1.0,

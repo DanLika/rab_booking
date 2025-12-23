@@ -7,15 +7,14 @@ const String _showEmptyUnitsPrefsKey = 'calendar_show_empty_units';
 
 /// Provider for show empty units preference in timeline calendar
 /// Persists user's preference across app restarts
-final showEmptyUnitsProvider = StateNotifierProvider<ShowEmptyUnitsNotifier, bool>(
-  (ref) {
-    final prefs = ref.read(sharedPreferencesProvider);
-    if (prefs == null) {
-      return ShowEmptyUnitsNotifier.withDefault();
-    }
-    return ShowEmptyUnitsNotifier(prefs);
-  },
-);
+final showEmptyUnitsProvider =
+    StateNotifierProvider<ShowEmptyUnitsNotifier, bool>((ref) {
+      final prefs = ref.read(sharedPreferencesProvider);
+      if (prefs == null) {
+        return ShowEmptyUnitsNotifier.withDefault();
+      }
+      return ShowEmptyUnitsNotifier(prefs);
+    });
 
 /// State notifier for show empty units preference with persistence
 class ShowEmptyUnitsNotifier extends StateNotifier<bool> {

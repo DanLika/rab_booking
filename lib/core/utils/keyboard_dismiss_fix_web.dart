@@ -84,10 +84,13 @@ void forceCanvasInvalidateImpl() {
 
       // Dispatch resize event multiple times with delays
       for (final delay in [0, 50, 100, 200]) {
-        web.window.setTimeout((() {
-          final resizeEvent = web.Event('resize');
-          web.window.dispatchEvent(resizeEvent);
-        }).toJS, delay.toJS);
+        web.window.setTimeout(
+          (() {
+            final resizeEvent = web.Event('resize');
+            web.window.dispatchEvent(resizeEvent);
+          }).toJS,
+          delay.toJS,
+        );
       }
     }
   } catch (e) {

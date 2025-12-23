@@ -31,7 +31,9 @@ class BookingStatusChangeDialog extends StatelessWidget {
 
     // Constrain dialog height for landscape mode on phones
     final screenHeight = MediaQuery.of(context).size.height;
-    final maxDialogHeight = screenHeight * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
+    final maxDialogHeight =
+        screenHeight *
+        ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -42,7 +44,11 @@ class BookingStatusChangeDialog extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -59,7 +65,11 @@ class BookingStatusChangeDialog extends StatelessWidget {
   }
 
   /// Gradient header with icon and title
-  Widget _buildHeader(BuildContext context, AppLocalizations l10n, ThemeData theme) {
+  Widget _buildHeader(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -80,7 +90,10 @@ class BookingStatusChangeDialog extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.ownerCalendarChangeStatus,
-              style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           IconButton(
@@ -95,7 +108,11 @@ class BookingStatusChangeDialog extends StatelessWidget {
   }
 
   /// List of all status options with colored indicators (scrollable)
-  Widget _buildStatusOptions(BuildContext context, AppLocalizations l10n, ThemeData theme) {
+  Widget _buildStatusOptions(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -105,7 +122,11 @@ class BookingStatusChangeDialog extends StatelessWidget {
           return ListTile(
             title: Text(
               status.displayNameLocalized(context),
-              style: TextStyle(fontWeight: isCurrentStatus ? FontWeight.bold : FontWeight.normal),
+              style: TextStyle(
+                fontWeight: isCurrentStatus
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
             ),
             leading: Container(
               width: 24,
@@ -113,17 +134,27 @@ class BookingStatusChangeDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 color: status.color,
                 shape: BoxShape.circle,
-                border: isCurrentStatus ? Border.all(color: theme.colorScheme.primary, width: 2) : null,
+                border: isCurrentStatus
+                    ? Border.all(color: theme.colorScheme.primary, width: 2)
+                    : null,
               ),
-              child: isCurrentStatus ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+              child: isCurrentStatus
+                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                  : null,
             ),
             trailing: isCurrentStatus
                 ? Text(
                     l10n.calendarStatusCurrent,
-                    style: TextStyle(color: theme.colorScheme.primary, fontSize: 12, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   )
                 : null,
-            onTap: isCurrentStatus ? null : () => Navigator.of(context).pop(status),
+            onTap: isCurrentStatus
+                ? null
+                : () => Navigator.of(context).pop(status),
           );
         }).toList(),
       ),

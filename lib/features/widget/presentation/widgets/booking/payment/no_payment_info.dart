@@ -32,7 +32,9 @@ class NoPaymentInfo extends ConsumerWidget {
         margin: const EdgeInsets.only(top: SpacingTokens.m),
         padding: const EdgeInsets.all(SpacingTokens.m),
         decoration: BoxDecoration(
-          color: colors.error.withValues(alpha: isDarkMode ? _darkModeAlpha : _lightModeAlpha),
+          color: colors.error.withValues(
+            alpha: isDarkMode ? _darkModeAlpha : _lightModeAlpha,
+          ),
           borderRadius: BorderTokens.circularMedium,
           border: Border.all(color: colors.error),
         ),
@@ -43,7 +45,10 @@ class NoPaymentInfo extends ConsumerWidget {
             Expanded(
               child: Text(
                 errorMessage,
-                style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.error),
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeS,
+                  color: colors.error,
+                ),
               ),
             ),
           ],

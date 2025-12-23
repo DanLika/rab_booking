@@ -145,7 +145,8 @@ class _MonthCalendarSkeletonState extends State<MonthCalendarSkeleton>
     // Using average values for skeleton visual consistency
     const emptyStartCells = 3; // Simulates month starting on Thursday
     const totalDays = 28; // Minimum days in any month (February)
-    final isEmpty = index < emptyStartCells || index >= emptyStartCells + totalDays;
+    final isEmpty =
+        index < emptyStartCells || index >= emptyStartCells + totalDays;
 
     return Container(
       decoration: BoxDecoration(

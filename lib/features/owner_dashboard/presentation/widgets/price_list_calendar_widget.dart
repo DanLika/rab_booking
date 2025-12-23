@@ -498,14 +498,22 @@ class _PriceListCalendarWidgetState
 
   Widget _buildBulkSelectionButtons() {
     final l10n = AppLocalizations.of(context);
-    final daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
+    final daysInMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month + 1,
+      0,
+    ).day;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isDeselectDisabled = _selectedDays.isEmpty;
 
     // Dropdown-style background for disabled state (matches surfaceContainerHighest)
-    final disabledBgColor = isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5F5);
-    final disabledTextColor = theme.colorScheme.onSurface.withValues(alpha: 0.38);
+    final disabledBgColor = isDark
+        ? const Color(0xFF2D2D3A)
+        : const Color(0xFFF5F5F5);
+    final disabledTextColor = theme.colorScheme.onSurface.withValues(
+      alpha: 0.38,
+    );
 
     return Row(
       children: [
@@ -530,15 +538,23 @@ class _PriceListCalendarWidgetState
                   // Select all days in current month
                   _selectedDays.clear();
                   for (int day = 1; day <= daysInMonth; day++) {
-                    _selectedDays.add(DateTime(_selectedMonth.year, _selectedMonth.month, day));
+                    _selectedDays.add(
+                      DateTime(_selectedMonth.year, _selectedMonth.month, day),
+                    );
                   }
                 });
               },
               backgroundColor: context.gradients.cardBackground,
               side: BorderSide(color: context.primaryColor, width: 1.5),
-              labelStyle: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w600, fontSize: 14),
+              labelStyle: TextStyle(
+                color: context.primaryColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ),
@@ -557,14 +573,18 @@ class _PriceListCalendarWidgetState
                   Icon(
                     Icons.deselect,
                     size: 16,
-                    color: isDeselectDisabled ? disabledTextColor : context.primaryColor,
+                    color: isDeselectDisabled
+                        ? disabledTextColor
+                        : context.primaryColor,
                   ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       l10n.priceCalendarDeselectAll,
                       style: TextStyle(
-                        color: isDeselectDisabled ? disabledTextColor : context.primaryColor,
+                        color: isDeselectDisabled
+                            ? disabledTextColor
+                            : context.primaryColor,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -578,7 +598,9 @@ class _PriceListCalendarWidgetState
                       setState(_selectedDays.clear);
                     },
               // Use dropdown background for disabled state
-              backgroundColor: isDeselectDisabled ? disabledBgColor : context.gradients.cardBackground,
+              backgroundColor: isDeselectDisabled
+                  ? disabledBgColor
+                  : context.gradients.cardBackground,
               disabledColor: disabledBgColor,
               side: BorderSide(
                 color: isDeselectDisabled
@@ -587,12 +609,16 @@ class _PriceListCalendarWidgetState
                 width: 1.5,
               ),
               labelStyle: TextStyle(
-                color: isDeselectDisabled ? disabledTextColor : context.primaryColor,
+                color: isDeselectDisabled
+                    ? disabledTextColor
+                    : context.primaryColor,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ),
@@ -1502,10 +1528,12 @@ class _PriceListCalendarWidgetState
                                     // Cross-validation: min nights must be <= max nights
                                     if (minNightsText.isNotEmpty &&
                                         maxNightsText.isNotEmpty) {
-                                      final minNights =
-                                          int.tryParse(minNightsText);
-                                      final maxNights =
-                                          int.tryParse(maxNightsText);
+                                      final minNights = int.tryParse(
+                                        minNightsText,
+                                      );
+                                      final maxNights = int.tryParse(
+                                        maxNightsText,
+                                      );
                                       if (minNights != null &&
                                           maxNights != null &&
                                           minNights > maxNights) {
@@ -1521,10 +1549,12 @@ class _PriceListCalendarWidgetState
                                     // Cross-validation: min days advance must be <= max days advance
                                     if (minDaysAdvanceText.isNotEmpty &&
                                         maxDaysAdvanceText.isNotEmpty) {
-                                      final minDaysAdvance =
-                                          int.tryParse(minDaysAdvanceText);
-                                      final maxDaysAdvance =
-                                          int.tryParse(maxDaysAdvanceText);
+                                      final minDaysAdvance = int.tryParse(
+                                        minDaysAdvanceText,
+                                      );
+                                      final maxDaysAdvance = int.tryParse(
+                                        maxDaysAdvanceText,
+                                      );
                                       if (minDaysAdvance != null &&
                                           maxDaysAdvance != null &&
                                           minDaysAdvance > maxDaysAdvance) {
@@ -1814,8 +1844,9 @@ class _PriceListCalendarWidgetState
                                   .withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.outline
-                                    .withValues(alpha: 0.3),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outline.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -2032,11 +2063,12 @@ class _PriceListCalendarWidgetState
 
                                           await repository
                                               .bulkPartialUpdateWithPropertyId(
-                                            propertyId: widget.unit.propertyId,
-                                            unitId: widget.unit.id,
-                                            dates: datesToUpdate,
-                                            partialData: {'price': price},
-                                          );
+                                                propertyId:
+                                                    widget.unit.propertyId,
+                                                unitId: widget.unit.id,
+                                                dates: datesToUpdate,
+                                                partialData: {'price': price},
+                                              );
 
                                           // Refresh from server
                                           ref.invalidate(
@@ -2203,10 +2235,12 @@ class _PriceListCalendarWidgetState
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? AppColors.sectionDividerDark
-                                      .withValues(alpha: 0.5)
-                                  : AppColors.sectionDividerLight
-                                      .withValues(alpha: 0.5),
+                                  ? AppColors.sectionDividerDark.withValues(
+                                      alpha: 0.5,
+                                    )
+                                  : AppColors.sectionDividerLight.withValues(
+                                      alpha: 0.5,
+                                    ),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: isDark
@@ -2274,23 +2308,32 @@ class _PriceListCalendarWidgetState
 
                                     try {
                                       // Check for platform integrations and show warning
-                                      final platformConnections = await ref.read(
-                                        platformConnectionsForUnitProvider(widget.unit.id).future,
-                                      );
+                                      final platformConnections = await ref
+                                          .read(
+                                            platformConnectionsForUnitProvider(
+                                              widget.unit.id,
+                                            ).future,
+                                          );
 
-                                      if (platformConnections.isNotEmpty && mounted) {
-                                        final platformNames = platformConnections
-                                            .map((c) => c.platform.displayName)
-                                            .toSet()
-                                            .join(', ');
+                                      if (platformConnections.isNotEmpty &&
+                                          mounted) {
+                                        final platformNames =
+                                            platformConnections
+                                                .map(
+                                                  (c) => c.platform.displayName,
+                                                )
+                                                .toSet()
+                                                .join(', ');
 
-                                        final sortedDates = _selectedDays.toList()..sort();
-                                        final confirmed = await UnblockWarningDialog.show(
-                                          context: this.context,
-                                          platformName: platformNames,
-                                          startDate: sortedDates.first,
-                                          endDate: sortedDates.last,
-                                        );
+                                        final sortedDates =
+                                            _selectedDays.toList()..sort();
+                                        final confirmed =
+                                            await UnblockWarningDialog.show(
+                                              context: this.context,
+                                              platformName: platformNames,
+                                              startDate: sortedDates.first,
+                                              endDate: sortedDates.last,
+                                            );
 
                                         if (!confirmed) {
                                           setState(() => isProcessing = false);
@@ -2306,11 +2349,11 @@ class _PriceListCalendarWidgetState
                                       // Only update 'available' field, keep custom prices
                                       await repository
                                           .bulkPartialUpdateWithPropertyId(
-                                        propertyId: widget.unit.propertyId,
-                                        unitId: widget.unit.id,
-                                        dates: _selectedDays.toList(),
-                                        partialData: {'available': true},
-                                      );
+                                            propertyId: widget.unit.propertyId,
+                                            unitId: widget.unit.id,
+                                            dates: _selectedDays.toList(),
+                                            partialData: {'available': true},
+                                          );
 
                                       // Save count before clearing for snackbar message
                                       final count = _selectedDays.length;
@@ -2459,13 +2502,13 @@ class _PriceListCalendarWidgetState
                                       // Only update 'available' field, keep custom prices
                                       await repository
                                           .bulkPartialUpdateWithPropertyId(
-                                        propertyId: widget.unit.propertyId,
-                                        unitId: widget.unit.id,
-                                        dates: _selectedDays.toList(),
-                                        partialData: {
-                                          'available': false, // Block dates
-                                        },
-                                      );
+                                            propertyId: widget.unit.propertyId,
+                                            unitId: widget.unit.id,
+                                            dates: _selectedDays.toList(),
+                                            partialData: {
+                                              'available': false, // Block dates
+                                            },
+                                          );
 
                                       // Save count before clearing for snackbar message
                                       final count = _selectedDays.length;
@@ -2572,14 +2615,14 @@ class _PriceListCalendarWidgetState
                                       // Only update 'block_checkin' field, keep prices
                                       await repository
                                           .bulkPartialUpdateWithPropertyId(
-                                        propertyId: widget.unit.propertyId,
-                                        unitId: widget.unit.id,
-                                        dates: _selectedDays.toList(),
-                                        partialData: {
-                                          'block_checkin':
-                                              true, // Block check-in
-                                        },
-                                      );
+                                            propertyId: widget.unit.propertyId,
+                                            unitId: widget.unit.id,
+                                            dates: _selectedDays.toList(),
+                                            partialData: {
+                                              'block_checkin':
+                                                  true, // Block check-in
+                                            },
+                                          );
 
                                       // Invalidate provider to trigger reload with fresh data
                                       ref.invalidate(
@@ -2682,14 +2725,14 @@ class _PriceListCalendarWidgetState
                                       // Only update 'block_checkout' field, keep prices
                                       await repository
                                           .bulkPartialUpdateWithPropertyId(
-                                        propertyId: widget.unit.propertyId,
-                                        unitId: widget.unit.id,
-                                        dates: _selectedDays.toList(),
-                                        partialData: {
-                                          'block_checkout':
-                                              true, // Block check-out
-                                        },
-                                      );
+                                            propertyId: widget.unit.propertyId,
+                                            unitId: widget.unit.id,
+                                            dates: _selectedDays.toList(),
+                                            partialData: {
+                                              'block_checkout':
+                                                  true, // Block check-out
+                                            },
+                                          );
 
                                       // Invalidate provider to trigger reload with fresh data
                                       ref.invalidate(
@@ -2757,13 +2800,12 @@ class _PriceListCalendarWidgetState
                                 Icon(
                                   Icons.close,
                                   size: 18,
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(l10nDialog.cancel),
-                                ),
+                                Expanded(child: Text(l10nDialog.cancel)),
                               ],
                             ),
                             onSelected: isProcessing

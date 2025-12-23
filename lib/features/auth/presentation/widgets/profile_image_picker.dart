@@ -123,19 +123,24 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: Stack(
-          alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
+          alignment:
+              Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
             // Main Image Container with Border
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.3 * 255).toInt(),
+                  ),
                   width: 4,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.2 * 255).toInt(),
+                    ),
                     blurRadius: 20,
                     spreadRadius: 2,
                     offset: const Offset(0, 4),
@@ -151,7 +156,9 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: theme.colorScheme.shadow.withAlpha((0.4 * 255).toInt()),
+                    color: theme.colorScheme.shadow.withAlpha(
+                      (0.4 * 255).toInt(),
+                    ),
                   ),
                   child: Center(
                     child: Icon(
@@ -190,7 +197,9 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withAlpha((0.4 * 255).toInt()),
+                          color: theme.colorScheme.primary.withAlpha(
+                            (0.4 * 255).toInt(),
+                          ),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),

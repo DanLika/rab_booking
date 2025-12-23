@@ -82,11 +82,15 @@ class ResponsiveSpacingHelper {
 
   /// Check if screen is very small (< 400px width)
   static bool isVerySmallScreen(BuildContext context) {
-    return MediaQuery.of(context).size.width < ResponsiveBreakpoints.verySmallWidth;
+    return MediaQuery.of(context).size.width <
+        ResponsiveBreakpoints.verySmallWidth;
   }
 
   /// Get page padding based on screen type and density
-  static EdgeInsets getPagePadding(BuildContext context, {PageDensity density = PageDensity.normal}) {
+  static EdgeInsets getPagePadding(
+    BuildContext context, {
+    PageDensity density = PageDensity.normal,
+  }) {
     final screenType = getScreenType(context);
 
     switch (density) {
@@ -282,7 +286,9 @@ class ResponsiveSpacingHelper {
   /// - Landscape mobile: compact (40-56px) - minimal space, single line
   /// - Portrait mobile: flexible (48-80px) - allow 2 lines
   /// - Tablet/Desktop: comfortable (56-80px)
-  static ({double? minHeight, double? maxHeight}) getDialogHeaderConstraints(BuildContext context) {
+  static ({double? minHeight, double? maxHeight}) getDialogHeaderConstraints(
+    BuildContext context,
+  ) {
     final screenType = getScreenType(context);
 
     switch (screenType) {
@@ -301,7 +307,9 @@ class ResponsiveSpacingHelper {
   /// - Landscape mobile: compact (36-48px) - minimal space
   /// - Portrait mobile: flexible (44-64px)
   /// - Tablet/Desktop: comfortable (48-72px)
-  static ({double? minHeight, double? maxHeight}) getDialogFooterConstraints(BuildContext context) {
+  static ({double? minHeight, double? maxHeight}) getDialogFooterConstraints(
+    BuildContext context,
+  ) {
     final screenType = getScreenType(context);
 
     switch (screenType) {

@@ -9,7 +9,12 @@ class GlassCard extends StatelessWidget {
   final double maxWidth;
   final EdgeInsetsGeometry? padding;
 
-  const GlassCard({super.key, required this.child, this.maxWidth = 460, this.padding});
+  const GlassCard({
+    super.key,
+    required this.child,
+    this.maxWidth = 460,
+    this.padding,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +42,15 @@ class GlassCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            color: context.gradients.cardBackground.withAlpha((0.97 * 255).toInt()),
+            color: context.gradients.cardBackground.withAlpha(
+              (0.97 * 255).toInt(),
+            ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+            border: Border.all(
+              color: context.gradients.sectionBorder.withAlpha(
+                (0.5 * 255).toInt(),
+              ),
+            ),
           ),
           padding: responsivePadding,
           child: child,

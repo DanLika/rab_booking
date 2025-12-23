@@ -265,11 +265,17 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
                 decoration: BoxDecoration(
                   color: isDark
                       ? theme.colorScheme.success.withAlpha((0.2 * 255).toInt())
-                      : theme.colorScheme.success.withAlpha((0.1 * 255).toInt()),
+                      : theme.colorScheme.success.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
                   border: Border.all(
                     color: isDark
-                        ? theme.colorScheme.success.withAlpha((0.5 * 255).toInt())
-                        : theme.colorScheme.success.withAlpha((0.3 * 255).toInt()),
+                        ? theme.colorScheme.success.withAlpha(
+                            (0.5 * 255).toInt(),
+                          )
+                        : theme.colorScheme.success.withAlpha(
+                            (0.3 * 255).toInt(),
+                          ),
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -316,8 +322,9 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: context.gradients.sectionBorder),
-            boxShadow:
-                isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+            boxShadow: isDark
+                ? AppShadows.elevation2Dark
+                : AppShadows.elevation2,
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -382,8 +389,9 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: context.gradients.sectionBorder),
-            boxShadow:
-                isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+            boxShadow: isDark
+                ? AppShadows.elevation2Dark
+                : AppShadows.elevation2,
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -530,7 +538,9 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
                 'HTML',
                 style: TextStyle(
                   color: isDark
-                      ? theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt())
+                      ? theme.colorScheme.onSurface.withAlpha(
+                          (0.7 * 255).toInt(),
+                        )
                       : Colors.white70,
                   fontSize: 12,
                 ),
@@ -539,7 +549,9 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
                 icon: Icon(
                   Icons.copy,
                   color: isDark
-                      ? theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt())
+                      ? theme.colorScheme.onSurface.withAlpha(
+                          (0.7 * 255).toInt(),
+                        )
                       : Colors.white70,
                   size: 18,
                 ),
@@ -638,11 +650,7 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.star,
-                size: 16,
-                color: theme.colorScheme.primary,
-              ),
+              Icon(Icons.star, size: 16, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -674,11 +682,7 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
     );
   }
 
-  Widget _buildTroubleshootItem(
-    String problem,
-    String solution,
-    bool isDark,
-  ) {
+  Widget _buildTroubleshootItem(String problem, String solution, bool isDark) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -715,7 +719,9 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
                 fontSize: 13,
                 color: isDark
                     ? theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt())
-                    : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                    : theme.colorScheme.onSurface.withAlpha(
+                        (0.7 * 255).toInt(),
+                      ),
                 height: 1.5,
               ),
             ),

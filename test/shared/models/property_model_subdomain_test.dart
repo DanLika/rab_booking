@@ -58,7 +58,9 @@ void main() {
 
       test('returns true when branding has logoUrl', () {
         final property = baseProperty.copyWith(
-          branding: const PropertyBranding(logoUrl: 'https://example.com/logo.png'),
+          branding: const PropertyBranding(
+            logoUrl: 'https://example.com/logo.png',
+          ),
         );
         expect(property.hasCustomBranding, isTrue);
       });
@@ -155,7 +157,10 @@ void main() {
         expect(property.branding, isNotNull);
         expect(property.branding!.displayName, equals('Test Display'));
         expect(property.branding!.primaryColor, equals('#ff0000'));
-        expect(property.branding!.logoUrl, equals('https://example.com/logo.png'));
+        expect(
+          property.branding!.logoUrl,
+          equals('https://example.com/logo.png'),
+        );
       });
 
       test('customDomain field exists in model', () {

@@ -88,4 +88,3 @@ class GuestInfoCard extends ConsumerWidget {
     );
   }
 }
-

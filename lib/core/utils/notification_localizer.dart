@@ -77,7 +77,10 @@ class NotificationLocalizer {
       case 'notificationBookingCancelledMessage':
         return l10n.notificationBookingCancelledMessage(guestName);
       case 'notificationPaymentReceivedMessage':
-        return l10n.notificationPaymentReceivedMessage(guestName, amount.toDouble());
+        return l10n.notificationPaymentReceivedMessage(
+          guestName,
+          amount.toDouble(),
+        );
       default:
         return key;
     }

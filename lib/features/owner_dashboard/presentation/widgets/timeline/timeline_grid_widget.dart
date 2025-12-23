@@ -37,7 +37,8 @@ class TimelineGridWidget extends StatelessWidget {
   final Function(BookingModel booking)? onBookingLongPress;
 
   /// Widget builder for drop zones (injected from parent with provider access)
-  final Widget Function(UnitModel unit, DateTime date, int index)? dropZoneBuilder;
+  final Widget Function(UnitModel unit, DateTime date, int index)?
+  dropZoneBuilder;
 
   const TimelineGridWidget({
     super.key,
@@ -93,7 +94,8 @@ class _TimelineUnitRow extends StatelessWidget {
   final TimelineDimensions dimensions;
   final Function(BookingModel booking)? onBookingTap;
   final Function(BookingModel booking)? onBookingLongPress;
-  final Widget Function(UnitModel unit, DateTime date, int index)? dropZoneBuilder;
+  final Widget Function(UnitModel unit, DateTime date, int index)?
+  dropZoneBuilder;
 
   const _TimelineUnitRow({
     required this.unit,
@@ -113,7 +115,9 @@ class _TimelineUnitRow extends StatelessWidget {
 
     // Calculate stack levels for overlapping bookings
     final stackLevels = TimelineBookingStacker.assignStackLevels(bookings);
-    final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
+    final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(
+      bookings,
+    );
 
     // Dynamic height based on stack count
     final unitRowHeight = dimensions.getStackedRowHeight(maxStackCount);
@@ -122,17 +126,23 @@ class _TimelineUnitRow extends StatelessWidget {
     // The width should match the content width (offsetWidth + dates.length * dayWidth)
     // FIX: Use floorToDouble() to avoid floating point precision errors that cause micro-overflow
     // Without this, we get RenderFlex overflow errors of ~1.06e-10 pixels
-    final contentWidth = (offsetWidth + (dates.length * dimensions.dayWidth)).floorToDouble();
+    final contentWidth = (offsetWidth + (dates.length * dimensions.dayWidth))
+        .floorToDouble();
     return SizedBox(
       width: contentWidth,
       height: unitRowHeight,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.transparent,
-          border: Border(bottom: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()))),
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
+            ),
+          ),
         ),
         child: Stack(
-          alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+          alignment: Alignment
+              .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
           children: [
             // Day cells (background)
             // ClipRect prevents micro-overflow from floating point precision errors
@@ -142,8 +152,12 @@ class _TimelineUnitRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // FIX: Use floorToDouble() for offsetWidth to match container width calculation
-                  if (offsetWidth > 0) SizedBox(width: offsetWidth.floorToDouble()),
-                  ...dates.map((date) => _TimelineDayCell(date: date, dimensions: dimensions)),
+                  if (offsetWidth > 0)
+                    SizedBox(width: offsetWidth.floorToDouble()),
+                  ...dates.map(
+                    (date) =>
+                        _TimelineDayCell(date: date, dimensions: dimensions),
+                  ),
                 ],
               ),
             ),
@@ -151,12 +165,14 @@ class _TimelineUnitRow extends StatelessWidget {
             // Drop zones layer (if provided)
             if (dropZoneBuilder != null)
               Stack(
-                alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+                alignment: Alignment
+                    .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
                 children: dates.asMap().entries.map((entry) {
                   final index = entry.key;
                   final date = entry.value;
                   // FIX: Use floorToDouble() for consistent positioning
-                  final left = (offsetWidth + (index * dimensions.dayWidth)).floorToDouble();
+                  final left = (offsetWidth + (index * dimensions.dayWidth))
+                      .floorToDouble();
 
                   return Positioned(
                     left: left,
@@ -169,7 +185,10 @@ class _TimelineUnitRow extends StatelessWidget {
               ),
 
             // Reservation blocks (foreground)
-            Stack(alignment: Alignment.topLeft, children: _buildReservationBlocks(stackLevels)),
+            Stack(
+              alignment: Alignment.topLeft,
+              children: _buildReservationBlocks(stackLevels),
+            ),
           ],
         ),
       ),
@@ -181,15 +200,27 @@ class _TimelineUnitRow extends StatelessWidget {
 
     // Calculate visible range boundaries for filtering
     // DST FIX: Use UTC for consistency with fixedStartDate and booking positions
-    final visibleFirstDate = dates.isNotEmpty ? DateTime.utc(dates.first.year, dates.first.month, dates.first.day) : null;
-    final visibleLastDate = dates.isNotEmpty ? DateTime.utc(dates.last.year, dates.last.month, dates.last.day) : null;
+    final visibleFirstDate = dates.isNotEmpty
+        ? DateTime.utc(dates.first.year, dates.first.month, dates.first.day)
+        : null;
+    final visibleLastDate = dates.isNotEmpty
+        ? DateTime.utc(dates.last.year, dates.last.month, dates.last.day)
+        : null;
 
     for (final booking in bookings) {
       // Normalize check-in/check-out dates to midnight UTC for accurate comparison
       // DST FIX: Use UTC to match fixedStartDate (also UTC) and avoid off-by-one
       // errors when Duration.inDays miscalculates due to DST timezone changes
-      final checkIn = DateTime.utc(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-      final checkOut = DateTime.utc(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
+      final checkIn = DateTime.utc(
+        booking.checkIn.year,
+        booking.checkIn.month,
+        booking.checkIn.day,
+      );
+      final checkOut = DateTime.utc(
+        booking.checkOut.year,
+        booking.checkOut.month,
+        booking.checkOut.day,
+      );
       // FIX: Use already UTC-normalized dates for nights calculation
       // Previously used booking.checkIn/checkOut which went through LOCAL normalization
       // in calculateNights(), causing position mismatch with UTC-based left offset
@@ -202,7 +233,8 @@ class _TimelineUnitRow extends StatelessWidget {
       // A booking is visible if its check-in OR any part of it falls within visible range
       if (visibleFirstDate != null && visibleLastDate != null) {
         // Booking ends before visible range starts OR booking starts after visible range ends
-        if (checkOut.isBefore(visibleFirstDate) || checkIn.isAfter(visibleLastDate)) {
+        if (checkOut.isBefore(visibleFirstDate) ||
+            checkIn.isAfter(visibleLastDate)) {
           // Booking is completely outside visible range - skip rendering
           continue;
         }
@@ -233,7 +265,9 @@ class _TimelineUnitRow extends StatelessWidget {
 
       // Use unitRowHeight for stack level offset to ensure proper vertical spacing
       // Each stack level should be offset by the full row height to prevent overlap
-      final topPosition = (kTimelineBookingTopPadding + (stackLevel * unitRowHeight)).floorToDouble();
+      final topPosition =
+          (kTimelineBookingTopPadding + (stackLevel * unitRowHeight))
+              .floorToDouble();
       // Ensure topPosition is valid
       if (!topPosition.isFinite) continue;
 
@@ -248,8 +282,12 @@ class _TimelineUnitRow extends StatelessWidget {
               width: width,
               unitRowHeight: unitRowHeight,
               dayWidth: dayWidth,
-              onTap: onBookingTap != null ? () => onBookingTap!(booking) : () {},
-              onLongPress: onBookingLongPress != null ? () => onBookingLongPress!(booking) : () {},
+              onTap: onBookingTap != null
+                  ? () => onBookingTap!(booking)
+                  : () {},
+              onLongPress: onBookingLongPress != null
+                  ? () => onBookingLongPress!(booking)
+                  : () {},
             ),
           ),
         ),
@@ -271,22 +309,38 @@ class _TimelineDayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isToday = DateUtils.isSameDay(date, DateTime.now());
-    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isWeekend =
+        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
     return Container(
       // FIX: Use floorToDouble() to match other width calculations and prevent overflow
       width: dimensions.dayWidth.floorToDouble(),
       decoration: BoxDecoration(
-        color: CalendarCellColors.getCellBackground(context: context, isToday: isToday, isWeekend: isWeekend),
+        color: CalendarCellColors.getCellBackground(
+          context: context,
+          isToday: isToday,
+          isWeekend: isWeekend,
+        ),
         border: Border(
           left: BorderSide(
-            color: isFirstDayOfMonth ? theme.colorScheme.primary : theme.dividerColor.withAlpha((0.5 * 255).toInt()),
+            color: isFirstDayOfMonth
+                ? theme.colorScheme.primary
+                : theme.dividerColor.withAlpha((0.5 * 255).toInt()),
             width: isFirstDayOfMonth ? 2 : 1,
           ),
-          right: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()), width: 0.5),
-          top: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()), width: 0.5),
-          bottom: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()), width: 0.5),
+          right: BorderSide(
+            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
+            width: 0.5,
+          ),
+          top: BorderSide(
+            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
+            width: 0.5,
+          ),
+          bottom: BorderSide(
+            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
+            width: 0.5,
+          ),
         ),
       ),
     );

@@ -40,8 +40,6 @@ class PlatformScrollPhysics {
   /// Recommended debounce duration for scroll listeners on web
   /// Returns Duration.zero on mobile (no debounce needed)
   static Duration get scrollDebounceDelay {
-    return kIsWeb
-        ? const Duration(milliseconds: 100)
-        : Duration.zero;
+    return kIsWeb ? const Duration(milliseconds: 100) : Duration.zero;
   }
 }

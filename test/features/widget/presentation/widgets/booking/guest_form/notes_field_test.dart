@@ -19,7 +19,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: NotesField(controller: controller, isDarkMode: false)),
+            home: Scaffold(
+              body: NotesField(controller: controller, isDarkMode: false),
+            ),
           ),
         ),
       );
@@ -31,7 +33,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: NotesField(controller: controller, isDarkMode: false)),
+            home: Scaffold(
+              body: NotesField(controller: controller, isDarkMode: false),
+            ),
           ),
         ),
       );
@@ -43,7 +47,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: NotesField(controller: controller, isDarkMode: false)),
+            home: Scaffold(
+              body: NotesField(controller: controller, isDarkMode: false),
+            ),
           ),
         ),
       );
@@ -55,7 +61,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: NotesField(controller: controller, isDarkMode: true)),
+            home: Scaffold(
+              body: NotesField(controller: controller, isDarkMode: true),
+            ),
           ),
         ),
       );
@@ -67,12 +75,17 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: NotesField(controller: controller, isDarkMode: false)),
+            home: Scaffold(
+              body: NotesField(controller: controller, isDarkMode: false),
+            ),
           ),
         ),
       );
 
-      await tester.enterText(find.byType(TextFormField), 'Line 1\nLine 2\nLine 3');
+      await tester.enterText(
+        find.byType(TextFormField),
+        'Line 1\nLine 2\nLine 3',
+      );
       expect(controller.text, 'Line 1\nLine 2\nLine 3');
     });
 

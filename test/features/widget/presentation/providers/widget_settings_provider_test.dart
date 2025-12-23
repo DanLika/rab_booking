@@ -8,8 +8,16 @@ void main() {
       final container = ProviderContainer();
 
       expect(
-        () async => await container.read(widgetSettingsOrDefaultProvider(('property123', '')).future),
-        throwsA(isA<ArgumentError>().having((e) => e.message, 'message', 'unitId and propertyId must not be empty')),
+        () async => await container.read(
+          widgetSettingsOrDefaultProvider(('property123', '')).future,
+        ),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            'unitId and propertyId must not be empty',
+          ),
+        ),
       );
 
       container.dispose();
@@ -19,22 +27,41 @@ void main() {
       final container = ProviderContainer();
 
       expect(
-        () async => await container.read(widgetSettingsOrDefaultProvider(('', 'unit123')).future),
-        throwsA(isA<ArgumentError>().having((e) => e.message, 'message', 'unitId and propertyId must not be empty')),
+        () async => await container.read(
+          widgetSettingsOrDefaultProvider(('', 'unit123')).future,
+        ),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            'unitId and propertyId must not be empty',
+          ),
+        ),
       );
 
       container.dispose();
     });
 
-    test('throws ArgumentError when both unitId and propertyId are empty', () async {
-      final container = ProviderContainer();
+    test(
+      'throws ArgumentError when both unitId and propertyId are empty',
+      () async {
+        final container = ProviderContainer();
 
-      expect(
-        () async => await container.read(widgetSettingsOrDefaultProvider(('', '')).future),
-        throwsA(isA<ArgumentError>().having((e) => e.message, 'message', 'unitId and propertyId must not be empty')),
-      );
+        expect(
+          () async => await container.read(
+            widgetSettingsOrDefaultProvider(('', '')).future,
+          ),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              'unitId and propertyId must not be empty',
+            ),
+          ),
+        );
 
-      container.dispose();
-    });
+        container.dispose();
+      },
+    );
   });
 }

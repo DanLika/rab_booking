@@ -13,6 +13,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
+import '../widgets/notification_settings_bottom_sheet.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/premium_list_tile.dart';
@@ -95,162 +96,175 @@ class ProfileScreen extends ConsumerWidget {
                                     ? AppShadows.elevation2Dark
                                     : AppShadows.elevation2,
                               ),
-                          child: Padding(
-                            padding: EdgeInsets.all(isMobile ? 16 : 20),
-                            child: Column(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: isDark ? 0.2 : 0.3,
-                                      ),
-                                      width: 3,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: isDark ? 0.3 : 0.15,
+                              child: Padding(
+                                padding: EdgeInsets.all(isMobile ? 16 : 20),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: isDark ? 0.2 : 0.3,
+                                          ),
+                                          width: 3,
                                         ),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: isDark ? 0.3 : 0.15,
+                                            ),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  child:
-                                      authState.userModel?.avatarUrl != null &&
-                                          authState
-                                              .userModel!
-                                              .avatarUrl!
-                                              .isNotEmpty
-                                      ? ClipOval(
-                                          child: Image.network(
-                                            authState.userModel!.avatarUrl!,
-                                            width: isMobile ? 72 : 88,
-                                            height: isMobile ? 72 : 88,
-                                            fit: BoxFit.cover,
-                                            loadingBuilder: (context, child, loadingProgress) {
-                                              if (loadingProgress == null) {
-                                                return child;
-                                              }
-                                              return CircleAvatar(
-                                                radius: isMobile ? 36 : 44,
-                                                backgroundColor: isDark
-                                                    ? AppColors.primary
-                                                    : Colors.white,
-                                                child: CircularProgressIndicator(
-                                                  value:
-                                                      loadingProgress
-                                                              .expectedTotalBytes !=
-                                                          null
-                                                      ? loadingProgress
-                                                                .cumulativeBytesLoaded /
-                                                            loadingProgress
-                                                                .expectedTotalBytes!
-                                                      : null,
-                                                  strokeWidth: 2,
-                                                  color: isDark
-                                                      ? Colors.white
-                                                      : AppColors.primary,
-                                                ),
-                                              );
-                                            },
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
+                                      child:
+                                          authState.userModel?.avatarUrl !=
+                                                  null &&
+                                              authState
+                                                  .userModel!
+                                                  .avatarUrl!
+                                                  .isNotEmpty
+                                          ? ClipOval(
+                                              child: Image.network(
+                                                authState.userModel!.avatarUrl!,
+                                                width: isMobile ? 72 : 88,
+                                                height: isMobile ? 72 : 88,
+                                                fit: BoxFit.cover,
+                                                loadingBuilder: (context, child, loadingProgress) {
+                                                  if (loadingProgress == null) {
+                                                    return child;
+                                                  }
                                                   return CircleAvatar(
                                                     radius: isMobile ? 36 : 44,
                                                     backgroundColor: isDark
                                                         ? AppColors.primary
                                                         : Colors.white,
-                                                    child: Text(
-                                                      displayName.isNotEmpty
-                                                          ? displayName
-                                                                .substring(0, 1)
-                                                                .toUpperCase()
-                                                          : '?',
-                                                      style: TextStyle(
-                                                        fontSize: isMobile
-                                                            ? 28
-                                                            : 34,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: isDark
-                                                            ? Colors.white
-                                                            : AppColors.primary,
-                                                      ),
+                                                    child: CircularProgressIndicator(
+                                                      value:
+                                                          loadingProgress
+                                                                  .expectedTotalBytes !=
+                                                              null
+                                                          ? loadingProgress
+                                                                    .cumulativeBytesLoaded /
+                                                                loadingProgress
+                                                                    .expectedTotalBytes!
+                                                          : null,
+                                                      strokeWidth: 2,
+                                                      color: isDark
+                                                          ? Colors.white
+                                                          : AppColors.primary,
                                                     ),
                                                   );
                                                 },
-                                          ),
-                                        )
-                                      : CircleAvatar(
-                                          radius: isMobile ? 36 : 44,
-                                          backgroundColor: isDark
-                                              ? AppColors.primary
-                                              : Colors.white,
-                                          child: Text(
-                                            displayName.isNotEmpty
-                                                ? displayName
-                                                      .substring(0, 1)
-                                                      .toUpperCase()
-                                                : '?',
-                                            style: TextStyle(
-                                              fontSize: isMobile ? 28 : 34,
-                                              fontWeight: FontWeight.bold,
-                                              color: isDark
-                                                  ? Colors.white
-                                                  : AppColors.primary,
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return CircleAvatar(
+                                                        radius: isMobile
+                                                            ? 36
+                                                            : 44,
+                                                        backgroundColor: isDark
+                                                            ? AppColors.primary
+                                                            : Colors.white,
+                                                        child: Text(
+                                                          displayName.isNotEmpty
+                                                              ? displayName
+                                                                    .substring(
+                                                                      0,
+                                                                      1,
+                                                                    )
+                                                                    .toUpperCase()
+                                                              : '?',
+                                                          style: TextStyle(
+                                                            fontSize: isMobile
+                                                                ? 28
+                                                                : 34,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: isDark
+                                                                ? Colors.white
+                                                                : AppColors
+                                                                      .primary,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                              ),
+                                            )
+                                          : CircleAvatar(
+                                              radius: isMobile ? 36 : 44,
+                                              backgroundColor: isDark
+                                                  ? AppColors.primary
+                                                  : Colors.white,
+                                              child: Text(
+                                                displayName.isNotEmpty
+                                                    ? displayName
+                                                          .substring(0, 1)
+                                                          .toUpperCase()
+                                                    : '?',
+                                                style: TextStyle(
+                                                  fontSize: isMobile ? 28 : 34,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : AppColors.primary,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                ),
-                                SizedBox(height: isMobile ? 12 : 14),
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: isMobile ? double.infinity : 400,
-                                  ),
-                                  child: Text(
-                                    displayName,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 20 : 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(
-                                      alpha: isDark ? 0.15 : 0.2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    email,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 12 : 13,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.9,
+                                    SizedBox(height: isMobile ? 12 : 14),
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: isMobile
+                                            ? double.infinity
+                                            : 400,
                                       ),
-                                      fontWeight: FontWeight.w500,
+                                      child: Text(
+                                        displayName,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isMobile ? 20 : 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: isDark ? 0.15 : 0.2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Text(
+                                        email,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isMobile ? 12 : 13,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
                             ),
                           ),
                         ),
@@ -309,9 +323,11 @@ class ProfileScreen extends ConsumerWidget {
                                 title: l10n.ownerProfileNotificationSettings,
                                 subtitle: l10n
                                     .ownerProfileNotificationSettingsSubtitle,
-                                onTap: () => context.push(
-                                  OwnerRoutes.profileNotifications,
-                                ),
+                                onTap: () =>
+                                    showNotificationSettingsBottomSheet(
+                                      context,
+                                      ref,
+                                    ),
                                 isLast: true,
                               ),
                             ],

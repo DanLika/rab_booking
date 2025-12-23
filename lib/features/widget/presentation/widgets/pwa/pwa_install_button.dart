@@ -109,7 +109,10 @@ class _PwaInstallButtonState extends ConsumerState<PwaInstallButton> {
     return _buildFullButton(colors, tr);
   }
 
-  Widget _buildCompactButton(MinimalistColorSchemeAdapter colors, WidgetTranslations tr) {
+  Widget _buildCompactButton(
+    MinimalistColorSchemeAdapter colors,
+    WidgetTranslations tr,
+  ) {
     return Tooltip(
       message: tr.installApp,
       child: IconButton(
@@ -123,15 +126,15 @@ class _PwaInstallButtonState extends ConsumerState<PwaInstallButton> {
                   valueColor: AlwaysStoppedAnimation<Color>(colors.textPrimary),
                 ),
               )
-            : Icon(
-                Icons.install_mobile_rounded,
-                color: colors.textPrimary,
-              ),
+            : Icon(Icons.install_mobile_rounded, color: colors.textPrimary),
       ),
     );
   }
 
-  Widget _buildFullButton(MinimalistColorSchemeAdapter colors, WidgetTranslations tr) {
+  Widget _buildFullButton(
+    MinimalistColorSchemeAdapter colors,
+    WidgetTranslations tr,
+  ) {
     return ElevatedButton.icon(
       onPressed: _isLoading ? null : _handleInstall,
       style: ElevatedButton.styleFrom(
@@ -151,7 +154,9 @@ class _PwaInstallButtonState extends ConsumerState<PwaInstallButton> {
               height: 18,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(colors.backgroundPrimary),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  colors.backgroundPrimary,
+                ),
               ),
             )
           : const Icon(Icons.install_mobile_rounded, size: 18),

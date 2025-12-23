@@ -38,7 +38,9 @@ class LoadingStateNotifier extends StateNotifier<bool> {
 }
 
 /// Global loading state provider
-final loadingStateProvider = StateNotifierProvider<LoadingStateNotifier, bool>((ref) {
+final loadingStateProvider = StateNotifierProvider<LoadingStateNotifier, bool>((
+  ref,
+) {
   return LoadingStateNotifier();
 });
 
@@ -85,7 +87,9 @@ class _LoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withValues(alpha: 0.3), // Semi-transparent dark overlay
+      color: Colors.black.withValues(
+        alpha: 0.3,
+      ), // Semi-transparent dark overlay
       child: Center(
         child: Container(
           width: 80,
@@ -93,7 +97,13 @@ class _LoadingOverlay extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, spreadRadius: 2)],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
           ),
           child: const Center(
             child: SizedBox(

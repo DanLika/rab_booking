@@ -22,14 +22,14 @@ class SpacingTokens {
   // ============================================================
   static const double xxs = 2.0;
   static const double xs = 4.0;
-  static const double xs2 = 6.0;  // Between xs and s
+  static const double xs2 = 6.0; // Between xs and s
   static const double s = 8.0;
   static const double s2 = 12.0; // Between s and m
   static const double m = 16.0;
   static const double m2 = 20.0; // Between m and l
   static const double l = 24.0;
   static const double xl = 32.0;
-  static const double xl2 = 40.0;  // Between xl and xxl
+  static const double xl2 = 40.0; // Between xl and xxl
   static const double xxl = 48.0;
   static const double xxl2 = 56.0; // Between xxl and xxxl
   static const double xxxl = 64.0;

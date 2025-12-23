@@ -13,7 +13,8 @@ void main() {
       final expectedYear = 2023;
 
       // Verify the calculation logic (same as in calendar_data_service.dart)
-      final startMonth = startDate.month - CalendarConstants.monthsBeforeForGapDetection;
+      final startMonth =
+          startDate.month - CalendarConstants.monthsBeforeForGapDetection;
       final startYear = startDate.year;
       final adjustedStartMonth = startMonth <= 0 ? 12 + startMonth : startMonth;
       final adjustedStartYear = startMonth <= 0 ? startYear - 1 : startYear;
@@ -32,7 +33,8 @@ void main() {
       final startDate = DateTime.utc(2024, 2, 15); // February 15, 2024
 
       // Expected: extendedStart should be January 2024 (month 1, year 2024)
-      final startMonth = startDate.month - CalendarConstants.monthsBeforeForGapDetection;
+      final startMonth =
+          startDate.month - CalendarConstants.monthsBeforeForGapDetection;
       final startYear = startDate.year;
       final adjustedStartMonth = startMonth <= 0 ? 12 + startMonth : startMonth;
       final adjustedStartYear = startMonth <= 0 ? startYear - 1 : startYear;
@@ -53,7 +55,8 @@ void main() {
 
       // Calculation: month 12 + 1 + 1 = 14, adjusted to 14 - 12 = 2, year 2024 + 1 = 2025
       // DateTime.utc(2025, 2, 0) = last day of January 2025 (because day 0 = previous month)
-      final endMonth = endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
+      final endMonth =
+          endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
       final endYear = endDate.year;
       final adjustedEndMonth = endMonth > 12 ? endMonth - 12 : endMonth;
       final adjustedEndYear = endMonth > 12 ? endYear + 1 : endYear;
@@ -65,7 +68,10 @@ void main() {
       // Note: day=0 means last day of previous month, so month 2, day 0 = January 31
       final extendedEnd = DateTime.utc(adjustedEndYear, adjustedEndMonth, 0);
       expect(extendedEnd.year, 2025);
-      expect(extendedEnd.month, 1); // January (because day 0 gives previous month)
+      expect(
+        extendedEnd.month,
+        1,
+      ); // January (because day 0 gives previous month)
     });
 
     test('extendedEnd handles November (month 11) correctly', () {
@@ -76,7 +82,8 @@ void main() {
       // Calculation: month 11 + 1 + 1 = 13, which is > 12, so adjusted to 13 - 12 = 1, year 2024 + 1 = 2025
       // But wait, let's check: 13 > 12, so adjustedEndMonth = 1, adjustedEndYear = 2025
       // DateTime.utc(2025, 1, 0) = last day of December 2024
-      final endMonth = endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
+      final endMonth =
+          endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
       final endYear = endDate.year;
       final adjustedEndMonth = endMonth > 12 ? endMonth - 12 : endMonth;
       final adjustedEndYear = endMonth > 12 ? endYear + 1 : endYear;
@@ -87,7 +94,10 @@ void main() {
       // Verify the resulting DateTime is valid
       // Note: day=0 means last day of previous month, so month 1, day 0 = December 31 of previous year
       final extendedEnd = DateTime.utc(adjustedEndYear, adjustedEndMonth, 0);
-      expect(extendedEnd.year, 2024); // December 31, 2024 (previous year because day 0)
+      expect(
+        extendedEnd.year,
+        2024,
+      ); // December 31, 2024 (previous year because day 0)
       expect(extendedEnd.month, 12); // December
     });
 
@@ -97,7 +107,8 @@ void main() {
       final endDate = DateTime.utc(2024, 12, 31); // December 31, 2024
 
       // Test extendedStart (should go to December 2023)
-      final startMonth = startDate.month - CalendarConstants.monthsBeforeForGapDetection;
+      final startMonth =
+          startDate.month - CalendarConstants.monthsBeforeForGapDetection;
       final startYear = startDate.year;
       final adjustedStartMonth = startMonth <= 0 ? 12 + startMonth : startMonth;
       final adjustedStartYear = startMonth <= 0 ? startYear - 1 : startYear;
@@ -111,7 +122,8 @@ void main() {
 
       // Test extendedEnd (should go to January 2025, last day)
       // Note: day=0 gives last day of previous month
-      final endMonth = endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
+      final endMonth =
+          endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
       final endYear = endDate.year;
       final adjustedEndMonth = endMonth > 12 ? endMonth - 12 : endMonth;
       final adjustedEndYear = endMonth > 12 ? endYear + 1 : endYear;
@@ -121,7 +133,10 @@ void main() {
 
       final extendedEnd = DateTime.utc(adjustedEndYear, adjustedEndMonth, 0);
       expect(extendedEnd.year, 2025);
-      expect(extendedEnd.month, 1); // January (because day 0 gives previous month)
+      expect(
+        extendedEnd.month,
+        1,
+      ); // January (because day 0 gives previous month)
     });
 
     test('normal months (not at boundaries) work correctly', () {
@@ -130,7 +145,8 @@ void main() {
       final endDate = DateTime.utc(2024, 8, 31); // August 31, 2024
 
       // Test extendedStart (should go to May 2024)
-      final startMonth = startDate.month - CalendarConstants.monthsBeforeForGapDetection;
+      final startMonth =
+          startDate.month - CalendarConstants.monthsBeforeForGapDetection;
       final startYear = startDate.year;
       final adjustedStartMonth = startMonth <= 0 ? 12 + startMonth : startMonth;
       final adjustedStartYear = startMonth <= 0 ? startYear - 1 : startYear;
@@ -145,7 +161,8 @@ void main() {
       // Test extendedEnd (should go to September 2024, last day)
       // Note: day=0 gives last day of previous month
       // August (8) + 1 + 1 = 10, day 0 = last day of September
-      final endMonth = endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
+      final endMonth =
+          endDate.month + CalendarConstants.monthsAfterForGapDetection + 1;
       final endYear = endDate.year;
       final adjustedEndMonth = endMonth > 12 ? endMonth - 12 : endMonth;
       final adjustedEndYear = endMonth > 12 ? endYear + 1 : endYear;
@@ -155,7 +172,10 @@ void main() {
 
       final extendedEnd = DateTime.utc(adjustedEndYear, adjustedEndMonth, 0);
       expect(extendedEnd.year, 2024);
-      expect(extendedEnd.month, 9); // September (because day 0 gives previous month)
+      expect(
+        extendedEnd.month,
+        9,
+      ); // September (because day 0 gives previous month)
     });
   });
 

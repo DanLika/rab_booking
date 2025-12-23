@@ -61,42 +61,45 @@ void main() {
 
   group('SubmitBookingUseCase -', () {
     group('bookingPending mode', () {
-      test('should create booking with status=pending and no payment', () async {
-        // Arrange
-        final widgetSettings = WidgetSettings(
-          id: 'unit-1',
-          propertyId: 'property-1',
-          widgetMode: WidgetMode.bookingPending,
-          requireOwnerApproval: true,
-          contactOptions: const ContactOptions(),
-          emailConfig: const EmailNotificationConfig(),
-          taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025),
-          updatedAt: DateTime(2025),
-        );
+      test(
+        'should create booking with status=pending and no payment',
+        () async {
+          // Arrange
+          final widgetSettings = WidgetSettings(
+            id: 'unit-1',
+            propertyId: 'property-1',
+            widgetMode: WidgetMode.bookingPending,
+            requireOwnerApproval: true,
+            contactOptions: const ContactOptions(),
+            emailConfig: const EmailNotificationConfig(),
+            taxLegalConfig: const TaxLegalConfig(),
+            createdAt: DateTime(2025),
+            updatedAt: DateTime(2025),
+          );
 
-        final params = SubmitBookingParams(
-          unitId: 'unit-1',
-          propertyId: 'property-1',
-          ownerId: 'owner-1',
-          unit: testUnit,
-          widgetSettings: widgetSettings,
-          checkIn: testCheckIn,
-          checkOut: testCheckOut,
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-          phoneWithCountryCode: '+385 91 123 4567',
-          notes: 'Test notes',
-          adults: 2,
-          children: 0,
-          totalPrice: 500.0,
-          paymentMethod: 'none',
-          paymentOption: 'none',
-          taxLegalAccepted: false,
-        );
+          final params = SubmitBookingParams(
+            unitId: 'unit-1',
+            propertyId: 'property-1',
+            ownerId: 'owner-1',
+            unit: testUnit,
+            widgetSettings: widgetSettings,
+            checkIn: testCheckIn,
+            checkOut: testCheckOut,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@example.com',
+            phoneWithCountryCode: '+385 91 123 4567',
+            notes: 'Test notes',
+            adults: 2,
+            children: 0,
+            totalPrice: 500.0,
+            paymentMethod: 'none',
+            paymentOption: 'none',
+            taxLegalAccepted: false,
+          );
 
-        when(() => mockBookingService.createBooking(
+          when(
+            () => mockBookingService.createBooking(
               unitId: any(named: 'unitId'),
               propertyId: any(named: 'propertyId'),
               ownerId: any(named: 'ownerId'),
@@ -112,19 +115,21 @@ void main() {
               requireOwnerApproval: any(named: 'requireOwnerApproval'),
               notes: any(named: 'notes'),
               taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenAnswer((_) async => BookingResult.booking(testBooking));
+            ),
+          ).thenAnswer((_) async => BookingResult.booking(testBooking));
 
-        // Act
-        final result = await useCase.execute(params);
+          // Act
+          final result = await useCase.execute(params);
 
-        // Assert
-        expect(result.isStripeFlow, false);
-        expect(result, isA<BookingSubmissionCreated>());
-        final createdResult = result as BookingSubmissionCreated;
-        expect(createdResult.booking.id, 'test-booking-123');
+          // Assert
+          expect(result.isStripeFlow, false);
+          expect(result, isA<BookingSubmissionCreated>());
+          final createdResult = result as BookingSubmissionCreated;
+          expect(createdResult.booking.id, 'test-booking-123');
 
-        // Verify booking service called with correct params
-        verify(() => mockBookingService.createBooking(
+          // Verify booking service called with correct params
+          verify(
+            () => mockBookingService.createBooking(
               unitId: 'unit-1',
               propertyId: 'property-1',
               ownerId: 'owner-1',
@@ -140,8 +145,10 @@ void main() {
               requireOwnerApproval: true,
               notes: 'Test notes',
               taxLegalAccepted: false,
-            )).called(1);
-      });
+            ),
+          ).called(1);
+        },
+      );
 
       test('should sanitize XSS input', () async {
         // Arrange
@@ -176,45 +183,49 @@ void main() {
           taxLegalAccepted: false,
         );
 
-        when(() => mockBookingService.createBooking(
-              unitId: any(named: 'unitId'),
-              propertyId: any(named: 'propertyId'),
-              ownerId: any(named: 'ownerId'),
-              checkIn: any(named: 'checkIn'),
-              checkOut: any(named: 'checkOut'),
-              guestName: any(named: 'guestName'),
-              guestEmail: any(named: 'guestEmail'),
-              guestPhone: any(named: 'guestPhone'),
-              guestCount: any(named: 'guestCount'),
-              totalPrice: any(named: 'totalPrice'),
-              paymentOption: any(named: 'paymentOption'),
-              paymentMethod: any(named: 'paymentMethod'),
-              requireOwnerApproval: any(named: 'requireOwnerApproval'),
-              notes: any(named: 'notes'),
-              taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenAnswer((_) async => BookingResult.booking(testBooking));
+        when(
+          () => mockBookingService.createBooking(
+            unitId: any(named: 'unitId'),
+            propertyId: any(named: 'propertyId'),
+            ownerId: any(named: 'ownerId'),
+            checkIn: any(named: 'checkIn'),
+            checkOut: any(named: 'checkOut'),
+            guestName: any(named: 'guestName'),
+            guestEmail: any(named: 'guestEmail'),
+            guestPhone: any(named: 'guestPhone'),
+            guestCount: any(named: 'guestCount'),
+            totalPrice: any(named: 'totalPrice'),
+            paymentOption: any(named: 'paymentOption'),
+            paymentMethod: any(named: 'paymentMethod'),
+            requireOwnerApproval: any(named: 'requireOwnerApproval'),
+            notes: any(named: 'notes'),
+            taxLegalAccepted: any(named: 'taxLegalAccepted'),
+          ),
+        ).thenAnswer((_) async => BookingResult.booking(testBooking));
 
         // Act
         await useCase.execute(params);
 
         // Assert - Verify sanitized input was passed to service
-        final captured = verify(() => mockBookingService.createBooking(
-              unitId: any(named: 'unitId'),
-              propertyId: any(named: 'propertyId'),
-              ownerId: any(named: 'ownerId'),
-              checkIn: any(named: 'checkIn'),
-              checkOut: any(named: 'checkOut'),
-              guestName: captureAny(named: 'guestName'),
-              guestEmail: captureAny(named: 'guestEmail'),
-              guestPhone: captureAny(named: 'guestPhone'),
-              guestCount: any(named: 'guestCount'),
-              totalPrice: any(named: 'totalPrice'),
-              paymentOption: any(named: 'paymentOption'),
-              paymentMethod: any(named: 'paymentMethod'),
-              requireOwnerApproval: any(named: 'requireOwnerApproval'),
-              notes: captureAny(named: 'notes'),
-              taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).captured;
+        final captured = verify(
+          () => mockBookingService.createBooking(
+            unitId: any(named: 'unitId'),
+            propertyId: any(named: 'propertyId'),
+            ownerId: any(named: 'ownerId'),
+            checkIn: any(named: 'checkIn'),
+            checkOut: any(named: 'checkOut'),
+            guestName: captureAny(named: 'guestName'),
+            guestEmail: captureAny(named: 'guestEmail'),
+            guestPhone: captureAny(named: 'guestPhone'),
+            guestCount: any(named: 'guestCount'),
+            totalPrice: any(named: 'totalPrice'),
+            paymentOption: any(named: 'paymentOption'),
+            paymentMethod: any(named: 'paymentMethod'),
+            requireOwnerApproval: any(named: 'requireOwnerApproval'),
+            notes: captureAny(named: 'notes'),
+            taxLegalAccepted: any(named: 'taxLegalAccepted'),
+          ),
+        ).captured;
 
         // Verify XSS tags removed from guestName
         final guestName = captured[0] as String;
@@ -270,26 +281,30 @@ void main() {
           'depositAmount': 100.0,
         };
 
-        when(() => mockBookingService.createBooking(
-              unitId: any(named: 'unitId'),
-              propertyId: any(named: 'propertyId'),
-              ownerId: any(named: 'ownerId'),
-              checkIn: any(named: 'checkIn'),
-              checkOut: any(named: 'checkOut'),
-              guestName: any(named: 'guestName'),
-              guestEmail: any(named: 'guestEmail'),
-              guestPhone: any(named: 'guestPhone'),
-              guestCount: any(named: 'guestCount'),
-              totalPrice: any(named: 'totalPrice'),
-              paymentOption: any(named: 'paymentOption'),
-              paymentMethod: any(named: 'paymentMethod'),
-              requireOwnerApproval: any(named: 'requireOwnerApproval'),
-              notes: any(named: 'notes'),
-              taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenAnswer((_) async => BookingResult.stripeValidation(
-              bookingData: stripeBookingData,
-              depositAmount: 100.0,
-            ));
+        when(
+          () => mockBookingService.createBooking(
+            unitId: any(named: 'unitId'),
+            propertyId: any(named: 'propertyId'),
+            ownerId: any(named: 'ownerId'),
+            checkIn: any(named: 'checkIn'),
+            checkOut: any(named: 'checkOut'),
+            guestName: any(named: 'guestName'),
+            guestEmail: any(named: 'guestEmail'),
+            guestPhone: any(named: 'guestPhone'),
+            guestCount: any(named: 'guestCount'),
+            totalPrice: any(named: 'totalPrice'),
+            paymentOption: any(named: 'paymentOption'),
+            paymentMethod: any(named: 'paymentMethod'),
+            requireOwnerApproval: any(named: 'requireOwnerApproval'),
+            notes: any(named: 'notes'),
+            taxLegalAccepted: any(named: 'taxLegalAccepted'),
+          ),
+        ).thenAnswer(
+          (_) async => BookingResult.stripeValidation(
+            bookingData: stripeBookingData,
+            depositAmount: 100.0,
+          ),
+        );
 
         // Act
         final result = await useCase.execute(params);
@@ -302,56 +317,61 @@ void main() {
         expect(stripeResult.bookingData['depositAmount'], 100.0);
 
         // Verify booking service called with Stripe payment method
-        verify(() => mockBookingService.createBooking(
-              unitId: 'unit-1',
-              propertyId: 'property-1',
-              ownerId: 'owner-1',
-              checkIn: testCheckIn,
-              checkOut: testCheckOut,
-              guestName: 'John Doe',
-              guestEmail: 'john@example.com',
-              guestPhone: '385 91 123 4567', // Sanitized (+ removed)
-              guestCount: 2,
-              totalPrice: 500.0,
-              paymentOption: 'deposit',
-              paymentMethod: 'stripe',
-              taxLegalAccepted: true,
-            )).called(1);
+        verify(
+          () => mockBookingService.createBooking(
+            unitId: 'unit-1',
+            propertyId: 'property-1',
+            ownerId: 'owner-1',
+            checkIn: testCheckIn,
+            checkOut: testCheckOut,
+            guestName: 'John Doe',
+            guestEmail: 'john@example.com',
+            guestPhone: '385 91 123 4567', // Sanitized (+ removed)
+            guestCount: 2,
+            totalPrice: 500.0,
+            paymentOption: 'deposit',
+            paymentMethod: 'stripe',
+            taxLegalAccepted: true,
+          ),
+        ).called(1);
       });
 
-      test('should throw exception if Stripe validation returns invalid data', () async {
-        // Arrange
-        final widgetSettings = WidgetSettings(
-          id: 'unit-1',
-          propertyId: 'property-1',
-          contactOptions: const ContactOptions(),
-          emailConfig: const EmailNotificationConfig(),
-          taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025),
-          updatedAt: DateTime(2025),
-        );
+      test(
+        'should throw exception if Stripe validation returns invalid data',
+        () async {
+          // Arrange
+          final widgetSettings = WidgetSettings(
+            id: 'unit-1',
+            propertyId: 'property-1',
+            contactOptions: const ContactOptions(),
+            emailConfig: const EmailNotificationConfig(),
+            taxLegalConfig: const TaxLegalConfig(),
+            createdAt: DateTime(2025),
+            updatedAt: DateTime(2025),
+          );
 
-        final params = SubmitBookingParams(
-          unitId: 'unit-1',
-          propertyId: 'property-1',
-          ownerId: 'owner-1',
-          widgetSettings: widgetSettings,
-          checkIn: testCheckIn,
-          checkOut: testCheckOut,
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-          phoneWithCountryCode: '+385 91 123 4567',
-          adults: 2,
-          children: 0,
-          totalPrice: 500.0,
-          paymentMethod: 'stripe',
-          paymentOption: 'deposit',
-          taxLegalAccepted: false,
-        );
+          final params = SubmitBookingParams(
+            unitId: 'unit-1',
+            propertyId: 'property-1',
+            ownerId: 'owner-1',
+            widgetSettings: widgetSettings,
+            checkIn: testCheckIn,
+            checkOut: testCheckOut,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@example.com',
+            phoneWithCountryCode: '+385 91 123 4567',
+            adults: 2,
+            children: 0,
+            totalPrice: 500.0,
+            paymentMethod: 'stripe',
+            paymentOption: 'deposit',
+            taxLegalAccepted: false,
+          );
 
-        // Mock returns non-Stripe result even though Stripe was requested
-        when(() => mockBookingService.createBooking(
+          // Mock returns non-Stripe result even though Stripe was requested
+          when(
+            () => mockBookingService.createBooking(
               unitId: any(named: 'unitId'),
               propertyId: any(named: 'propertyId'),
               ownerId: any(named: 'ownerId'),
@@ -367,57 +387,59 @@ void main() {
               requireOwnerApproval: any(named: 'requireOwnerApproval'),
               notes: any(named: 'notes'),
               taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenAnswer((_) async => BookingResult.booking(testBooking));
+            ),
+          ).thenAnswer((_) async => BookingResult.booking(testBooking));
 
-        // Act & Assert
-        expect(
-          () => useCase.execute(params),
-          throwsException,
-        );
-      });
+          // Act & Assert
+          expect(() => useCase.execute(params), throwsException);
+        },
+      );
     });
 
     group('Bank transfer flow', () {
-      test('should create booking immediately with bank_transfer payment', () async {
-        // Arrange
-        final widgetSettings = WidgetSettings(
-          id: 'unit-1',
-          propertyId: 'property-1',
-          contactOptions: const ContactOptions(),
-          emailConfig: const EmailNotificationConfig(),
-          taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025),
-          updatedAt: DateTime(2025),
-        );
+      test(
+        'should create booking immediately with bank_transfer payment',
+        () async {
+          // Arrange
+          final widgetSettings = WidgetSettings(
+            id: 'unit-1',
+            propertyId: 'property-1',
+            contactOptions: const ContactOptions(),
+            emailConfig: const EmailNotificationConfig(),
+            taxLegalConfig: const TaxLegalConfig(),
+            createdAt: DateTime(2025),
+            updatedAt: DateTime(2025),
+          );
 
-        final params = SubmitBookingParams(
-          unitId: 'unit-1',
-          propertyId: 'property-1',
-          ownerId: 'owner-1',
-          unit: testUnit,
-          widgetSettings: widgetSettings,
-          checkIn: testCheckIn,
-          checkOut: testCheckOut,
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-          phoneWithCountryCode: '+385 91 123 4567',
-          notes: 'Bank transfer notes',
-          adults: 2,
-          children: 1,
-          totalPrice: 600.0,
-          paymentMethod: 'bank_transfer',
-          paymentOption: 'full',
-          taxLegalAccepted: true,
-        );
+          final params = SubmitBookingParams(
+            unitId: 'unit-1',
+            propertyId: 'property-1',
+            ownerId: 'owner-1',
+            unit: testUnit,
+            widgetSettings: widgetSettings,
+            checkIn: testCheckIn,
+            checkOut: testCheckOut,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@example.com',
+            phoneWithCountryCode: '+385 91 123 4567',
+            notes: 'Bank transfer notes',
+            adults: 2,
+            children: 1,
+            totalPrice: 600.0,
+            paymentMethod: 'bank_transfer',
+            paymentOption: 'full',
+            taxLegalAccepted: true,
+          );
 
-        final bankTransferBooking = testBooking.copyWith(
-          paymentMethod: 'bank_transfer',
-          guestCount: 3,
-          totalPrice: 600.0,
-        );
+          final bankTransferBooking = testBooking.copyWith(
+            paymentMethod: 'bank_transfer',
+            guestCount: 3,
+            totalPrice: 600.0,
+          );
 
-        when(() => mockBookingService.createBooking(
+          when(
+            () => mockBookingService.createBooking(
               unitId: any(named: 'unitId'),
               propertyId: any(named: 'propertyId'),
               ownerId: any(named: 'ownerId'),
@@ -433,21 +455,23 @@ void main() {
               requireOwnerApproval: any(named: 'requireOwnerApproval'),
               notes: any(named: 'notes'),
               taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenAnswer((_) async => BookingResult.booking(bankTransferBooking));
+            ),
+          ).thenAnswer((_) async => BookingResult.booking(bankTransferBooking));
 
-        // Act
-        final result = await useCase.execute(params);
+          // Act
+          final result = await useCase.execute(params);
 
-        // Assert
-        expect(result.isStripeFlow, false);
-        expect(result, isA<BookingSubmissionCreated>());
-        final createdResult = result as BookingSubmissionCreated;
-        expect(createdResult.booking.paymentMethod, 'bank_transfer');
-        expect(createdResult.booking.guestCount, 3);
-        expect(createdResult.booking.totalPrice, 600.0);
+          // Assert
+          expect(result.isStripeFlow, false);
+          expect(result, isA<BookingSubmissionCreated>());
+          final createdResult = result as BookingSubmissionCreated;
+          expect(createdResult.booking.paymentMethod, 'bank_transfer');
+          expect(createdResult.booking.guestCount, 3);
+          expect(createdResult.booking.totalPrice, 600.0);
 
-        // Verify booking created with correct payment method
-        verify(() => mockBookingService.createBooking(
+          // Verify booking created with correct payment method
+          verify(
+            () => mockBookingService.createBooking(
               unitId: 'unit-1',
               propertyId: 'property-1',
               ownerId: 'owner-1',
@@ -462,54 +486,59 @@ void main() {
               paymentMethod: 'bank_transfer',
               notes: 'Bank transfer notes',
               taxLegalAccepted: true,
-            )).called(1);
-      });
+            ),
+          ).called(1);
+        },
+      );
     });
 
     group('Pay on arrival flow', () {
-      test('should create booking immediately with pay_on_arrival payment', () async {
-        // Arrange
-        final widgetSettings = WidgetSettings(
-          id: 'unit-1',
-          propertyId: 'property-1',
-          requireOwnerApproval: true,
-          contactOptions: const ContactOptions(),
-          emailConfig: const EmailNotificationConfig(),
-          taxLegalConfig: const TaxLegalConfig(),
-          createdAt: DateTime(2025),
-          updatedAt: DateTime(2025),
-        );
+      test(
+        'should create booking immediately with pay_on_arrival payment',
+        () async {
+          // Arrange
+          final widgetSettings = WidgetSettings(
+            id: 'unit-1',
+            propertyId: 'property-1',
+            requireOwnerApproval: true,
+            contactOptions: const ContactOptions(),
+            emailConfig: const EmailNotificationConfig(),
+            taxLegalConfig: const TaxLegalConfig(),
+            createdAt: DateTime(2025),
+            updatedAt: DateTime(2025),
+          );
 
-        final params = SubmitBookingParams(
-          unitId: 'unit-1',
-          propertyId: 'property-1',
-          ownerId: 'owner-1',
-          unit: testUnit,
-          widgetSettings: widgetSettings,
-          checkIn: testCheckIn,
-          checkOut: testCheckOut,
-          firstName: 'Jane',
-          lastName: 'Smith',
-          email: 'jane@example.com',
-          phoneWithCountryCode: '+385 92 987 6543',
-          adults: 1,
-          children: 0,
-          totalPrice: 300.0,
-          paymentMethod: 'pay_on_arrival',
-          paymentOption: 'full',
-          taxLegalAccepted: false,
-        );
+          final params = SubmitBookingParams(
+            unitId: 'unit-1',
+            propertyId: 'property-1',
+            ownerId: 'owner-1',
+            unit: testUnit,
+            widgetSettings: widgetSettings,
+            checkIn: testCheckIn,
+            checkOut: testCheckOut,
+            firstName: 'Jane',
+            lastName: 'Smith',
+            email: 'jane@example.com',
+            phoneWithCountryCode: '+385 92 987 6543',
+            adults: 1,
+            children: 0,
+            totalPrice: 300.0,
+            paymentMethod: 'pay_on_arrival',
+            paymentOption: 'full',
+            taxLegalAccepted: false,
+          );
 
-        final payOnArrivalBooking = testBooking.copyWith(
-          guestName: 'Jane Smith',
-          guestEmail: 'jane@example.com',
-          guestPhone: '+385 92 987 6543',
-          paymentMethod: 'pay_on_arrival',
-          guestCount: 1,
-          totalPrice: 300.0,
-        );
+          final payOnArrivalBooking = testBooking.copyWith(
+            guestName: 'Jane Smith',
+            guestEmail: 'jane@example.com',
+            guestPhone: '+385 92 987 6543',
+            paymentMethod: 'pay_on_arrival',
+            guestCount: 1,
+            totalPrice: 300.0,
+          );
 
-        when(() => mockBookingService.createBooking(
+          when(
+            () => mockBookingService.createBooking(
               unitId: any(named: 'unitId'),
               propertyId: any(named: 'propertyId'),
               ownerId: any(named: 'ownerId'),
@@ -525,20 +554,22 @@ void main() {
               requireOwnerApproval: any(named: 'requireOwnerApproval'),
               notes: any(named: 'notes'),
               taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenAnswer((_) async => BookingResult.booking(payOnArrivalBooking));
+            ),
+          ).thenAnswer((_) async => BookingResult.booking(payOnArrivalBooking));
 
-        // Act
-        final result = await useCase.execute(params);
+          // Act
+          final result = await useCase.execute(params);
 
-        // Assert
-        expect(result.isStripeFlow, false);
-        expect(result, isA<BookingSubmissionCreated>());
-        final createdResult = result as BookingSubmissionCreated;
-        expect(createdResult.booking.paymentMethod, 'pay_on_arrival');
-        expect(createdResult.booking.guestName, 'Jane Smith');
+          // Assert
+          expect(result.isStripeFlow, false);
+          expect(result, isA<BookingSubmissionCreated>());
+          final createdResult = result as BookingSubmissionCreated;
+          expect(createdResult.booking.paymentMethod, 'pay_on_arrival');
+          expect(createdResult.booking.guestName, 'Jane Smith');
 
-        // Verify booking created with requireOwnerApproval
-        verify(() => mockBookingService.createBooking(
+          // Verify booking created with requireOwnerApproval
+          verify(
+            () => mockBookingService.createBooking(
               unitId: 'unit-1',
               propertyId: 'property-1',
               ownerId: 'owner-1',
@@ -553,8 +584,10 @@ void main() {
               paymentMethod: 'pay_on_arrival',
               requireOwnerApproval: true,
               taxLegalAccepted: false,
-            )).called(1);
-      });
+            ),
+          ).called(1);
+        },
+      );
     });
 
     group('Tax/legal acceptance', () {
@@ -565,9 +598,7 @@ void main() {
           propertyId: 'property-1',
           contactOptions: const ContactOptions(),
           emailConfig: const EmailNotificationConfig(),
-          taxLegalConfig: const TaxLegalConfig(
-            
-          ),
+          taxLegalConfig: const TaxLegalConfig(),
           createdAt: DateTime(2025),
           updatedAt: DateTime(2025),
         );
@@ -591,79 +622,86 @@ void main() {
           taxLegalAccepted: true,
         );
 
-        when(() => mockBookingService.createBooking(
-              unitId: any(named: 'unitId'),
-              propertyId: any(named: 'propertyId'),
-              ownerId: any(named: 'ownerId'),
-              checkIn: any(named: 'checkIn'),
-              checkOut: any(named: 'checkOut'),
-              guestName: any(named: 'guestName'),
-              guestEmail: any(named: 'guestEmail'),
-              guestPhone: any(named: 'guestPhone'),
-              guestCount: any(named: 'guestCount'),
-              totalPrice: any(named: 'totalPrice'),
-              paymentOption: any(named: 'paymentOption'),
-              paymentMethod: any(named: 'paymentMethod'),
-              requireOwnerApproval: any(named: 'requireOwnerApproval'),
-              notes: any(named: 'notes'),
-              taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenAnswer((_) async => BookingResult.booking(testBooking));
+        when(
+          () => mockBookingService.createBooking(
+            unitId: any(named: 'unitId'),
+            propertyId: any(named: 'propertyId'),
+            ownerId: any(named: 'ownerId'),
+            checkIn: any(named: 'checkIn'),
+            checkOut: any(named: 'checkOut'),
+            guestName: any(named: 'guestName'),
+            guestEmail: any(named: 'guestEmail'),
+            guestPhone: any(named: 'guestPhone'),
+            guestCount: any(named: 'guestCount'),
+            totalPrice: any(named: 'totalPrice'),
+            paymentOption: any(named: 'paymentOption'),
+            paymentMethod: any(named: 'paymentMethod'),
+            requireOwnerApproval: any(named: 'requireOwnerApproval'),
+            notes: any(named: 'notes'),
+            taxLegalAccepted: any(named: 'taxLegalAccepted'),
+          ),
+        ).thenAnswer((_) async => BookingResult.booking(testBooking));
 
         // Act
         await useCase.execute(params);
 
         // Assert - taxLegalAccepted should be true
-        verify(() => mockBookingService.createBooking(
-              unitId: any(named: 'unitId'),
-              propertyId: any(named: 'propertyId'),
-              ownerId: any(named: 'ownerId'),
-              checkIn: any(named: 'checkIn'),
-              checkOut: any(named: 'checkOut'),
-              guestName: any(named: 'guestName'),
-              guestEmail: any(named: 'guestEmail'),
-              guestPhone: any(named: 'guestPhone'),
-              guestCount: any(named: 'guestCount'),
-              totalPrice: any(named: 'totalPrice'),
-              paymentOption: any(named: 'paymentOption'),
-              paymentMethod: any(named: 'paymentMethod'),
-              requireOwnerApproval: any(named: 'requireOwnerApproval'),
-              notes: any(named: 'notes'),
-              taxLegalAccepted: true,
-            )).called(1);
+        verify(
+          () => mockBookingService.createBooking(
+            unitId: any(named: 'unitId'),
+            propertyId: any(named: 'propertyId'),
+            ownerId: any(named: 'ownerId'),
+            checkIn: any(named: 'checkIn'),
+            checkOut: any(named: 'checkOut'),
+            guestName: any(named: 'guestName'),
+            guestEmail: any(named: 'guestEmail'),
+            guestPhone: any(named: 'guestPhone'),
+            guestCount: any(named: 'guestCount'),
+            totalPrice: any(named: 'totalPrice'),
+            paymentOption: any(named: 'paymentOption'),
+            paymentMethod: any(named: 'paymentMethod'),
+            requireOwnerApproval: any(named: 'requireOwnerApproval'),
+            notes: any(named: 'notes'),
+            taxLegalAccepted: true,
+          ),
+        ).called(1);
       });
 
-      test('should pass null for taxLegalAccepted when config is disabled', () async {
-        // Arrange
-        final widgetSettings = WidgetSettings(
-          id: 'unit-1',
-          propertyId: 'property-1',
-          contactOptions: const ContactOptions(),
-          emailConfig: const EmailNotificationConfig(),
-          taxLegalConfig: const TaxLegalConfig(enabled: false),
-          createdAt: DateTime(2025),
-          updatedAt: DateTime(2025),
-        );
+      test(
+        'should pass null for taxLegalAccepted when config is disabled',
+        () async {
+          // Arrange
+          final widgetSettings = WidgetSettings(
+            id: 'unit-1',
+            propertyId: 'property-1',
+            contactOptions: const ContactOptions(),
+            emailConfig: const EmailNotificationConfig(),
+            taxLegalConfig: const TaxLegalConfig(enabled: false),
+            createdAt: DateTime(2025),
+            updatedAt: DateTime(2025),
+          );
 
-        final params = SubmitBookingParams(
-          unitId: 'unit-1',
-          propertyId: 'property-1',
-          ownerId: 'owner-1',
-          widgetSettings: widgetSettings,
-          checkIn: testCheckIn,
-          checkOut: testCheckOut,
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-          phoneWithCountryCode: '+385 91 123 4567',
-          adults: 2,
-          children: 0,
-          totalPrice: 500.0,
-          paymentMethod: 'bank_transfer',
-          paymentOption: 'full',
-          taxLegalAccepted: true, // User checked it, but config disabled
-        );
+          final params = SubmitBookingParams(
+            unitId: 'unit-1',
+            propertyId: 'property-1',
+            ownerId: 'owner-1',
+            widgetSettings: widgetSettings,
+            checkIn: testCheckIn,
+            checkOut: testCheckOut,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@example.com',
+            phoneWithCountryCode: '+385 91 123 4567',
+            adults: 2,
+            children: 0,
+            totalPrice: 500.0,
+            paymentMethod: 'bank_transfer',
+            paymentOption: 'full',
+            taxLegalAccepted: true, // User checked it, but config disabled
+          );
 
-        when(() => mockBookingService.createBooking(
+          when(
+            () => mockBookingService.createBooking(
               unitId: any(named: 'unitId'),
               propertyId: any(named: 'propertyId'),
               ownerId: any(named: 'ownerId'),
@@ -679,13 +717,15 @@ void main() {
               requireOwnerApproval: any(named: 'requireOwnerApproval'),
               notes: any(named: 'notes'),
               taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenAnswer((_) async => BookingResult.booking(testBooking));
+            ),
+          ).thenAnswer((_) async => BookingResult.booking(testBooking));
 
-        // Act
-        await useCase.execute(params);
+          // Act
+          await useCase.execute(params);
 
-        // Assert - taxLegalAccepted should be null (config disabled)
-        verify(() => mockBookingService.createBooking(
+          // Assert - taxLegalAccepted should be null (config disabled)
+          verify(
+            () => mockBookingService.createBooking(
               unitId: any(named: 'unitId'),
               propertyId: any(named: 'propertyId'),
               ownerId: any(named: 'ownerId'),
@@ -700,8 +740,10 @@ void main() {
               paymentMethod: any(named: 'paymentMethod'),
               requireOwnerApproval: any(named: 'requireOwnerApproval'),
               notes: any(named: 'notes'),
-            )).called(1);
-      });
+            ),
+          ).called(1);
+        },
+      );
     });
 
     group('Error handling', () {
@@ -725,23 +767,25 @@ void main() {
           taxLegalAccepted: false,
         );
 
-        when(() => mockBookingService.createBooking(
-              unitId: any(named: 'unitId'),
-              propertyId: any(named: 'propertyId'),
-              ownerId: any(named: 'ownerId'),
-              checkIn: any(named: 'checkIn'),
-              checkOut: any(named: 'checkOut'),
-              guestName: any(named: 'guestName'),
-              guestEmail: any(named: 'guestEmail'),
-              guestPhone: any(named: 'guestPhone'),
-              guestCount: any(named: 'guestCount'),
-              totalPrice: any(named: 'totalPrice'),
-              paymentOption: any(named: 'paymentOption'),
-              paymentMethod: any(named: 'paymentMethod'),
-              requireOwnerApproval: any(named: 'requireOwnerApproval'),
-              notes: any(named: 'notes'),
-              taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenThrow(BookingConflictException('Dates no longer available'));
+        when(
+          () => mockBookingService.createBooking(
+            unitId: any(named: 'unitId'),
+            propertyId: any(named: 'propertyId'),
+            ownerId: any(named: 'ownerId'),
+            checkIn: any(named: 'checkIn'),
+            checkOut: any(named: 'checkOut'),
+            guestName: any(named: 'guestName'),
+            guestEmail: any(named: 'guestEmail'),
+            guestPhone: any(named: 'guestPhone'),
+            guestCount: any(named: 'guestCount'),
+            totalPrice: any(named: 'totalPrice'),
+            paymentOption: any(named: 'paymentOption'),
+            paymentMethod: any(named: 'paymentMethod'),
+            requireOwnerApproval: any(named: 'requireOwnerApproval'),
+            notes: any(named: 'notes'),
+            taxLegalAccepted: any(named: 'taxLegalAccepted'),
+          ),
+        ).thenThrow(BookingConflictException('Dates no longer available'));
 
         // Act & Assert
         expect(
@@ -770,23 +814,25 @@ void main() {
           taxLegalAccepted: false,
         );
 
-        when(() => mockBookingService.createBooking(
-              unitId: any(named: 'unitId'),
-              propertyId: any(named: 'propertyId'),
-              ownerId: any(named: 'ownerId'),
-              checkIn: any(named: 'checkIn'),
-              checkOut: any(named: 'checkOut'),
-              guestName: any(named: 'guestName'),
-              guestEmail: any(named: 'guestEmail'),
-              guestPhone: any(named: 'guestPhone'),
-              guestCount: any(named: 'guestCount'),
-              totalPrice: any(named: 'totalPrice'),
-              paymentOption: any(named: 'paymentOption'),
-              paymentMethod: any(named: 'paymentMethod'),
-              requireOwnerApproval: any(named: 'requireOwnerApproval'),
-              notes: any(named: 'notes'),
-              taxLegalAccepted: any(named: 'taxLegalAccepted'),
-            )).thenThrow(BookingServiceException('Service error'));
+        when(
+          () => mockBookingService.createBooking(
+            unitId: any(named: 'unitId'),
+            propertyId: any(named: 'propertyId'),
+            ownerId: any(named: 'ownerId'),
+            checkIn: any(named: 'checkIn'),
+            checkOut: any(named: 'checkOut'),
+            guestName: any(named: 'guestName'),
+            guestEmail: any(named: 'guestEmail'),
+            guestPhone: any(named: 'guestPhone'),
+            guestCount: any(named: 'guestCount'),
+            totalPrice: any(named: 'totalPrice'),
+            paymentOption: any(named: 'paymentOption'),
+            paymentMethod: any(named: 'paymentMethod'),
+            requireOwnerApproval: any(named: 'requireOwnerApproval'),
+            notes: any(named: 'notes'),
+            taxLegalAccepted: any(named: 'taxLegalAccepted'),
+          ),
+        ).thenThrow(BookingServiceException('Service error'));
 
         // Act & Assert
         expect(

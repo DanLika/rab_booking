@@ -34,9 +34,7 @@ class PropertyBranding with _$PropertyBranding {
 
   /// Check if branding has any customization
   bool get hasCustomBranding =>
-      displayName != null ||
-      logoUrl != null ||
-      primaryColor != null;
+      displayName != null || logoUrl != null || primaryColor != null;
 
   /// Get primary color as Color (for Flutter)
   /// Returns null if primaryColor is not set or invalid

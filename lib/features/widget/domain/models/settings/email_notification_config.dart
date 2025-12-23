@@ -111,7 +111,8 @@ class EmailNotificationConfig {
   /// Returns true if fromEmail is null (not set) or matches email format.
   /// Returns false only if fromEmail is set but has invalid format.
   bool get hasValidFromEmail {
-    if (fromEmail == null) return true; // Not set = valid (will fail isConfigured)
+    if (fromEmail == null)
+      return true; // Not set = valid (will fail isConfigured)
     return _emailRegex.hasMatch(fromEmail!.trim());
   }
 

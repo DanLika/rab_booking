@@ -30,7 +30,8 @@ const String _sentryDsn =
 /// Global initialization state - tracks what has been initialized
 class AppInitState {
   static final Completer<void> firebaseReady = Completer<void>();
-  static final Completer<SharedPreferences> prefsReady = Completer<SharedPreferences>();
+  static final Completer<SharedPreferences> prefsReady =
+      Completer<SharedPreferences>();
   static final Completer<void> allReady = Completer<void>();
 
   static bool get isFirebaseReady => firebaseReady.isCompleted;
@@ -112,10 +113,7 @@ void _runAppWithDeferredInit() {
           return true; // Mark as handled, don't crash
         }
         // Log other errors
-        LoggingService.log(
-          'Platform error: $error',
-          tag: 'PLATFORM_ERROR',
-        );
+        LoggingService.log('Platform error: $error', tag: 'PLATFORM_ERROR');
         return true; // Mark as handled
       };
     }
@@ -135,11 +133,19 @@ void _runAppWithDeferredInit() {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Color(0xFFD32F2F)),
+              const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Color(0xFFD32F2F),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Widget Error',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFD32F2F)),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFD32F2F),
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -180,18 +186,29 @@ Future<void> _initializeInBackground() async {
   try {
     // Initialize Firebase
     LoggingService.log('Initializing Firebase...', tag: 'INIT');
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     AppInitState.firebaseReady.complete();
-    LoggingService.log('Firebase ready (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+    LoggingService.log(
+      'Firebase ready (${stopwatch.elapsedMilliseconds}ms)',
+      tag: 'INIT',
+    );
 
     // Initialize SharedPreferences
     LoggingService.log('Initializing SharedPreferences...', tag: 'INIT');
     try {
       final prefs = await SharedPreferences.getInstance();
       AppInitState.prefsReady.complete(prefs);
-      LoggingService.log('SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+      LoggingService.log(
+        'SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)',
+        tag: 'INIT',
+      );
     } catch (e, stack) {
-      LoggingService.log('SharedPreferences init failed: $e', tag: 'INIT_ERROR');
+      LoggingService.log(
+        'SharedPreferences init failed: $e',
+        tag: 'INIT_ERROR',
+      );
       // Complete with error so app can handle it gracefully
       if (!AppInitState.prefsReady.isCompleted) {
         AppInitState.prefsReady.completeError(e, stack);
@@ -207,7 +224,10 @@ Future<void> _initializeInBackground() async {
 
     // Mark all initialization as complete
     AppInitState.allReady.complete();
-    LoggingService.log('All initialization complete (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+    LoggingService.log(
+      'All initialization complete (${stopwatch.elapsedMilliseconds}ms)',
+      tag: 'INIT',
+    );
   } catch (e, stack) {
     LoggingService.log('Initialization error: $e', tag: 'INIT_ERROR');
     // Complete with error so app can handle it
@@ -293,7 +313,10 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
       _prefs = await AppInitState.prefsReady.future;
       LoggingService.log('Prefs ready, updating state...', tag: 'APP');
     } catch (e) {
-      LoggingService.log('SharedPreferences init error: $e - continuing without persistence', tag: 'APP_ERROR');
+      LoggingService.log(
+        'SharedPreferences init error: $e - continuing without persistence',
+        tag: 'APP_ERROR',
+      );
       // Continue without SharedPreferences - providers will use fallbacks
       _prefs = null;
     }
@@ -352,7 +375,9 @@ class _InitializingSplash extends StatelessWidget {
     // Use platform brightness to match HTML splash
     final brightness = MediaQuery.platformBrightnessOf(context);
     final isDark = brightness == Brightness.dark;
-    final backgroundColor = isDark ? const Color(0xFF000000) : const Color(0xFFFAFAFA);
+    final backgroundColor = isDark
+        ? const Color(0xFF000000)
+        : const Color(0xFFFAFAFA);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -376,7 +401,10 @@ class _InitializedApp extends ConsumerStatefulWidget {
   final bool showSplash;
   final VoidCallback onSplashComplete;
 
-  const _InitializedApp({required this.showSplash, required this.onSplashComplete});
+  const _InitializedApp({
+    required this.showSplash,
+    required this.onSplashComplete,
+  });
 
   @override
   ConsumerState<_InitializedApp> createState() => _InitializedAppState();
@@ -399,7 +427,10 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
     if (!_authChecked && !authState.isLoading) {
       _authChecked = true;
       if (!_authReadyCompleter.isCompleted) {
-        LoggingService.log('Auth check complete, isAuthenticated=${authState.isAuthenticated}', tag: 'APP');
+        LoggingService.log(
+          'Auth check complete, isAuthenticated=${authState.isAuthenticated}',
+          tag: 'APP',
+        );
         _authReadyCompleter.complete();
       }
     }

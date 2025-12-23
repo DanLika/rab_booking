@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 
 /// Responsive dialog sizing utilities
 class ResponsiveDialogUtils {
+  /// Standard header height matching CommonAppBar (52px)
+  /// Used for dialog/bottom sheet headers to ensure visual consistency
+  static const double kHeaderHeight = 52.0;
+
   /// Get responsive dialog width based on screen size
   /// - Very small mobile (< 400px): 90% width (with 0px inset padding = 90% total)
   /// - Mobile (400-600px): 90% width (with 5px inset padding)
@@ -31,24 +35,33 @@ class ResponsiveDialogUtils {
     } else {
       // Desktop
       // Use math.max to prevent ArgumentError when minWidth > maxWidth
-      return (screenWidth * desktopPercent).clamp(minWidth, math.max(minWidth, maxWidth));
+      return (screenWidth * desktopPercent).clamp(
+        minWidth,
+        math.max(minWidth, maxWidth),
+      );
     }
   }
 
   /// Get responsive content padding
   /// - Mobile: minimal padding (12px) - always have some padding between content and dialog edge
   /// - Tablet/Desktop: normal padding (20px)
-  static double getContentPadding(BuildContext context, {double mobilePadding = 12.0, double desktopPadding = 20.0}) {
+  static double getContentPadding(
+    BuildContext context, {
+    double mobilePadding = 12.0,
+    double desktopPadding = 20.0,
+  }) {
     final screenWidth = MediaQuery.of(context).size.width;
     return screenWidth < 600 ? mobilePadding : desktopPadding;
   }
 
   /// Get responsive header padding
-  /// - Mobile: minimal (8px) - save space
-  /// - Desktop: normal (16px)
+  /// Compact padding to achieve kHeaderHeight (52px) total height
+  /// - Mobile: 8px vertical padding
+  /// - Desktop: 10px vertical padding
+  /// With icon (20px) + text (~20px) + padding = ~52px
   static double getHeaderPadding(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    return screenWidth < 600 ? 8.0 : 16.0;
+    return screenWidth < 600 ? 8.0 : 10.0;
   }
 
   /// Check if device is mobile

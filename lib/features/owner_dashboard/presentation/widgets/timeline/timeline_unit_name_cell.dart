@@ -18,7 +18,12 @@ class TimelineUnitNameCell extends StatelessWidget {
   /// Callback when unit name is tapped (to show future bookings dialog)
   final VoidCallback? onTap;
 
-  const TimelineUnitNameCell({super.key, required this.unit, required this.unitRowHeight, this.onTap});
+  const TimelineUnitNameCell({
+    super.key,
+    required this.unit,
+    required this.unitRowHeight,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +35,9 @@ class TimelineUnitNameCell extends StatelessWidget {
     // Landscape mobile needs more compact layout
     final cellPadding = isLandscape
         ? const EdgeInsets.symmetric(horizontal: 4, vertical: 2)
-        : EdgeInsets.all(isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS);
+        : EdgeInsets.all(
+            isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
+          );
     final iconPadding = isLandscape ? 3.0 : (isMobile ? 4.0 : 6.0);
     final iconSize = isLandscape ? 12.0 : (isMobile ? 14.0 : 16.0);
     final nameFontSize = isLandscape ? 11.0 : (isMobile ? 12.0 : 13.0);
@@ -44,7 +51,11 @@ class TimelineUnitNameCell extends StatelessWidget {
         height: unitRowHeight,
         padding: cellPadding,
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6))),
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withValues(alpha: 0.6),
+            ),
+          ),
         ),
         child: Row(
           children: [
@@ -88,7 +99,9 @@ class TimelineUnitNameCell extends StatelessWidget {
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: guestsFontSize,
                           height: 1.1, // Tighter line height for landscape
-                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                          color: theme.textTheme.bodySmall?.color?.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

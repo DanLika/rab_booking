@@ -172,11 +172,21 @@ class BookingConfirmationData {
       propertyName: propertyName ?? this.propertyName,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       // Use sentinel pattern for nullable fields to support explicit null
-      unitName: identical(unitName, _sentinel) ? this.unitName : unitName as String?,
-      booking: identical(booking, _sentinel) ? this.booking : booking as BookingModel?,
-      emailConfig: identical(emailConfig, _sentinel) ? this.emailConfig : emailConfig as EmailNotificationConfig?,
-      widgetSettings: identical(widgetSettings, _sentinel) ? this.widgetSettings : widgetSettings as WidgetSettings?,
-      propertyId: identical(propertyId, _sentinel) ? this.propertyId : propertyId as String?,
+      unitName: identical(unitName, _sentinel)
+          ? this.unitName
+          : unitName as String?,
+      booking: identical(booking, _sentinel)
+          ? this.booking
+          : booking as BookingModel?,
+      emailConfig: identical(emailConfig, _sentinel)
+          ? this.emailConfig
+          : emailConfig as EmailNotificationConfig?,
+      widgetSettings: identical(widgetSettings, _sentinel)
+          ? this.widgetSettings
+          : widgetSettings as WidgetSettings?,
+      propertyId: identical(propertyId, _sentinel)
+          ? this.propertyId
+          : propertyId as String?,
       unitId: identical(unitId, _sentinel) ? this.unitId : unitId as String?,
     );
   }

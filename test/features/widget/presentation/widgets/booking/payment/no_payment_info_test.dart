@@ -8,7 +8,9 @@ void main() {
     testWidgets('renders container with error styling', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(home: Scaffold(body: NoPaymentInfo(isDarkMode: false))),
+          child: MaterialApp(
+            home: Scaffold(body: NoPaymentInfo(isDarkMode: false)),
+          ),
         ),
       );
 
@@ -18,7 +20,9 @@ void main() {
     testWidgets('renders error icon', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(home: Scaffold(body: NoPaymentInfo(isDarkMode: false))),
+          child: MaterialApp(
+            home: Scaffold(body: NoPaymentInfo(isDarkMode: false)),
+          ),
         ),
       );
 
@@ -28,7 +32,9 @@ void main() {
     testWidgets('renders default error message', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(home: Scaffold(body: NoPaymentInfo(isDarkMode: false))),
+          child: MaterialApp(
+            home: Scaffold(body: NoPaymentInfo(isDarkMode: false)),
+          ),
         ),
       );
 
@@ -44,7 +50,12 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: NoPaymentInfo(isDarkMode: false, message: 'Custom error message')),
+            home: Scaffold(
+              body: NoPaymentInfo(
+                isDarkMode: false,
+                message: 'Custom error message',
+              ),
+            ),
           ),
         ),
       );
@@ -55,7 +66,9 @@ void main() {
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(home: Scaffold(body: NoPaymentInfo(isDarkMode: true))),
+          child: MaterialApp(
+            home: Scaffold(body: NoPaymentInfo(isDarkMode: true)),
+          ),
         ),
       );
 
@@ -65,7 +78,9 @@ void main() {
     testWidgets('uses Row layout with icon and text', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(home: Scaffold(body: NoPaymentInfo(isDarkMode: false))),
+          child: MaterialApp(
+            home: Scaffold(body: NoPaymentInfo(isDarkMode: false)),
+          ),
         ),
       );
 

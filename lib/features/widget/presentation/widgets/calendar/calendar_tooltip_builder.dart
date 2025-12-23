@@ -60,7 +60,7 @@ class CalendarTooltipBuilder {
     // Defensive check: ensure MediaQuery is available
     final mediaQuery = MediaQuery.maybeOf(context);
     if (mediaQuery == null) return const SizedBox.shrink();
-    
+
     final screenWidth = mediaQuery.size.width;
     final screenHeight = mediaQuery.size.height;
 

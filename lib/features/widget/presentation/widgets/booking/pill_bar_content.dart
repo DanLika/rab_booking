@@ -77,17 +77,17 @@ class PillBarContent extends StatelessWidget {
       // Fallback to compact layout if MediaQuery not available
       return _buildCompactLayout();
     }
-    
+
     // Defensive check: ensure size values are valid and finite
     final size = mediaQuery.size;
     if (!size.height.isFinite || size.height <= 0) {
       return _buildCompactLayout();
     }
-    
+
     final viewInsets = mediaQuery.viewInsets.bottom;
     final screenHeight = size.height;
     final calculatedHeight = (screenHeight - viewInsets) * _maxHeightFactor;
-    
+
     // Ensure calculated height is valid
     final maxHeight = calculatedHeight.isFinite && calculatedHeight > 0
         ? calculatedHeight

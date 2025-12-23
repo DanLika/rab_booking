@@ -32,7 +32,11 @@ class _EmbedWidgetGuideScreenState
   /// Generate direct iframe embed code for a unit
   /// Works on any website - just copy and paste
   /// Responsive height using aspect-ratio with min/max constraints
-  String _generateEmbedCode(String propertyId, UnitModel unit, String? subdomain) {
+  String _generateEmbedCode(
+    String propertyId,
+    UnitModel unit,
+    String? subdomain,
+  ) {
     final baseUrl = (subdomain != null && subdomain.isNotEmpty)
         ? 'https://$subdomain.$_subdomainBaseDomain'
         : 'https://$_subdomainBaseDomain';
@@ -98,8 +102,7 @@ class _EmbedWidgetGuideScreenState
       decoration: BoxDecoration(
         gradient: context.gradients.brandPrimary,
         borderRadius: BorderRadius.circular(12),
-        boxShadow:
-            isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -111,11 +114,7 @@ class _EmbedWidgetGuideScreenState
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.code,
-                size: 32,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.code, size: 32, color: Colors.white),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -322,18 +321,15 @@ class _EmbedWidgetGuideScreenState
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: isDark
-                ? theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.5)
+                ? theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  )
                 : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: theme.colorScheme.primary,
-              ),
+              Icon(icon, size: 20, color: theme.colorScheme.primary),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -575,14 +571,21 @@ class _EmbedWidgetGuideScreenState
           ),
 
           // Units list
-          ...units.map((unit) => _buildUnitEmbedCard(property.id, unit, property.subdomain)),
+          ...units.map(
+            (unit) =>
+                _buildUnitEmbedCard(property.id, unit, property.subdomain),
+          ),
         ],
       ),
     );
   }
 
   /// Build embed card for a single unit
-  Widget _buildUnitEmbedCard(String propertyId, UnitModel unit, String? subdomain) {
+  Widget _buildUnitEmbedCard(
+    String propertyId,
+    UnitModel unit,
+    String? subdomain,
+  ) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;

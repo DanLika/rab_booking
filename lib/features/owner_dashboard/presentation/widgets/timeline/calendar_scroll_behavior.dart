@@ -12,11 +12,11 @@ import 'package:flutter/material.dart';
 class CalendarScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse, // Enable mouse drag for desktop
-        PointerDeviceKind.trackpad, // Enable trackpad gestures
-        PointerDeviceKind.stylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse, // Enable mouse drag for desktop
+    PointerDeviceKind.trackpad, // Enable trackpad gestures
+    PointerDeviceKind.stylus,
+  };
 
   // NOTE: Do NOT override getScrollPhysics() here!
   // The widget's physics parameter (TimelineSnapScrollPhysics) must take precedence.

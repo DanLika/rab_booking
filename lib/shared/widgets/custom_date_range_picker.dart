@@ -29,13 +29,19 @@ class _CustomDateRangePickerDialog extends StatefulWidget {
   final DateTime firstDate;
   final DateTime lastDate;
 
-  const _CustomDateRangePickerDialog({this.initialDateRange, required this.firstDate, required this.lastDate});
+  const _CustomDateRangePickerDialog({
+    this.initialDateRange,
+    required this.firstDate,
+    required this.lastDate,
+  });
 
   @override
-  State<_CustomDateRangePickerDialog> createState() => _CustomDateRangePickerDialogState();
+  State<_CustomDateRangePickerDialog> createState() =>
+      _CustomDateRangePickerDialogState();
 }
 
-class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDialog> {
+class _CustomDateRangePickerDialogState
+    extends State<_CustomDateRangePickerDialog> {
   late DateTime _focusedMonth;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -61,7 +67,11 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
         width: isMobile ? screenWidth * 0.9 : 450,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * ResponsiveSpacingHelper.getDialogMaxHeightPercent(context)),
+        constraints: BoxConstraints(
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
         decoration: BoxDecoration(
           color: context.gradients.cardBackground,
           borderRadius: BorderRadius.circular(16),
@@ -75,7 +85,9 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(15),
+                ),
               ),
               child: Row(
                 children: [
@@ -85,13 +97,20 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
                       color: Colors.white.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.date_range, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.date_range,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: AutoSizeText(
                       'Odaberi raspon',
-                      style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       minFontSize: 14,
                     ),
@@ -109,8 +128,16 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-                border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()))),
+                color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+                  (0.3 * 255).toInt(),
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.colorScheme.outline.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
+                  ),
+                ),
               ),
               child: Row(
                 children: [
@@ -124,7 +151,11 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Icon(Icons.arrow_forward, color: theme.colorScheme.onSurfaceVariant, size: 20),
+                    child: Icon(
+                      Icons.arrow_forward,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
                   ),
                   Expanded(
                     child: _buildDateDisplay(
@@ -140,28 +171,50 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
 
             // Calendar
             Flexible(
-              child: SingleChildScrollView(padding: const EdgeInsets.all(16), child: _buildCalendar(theme)),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: _buildCalendar(theme),
+              ),
             ),
 
             // Footer buttons
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-                border: Border(top: BorderSide(color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()))),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
+                color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+                  (0.3 * 255).toInt(),
+                ),
+                border: Border(
+                  top: BorderSide(
+                    color: theme.colorScheme.outline.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
+                  ),
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(15),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text('Otkaži', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
+                    child: Text(
+                      'Otkaži',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Container(
                     decoration: BoxDecoration(
-                      gradient: (_startDate != null && _endDate != null) ? context.gradients.brandPrimary : null,
+                      gradient: (_startDate != null && _endDate != null)
+                          ? context.gradients.brandPrimary
+                          : null,
                       color: (_startDate == null || _endDate == null)
                           ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
                           : null,
@@ -172,18 +225,28 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
                       child: InkWell(
                         onTap: (_startDate != null && _endDate != null)
                             ? () {
-                                Navigator.of(context).pop(DateTimeRange(start: _startDate!, end: _endDate!));
+                                Navigator.of(context).pop(
+                                  DateTimeRange(
+                                    start: _startDate!,
+                                    end: _endDate!,
+                                  ),
+                                );
                               }
                             : null,
                         borderRadius: BorderRadius.circular(10),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                           child: Text(
                             'Spremi',
                             style: TextStyle(
                               color: (_startDate != null && _endDate != null)
                                   ? Colors.white
-                                  : theme.colorScheme.onSurface.withValues(alpha: 0.38),
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.38,
+                                    ),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -216,10 +279,14 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? theme.colorScheme.primary.withValues(alpha: 0.12) : Colors.transparent,
+          color: isActive
+              ? theme.colorScheme.primary.withValues(alpha: 0.12)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.3),
+            color: isActive
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),
@@ -229,7 +296,9 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
             Text(
               label,
               style: theme.textTheme.labelSmall?.copyWith(
-                color: isActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                color: isActive
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -238,7 +307,9 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
               date != null ? dateFormat.format(date) : 'Odaberi',
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: date != null ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
+                color: date != null
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -258,19 +329,30 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
               icon: const Icon(Icons.chevron_left),
               onPressed: () {
                 setState(() {
-                  _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1);
+                  _focusedMonth = DateTime(
+                    _focusedMonth.year,
+                    _focusedMonth.month - 1,
+                  );
                 });
               },
             ),
             Text(
-              DateFormat('MMMM yyyy', Localizations.localeOf(context).toString()).format(_focusedMonth),
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              DateFormat(
+                'MMMM yyyy',
+                Localizations.localeOf(context).toString(),
+              ).format(_focusedMonth),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.chevron_right),
               onPressed: () {
                 setState(() {
-                  _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1);
+                  _focusedMonth = DateTime(
+                    _focusedMonth.year,
+                    _focusedMonth.month + 1,
+                  );
                 });
               },
             ),
@@ -306,7 +388,11 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
 
   Widget _buildMonthGrid(ThemeData theme) {
     final firstDayOfMonth = DateTime(_focusedMonth.year, _focusedMonth.month);
-    final lastDayOfMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1, 0);
+    final lastDayOfMonth = DateTime(
+      _focusedMonth.year,
+      _focusedMonth.month + 1,
+      0,
+    );
 
     // Monday = 1, Sunday = 7
     final startWeekday = firstDayOfMonth.weekday;
@@ -328,7 +414,11 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
               return const Expanded(child: SizedBox(height: 44));
             }
 
-            final date = DateTime(_focusedMonth.year, _focusedMonth.month, dayNumber);
+            final date = DateTime(
+              _focusedMonth.year,
+              _focusedMonth.month,
+              dayNumber,
+            );
             return Expanded(child: _buildDayCell(date, theme));
           }),
         );
@@ -338,16 +428,23 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
 
   Widget _buildDayCell(DateTime date, ThemeData theme) {
     final today = DateTime.now();
-    final isToday = date.year == today.year && date.month == today.month && date.day == today.day;
+    final isToday =
+        date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
 
     final isSelected =
-        _startDate != null && _endDate != null && !date.isBefore(_startDate!) && !date.isAfter(_endDate!);
+        _startDate != null &&
+        _endDate != null &&
+        !date.isBefore(_startDate!) &&
+        !date.isAfter(_endDate!);
 
     final isStart = _startDate != null && _isSameDay(date, _startDate!);
     final isEnd = _endDate != null && _isSameDay(date, _endDate!);
     final isInRange = isSelected && !isStart && !isEnd;
 
-    final isDisabled = date.isBefore(widget.firstDate) || date.isAfter(widget.lastDate);
+    final isDisabled =
+        date.isBefore(widget.firstDate) || date.isAfter(widget.lastDate);
 
     final isWeekend = date.weekday == 6 || date.weekday == 7;
 
@@ -357,7 +454,9 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
         height: 44,
         margin: const EdgeInsets.symmetric(vertical: 2),
         decoration: BoxDecoration(
-          color: isInRange ? theme.colorScheme.primary.withValues(alpha: 0.12) : null,
+          color: isInRange
+              ? theme.colorScheme.primary.withValues(alpha: 0.12)
+              : null,
           borderRadius: isStart
               ? const BorderRadius.horizontal(left: Radius.circular(22))
               : isEnd
@@ -368,7 +467,9 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
           decoration: BoxDecoration(
             color: (isStart || isEnd) ? theme.colorScheme.primary : null,
             shape: BoxShape.circle,
-            border: isToday && !isStart && !isEnd ? Border.all(color: theme.colorScheme.primary, width: 2) : null,
+            border: isToday && !isStart && !isEnd
+                ? Border.all(color: theme.colorScheme.primary, width: 2)
+                : null,
           ),
           child: Center(
             child: Text(
@@ -381,7 +482,9 @@ class _CustomDateRangePickerDialogState extends State<_CustomDateRangePickerDial
                     : isWeekend
                     ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
                     : theme.colorScheme.onSurface,
-                fontWeight: (isStart || isEnd || isToday) ? FontWeight.bold : FontWeight.normal,
+                fontWeight: (isStart || isEnd || isToday)
+                    ? FontWeight.bold
+                    : FontWeight.normal,
                 fontSize: 14,
               ),
             ),

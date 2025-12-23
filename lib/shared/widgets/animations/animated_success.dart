@@ -175,18 +175,12 @@ class _CheckmarkPainter extends CustomPainter {
       if (progress <= 0.5) {
         // First half of checkmark
         final t = progress * 2;
-        path.lineTo(
-          startX + (midX - startX) * t,
-          startY + (midY - startY) * t,
-        );
+        path.lineTo(startX + (midX - startX) * t, startY + (midY - startY) * t);
       } else {
         // Full first part + second part
         path.lineTo(midX, midY);
         final t = (progress - 0.5) * 2;
-        path.lineTo(
-          midX + (endX - midX) * t,
-          midY + (endY - midY) * t,
-        );
+        path.lineTo(midX + (endX - midX) * t, midY + (endY - midY) * t);
       }
 
       canvas.drawPath(path, paint);
@@ -281,10 +275,7 @@ class _SuccessOverlayState extends State<SuccessOverlay>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Opacity(
-          opacity: _fadeAnimation.value,
-          child: child,
-        );
+        return Opacity(opacity: _fadeAnimation.value, child: child);
       },
       child: Container(
         color: Colors.black.withAlpha((0.5 * 255).toInt()),

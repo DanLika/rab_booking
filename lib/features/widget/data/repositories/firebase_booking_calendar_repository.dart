@@ -33,7 +33,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
   FirebaseBookingCalendarRepository(this._firestore) {
     _availabilityChecker = AvailabilityChecker(_firestore);
-    _priceCalculator = BookingPriceCalculator(firestore: _firestore, availabilityChecker: _availabilityChecker);
+    _priceCalculator = BookingPriceCalculator(
+      firestore: _firestore,
+      availabilityChecker: _availabilityChecker,
+    );
   }
 
   /// Get year-view calendar data with realtime updates and prices
@@ -86,81 +89,105 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .snapshots();
 
     // Combine all four streams
-    return Rx.combineLatest4(bookingsStream, pricesStream, icalEventsStream, widgetSettingsStream, (
-      bookingsSnapshot,
-      pricesSnapshot,
-      icalEventsSnapshot,
-      widgetSettingsSnapshot,
-    ) {
-      // Parse bookings
-      final bookings = bookingsSnapshot.docs
-          .map((doc) {
-            try {
-              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
-            } catch (e) {
-              LoggingService.logError('Error parsing booking', e);
-              return null;
-            }
-          })
-          .where((booking) => booking != null && booking.checkOut.isAfter(startDate))
-          .cast<BookingModel>()
-          .toList();
+    return Rx.combineLatest4(
+      bookingsStream,
+      pricesStream,
+      icalEventsStream,
+      widgetSettingsStream,
+      (
+        bookingsSnapshot,
+        pricesSnapshot,
+        icalEventsSnapshot,
+        widgetSettingsSnapshot,
+      ) {
+        // Parse bookings
+        final bookings = bookingsSnapshot.docs
+            .map((doc) {
+              try {
+                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+              } catch (e) {
+                LoggingService.logError('Error parsing booking', e);
+                return null;
+              }
+            })
+            .where(
+              (booking) =>
+                  booking != null && booking.checkOut.isAfter(startDate),
+            )
+            .cast<BookingModel>()
+            .toList();
 
-      // Parse iCal events as "blocked" dates
-      // Client-side filtering: include events that overlap with the date range
-      final icalEvents = icalEventsSnapshot.docs
-          .map((doc) {
-            try {
-              final data = doc.data();
-              return {
-                'id': doc.id,
-                'start_date': (data['start_date'] as Timestamp).toDate(),
-                'end_date': (data['end_date'] as Timestamp).toDate(),
-                'source': data['source'] ?? 'ical',
-                'guest_name': data['guest_name'] ?? 'External Booking',
-              };
-            } catch (e) {
-              LoggingService.logError('Error parsing iCal event', e);
-              return null;
-            }
-          })
-          .where(
-            (event) => event != null && event['end_date'].isAfter(startDate) && event['start_date'].isBefore(endDate),
-          )
-          .cast<Map<String, dynamic>>()
-          .toList();
+        // Parse iCal events as "blocked" dates
+        // Client-side filtering: include events that overlap with the date range
+        final icalEvents = icalEventsSnapshot.docs
+            .map((doc) {
+              try {
+                final data = doc.data();
+                return {
+                  'id': doc.id,
+                  'start_date': (data['start_date'] as Timestamp).toDate(),
+                  'end_date': (data['end_date'] as Timestamp).toDate(),
+                  'source': data['source'] ?? 'ical',
+                  'guest_name': data['guest_name'] ?? 'External Booking',
+                };
+              } catch (e) {
+                LoggingService.logError('Error parsing iCal event', e);
+                return null;
+              }
+            })
+            .where(
+              (event) =>
+                  event != null &&
+                  event['end_date'].isAfter(startDate) &&
+                  event['start_date'].isBefore(endDate),
+            )
+            .cast<Map<String, dynamic>>()
+            .toList();
 
-      // Parse prices
-      final Map<String, DailyPriceModel> priceMap = {};
-      for (final doc in pricesSnapshot.docs) {
-        final data = doc.data();
-        // Skip documents without valid date or unit_id field
-        // FIXED: Also check if date is a valid Timestamp
-        if (data['date'] == null || data['date'] is! Timestamp || data['unit_id'] == null) {
-          continue;
+        // Parse prices
+        final Map<String, DailyPriceModel> priceMap = {};
+        for (final doc in pricesSnapshot.docs) {
+          final data = doc.data();
+          // Skip documents without valid date or unit_id field
+          // FIXED: Also check if date is a valid Timestamp
+          if (data['date'] == null ||
+              data['date'] is! Timestamp ||
+              data['unit_id'] == null) {
+            continue;
+          }
+
+          try {
+            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
+            final key = DateKeyGenerator.fromDate(price.date);
+            priceMap[key] = price;
+          } catch (e) {
+            LoggingService.logError('Error parsing daily price', e);
+          }
         }
 
-        try {
-          final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-          final key = DateKeyGenerator.fromDate(price.date);
-          priceMap[key] = price;
-        } catch (e) {
-          LoggingService.logError('Error parsing daily price', e);
+        // Parse widget settings to get minNights
+        int minNights = 1; // Default
+        if (widgetSettingsSnapshot.exists) {
+          final settingsData = widgetSettingsSnapshot.data();
+          minNights = settingsData?['min_nights'] ?? 1;
         }
-      }
 
-      // Parse widget settings to get minNights
-      int minNights = 1; // Default
-      if (widgetSettingsSnapshot.exists) {
-        final settingsData = widgetSettingsSnapshot.data();
-        minNights = settingsData?['min_nights'] ?? 1;
-      }
-
-      // Build calendar with both bookings and iCal events
-      return _buildYearCalendarMap(bookings, priceMap, year, minNights, icalEvents);
-    }).onErrorReturnWith((error, stackTrace) {
+        // Build calendar with both bookings and iCal events
+        return _buildYearCalendarMap(
+          bookings,
+          priceMap,
+          year,
+          minNights,
+          icalEvents,
+        );
+      },
+    ).onErrorReturnWith((error, stackTrace) {
       // Log error but don't crash the UI
-      LoggingService.logError('[CalendarRepo] Year calendar stream error', error, stackTrace);
+      LoggingService.logError(
+        '[CalendarRepo] Year calendar stream error',
+        error,
+        stackTrace,
+      );
       // Return empty calendar - UI will show available dates
       // This prevents crashes on network errors or permission issues
       return <DateTime, CalendarDateInfo>{};
@@ -219,81 +246,106 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .snapshots();
 
     // Combine all four streams
-    return Rx.combineLatest4(bookingsStream, pricesStream, icalEventsStream, widgetSettingsStream, (
-      bookingsSnapshot,
-      pricesSnapshot,
-      icalEventsSnapshot,
-      widgetSettingsSnapshot,
-    ) {
-      // Parse bookings
-      final bookings = bookingsSnapshot.docs
-          .map((doc) {
-            try {
-              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
-            } catch (e) {
-              LoggingService.logError('Error parsing booking', e);
-              return null;
-            }
-          })
-          .where((booking) => booking != null && booking.checkOut.isAfter(startDate))
-          .cast<BookingModel>()
-          .toList();
+    return Rx.combineLatest4(
+      bookingsStream,
+      pricesStream,
+      icalEventsStream,
+      widgetSettingsStream,
+      (
+        bookingsSnapshot,
+        pricesSnapshot,
+        icalEventsSnapshot,
+        widgetSettingsSnapshot,
+      ) {
+        // Parse bookings
+        final bookings = bookingsSnapshot.docs
+            .map((doc) {
+              try {
+                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+              } catch (e) {
+                LoggingService.logError('Error parsing booking', e);
+                return null;
+              }
+            })
+            .where(
+              (booking) =>
+                  booking != null && booking.checkOut.isAfter(startDate),
+            )
+            .cast<BookingModel>()
+            .toList();
 
-      // Parse iCal events as "blocked" dates
-      // Client-side filtering: include events that overlap with the date range
-      final icalEvents = icalEventsSnapshot.docs
-          .map((doc) {
-            try {
-              final data = doc.data();
-              return {
-                'id': doc.id,
-                'start_date': (data['start_date'] as Timestamp).toDate(),
-                'end_date': (data['end_date'] as Timestamp).toDate(),
-                'source': data['source'] ?? 'ical',
-                'guest_name': data['guest_name'] ?? 'External Booking',
-              };
-            } catch (e) {
-              LoggingService.logError('Error parsing iCal event', e);
-              return null;
-            }
-          })
-          .where(
-            (event) => event != null && event['end_date'].isAfter(startDate) && event['start_date'].isBefore(endDate),
-          )
-          .cast<Map<String, dynamic>>()
-          .toList();
+        // Parse iCal events as "blocked" dates
+        // Client-side filtering: include events that overlap with the date range
+        final icalEvents = icalEventsSnapshot.docs
+            .map((doc) {
+              try {
+                final data = doc.data();
+                return {
+                  'id': doc.id,
+                  'start_date': (data['start_date'] as Timestamp).toDate(),
+                  'end_date': (data['end_date'] as Timestamp).toDate(),
+                  'source': data['source'] ?? 'ical',
+                  'guest_name': data['guest_name'] ?? 'External Booking',
+                };
+              } catch (e) {
+                LoggingService.logError('Error parsing iCal event', e);
+                return null;
+              }
+            })
+            .where(
+              (event) =>
+                  event != null &&
+                  event['end_date'].isAfter(startDate) &&
+                  event['start_date'].isBefore(endDate),
+            )
+            .cast<Map<String, dynamic>>()
+            .toList();
 
-      // Parse prices
-      final Map<String, DailyPriceModel> priceMap = {};
-      for (final doc in pricesSnapshot.docs) {
-        final data = doc.data();
-        // Skip documents without valid date or unit_id field
-        // FIXED: Also check if date is a valid Timestamp
-        if (data['date'] == null || data['date'] is! Timestamp || data['unit_id'] == null) {
-          continue;
+        // Parse prices
+        final Map<String, DailyPriceModel> priceMap = {};
+        for (final doc in pricesSnapshot.docs) {
+          final data = doc.data();
+          // Skip documents without valid date or unit_id field
+          // FIXED: Also check if date is a valid Timestamp
+          if (data['date'] == null ||
+              data['date'] is! Timestamp ||
+              data['unit_id'] == null) {
+            continue;
+          }
+
+          try {
+            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
+            final key = DateKeyGenerator.fromDate(price.date);
+            priceMap[key] = price;
+          } catch (e) {
+            LoggingService.logError('Error parsing daily price', e);
+          }
         }
 
-        try {
-          final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-          final key = DateKeyGenerator.fromDate(price.date);
-          priceMap[key] = price;
-        } catch (e) {
-          LoggingService.logError('Error parsing daily price', e);
+        // Parse widget settings to get minNights
+        int minNights = 1; // Default
+        if (widgetSettingsSnapshot.exists) {
+          final settingsData = widgetSettingsSnapshot.data();
+          minNights = settingsData?['min_nights'] ?? 1;
         }
-      }
 
-      // Parse widget settings to get minNights
-      int minNights = 1; // Default
-      if (widgetSettingsSnapshot.exists) {
-        final settingsData = widgetSettingsSnapshot.data();
-        minNights = settingsData?['min_nights'] ?? 1;
-      }
-
-      // Build calendar with bookings AND iCal events
-      return _buildCalendarMap(bookings, priceMap, year, month, minNights, icalEvents);
-    }).onErrorReturnWith((error, stackTrace) {
+        // Build calendar with bookings AND iCal events
+        return _buildCalendarMap(
+          bookings,
+          priceMap,
+          year,
+          month,
+          minNights,
+          icalEvents,
+        );
+      },
+    ).onErrorReturnWith((error, stackTrace) {
       // Log error but don't crash the UI
-      LoggingService.logError('[CalendarRepo] Month calendar stream error', error, stackTrace);
+      LoggingService.logError(
+        '[CalendarRepo] Month calendar stream error',
+        error,
+        stackTrace,
+      );
       // Return empty calendar - UI will show available dates
       // This prevents crashes on network errors or permission issues
       return <DateTime, CalendarDateInfo>{};
@@ -359,7 +411,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
               return null;
             }
           })
-          .where((booking) => booking != null && booking.checkOut.isAfter(startDate))
+          .where(
+            (booking) => booking != null && booking.checkOut.isAfter(startDate),
+          )
           .cast<BookingModel>()
           .toList();
 
@@ -381,7 +435,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             }
           })
           .where(
-            (event) => event != null && event['end_date'].isAfter(startDate) && event['start_date'].isBefore(endDate),
+            (event) =>
+                event != null &&
+                event['end_date'].isAfter(startDate) &&
+                event['start_date'].isBefore(endDate),
           )
           .cast<Map<String, dynamic>>()
           .toList();
@@ -390,7 +447,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       final Map<String, DailyPriceModel> priceMap = {};
       for (final doc in pricesSnapshot.docs) {
         final data = doc.data();
-        if (data['date'] == null || data['date'] is! Timestamp || data['unit_id'] == null) {
+        if (data['date'] == null ||
+            data['date'] is! Timestamp ||
+            data['unit_id'] == null) {
           continue;
         }
 
@@ -404,9 +463,19 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       }
 
       // Build calendar using passed minNights (no fetch needed!)
-      return _buildYearCalendarMap(bookings, priceMap, year, minNights, icalEvents);
+      return _buildYearCalendarMap(
+        bookings,
+        priceMap,
+        year,
+        minNights,
+        icalEvents,
+      );
     }).onErrorReturnWith((error, stackTrace) {
-      LoggingService.logError('[CalendarRepo] Year calendar optimized stream error', error, stackTrace);
+      LoggingService.logError(
+        '[CalendarRepo] Year calendar optimized stream error',
+        error,
+        stackTrace,
+      );
       return <DateTime, CalendarDateInfo>{};
     });
   }
@@ -474,7 +543,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
               return null;
             }
           })
-          .where((booking) => booking != null && booking.checkOut.isAfter(startDate))
+          .where(
+            (booking) => booking != null && booking.checkOut.isAfter(startDate),
+          )
           .cast<BookingModel>()
           .toList();
 
@@ -496,7 +567,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             }
           })
           .where(
-            (event) => event != null && event['end_date'].isAfter(startDate) && event['start_date'].isBefore(endDate),
+            (event) =>
+                event != null &&
+                event['end_date'].isAfter(startDate) &&
+                event['start_date'].isBefore(endDate),
           )
           .cast<Map<String, dynamic>>()
           .toList();
@@ -505,7 +579,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       final Map<String, DailyPriceModel> priceMap = {};
       for (final doc in pricesSnapshot.docs) {
         final data = doc.data();
-        if (data['date'] == null || data['date'] is! Timestamp || data['unit_id'] == null) {
+        if (data['date'] == null ||
+            data['date'] is! Timestamp ||
+            data['unit_id'] == null) {
           continue;
         }
 
@@ -519,9 +595,20 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       }
 
       // Build calendar using passed minNights (no fetch needed!)
-      return _buildCalendarMap(bookings, priceMap, year, month, minNights, icalEvents);
+      return _buildCalendarMap(
+        bookings,
+        priceMap,
+        year,
+        month,
+        minNights,
+        icalEvents,
+      );
     }).onErrorReturnWith((error, stackTrace) {
-      LoggingService.logError('[CalendarRepo] Month calendar optimized stream error', error, stackTrace);
+      LoggingService.logError(
+        '[CalendarRepo] Month calendar optimized stream error',
+        error,
+        stackTrace,
+      );
       return <DateTime, CalendarDateInfo>{};
     });
   }
@@ -568,8 +655,16 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final monthEnd = DateTime.utc(year, month, daysInMonth);
 
     for (final booking in bookings) {
-      final checkIn = DateTime.utc(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-      final checkOut = DateTime.utc(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
+      final checkIn = DateTime.utc(
+        booking.checkIn.year,
+        booking.checkIn.month,
+        booking.checkIn.day,
+      );
+      final checkOut = DateTime.utc(
+        booking.checkOut.year,
+        booking.checkOut.month,
+        booking.checkOut.day,
+      );
 
       // Calculate intersection of booking range with current month
       // This avoids iterating through days outside the current month
@@ -583,7 +678,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         // This shows checkout day with partialCheckOut status in the calendar.
         // However, checkout day does NOT block new check-ins (turnover day is supported),
         // and is NOT included in price calculation or night count.
-        while (current.isBefore(rangeEnd) || current.isAtSameMomentAs(rangeEnd)) {
+        while (current.isBefore(rangeEnd) ||
+            current.isAtSameMomentAs(rangeEnd)) {
           final isCheckIn = current.isAtSameMomentAs(checkIn);
           final isCheckOut = current.isAtSameMomentAs(checkOut);
 
@@ -625,13 +721,15 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
                   // Inherit check-in pending status from existing
                   isCheckInPending =
                       existingInfo.isCheckInPending ||
-                      (existingInfo.status == DateStatus.partialCheckIn && existingInfo.isPendingBooking);
+                      (existingInfo.status == DateStatus.partialCheckIn &&
+                          existingInfo.isPendingBooking);
                 } else if (isCheckIn) {
                   isCheckInPending = isPending;
                   // Inherit check-out pending status from existing
                   isCheckOutPending =
                       existingInfo.isCheckOutPending ||
-                      (existingInfo.status == DateStatus.partialCheckOut && existingInfo.isPendingBooking);
+                      (existingInfo.status == DateStatus.partialCheckOut &&
+                          existingInfo.isPendingBooking);
                 }
               }
               // If current booking spans through (not check-in/out), keep existing status
@@ -661,8 +759,16 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     if (icalEvents != null) {
       for (final event in icalEvents) {
         // Bug #65 Fix: Use UTC for DST-safe date handling (consistent with calendar keys)
-        final checkIn = DateTime.utc(event['start_date'].year, event['start_date'].month, event['start_date'].day);
-        final checkOut = DateTime.utc(event['end_date'].year, event['end_date'].month, event['end_date'].day);
+        final checkIn = DateTime.utc(
+          event['start_date'].year,
+          event['start_date'].month,
+          event['start_date'].day,
+        );
+        final checkOut = DateTime.utc(
+          event['end_date'].year,
+          event['end_date'].month,
+          event['end_date'].day,
+        );
 
         // Calculate intersection of event range with current month
         final rangeStart = checkIn.isAfter(monthStart) ? checkIn : monthStart;
@@ -675,7 +781,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           // This shows checkout day with partialCheckOut status in the calendar.
           // However, checkout day does NOT block new check-ins (turnover day is supported),
           // and is NOT included in price calculation or night count.
-          while (current.isBefore(rangeEnd) || current.isAtSameMomentAs(rangeEnd)) {
+          while (current.isBefore(rangeEnd) ||
+              current.isAtSameMomentAs(rangeEnd)) {
             final isCheckIn = current.isAtSameMomentAs(checkIn);
             final isCheckOut = current.isAtSameMomentAs(checkOut);
 
@@ -709,11 +816,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
                   if (isCheckOut) {
                     isCheckInPending =
                         existingInfo.isCheckInPending ||
-                        (existingInfo.status == DateStatus.partialCheckIn && existingInfo.isPendingBooking);
+                        (existingInfo.status == DateStatus.partialCheckIn &&
+                            existingInfo.isPendingBooking);
                   } else if (isCheckIn) {
                     isCheckOutPending =
                         existingInfo.isCheckOutPending ||
-                        (existingInfo.status == DateStatus.partialCheckOut && existingInfo.isPendingBooking);
+                        (existingInfo.status == DateStatus.partialCheckOut &&
+                            existingInfo.isPendingBooking);
                   }
                 }
               }
@@ -792,8 +901,16 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
     for (final booking in bookings) {
       // Bug #65 Fix: Use UTC for DST-safe date handling
-      final checkIn = DateTime.utc(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-      final checkOut = DateTime.utc(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
+      final checkIn = DateTime.utc(
+        booking.checkIn.year,
+        booking.checkIn.month,
+        booking.checkIn.day,
+      );
+      final checkOut = DateTime.utc(
+        booking.checkOut.year,
+        booking.checkOut.month,
+        booking.checkOut.day,
+      );
 
       // Calculate intersection of booking range with current year
       final rangeStart = checkIn.isAfter(yearStart) ? checkIn : yearStart;
@@ -806,7 +923,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         // This shows checkout day with partialCheckOut status in the calendar.
         // However, checkout day does NOT block new check-ins (turnover day is supported),
         // and is NOT included in price calculation or night count.
-        while (current.isBefore(rangeEnd) || current.isAtSameMomentAs(rangeEnd)) {
+        while (current.isBefore(rangeEnd) ||
+            current.isAtSameMomentAs(rangeEnd)) {
           final isCheckIn = current.isAtSameMomentAs(checkIn);
           final isCheckOut = current.isAtSameMomentAs(checkOut);
 
@@ -848,13 +966,15 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
                   // Inherit check-in pending status from existing
                   isCheckInPending =
                       existingInfo.isCheckInPending ||
-                      (existingInfo.status == DateStatus.partialCheckIn && existingInfo.isPendingBooking);
+                      (existingInfo.status == DateStatus.partialCheckIn &&
+                          existingInfo.isPendingBooking);
                 } else if (isCheckIn) {
                   isCheckInPending = isPending;
                   // Inherit check-out pending status from existing
                   isCheckOutPending =
                       existingInfo.isCheckOutPending ||
-                      (existingInfo.status == DateStatus.partialCheckOut && existingInfo.isPendingBooking);
+                      (existingInfo.status == DateStatus.partialCheckOut &&
+                          existingInfo.isPendingBooking);
                 }
               }
               // If current booking spans through (not check-in/out), keep existing status
@@ -884,8 +1004,16 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     if (icalEvents != null) {
       for (final event in icalEvents) {
         // Bug #65 Fix: Use UTC for DST-safe date handling
-        final checkIn = DateTime.utc(event['start_date'].year, event['start_date'].month, event['start_date'].day);
-        final checkOut = DateTime.utc(event['end_date'].year, event['end_date'].month, event['end_date'].day);
+        final checkIn = DateTime.utc(
+          event['start_date'].year,
+          event['start_date'].month,
+          event['start_date'].day,
+        );
+        final checkOut = DateTime.utc(
+          event['end_date'].year,
+          event['end_date'].month,
+          event['end_date'].day,
+        );
 
         // Calculate intersection of event range with current year
         final rangeStart = checkIn.isAfter(yearStart) ? checkIn : yearStart;
@@ -898,7 +1026,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           // This shows checkout day with partialCheckOut status in the calendar.
           // However, checkout day does NOT block new check-ins (turnover day is supported),
           // and is NOT included in price calculation or night count.
-          while (current.isBefore(rangeEnd) || current.isAtSameMomentAs(rangeEnd)) {
+          while (current.isBefore(rangeEnd) ||
+              current.isAtSameMomentAs(rangeEnd)) {
             final isCheckIn = current.isAtSameMomentAs(checkIn);
             final isCheckOut = current.isAtSameMomentAs(checkOut);
 
@@ -932,11 +1061,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
                   if (isCheckOut) {
                     isCheckInPending =
                         existingInfo.isCheckInPending ||
-                        (existingInfo.status == DateStatus.partialCheckIn && existingInfo.isPendingBooking);
+                        (existingInfo.status == DateStatus.partialCheckIn &&
+                            existingInfo.isPendingBooking);
                   } else if (isCheckIn) {
                     isCheckOutPending =
                         existingInfo.isCheckOutPending ||
-                        (existingInfo.status == DateStatus.partialCheckOut && existingInfo.isPendingBooking);
+                        (existingInfo.status == DateStatus.partialCheckOut &&
+                            existingInfo.isPendingBooking);
                   }
                 }
               }
@@ -955,7 +1086,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           }
         }
 
-        LoggingService.log('📅 iCal Event blocked: ${event['source']} from $checkIn to $checkOut', tag: 'iCAL_SYNC');
+        LoggingService.log(
+          '📅 iCal Event blocked: ${event['source']} from $checkIn to $checkOut',
+          tag: 'iCAL_SYNC',
+        );
       }
     }
 
@@ -996,11 +1130,15 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           case DateStatus.partialCheckOut:
           case DateStatus.partialBoth:
             // Past booked → pastReservation
-            datesToUpdate[date] = info.copyWith(status: DateStatus.pastReservation);
+            datesToUpdate[date] = info.copyWith(
+              status: DateStatus.pastReservation,
+            );
 
           case DateStatus.pending:
             // Past pending → pastReservation (shouldn't happen, but handle it)
-            datesToUpdate[date] = info.copyWith(status: DateStatus.pastReservation);
+            datesToUpdate[date] = info.copyWith(
+              status: DateStatus.pastReservation,
+            );
 
           case DateStatus.blocked:
           case DateStatus.disabled:
@@ -1024,7 +1162,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     int defaultMinNights,
   ) {
     // Sort bookings by check-in date
-    final sortedBookings = List<BookingModel>.from(bookings)..sort((a, b) => a.checkIn.compareTo(b.checkIn));
+    final sortedBookings = List<BookingModel>.from(bookings)
+      ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
     // Check gaps between consecutive bookings
     for (int i = 0; i < sortedBookings.length - 1; i++) {
@@ -1037,7 +1176,11 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         currentBooking.checkOut.month,
         currentBooking.checkOut.day,
       );
-      final checkInNext = DateTime.utc(nextBooking.checkIn.year, nextBooking.checkIn.month, nextBooking.checkIn.day);
+      final checkInNext = DateTime.utc(
+        nextBooking.checkIn.year,
+        nextBooking.checkIn.month,
+        nextBooking.checkIn.day,
+      );
 
       // Calculate gap in days (from checkout day to checkin day of next booking)
       final gapStart = checkOutCurrent;
@@ -1055,8 +1198,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         while (current.isBefore(gapEnd)) {
           // Only block if it exists in calendar and is available
           final existingInfo = calendar[current];
-          if (existingInfo != null && existingInfo.status == DateStatus.available) {
-            calendar[current] = CalendarDateInfo(date: current, status: DateStatus.blocked, price: existingInfo.price);
+          if (existingInfo != null &&
+              existingInfo.status == DateStatus.available) {
+            calendar[current] = CalendarDateInfo(
+              date: current,
+              status: DateStatus.blocked,
+              price: existingInfo.price,
+            );
           }
           current = current.add(const Duration(days: 1));
         }
@@ -1069,8 +1217,16 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   /// Checks regular bookings, iCal events (Booking.com, Airbnb), and blocked dates.
   /// Delegates to [AvailabilityChecker] for the actual logic.
   @override
-  Future<bool> checkAvailability({required String unitId, required DateTime checkIn, required DateTime checkOut}) {
-    return _availabilityChecker.isAvailable(unitId: unitId, checkIn: checkIn, checkOut: checkOut);
+  Future<bool> checkAvailability({
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  }) {
+    return _availabilityChecker.isAvailable(
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+    );
   }
 
   /// Check availability with detailed result.
@@ -1081,7 +1237,11 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     required DateTime checkIn,
     required DateTime checkOut,
   }) {
-    return _availabilityChecker.check(unitId: unitId, checkIn: checkIn, checkOut: checkOut);
+    return _availabilityChecker.check(
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+    );
   }
 
   /// Calculate total price for date range.

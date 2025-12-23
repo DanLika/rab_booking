@@ -13,7 +13,7 @@ class UserProfileRepository {
   final FirebaseFirestore _firestore;
 
   UserProfileRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   // ========== USER PROFILE ==========
 
@@ -26,11 +26,11 @@ class UserProfileRepository {
         .doc('profile')
         .snapshots()
         .map((snapshot) {
-      if (!snapshot.exists || snapshot.data() == null) {
-        return null;
-      }
-      return UserProfile.fromFirestore(userId, snapshot.data()!);
-    });
+          if (!snapshot.exists || snapshot.data() == null) {
+            return null;
+          }
+          return UserProfile.fromFirestore(userId, snapshot.data()!);
+        });
   }
 
   /// Get user profile once
@@ -56,10 +56,7 @@ class UserProfileRepository {
           .doc(profile.userId)
           .collection('data')
           .doc('profile')
-          .set(
-            profile.toFirestore(),
-            SetOptions(merge: true),
-          );
+          .set(profile.toFirestore(), SetOptions(merge: true));
     } catch (e) {
       throw AuthException(
         'Failed to update profile',
@@ -80,11 +77,11 @@ class UserProfileRepository {
         .doc('company')
         .snapshots()
         .map((snapshot) {
-      if (!snapshot.exists || snapshot.data() == null) {
-        return null;
-      }
-      return CompanyDetails.fromFirestore(snapshot.data()!);
-    });
+          if (!snapshot.exists || snapshot.data() == null) {
+            return null;
+          }
+          return CompanyDetails.fromFirestore(snapshot.data()!);
+        });
   }
 
   /// Get company details once
@@ -113,20 +110,17 @@ class UserProfileRepository {
           .doc(userId)
           .collection('data')
           .doc('company')
-          .set(
-        {
-          'companyName': company.companyName,
-          'taxId': company.taxId,
-          'vatId': company.vatId,
-          'bankAccountIban': company.bankAccountIban,
-          'swift': company.swift,
-          'bankName': company.bankName,
-          'accountHolder': company.accountHolder,
-          'address': company.address.toJson(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+          .set({
+            'companyName': company.companyName,
+            'taxId': company.taxId,
+            'vatId': company.vatId,
+            'bankAccountIban': company.bankAccountIban,
+            'swift': company.swift,
+            'bankName': company.bankName,
+            'accountHolder': company.accountHolder,
+            'address': company.address.toJson(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
     } catch (e) {
       throw AuthException(
         'Failed to update company details',
@@ -139,9 +133,7 @@ class UserProfileRepository {
   // ========== NOTIFICATION PREFERENCES ==========
 
   /// Get notification preferences stream
-  Stream<NotificationPreferences?> watchNotificationPreferences(
-    String userId,
-  ) {
+  Stream<NotificationPreferences?> watchNotificationPreferences(String userId) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -149,11 +141,14 @@ class UserProfileRepository {
         .doc('preferences')
         .snapshots()
         .map((snapshot) {
-      if (!snapshot.exists || snapshot.data() == null) {
-        return null;
-      }
-      return NotificationPreferences.fromFirestore(userId, snapshot.data()!);
-    });
+          if (!snapshot.exists || snapshot.data() == null) {
+            return null;
+          }
+          return NotificationPreferences.fromFirestore(
+            userId,
+            snapshot.data()!,
+          );
+        });
   }
 
   /// Get notification preferences once
@@ -183,10 +178,7 @@ class UserProfileRepository {
           .doc(preferences.userId)
           .collection('data')
           .doc('preferences')
-          .set(
-            preferences.toFirestore(),
-            SetOptions(merge: true),
-          );
+          .set(preferences.toFirestore(), SetOptions(merge: true));
     } catch (e) {
       throw AuthException(
         'Failed to update notification preferences',
@@ -216,24 +208,24 @@ class UserProfileRepository {
         .collection('data')
         .snapshots()
         .asyncMap((snapshot) async {
-      UserProfile? profile;
-      CompanyDetails? company;
+          UserProfile? profile;
+          CompanyDetails? company;
 
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        if (doc.id == 'profile') {
-          profile = UserProfile.fromFirestore(userId, data);
-        } else if (doc.id == 'company') {
-          company = CompanyDetails.fromFirestore(data);
-        }
-      }
+          for (final doc in snapshot.docs) {
+            final data = doc.data();
+            if (doc.id == 'profile') {
+              profile = UserProfile.fromFirestore(userId, data);
+            } else if (doc.id == 'company') {
+              company = CompanyDetails.fromFirestore(data);
+            }
+          }
 
-      if (profile == null) return null;
+          if (profile == null) return null;
 
-      return UserData(
-        profile: profile,
-        company: company ?? const CompanyDetails(),
-      );
-    });
+          return UserData(
+            profile: profile,
+            company: company ?? const CompanyDetails(),
+          );
+        });
   }
 }

@@ -59,12 +59,17 @@ void redirectTopLevelWindow(String url) {
       // Cast to Window to access location property
       final topWindow = web.window.top as web.Window;
       topWindow.location.href = url; // location.href accepts String directly
-      web.console.log('[REDIRECT] Redirecting top-level window (same-origin)'.toJS);
+      web.console.log(
+        '[REDIRECT] Redirecting top-level window (same-origin)'.toJS,
+      );
       return;
     }
   } catch (e) {
     // Cross-origin iframe - cannot access window.top.location
-    web.console.log('[REDIRECT] Cross-origin iframe detected, using window.open fallback'.toJS);
+    web.console.log(
+      '[REDIRECT] Cross-origin iframe detected, using window.open fallback'
+          .toJS,
+    );
   }
 
   // Fallback: Use window.open with '_top' target
@@ -87,7 +92,11 @@ void redirectTopLevelWindow(String url) {
 /// Open URL in new window (for Stripe Checkout when in iframe)
 /// Returns the window reference for monitoring
 @JS('window.open')
-external web.Window? _windowOpen(JSString url, JSString target, JSString features);
+external web.Window? _windowOpen(
+  JSString url,
+  JSString target,
+  JSString features,
+);
 
 /// Pre-open payment popup with placeholder (CRITICAL: call synchronously on user click)
 /// Returns: 'popup', 'redirect', or 'blocked'
@@ -131,7 +140,9 @@ String preOpenPaymentPopup() {
 
     final result = _paymentBridgePreOpenPopup();
     final resultStr = result.toDart;
-    web.console.log('[STRIPE] PaymentBridge.preOpenPaymentPopup result: $resultStr'.toJS);
+    web.console.log(
+      '[STRIPE] PaymentBridge.preOpenPaymentPopup result: $resultStr'.toJS,
+    );
     return resultStr;
   } catch (e) {
     web.console.log('[STRIPE] Error pre-opening popup: $e'.toJS);
@@ -148,7 +159,9 @@ bool updatePaymentPopupUrl(String checkoutUrl) {
     }
 
     final success = _paymentBridgeUpdatePopupUrl(checkoutUrl.toJS);
-    web.console.log('[STRIPE] PaymentBridge.updatePaymentPopupUrl result: $success'.toJS);
+    web.console.log(
+      '[STRIPE] PaymentBridge.updatePaymentPopupUrl result: $success'.toJS,
+    );
     return success;
   } catch (e) {
     web.console.log('[STRIPE] Error updating popup URL: $e'.toJS);
@@ -162,13 +175,18 @@ String openStripeCheckoutWithBridge(String checkoutUrl) {
   try {
     // Check if PaymentBridge is available
     if (_paymentBridge == null) {
-      web.console.log('[STRIPE] PaymentBridge not available, falling back to direct redirect'.toJS);
+      web.console.log(
+        '[STRIPE] PaymentBridge not available, falling back to direct redirect'
+            .toJS,
+      );
       return 'error';
     }
 
     final result = _paymentBridgeOpenPayment(checkoutUrl.toJS);
     final resultStr = result.toDart;
-    web.console.log('[STRIPE] PaymentBridge.openPayment result: $resultStr'.toJS);
+    web.console.log(
+      '[STRIPE] PaymentBridge.openPayment result: $resultStr'.toJS,
+    );
     return resultStr;
   } catch (e) {
     web.console.log('[STRIPE] Error using PaymentBridge: $e'.toJS);
@@ -208,7 +226,9 @@ void notifyPaymentComplete(String sessionId, String status) {
   try {
     if (_paymentBridge != null) {
       _paymentBridgeNotifyComplete(sessionId.toJS, status.toJS);
-      web.console.log('[STRIPE] Payment completion notified via PaymentBridge'.toJS);
+      web.console.log(
+        '[STRIPE] Payment completion notified via PaymentBridge'.toJS,
+      );
     }
   } catch (e) {
     web.console.log('[STRIPE] Error notifying payment completion: $e'.toJS);
@@ -245,7 +265,9 @@ web.Window? openStripeCheckoutInNewWindow(String checkoutUrl) {
       web.console.log('[STRIPE] Opened checkout in new window'.toJS);
       return window;
     } else {
-      web.console.log('[STRIPE] Failed to open new window (popup blocked?)'.toJS);
+      web.console.log(
+        '[STRIPE] Failed to open new window (popup blocked?)'.toJS,
+      );
       return null;
     }
   } catch (e) {
@@ -301,12 +323,16 @@ void sendMessageToParent(Map<String, dynamic> message) {
     if (isInIframe) {
       // Send to iframe parent
       web.window.parent?.postMessage(_dartMapToJs(message), '*'.toJS);
-      web.console.log('[POSTMESSAGE] Sent to iframe parent: ${message['type']}'.toJS);
+      web.console.log(
+        '[POSTMESSAGE] Sent to iframe parent: ${message['type']}'.toJS,
+      );
     } else if (isPopupWindow && web.window.opener != null) {
       // Send to popup opener (cast to Window for postMessage)
       final opener = web.window.opener as web.Window?;
       opener?.postMessage(_dartMapToJs(message), '*'.toJS);
-      web.console.log('[POSTMESSAGE] Sent to popup opener: ${message['type']}'.toJS);
+      web.console.log(
+        '[POSTMESSAGE] Sent to popup opener: ${message['type']}'.toJS,
+      );
     }
   } catch (e) {
     web.console.log('[POSTMESSAGE] Error sending message: $e'.toJS);
@@ -319,7 +345,9 @@ external JSString _jsonStringify(JSAny value);
 
 /// Listen for postMessage from parent/opener window
 /// Returns cleanup function
-void Function() listenToParentMessages(void Function(Map<String, dynamic>) onMessage) {
+void Function() listenToParentMessages(
+  void Function(Map<String, dynamic>) onMessage,
+) {
   void handler(web.MessageEvent event) {
     try {
       // Verify origin (allow all for iframe embedding flexibility)
@@ -385,7 +413,11 @@ void sendIframeHeight(double height) {
     }
 
     // Create message object
-    final message = <String, dynamic>{'type': 'resize', 'height': height.ceil(), 'source': 'bookbed-widget'};
+    final message = <String, dynamic>{
+      'type': 'resize',
+      'height': height.ceil(),
+      'source': 'bookbed-widget',
+    };
 
     // Debug log
     web.console.log('[IFRAME_RESIZE] Sending height: ${height.ceil()}px'.toJS);
@@ -414,9 +446,15 @@ void setupIframeScrollCapture() {
 
     // Add wheel event listener to prevent scroll propagation to parent
     // This is critical for desktop where wheel scrolling is common
-    web.document.addEventListener('wheel', _handleWheelEvent.toJS, web.AddEventListenerOptions(passive: false));
+    web.document.addEventListener(
+      'wheel',
+      _handleWheelEvent.toJS,
+      web.AddEventListenerOptions(passive: false),
+    );
 
-    web.console.log('[IFRAME] Scroll capture configured with wheel handler'.toJS);
+    web.console.log(
+      '[IFRAME] Scroll capture configured with wheel handler'.toJS,
+    );
   } catch (e) {
     web.console.log('[IFRAME] Scroll capture error: $e'.toJS);
   }
@@ -445,7 +483,8 @@ void _handleWheelEvent(web.WheelEvent event) {
 
     // Calculate if we're at scroll boundaries
     final atTop = scrollTop <= 0;
-    final atBottom = scrollTop + clientHeight >= scrollHeight - 1; // -1 for rounding
+    final atBottom =
+        scrollTop + clientHeight >= scrollHeight - 1; // -1 for rounding
 
     // Determine scroll direction (positive deltaY = scrolling down)
     final scrollingDown = event.deltaY > 0;
@@ -475,7 +514,11 @@ web.Element? _findScrollableParent(web.Element element) {
     final overflowY = style.getPropertyValue('overflow-y');
     final overflow = style.getPropertyValue('overflow');
 
-    final isScrollable = overflowY == 'auto' || overflowY == 'scroll' || overflow == 'auto' || overflow == 'scroll';
+    final isScrollable =
+        overflowY == 'auto' ||
+        overflowY == 'scroll' ||
+        overflow == 'auto' ||
+        overflow == 'scroll';
 
     if (isScrollable) {
       // Verify it actually has scrollable content
@@ -539,7 +582,9 @@ void Function() listenToVisualViewport(void Function() onResize) {
 /// Handle visualViewport resize event
 void _onVisualViewportResize(web.Event event) {
   final height = web.window.visualViewport?.height ?? 0;
-  web.console.log('[VIEWPORT] resize event - height: ${height.toStringAsFixed(0)}px'.toJS);
+  web.console.log(
+    '[VIEWPORT] resize event - height: ${height.toStringAsFixed(0)}px'.toJS,
+  );
   _visualViewportCallback?.call();
 }
 
@@ -670,7 +715,10 @@ void forceLayoutReset() {
     body.offsetHeight; // Trigger reflow
 
     // Restore display
-    body.style.setProperty('display', originalDisplay.isEmpty ? '' : originalDisplay);
+    body.style.setProperty(
+      'display',
+      originalDisplay.isEmpty ? '' : originalDisplay,
+    );
 
     // Reset scroll positions
     body.scrollTop = 0;
@@ -703,7 +751,9 @@ void Function() setupAndroidKeyboardFix() {
     final isNearFullHeight = currentHeight >= fullHeight - 50;
 
     if (heightIncrease > 100 && isNearFullHeight) {
-      web.console.log('[KEYBOARD_FIX] Keyboard dismissed, forcing layout reset'.toJS);
+      web.console.log(
+        '[KEYBOARD_FIX] Keyboard dismissed, forcing layout reset'.toJS,
+      );
 
       // Multiple delayed resets to catch async layout updates
       for (final delay in [0, 50, 100, 200, 300]) {
@@ -831,7 +881,9 @@ Future<bool> promptPwaInstall() async {
 
 /// Listen for PWA installability changes
 /// Callback is called when install prompt becomes available
-void Function() listenToPwaInstallability(void Function(bool canInstall) callback) {
+void Function() listenToPwaInstallability(
+  void Function(bool canInstall) callback,
+) {
   try {
     // Check initial state
     callback(canInstallPwa());

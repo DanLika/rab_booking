@@ -96,10 +96,7 @@ class UserProfile with _$UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) =>
       _$UserProfileFromJson(json);
 
-  factory UserProfile.fromFirestore(
-    String userId,
-    Map<String, dynamic> data,
-  ) {
+  factory UserProfile.fromFirestore(String userId, Map<String, dynamic> data) {
     return UserProfile(
       userId: userId,
       displayName: data['displayName'] as String? ?? '',

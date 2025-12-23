@@ -48,17 +48,19 @@ class LanguageNotifier extends _$LanguageNotifier {
   Future<Locale> build() async {
     // Try to use the provider first (initialized in main.dart)
     final prefsFromProvider = ref.read(sharedPreferencesProvider);
-    
+
     // If provider has SharedPreferences, use it
     if (prefsFromProvider != null) {
-      final savedLanguageCode = prefsFromProvider.getString(_languageKey) ?? _defaultLanguage;
+      final savedLanguageCode =
+          prefsFromProvider.getString(_languageKey) ?? _defaultLanguage;
       return _parseLocale(savedLanguageCode);
     }
-    
+
     // Fallback: try to get instance directly (for widget_main.dart or if provider not ready)
     try {
       final prefs = await SharedPreferences.getInstance();
-      final savedLanguageCode = prefs.getString(_languageKey) ?? _defaultLanguage;
+      final savedLanguageCode =
+          prefs.getString(_languageKey) ?? _defaultLanguage;
       return _parseLocale(savedLanguageCode);
     } catch (e) {
       // If SharedPreferences is not available, return default
@@ -86,12 +88,12 @@ class LanguageNotifier extends _$LanguageNotifier {
 
     // Try to use the provider first
     final prefsFromProvider = ref.read(sharedPreferencesProvider);
-    
+
     if (prefsFromProvider != null) {
       await prefsFromProvider.setString(_languageKey, languageCode);
       return;
     }
-    
+
     // Fallback: try to get instance directly
     try {
       final prefs = await SharedPreferences.getInstance();

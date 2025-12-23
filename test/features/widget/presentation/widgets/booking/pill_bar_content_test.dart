@@ -11,7 +11,11 @@ void main() {
     final testCheckIn = DateTime(2025, 1, 15);
     final testCheckOut = DateTime(2025, 1, 18);
 
-    Widget buildTestWidget({bool showGuestForm = false, double screenWidth = 400, bool isDarkMode = false}) {
+    Widget buildTestWidget({
+      bool showGuestForm = false,
+      double screenWidth = 400,
+      bool isDarkMode = false,
+    }) {
       return MaterialApp(
         home: Scaffold(
           body: MediaQuery(
@@ -42,7 +46,9 @@ void main() {
       );
     }
 
-    testWidgets('renders CompactPillSummary when not showing guest form', (tester) async {
+    testWidgets('renders CompactPillSummary when not showing guest form', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget());
 
       expect(find.byType(CompactPillSummary), findsOneWidget);
@@ -87,7 +93,9 @@ void main() {
       expect(closeCalled, isTrue);
     });
 
-    testWidgets('calls onReserve when reserve button is tapped', (tester) async {
+    testWidgets('calls onReserve when reserve button is tapped', (
+      tester,
+    ) async {
       bool reserveCalled = false;
 
       await tester.pumpWidget(
@@ -126,42 +134,47 @@ void main() {
       expect(reserveCalled, isTrue);
     });
 
-    testWidgets('shows guest form in mobile layout when showGuestForm is true', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: PillBarContent(
-              translations: testTranslations,
-              checkIn: testCheckIn,
-              checkOut: testCheckOut,
-              nights: 3,
-              formattedRoomPrice: '€300.00',
-              additionalServicesTotal: 0.0,
-              formattedAdditionalServices: '€0.00',
-              formattedTotal: '€300.00',
-              formattedDeposit: '€60.00',
-              depositPercentage: 20,
-              isDarkMode: false,
-              showGuestForm: true,
-              isWideScreen: false,
-              onClose: () {},
-              onReserve: () {},
-              guestFormBuilder: () => const Text('Guest Form'),
-              paymentSectionBuilder: () => const Text('Payment Section'),
-              additionalServicesBuilder: () => const SizedBox.shrink(),
-              taxLegalBuilder: () => const SizedBox.shrink(),
+    testWidgets(
+      'shows guest form in mobile layout when showGuestForm is true',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: PillBarContent(
+                translations: testTranslations,
+                checkIn: testCheckIn,
+                checkOut: testCheckOut,
+                nights: 3,
+                formattedRoomPrice: '€300.00',
+                additionalServicesTotal: 0.0,
+                formattedAdditionalServices: '€0.00',
+                formattedTotal: '€300.00',
+                formattedDeposit: '€60.00',
+                depositPercentage: 20,
+                isDarkMode: false,
+                showGuestForm: true,
+                isWideScreen: false,
+                onClose: () {},
+                onReserve: () {},
+                guestFormBuilder: () => const Text('Guest Form'),
+                paymentSectionBuilder: () => const Text('Payment Section'),
+                additionalServicesBuilder: () => const SizedBox.shrink(),
+                taxLegalBuilder: () => const SizedBox.shrink(),
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Should show CompactPillSummary (without reserve button) + guest form
-      expect(find.byType(CompactPillSummary), findsOneWidget);
-      expect(find.text('Guest Form'), findsOneWidget);
-      expect(find.text('Payment Section'), findsOneWidget);
-    });
+        // Should show CompactPillSummary (without reserve button) + guest form
+        expect(find.byType(CompactPillSummary), findsOneWidget);
+        expect(find.text('Guest Form'), findsOneWidget);
+        expect(find.text('Payment Section'), findsOneWidget);
+      },
+    );
 
-    testWidgets('shows 2-column layout on wide screen with guest form', (tester) async {
+    testWidgets('shows 2-column layout on wide screen with guest form', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

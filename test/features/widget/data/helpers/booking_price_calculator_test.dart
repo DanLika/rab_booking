@@ -78,9 +78,7 @@ void main() {
 
     setUp(() {
       fakeFirestore = FakeFirebaseFirestore();
-      calculator = BookingPriceCalculator(
-        firestore: fakeFirestore,
-      );
+      calculator = BookingPriceCalculator(firestore: fakeFirestore);
     });
 
     group('calculate - base price only', () {
@@ -280,39 +278,42 @@ void main() {
         expect(result.nights, 3);
       });
 
-      test('skips availability check when checkAvailability is false', () async {
-        // Add conflicting booking
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+      test(
+        'skips availability check when checkAvailability is false',
+        () async {
+          // Add conflicting booking
+          await fakeFirestore.collection('bookings').add({
+            'unit_id': 'unit123',
+            'status': 'confirmed',
+            'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
+            'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
+            'guest_name': 'Test Guest',
+            'guest_email': 'test@test.com',
+            'property_id': 'prop123',
+            'total_price': 500.0,
+            'nights': 5,
+            'guests': 2,
+            'created_at': Timestamp.now(),
+          });
 
-        final calculatorWithChecker = BookingPriceCalculator(
-          firestore: fakeFirestore,
-          availabilityChecker: AvailabilityChecker(fakeFirestore),
-        );
+          final calculatorWithChecker = BookingPriceCalculator(
+            firestore: fakeFirestore,
+            availabilityChecker: AvailabilityChecker(fakeFirestore),
+          );
 
-        // Should NOT throw because availability check is disabled
-        final result = await calculatorWithChecker.calculate(
-          unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 17),
-          checkOut: DateTime(2024, 1, 22),
-          basePrice: 100.0,
-          checkAvailability: false,
-        );
+          // Should NOT throw because availability check is disabled
+          final result = await calculatorWithChecker.calculate(
+            unitId: 'unit123',
+            checkIn: DateTime(2024, 1, 17),
+            checkOut: DateTime(2024, 1, 22),
+            basePrice: 100.0,
+            checkAvailability: false,
+          );
 
-        expect(result.totalPrice, 500.0);
-        expect(result.nights, 5);
-      });
+          expect(result.totalPrice, 500.0);
+          expect(result.nights, 5);
+        },
+      );
 
       test('skips check when no availabilityChecker provided', () async {
         // Add conflicting booking
@@ -371,12 +372,13 @@ void main() {
           availabilityChecker: AvailabilityChecker(fakeFirestore),
         );
 
-        final result = await calculatorWithChecker.calculateWithoutAvailabilityCheck(
-          unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 17),
-          checkOut: DateTime(2024, 1, 22),
-          basePrice: 100.0,
-        );
+        final result = await calculatorWithChecker
+            .calculateWithoutAvailabilityCheck(
+              unitId: 'unit123',
+              checkIn: DateTime(2024, 1, 17),
+              checkOut: DateTime(2024, 1, 22),
+              basePrice: 100.0,
+            );
 
         expect(result.totalPrice, 500.0);
         expect(result.nights, 5);

@@ -27,7 +27,10 @@ void main() {
 
     group('getWidgetSettings', () {
       test('returns null when no settings exist', () async {
-        final settings = await repository.getWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        final settings = await repository.getWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         expect(settings, isNull);
       });
@@ -48,7 +51,10 @@ void main() {
               'updated_at': Timestamp.now(),
             });
 
-        final settings = await repository.getWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        final settings = await repository.getWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         expect(settings, isNotNull);
         expect(settings!.id, testUnitId);
@@ -59,7 +65,10 @@ void main() {
 
     group('watchWidgetSettings', () {
       test('emits null when no settings exist', () async {
-        final stream = repository.watchWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        final stream = repository.watchWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         final settings = await stream.first;
         expect(settings, isNull);
@@ -81,7 +90,10 @@ void main() {
               'updated_at': Timestamp.now(),
             });
 
-        final stream = repository.watchWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        final stream = repository.watchWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         final settings = await stream.first;
         expect(settings, isNotNull);
@@ -109,7 +121,10 @@ void main() {
         expect(doc.exists, true);
         expect(doc.data()!['widget_mode'], 'calendar_only');
         expect(doc.data()!['require_owner_approval'], true);
-        expect(doc.data()!['contact_options']['email_address'], 'owner@test.com');
+        expect(
+          doc.data()!['contact_options']['email_address'],
+          'owner@test.com',
+        );
         expect(doc.data()!['contact_options']['phone_number'], '+385911234567');
       });
     });
@@ -117,10 +132,17 @@ void main() {
     group('updateWidgetSettings', () {
       test('updates existing settings', () async {
         // First create settings
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: testUnitId, ownerId: testOwnerId);
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+          ownerId: testOwnerId,
+        );
 
         // Get and update settings
-        final originalSettings = await repository.getWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        final originalSettings = await repository.getWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         final updatedSettings = originalSettings!.copyWith(
           widgetMode: WidgetMode.bookingInstant,
@@ -130,7 +152,10 @@ void main() {
         await repository.updateWidgetSettings(updatedSettings);
 
         // Verify update
-        final fetchedSettings = await repository.getWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        final fetchedSettings = await repository.getWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         expect(fetchedSettings!.widgetMode, WidgetMode.bookingInstant);
         expect(fetchedSettings.requireOwnerApproval, false);
@@ -140,7 +165,11 @@ void main() {
     group('updateWidgetMode', () {
       test('updates only the widget mode', () async {
         // Create settings
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: testUnitId, ownerId: testOwnerId);
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+          ownerId: testOwnerId,
+        );
 
         // Update mode
         await repository.updateWidgetMode(
@@ -150,7 +179,10 @@ void main() {
         );
 
         // Verify
-        final settings = await repository.getWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        final settings = await repository.getWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         expect(settings!.widgetMode, WidgetMode.bookingPending);
         // Other settings should remain unchanged
@@ -160,7 +192,11 @@ void main() {
 
     group('updateContactOptions', () {
       test('updates contact options', () async {
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: testUnitId, ownerId: testOwnerId);
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+          ownerId: testOwnerId,
+        );
 
         await repository.updateContactOptions(
           propertyId: testPropertyId,
@@ -172,7 +208,10 @@ void main() {
           ),
         );
 
-        final settings = await repository.getWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        final settings = await repository.getWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         expect(settings!.contactOptions.emailAddress, 'new@test.com');
         expect(settings.contactOptions.phoneNumber, '+385921111111');
@@ -183,32 +222,55 @@ void main() {
     group('deleteWidgetSettings', () {
       test('deletes settings', () async {
         // Create settings
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: testUnitId, ownerId: testOwnerId);
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+          ownerId: testOwnerId,
+        );
 
         // Verify exists
-        var exists = await repository.settingsExist(propertyId: testPropertyId, unitId: testUnitId);
+        var exists = await repository.settingsExist(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
         expect(exists, true);
 
         // Delete
-        await repository.deleteWidgetSettings(propertyId: testPropertyId, unitId: testUnitId);
+        await repository.deleteWidgetSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         // Verify deleted
-        exists = await repository.settingsExist(propertyId: testPropertyId, unitId: testUnitId);
+        exists = await repository.settingsExist(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
         expect(exists, false);
       });
     });
 
     group('settingsExist', () {
       test('returns false when no settings exist', () async {
-        final exists = await repository.settingsExist(propertyId: testPropertyId, unitId: testUnitId);
+        final exists = await repository.settingsExist(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         expect(exists, false);
       });
 
       test('returns true when settings exist', () async {
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: testUnitId, ownerId: testOwnerId);
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+          ownerId: testOwnerId,
+        );
 
-        final exists = await repository.settingsExist(propertyId: testPropertyId, unitId: testUnitId);
+        final exists = await repository.settingsExist(
+          propertyId: testPropertyId,
+          unitId: testUnitId,
+        );
 
         expect(exists, true);
       });
@@ -216,27 +278,58 @@ void main() {
 
     group('getAllPropertySettings', () {
       test('returns empty list when no settings exist', () async {
-        final settings = await repository.getAllPropertySettings(testPropertyId);
+        final settings = await repository.getAllPropertySettings(
+          testPropertyId,
+        );
         expect(settings, isEmpty);
       });
 
       test('returns all settings for property', () async {
         // Create settings for multiple units
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: 'unit1', ownerId: testOwnerId);
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: 'unit2', ownerId: testOwnerId);
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: 'unit3', ownerId: testOwnerId);
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: 'unit1',
+          ownerId: testOwnerId,
+        );
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: 'unit2',
+          ownerId: testOwnerId,
+        );
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: 'unit3',
+          ownerId: testOwnerId,
+        );
 
-        final settings = await repository.getAllPropertySettings(testPropertyId);
+        final settings = await repository.getAllPropertySettings(
+          testPropertyId,
+        );
 
         expect(settings.length, 3);
-        expect(settings.map((s) => s.id), containsAll(['unit1', 'unit2', 'unit3']));
+        expect(
+          settings.map((s) => s.id),
+          containsAll(['unit1', 'unit2', 'unit3']),
+        );
       });
 
       test('returns valid settings even when one document fails to parse', () async {
         // Create valid settings
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: 'unit1', ownerId: testOwnerId);
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: 'unit2', ownerId: testOwnerId);
-        await repository.createDefaultSettings(propertyId: testPropertyId, unitId: 'unit3', ownerId: testOwnerId);
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: 'unit1',
+          ownerId: testOwnerId,
+        );
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: 'unit2',
+          ownerId: testOwnerId,
+        );
+        await repository.createDefaultSettings(
+          propertyId: testPropertyId,
+          unitId: 'unit3',
+          ownerId: testOwnerId,
+        );
 
         // Create a document with null data() to simulate a corrupted document
         // This will cause WidgetSettings.fromFirestore to throw ArgumentError
@@ -260,11 +353,16 @@ void main() {
         // with multiple valid documents. The error handling is tested implicitly
         // through the try-catch structure in the implementation.
 
-        final settings = await repository.getAllPropertySettings(testPropertyId);
+        final settings = await repository.getAllPropertySettings(
+          testPropertyId,
+        );
 
         // Should return all 3 valid settings
         expect(settings.length, 3);
-        expect(settings.map((s) => s.id), containsAll(['unit1', 'unit2', 'unit3']));
+        expect(
+          settings.map((s) => s.id),
+          containsAll(['unit1', 'unit2', 'unit3']),
+        );
       });
     });
   });

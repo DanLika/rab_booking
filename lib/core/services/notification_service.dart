@@ -34,7 +34,8 @@ class NotificationService {
   /// Get notifications collection reference for a user
   /// NEW STRUCTURE: users/{userId}/notifications
   CollectionReference<Map<String, dynamic>> _notificationsCollection(
-      String userId) {
+    String userId,
+  ) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -82,8 +83,8 @@ class NotificationService {
         .limit(100) // Limit to last 100 notifications
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map(NotificationModel.fromFirestore).toList();
-    });
+          return snapshot.docs.map(NotificationModel.fromFirestore).toList();
+        });
   }
 
   /// Get unread notifications count (stream)
@@ -100,9 +101,9 @@ class NotificationService {
     try {
       if (ownerId != null) {
         // NEW STRUCTURE: Use subcollection path
-        await _notificationsCollection(ownerId).doc(notificationId).update({
-          'isRead': true,
-        });
+        await _notificationsCollection(
+          ownerId,
+        ).doc(notificationId).update({'isRead': true});
       } else {
         // Fallback: Use collection group query to find notification
         final query = await _firestore
@@ -121,8 +122,10 @@ class NotificationService {
   }
 
   /// Mark multiple notifications as read
-  Future<void> markMultipleAsRead(List<String> notificationIds,
-      {String? ownerId}) async {
+  Future<void> markMultipleAsRead(
+    List<String> notificationIds, {
+    String? ownerId,
+  }) async {
     if (notificationIds.isEmpty) return;
 
     try {
@@ -161,9 +164,9 @@ class NotificationService {
   Future<void> markAllAsRead(String ownerId) async {
     try {
       // NEW STRUCTURE: Query from user's notifications subcollection
-      final snapshot = await _notificationsCollection(ownerId)
-          .where('isRead', isEqualTo: false)
-          .get();
+      final snapshot = await _notificationsCollection(
+        ownerId,
+      ).where('isRead', isEqualTo: false).get();
 
       // Firestore batch limit is 500 operations
       const batchLimit = 500;
@@ -172,8 +175,9 @@ class NotificationService {
       // Process in chunks to avoid batch limit
       for (var i = 0; i < docs.length; i += batchLimit) {
         final batch = _firestore.batch();
-        final end =
-            (i + batchLimit < docs.length) ? i + batchLimit : docs.length;
+        final end = (i + batchLimit < docs.length)
+            ? i + batchLimit
+            : docs.length;
 
         for (var j = i; j < end; j++) {
           batch.update(docs[j].reference, {'isRead': true});
@@ -187,8 +191,10 @@ class NotificationService {
   }
 
   /// Delete notification
-  Future<void> deleteNotification(String notificationId,
-      {String? ownerId}) async {
+  Future<void> deleteNotification(
+    String notificationId, {
+    String? ownerId,
+  }) async {
     try {
       if (ownerId != null) {
         // NEW STRUCTURE: Use subcollection path
@@ -216,8 +222,10 @@ class NotificationService {
 
   /// Delete multiple notifications by IDs
   /// Note: Handles Firestore batch limit of 500 operations
-  Future<void> deleteMultipleNotifications(List<String> notificationIds,
-      {String? ownerId}) async {
+  Future<void> deleteMultipleNotifications(
+    List<String> notificationIds, {
+    String? ownerId,
+  }) async {
     if (notificationIds.isEmpty) return;
 
     try {
@@ -233,7 +241,9 @@ class NotificationService {
         for (var j = i; j < end; j++) {
           if (ownerId != null) {
             // NEW STRUCTURE: Use subcollection path
-            batch.delete(_notificationsCollection(ownerId).doc(notificationIds[j]));
+            batch.delete(
+              _notificationsCollection(ownerId).doc(notificationIds[j]),
+            );
           } else {
             // Fallback: Find via collection group
             final query = await _firestore
@@ -273,8 +283,9 @@ class NotificationService {
       // Process in chunks to avoid batch limit
       for (var i = 0; i < docs.length; i += batchLimit) {
         final batch = _firestore.batch();
-        final end =
-            (i + batchLimit < docs.length) ? i + batchLimit : docs.length;
+        final end = (i + batchLimit < docs.length)
+            ? i + batchLimit
+            : docs.length;
 
         for (var j = i; j < end; j++) {
           batch.delete(docs[j].reference);

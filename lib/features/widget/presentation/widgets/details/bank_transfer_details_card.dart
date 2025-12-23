@@ -41,7 +41,9 @@ class BankTransferDetailsCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -104,15 +106,32 @@ class BankTransferDetailsCard extends ConsumerWidget {
             const SizedBox(height: SpacingTokens.xs),
           ],
           if (bankDetails.accountHolder != null) ...[
-            _buildDetailRow(context, ref, tr.accountHolder, bankDetails.accountHolder!),
+            _buildDetailRow(
+              context,
+              ref,
+              tr.accountHolder,
+              bankDetails.accountHolder!,
+            ),
             const SizedBox(height: SpacingTokens.xs),
           ],
           if (bankDetails.iban != null) ...[
-            _buildDetailRow(context, ref, 'IBAN', bankDetails.iban!, copyable: true),
+            _buildDetailRow(
+              context,
+              ref,
+              'IBAN',
+              bankDetails.iban!,
+              copyable: true,
+            ),
             const SizedBox(height: SpacingTokens.xs),
           ],
           if (bankDetails.swift != null) ...[
-            _buildDetailRow(context, ref, 'SWIFT/BIC', bankDetails.swift!, copyable: true),
+            _buildDetailRow(
+              context,
+              ref,
+              'SWIFT/BIC',
+              bankDetails.swift!,
+              copyable: true,
+            ),
             const SizedBox(height: SpacingTokens.xs),
           ],
 
@@ -121,7 +140,14 @@ class BankTransferDetailsCard extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.s),
 
           // Payment reference and amount
-          _buildDetailRow(context, ref, tr.paymentReference, bookingReference, copyable: true, highlight: true),
+          _buildDetailRow(
+            context,
+            ref,
+            tr.paymentReference,
+            bookingReference,
+            copyable: true,
+            highlight: true,
+          ),
           const SizedBox(height: SpacingTokens.xs),
           _buildDetailRow(
             context,
@@ -167,8 +193,12 @@ class BankTransferDetailsCard extends ConsumerWidget {
                 child: Text(
                   value,
                   style: TextStyle(
-                    fontSize: highlight ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
-                    fontWeight: highlight ? TypographyTokens.bold : TypographyTokens.medium,
+                    fontSize: highlight
+                        ? TypographyTokens.fontSizeM
+                        : TypographyTokens.fontSizeS,
+                    fontWeight: highlight
+                        ? TypographyTokens.bold
+                        : TypographyTokens.medium,
                     color: highlightColor ?? colors.textPrimary,
                     fontFamily: copyable ? 'monospace' : null,
                   ),
@@ -182,7 +212,11 @@ class BankTransferDetailsCard extends ConsumerWidget {
                   borderRadius: BorderTokens.circularSmall,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
-                    child: Icon(Icons.copy, size: 16, color: colors.textSecondary),
+                    child: Icon(
+                      Icons.copy,
+                      size: 16,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -193,7 +227,11 @@ class BankTransferDetailsCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _copyToClipboard(BuildContext context, WidgetRef ref, String value) async {
+  Future<void> _copyToClipboard(
+    BuildContext context,
+    WidgetRef ref,
+    String value,
+  ) async {
     try {
       await Clipboard.setData(ClipboardData(text: value));
       if (context.mounted) {

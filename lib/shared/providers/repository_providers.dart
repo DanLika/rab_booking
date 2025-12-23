@@ -41,31 +41,39 @@ final firebaseStorageProvider = Provider<FirebaseStorage>((ref) {
 // ========== Owner Dashboard Repository Providers ==========
 
 /// Owner Properties repository provider
-final ownerPropertiesRepositoryProvider = Provider<FirebaseOwnerPropertiesRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  final storage = ref.watch(firebaseStorageProvider);
-  final widgetSettingsRepo = ref.watch(widgetSettingsRepositoryProvider);
-  return FirebaseOwnerPropertiesRepository(firestore, storage, widgetSettingsRepo);
-});
+final ownerPropertiesRepositoryProvider =
+    Provider<FirebaseOwnerPropertiesRepository>((ref) {
+      final firestore = ref.watch(firestoreProvider);
+      final storage = ref.watch(firebaseStorageProvider);
+      final widgetSettingsRepo = ref.watch(widgetSettingsRepositoryProvider);
+      return FirebaseOwnerPropertiesRepository(
+        firestore,
+        storage,
+        widgetSettingsRepo,
+      );
+    });
 
 /// Owner Bookings repository provider
-final ownerBookingsRepositoryProvider = Provider<FirebaseOwnerBookingsRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  final auth = ref.watch(firebaseAuthProvider);
-  return FirebaseOwnerBookingsRepository(firestore, auth);
-});
+final ownerBookingsRepositoryProvider =
+    Provider<FirebaseOwnerBookingsRepository>((ref) {
+      final firestore = ref.watch(firestoreProvider);
+      final auth = ref.watch(firebaseAuthProvider);
+      return FirebaseOwnerBookingsRepository(firestore, auth);
+    });
 
 /// Revenue Analytics repository provider
-final revenueAnalyticsRepositoryProvider = Provider<FirebaseRevenueAnalyticsRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return FirebaseRevenueAnalyticsRepository(firestore);
-});
+final revenueAnalyticsRepositoryProvider =
+    Provider<FirebaseRevenueAnalyticsRepository>((ref) {
+      final firestore = ref.watch(firestoreProvider);
+      return FirebaseRevenueAnalyticsRepository(firestore);
+    });
 
 /// Property Performance repository provider
-final propertyPerformanceRepositoryProvider = Provider<FirebasePropertyPerformanceRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return FirebasePropertyPerformanceRepository(firestore);
-});
+final propertyPerformanceRepositoryProvider =
+    Provider<FirebasePropertyPerformanceRepository>((ref) {
+      final firestore = ref.watch(firestoreProvider);
+      return FirebasePropertyPerformanceRepository(firestore);
+    });
 
 // ========== Owner-Only Service Providers ==========
 
@@ -73,5 +81,8 @@ final propertyPerformanceRepositoryProvider = Provider<FirebasePropertyPerforman
 final icalExportServiceProvider = Provider<IcalExportService>((ref) {
   final bookingRepository = ref.watch(bookingRepositoryProvider);
   final storage = ref.watch(firebaseStorageProvider);
-  return IcalExportService(bookingRepository: bookingRepository, storage: storage);
+  return IcalExportService(
+    bookingRepository: bookingRepository,
+    storage: storage,
+  );
 });

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Deep Link Service
-/// 
+///
 /// Handles deep linking for:
 /// - App navigation (bookbed://)
 /// - External platform links (Booking.com, Airbnb)
@@ -51,9 +51,11 @@ class DeepLinkService {
         final unitId = queryParams['unit'];
         final date = queryParams['date'];
         final conflictId = queryParams['conflict'];
-        
+
         if (unitId != null) {
-          context.go('/owner/calendar?unit=$unitId${date != null ? '&date=$date' : ''}${conflictId != null ? '&conflict=$conflictId' : ''}');
+          context.go(
+            '/owner/calendar?unit=$unitId${date != null ? '&date=$date' : ''}${conflictId != null ? '&conflict=$conflictId' : ''}',
+          );
           return true;
         }
         break;
@@ -61,7 +63,7 @@ class DeepLinkService {
       case '/owner/bookings':
         final bookingId = queryParams['booking'];
         final conflictId = queryParams['conflict'];
-        
+
         if (bookingId != null) {
           context.go('/owner/bookings?booking=$bookingId');
           return true;
@@ -75,7 +77,7 @@ class DeepLinkService {
 
       case '/owner/platform-connections':
         final unitId = queryParams['unit'];
-        
+
         if (unitId != null) {
           context.go('/owner/platform-connections?unit=$unitId');
           return true;
@@ -155,4 +157,3 @@ class DeepLinkService {
     return uri.toString();
   }
 }
-

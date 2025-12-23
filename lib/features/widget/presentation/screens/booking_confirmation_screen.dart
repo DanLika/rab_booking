@@ -71,10 +71,12 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<BookingConfirmationScreen> createState() => _BookingConfirmationScreenState();
+  ConsumerState<BookingConfirmationScreen> createState() =>
+      _BookingConfirmationScreenState();
 }
 
-class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationScreen>
+class _BookingConfirmationScreenState
+    extends ConsumerState<BookingConfirmationScreen>
     with SingleTickerProviderStateMixin, ThemeDetectionMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -83,17 +85,18 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.elasticOut));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
 
     _animationController.forward();
 
@@ -113,7 +116,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
   void _notifyParentOfPaymentComplete() {
     final booking = widget.booking;
     if (booking == null) {
-      LoggingService.log('[PaymentComplete] Cannot notify - booking is null', tag: 'STRIPE');
+      LoggingService.log(
+        '[PaymentComplete] Cannot notify - booking is null',
+        tag: 'STRIPE',
+      );
       return;
     }
 
@@ -121,13 +127,19 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     final bookingRef = widget.bookingReference;
 
     if (bookingId.isEmpty || bookingRef.isEmpty) {
-      LoggingService.log('[PaymentComplete] Cannot notify - missing bookingId or bookingRef', tag: 'STRIPE');
+      LoggingService.log(
+        '[PaymentComplete] Cannot notify - missing bookingId or bookingRef',
+        tag: 'STRIPE',
+      );
       return;
     }
 
     // Extract session ID from URL if available (for PaymentBridge)
     final uri = Uri.base;
-    final sessionId = uri.queryParameters['session_id'] ?? uri.queryParameters['stripe_session_id'] ?? '';
+    final sessionId =
+        uri.queryParameters['session_id'] ??
+        uri.queryParameters['stripe_session_id'] ??
+        '';
 
     LoggingService.log(
       '[PaymentComplete] Notifying parent with bookingId: $bookingId, bookingRef: $bookingRef, sessionId: ${sessionId.isNotEmpty ? sessionId : "N/A"}',
@@ -146,7 +158,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
           tag: 'STRIPE',
         );
       } catch (e) {
-        LoggingService.log('[PaymentComplete] PaymentBridge failed: $e', tag: 'STRIPE');
+        LoggingService.log(
+          '[PaymentComplete] PaymentBridge failed: $e',
+          tag: 'STRIPE',
+        );
 
         // Fallback: try BroadcastChannel directly if PaymentBridge failed
         try {
@@ -156,32 +171,41 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
             ref: bookingRef,
             sessionId: sessionId,
           );
-          LoggingService.log('[PaymentComplete] Fallback sent via BroadcastChannel', tag: 'STRIPE');
+          LoggingService.log(
+            '[PaymentComplete] Fallback sent via BroadcastChannel',
+            tag: 'STRIPE',
+          );
           Future.delayed(const Duration(seconds: 2), () {
             try {
               tabService.dispose();
             } catch (_) {}
           });
         } catch (fallbackError) {
-          LoggingService.log('[PaymentComplete] Fallback also failed: $fallbackError', tag: 'STRIPE');
+          LoggingService.log(
+            '[PaymentComplete] Fallback also failed: $fallbackError',
+            tag: 'STRIPE',
+          );
         }
       }
     } else if (kIsWeb) {
       // No sessionId - use BroadcastChannel directly
       try {
         final tabService = createTabCommunicationService();
-        tabService.sendPaymentComplete(
-          bookingId: bookingId,
-          ref: bookingRef,
+        tabService.sendPaymentComplete(bookingId: bookingId, ref: bookingRef);
+        LoggingService.log(
+          '[PaymentComplete] Sent via BroadcastChannel (no sessionId)',
+          tag: 'STRIPE',
         );
-        LoggingService.log('[PaymentComplete] Sent via BroadcastChannel (no sessionId)', tag: 'STRIPE');
         Future.delayed(const Duration(seconds: 2), () {
           try {
             tabService.dispose();
           } catch (_) {}
         });
       } catch (e) {
-        LoggingService.log('[PaymentComplete] BroadcastChannel failed: $e', tag: 'STRIPE');
+        LoggingService.log(
+          '[PaymentComplete] BroadcastChannel failed: $e',
+          tag: 'STRIPE',
+        );
       }
     }
 
@@ -192,7 +216,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
         try {
           final closed = closePopupWindow();
           if (closed) {
-            LoggingService.log('[PaymentComplete] Popup window closed', tag: 'STRIPE');
+            LoggingService.log(
+              '[PaymentComplete] Popup window closed',
+              tag: 'STRIPE',
+            );
           } else {
             LoggingService.log(
               '[PaymentComplete] Popup could not be auto-closed (user can close manually)',
@@ -200,7 +227,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
             );
           }
         } catch (e) {
-          LoggingService.log('[PaymentComplete] Error closing popup: $e', tag: 'STRIPE');
+          LoggingService.log(
+            '[PaymentComplete] Error closing popup: $e',
+            tag: 'STRIPE',
+          );
         }
       });
     }
@@ -240,7 +270,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
 
     // Priority 3: If in popup window (opened from iframe), close the popup
     if (kIsWeb && isPopupWindow) {
-      sendMessageToParent({'type': 'stripe-popup-close', 'source': 'bookbed-widget'});
+      sendMessageToParent({
+        'type': 'stripe-popup-close',
+        'source': 'bookbed-widget',
+      });
       // Try to close popup window
       Future.delayed(const Duration(milliseconds: 100), closePopupWindow);
       return;
@@ -265,10 +298,13 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     final bankConfig = widgetSettings?.bankTransferConfig;
     final hasBankTransferDetails = bankConfig?.hasCompleteDetails == true;
     final cancellationDeadlineHours = widgetSettings?.cancellationDeadlineHours;
-    final allowGuestCancellation = widgetSettings?.allowGuestCancellation == true;
+    final allowGuestCancellation =
+        widgetSettings?.allowGuestCancellation == true;
 
     // Use pure black background for dark theme in widget
-    final backgroundColor = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final backgroundColor = isDarkMode
+        ? ColorTokens.pureBlack
+        : colors.backgroundPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -298,7 +334,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                             paymentMethod: widget.paymentMethod,
                             colors: colors,
                             scaleAnimation: _scaleAnimation,
-                            customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
+                            customLogoUrl: widget
+                                .widgetSettings
+                                ?.themeOptions
+                                ?.customLogoUrl,
                           ),
 
                           const SizedBox(height: SpacingTokens.m),
@@ -306,7 +345,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                           // Payment verification warning (Stripe pending)
                           if (_shouldShowPaymentVerificationWarning)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: SpacingTokens.m),
+                              padding: const EdgeInsets.only(
+                                bottom: SpacingTokens.m,
+                              ),
                               child: InfoCardWidget(
                                 title: tr.paymentVerificationInProgress,
                                 message: tr.paymentVerificationMessage,
@@ -315,7 +356,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                             ),
 
                           // Booking reference card
-                          BookingReferenceCard(bookingReference: widget.bookingReference, colors: colors),
+                          BookingReferenceCard(
+                            bookingReference: widget.bookingReference,
+                            colors: colors,
+                          ),
 
                           const SizedBox(height: SpacingTokens.m),
 
@@ -351,7 +395,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                             ),
 
                           // Bank transfer instructions
-                          if (widget.paymentMethod == 'bank_transfer' && hasBankTransferDetails && bankConfig != null)
+                          if (widget.paymentMethod == 'bank_transfer' &&
+                              hasBankTransferDetails &&
+                              bankConfig != null)
                             BankTransferInstructionsCard(
                               bankConfig: bankConfig,
                               bookingReference: widget.bookingReference,
@@ -370,7 +416,8 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                           ),
 
                           // Cancellation policy
-                          if (allowGuestCancellation && cancellationDeadlineHours != null)
+                          if (allowGuestCancellation &&
+                              cancellationDeadlineHours != null)
                             CancellationPolicySection(
                               isDarkMode: isDarkMode,
                               deadlineHours: cancellationDeadlineHours,
@@ -379,7 +426,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                             ),
 
                           // Next steps section
-                          NextStepsSection(isDarkMode: isDarkMode, paymentMethod: widget.paymentMethod),
+                          NextStepsSection(
+                            isDarkMode: isDarkMode,
+                            paymentMethod: widget.paymentMethod,
+                          ),
 
                           const SizedBox(height: SpacingTokens.xl),
 
@@ -393,7 +443,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
                           Text(
                             tr.saveBookingReference,
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                            style: TextStyle(
+                              fontSize: TypographyTokens.fontSizeS,
+                              color: colors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -424,7 +477,10 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     final tr = WidgetTranslations.of(context, ref);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.m,
+        vertical: SpacingTokens.s,
+      ),
       child: Row(
         children: [
           // Back button - always show for same-tab navigation
@@ -454,7 +510,9 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
     final tr = WidgetTranslations.of(context, ref);
     // Use white button with black text for dark theme
     final buttonBg = isDark ? ColorTokens.pureWhite : colors.buttonPrimary;
-    final buttonText = isDark ? ColorTokens.pureBlack : colors.buttonPrimaryText;
+    final buttonText = isDark
+        ? ColorTokens.pureBlack
+        : colors.buttonPrimaryText;
 
     return SizedBox(
       width: double.infinity,
@@ -464,11 +522,16 @@ class _BookingConfirmationScreenState extends ConsumerState<BookingConfirmationS
           backgroundColor: buttonBg,
           foregroundColor: buttonText,
           padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-          shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularRounded),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderTokens.circularRounded,
+          ),
         ),
         child: Text(
           tr.close,
-          style: const TextStyle(fontSize: TypographyTokens.fontSizeL, fontWeight: TypographyTokens.bold),
+          style: const TextStyle(
+            fontSize: TypographyTokens.fontSizeL,
+            fontWeight: TypographyTokens.bold,
+          ),
         ),
       ),
     );

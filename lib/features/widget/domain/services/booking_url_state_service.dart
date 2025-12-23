@@ -61,7 +61,10 @@ class BookingUrlStateService {
       final newUri = uri.replace(queryParameters: cleanParams);
       replaceUrlState(newUri.toString());
 
-      LoggingService.log('[URL] Cleared booking params, new URL: ${newUri.toString()}', tag: _tag);
+      LoggingService.log(
+        '[URL] Cleared booking params, new URL: ${newUri.toString()}',
+        tag: _tag,
+      );
     } catch (e) {
       LoggingService.log('[URL] Failed to clear URL params: $e', tag: _tag);
     }
@@ -97,7 +100,10 @@ class BookingUrlStateService {
       // Use pushState to add to browser history (back button works)
       pushUrlState(newUri.toString());
 
-      LoggingService.log('[URL] Added booking params, new URL: ${newUri.toString()}', tag: _tag);
+      LoggingService.log(
+        '[URL] Added booking params, new URL: ${newUri.toString()}',
+        tag: _tag,
+      );
     } catch (e) {
       LoggingService.log('[URL] Failed to add URL params: $e', tag: _tag);
     }
@@ -126,7 +132,10 @@ class BookingUrlStateService {
         bookingId: uri.queryParameters['bookingId'],
       );
     } catch (e) {
-      LoggingService.log('[URL] Failed to parse Stripe return params: $e', tag: _tag);
+      LoggingService.log(
+        '[URL] Failed to parse Stripe return params: $e',
+        tag: _tag,
+      );
       return null;
     }
   }
@@ -172,7 +181,10 @@ class BookingUrlStateService {
         paymentMethod: uri.queryParameters['payment'],
       );
     } catch (e) {
-      LoggingService.log('[URL] Failed to parse confirmation params: $e', tag: _tag);
+      LoggingService.log(
+        '[URL] Failed to parse confirmation params: $e',
+        tag: _tag,
+      );
       return null;
     }
   }
@@ -189,7 +201,11 @@ class StripeReturnParams {
   /// Booking ID if created before redirect
   final String? bookingId;
 
-  const StripeReturnParams({required this.status, this.sessionId, this.bookingId});
+  const StripeReturnParams({
+    required this.status,
+    this.sessionId,
+    this.bookingId,
+  });
 
   /// Whether the payment was successful
   bool get isSuccess => status == 'success';
@@ -209,5 +225,9 @@ class ConfirmationParams {
   /// Payment method used (e.g., 'stripe', 'bank_transfer')
   final String? paymentMethod;
 
-  const ConfirmationParams({required this.bookingRef, this.bookingId, this.paymentMethod});
+  const ConfirmationParams({
+    required this.bookingRef,
+    this.bookingId,
+    this.paymentMethod,
+  });
 }

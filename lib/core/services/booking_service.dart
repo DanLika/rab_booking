@@ -82,7 +82,8 @@ class BookingService {
     required String guestPhone,
     required int guestCount,
     required double totalPrice,
-    double servicesTotal = 0.0, // Additional services total for server-side validation
+    double servicesTotal =
+        0.0, // Additional services total for server-side validation
     required String paymentOption, // 'deposit', 'full', or 'none'
     required String paymentMethod, // 'stripe', 'bank_transfer', or 'none'
     bool requireOwnerApproval = false,
@@ -98,7 +99,9 @@ class BookingService {
       LoggingService.logDebug('   Payment: $paymentOption via $paymentMethod');
 
       // Call atomic Cloud Function to prevent race conditions
-      LoggingService.logDebug('   Calling createBookingAtomic Cloud Function...');
+      LoggingService.logDebug(
+        '   Calling createBookingAtomic Cloud Function...',
+      );
 
       // Prepare request data with validation
       final requestData = <String, dynamic>{
@@ -122,13 +125,21 @@ class BookingService {
 
       // Log request data for debugging (without sensitive info)
       LoggingService.logDebug('   Request data validation:');
-      LoggingService.logDebug('     unitId: ${requestData['unitId']} (${requestData['unitId']?.runtimeType})');
+      LoggingService.logDebug(
+        '     unitId: ${requestData['unitId']} (${requestData['unitId']?.runtimeType})',
+      );
       LoggingService.logDebug(
         '     propertyId: ${requestData['propertyId']} (${requestData['propertyId']?.runtimeType})',
       );
-      LoggingService.logDebug('     ownerId: ${requestData['ownerId']} (${requestData['ownerId']?.runtimeType})');
-      LoggingService.logDebug('     checkIn: ${requestData['checkIn']} (${requestData['checkIn']?.runtimeType})');
-      LoggingService.logDebug('     checkOut: ${requestData['checkOut']} (${requestData['checkOut']?.runtimeType})');
+      LoggingService.logDebug(
+        '     ownerId: ${requestData['ownerId']} (${requestData['ownerId']?.runtimeType})',
+      );
+      LoggingService.logDebug(
+        '     checkIn: ${requestData['checkIn']} (${requestData['checkIn']?.runtimeType})',
+      );
+      LoggingService.logDebug(
+        '     checkOut: ${requestData['checkOut']} (${requestData['checkOut']?.runtimeType})',
+      );
       LoggingService.logDebug(
         '     guestName: ${requestData['guestName']?.toString().substring(0, (requestData['guestName']?.toString().length ?? 0).clamp(0, 20))} (${requestData['guestName']?.runtimeType})',
       );
@@ -153,35 +164,55 @@ class BookingService {
       LoggingService.logDebug(
         '     requireOwnerApproval: ${requestData['requireOwnerApproval']} (${requestData['requireOwnerApproval']?.runtimeType})',
       );
-      LoggingService.logDebug('     notes: ${requestData['notes'] != null ? 'present' : 'null'}');
+      LoggingService.logDebug(
+        '     notes: ${requestData['notes'] != null ? 'present' : 'null'}',
+      );
       LoggingService.logDebug(
         '     taxLegalAccepted: ${requestData['taxLegalAccepted']} (${requestData['taxLegalAccepted']?.runtimeType})',
       );
 
       // Validate required fields before sending
       final missingFields = <String>[];
-      if (requestData['unitId'] == null || (requestData['unitId'] as String).isEmpty) missingFields.add('unitId');
-      if (requestData['propertyId'] == null || (requestData['propertyId'] as String).isEmpty) {
+      if (requestData['unitId'] == null ||
+          (requestData['unitId'] as String).isEmpty)
+        missingFields.add('unitId');
+      if (requestData['propertyId'] == null ||
+          (requestData['propertyId'] as String).isEmpty) {
         missingFields.add('propertyId');
       }
-      if (requestData['ownerId'] == null || (requestData['ownerId'] as String).isEmpty) missingFields.add('ownerId');
-      if (requestData['checkIn'] == null || (requestData['checkIn'] as String).isEmpty) missingFields.add('checkIn');
-      if (requestData['checkOut'] == null || (requestData['checkOut'] as String).isEmpty) missingFields.add('checkOut');
-      if (requestData['guestName'] == null || (requestData['guestName'] as String).isEmpty) {
+      if (requestData['ownerId'] == null ||
+          (requestData['ownerId'] as String).isEmpty)
+        missingFields.add('ownerId');
+      if (requestData['checkIn'] == null ||
+          (requestData['checkIn'] as String).isEmpty)
+        missingFields.add('checkIn');
+      if (requestData['checkOut'] == null ||
+          (requestData['checkOut'] as String).isEmpty)
+        missingFields.add('checkOut');
+      if (requestData['guestName'] == null ||
+          (requestData['guestName'] as String).isEmpty) {
         missingFields.add('guestName');
       }
-      if (requestData['guestEmail'] == null || (requestData['guestEmail'] as String).isEmpty) {
+      if (requestData['guestEmail'] == null ||
+          (requestData['guestEmail'] as String).isEmpty) {
         missingFields.add('guestEmail');
       }
       if (requestData['totalPrice'] == null) missingFields.add('totalPrice');
       if (requestData['guestCount'] == null) missingFields.add('guestCount');
-      if (requestData['paymentMethod'] == null || (requestData['paymentMethod'] as String).isEmpty) {
+      if (requestData['paymentMethod'] == null ||
+          (requestData['paymentMethod'] as String).isEmpty) {
         missingFields.add('paymentMethod');
       }
 
       if (missingFields.isNotEmpty) {
-        unawaited(LoggingService.logError('Missing required fields before API call: ${missingFields.join(', ')}'));
-        throw Exception('Missing required booking fields: ${missingFields.join(', ')}');
+        unawaited(
+          LoggingService.logError(
+            'Missing required fields before API call: ${missingFields.join(', ')}',
+          ),
+        );
+        throw Exception(
+          'Missing required booking fields: ${missingFields.join(', ')}',
+        );
       }
 
       final callable = _functions.httpsCallable('createBookingAtomic');
@@ -198,16 +229,24 @@ class BookingService {
         final bookingData = responseData['bookingData'] as Map<String, dynamic>;
         final depositAmount = (bookingData['depositAmount'] as num).toDouble();
 
-        LoggingService.logSuccess('[BookingService] Stripe validation passed - proceeding to checkout');
-        LoggingService.logDebug('   Deposit: €${depositAmount.toStringAsFixed(2)}');
+        LoggingService.logSuccess(
+          '[BookingService] Stripe validation passed - proceeding to checkout',
+        );
+        LoggingService.logDebug(
+          '   Deposit: €${depositAmount.toStringAsFixed(2)}',
+        );
 
-        return BookingResult.stripeValidation(bookingData: bookingData, depositAmount: depositAmount);
+        return BookingResult.stripeValidation(
+          bookingData: bookingData,
+          depositAmount: depositAmount,
+        );
       }
 
       // For non-Stripe: Booking was created, return BookingModel
       final createdBookingId = responseData['bookingId'] as String;
       final createdBookingRef = responseData['bookingReference'] as String;
-      final createdDepositAmount = (responseData['depositAmount'] as num).toDouble();
+      final createdDepositAmount = (responseData['depositAmount'] as num)
+          .toDouble();
 
       // Determine status based on payment method
       BookingStatus status;
@@ -242,12 +281,17 @@ class BookingService {
         createdAt: DateTime.now(),
       );
 
-      LoggingService.logSuccess('[BookingService] Booking created: $createdBookingRef (ID: $createdBookingId)');
+      LoggingService.logSuccess(
+        '[BookingService] Booking created: $createdBookingRef (ID: $createdBookingId)',
+      );
 
       return BookingResult.booking(booking);
     } on FirebaseFunctionsException catch (e) {
       // Log detailed error information
-      await LoggingService.logError('[BookingService] Cloud Function error: ${e.code} - ${e.message}', e);
+      await LoggingService.logError(
+        '[BookingService] Cloud Function error: ${e.code} - ${e.message}',
+        e,
+      );
       LoggingService.logDebug('   Error code: ${e.code}');
       LoggingService.logDebug('   Error message: ${e.message}');
       LoggingService.logDebug('   Error details: ${e.details}');
@@ -271,7 +315,10 @@ class BookingService {
       // Other Firebase Functions errors
       throw BookingServiceException('Failed to create booking: ${e.message}');
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error creating booking', e);
+      await LoggingService.logError(
+        '[BookingService] Error creating booking',
+        e,
+      );
       throw BookingServiceException('Failed to create booking: $e');
     }
   }
@@ -279,9 +326,14 @@ class BookingService {
   /// Helper method to find a booking document by ID
   /// IMPORTANT: FieldPath.documentId does NOT work with collectionGroup queries!
   /// Firestore expects full document path, not just ID when using collectionGroup.
-  Future<DocumentSnapshot<Map<String, dynamic>>?> _findBookingDocById(String bookingId) async {
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _findBookingDocById(
+    String bookingId,
+  ) async {
     // Try legacy top-level collection first (faster)
-    final legacyDoc = await _firestore.collection('bookings').doc(bookingId).get();
+    final legacyDoc = await _firestore
+        .collection('bookings')
+        .doc(bookingId)
+        .get();
     if (legacyDoc.exists) return legacyDoc;
 
     // Search through collection group
@@ -305,7 +357,10 @@ class BookingService {
 
       return BookingModel.fromJson({'id': doc.id, ...doc.data()!});
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error fetching booking', e);
+      await LoggingService.logError(
+        '[BookingService] Error fetching booking',
+        e,
+      );
       throw BookingServiceException('Failed to fetch booking: $e');
     }
   }
@@ -324,16 +379,25 @@ class BookingService {
         return null;
       }
 
-      return BookingModel.fromJson({'id': query.docs.first.id, ...query.docs.first.data()});
+      return BookingModel.fromJson({
+        'id': query.docs.first.id,
+        ...query.docs.first.data(),
+      });
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error fetching booking by reference', e);
+      await LoggingService.logError(
+        '[BookingService] Error fetching booking by reference',
+        e,
+      );
       throw BookingServiceException('Failed to fetch booking: $e');
     }
   }
 
   /// Update booking status
   /// NEW STRUCTURE: First find booking via collection group, then update
-  Future<void> updateBookingStatus({required String bookingId, required BookingStatus status}) async {
+  Future<void> updateBookingStatus({
+    required String bookingId,
+    required BookingStatus status,
+  }) async {
     try {
       final doc = await _findBookingDocById(bookingId);
       if (doc == null || !doc.exists) {
@@ -345,16 +409,25 @@ class BookingService {
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      LoggingService.logSuccess('[BookingService] Booking $bookingId status updated to $status');
+      LoggingService.logSuccess(
+        '[BookingService] Booking $bookingId status updated to $status',
+      );
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error updating booking status', e);
+      await LoggingService.logError(
+        '[BookingService] Error updating booking status',
+        e,
+      );
       throw BookingServiceException('Failed to update booking status: $e');
     }
   }
 
   /// Cancel booking
   /// NEW STRUCTURE: First find booking via collection group, then update
-  Future<void> cancelBooking({required String bookingId, required String reason, String? cancelledBy}) async {
+  Future<void> cancelBooking({
+    required String bookingId,
+    required String reason,
+    String? cancelledBy,
+  }) async {
     try {
       final doc = await _findBookingDocById(bookingId);
       if (doc == null || !doc.exists) {
@@ -369,9 +442,14 @@ class BookingService {
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      LoggingService.logSuccess('[BookingService] Booking $bookingId cancelled');
+      LoggingService.logSuccess(
+        '[BookingService] Booking $bookingId cancelled',
+      );
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error cancelling booking', e);
+      await LoggingService.logError(
+        '[BookingService] Error cancelling booking',
+        e,
+      );
       throw BookingServiceException('Failed to cancel booking: $e');
     }
   }
@@ -411,7 +489,12 @@ class BookingResult {
   /// Whether this is a Stripe validation result (no booking created)
   final bool isStripeValidation;
 
-  BookingResult._({this.booking, this.stripeBookingData, this.depositAmount, required this.isStripeValidation});
+  BookingResult._({
+    this.booking,
+    this.stripeBookingData,
+    this.depositAmount,
+    required this.isStripeValidation,
+  });
 
   /// Create result for a created booking (non-Stripe)
   factory BookingResult.booking(BookingModel booking) {
@@ -419,7 +502,14 @@ class BookingResult {
   }
 
   /// Create result for Stripe validation (no booking created)
-  factory BookingResult.stripeValidation({required Map<String, dynamic> bookingData, required double depositAmount}) {
-    return BookingResult._(stripeBookingData: bookingData, depositAmount: depositAmount, isStripeValidation: true);
+  factory BookingResult.stripeValidation({
+    required Map<String, dynamic> bookingData,
+    required double depositAmount,
+  }) {
+    return BookingResult._(
+      stripeBookingData: bookingData,
+      depositAmount: depositAmount,
+      isStripeValidation: true,
+    );
   }
 }

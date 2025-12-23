@@ -25,7 +25,7 @@ class NotificationCategories with _$NotificationCategories {
     @Default(NotificationChannels()) NotificationChannels payments,
     @Default(NotificationChannels()) NotificationChannels calendar,
     @Default(NotificationChannels(email: false, push: false))
-        NotificationChannels marketing,
+    NotificationChannels marketing,
   }) = _NotificationCategories;
 
   factory NotificationCategories.fromJson(Map<String, dynamic> json) =>

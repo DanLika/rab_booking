@@ -18,7 +18,8 @@ class TabMessage {
   final Map<String, String> params;
   final DateTime timestamp;
 
-  TabMessage({required this.type, required this.params, DateTime? timestamp}) : timestamp = timestamp ?? DateTime.now();
+  TabMessage({required this.type, required this.params, DateTime? timestamp})
+    : timestamp = timestamp ?? DateTime.now();
 
   /// Parse message string into TabMessage
   /// Format: "type:key1=value1&key2=value2"
@@ -68,7 +69,9 @@ class TabMessage {
         break;
     }
 
-    final paramsStr = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+    final paramsStr = params.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
     return '$typeStr:$paramsStr';
   }
 
@@ -119,7 +122,11 @@ abstract class TabCommunicationService {
   /// Send payment complete message to other tabs
   /// NOTE: Email is NOT included - booking is fetched by sessionId or bookingId
   /// [sessionId] - Stripe session ID (preferred for lookup, avoids collection group query bug)
-  void sendPaymentComplete({required String bookingId, required String ref, String? sessionId}) {
+  void sendPaymentComplete({
+    required String bookingId,
+    required String ref,
+    String? sessionId,
+  }) {
     final message = TabMessage(
       type: TabMessageType.paymentComplete,
       params: {
@@ -133,13 +140,19 @@ abstract class TabCommunicationService {
 
   /// Send booking cancelled message to other tabs
   void sendBookingCancelled({required String bookingId}) {
-    final message = TabMessage(type: TabMessageType.bookingCancelled, params: {'bookingId': bookingId});
+    final message = TabMessage(
+      type: TabMessageType.bookingCancelled,
+      params: {'bookingId': bookingId},
+    );
     send(message.serialize());
   }
 
   /// Send calendar refresh message to other tabs
   void sendCalendarRefresh({String? unitId}) {
-    final message = TabMessage(type: TabMessageType.calendarRefresh, params: {if (unitId != null) 'unitId': unitId});
+    final message = TabMessage(
+      type: TabMessageType.calendarRefresh,
+      params: {if (unitId != null) 'unitId': unitId},
+    );
     send(message.serialize());
   }
 
@@ -161,7 +174,11 @@ class TabCommunicationServiceStub implements TabCommunicationService {
   }
 
   @override
-  void sendPaymentComplete({required String bookingId, required String ref, String? sessionId}) {
+  void sendPaymentComplete({
+    required String bookingId,
+    required String ref,
+    String? sessionId,
+  }) {
     // No-op
   }
 

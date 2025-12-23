@@ -63,12 +63,20 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
   void _scrollToSection(String key) {
     final context = _sectionKeys[key]?.currentContext;
     if (context != null) {
-      Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
   void _scrollToTop() {
-    _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -99,14 +107,18 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: Stack(
-            alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
+            alignment:
+                Alignment.topLeft, // Explicit to avoid TextDirection null check
             children: [
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
                   child: SingleChildScrollView(
                     controller: _scrollController,
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: isMobile ? 16 : 24),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: isMobile ? 16 : 24,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -250,7 +262,11 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               gradient: context.gradients.brandPrimary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(Icons.privacy_tip, color: Colors.white, size: isMobile ? 28 : 32),
+            child: Icon(
+              Icons.privacy_tip,
+              color: Colors.white,
+              size: isMobile ? 28 : 32,
+            ),
           ),
           SizedBox(width: isMobile ? 12 : 16),
           Expanded(
@@ -269,7 +285,9 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  AppLocalizations.of(context).privacyScreenLastUpdated(DateTime.now().year.toString()),
+                  AppLocalizations.of(
+                    context,
+                  ).privacyScreenLastUpdated(DateTime.now().year.toString()),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: isMobile ? 11 : 12,
@@ -307,10 +325,16 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.list_alt, color: theme.colorScheme.primary, size: 20),
+                  child: Icon(
+                    Icons.list_alt,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -337,11 +361,20 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
             _buildTocItem('7. ${l10n.privacyScreenSection7Title}', 'retention'),
             _buildTocItem('8. ${l10n.privacyScreenSection8Title}', 'rights'),
             _buildTocItem('9. ${l10n.privacyScreenSection9Title}', 'cookies'),
-            _buildTocItem('10. ${l10n.privacyScreenSection10Title}', 'transfers'),
-            _buildTocItem('11. ${l10n.privacyScreenSection11Title}', 'children'),
+            _buildTocItem(
+              '10. ${l10n.privacyScreenSection10Title}',
+              'transfers',
+            ),
+            _buildTocItem(
+              '11. ${l10n.privacyScreenSection11Title}',
+              'children',
+            ),
             _buildTocItem('12. ${l10n.privacyScreenSection12Title}', 'changes'),
             _buildTocItem('13. ${l10n.privacyScreenSection13Title}', 'dpo'),
-            _buildTocItem('14. ${l10n.privacyScreenSection14Title}', 'authority'),
+            _buildTocItem(
+              '14. ${l10n.privacyScreenSection14Title}',
+              'authority',
+            ),
           ],
         ),
       ),
@@ -357,7 +390,10 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
       onTap: () => _scrollToSection(key),
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: isMobile ? 8 : 10, horizontal: 8),
+        padding: EdgeInsets.symmetric(
+          vertical: isMobile ? 8 : 10,
+          horizontal: 8,
+        ),
         child: Row(
           children: [
             Icon(Icons.arrow_right, color: theme.colorScheme.primary, size: 20),
@@ -433,8 +469,13 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-        border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()), width: 1.5),
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+          (0.3 * 255).toInt(),
+        ),
+        border: Border.all(
+          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -446,10 +487,16 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.12 * 255).toInt(),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.shield_outlined, color: theme.colorScheme.primary, size: isMobile ? 20 : 24),
+                child: Icon(
+                  Icons.shield_outlined,
+                  color: theme.colorScheme.primary,
+                  size: isMobile ? 20 : 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

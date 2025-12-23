@@ -49,10 +49,7 @@ class AccessibleIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(
-        minWidth: 48,
-        minHeight: 48,
-      ),
+      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
       child: IconButton(
         icon: Icon(icon),
         onPressed: onPressed == null

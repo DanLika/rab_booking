@@ -64,18 +64,18 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
     final padding = isTinyScreen
         ? _paddingTiny
         : isSmallScreen
-            ? _paddingSmall
-            : _paddingNormal;
+        ? _paddingSmall
+        : _paddingNormal;
     final gap = isTinyScreen
         ? _gapTiny
         : isSmallScreen
-            ? _gapSmall
-            : _gapNormal;
+        ? _gapSmall
+        : _gapNormal;
     final containerRadius = isTinyScreen
         ? _containerRadiusTiny
         : isSmallScreen
-            ? _containerRadiusSmall
-            : _containerRadiusNormal;
+        ? _containerRadiusSmall
+        : _containerRadiusNormal;
 
     return Container(
       padding: EdgeInsets.all(padding),
@@ -132,23 +132,23 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
     final borderRadius = isTinyScreen
         ? _borderRadiusTiny
         : isSmallScreen
-            ? _borderRadiusSmall
-            : _borderRadiusNormal;
+        ? _borderRadiusSmall
+        : _borderRadiusNormal;
     final horizontalPadding = isTinyScreen
         ? _horizontalPaddingTiny
         : isSmallScreen
-            ? _horizontalPaddingSmall
-            : _horizontalPaddingNormal;
+        ? _horizontalPaddingSmall
+        : _horizontalPaddingNormal;
     final verticalPadding = isTinyScreen
         ? _verticalPaddingTiny
         : isSmallScreen
-            ? _verticalPaddingSmall
-            : _verticalPaddingNormal;
+        ? _verticalPaddingSmall
+        : _verticalPaddingNormal;
     final iconSize = isTinyScreen
         ? _iconSizeTiny
         : isSmallScreen
-            ? _iconSizeSmall
-            : IconSizeTokens.small;
+        ? _iconSizeSmall
+        : IconSizeTokens.small;
 
     return Semantics(
       label: '$label view',

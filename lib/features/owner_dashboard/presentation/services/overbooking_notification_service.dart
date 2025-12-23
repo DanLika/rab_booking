@@ -1,12 +1,12 @@
 import '../../domain/models/overbooking_conflict.dart';
 
 /// Placeholder service for future overbooking notification features
-/// 
+///
 /// This service provides a foundation for future notification implementations:
 /// - Email notifications to owners
 /// - Push notifications
 /// - Firestore notifications
-/// 
+///
 /// Currently not implemented in MVP, but structure is ready for future expansion.
 abstract class OverbookingNotificationService {
   /// Send email notification about overbooking conflict
@@ -20,9 +20,10 @@ abstract class OverbookingNotificationService {
 }
 
 /// Default implementation (placeholder)
-/// 
+///
 /// All methods are currently no-ops, ready for future implementation.
-class OverbookingNotificationServiceImpl implements OverbookingNotificationService {
+class OverbookingNotificationServiceImpl
+    implements OverbookingNotificationService {
   @override
   Future<void> sendEmailNotification(OverbookingConflict conflict) async {
     // PLACEHOLDER: Email notification (Phase 2 feature)
@@ -53,5 +54,3 @@ class OverbookingNotificationServiceImpl implements OverbookingNotificationServi
     // Priority: Medium - useful for notification center
   }
 }
-
-

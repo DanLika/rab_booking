@@ -73,7 +73,8 @@ class DateRangeFilter with _$DateRangeFilter {
   const factory DateRangeFilter({
     required DateTime startDate,
     required DateTime endDate,
-    @Default('last7') String preset, // 'last7', 'last30', 'last90', 'last365', 'custom'
+    @Default('last7')
+    String preset, // 'last7', 'last30', 'last90', 'last365', 'custom'
   }) = _DateRangeFilter;
 
   factory DateRangeFilter.fromJson(Map<String, dynamic> json) =>

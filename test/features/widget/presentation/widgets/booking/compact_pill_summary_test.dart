@@ -14,7 +14,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(translations: testTranslations, 
+            body: CompactPillSummary(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -40,7 +41,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(translations: testTranslations, 
+            body: CompactPillSummary(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -66,7 +68,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(translations: testTranslations, 
+            body: CompactPillSummary(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -88,11 +91,14 @@ void main() {
       expect(find.text('3 nights'), findsOneWidget);
     });
 
-    testWidgets('renders Reserve button when showReserveButton is true', (tester) async {
+    testWidgets('renders Reserve button when showReserveButton is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(translations: testTranslations, 
+            body: CompactPillSummary(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -114,11 +120,14 @@ void main() {
       expect(find.text('Reserve'), findsOneWidget);
     });
 
-    testWidgets('hides Reserve button when showReserveButton is false', (tester) async {
+    testWidgets('hides Reserve button when showReserveButton is false', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(translations: testTranslations, 
+            body: CompactPillSummary(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -146,7 +155,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(translations: testTranslations, 
+            body: CompactPillSummary(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -175,7 +185,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(translations: testTranslations, 
+            body: CompactPillSummary(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,
@@ -202,7 +213,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CompactPillSummary(translations: testTranslations, 
+            body: CompactPillSummary(
+              translations: testTranslations,
               checkIn: testCheckIn,
               checkOut: testCheckOut,
               nights: 3,

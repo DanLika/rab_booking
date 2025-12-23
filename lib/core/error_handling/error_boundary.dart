@@ -31,7 +31,12 @@ class ErrorBoundary extends StatefulWidget {
   final Widget Function(FlutterErrorDetails)? errorBuilder;
   final void Function(FlutterErrorDetails)? onError;
 
-  const ErrorBoundary({super.key, required this.child, this.errorBuilder, this.onError});
+  const ErrorBoundary({
+    super.key,
+    required this.child,
+    this.errorBuilder,
+    this.onError,
+  });
 
   @override
   State<ErrorBoundary> createState() => _ErrorBoundaryState();
@@ -120,13 +125,15 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
       vsync: this,
     )..repeat(reverse: true);
 
-    _floatAnimation = Tween<double>(begin: -8, end: 8).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _floatAnimation = Tween<double>(
+      begin: -8,
+      end: 8,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _rotateAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _rotateAnimation = Tween<double>(
+      begin: -0.05,
+      end: 0.05,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -142,9 +149,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
 
     return Material(
       child: Container(
-        decoration: BoxDecoration(
-          gradient: context.gradients.pageBackground,
-        ),
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -185,7 +190,9 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
                     Text(
                       'Don\'t worry, this happens sometimes. You can try again or go back to the dashboard.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                        color: theme.colorScheme.onSurface.withAlpha(
+                          (0.7 * 255).toInt(),
+                        ),
                         height: 1.5,
                       ),
                       textAlign: TextAlign.center,
@@ -197,10 +204,14 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
+                          color: theme.colorScheme.errorContainer.withAlpha(
+                            (0.3 * 255).toInt(),
+                          ),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: theme.colorScheme.error.withAlpha((0.5 * 255).toInt()),
+                            color: theme.colorScheme.error.withAlpha(
+                              (0.5 * 255).toInt(),
+                            ),
                           ),
                         ),
                         child: Text(
@@ -250,7 +261,9 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
                                 backgroundColor: Colors.transparent,
                                 foregroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -333,7 +346,9 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFA726).withAlpha((0.4 * 255).toInt()),
+                    color: const Color(
+                      0xFFFFA726,
+                    ).withAlpha((0.4 * 255).toInt()),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -367,13 +382,15 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
       debugPrint('Error navigating to home: ${_safeExceptionToString(e)}');
       // If go_router fails completely, use Navigator
       try {
-        Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
-          '/owner/dashboard',
-          (_) => false,
-        );
+        Navigator.of(
+          context,
+          rootNavigator: true,
+        ).pushNamedAndRemoveUntil('/owner/dashboard', (_) => false);
       } catch (navError) {
         // If Navigator also fails, just log the error
-        debugPrint('Navigator fallback also failed: ${_safeExceptionToString(navError)}');
+        debugPrint(
+          'Navigator fallback also failed: ${_safeExceptionToString(navError)}',
+        );
       }
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
 
 /// Show theme selection bottom sheet
@@ -32,7 +33,7 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentThemeMode = ref.watch(currentThemeModeProvider);
     final l10n = AppLocalizations.of(context);
-    final headerPadding = ResponsiveSpacingHelper.getHeaderPadding(context);
+    final theme = Theme.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -42,29 +43,30 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header (fixed)
-          Padding(
-            padding: headerPadding,
+          // Header (fixed) - matches CommonAppBar height (52px)
+          Container(
+            height: ResponsiveDialogUtils.kHeaderHeight,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
                 Icon(
                   Icons.brightness_6_outlined,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: theme.colorScheme.onSurface,
+                  size: 22,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     l10n.themeSelectionTitle,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
                 ),
               ],
             ),

@@ -18,10 +18,7 @@ class BookingApproveDialog extends StatelessWidget {
       title: l10n.bookingApproveTitle,
       content: Text(
         l10n.bookingApproveMessage,
-        style: TextStyle(
-          fontSize: 15,
-          color: theme.colorScheme.onSurface,
-        ),
+        style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface),
       ),
       cancelLabel: l10n.bookingApproveCancel,
       confirmLabel: l10n.bookingApproveConfirm,

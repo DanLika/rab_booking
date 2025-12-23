@@ -81,7 +81,8 @@ class _LazyCalendarContainerState extends State<LazyCalendarContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final isReady = _isCalendarReady &&
+    final isReady =
+        _isCalendarReady &&
         widget.propertyId.isNotEmpty &&
         widget.unitId.isNotEmpty;
 

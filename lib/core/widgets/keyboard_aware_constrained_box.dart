@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-import '../utils/web_utils.dart' if (dart.library.io) '../utils/web_utils_stub.dart';
-import '../utils/keyboard_dismiss_fix_web.dart' if (dart.library.io) '../utils/keyboard_dismiss_fix_stub.dart';
+import '../utils/web_utils.dart'
+    if (dart.library.io) '../utils/web_utils_stub.dart';
+import '../utils/keyboard_dismiss_fix_web.dart'
+    if (dart.library.io) '../utils/keyboard_dismiss_fix_stub.dart';
 
 /// A ConstrainedBox that automatically adjusts its minHeight based on keyboard state.
 ///
@@ -40,10 +42,12 @@ class KeyboardAwareConstrainedBox extends StatefulWidget {
   });
 
   @override
-  State<KeyboardAwareConstrainedBox> createState() => _KeyboardAwareConstrainedBoxState();
+  State<KeyboardAwareConstrainedBox> createState() =>
+      _KeyboardAwareConstrainedBoxState();
 }
 
-class _KeyboardAwareConstrainedBoxState extends State<KeyboardAwareConstrainedBox> {
+class _KeyboardAwareConstrainedBoxState
+    extends State<KeyboardAwareConstrainedBox> {
   void Function()? _viewportCleanup;
 
   @override
@@ -76,10 +80,7 @@ class _KeyboardAwareConstrainedBoxState extends State<KeyboardAwareConstrainedBo
     final mediaQuery = MediaQuery.maybeOf(context);
     if (mediaQuery == null) {
       // Fallback to base height if MediaQuery not available
-      return SizedBox(
-        height: widget.baseHeight,
-        child: widget.child,
-      );
+      return SizedBox(height: widget.baseHeight, child: widget.child);
     }
 
     // Use MediaQuery to get keyboard-aware height
@@ -89,11 +90,8 @@ class _KeyboardAwareConstrainedBoxState extends State<KeyboardAwareConstrainedBo
     // Use SizedBox with calculated height instead of ConstrainedBox
     // This ensures the container shrinks when keyboard appears
     final calculatedHeight = availableHeight.clamp(0.0, double.infinity);
-    
-    Widget result = SizedBox(
-      height: calculatedHeight,
-      child: widget.child,
-    );
+
+    Widget result = SizedBox(height: calculatedHeight, child: widget.child);
 
     // Apply additional constraints if provided
     if (widget.additionalConstraints != null) {
@@ -124,33 +122,36 @@ class _KeyboardAwareConstrainedBoxState extends State<KeyboardAwareConstrainedBo
           final padding = mediaQuery.padding;
           final safeAreaTop = padding.top.isFinite ? padding.top : 0.0;
           final safeAreaBottom = padding.bottom.isFinite ? padding.bottom : 0.0;
-          
+
           // Ensure values are non-negative
           final safeTop = safeAreaTop >= 0 ? safeAreaTop : 0.0;
           final safeBottom = safeAreaBottom >= 0 ? safeAreaBottom : 0.0;
-          
+
           final availableViewport = viewportHeight - safeTop - safeBottom;
-          
+
           // Ensure availableViewport is valid
           if (!availableViewport.isFinite || availableViewport <= 0) {
             return baseHeight;
           }
-          
+
           // Return the smaller of viewport height or base height
           // This ensures we shrink when keyboard appears
-          return availableViewport < baseHeight ? availableViewport : baseHeight;
+          return availableViewport < baseHeight
+              ? availableViewport
+              : baseHeight;
         }
       } catch (e) {
         // If visualViewport fails, fall through to MediaQuery approach
       }
     }
-    
+
     // Fallback to MediaQuery viewInsets for non-web platforms
     // viewInsets.bottom gives us the keyboard height
     // Defensive check: ensure viewInsets is valid
     try {
       final viewInsets = mediaQuery.viewInsets;
-      final keyboardHeight = viewInsets.bottom.isFinite && viewInsets.bottom >= 0
+      final keyboardHeight =
+          viewInsets.bottom.isFinite && viewInsets.bottom >= 0
           ? viewInsets.bottom
           : 0.0;
 
@@ -161,7 +162,7 @@ class _KeyboardAwareConstrainedBoxState extends State<KeyboardAwareConstrainedBo
       if (!availableHeight.isFinite) {
         return baseHeight;
       }
-      
+
       return availableHeight.clamp(0.0, double.infinity);
     } catch (e) {
       // If viewInsets access fails, return base height
@@ -169,4 +170,3 @@ class _KeyboardAwareConstrainedBoxState extends State<KeyboardAwareConstrainedBo
     }
   }
 }
-

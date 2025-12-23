@@ -212,21 +212,19 @@ class _PremiumButtonState extends State<PremiumButton> {
                         // Execute callback
                         widget.onPressed?.call();
                       },
-                borderRadius: BorderRadius.circular(
-                  () {
-                    if (isIconOnly) {
-                      // For icon-only buttons, use half of height (pill shape)
-                      // Ensure height is valid and finite
-                      final height = buttonConfig.height;
-                      if (height.isFinite && height > 0) {
-                        return height / 2;
-                      }
-                      // Fallback to default radius if height is invalid
-                      return AppDimensions.radiusL;
+                borderRadius: BorderRadius.circular(() {
+                  if (isIconOnly) {
+                    // For icon-only buttons, use half of height (pill shape)
+                    // Ensure height is valid and finite
+                    final height = buttonConfig.height;
+                    if (height.isFinite && height > 0) {
+                      return height / 2;
                     }
+                    // Fallback to default radius if height is invalid
                     return AppDimensions.radiusL;
-                  }(),
-                ),
+                  }
+                  return AppDimensions.radiusL;
+                }()),
                 child: Container(
                   padding: _getPadding(isIconOnly, buttonConfig),
                   child: _buildContent(buttonConfig),

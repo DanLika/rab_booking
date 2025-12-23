@@ -100,7 +100,9 @@ class PriceChangeDialogBuilder {
       builder: (dialogContext) => AlertDialog(
         title: Text(
           priceIncreased ? config.increaseTitleText : config.decreaseTitleText,
-          style: TextStyle(color: priceIncreased ? config.increaseColor : config.decreaseColor),
+          style: TextStyle(
+            color: priceIncreased ? config.increaseColor : config.decreaseColor,
+          ),
         ),
         content: Text(
           priceIncreased
@@ -114,11 +116,16 @@ class PriceChangeDialogBuilder {
                     'Proceed with the new price?',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(config.cancelButtonText)),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(config.cancelButtonText),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: priceIncreased ? config.increaseColor : config.decreaseColor,
+              backgroundColor: priceIncreased
+                  ? config.increaseColor
+                  : config.decreaseColor,
             ),
             child: Text(config.proceedButtonText),
           ),
@@ -147,7 +154,9 @@ class PriceChangeDialogBuilder {
     return AlertDialog(
       title: Text(
         priceIncreased ? config.increaseTitleText : config.decreaseTitleText,
-        style: TextStyle(color: priceIncreased ? config.increaseColor : config.decreaseColor),
+        style: TextStyle(
+          color: priceIncreased ? config.increaseColor : config.decreaseColor,
+        ),
       ),
       content: Text(
         priceIncreased
@@ -165,7 +174,9 @@ class PriceChangeDialogBuilder {
         ElevatedButton(
           onPressed: onProceed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: priceIncreased ? config.increaseColor : config.decreaseColor,
+            backgroundColor: priceIncreased
+                ? config.increaseColor
+                : config.decreaseColor,
           ),
           child: Text(config.proceedButtonText),
         ),
@@ -221,14 +232,16 @@ class PriceLockService {
     required BookingPriceCalculation? lockedCalculation,
     required VoidCallback onLockUpdated,
     double tolerance = defaultTolerance,
-    PriceChangeDialogConfig dialogConfig = PriceChangeDialogConfig.defaultConfig,
+    PriceChangeDialogConfig dialogConfig =
+        PriceChangeDialogConfig.defaultConfig,
   }) async {
     // No locked price - no change detection needed
     if (lockedCalculation == null) {
       return PriceLockResult.noChange;
     }
 
-    final priceDelta = currentCalculation.totalPrice - lockedCalculation.totalPrice;
+    final priceDelta =
+        currentCalculation.totalPrice - lockedCalculation.totalPrice;
 
     // Price within tolerance - no change
     if (priceDelta.abs() <= tolerance) {
@@ -261,7 +274,11 @@ class PriceLockService {
   /// Check if two prices are equal within tolerance.
   ///
   /// Utility method for price comparisons elsewhere in the codebase.
-  static bool pricesEqual(double price1, double price2, {double tolerance = defaultTolerance}) {
+  static bool pricesEqual(
+    double price1,
+    double price2, {
+    double tolerance = defaultTolerance,
+  }) {
     return (price1 - price2).abs() <= tolerance;
   }
 
@@ -269,7 +286,10 @@ class PriceLockService {
   ///
   /// Returns positive value if current > locked (price increased),
   /// negative if current < locked (price decreased).
-  static double calculatePriceDelta(BookingPriceCalculation current, BookingPriceCalculation locked) {
+  static double calculatePriceDelta(
+    BookingPriceCalculation current,
+    BookingPriceCalculation locked,
+  ) {
     return current.totalPrice - locked.totalPrice;
   }
 }

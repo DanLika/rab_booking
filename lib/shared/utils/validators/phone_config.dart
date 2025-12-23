@@ -54,14 +54,12 @@ class PhoneConfigs {
       maxLength: 10,
       format: PhoneFormatPattern.standard3_3_4,
     ), // US, Canada
-
     // Eastern Europe
     '+7': PhoneConfig(
       minLength: 10,
       maxLength: 10,
       format: PhoneFormatPattern.standard3_3_4,
     ), // Russia, Kazakhstan
-
     // Western Europe
     '+44': PhoneConfig(
       minLength: 10,
@@ -88,7 +86,6 @@ class PhoneConfigs {
       maxLength: 9,
       format: PhoneFormatPattern.europe3_3_3,
     ), // Spain
-
     // Balkans (Primary Market)
     '+385': PhoneConfig(
       minLength: 8,
@@ -125,7 +122,6 @@ class PhoneConfigs {
       maxLength: 8,
       format: PhoneFormatPattern.balkans2_3_3,
     ), // North Macedonia
-
     // Other European
     '+43': PhoneConfig(
       minLength: 10,

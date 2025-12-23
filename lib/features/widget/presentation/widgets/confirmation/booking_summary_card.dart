@@ -128,7 +128,10 @@ class BookingSummaryCard extends ConsumerWidget {
           DetailRowWidget(
             label: tr.checkIn,
             // Bug Fix: Use locale for proper date formatting (e.g., "Ponedjeljak, 15. sij. 2024" for HR)
-            value: DateFormat('EEEE, MMM dd, yyyy', tr.locale.languageCode).format(checkIn),
+            value: DateFormat(
+              'EEEE, MMM dd, yyyy',
+              tr.locale.languageCode,
+            ).format(checkIn),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
@@ -136,7 +139,10 @@ class BookingSummaryCard extends ConsumerWidget {
           DetailRowWidget(
             label: tr.checkOut,
             // Bug Fix: Use locale for proper date formatting
-            value: DateFormat('EEEE, MMM dd, yyyy', tr.locale.languageCode).format(checkOut),
+            value: DateFormat(
+              'EEEE, MMM dd, yyyy',
+              tr.locale.languageCode,
+            ).format(checkOut),
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,

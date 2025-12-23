@@ -48,7 +48,7 @@ class BookingCardGuestInfo extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              // Email
+              // Email - selectable for easy copying
               Row(
                 children: [
                   Icon(
@@ -60,19 +60,19 @@ class BookingCardGuestInfo extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: Text(
+                    child: SelectableText(
                       ownerBooking.guestEmail,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withAlpha(
                           (0.6 * 255).toInt(),
                         ),
                       ),
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                 ],
               ),
-              // Phone (conditional)
+              // Phone (conditional) - selectable for easy copying
               if (ownerBooking.guestPhone != null) ...[
                 const SizedBox(height: 2),
                 Row(
@@ -86,14 +86,14 @@ class BookingCardGuestInfo extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(
+                      child: SelectableText(
                         ownerBooking.guestPhone!,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withAlpha(
                             (0.6 * 255).toInt(),
                           ),
                         ),
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                   ],

@@ -75,8 +75,15 @@ class _NotificationSettingsBottomSheetState
         );
       }
     } catch (e, stackTrace) {
-      LoggingService.log('Error toggling master switch: $e', tag: 'NotificationSettings');
-      await LoggingService.logError('Failed to toggle master switch', e, stackTrace);
+      LoggingService.log(
+        'Error toggling master switch: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to toggle master switch',
+        e,
+        stackTrace,
+      );
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
@@ -141,8 +148,15 @@ class _NotificationSettingsBottomSheetState
         );
       }
     } catch (e, stackTrace) {
-      LoggingService.log('Error updating category $category: $e', tag: 'NotificationSettings');
-      await LoggingService.logError('Failed to update notification category', e, stackTrace);
+      LoggingService.log(
+        'Error updating category $category: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to update notification category',
+        e,
+        stackTrace,
+      );
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
@@ -244,7 +258,9 @@ class _NotificationSettingsBottomSheetState
                                         ? theme.colorScheme.primary.withAlpha(
                                             (0.12 * 255).toInt(),
                                           )
-                                        : theme.colorScheme.surfaceContainerHighest
+                                        : theme
+                                              .colorScheme
+                                              .surfaceContainerHighest
                                               .withAlpha((0.3 * 255).toInt()),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -264,7 +280,8 @@ class _NotificationSettingsBottomSheetState
                                 // Text
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         l10n.notificationSettingsEnableAll,
@@ -279,9 +296,8 @@ class _NotificationSettingsBottomSheetState
                                         l10n.notificationSettingsMasterSwitch,
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: theme.colorScheme.onSurface.withValues(
-                                            alpha: 0.6,
-                                          ),
+                                          color: theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.6),
                                         ),
                                       ),
                                     ],
@@ -290,7 +306,9 @@ class _NotificationSettingsBottomSheetState
                                 // Switch
                                 Switch(
                                   value: masterEnabled,
-                                  onChanged: _isSaving ? null : _toggleMasterSwitch,
+                                  onChanged: _isSaving
+                                      ? null
+                                      : _toggleMasterSwitch,
                                   activeThumbColor: theme.colorScheme.primary,
                                 ),
                               ],
@@ -335,9 +353,8 @@ class _NotificationSettingsBottomSheetState
                                   child: Text(
                                     l10n.notificationSettingsDisabledWarning,
                                     style: TextStyle(
-                                      color: theme.colorScheme.onSurface.withValues(
-                                        alpha: 0.7,
-                                      ),
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.7),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -433,7 +450,9 @@ class _NotificationSettingsBottomSheetState
                       Text(
                         error.toString(),
                         style: TextStyle(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                           fontSize: 12,
                         ),
                         textAlign: TextAlign.center,
@@ -526,7 +545,8 @@ class _NotificationSettingsBottomSheetState
                   icon: Icons.email_outlined,
                   iconColor: theme.colorScheme.primary,
                   enabled: enabled,
-                  isLast: true, // Push notifications hidden until mobile app release
+                  isLast:
+                      true, // Push notifications hidden until mobile app release
                 );
               },
             ),

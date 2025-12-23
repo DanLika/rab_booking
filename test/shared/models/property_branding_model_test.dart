@@ -17,7 +17,9 @@ void main() {
       });
 
       test('returns true when logoUrl is set', () {
-        const branding = PropertyBranding(logoUrl: 'https://example.com/logo.png');
+        const branding = PropertyBranding(
+          logoUrl: 'https://example.com/logo.png',
+        );
         expect(branding.hasCustomBranding, isTrue);
       });
 
@@ -34,7 +36,9 @@ void main() {
 
       test('returns false when only faviconUrl is set', () {
         // faviconUrl alone doesn't count as custom branding
-        const branding = PropertyBranding(faviconUrl: 'https://example.com/favicon.ico');
+        const branding = PropertyBranding(
+          faviconUrl: 'https://example.com/favicon.ico',
+        );
         expect(branding.hasCustomBranding, isFalse);
       });
 

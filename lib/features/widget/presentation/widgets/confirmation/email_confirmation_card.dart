@@ -72,7 +72,8 @@ class EmailConfirmationCard extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EmailConfirmationCard> createState() => _EmailConfirmationCardState();
+  ConsumerState<EmailConfirmationCard> createState() =>
+      _EmailConfirmationCardState();
 }
 
 class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
@@ -85,13 +86,19 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
 
   Future<void> _resendConfirmationEmail(WidgetTranslations tr) async {
     if (widget.booking == null || widget.emailConfig == null) {
-      SnackBarHelper.showError(context: context, message: tr.unableToResendEmail);
+      SnackBarHelper.showError(
+        context: context,
+        message: tr.unableToResendEmail,
+      );
       return;
     }
 
     // Check rate limit - prevent spam
     if (_resendCount >= _maxResendAttempts) {
-      SnackBarHelper.showWarning(context: context, message: tr.maxResendAttemptsReached);
+      SnackBarHelper.showWarning(
+        context: context,
+        message: tr.maxResendAttemptsReached,
+      );
       return;
     }
 
@@ -99,7 +106,10 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
     // The 'enabled' flag controls email verification on the booking form, not confirmation emails
     final config = widget.emailConfig!;
     if (config.resendApiKey == null || config.fromEmail == null) {
-      SnackBarHelper.showWarning(context: context, message: tr.emailServiceNotConfigured);
+      SnackBarHelper.showWarning(
+        context: context,
+        message: tr.emailServiceNotConfigured,
+      );
       return;
     }
 
@@ -114,8 +124,10 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
         emailConfig: widget.emailConfig!,
         propertyName: widget.propertyName,
         bookingReference: widget.bookingReference,
-        allowGuestCancellation: widget.widgetSettings?.allowGuestCancellation ?? false,
-        cancellationDeadlineHours: widget.widgetSettings?.cancellationDeadlineHours,
+        allowGuestCancellation:
+            widget.widgetSettings?.allowGuestCancellation ?? false,
+        cancellationDeadlineHours:
+            widget.widgetSettings?.cancellationDeadlineHours,
         ownerEmail: widget.widgetSettings?.contactOptions.emailAddress,
         ownerPhone: widget.widgetSettings?.contactOptions.phoneNumber,
         customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
@@ -128,7 +140,10 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
       });
 
       if (mounted) {
-        SnackBarHelper.showSuccess(context: context, message: tr.confirmationEmailSentSuccessfully);
+        SnackBarHelper.showSuccess(
+          context: context,
+          message: tr.confirmationEmailSentSuccessfully,
+        );
       }
     } catch (e) {
       setState(() {
@@ -152,7 +167,9 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
-    final cardBackground = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDark
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
@@ -195,7 +212,10 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                       children: [
                         TextSpan(
                           text: tr.checkYourEmailAt,
-                          style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                          style: TextStyle(
+                            fontSize: TypographyTokens.fontSizeS,
+                            color: colors.textSecondary,
+                          ),
                         ),
                         if (widget.guestEmail.isEmpty)
                           TextSpan(
@@ -217,7 +237,10 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                           ),
                           TextSpan(
                             text: tr.forBookingDetails,
-                            style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                            style: TextStyle(
+                              fontSize: TypographyTokens.fontSizeS,
+                              color: colors.textSecondary,
+                            ),
                           ),
                         ],
                       ],
@@ -228,14 +251,20 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                   const SizedBox(height: SpacingTokens.s),
                   // Bug #57 Fix: Add Semantics for accessibility
                   Semantics(
-                    label: _emailResent ? tr.emailSent : tr.didntReceiveResendEmail,
+                    label: _emailResent
+                        ? tr.emailSent
+                        : tr.didntReceiveResendEmail,
                     button: true,
                     enabled: !_isResendingEmail,
                     child: InkWell(
-                      onTap: _isResendingEmail ? null : () => _resendConfirmationEmail(tr),
+                      onTap: _isResendingEmail
+                          ? null
+                          : () => _resendConfirmationEmail(tr),
                       borderRadius: BorderRadius.circular(4),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xxs),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: SpacingTokens.xxs,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -243,13 +272,22 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                               SizedBox(
                                 width: 14,
                                 height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: colors.textSecondary),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colors.textSecondary,
+                                ),
                               )
                             else
-                              Icon(_emailResent ? Icons.check : Icons.refresh, size: 14, color: colors.textSecondary),
+                              Icon(
+                                _emailResent ? Icons.check : Icons.refresh,
+                                size: 14,
+                                color: colors.textSecondary,
+                              ),
                             const SizedBox(width: SpacingTokens.xxs),
                             Text(
-                              _emailResent ? tr.emailSent : tr.didntReceiveResendEmail,
+                              _emailResent
+                                  ? tr.emailSent
+                                  : tr.didntReceiveResendEmail,
                               style: TextStyle(
                                 fontSize: TypographyTokens.fontSizeS,
                                 color: colors.textSecondary,

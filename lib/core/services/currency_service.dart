@@ -60,13 +60,13 @@ class SelectedCurrency extends _$SelectedCurrency {
   Future<Currency> build() async {
     // Try to use the provider first (initialized in main.dart)
     final prefsFromProvider = ref.read(sharedPreferencesProvider);
-    
+
     // If provider has SharedPreferences, use it
     if (prefsFromProvider != null) {
       final code = prefsFromProvider.getString(_storageKey);
       return code != null ? Currency.fromCode(code) : Currency.eur;
     }
-    
+
     // Fallback: try to get instance directly (for widget_main.dart or if provider not ready)
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -84,12 +84,12 @@ class SelectedCurrency extends _$SelectedCurrency {
 
     // Try to use the provider first
     final prefsFromProvider = ref.read(sharedPreferencesProvider);
-    
+
     if (prefsFromProvider != null) {
       await prefsFromProvider.setString(_storageKey, currency.code);
       return;
     }
-    
+
     // Fallback: try to get instance directly
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -108,11 +108,7 @@ class CurrencyService {
   }
 
   /// Convert amount from source currency to target currency
-  double convertBetween(
-    double amount,
-    Currency from,
-    Currency to,
-  ) {
+  double convertBetween(double amount, Currency from, Currency to) {
     // Convert to EUR first, then to target currency
     final amountInEur = amount / from.rateToEur;
     return amountInEur * to.rateToEur;

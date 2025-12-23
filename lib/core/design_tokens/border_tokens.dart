@@ -27,13 +27,13 @@ class BorderTokens {
   // BORDER RADIUS VALUES
   // ============================================================
   static const double radiusSharp = 0.0;
-  static const double radiusTiny = 2.0;    // Very small rounded corners
+  static const double radiusTiny = 2.0; // Very small rounded corners
   static const double radiusSubtle = 4.0;
-  static const double radiusSmall = 6.0;   // Slightly more rounded than subtle
+  static const double radiusSmall = 6.0; // Slightly more rounded than subtle
   static const double radiusMedium = 8.0;
   static const double radiusRounded = 12.0;
-  static const double radiusLarge = 16.0;  // Noticeably rounded corners
-  static const double radiusXL = 20.0;     // Extra large rounded corners
+  static const double radiusLarge = 16.0; // Noticeably rounded corners
+  static const double radiusXL = 20.0; // Extra large rounded corners
   static const double radiusPill = 999.0;
 
   // Responsive border radius for calendar cells
@@ -57,10 +57,16 @@ class BorderTokens {
 
   static final BorderRadius circularSharp = BorderRadius.circular(radiusSharp);
   static final BorderRadius circularTiny = BorderRadius.circular(radiusTiny);
-  static final BorderRadius circularSubtle = BorderRadius.circular(radiusSubtle);
+  static final BorderRadius circularSubtle = BorderRadius.circular(
+    radiusSubtle,
+  );
   static final BorderRadius circularSmall = BorderRadius.circular(radiusSmall);
-  static final BorderRadius circularMedium = BorderRadius.circular(radiusMedium);
-  static final BorderRadius circularRounded = BorderRadius.circular(radiusRounded);
+  static final BorderRadius circularMedium = BorderRadius.circular(
+    radiusMedium,
+  );
+  static final BorderRadius circularRounded = BorderRadius.circular(
+    radiusRounded,
+  );
   static final BorderRadius circularLarge = BorderRadius.circular(radiusLarge);
   static final BorderRadius circularXL = BorderRadius.circular(radiusXL);
 
@@ -68,10 +74,12 @@ class BorderTokens {
   // COMPONENT-SPECIFIC HELPERS
   // ============================================================
 
-  static final BorderRadius calendarCell =
-      BorderRadius.circular(calendarCellRadius);
-  static final BorderRadius widgetContainer =
-      BorderRadius.circular(widgetContainerRadius);
+  static final BorderRadius calendarCell = BorderRadius.circular(
+    calendarCellRadius,
+  );
+  static final BorderRadius widgetContainer = BorderRadius.circular(
+    widgetContainerRadius,
+  );
   static final BorderRadius card = BorderRadius.circular(cardRadius);
   static final BorderRadius button = BorderRadius.circular(buttonRadius);
   static final BorderRadius input = BorderRadius.circular(inputRadius);

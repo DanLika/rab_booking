@@ -164,7 +164,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: Stack(
-          alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+          alignment: Alignment
+              .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
           children: [
             notificationsAsync.when(
               data: (notifications) {
@@ -495,10 +496,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         Icon(icon, size: 16, color: color),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 13, color: color),
-          ),
+          child: Text(text, style: TextStyle(fontSize: 13, color: color)),
         ),
       ],
     );
@@ -1067,7 +1065,8 @@ class _AnimatedEmptyStateContent extends StatefulWidget {
   });
 
   @override
-  State<_AnimatedEmptyStateContent> createState() => _AnimatedEmptyStateContentState();
+  State<_AnimatedEmptyStateContent> createState() =>
+      _AnimatedEmptyStateContentState();
 }
 
 class _AnimatedEmptyStateContentState extends State<_AnimatedEmptyStateContent>
@@ -1093,7 +1092,10 @@ class _AnimatedEmptyStateContentState extends State<_AnimatedEmptyStateContent>
       vsync: this,
     );
     _iconScale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _iconController, curve: AnimationTokens.fastOutSlowIn),
+      CurvedAnimation(
+        parent: _iconController,
+        curve: AnimationTokens.fastOutSlowIn,
+      ),
     );
     _iconFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _iconController, curve: AnimationTokens.easeOut),
@@ -1107,9 +1109,13 @@ class _AnimatedEmptyStateContentState extends State<_AnimatedEmptyStateContent>
     _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _textController, curve: AnimationTokens.easeOut),
     );
-    _textSlide = Tween<Offset>(begin: const Offset(0, 20), end: Offset.zero).animate(
-      CurvedAnimation(parent: _textController, curve: AnimationTokens.easeOut),
-    );
+    _textSlide = Tween<Offset>(begin: const Offset(0, 20), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _textController,
+            curve: AnimationTokens.easeOut,
+          ),
+        );
 
     // Hints animation
     _hintsController = AnimationController(
@@ -1119,9 +1125,13 @@ class _AnimatedEmptyStateContentState extends State<_AnimatedEmptyStateContent>
     _hintsFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _hintsController, curve: AnimationTokens.easeOut),
     );
-    _hintsSlide = Tween<Offset>(begin: const Offset(0, 30), end: Offset.zero).animate(
-      CurvedAnimation(parent: _hintsController, curve: AnimationTokens.easeOut),
-    );
+    _hintsSlide = Tween<Offset>(begin: const Offset(0, 30), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _hintsController,
+            curve: AnimationTokens.easeOut,
+          ),
+        );
 
     // Start staggered animations
     _iconController.forward();
@@ -1157,10 +1167,7 @@ class _AnimatedEmptyStateContentState extends State<_AnimatedEmptyStateContent>
           builder: (context, child) {
             return Opacity(
               opacity: _iconFade.value,
-              child: Transform.scale(
-                scale: _iconScale.value,
-                child: child,
-              ),
+              child: Transform.scale(scale: _iconScale.value, child: child),
             );
           },
           child: Container(
@@ -1252,13 +1259,29 @@ class _AnimatedEmptyStateContentState extends State<_AnimatedEmptyStateContent>
                   ),
                 ),
                 const SizedBox(height: 12),
-                widget.buildHintRow(Icons.calendar_today_rounded, l10n.notificationsHintNewBookings, hintColor),
+                widget.buildHintRow(
+                  Icons.calendar_today_rounded,
+                  l10n.notificationsHintNewBookings,
+                  hintColor,
+                ),
                 const SizedBox(height: 8),
-                widget.buildHintRow(Icons.payment_rounded, l10n.notificationsHintPayments, hintColor),
+                widget.buildHintRow(
+                  Icons.payment_rounded,
+                  l10n.notificationsHintPayments,
+                  hintColor,
+                ),
                 const SizedBox(height: 8),
-                widget.buildHintRow(Icons.cancel_outlined, l10n.notificationsHintCancellations, hintColor),
+                widget.buildHintRow(
+                  Icons.cancel_outlined,
+                  l10n.notificationsHintCancellations,
+                  hintColor,
+                ),
                 const SizedBox(height: 8),
-                widget.buildHintRow(Icons.access_time_rounded, l10n.notificationsHintReminders, hintColor),
+                widget.buildHintRow(
+                  Icons.access_time_rounded,
+                  l10n.notificationsHintReminders,
+                  hintColor,
+                ),
               ],
             ),
           ),

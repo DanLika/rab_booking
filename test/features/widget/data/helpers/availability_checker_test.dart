@@ -32,8 +32,10 @@ void main() {
 
     group('icalConflict factory', () {
       test('creates result with iCal conflict details', () {
-        final result =
-            AvailabilityCheckResult.icalConflict('event456', 'Booking.com');
+        final result = AvailabilityCheckResult.icalConflict(
+          'event456',
+          'Booking.com',
+        );
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.icalEvent);
@@ -43,8 +45,10 @@ void main() {
       });
 
       test('creates result with Airbnb source', () {
-        final result =
-            AvailabilityCheckResult.icalConflict('event789', 'Airbnb');
+        final result = AvailabilityCheckResult.icalConflict(
+          'event789',
+          'Airbnb',
+        );
 
         expect(result.icalSource, 'Airbnb');
       });
@@ -53,8 +57,10 @@ void main() {
     group('blockedDateConflict factory', () {
       test('creates result with blocked date details', () {
         final blockedDate = DateTime(2024, 1, 15);
-        final result =
-            AvailabilityCheckResult.blockedDateConflict('price123', blockedDate);
+        final result = AvailabilityCheckResult.blockedDateConflict(
+          'price123',
+          blockedDate,
+        );
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.blockedDate);

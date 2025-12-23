@@ -19,7 +19,10 @@ class PasswordValidationResult {
     return PasswordValidationResult(isValid: true, strength: strength);
   }
 
-  factory PasswordValidationResult.invalid(String message, {List<String> missing = const []}) {
+  factory PasswordValidationResult.invalid(
+    String message, {
+    List<String> missing = const [],
+  }) {
     return PasswordValidationResult(
       isValid: false,
       errorMessage: message,
@@ -48,7 +51,10 @@ class PasswordValidator {
   /// Validate password and return detailed result
   static PasswordValidationResult validate(String? password) {
     if (password == null || password.isEmpty) {
-      return PasswordValidationResult.invalid('Password is required', missing: ['Enter a password']);
+      return PasswordValidationResult.invalid(
+        'Password is required',
+        missing: ['Enter a password'],
+      );
     }
 
     final missing = <String>[];
@@ -59,7 +65,9 @@ class PasswordValidator {
     }
 
     if (password.length > maxLength) {
-      return PasswordValidationResult.invalid('Password must be less than $maxLength characters');
+      return PasswordValidationResult.invalid(
+        'Password must be less than $maxLength characters',
+      );
     }
 
     // Check for uppercase letter
@@ -84,7 +92,10 @@ class PasswordValidator {
 
     // If any requirements are missing, return invalid
     if (missing.isNotEmpty) {
-      return PasswordValidationResult.invalid('Password must contain: ${missing.join(', ')}', missing: missing);
+      return PasswordValidationResult.invalid(
+        'Password must contain: ${missing.join(', ')}',
+        missing: missing,
+      );
     }
 
     // Calculate strength
@@ -163,7 +174,8 @@ class PasswordValidator {
 
     // Check if all characters are digits
     if (!_digitRegex.hasMatch(password) ||
-        password.length != password.split('').where(_digitRegex.hasMatch).length) {
+        password.length !=
+            password.split('').where(_digitRegex.hasMatch).length) {
       return false;
     }
 

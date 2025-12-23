@@ -71,7 +71,10 @@ class BookingDatesCard extends ConsumerWidget {
 
     // Bug #59 Fix: Parse dates with error handling
     final checkInDate = _parseDateSafely(checkIn, 'BookingDatesCard.checkIn');
-    final checkOutDate = _parseDateSafely(checkOut, 'BookingDatesCard.checkOut');
+    final checkOutDate = _parseDateSafely(
+      checkOut,
+      'BookingDatesCard.checkOut',
+    );
 
     // Return empty widget if dates cannot be parsed
     if (checkInDate == null || checkOutDate == null) {
@@ -83,7 +86,9 @@ class BookingDatesCard extends ConsumerWidget {
     final formatter = DateFormat('EEEE, MMM dd, yyyy', locale.toString());
 
     // Use backgroundTertiary in dark mode for better contrast
-    final cardBackground = isDarkMode ? colors.backgroundTertiary : colors.backgroundSecondary;
+    final cardBackground = isDarkMode
+        ? colors.backgroundTertiary
+        : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Container(

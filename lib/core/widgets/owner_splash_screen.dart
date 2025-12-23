@@ -33,7 +33,9 @@ class _SplashProgressController extends ChangeNotifier {
     _progress = 0.0;
     _completer = Completer<void>();
 
-    _timer = Timer.periodic(const Duration(milliseconds: _tickInterval), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: _tickInterval), (
+      timer,
+    ) {
       if (_isCompleted) {
         timer.cancel();
         return;
@@ -374,7 +376,9 @@ class _OwnerSplashOverlayState extends State<OwnerSplashOverlay> {
       isDark = false;
     }
 
-    final backgroundColor = isDark ? const Color(0xFF000000) : const Color(0xFFFAFAFA);
+    final backgroundColor = isDark
+        ? const Color(0xFF000000)
+        : const Color(0xFFFAFAFA);
 
     // Build the splash screen widget with theme context
     final splashScreen = Theme(

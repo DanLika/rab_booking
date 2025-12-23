@@ -22,7 +22,8 @@ class BrowserDetection {
         return 'chrome';
       } else if (userAgent.contains('firefox')) {
         return 'firefox';
-      } else if (userAgent.contains('safari') && !userAgent.contains('chrome')) {
+      } else if (userAgent.contains('safari') &&
+          !userAgent.contains('chrome')) {
         return 'safari';
       } else {
         return 'unknown';
@@ -41,13 +42,15 @@ class BrowserDetection {
       final screenWidth = screen.width;
 
       // Check user agent for mobile/tablet indicators
-      final isMobileUA = userAgent.contains('mobile') ||
-                        userAgent.contains('android') ||
-                        userAgent.contains('iphone') ||
-                        userAgent.contains('ipod');
+      final isMobileUA =
+          userAgent.contains('mobile') ||
+          userAgent.contains('android') ||
+          userAgent.contains('iphone') ||
+          userAgent.contains('ipod');
 
-      final isTabletUA = userAgent.contains('ipad') ||
-                        (userAgent.contains('android') && !userAgent.contains('mobile'));
+      final isTabletUA =
+          userAgent.contains('ipad') ||
+          (userAgent.contains('android') && !userAgent.contains('mobile'));
 
       // Check screen size as fallback
       if (isMobileUA || screenWidth < 768) {

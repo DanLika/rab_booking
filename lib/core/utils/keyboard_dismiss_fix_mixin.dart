@@ -1,9 +1,11 @@
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 // Conditional import for web-specific implementation
-import 'keyboard_dismiss_fix_web.dart' if (dart.library.io) 'keyboard_dismiss_fix_stub.dart';
+import 'keyboard_dismiss_fix_web.dart'
+    if (dart.library.io) 'keyboard_dismiss_fix_stub.dart';
 
 /// Mixin that fixes Android Chrome keyboard dismiss bug (Flutter #175074).
 ///
@@ -63,12 +65,13 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     if (_isAndroidWeb && mounted) {
       // Detect orientation changes and reset baseline
       try {
         final currentOrientation = MediaQuery.of(context).orientation;
-        if (_lastOrientation != null && _lastOrientation != currentOrientation) {
+        if (_lastOrientation != null &&
+            _lastOrientation != currentOrientation) {
           // Orientation changed - reset full viewport height
           // This will be updated on next viewport resize event
           _fullViewportHeight = 0;
@@ -115,7 +118,8 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
 
     // Defensive: skip tiny/noise deltas to avoid spurious layout work (especially in landscape)
     if ((_fullViewportHeight == 0 && currentHeight < 80) ||
-        (_fullViewportHeight > 0 && (currentHeight - _lastViewportHeight).abs() < 20)) {
+        (_fullViewportHeight > 0 &&
+            (currentHeight - _lastViewportHeight).abs() < 20)) {
       return;
     }
 
@@ -124,37 +128,43 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
 
     // Defensive check: ensure mounted before accessing context
     if (!mounted) return;
-    
+
     // Get current orientation to adjust thresholds
     try {
       final orientation = MediaQuery.of(context).orientation;
       final isLandscape = orientation == Orientation.landscape;
-      
+
       // Use orientation-specific thresholds (matching JavaScript implementation)
       // Landscape has smaller viewport, so use larger percentage threshold
       final viewportSize = MediaQuery.of(context).size;
-      final viewportHeight = isLandscape ? viewportSize.width : viewportSize.height;
+      final viewportHeight = isLandscape
+          ? viewportSize.width
+          : viewportSize.height;
       final relativeThreshold = isLandscape
-          ? viewportHeight * 0.15   // Landscape: 15%
-          : viewportHeight * 0.12;  // Portrait: 12%
+          ? viewportHeight *
+                0.15 // Landscape: 15%
+          : viewportHeight * 0.12; // Portrait: 12%
       final absoluteThreshold = isLandscape
-          ? 50.0    // Landscape: 50px (match JavaScript)
-          : 100.0;  // Portrait: 100px
-      final threshold = relativeThreshold > absoluteThreshold ? relativeThreshold : absoluteThreshold;
+          ? 50.0 // Landscape: 50px (match JavaScript)
+          : 100.0; // Portrait: 100px
+      final threshold = relativeThreshold > absoluteThreshold
+          ? relativeThreshold
+          : absoluteThreshold;
 
       // Detect orientation change: very large height change (>40% of viewport) without keyboard
       // This happens when device rotates
       final orientationChangeThreshold = viewportHeight * 0.4;
-      final isLikelyOrientationChange = absHeightDiff > orientationChangeThreshold && 
-                                        absHeightDiff > 200; // Also require absolute minimum
-      
+      final isLikelyOrientationChange =
+          absHeightDiff > orientationChangeThreshold &&
+          absHeightDiff > 200; // Also require absolute minimum
+
       if (isLikelyOrientationChange) {
         // Reset baseline on orientation change
         _fullViewportHeight = currentHeight;
         _currentViewportHeight = currentHeight;
         _lastViewportHeight = currentHeight;
         _isKeyboardOpen = false;
-        
+
         // Force rebuild to adjust layout
         if (mounted) {
           setState(() {
@@ -166,7 +176,8 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
 
       // Update full height if we see a larger value (keyboard closed)
       // But only if the increase is reasonable (not an orientation change)
-      if (currentHeight > _fullViewportHeight && absHeightDiff < orientationChangeThreshold) {
+      if (currentHeight > _fullViewportHeight &&
+          absHeightDiff < orientationChangeThreshold) {
         _fullViewportHeight = currentHeight;
       }
 
@@ -175,33 +186,37 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
 
       // Detect keyboard state: significant height decrease means keyboard opened
       // Use relative threshold based on viewport size
-      final keyboardHeight = _fullViewportHeight > 0 
-          ? (_fullViewportHeight - currentHeight) 
+      final keyboardHeight = _fullViewportHeight > 0
+          ? (_fullViewportHeight - currentHeight)
           : 0;
       final wasKeyboardOpen = _isKeyboardOpen;
-      
+
       // Keyboard is open if height difference exceeds threshold
       // Use both absolute and relative checks
-      final relativeKeyboardHeight = _fullViewportHeight > 0 
-          ? (keyboardHeight / _fullViewportHeight) 
+      final relativeKeyboardHeight = _fullViewportHeight > 0
+          ? (keyboardHeight / _fullViewportHeight)
           : 0;
-      _isKeyboardOpen = keyboardHeight > threshold || relativeKeyboardHeight > 0.15;
+      _isKeyboardOpen =
+          keyboardHeight > threshold || relativeKeyboardHeight > 0.15;
 
       // Detect keyboard dismiss: viewport height increased significantly
       // Use relative threshold - at least 15% increase or absolute threshold
-      final heightIncreasePercent = _lastViewportHeight > 0 
-          ? (heightDiff / _lastViewportHeight) 
+      final heightIncreasePercent = _lastViewportHeight > 0
+          ? (heightDiff / _lastViewportHeight)
           : 0;
-      final isSignificantIncrease = heightDiff > threshold || heightIncreasePercent > 0.15;
-      
+      final isSignificantIncrease =
+          heightDiff > threshold || heightIncreasePercent > 0.15;
+
       // Safety check: ensure we're near full viewport height to avoid false positives
       // Use threshold * 0.5 (matching JavaScript implementation)
       final nearFullHeightThreshold = threshold * 0.5;
-      final isNearFullHeight = _fullViewportHeight > 0 &&
+      final isNearFullHeight =
+          _fullViewportHeight > 0 &&
           currentHeight >= (_fullViewportHeight - nearFullHeightThreshold);
 
       // Keyboard dismiss: significant height increase AND near full height
-      final isKeyboardDismiss = isSignificantIncrease && isNearFullHeight && wasKeyboardOpen;
+      final isKeyboardDismiss =
+          isSignificantIncrease && isNearFullHeight && wasKeyboardOpen;
 
       if (isKeyboardDismiss) {
         _forceFullRebuild();
@@ -293,7 +308,10 @@ mixin AndroidKeyboardDismissFix<T extends StatefulWidget> on State<T> {
       }
     }
     return _fullViewportHeight > 0
-        ? (_fullViewportHeight - _currentViewportHeight).clamp(0.0, double.infinity)
+        ? (_fullViewportHeight - _currentViewportHeight).clamp(
+            0.0,
+            double.infinity,
+          )
         : 0.0;
   }
 

@@ -1576,22 +1576,19 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: _allowCancellation
-                          ? Theme.of(context)
-                              .colorScheme
-                              .primaryContainer
-                              .withValues(alpha: 0.3)
+                          ? Theme.of(context).colorScheme.primaryContainer
+                                .withValues(alpha: 0.3)
                           : Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest
-                              .withValues(alpha: 0.3),
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: _allowCancellation
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context)
-                                .colorScheme
-                                .outline
-                                .withValues(alpha: 0.3),
+                            : Theme.of(
+                                context,
+                              ).colorScheme.outline.withValues(alpha: 0.3),
                         width: _allowCancellation ? 2 : 1,
                       ),
                     ),
@@ -1605,9 +1602,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                               size: 20,
                               color: _allowCancellation
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -1619,9 +1616,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                                   fontWeight: FontWeight.w600,
                                   color: _allowCancellation
                                       ? Theme.of(context).colorScheme.onSurface
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -1632,25 +1629,22 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                           data: SliderTheme.of(context).copyWith(
                             activeTrackColor: _allowCancellation
                                 ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant
-                                    .withValues(alpha: 0.3),
-                            inactiveTrackColor: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.2),
+                                : Theme.of(context).colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.3),
+                            inactiveTrackColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2),
                             thumbColor: _allowCancellation
                                 ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                            overlayColor: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.12),
-                            valueIndicatorColor:
-                                Theme.of(context).colorScheme.primary,
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                            overlayColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.12),
+                            valueIndicatorColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                             valueIndicatorTextStyle: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -1664,8 +1658,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                             onChanged: _allowCancellation
                                 ? (value) {
                                     setState(
-                                      () =>
-                                          _cancellationHours = value.round(),
+                                      () => _cancellationHours = value.round(),
                                     );
                                   }
                                 : null,
@@ -1984,7 +1977,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
           label: Text(l10n.widgetSettingsCopyFromProfile),
           style: OutlinedButton.styleFrom(
             foregroundColor: theme.colorScheme.primary,
-            side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+            side: BorderSide(
+              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         );

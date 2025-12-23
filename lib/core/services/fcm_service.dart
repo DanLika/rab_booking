@@ -104,9 +104,17 @@ class FcmService {
 
     try {
       final platform = _getPlatform();
-      final tokenData = {'token': token, 'platform': platform, 'updatedAt': FieldValue.serverTimestamp()};
+      final tokenData = {
+        'token': token,
+        'platform': platform,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
 
-      final tokensRef = _firestore.collection('users').doc(userId).collection('data').doc('fcmTokens');
+      final tokensRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('data')
+          .doc('fcmTokens');
 
       // Get existing tokens
       final doc = await tokensRef.get();
@@ -122,7 +130,10 @@ class FcmService {
       tokens.add(tokenData);
 
       // Save
-      await tokensRef.set({'tokens': tokens, 'updatedAt': FieldValue.serverTimestamp()});
+      await tokensRef.set({
+        'tokens': tokens,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
 
       debugPrint('[FCM] Token saved for platform: $platform');
     } catch (e) {
@@ -136,12 +147,18 @@ class FcmService {
     if (userId == null || _currentToken == null) return;
 
     try {
-      final tokensRef = _firestore.collection('users').doc(userId).collection('data').doc('fcmTokens');
+      final tokensRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('data')
+          .doc('fcmTokens');
 
       final doc = await tokensRef.get();
       if (!doc.exists) return;
 
-      final tokens = List<Map<String, dynamic>>.from(doc.data()?['tokens'] as List? ?? []);
+      final tokens = List<Map<String, dynamic>>.from(
+        doc.data()?['tokens'] as List? ?? [],
+      );
       tokens.removeWhere((t) => t['token'] == _currentToken);
 
       await tokensRef.update({'tokens': tokens});
@@ -187,7 +204,9 @@ class FcmService {
     final category = data['category'];
     final bookingId = data['bookingId'];
 
-    debugPrint('[FCM] Tapped notification - category: $category, bookingId: $bookingId');
+    debugPrint(
+      '[FCM] Tapped notification - category: $category, bookingId: $bookingId',
+    );
 
     // Navigation will be handled by the app based on the data
     // Can emit events or use a callback here

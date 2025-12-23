@@ -103,9 +103,7 @@ void main() {
       });
 
       test('parses DateTime from string', () {
-        final map = {
-          'last_generated': '2024-01-15T10:30:00.000Z',
-        };
+        final map = {'last_generated': '2024-01-15T10:30:00.000Z'};
 
         final config = ICalExportConfig.fromMap(map);
 
@@ -188,7 +186,9 @@ void main() {
         expect(map['ical_export_url'], 'https://flat.com/ical.ics');
         expect(map['ical_export_token'], 'flat-token');
         expect(
-            (map['ical_export_last_generated'] as Timestamp).toDate(), lastGen);
+          (map['ical_export_last_generated'] as Timestamp).toDate(),
+          lastGen,
+        );
       });
     });
 
@@ -310,9 +310,7 @@ void main() {
       });
 
       test('returns false when exportUrl is invalid', () {
-        const config = ICalExportConfig(
-          exportUrl: 'invalid-url',
-        );
+        const config = ICalExportConfig(exportUrl: 'invalid-url');
 
         expect(config.hasValidExportUrl, false);
       });
@@ -326,20 +324,14 @@ void main() {
       });
 
       test('returns true when lastGenerated is null', () {
-        const config = ICalExportConfig(
-          enabled: true,
-          lastGenerated: null,
-        );
+        const config = ICalExportConfig(enabled: true, lastGenerated: null);
 
         expect(config.needsRegeneration, true);
       });
 
       test('returns true when lastGenerated is too old', () {
         final oldDate = DateTime.now().subtract(const Duration(hours: 2));
-        final config = ICalExportConfig(
-          enabled: true,
-          lastGenerated: oldDate,
-        );
+        final config = ICalExportConfig(enabled: true, lastGenerated: oldDate);
 
         // Default sync interval is 1 hour, so 2 hours ago needs regeneration
         expect(config.needsRegeneration, true);
@@ -358,20 +350,18 @@ void main() {
 
     group('getDisplayTitle', () {
       test('returns custom feedTitle if set', () {
-        const config = ICalExportConfig(
-          feedTitle: 'My Custom Calendar',
-        );
+        const config = ICalExportConfig(feedTitle: 'My Custom Calendar');
 
         expect(config.getDisplayTitle('Beach House'), 'My Custom Calendar');
       });
 
       test('returns default title with unit name if feedTitle not set', () {
-        const config = ICalExportConfig(
-          feedTitle: null,
-        );
+        const config = ICalExportConfig(feedTitle: null);
 
-        expect(config.getDisplayTitle('Beach House'),
-            'Beach House - Availability Calendar');
+        expect(
+          config.getDisplayTitle('Beach House'),
+          'Beach House - Availability Calendar',
+        );
       });
     });
 

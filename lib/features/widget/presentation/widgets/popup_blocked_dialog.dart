@@ -14,20 +14,28 @@ class PopupBlockedDialog extends ConsumerWidget {
   final String checkoutUrl;
   final VoidCallback? onRetry;
 
-  const PopupBlockedDialog({super.key, required this.checkoutUrl, this.onRetry});
+  const PopupBlockedDialog({
+    super.key,
+    required this.checkoutUrl,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final dialogBg = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final dialogBg = isDarkMode
+        ? ColorTokens.pureBlack
+        : colors.backgroundPrimary;
 
     // Get WidgetColorScheme for widget-specific colors
     final widgetColors = colors;
 
     return AlertDialog(
       backgroundColor: dialogBg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderTokens.radiusLarge)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(BorderTokens.radiusLarge),
+      ),
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: colors.warning, size: 24),
@@ -52,7 +60,11 @@ class PopupBlockedDialog extends ConsumerWidget {
           children: [
             Text(
               'Your browser blocked the payment popup. To complete your booking, please choose one of the options below:',
-              style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary, height: 1.5),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                color: colors.textSecondary,
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: SpacingTokens.l),
             _buildOption(
@@ -131,7 +143,10 @@ class PopupBlockedDialog extends ConsumerWidget {
                   const SizedBox(height: SpacingTokens.xs),
                   Text(
                     description,
-                    style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textSecondary),
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeS,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ],
               ),

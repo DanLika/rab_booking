@@ -61,7 +61,11 @@ class RotateDeviceOverlay extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.screen_rotation, size: iconSize, color: colors.textPrimary),
+                Icon(
+                  Icons.screen_rotation,
+                  size: iconSize,
+                  color: colors.textPrimary,
+                ),
                 const SizedBox(height: SpacingTokens.l),
                 // Bug #51 Fix: Add Semantics for rotate prompt
                 Semantics(
@@ -82,7 +86,10 @@ class RotateDeviceOverlay extends StatelessWidget {
                       const SizedBox(height: SpacingTokens.m),
                       Text(
                         translations.rotateForBestExperience,
-                        style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
+                        style: TextStyle(
+                          fontSize: TypographyTokens.fontSizeM,
+                          color: colors.textSecondary,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -99,8 +106,12 @@ class RotateDeviceOverlay extends StatelessWidget {
   }
 
   Widget _buildSwitchButton() {
-    final backgroundColor = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
-    final foregroundColor = isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
+    final backgroundColor = isDarkMode
+        ? ColorTokens.pureWhite
+        : ColorTokens.pureBlack;
+    final foregroundColor = isDarkMode
+        ? ColorTokens.pureBlack
+        : ColorTokens.pureWhite;
 
     // Bug #51 Fix: Add Semantics for button
     return Semantics(
@@ -112,12 +123,20 @@ class RotateDeviceOverlay extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
-          padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xl, vertical: SpacingTokens.m),
-          shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingTokens.xl,
+            vertical: SpacingTokens.m,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderTokens.circularMedium,
+          ),
         ),
         child: Text(
           translations.switchToMonthView,
-          style: const TextStyle(fontSize: TypographyTokens.fontSizeM, fontWeight: TypographyTokens.semiBold),
+          style: const TextStyle(
+            fontSize: TypographyTokens.fontSizeM,
+            fontWeight: TypographyTokens.semiBold,
+          ),
         ),
       ),
     );

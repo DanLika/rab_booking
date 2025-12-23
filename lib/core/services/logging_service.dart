@@ -56,14 +56,20 @@ class LoggingService {
 
   /// Add breadcrumb for debugging context
   /// Helps understand what user did before error
-  static void addBreadcrumb(String message, {String? category, Map<String, dynamic>? data}) {
+  static void addBreadcrumb(
+    String message, {
+    String? category,
+    Map<String, dynamic>? data,
+  }) {
     if (kIsWeb && kReleaseMode) {
-      Sentry.addBreadcrumb(Breadcrumb(
-        message: message,
-        category: category ?? 'app',
-        data: data,
-        level: SentryLevel.info,
-      ));
+      Sentry.addBreadcrumb(
+        Breadcrumb(
+          message: message,
+          category: category ?? 'app',
+          data: data,
+          level: SentryLevel.info,
+        ),
+      );
     }
   }
 
@@ -83,7 +89,11 @@ class LoggingService {
   }
 
   /// Log an error message with optional error object and stack trace
-  static Future<void> logError(String message, [dynamic error, StackTrace? stackTrace]) async {
+  static Future<void> logError(
+    String message, [
+    dynamic error,
+    StackTrace? stackTrace,
+  ]) async {
     log(message, tag: 'ERROR');
     if (error != null) {
       debugPrint('Error details: $error');
@@ -103,7 +113,9 @@ class LoggingService {
             scope.setTag('source', 'LoggingService');
             scope.setTag('error_message', message);
             if (_currentUserId != null) {
-              scope.setUser(SentryUser(id: _currentUserId, email: _currentUserEmail));
+              scope.setUser(
+                SentryUser(id: _currentUserId, email: _currentUserEmail),
+              );
             }
           },
         );
@@ -121,7 +133,10 @@ class LoggingService {
   }
 
   /// Log a warning to Sentry (for important warnings that should be tracked)
-  static Future<void> logWarningToSentry(String message, {Map<String, dynamic>? data}) async {
+  static Future<void> logWarningToSentry(
+    String message, {
+    Map<String, dynamic>? data,
+  }) async {
     if (kIsWeb && kReleaseMode) {
       await Sentry.captureMessage(
         message,
@@ -134,7 +149,9 @@ class LoggingService {
             });
           }
           if (_currentUserId != null) {
-            scope.setUser(SentryUser(id: _currentUserId, email: _currentUserEmail));
+            scope.setUser(
+              SentryUser(id: _currentUserId, email: _currentUserEmail),
+            );
           }
         },
       );
@@ -150,22 +167,37 @@ class LoggingService {
 
   /// Log a network request
   /// Also adds breadcrumb for Sentry tracking
-  static void logNetworkRequest(String method, String url, {Map<String, dynamic>? params}) {
+  static void logNetworkRequest(
+    String method,
+    String url, {
+    Map<String, dynamic>? params,
+  }) {
     if (kDebugMode) {
-      log('$method $url${params != null ? ' - Params: $params' : ''}', tag: 'NETWORK');
+      log(
+        '$method $url${params != null ? ' - Params: $params' : ''}',
+        tag: 'NETWORK',
+      );
     }
 
     // Add breadcrumb for Sentry (helps debug API-related errors)
-    addBreadcrumb('$method $url', category: 'http', data: {
-      'method': method,
-      'url': url,
-      if (params != null) 'params': params,
-    });
+    addBreadcrumb(
+      '$method $url',
+      category: 'http',
+      data: {
+        'method': method,
+        'url': url,
+        if (params != null) 'params': params,
+      },
+    );
   }
 
   /// Log a network response
   /// Also adds breadcrumb for Sentry tracking
-  static void logNetworkResponse(String url, int statusCode, {dynamic response}) {
+  static void logNetworkResponse(
+    String url,
+    int statusCode, {
+    dynamic response,
+  }) {
     if (kDebugMode) {
       log('Response from $url - Status: $statusCode', tag: 'NETWORK');
       if (response != null) {
@@ -174,16 +206,20 @@ class LoggingService {
     }
 
     // Add breadcrumb for Sentry (helps debug API-related errors)
-    addBreadcrumb('Response $statusCode from $url', category: 'http', data: {
-      'url': url,
-      'status_code': statusCode,
-    });
+    addBreadcrumb(
+      'Response $statusCode from $url',
+      category: 'http',
+      data: {'url': url, 'status_code': statusCode},
+    );
   }
 
   /// Log user action/event
   /// Also adds breadcrumb for Sentry tracking
   static void logUserAction(String action, {Map<String, dynamic>? data}) {
-    log('User action: $action${data != null ? ' - Data: $data' : ''}', tag: 'USER_ACTION');
+    log(
+      'User action: $action${data != null ? ' - Data: $data' : ''}',
+      tag: 'USER_ACTION',
+    );
 
     // Add breadcrumb for Sentry (helps debug errors)
     addBreadcrumb(action, category: 'user_action', data: data);
@@ -192,7 +228,9 @@ class LoggingService {
   /// Log navigation event
   /// Also adds breadcrumb for Sentry tracking
   static void logNavigation(String route, {Map<String, dynamic>? params}) {
-    logDebug('Navigation to: $route${params != null ? ' - Params: $params' : ''}');
+    logDebug(
+      'Navigation to: $route${params != null ? ' - Params: $params' : ''}',
+    );
 
     // Add breadcrumb for Sentry (helps understand user flow before error)
     addBreadcrumb('Navigate to $route', category: 'navigation', data: params);

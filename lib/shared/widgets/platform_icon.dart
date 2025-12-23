@@ -90,12 +90,7 @@ class PlatformIcon extends StatelessWidget {
           : null,
       child: Center(
         child: config.isEmoji
-            ? Text(
-                config.letter,
-                style: TextStyle(
-                  fontSize: size * 0.6,
-                ),
-              )
+            ? Text(config.letter, style: TextStyle(fontSize: size * 0.6))
             : Text(
                 config.letter,
                 style: TextStyle(

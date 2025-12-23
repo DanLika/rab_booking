@@ -29,12 +29,20 @@ class CalendarDateUtils {
 
   /// Check if a date is within a range (inclusive on both ends).
   /// Bug #43 Fix: Normalize all dates to UTC for consistent comparison
-  static bool isDateInRange(DateTime date, DateTime? rangeStart, DateTime? rangeEnd) {
+  static bool isDateInRange(
+    DateTime date,
+    DateTime? rangeStart,
+    DateTime? rangeEnd,
+  ) {
     if (rangeStart == null || rangeEnd == null) return false;
 
     // Normalize all dates to UTC for consistent comparison
     final dateUtc = DateTime.utc(date.year, date.month, date.day);
-    final startUtc = DateTime.utc(rangeStart.year, rangeStart.month, rangeStart.day);
+    final startUtc = DateTime.utc(
+      rangeStart.year,
+      rangeStart.month,
+      rangeStart.day,
+    );
     final endUtc = DateTime.utc(rangeEnd.year, rangeEnd.month, rangeEnd.day);
 
     return (dateUtc.isAfter(startUtc) || dateUtc.isAtSameMomentAs(startUtc)) &&
@@ -68,7 +76,9 @@ class CalendarDateUtils {
         ? translations.semanticUnavailable
         : translations.semanticPastReservation;
 
-    final pendingStr = isPending ? ', ${translations.semanticPendingApproval}' : '';
+    final pendingStr = isPending
+        ? ', ${translations.semanticPendingApproval}'
+        : '';
 
     // Range indicators (localized)
     final rangeStr = isRangeStart

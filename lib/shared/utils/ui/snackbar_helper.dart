@@ -6,9 +6,15 @@ class SnackBarColors {
   SnackBarColors._();
 
   // Light theme colors (matching calendar status colors)
-  static const Color successLight = Color(0xFF10B981); // Emerald 500 - harmonizes with available #83e6bf
-  static const Color errorLight = Color(0xFFEF4444); // Red - matches booked border #ef4444
-  static const Color warningLight = Color(0xFFF59E0B); // Amber 500 - matches pending border #F59E0B
+  static const Color successLight = Color(
+    0xFF10B981,
+  ); // Emerald 500 - harmonizes with available #83e6bf
+  static const Color errorLight = Color(
+    0xFFEF4444,
+  ); // Red - matches booked border #ef4444
+  static const Color warningLight = Color(
+    0xFFF59E0B,
+  ); // Amber 500 - matches pending border #F59E0B
   static const Color infoLight = Color(0xFF3B82F6); // Blue 500 - standard info
 
   // Dark theme colors (slightly lighter for visibility on dark backgrounds)
@@ -32,7 +38,9 @@ class SnackBarHelper {
     _show(
       context: context,
       message: message,
-      backgroundColor: isDark ? SnackBarColors.successDark : SnackBarColors.successLight,
+      backgroundColor: isDark
+          ? SnackBarColors.successDark
+          : SnackBarColors.successLight,
       icon: Icons.check_circle_outline,
       duration: duration,
     );
@@ -47,7 +55,9 @@ class SnackBarHelper {
     _show(
       context: context,
       message: message,
-      backgroundColor: isDark ? SnackBarColors.errorDark : SnackBarColors.errorLight,
+      backgroundColor: isDark
+          ? SnackBarColors.errorDark
+          : SnackBarColors.errorLight,
       icon: Icons.error_outline,
       duration: duration,
     );
@@ -62,7 +72,9 @@ class SnackBarHelper {
     _show(
       context: context,
       message: message,
-      backgroundColor: isDark ? SnackBarColors.warningDark : SnackBarColors.warningLight,
+      backgroundColor: isDark
+          ? SnackBarColors.warningDark
+          : SnackBarColors.warningLight,
       icon: Icons.warning_amber_outlined,
       duration: duration,
     );
@@ -77,7 +89,9 @@ class SnackBarHelper {
     _show(
       context: context,
       message: message,
-      backgroundColor: isDark ? SnackBarColors.infoDark : SnackBarColors.infoLight,
+      backgroundColor: isDark
+          ? SnackBarColors.infoDark
+          : SnackBarColors.infoLight,
       icon: Icons.info_outline,
       duration: duration,
     );
@@ -95,7 +109,8 @@ class SnackBarHelper {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
-          mainAxisAlignment: MainAxisAlignment.center, // Center content horizontally
+          mainAxisAlignment:
+              MainAxisAlignment.center, // Center content horizontally
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: Colors.white, size: 20),

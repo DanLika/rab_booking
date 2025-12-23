@@ -52,7 +52,9 @@ class GradientTokens {
 
   /// Brand gradient colors (for custom usage with gradientColors parameter)
   static const Color brandPrimaryStart = Color(0xFF6B4CE6);
-  static const Color brandPrimaryEnd = Color(0xFF7E5FEE); // Solid lighter purple
+  static const Color brandPrimaryEnd = Color(
+    0xFF7E5FEE,
+  ); // Solid lighter purple
 
   /// Primary accent gradient
   static const LinearGradient primaryAccent = LinearGradient(
@@ -152,7 +154,11 @@ class GradientTokens {
     AlignmentGeometry begin = Alignment.topLeft,
     AlignmentGeometry end = Alignment.bottomRight,
   }) {
-    return LinearGradient(begin: begin, end: end, colors: [startColor, endColor]);
+    return LinearGradient(
+      begin: begin,
+      end: end,
+      colors: [startColor, endColor],
+    );
   }
 
   /// Create a three-color linear gradient
@@ -179,6 +185,10 @@ class GradientTokens {
     AlignmentGeometry center = Alignment.center,
     double radius = 1.0,
   }) {
-    return RadialGradient(center: center, radius: radius, colors: [centerColor, edgeColor]);
+    return RadialGradient(
+      center: center,
+      radius: radius,
+      colors: [centerColor, edgeColor],
+    );
   }
 }

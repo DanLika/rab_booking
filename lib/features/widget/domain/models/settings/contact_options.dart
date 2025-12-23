@@ -121,13 +121,16 @@ class ContactOptions {
     final newWhatsAppNumber = whatsAppNumber ?? this.whatsAppNumber;
 
     // Auto-disable toggles if no valid value exists
-    final effectiveShowPhone = (showPhone ?? this.showPhone) &&
+    final effectiveShowPhone =
+        (showPhone ?? this.showPhone) &&
         newPhoneNumber != null &&
         newPhoneNumber.isNotEmpty;
-    final effectiveShowEmail = (showEmail ?? this.showEmail) &&
+    final effectiveShowEmail =
+        (showEmail ?? this.showEmail) &&
         newEmailAddress != null &&
         newEmailAddress.isNotEmpty;
-    final effectiveShowWhatsApp = (showWhatsApp ?? this.showWhatsApp) &&
+    final effectiveShowWhatsApp =
+        (showWhatsApp ?? this.showWhatsApp) &&
         newWhatsAppNumber != null &&
         newWhatsAppNumber.isNotEmpty;
 

@@ -57,7 +57,8 @@ class TimelineDateHeadersWidget extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // FIX: Use floorToDouble() for consistent positioning
-                        if (offsetWidth > 0) SizedBox(width: offsetWidth.floorToDouble()),
+                        if (offsetWidth > 0)
+                          SizedBox(width: offsetWidth.floorToDouble()),
                         ..._buildMonthHeaders(context),
                       ],
                     ),
@@ -72,7 +73,8 @@ class TimelineDateHeadersWidget extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           // FIX: Use floorToDouble() for consistent positioning
-                          if (offsetWidth > 0) SizedBox(width: offsetWidth.floorToDouble()),
+                          if (offsetWidth > 0)
+                            SizedBox(width: offsetWidth.floorToDouble()),
                           ...dates.map(
                             (date) => TimelineDayHeader(
                               date: date,

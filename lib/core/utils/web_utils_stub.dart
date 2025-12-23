@@ -96,7 +96,9 @@ void sendMessageToParent(Map<String, dynamic> message) {
 }
 
 /// Listen for postMessage from parent window (no-op on mobile)
-void Function() listenToParentMessages(void Function(Map<String, dynamic>) onMessage) {
+void Function() listenToParentMessages(
+  void Function(Map<String, dynamic>) onMessage,
+) {
   // No-op on non-web platforms
   return () {};
 }
@@ -208,6 +210,8 @@ bool isPwaInstalled() => false;
 Future<bool> promptPwaInstall() async => false;
 
 /// Listen for PWA installability changes (no-op on non-web)
-void Function() listenToPwaInstallability(void Function(bool canInstall) callback) {
+void Function() listenToPwaInstallability(
+  void Function(bool canInstall) callback,
+) {
   return () {};
 }

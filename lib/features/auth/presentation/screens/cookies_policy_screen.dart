@@ -54,12 +54,20 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
   void _scrollToSection(String key) {
     final context = _sectionKeys[key]?.currentContext;
     if (context != null) {
-      Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
   void _scrollToTop() {
-    _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -91,14 +99,18 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: Stack(
-            alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
+            alignment:
+                Alignment.topLeft, // Explicit to avoid TextDirection null check
             children: [
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
                   child: SingleChildScrollView(
                     controller: _scrollController,
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: isMobile ? 16 : 24),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: isMobile ? 16 : 24,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -204,7 +216,11 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
               gradient: context.gradients.brandPrimary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(Icons.cookie, color: Colors.white, size: isMobile ? 28 : 32),
+            child: Icon(
+              Icons.cookie,
+              color: Colors.white,
+              size: isMobile ? 28 : 32,
+            ),
           ),
           SizedBox(width: isMobile ? 12 : 16),
           Expanded(
@@ -223,7 +239,9 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  l10n.cookiesScreenLastUpdated(DateTime.now().toString().split(' ')[0]),
+                  l10n.cookiesScreenLastUpdated(
+                    DateTime.now().toString().split(' ')[0],
+                  ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: isMobile ? 11 : 12,
@@ -261,10 +279,16 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.list_alt, color: theme.colorScheme.primary, size: 20),
+                  child: Icon(
+                    Icons.list_alt,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -286,7 +310,10 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
             _buildTocItem('2. ${l10n.cookiesScreenSection2Title}', 'how'),
             _buildTocItem('3. ${l10n.cookiesScreenSection3Title}', 'types'),
             _buildTocItem('4. ${l10n.cookiesScreenSection4Title}', 'choices'),
-            _buildTocItem('5. ${l10n.cookiesScreenSection5Title}', 'thirdparty'),
+            _buildTocItem(
+              '5. ${l10n.cookiesScreenSection5Title}',
+              'thirdparty',
+            ),
             _buildTocItem('6. ${l10n.cookiesScreenSection6Title}', 'updates'),
             _buildTocItem('7. ${l10n.cookiesScreenSection7Title}', 'more'),
           ],
@@ -304,7 +331,10 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
       onTap: () => _scrollToSection(key),
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: isMobile ? 8 : 10, horizontal: 8),
+        padding: EdgeInsets.symmetric(
+          vertical: isMobile ? 8 : 10,
+          horizontal: 8,
+        ),
         child: Row(
           children: [
             Icon(Icons.arrow_right, color: theme.colorScheme.primary, size: 20),
@@ -380,8 +410,13 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-        border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()), width: 1.5),
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+          (0.3 * 255).toInt(),
+        ),
+        border: Border.all(
+          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -393,10 +428,16 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.12 * 255).toInt(),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.privacy_tip_outlined, color: theme.colorScheme.primary, size: isMobile ? 20 : 24),
+                child: Icon(
+                  Icons.privacy_tip_outlined,
+                  color: theme.colorScheme.primary,
+                  size: isMobile ? 20 : 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -439,7 +480,9 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
                   foregroundColor: Colors.white,
                   shadowColor: Colors.transparent,
                   padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
@@ -458,8 +501,13 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-        border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()), width: 1.5),
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+          (0.3 * 255).toInt(),
+        ),
+        border: Border.all(
+          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -471,10 +519,16 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.12 * 255).toInt(),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.info_outline, color: theme.colorScheme.primary, size: isMobile ? 20 : 24),
+                child: Icon(
+                  Icons.info_outline,
+                  color: theme.colorScheme.primary,
+                  size: isMobile ? 20 : 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

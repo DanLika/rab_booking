@@ -7,17 +7,14 @@ import '../../features/auth/models/saved_credentials.dart';
 /// - iOS: Keychain
 /// - Web: Not recommended for production (uses localStorage - not encrypted)
 class SecureStorageService {
-  static final SecureStorageService _instance = SecureStorageService._internal();
+  static final SecureStorageService _instance =
+      SecureStorageService._internal();
   factory SecureStorageService() => _instance;
   SecureStorageService._internal();
 
   final _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_unlock,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
   static const _keyEmail = 'saved_email';

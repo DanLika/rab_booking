@@ -35,10 +35,13 @@ class TimelineBookingStacker {
     // Filter to only active bookings for stack level calculation
     // Cancelled and completed bookings don't block dates, so they shouldn't affect stacking
     final activeBookings = bookings.where(isActiveBooking).toList();
-    final inactiveBookings = bookings.where((b) => !isActiveBooking(b)).toList();
+    final inactiveBookings = bookings
+        .where((b) => !isActiveBooking(b))
+        .toList();
 
     // Sort active bookings by check-in date
-    final sorted = List<BookingModel>.from(activeBookings)..sort((a, b) => a.checkIn.compareTo(b.checkIn));
+    final sorted = List<BookingModel>.from(activeBookings)
+      ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
     // Track active bookings at each stack level
     final List<DateTime?> stackEndDates = [];
@@ -96,7 +99,9 @@ class TimelineBookingStacker {
   /// - Booking A: May 1-5 (checkOut = May 5)
   /// - Booking B: May 5-10 (checkIn = May 5)
   /// - Result: {May 5: [[A, B]]}
-  static Map<DateTime, List<List<BookingModel>>> detectSameDayTurnovers(List<BookingModel> bookings) {
+  static Map<DateTime, List<List<BookingModel>>> detectSameDayTurnovers(
+    List<BookingModel> bookings,
+  ) {
     // Input validation
     if (bookings.isEmpty || bookings.length < 2) {
       return {};
@@ -122,7 +127,10 @@ class TimelineBookingStacker {
         for (final checkOutBooking in matchingCheckOuts) {
           // Don't match a booking with itself
           if (checkOutBooking.id != booking.id) {
-            turnovers.putIfAbsent(checkInDate, () => []).add([checkOutBooking, booking]);
+            turnovers.putIfAbsent(checkInDate, () => []).add([
+              checkOutBooking,
+              booking,
+            ]);
           }
         }
       }
@@ -143,7 +151,10 @@ class TimelineBookingStacker {
     }
 
     final stackLevels = assignStackLevels(bookings);
-    final maxLevel = stackLevels.values.fold<int>(0, (max, level) => level > max ? level : max);
+    final maxLevel = stackLevels.values.fold<int>(
+      0,
+      (max, level) => level > max ? level : max,
+    );
 
     return maxLevel + 1; // +1 because levels are 0-indexed
   }

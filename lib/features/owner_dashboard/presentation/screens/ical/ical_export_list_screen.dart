@@ -157,7 +157,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Desktop: Benefits + Units side by side
+                            // Desktop: Benefits + Units/HowItWorks side by side
                             if (isDesktop) ...[
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,29 +166,39 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                                     child: _buildBenefitsSection(context),
                                   ),
                                   const SizedBox(width: 24),
-                                  Expanded(child: _buildUnitsSection(context)),
+                                  Expanded(
+                                    child: _allUnits.isNotEmpty
+                                        ? _buildUnitsSection(context)
+                                        : _buildHowItWorksSection(context),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 24),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: _buildHowItWorksSection(context),
-                                  ),
-                                  const SizedBox(width: 24),
-                                  Expanded(child: _buildFaqSection(context)),
-                                ],
-                              ),
+                              // Show FAQ only if has units
+                              if (_allUnits.isNotEmpty) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: _buildHowItWorksSection(context),
+                                    ),
+                                    const SizedBox(width: 24),
+                                    Expanded(child: _buildFaqSection(context)),
+                                  ],
+                                ),
+                              ],
                             ] else ...[
                               // Mobile/Tablet: Stack vertically
                               _buildBenefitsSection(context),
                               const SizedBox(height: 24),
-                              _buildUnitsSection(context),
-                              const SizedBox(height: 24),
+                              if (_allUnits.isNotEmpty) ...[
+                                _buildUnitsSection(context),
+                                const SizedBox(height: 24),
+                              ],
                               _buildHowItWorksSection(context),
                               const SizedBox(height: 24),
-                              _buildFaqSection(context),
+                              if (_allUnits.isNotEmpty)
+                                _buildFaqSection(context),
                             ],
                             const SizedBox(height: 32),
                           ],
@@ -219,86 +229,173 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         ? l10n.icalExportUnitsAvailable(_allUnits.length)
         : l10n.icalExportListNoUnitsDesc;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: context.gradients.brandPrimary,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: isDark ? AppShadows.elevation3Dark : AppShadows.elevation3,
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(statusIcon, size: 32, color: Colors.white),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth > 700;
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: context.gradients.brandPrimary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: isDark
+                ? AppShadows.elevation3Dark
+                : AppShadows.elevation3,
+          ),
+          padding: const EdgeInsets.all(24),
+          child: isDesktop
+              ? Row(
                   children: [
+                    // Status icon
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        statusTitle,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                      child: Icon(statusIcon, size: 32, color: Colors.white),
+                    ),
+                    const SizedBox(width: 16),
+                    // Status info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              statusTitle,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            statusDescription,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // CTA Button - fixed width on desktop, only show if no units
+                    if (!hasUnits) ...[
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: 200,
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              context.push(OwnerRoutes.propertyNew),
+                          icon: const Icon(Icons.add, size: 20),
+                          label: Text(
+                            l10n.icalExportListAddProperty,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: theme.colorScheme.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ),
+                    ],
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            statusIcon,
+                            size: 32,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withValues(alpha: 0.9),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  statusTitle,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                statusDescription,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      statusDescription,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 14,
+                    if (!hasUnits) ...[
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              context.push(OwnerRoutes.propertyNew),
+                          icon: const Icon(Icons.add, size: 20),
+                          label: Text(
+                            l10n.icalExportListAddProperty,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: theme.colorScheme.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
-              ),
-            ],
-          ),
-          if (!hasUnits) ...[
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () => context.push(OwnerRoutes.propertyNew),
-                icon: const Icon(Icons.add, size: 20),
-                label: Text(
-                  l10n.icalExportListAddProperty,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: theme.colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
+        );
+      },
     );
   }
 

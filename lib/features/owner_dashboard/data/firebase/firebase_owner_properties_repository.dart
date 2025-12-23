@@ -47,7 +47,9 @@ class FirebaseOwnerPropertiesRepository {
       }).toList();
 
       final unitCounts = Map.fromEntries(
-        await Future.wait(unitCountFutures).withListFetchTimeout('getOwnerProperties'),
+        await Future.wait(
+          unitCountFutures,
+        ).withListFetchTimeout('getOwnerProperties'),
       );
 
       // Build properties with cached unit counts

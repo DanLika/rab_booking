@@ -87,10 +87,7 @@ void main() {
       });
 
       test('returns default Croatian text when useDefaultText is true', () {
-        const config = TaxLegalConfig(
-          enabled: true,
-          useDefaultText: true,
-        );
+        const config = TaxLegalConfig(enabled: true, useDefaultText: true);
 
         final text = config.disclaimerText;
 
@@ -119,7 +116,10 @@ void main() {
         );
 
         // Now falls back to default Croatian text instead of empty string
-        expect(config.disclaimerText, contains('VAŽNO - Pravne i porezne informacije'));
+        expect(
+          config.disclaimerText,
+          contains('VAŽNO - Pravne i porezne informacije'),
+        );
       });
 
       test('falls back to default when custom text is empty', () {
@@ -130,7 +130,10 @@ void main() {
         );
 
         // Falls back to default Croatian text
-        expect(config.disclaimerText, contains('VAŽNO - Pravne i porezne informacije'));
+        expect(
+          config.disclaimerText,
+          contains('VAŽNO - Pravne i porezne informacije'),
+        );
       });
 
       test('falls back to default when custom text is whitespace only', () {
@@ -141,7 +144,10 @@ void main() {
         );
 
         // Falls back to default Croatian text
-        expect(config.disclaimerText, contains('VAŽNO - Pravne i porezne informacije'));
+        expect(
+          config.disclaimerText,
+          contains('VAŽNO - Pravne i porezne informacije'),
+        );
       });
 
       test('trims custom text before returning', () {
@@ -204,10 +210,7 @@ void main() {
 
     group('copyWith', () {
       test('creates copy with updated fields', () {
-        const original = TaxLegalConfig(
-          enabled: true,
-          useDefaultText: true,
-        );
+        const original = TaxLegalConfig(enabled: true, useDefaultText: true);
 
         final updated = original.copyWith(
           enabled: false,
@@ -259,10 +262,7 @@ void main() {
 
     group('toString', () {
       test('returns readable string representation', () {
-        const config = TaxLegalConfig(
-          enabled: true,
-          useDefaultText: false,
-        );
+        const config = TaxLegalConfig(enabled: true, useDefaultText: false);
 
         expect(
           config.toString(),

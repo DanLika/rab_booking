@@ -50,7 +50,9 @@ import '../providers/enhanced_auth_provider.dart';
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
-    _subscription = stream.asBroadcastStream().listen((dynamic _) => notifyListeners());
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
   }
 
   late final StreamSubscription<dynamic> _subscription;
@@ -101,12 +103,14 @@ class OwnerRoutes {
   static const String stripeRefresh = '/owner/stripe-refresh';
   static const String bankAccount = '/owner/integrations/payments/bank-account';
   // iCal routes (NEW structure - organized under /ical/)
-  static const String icalImport = '/owner/integrations/ical/import'; // iCal Sync Settings (Import)
+  static const String icalImport =
+      '/owner/integrations/ical/import'; // iCal Sync Settings (Import)
   static const String icalExportList =
       '/owner/integrations/ical/export-list'; // iCal Export List (for owners to export all bookings)
   static const String icalGuide = '/owner/guides/ical'; // iCal Guide
   // Platform connections (API integrations)
-  static const String platformConnections = '/owner/integrations/platform-connections';
+  static const String platformConnections =
+      '/owner/integrations/platform-connections';
   // DEPRECATED routes - will be removed in future versions
   @Deprecated('Use icalImport instead')
   static const String icalIntegration = '/owner/integrations/ical';
@@ -126,7 +130,9 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     // No initialLocation - let GoRouter read from URL (important for /calendar widget)
     debugLogDiagnostics: true,
-    refreshListenable: GoRouterRefreshStream(ref.watch(firebaseAuthProvider).authStateChanges()),
+    refreshListenable: GoRouterRefreshStream(
+      ref.watch(firebaseAuthProvider).authStateChanges(),
+    ),
     redirect: (context, state) {
       // Use the watched authState from above
       final isAuthenticated = authState.isAuthenticated;
@@ -139,11 +145,23 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Debug logging (only in debug mode)
       if (kDebugMode) {
         LoggingService.log('redirect called:', tag: 'ROUTER');
-        LoggingService.log('  - matchedLocation: ${state.matchedLocation}', tag: 'ROUTER');
-        LoggingService.log('  - isAuthenticated: $isAuthenticated', tag: 'ROUTER');
+        LoggingService.log(
+          '  - matchedLocation: ${state.matchedLocation}',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - isAuthenticated: $isAuthenticated',
+          tag: 'ROUTER',
+        );
         LoggingService.log('  - isLoading: $isLoading', tag: 'ROUTER');
-        LoggingService.log('  - firebaseUser: ${authState.firebaseUser?.uid}', tag: 'ROUTER');
-        LoggingService.log('  - userModel: ${authState.userModel?.id}', tag: 'ROUTER');
+        LoggingService.log(
+          '  - firebaseUser: ${authState.firebaseUser?.uid}',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - userModel: ${authState.userModel?.id}',
+          tag: 'ROUTER',
+        );
       }
 
       // Allow public access to embed, booking, calendar, and view routes (no auth required)
@@ -185,7 +203,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         // Authenticated → overview (even if still loading, we know user is authenticated)
         if (isAuthenticated) {
           if (kDebugMode) {
-            LoggingService.log('  → Redirecting / to overview (authenticated)', tag: 'ROUTER');
+            LoggingService.log(
+              '  → Redirecting / to overview (authenticated)',
+              tag: 'ROUTER',
+            );
           }
           return OwnerRoutes.overview;
         }
@@ -193,7 +214,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         // Not authenticated → login (ALWAYS redirect, even during initial loading)
         // This fixes the issue where app.bookbed.io shows "page unavailable"
         if (kDebugMode) {
-          LoggingService.log('  → Redirecting / to login (not authenticated, isLoading=$isLoading)', tag: 'ROUTER');
+          LoggingService.log(
+            '  → Redirecting / to login (not authenticated, isLoading=$isLoading)',
+            tag: 'ROUTER',
+          );
         }
         return OwnerRoutes.login;
       }
@@ -214,7 +238,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Redirect to login if not authenticated and trying to access protected routes
       if (!isAuthenticated && !isLoggingIn) {
         if (kDebugMode) {
-          LoggingService.log('  → Redirecting to login (not authenticated)', tag: 'ROUTER');
+          LoggingService.log(
+            '  → Redirecting to login (not authenticated)',
+            tag: 'ROUTER',
+          );
         }
         return OwnerRoutes.login;
       }
@@ -222,7 +249,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Redirect to overview if authenticated and trying to access login
       if (isAuthenticated && isLoggingIn) {
         if (kDebugMode) {
-          LoggingService.log('  → Redirecting to overview (authenticated, was on login)', tag: 'ROUTER');
+          LoggingService.log(
+            '  → Redirecting to overview (authenticated, was on login)',
+            tag: 'ROUTER',
+          );
         }
         return OwnerRoutes.overview;
       }
@@ -230,15 +260,22 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // SECURITY: Email verification enforcement for authenticated users
       // Block access to protected routes if email is not verified
       final requiresEmailVerification = authState.requiresEmailVerification;
-      final isEmailVerificationRoute = state.matchedLocation == OwnerRoutes.emailVerification;
+      final isEmailVerificationRoute =
+          state.matchedLocation == OwnerRoutes.emailVerification;
       final isPublicAuthRoute =
           state.matchedLocation == OwnerRoutes.privacyPolicy ||
           state.matchedLocation == OwnerRoutes.termsConditions ||
           state.matchedLocation == OwnerRoutes.cookiesPolicy;
 
-      if (isAuthenticated && requiresEmailVerification && !isEmailVerificationRoute && !isPublicAuthRoute) {
+      if (isAuthenticated &&
+          requiresEmailVerification &&
+          !isEmailVerificationRoute &&
+          !isPublicAuthRoute) {
         if (kDebugMode) {
-          LoggingService.log('  → Redirecting to email verification (email not verified)', tag: 'ROUTER');
+          LoggingService.log(
+            '  → Redirecting to email verification (email not verified)',
+            tag: 'ROUTER',
+          );
         }
         return OwnerRoutes.emailVerification;
       }
@@ -278,7 +315,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // PUBLIC ROUTES (No authentication required)
       // Public booking widget (for iframe embedding)
       // URL: /?property=PROPERTY_ID&unit=UNIT_ID#/calendar
-      GoRoute(path: '/calendar', builder: (context, state) => const BookingWidgetScreen()),
+      GoRoute(
+        path: '/calendar',
+        builder: (context, state) => const BookingWidgetScreen(),
+      ),
 
       // Public booking lookup (from email link)
       // URL: /view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
@@ -308,7 +348,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
                 if (booking == null) {
                   return const NotFoundScreen();
                 }
-                return BookingDetailsScreen(booking: booking as dynamic, widgetSettings: widgetSettings as dynamic);
+                return BookingDetailsScreen(
+                  booking: booking as dynamic,
+                  widgetSettings: widgetSettings as dynamic,
+                );
               } else {
                 // Old format: BookingDetailsModel directly
                 return BookingDetailsScreen(booking: extra as dynamic);
@@ -338,49 +381,74 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
 
           if (hasWidgetParams) {
             // Show booking widget for Stripe return URLs
-            return PageTransitions.none(key: state.pageKey, child: const BookingWidgetScreen());
+            return PageTransitions.none(
+              key: state.pageKey,
+              child: const BookingWidgetScreen(),
+            );
           }
 
-          return PageTransitions.fade(key: state.pageKey, child: const EnhancedLoginScreen());
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: const EnhancedLoginScreen(),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.register,
-        pageBuilder: (context, state) =>
-            PageTransitions.fade(key: state.pageKey, child: const EnhancedRegisterScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EnhancedRegisterScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.forgotPassword,
-        pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const ForgotPasswordScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const ForgotPasswordScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.emailVerification,
-        pageBuilder: (context, state) =>
-            PageTransitions.fade(key: state.pageKey, child: const EmailVerificationScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EmailVerificationScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.privacyPolicy,
-        pageBuilder: (context, state) =>
-            PageTransitions.slideRight(key: state.pageKey, child: const PrivacyPolicyScreen()),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const PrivacyPolicyScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.termsConditions,
-        pageBuilder: (context, state) =>
-            PageTransitions.slideRight(key: state.pageKey, child: const TermsConditionsScreen()),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const TermsConditionsScreen(),
+        ),
       ),
 
       // Owner main screens - Fade transition for drawer navigation
       GoRoute(
         path: OwnerRoutes.overview,
-        pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const DashboardOverviewTab()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const DashboardOverviewTab(),
+        ),
       ),
       // Properties route redirects to unit-hub (property management is now in unit-hub)
-      GoRoute(path: OwnerRoutes.properties, redirect: (context, state) => OwnerRoutes.unitHub),
+      GoRoute(
+        path: OwnerRoutes.properties,
+        redirect: (context, state) => OwnerRoutes.unitHub,
+      ),
       // Calendar route
       GoRoute(
         path: OwnerRoutes.calendarTimeline,
-        pageBuilder: (context, state) =>
-            PageTransitions.fade(key: state.pageKey, child: const OwnerTimelineCalendarScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const OwnerTimelineCalendarScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.bookings,
@@ -397,7 +465,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Property management routes - SlideUp for new, SlideRight for edit
       GoRoute(
         path: OwnerRoutes.propertyNew,
-        pageBuilder: (context, state) => PageTransitions.slideUp(key: state.pageKey, child: const PropertyFormScreen()),
+        pageBuilder: (context, state) => PageTransitions.slideUp(
+          key: state.pageKey,
+          child: const PropertyFormScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.propertyEdit,
@@ -482,7 +553,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           final duplicateFromId = state.uri.queryParameters['duplicateFromId'];
           return PageTransitions.slideUp(
             key: state.pageKey,
-            child: UnitWizardScreen(propertyId: propertyId, duplicateFromId: duplicateFromId),
+            child: UnitWizardScreen(
+              propertyId: propertyId,
+              duplicateFromId: duplicateFromId,
+            ),
           );
         },
       ),
@@ -500,40 +574,56 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Notifications route - ScaleFade for emphasis
       GoRoute(
         path: OwnerRoutes.notifications,
-        pageBuilder: (context, state) =>
-            PageTransitions.scaleFade(key: state.pageKey, child: const NotificationsScreen()),
+        pageBuilder: (context, state) => PageTransitions.scaleFade(
+          key: state.pageKey,
+          child: const NotificationsScreen(),
+        ),
       ),
 
       // Profile routes - Fade for main, SlideRight for sub-pages
       GoRoute(
         path: OwnerRoutes.profile,
-        pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const ProfileScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const ProfileScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileEdit,
-        pageBuilder: (context, state) =>
-            PageTransitions.slideRight(key: state.pageKey, child: const EditProfileScreen()),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const EditProfileScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileChangePassword,
-        pageBuilder: (context, state) =>
-            PageTransitions.slideRight(key: state.pageKey, child: const ChangePasswordScreen()),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const ChangePasswordScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileNotifications,
-        pageBuilder: (context, state) =>
-            PageTransitions.slideRight(key: state.pageKey, child: const NotificationSettingsScreen()),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const NotificationSettingsScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.about,
-        pageBuilder: (context, state) => PageTransitions.slideRight(key: state.pageKey, child: const AboutScreen()),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const AboutScreen(),
+        ),
       ),
 
       // Integrations routes - Fade for drawer navigation
       GoRoute(
         path: OwnerRoutes.stripeIntegration,
-        pageBuilder: (context, state) =>
-            PageTransitions.fade(key: state.pageKey, child: const StripeConnectSetupScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const StripeConnectSetupScreen(),
+        ),
       ),
       // Stripe Connect return/refresh URLs - redirect to Stripe Integration page
       // These URLs are used by Stripe after onboarding completes or needs refresh
@@ -548,18 +638,26 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Bank Account (for bank transfer payments)
       GoRoute(
         path: OwnerRoutes.bankAccount,
-        pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const BankAccountScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const BankAccountScreen(),
+        ),
       ),
       // iCal Sync Settings (Import)
       GoRoute(
         path: OwnerRoutes.icalImport,
-        pageBuilder: (context, state) =>
-            PageTransitions.fade(key: state.pageKey, child: const IcalSyncSettingsScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const IcalSyncSettingsScreen(),
+        ),
       ),
       // iCal Export List (for owners to export all bookings)
       GoRoute(
         path: OwnerRoutes.icalExportList,
-        pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const IcalExportListScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const IcalExportListScreen(),
+        ),
       ),
       // Platform Connections (API integrations)
       GoRoute(
@@ -576,25 +674,33 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Guide routes - Fade for drawer navigation
       GoRoute(
         path: OwnerRoutes.guideEmbedWidget,
-        pageBuilder: (context, state) =>
-            PageTransitions.fade(key: state.pageKey, child: const EmbedWidgetGuideScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EmbedWidgetGuideScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.guideFaq,
-        pageBuilder: (context, state) => PageTransitions.fade(key: state.pageKey, child: const FAQScreen()),
+        pageBuilder: (context, state) =>
+            PageTransitions.fade(key: state.pageKey, child: const FAQScreen()),
       ),
 
       // Cookies Policy route - SlideRight (linked from auth screens)
       GoRoute(
         path: OwnerRoutes.cookiesPolicy,
-        pageBuilder: (context, state) =>
-            PageTransitions.slideRight(key: state.pageKey, child: const CookiesPolicyScreen()),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const CookiesPolicyScreen(),
+        ),
       ),
 
       // 404 - No transition
       GoRoute(
         path: OwnerRoutes.notFound,
-        pageBuilder: (context, state) => PageTransitions.none(key: state.pageKey, child: const NotFoundScreen()),
+        pageBuilder: (context, state) => PageTransitions.none(
+          key: state.pageKey,
+          child: const NotFoundScreen(),
+        ),
       ),
     ],
     observers: [SentryNavigatorObserver()],
@@ -620,8 +726,12 @@ class PropertyEditLoader extends ConsumerWidget {
           }
           return PropertyFormScreen(property: property);
         },
-        loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading property...')),
-        error: (error, stack) => Scaffold(body: Center(child: Text('Error loading property: $error'))),
+        loading: () => const Scaffold(
+          body: LoadingOverlay(message: 'Loading property...'),
+        ),
+        error: (error, stack) => Scaffold(
+          body: Center(child: Text('Error loading property: $error')),
+        ),
       ),
     );
   }
@@ -645,8 +755,10 @@ class UnitEditLoader extends ConsumerWidget {
           }
           return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
         },
-        loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading unit...')),
-        error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+        loading: () =>
+            const Scaffold(body: LoadingOverlay(message: 'Loading unit...')),
+        error: (error, stack) =>
+            Scaffold(body: Center(child: Text('Error loading unit: $error'))),
       ),
     );
   }
@@ -670,8 +782,10 @@ class UnitPricingLoader extends ConsumerWidget {
           }
           return UnitPricingScreen(unit: unit);
         },
-        loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading pricing...')),
-        error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+        loading: () =>
+            const Scaffold(body: LoadingOverlay(message: 'Loading pricing...')),
+        error: (error, stack) =>
+            Scaffold(body: Center(child: Text('Error loading unit: $error'))),
       ),
     );
   }
@@ -693,10 +807,16 @@ class WidgetSettingsLoader extends ConsumerWidget {
           if (unit == null) {
             return const NotFoundScreen();
           }
-          return WidgetSettingsScreen(propertyId: unit.propertyId, unitId: unitId);
+          return WidgetSettingsScreen(
+            propertyId: unit.propertyId,
+            unitId: unitId,
+          );
         },
-        loading: () => const Scaffold(body: LoadingOverlay(message: 'Loading settings...')),
-        error: (error, stack) => Scaffold(body: Center(child: Text('Error loading unit: $error'))),
+        loading: () => const Scaffold(
+          body: LoadingOverlay(message: 'Loading settings...'),
+        ),
+        error: (error, stack) =>
+            Scaffold(body: Center(child: Text('Error loading unit: $error'))),
       ),
     );
   }

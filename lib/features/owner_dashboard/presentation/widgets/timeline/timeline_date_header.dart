@@ -48,7 +48,9 @@ class _TimelineMonthHeaderState extends State<TimelineMonthHeader> {
     final fontSize = width < 600 ? 11.0 : (width < 900 ? 12.0 : 13.0);
 
     return MouseRegion(
-      cursor: widget.onTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      cursor: widget.onTap != null
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
@@ -61,7 +63,9 @@ class _TimelineMonthHeaderState extends State<TimelineMonthHeader> {
                 : Colors.transparent,
             border: Border(
               bottom: BorderSide(color: theme.dividerColor, width: 1.5),
-              right: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6)),
+              right: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.6),
+              ),
             ),
           ),
           child: Center(

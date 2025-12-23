@@ -220,7 +220,11 @@ void main() {
             fromEmail: email,
           );
 
-          expect(config.isConfigured, true, reason: 'Email: $email should be valid');
+          expect(
+            config.isConfigured,
+            true,
+            reason: 'Email: $email should be valid',
+          );
         }
       });
     });

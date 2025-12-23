@@ -118,7 +118,8 @@ class StorageService {
     required String fileName,
   }) async {
     try {
-      final String path = 'users/$userId/properties/$propertyId/units/$unitId/$fileName';
+      final String path =
+          'users/$userId/properties/$propertyId/units/$unitId/$fileName';
       final Reference ref = _storage.ref().child(path);
 
       final SettableMetadata metadata = SettableMetadata(

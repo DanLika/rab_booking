@@ -18,14 +18,21 @@ Stream<List<PlatformConnection>> platformConnections(Ref ref) {
 
   final firestore = ref.watch(firestoreProvider);
 
-  return firestore.collection('platform_connections').where('owner_id', isEqualTo: userId).snapshots().map((snapshot) {
-    return snapshot.docs.map(PlatformConnection.fromFirestore).toList();
-  });
+  return firestore
+      .collection('platform_connections')
+      .where('owner_id', isEqualTo: userId)
+      .snapshots()
+      .map((snapshot) {
+        return snapshot.docs.map(PlatformConnection.fromFirestore).toList();
+      });
 }
 
 /// Provider for platform connections for a specific unit
 @riverpod
-Stream<List<PlatformConnection>> platformConnectionsForUnit(Ref ref, String unitId) {
+Stream<List<PlatformConnection>> platformConnectionsForUnit(
+  Ref ref,
+  String unitId,
+) {
   final userId = FirebaseAuth.instance.currentUser?.uid;
   if (userId == null) {
     return Stream.value([]);
@@ -55,18 +62,26 @@ Future<Map<String, dynamic>> connectBookingCom(
   final functions = FirebaseFunctions.instance;
   final callable = functions.httpsCallable('initiateBookingComOAuth');
 
-  final result = await callable.call({'unitId': unitId, 'hotelId': hotelId, 'roomTypeId': roomTypeId}).withCloudFunctionTimeout('initiateBookingComOAuth');
+  final result = await callable
+      .call({'unitId': unitId, 'hotelId': hotelId, 'roomTypeId': roomTypeId})
+      .withCloudFunctionTimeout('initiateBookingComOAuth');
 
   return result.data as Map<String, dynamic>;
 }
 
 /// Initiate Airbnb OAuth flow
 @riverpod
-Future<Map<String, dynamic>> connectAirbnb(Ref ref, {required String unitId, required String listingId}) async {
+Future<Map<String, dynamic>> connectAirbnb(
+  Ref ref, {
+  required String unitId,
+  required String listingId,
+}) async {
   final functions = FirebaseFunctions.instance;
   final callable = functions.httpsCallable('initiateAirbnbOAuth');
 
-  final result = await callable.call({'unitId': unitId, 'listingId': listingId}).withCloudFunctionTimeout('initiateAirbnbOAuth');
+  final result = await callable
+      .call({'unitId': unitId, 'listingId': listingId})
+      .withCloudFunctionTimeout('initiateAirbnbOAuth');
 
   return result.data as Map<String, dynamic>;
 }
@@ -80,7 +95,10 @@ Future<void> removePlatformConnection(Ref ref, String connectionId) async {
   }
 
   final firestore = ref.watch(firestoreProvider);
-  final connectionDoc = await firestore.collection('platform_connections').doc(connectionId).get();
+  final connectionDoc = await firestore
+      .collection('platform_connections')
+      .doc(connectionId)
+      .get();
 
   if (!connectionDoc.exists) {
     throw Exception('Connection not found');

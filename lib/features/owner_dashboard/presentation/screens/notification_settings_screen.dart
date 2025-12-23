@@ -56,8 +56,15 @@ class _NotificationSettingsScreenState
         );
       }
     } catch (e, stackTrace) {
-      LoggingService.log('Error toggling master switch: $e', tag: 'NotificationSettings');
-      await LoggingService.logError('Failed to toggle master switch', e, stackTrace);
+      LoggingService.log(
+        'Error toggling master switch: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to toggle master switch',
+        e,
+        stackTrace,
+      );
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
@@ -122,8 +129,15 @@ class _NotificationSettingsScreenState
         );
       }
     } catch (e, stackTrace) {
-      LoggingService.log('Error updating category $category: $e', tag: 'NotificationSettings');
-      await LoggingService.logError('Failed to update notification category', e, stackTrace);
+      LoggingService.log(
+        'Error updating category $category: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to update notification category',
+        e,
+        stackTrace,
+      );
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
@@ -365,7 +379,6 @@ class _NotificationSettingsScreenState
                 //   onChanged: (channels) =>
                 //       _updateCategory('marketing', channels),
                 // ),
-
                 const SizedBox(height: 24),
               ],
             );
@@ -512,7 +525,8 @@ class _NotificationSettingsScreenState
                   icon: Icons.email_outlined,
                   iconColor: theme.colorScheme.primary,
                   enabled: enabled,
-                  isLast: true, // Push notifications hidden until mobile app release
+                  isLast:
+                      true, // Push notifications hidden until mobile app release
                 );
               },
             ),

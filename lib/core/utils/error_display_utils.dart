@@ -46,7 +46,10 @@ class ErrorDisplayUtils {
     final double horizontalMargin;
     if (isDesktop && screenWidth > _preferredMaxWidth) {
       // Center snackbar with calculated margins to cap max width
-      horizontalMargin = ((screenWidth - _preferredMaxWidth) / 2).clamp(16.0, double.infinity);
+      horizontalMargin = ((screenWidth - _preferredMaxWidth) / 2).clamp(
+        16.0,
+        double.infinity,
+      );
     } else {
       // Mobile or small desktop: standard margins
       horizontalMargin = 16.0;
@@ -57,7 +60,11 @@ class ErrorDisplayUtils {
       backgroundColor: backgroundColor,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.only(bottom: 16, left: horizontalMargin, right: horizontalMargin),
+      margin: EdgeInsets.only(
+        bottom: 16,
+        left: horizontalMargin,
+        right: horizontalMargin,
+      ),
       elevation: _snackBarElevation,
       duration: duration,
       action: action,
@@ -75,7 +82,9 @@ class ErrorDisplayUtils {
       children: [
         Icon(icon, color: iconColor, size: 20),
         const SizedBox(width: 12),
-        Expanded(child: Text(message, style: TextStyle(color: textColor))),
+        Expanded(
+          child: Text(message, style: TextStyle(color: textColor)),
+        ),
       ],
     );
   }
@@ -109,7 +118,11 @@ class ErrorDisplayUtils {
         backgroundColor: AppColors.error,
         duration: duration,
         action: onRetry != null
-            ? SnackBarAction(label: 'Pokušaj ponovo', textColor: Colors.white, onPressed: onRetry)
+            ? SnackBarAction(
+                label: 'Pokušaj ponovo',
+                textColor: Colors.white,
+                onPressed: onRetry,
+              )
             : null,
       ),
     );
@@ -141,7 +154,11 @@ class ErrorDisplayUtils {
         backgroundColor: AppColors.success,
         duration: duration,
         action: actionLabel != null && onAction != null
-            ? SnackBarAction(label: actionLabel, textColor: Colors.white, onPressed: onAction)
+            ? SnackBarAction(
+                label: actionLabel,
+                textColor: Colors.white,
+                onPressed: onAction,
+              )
             : null,
       ),
     );
@@ -200,10 +217,7 @@ class ErrorDisplayUtils {
   }
 
   /// Show loading snackbar (dismissible by calling clearSnackBars)
-  static void showLoadingSnackBar(
-    BuildContext context,
-    String message,
-  ) {
+  static void showLoadingSnackBar(BuildContext context, String message) {
     if (!context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
@@ -217,14 +231,21 @@ class ErrorDisplayUtils {
             const SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+            Expanded(
+              child: Text(message, style: const TextStyle(color: Colors.white)),
+            ),
           ],
         ),
         backgroundColor: AppColors.info,
-        duration: const Duration(seconds: 30), // Long duration, manually dismissed
+        duration: const Duration(
+          seconds: 30,
+        ), // Long duration, manually dismissed
       ),
     );
   }
@@ -276,7 +297,10 @@ class ErrorDisplayUtils {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(width: 12),
             Text(title),
           ],

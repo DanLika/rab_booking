@@ -99,6 +99,7 @@ dependencies:
   crypto: ^3.0.3
   connectivity_plus: ^7.0.0
   web: ^1.0.0
+  collection: ^1.18.0  # Collection utilities (firstWhereOrNull, etc.)
 
   # Error Tracking (Web - Crashlytics doesn't support web)
   sentry_flutter: ^8.12.0

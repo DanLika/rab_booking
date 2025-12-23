@@ -124,7 +124,8 @@ class BookingBlockWidget extends StatelessWidget {
             width: width,
             height: height,
             child: Stack(
-              alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+              alignment: Alignment
+                  .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
               children: [
                 // Background layer with skewed parallelogram shape
                 // Calculate dayWidth for turnover day alignment
@@ -137,7 +138,8 @@ class BookingBlockWidget extends StatelessWidget {
                     borderWidth: hasConflict ? 2.5 : 1.5,
                     hasConflict: hasConflict,
                     // Theme-aware separator color for diagonal lines
-                    separatorColor: Theme.of(context).brightness == Brightness.dark
+                    separatorColor:
+                        Theme.of(context).brightness == Brightness.dark
                         ? Colors.white.withValues(alpha: 0.3)
                         : Colors.black.withValues(alpha: 0.2),
                   ),
@@ -151,7 +153,8 @@ class BookingBlockWidget extends StatelessWidget {
                         dayWidth ?? (width / (booking.numberOfNights + 1)),
                   ),
                   child: Stack(
-                    alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+                    alignment: Alignment
+                        .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
                     children: [
                       // Check-in diagonal indicator (left edge)
                       Positioned(
@@ -449,7 +452,11 @@ class BookingBlockWidget extends StatelessWidget {
   }
 
   /// Get formatted date range string (e.g., "31 Oct - 28 Nov")
-  String _getDateRangeString(BuildContext context, DateTime checkIn, DateTime checkOut) {
+  String _getDateRangeString(
+    BuildContext context,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
     final locale = Localizations.localeOf(context).toString();
     final dateFormat = DateFormat('d MMM', locale);
     return '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}';

@@ -169,7 +169,8 @@ class PropertyModel with _$PropertyModel {
   }
 
   /// Check if property has complete info (for quick info display)
-  bool get hasCompleteInfo => maxGuests != null && bedrooms != null && bathrooms != null;
+  bool get hasCompleteInfo =>
+      maxGuests != null && bedrooms != null && bathrooms != null;
 
   /// Check if property has a subdomain configured
   bool get hasSubdomain => subdomain != null && subdomain!.isNotEmpty;

@@ -52,9 +52,14 @@ class ContactPillCardWidget extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: _isDesktop ? _desktopMaxWidth : _mobileMaxWidth),
+        constraints: BoxConstraints(
+          maxWidth: _isDesktop ? _desktopMaxWidth : _mobileMaxWidth,
+        ),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingTokens.m,
+            vertical: SpacingTokens.s,
+          ),
           decoration: BoxDecoration(
             color: colors.backgroundTertiary,
             borderRadius: BorderTokens.circularMedium,
@@ -85,7 +90,12 @@ class ContactPillCardWidget extends StatelessWidget {
       contactOptions?.phoneNumber != null &&
       contactOptions!.phoneNumber!.isNotEmpty;
 
-  Widget _buildColumnLayout(bool hasEmail, bool hasPhone, MinimalistColorSchemeAdapter colors, BuildContext context) {
+  Widget _buildColumnLayout(
+    bool hasEmail,
+    bool hasPhone,
+    MinimalistColorSchemeAdapter colors,
+    BuildContext context,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -93,7 +103,8 @@ class ContactPillCardWidget extends StatelessWidget {
           _ContactRow(
             icon: Icons.email,
             value: contactOptions!.emailAddress!,
-            onTap: (ctx) => _launchUrl('mailto:${contactOptions!.emailAddress}', ctx),
+            onTap: (ctx) =>
+                _launchUrl('mailto:${contactOptions!.emailAddress}', ctx),
             colors: colors,
           ),
         if (hasEmail && hasPhone)
@@ -106,14 +117,20 @@ class ContactPillCardWidget extends StatelessWidget {
           _ContactRow(
             icon: Icons.phone,
             value: contactOptions!.phoneNumber!,
-            onTap: (ctx) => _launchUrl('tel:${contactOptions!.phoneNumber}', ctx),
+            onTap: (ctx) =>
+                _launchUrl('tel:${contactOptions!.phoneNumber}', ctx),
             colors: colors,
           ),
       ],
     );
   }
 
-  Widget _buildRowLayout(bool hasEmail, bool hasPhone, MinimalistColorSchemeAdapter colors, BuildContext context) {
+  Widget _buildRowLayout(
+    bool hasEmail,
+    bool hasPhone,
+    MinimalistColorSchemeAdapter colors,
+    BuildContext context,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -123,7 +140,8 @@ class ContactPillCardWidget extends StatelessWidget {
             child: _ContactRow(
               icon: Icons.email,
               value: contactOptions!.emailAddress!,
-              onTap: (ctx) => _launchUrl('mailto:${contactOptions!.emailAddress}', ctx),
+              onTap: (ctx) =>
+                  _launchUrl('mailto:${contactOptions!.emailAddress}', ctx),
               colors: colors,
               centerContent: true,
             ),
@@ -140,7 +158,8 @@ class ContactPillCardWidget extends StatelessWidget {
             child: _ContactRow(
               icon: Icons.phone,
               value: contactOptions!.phoneNumber!,
-              onTap: (ctx) => _launchUrl('tel:${contactOptions!.phoneNumber}', ctx),
+              onTap: (ctx) =>
+                  _launchUrl('tel:${contactOptions!.phoneNumber}', ctx),
               colors: colors,
               centerContent: true,
             ),
@@ -160,7 +179,8 @@ class ContactPillCardWidget extends StatelessWidget {
         if (context.mounted) {
           SnackBarHelper.showError(
             context: context,
-            message: 'Unable to open $url. Please check if you have an app installed to handle this action.',
+            message:
+                'Unable to open $url. Please check if you have an app installed to handle this action.',
           );
         }
         return;
@@ -183,7 +203,8 @@ class ContactPillCardWidget extends StatelessWidget {
       if (context.mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: 'Unable to open $url. Please try again or contact the property owner.',
+          message:
+              'Unable to open $url. Please try again or contact the property owner.',
         );
       }
     }
@@ -211,12 +232,21 @@ class _ContactRow extends StatelessWidget {
       onTap: () => onTap(context),
       borderRadius: BorderTokens.circularSmall,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xxs, vertical: SpacingTokens.xxs),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingTokens.xxs,
+          vertical: SpacingTokens.xxs,
+        ),
         child: Row(
           mainAxisSize: centerContent ? MainAxisSize.min : MainAxisSize.max,
-          mainAxisAlignment: centerContent ? MainAxisAlignment.center : MainAxisAlignment.start,
+          mainAxisAlignment: centerContent
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
           children: [
-            Icon(icon, size: ContactPillCardWidget._iconSize, color: colors.buttonPrimary),
+            Icon(
+              icon,
+              size: ContactPillCardWidget._iconSize,
+              color: colors.buttonPrimary,
+            ),
             const SizedBox(width: SpacingTokens.s),
             Flexible(
               child: Text(

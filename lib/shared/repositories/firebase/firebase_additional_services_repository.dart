@@ -7,15 +7,12 @@ import '../additional_services_repository.dart';
 part 'firebase_additional_services_repository.g.dart';
 
 @riverpod
-AdditionalServicesRepository additionalServicesRepository(
-  Ref ref,
-) {
-  return FirebaseAdditionalServicesRepository(
-    FirebaseFirestore.instance,
-  );
+AdditionalServicesRepository additionalServicesRepository(Ref ref) {
+  return FirebaseAdditionalServicesRepository(FirebaseFirestore.instance);
 }
 
-class FirebaseAdditionalServicesRepository implements AdditionalServicesRepository {
+class FirebaseAdditionalServicesRepository
+    implements AdditionalServicesRepository {
   final FirebaseFirestore _firestore;
 
   FirebaseAdditionalServicesRepository(this._firestore);
@@ -33,19 +30,24 @@ class FirebaseAdditionalServicesRepository implements AdditionalServicesReposito
         .get();
 
     return query.docs
-        .map((doc) => AdditionalServiceModel.fromJson({
-              'id': doc.id,
-              ...doc.data(),
-              if (doc.data()['created_at'] != null)
-                'created_at':
-                    (doc.data()['created_at'] as Timestamp).toDate().toIso8601String(),
-              if (doc.data()['updated_at'] != null)
-                'updated_at':
-                    (doc.data()['updated_at'] as Timestamp).toDate().toIso8601String(),
-              if (doc.data()['deleted_at'] != null)
-                'deleted_at':
-                    (doc.data()['deleted_at'] as Timestamp).toDate().toIso8601String(),
-            }))
+        .map(
+          (doc) => AdditionalServiceModel.fromJson({
+            'id': doc.id,
+            ...doc.data(),
+            if (doc.data()['created_at'] != null)
+              'created_at': (doc.data()['created_at'] as Timestamp)
+                  .toDate()
+                  .toIso8601String(),
+            if (doc.data()['updated_at'] != null)
+              'updated_at': (doc.data()['updated_at'] as Timestamp)
+                  .toDate()
+                  .toIso8601String(),
+            if (doc.data()['deleted_at'] != null)
+              'deleted_at': (doc.data()['deleted_at'] as Timestamp)
+                  .toDate()
+                  .toIso8601String(),
+          }),
+        )
         .toList();
   }
 
@@ -64,16 +66,20 @@ class FirebaseAdditionalServicesRepository implements AdditionalServicesReposito
 
     // Filter in memory for unitId (Firestore doesn't support OR on where clauses)
     final services = query.docs
-        .map((doc) => AdditionalServiceModel.fromJson({
-              'id': doc.id,
-              ...doc.data(),
-              if (doc.data()['created_at'] != null)
-                'created_at':
-                    (doc.data()['created_at'] as Timestamp).toDate().toIso8601String(),
-              if (doc.data()['updated_at'] != null)
-                'updated_at':
-                    (doc.data()['updated_at'] as Timestamp).toDate().toIso8601String(),
-            }))
+        .map(
+          (doc) => AdditionalServiceModel.fromJson({
+            'id': doc.id,
+            ...doc.data(),
+            if (doc.data()['created_at'] != null)
+              'created_at': (doc.data()['created_at'] as Timestamp)
+                  .toDate()
+                  .toIso8601String(),
+            if (doc.data()['updated_at'] != null)
+              'updated_at': (doc.data()['updated_at'] as Timestamp)
+                  .toDate()
+                  .toIso8601String(),
+          }),
+        )
         .where((service) => service.unitId == null || service.unitId == unitId)
         .toList();
 
@@ -125,10 +131,7 @@ class FirebaseAdditionalServicesRepository implements AdditionalServicesReposito
 
     for (var i = 0; i < serviceIds.length; i++) {
       final docRef = _collection.doc(serviceIds[i]);
-      batch.update(docRef, {
-        'sort_order': i,
-        'updated_at': Timestamp.now(),
-      });
+      batch.update(docRef, {'sort_order': i, 'updated_at': Timestamp.now()});
     }
 
     await batch.commit();
@@ -141,21 +144,28 @@ class FirebaseAdditionalServicesRepository implements AdditionalServicesReposito
         .where('deleted_at', isNull: true)
         .orderBy('sort_order', descending: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => AdditionalServiceModel.fromJson({
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => AdditionalServiceModel.fromJson({
                   'id': doc.id,
                   ...doc.data(),
                   if (doc.data()['created_at'] != null)
-                    'created_at':
-                        (doc.data()['created_at'] as Timestamp).toDate().toIso8601String(),
+                    'created_at': (doc.data()['created_at'] as Timestamp)
+                        .toDate()
+                        .toIso8601String(),
                   if (doc.data()['updated_at'] != null)
-                    'updated_at':
-                        (doc.data()['updated_at'] as Timestamp).toDate().toIso8601String(),
+                    'updated_at': (doc.data()['updated_at'] as Timestamp)
+                        .toDate()
+                        .toIso8601String(),
                   if (doc.data()['deleted_at'] != null)
-                    'deleted_at':
-                        (doc.data()['deleted_at'] as Timestamp).toDate().toIso8601String(),
-                }))
-            .toList());
+                    'deleted_at': (doc.data()['deleted_at'] as Timestamp)
+                        .toDate()
+                        .toIso8601String(),
+                }),
+              )
+              .toList(),
+        );
   }
 
   @override
@@ -169,19 +179,26 @@ class FirebaseAdditionalServicesRepository implements AdditionalServicesReposito
         .where('deleted_at', isNull: true)
         .orderBy('sort_order', descending: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => AdditionalServiceModel.fromJson({
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => AdditionalServiceModel.fromJson({
                   'id': doc.id,
                   ...doc.data(),
                   if (doc.data()['created_at'] != null)
-                    'created_at':
-                        (doc.data()['created_at'] as Timestamp).toDate().toIso8601String(),
+                    'created_at': (doc.data()['created_at'] as Timestamp)
+                        .toDate()
+                        .toIso8601String(),
                   if (doc.data()['updated_at'] != null)
-                    'updated_at':
-                        (doc.data()['updated_at'] as Timestamp).toDate().toIso8601String(),
-                }))
-            .where((service) =>
-                service.unitId == null || service.unitId == unitId)
-            .toList());
+                    'updated_at': (doc.data()['updated_at'] as Timestamp)
+                        .toDate()
+                        .toIso8601String(),
+                }),
+              )
+              .where(
+                (service) => service.unitId == null || service.unitId == unitId,
+              )
+              .toList(),
+        );
   }
 }

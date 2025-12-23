@@ -62,7 +62,8 @@ class OwnerBookingsScreen extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<OwnerBookingsScreen> createState() => _OwnerBookingsScreenState();
+  ConsumerState<OwnerBookingsScreen> createState() =>
+      _OwnerBookingsScreenState();
 }
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
@@ -90,7 +91,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
   // Helper to get current bookingId (from widget or route)
   String? get _currentBookingId {
-    return widget.initialBookingId ?? OwnerBookingsScreen.getBookingIdFromRoute(context);
+    return widget.initialBookingId ??
+        OwnerBookingsScreen.getBookingIdFromRoute(context);
   }
 
   @override
@@ -127,7 +129,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // Wait to ensure provider is completely ready and we're outside any build phase
     _initialBookingCheckTimer?.cancel();
     final completer = Completer<void>();
-    _initialBookingCheckTimer = Timer(const Duration(milliseconds: 1500), completer.complete);
+    _initialBookingCheckTimer = Timer(
+      const Duration(milliseconds: 1500),
+      completer.complete,
+    );
     await completer.future;
 
     if (!mounted) return;
@@ -154,7 +159,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           .timeout(
             const Duration(seconds: 10),
             onTimeout: () {
-              throw TimeoutException('Failed to load booking - request timed out after 10 seconds');
+              throw TimeoutException(
+                'Failed to load booking - request timed out after 10 seconds',
+              );
             },
           );
       if (!mounted) return;
@@ -180,7 +187,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !context.mounted) return;
           final l10n = AppLocalizations.of(context);
-          ErrorDisplayUtils.showErrorSnackBar(context, l10n.ownerBookingsNotFound);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            l10n.ownerBookingsNotFound,
+          );
         });
       }
     } catch (error) {
@@ -213,7 +223,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final state = ref.read(windowedBookingsNotifierProvider);
 
     // Load more at bottom - use 90% threshold to trigger earlier
-    if (_scrollTracker.shouldLoadMore(_scrollController, ScrollDirection.down, bottomThreshold: 0.9)) {
+    if (_scrollTracker.shouldLoadMore(
+      _scrollController,
+      ScrollDirection.down,
+      bottomThreshold: 0.9,
+    )) {
       if (state.canLoadBottom) {
         ref.read(windowedBookingsNotifierProvider.notifier).loadMoreBottom();
       }
@@ -271,7 +285,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     if (pendingBookingId == null) {
       // CRITICAL FIX: Also check _dialogShownForBooking to prevent setting provider
       // when dialog is already shown or being shown
-      if (routeBookingId != null && routeBookingId != _handledBookingId && !_dialogShownForBooking) {
+      if (routeBookingId != null &&
+          routeBookingId != _handledBookingId &&
+          !_dialogShownForBooking) {
         // Use addPostFrameCallback to set provider value after build
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !context.mounted) return;
@@ -311,7 +327,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       // Use addPostFrameCallback to check for booking after build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // FIXED BUG #13: Add _dialogShownForBooking check to prevent race condition
-        if (!mounted || !context.mounted || _hasHandledInitialBooking || _dialogShownForBooking) {
+        if (!mounted ||
+            !context.mounted ||
+            _hasHandledInitialBooking ||
+            _dialogShownForBooking) {
           _bookingCheckScheduled = false;
           return;
         }
@@ -319,7 +338,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         // Try to find booking in visible bookings
         if (windowedState.visibleBookings.isNotEmpty) {
           try {
-            final booking = windowedState.visibleBookings.firstWhere((b) => b.booking.id == bookingId);
+            final booking = windowedState.visibleBookings.firstWhere(
+              (b) => b.booking.id == bookingId,
+            );
 
             // Mark as handled immediately to prevent duplicate dialogs
             _hasHandledInitialBooking = true;
@@ -377,7 +398,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           try {
             showDialog(
               context: context,
-              builder: (context) => BookingDetailsDialog(ownerBooking: bookingToShow),
+              builder: (context) =>
+                  BookingDetailsDialog(ownerBooking: bookingToShow),
             ).then((_) {
               // Dialog closed - clean up state
               if (!mounted) return;
@@ -392,7 +414,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               // This prevents the dialog from reopening during the router.go() rebuild
               setState(() {
                 _pendingBookingToShow = null;
-                _handledBookingId = shownBookingId; // Keep track of what we showed
+                _handledBookingId =
+                    shownBookingId; // Keep track of what we showed
                 // Keep _dialogShownForBooking = true until URL is fully cleared
               });
 
@@ -402,11 +425,16 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
                 try {
                   final router = GoRouter.of(this.context);
-                  final currentUri = router.routerDelegate.currentConfiguration.uri;
+                  final currentUri =
+                      router.routerDelegate.currentConfiguration.uri;
                   if (currentUri.queryParameters.containsKey('bookingId')) {
-                    final newQueryParams = Map<String, String>.from(currentUri.queryParameters);
+                    final newQueryParams = Map<String, String>.from(
+                      currentUri.queryParameters,
+                    );
                     newQueryParams.remove('bookingId');
-                    final newUri = currentUri.replace(queryParameters: newQueryParams);
+                    final newUri = currentUri.replace(
+                      queryParameters: newQueryParams,
+                    );
                     router.go(newUri.toString());
                   }
 
@@ -473,11 +501,15 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       body: Stack(
         children: [
           Container(
-            decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+            decoration: BoxDecoration(
+              gradient: context.gradients.pageBackground,
+            ),
             child: RefreshIndicator(
               onRefresh: () async {
                 // Refresh bookings data using windowed notifier
-                await ref.read(windowedBookingsNotifierProvider.notifier).refresh();
+                await ref
+                    .read(windowedBookingsNotifierProvider.notifier)
+                    .refresh();
               },
               color: theme.colorScheme.primary,
               child: CustomScrollView(
@@ -494,7 +526,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         context.horizontalPadding,
                         isMobile ? 8 : 12,
                       ),
-                      child: _buildFiltersSection(filters, isMobile, theme, viewMode),
+                      child: _buildFiltersSection(
+                        filters,
+                        isMobile,
+                        theme,
+                        viewMode,
+                      ),
                     ),
                   ),
 
@@ -504,7 +541,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     viewMode == BookingsViewMode.table
                         ? SliverToBoxAdapter(
                             child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: context.horizontalPadding,
+                              ),
                               child: SkeletonLoader.bookingsTable(),
                             ),
                           )
@@ -531,15 +570,23 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.error_outline, size: AppDimensions.iconSizeXL, color: theme.colorScheme.error),
+                              Icon(
+                                Icons.error_outline,
+                                size: AppDimensions.iconSizeXL,
+                                color: theme.colorScheme.error,
+                              ),
                               const SizedBox(height: AppDimensions.spaceS),
-                              Text(l10n.ownerBookingsErrorLoading, style: Theme.of(context).textTheme.titleLarge),
+                              Text(
+                                l10n.ownerBookingsErrorLoading,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
                               const SizedBox(height: AppDimensions.spaceXS),
                               Text(
                                 windowedState.error!,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.copyWith(color: context.textColorSecondary),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: context.textColorSecondary,
+                                    ),
                                 textAlign: TextAlign.center,
                                 maxLines: 5,
                                 overflow: TextOverflow.ellipsis,
@@ -558,7 +605,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   else
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.horizontalPadding,
+                        ),
                         child: BookingsTableView(bookings: bookings),
                       ),
                     ),
@@ -583,22 +632,32 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                                     children: [
                                       // Minimalistic: Use black in light mode, white in dark mode
                                       CircularProgressIndicator(
-                                        color: localTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                        color:
+                                            localTheme.brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors.black,
                                       ),
                                       const SizedBox(height: 12),
                                       Text(
                                         localL10n.ownerBookingsLoadingMore,
-                                        style: localTheme.textTheme.bodySmall?.copyWith(
-                                          color: localTheme.colorScheme.onSurfaceVariant,
-                                        ),
+                                        style: localTheme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: localTheme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
                                       ),
                                     ],
                                   )
                                 : Text(
                                     localL10n.ownerBookingsScrollToLoadMore,
-                                    style: localTheme.textTheme.bodySmall?.copyWith(
-                                      color: localTheme.colorScheme.onSurfaceVariant,
-                                    ),
+                                    style: localTheme.textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: localTheme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
                                   ),
                           ),
                         );
@@ -609,15 +668,30 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   // Sinkronizacija section
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(context.horizontalPadding, 16, context.horizontalPadding, 16),
-                      child: _buildSynchronizationSection(context, theme, isMobile, l10n),
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        16,
+                        context.horizontalPadding,
+                        16,
+                      ),
+                      child: _buildSynchronizationSection(
+                        context,
+                        theme,
+                        isMobile,
+                        l10n,
+                      ),
                     ),
                   ),
 
                   // Česta pitanja (FAQ) section
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(context.horizontalPadding, 0, context.horizontalPadding, 24),
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        0,
+                        context.horizontalPadding,
+                        24,
+                      ),
                       child: _buildFaqSection(context, theme, isMobile, l10n),
                     ),
                   ),
@@ -638,13 +712,17 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     children: [
                       // Minimalistic: Use black in light mode, white in dark mode
                       CircularProgressIndicator(
-                        color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         l10n.loading,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                       ),
                     ],
@@ -674,7 +752,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // Find booking that matches conflict
     OwnerBooking? conflictedBooking;
     for (final booking in bookings) {
-      if (booking.booking.id == firstConflict.booking1.id || booking.booking.id == firstConflict.booking2.id) {
+      if (booking.booking.id == firstConflict.booking1.id ||
+          booking.booking.id == firstConflict.booking2.id) {
         conflictedBooking = booking;
         break;
       }
@@ -722,24 +801,33 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   }
 
   /// Show booking details dialog for a conflict (works from any context)
-  void _showBookingDetailsFromConflict(WidgetRef ref, OverbookingConflict conflict) async {
+  void _showBookingDetailsFromConflict(
+    WidgetRef ref,
+    OverbookingConflict conflict,
+  ) async {
     // Try to get booking from repository (more reliable than local state)
     try {
       final repository = ref.read(ownerBookingsRepositoryProvider);
-      final ownerBooking = await repository.getOwnerBookingById(conflict.booking1.id);
+      final ownerBooking = await repository.getOwnerBookingById(
+        conflict.booking1.id,
+      );
 
       if (ownerBooking != null && mounted) {
         await showDialog(
           context: context,
-          builder: (dialogContext) => BookingDetailsDialog(ownerBooking: ownerBooking),
+          builder: (dialogContext) =>
+              BookingDetailsDialog(ownerBooking: ownerBooking),
         );
       } else {
         // Fallback: try booking2 if booking1 not found
-        final ownerBooking2 = await repository.getOwnerBookingById(conflict.booking2.id);
+        final ownerBooking2 = await repository.getOwnerBookingById(
+          conflict.booking2.id,
+        );
         if (ownerBooking2 != null && mounted) {
           await showDialog(
             context: context,
-            builder: (dialogContext) => BookingDetailsDialog(ownerBooking: ownerBooking2),
+            builder: (dialogContext) =>
+                BookingDetailsDialog(ownerBooking: ownerBooking2),
           );
         }
       }
@@ -749,13 +837,21 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.ownerBookingsNotFound), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(l10n.ownerBookingsNotFound),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  Widget _buildFiltersSection(BookingsFilters filters, bool isMobile, ThemeData theme, BookingsViewMode viewMode) {
+  Widget _buildFiltersSection(
+    BookingsFilters filters,
+    bool isMobile,
+    ThemeData theme,
+    BookingsViewMode viewMode,
+  ) {
     // Count active filters for display
     int activeFilterCount = 0;
     if (filters.status != null) activeFilterCount++;
@@ -774,7 +870,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt())),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+        ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
@@ -793,19 +891,27 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     color: theme.colorScheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.filter_list, color: theme.colorScheme.primary, size: 18),
+                  child: Icon(
+                    Icons.filter_list,
+                    color: theme.colorScheme.primary,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   l10n.ownerBookingsFiltersAndView,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
 
                 // View mode toggle button
                 Container(
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -815,8 +921,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         icon: Icons.view_agenda_outlined,
                         isSelected: viewMode == BookingsViewMode.card,
                         onTap: () {
-                          ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.card);
-                          ref.read(windowedBookingsNotifierProvider.notifier).setViewMode(isTableView: false);
+                          ref
+                              .read(ownerBookingsViewProvider.notifier)
+                              .setView(BookingsViewMode.card);
+                          ref
+                              .read(windowedBookingsNotifierProvider.notifier)
+                              .setViewMode(isTableView: false);
                         },
                         tooltip: l10n.ownerBookingsCardView,
                       ),
@@ -824,8 +934,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         icon: Icons.table_rows_outlined,
                         isSelected: viewMode == BookingsViewMode.table,
                         onTap: () {
-                          ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.table);
-                          ref.read(windowedBookingsNotifierProvider.notifier).setViewMode(isTableView: true);
+                          ref
+                              .read(ownerBookingsViewProvider.notifier)
+                              .setView(BookingsViewMode.table);
+                          ref
+                              .read(windowedBookingsNotifierProvider.notifier)
+                              .setViewMode(isTableView: true);
                         },
                         tooltip: l10n.ownerBookingsTableView,
                       ),
@@ -841,7 +955,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               GestureDetector(
                 onTap: () => _handleOverbookingBadgeTap(ref),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.shade100,
                     borderRadius: BorderRadius.circular(12),
@@ -850,11 +967,21 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 18),
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.red.shade700,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Text(
-                        conflictCount == 1 ? '1 conflict' : '$conflictCount conflicts',
-                        style: TextStyle(color: Colors.red.shade700, fontSize: 13, fontWeight: FontWeight.w600),
+                        conflictCount == 1
+                            ? '1 conflict'
+                            : '$conflictCount conflicts',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -876,20 +1003,32 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    showDialog(context: context, builder: (context) => const BookingsFiltersDialog());
+                    showDialog(
+                      context: context,
+                      builder: (context) => const BookingsFiltersDialog(),
+                    );
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                     child: Row(
                       children: [
-                        Icon(Icons.tune, color: theme.colorScheme.primary, size: 24),
+                        Icon(
+                          Icons.tune,
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -911,7 +1050,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                                   color: activeFilterCount > 0
                                       ? theme.colorScheme.primary
                                       : theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: activeFilterCount > 0 ? FontWeight.w600 : FontWeight.normal,
+                                  fontWeight: activeFilterCount > 0
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
                                 ),
                               ),
                             ],
@@ -920,9 +1061,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         const SizedBox(width: 12),
                         if (activeFilterCount > 0) ...[
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.15,
+                              ),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -935,7 +1081,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                           ),
                           const SizedBox(width: 8),
                         ],
-                        Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ],
                     ),
                   ),
@@ -948,15 +1098,24 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: () {
-                  ref.read(bookingsFiltersNotifierProvider.notifier).clearFilters();
+                  ref
+                      .read(bookingsFiltersNotifierProvider.notifier)
+                      .clearFilters();
                 },
                 icon: const Icon(Icons.clear_all, size: 18),
                 label: Text(l10n.ownerBookingsClearAllFilters),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.3)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  side: BorderSide(
+                    color: theme.colorScheme.error.withValues(alpha: 0.3),
+                  ),
                   foregroundColor: theme.colorScheme.error,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
@@ -987,7 +1146,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             final rightIndex = leftIndex + 1;
 
             final leftBooking = bookings[leftIndex];
-            final rightBooking = rightIndex < bookings.length ? bookings[rightIndex] : null;
+            final rightBooking = rightIndex < bookings.length
+                ? bookings[rightIndex]
+                : null;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -997,7 +1158,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   Expanded(
                     // Web performance: RepaintBoundary isolates card repaints
                     child: RepaintBoundary(
-                      child: _BookingCard(key: ValueKey(leftBooking.booking.id), ownerBooking: leftBooking),
+                      child: _BookingCard(
+                        key: ValueKey(leftBooking.booking.id),
+                        ownerBooking: leftBooking,
+                      ),
                     ),
                   ),
                   if (rightBooking != null) ...[
@@ -1005,7 +1169,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     Expanded(
                       // Web performance: RepaintBoundary isolates card repaints
                       child: RepaintBoundary(
-                        child: _BookingCard(key: ValueKey(rightBooking.booking.id), ownerBooking: rightBooking),
+                        child: _BookingCard(
+                          key: ValueKey(rightBooking.booking.id),
+                          ownerBooking: rightBooking,
+                        ),
                       ),
                     ),
                   ] else
@@ -1027,7 +1194,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               padding: const EdgeInsets.only(bottom: 16),
               // Web performance: RepaintBoundary isolates card repaints
               child: RepaintBoundary(
-                child: _BookingCard(key: ValueKey(ownerBooking.booking.id), ownerBooking: ownerBooking),
+                child: _BookingCard(
+                  key: ValueKey(ownerBooking.booking.id),
+                  ownerBooking: ownerBooking,
+                ),
               ),
             );
           }, childCount: bookings.length),
@@ -1054,7 +1224,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Widget _buildSynchronizationSection(BuildContext context, ThemeData theme, bool isMobile, AppLocalizations l10n) {
+  Widget _buildSynchronizationSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isMobile,
+    AppLocalizations l10n,
+  ) {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
@@ -1073,21 +1248,35 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Row(
                 children: [
-                  Icon(Icons.sync_rounded, color: theme.colorScheme.primary, size: 22),
+                  Icon(
+                    Icons.sync_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 22,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.icalSyncTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  Icon(_showSync ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.primary),
+                  Icon(
+                    _showSync ? Icons.expand_less : Icons.expand_more,
+                    color: theme.colorScheme.primary,
+                  ),
                 ],
               ),
             ),
           ),
           if (_showSync) ...[
-            Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+            Divider(
+              height: 1,
+              color: isDark
+                  ? AppColors.sectionDividerDark
+                  : AppColors.sectionDividerLight,
+            ),
             Padding(
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Column(
@@ -1113,7 +1302,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     onPressed: () => context.push(OwnerRoutes.icalImport),
                     icon: const Icon(Icons.sync, size: 20),
                     label: Text(l10n.icalSyncTitle),
-                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1124,7 +1318,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Widget _buildFaqSection(BuildContext context, ThemeData theme, bool isMobile, AppLocalizations l10n) {
+  Widget _buildFaqSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isMobile,
+    AppLocalizations l10n,
+  ) {
     final isDark = theme.brightness == Brightness.dark;
 
     final faqs = [
@@ -1151,21 +1350,35 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Row(
                 children: [
-                  Icon(Icons.question_answer, color: theme.colorScheme.primary, size: 22),
+                  Icon(
+                    Icons.question_answer,
+                    color: theme.colorScheme.primary,
+                    size: 22,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.ownerFaqCategoryBookings,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  Icon(_showFaq ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.primary),
+                  Icon(
+                    _showFaq ? Icons.expand_less : Icons.expand_more,
+                    color: theme.colorScheme.primary,
+                  ),
                 ],
               ),
             ),
           ),
           if (_showFaq) ...[
-            Divider(height: 1, color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight),
+            Divider(
+              height: 1,
+              color: isDark
+                  ? AppColors.sectionDividerDark
+                  : AppColors.sectionDividerLight,
+            ),
             Padding(
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Column(
@@ -1178,13 +1391,17 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                           children: [
                             Text(
                               '❓ ${faq.$1}',
-                              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               faq.$2,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
                                 height: 1.5,
                               ),
                             ),
@@ -1228,7 +1445,9 @@ class _BookingCard extends ConsumerWidget {
         color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: hasConflict ? Colors.red : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          color: hasConflict
+              ? Colors.red
+              : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
           width: hasConflict ? 2 : 1,
         ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
@@ -1250,20 +1469,32 @@ class _BookingCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Guest info
-                      BookingCardGuestInfo(ownerBooking: ownerBooking, isMobile: isMobile),
+                      BookingCardGuestInfo(
+                        ownerBooking: ownerBooking,
+                        isMobile: isMobile,
+                      ),
 
                       Divider(
                         height: isMobile ? 16 : 24,
-                        color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                        color: isDark
+                            ? AppColors.sectionDividerDark
+                            : AppColors.sectionDividerLight,
                       ),
 
                       // Property and unit info
-                      BookingCardPropertyInfo(property: property, unit: unit, isMobile: isMobile),
+                      BookingCardPropertyInfo(
+                        property: property,
+                        unit: unit,
+                        isMobile: isMobile,
+                      ),
 
                       SizedBox(height: isMobile ? 8 : 12),
 
                       // Date range
-                      BookingCardDateRange(booking: booking, isMobile: isMobile),
+                      BookingCardDateRange(
+                        booking: booking,
+                        isMobile: isMobile,
+                      ),
 
                       SizedBox(height: isMobile ? 8 : 12),
 
@@ -1272,17 +1503,24 @@ class _BookingCard extends ConsumerWidget {
                         icon: Icons.people_outline,
                         child: Text(
                           '${booking.guestCount} ${booking.guestCount == 1 ? l10n.ownerBookingsGuest : l10n.ownerBookingsGuests}',
-                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
 
                       Divider(
                         height: isMobile ? 16 : 24,
-                        color: isDark ? AppColors.sectionDividerDark : AppColors.sectionDividerLight,
+                        color: isDark
+                            ? AppColors.sectionDividerDark
+                            : AppColors.sectionDividerLight,
                       ),
 
                       // Payment info
-                      BookingCardPaymentInfo(booking: booking, isMobile: isMobile),
+                      BookingCardPaymentInfo(
+                        booking: booking,
+                        isMobile: isMobile,
+                      ),
 
                       // Notes
                       BookingCardNotes(booking: booking, isMobile: isMobile),
@@ -1299,7 +1537,8 @@ class _BookingCard extends ConsumerWidget {
                   onShowDetails: () {
                     showDialog(
                       context: context,
-                      builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+                      builder: (context) =>
+                          BookingDetailsDialog(ownerBooking: ownerBooking),
                     );
                   },
                   onApprove: booking.status == BookingStatus.pending
@@ -1308,10 +1547,14 @@ class _BookingCard extends ConsumerWidget {
                   onReject: booking.status == BookingStatus.pending
                       ? () => _rejectBooking(context, ref, booking.id)
                       : null,
-                  onComplete: booking.status == BookingStatus.confirmed && booking.isPast
+                  onComplete:
+                      booking.status == BookingStatus.confirmed &&
+                          booking.isPast
                       ? () => _completeBooking(context, ref, booking.id)
                       : null,
-                  onCancel: booking.canBeCancelled ? () => _cancelBooking(context, ref, booking.id) : null,
+                  onCancel: booking.canBeCancelled
+                      ? () => _cancelBooking(context, ref, booking.id)
+                      : null,
                 ),
               ],
             ),
@@ -1328,7 +1571,11 @@ class _BookingCard extends ConsumerWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.red.shade300, width: 2),
                 ),
-                child: Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 20),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red.shade700,
+                  size: 20,
+                ),
               ),
             ),
         ],
@@ -1337,9 +1584,18 @@ class _BookingCard extends ConsumerWidget {
   }
 
   /// Approve pending booking (requires owner approval workflow)
-  void _approveBooking(BuildContext context, WidgetRef ref, String bookingId) async {
-    debugPrint('[BookingsScreen._approveBooking] Called with bookingId: $bookingId');
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => const BookingApproveDialog());
+  void _approveBooking(
+    BuildContext context,
+    WidgetRef ref,
+    String bookingId,
+  ) async {
+    debugPrint(
+      '[BookingsScreen._approveBooking] Called with bookingId: $bookingId',
+    );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const BookingApproveDialog(),
+    );
     debugPrint('[BookingsScreen._approveBooking] Dialog result: $confirmed');
 
     if (confirmed == true && context.mounted) {
@@ -1347,29 +1603,49 @@ class _BookingCard extends ConsumerWidget {
       try {
         debugPrint('[BookingsScreen._approveBooking] Getting repository...');
         final repository = ref.read(ownerBookingsRepositoryProvider);
-        debugPrint('[BookingsScreen._approveBooking] Calling repository.approveBooking...');
+        debugPrint(
+          '[BookingsScreen._approveBooking] Calling repository.approveBooking...',
+        );
         await repository.approveBooking(bookingId);
         debugPrint('[BookingsScreen._approveBooking] SUCCESS!');
 
         if (context.mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerBookingsApproved);
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.ownerBookingsApproved,
+          );
           // Update local state immediately (optimistic update)
-          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.confirmed);
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .updateBookingStatus(bookingId, BookingStatus.confirmed);
         }
       } catch (e, stackTrace) {
         debugPrint('[BookingsScreen._approveBooking] ERROR: $e');
         debugPrint('[BookingsScreen._approveBooking] Stack: $stackTrace');
         if (context.mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsApproveError);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.ownerBookingsApproveError,
+          );
         }
       }
     }
   }
 
   /// Reject pending booking
-  void _rejectBooking(BuildContext context, WidgetRef ref, String bookingId) async {
-    debugPrint('[BookingsScreen._rejectBooking] Called with bookingId: $bookingId');
-    final reason = await showDialog<String?>(context: context, builder: (context) => const BookingRejectDialog());
+  void _rejectBooking(
+    BuildContext context,
+    WidgetRef ref,
+    String bookingId,
+  ) async {
+    debugPrint(
+      '[BookingsScreen._rejectBooking] Called with bookingId: $bookingId',
+    );
+    final reason = await showDialog<String?>(
+      context: context,
+      builder: (context) => const BookingRejectDialog(),
+    );
     debugPrint('[BookingsScreen._rejectBooking] Dialog result: $reason');
 
     if (reason != null && context.mounted) {
@@ -1377,27 +1653,48 @@ class _BookingCard extends ConsumerWidget {
       try {
         debugPrint('[BookingsScreen._rejectBooking] Getting repository...');
         final repository = ref.read(ownerBookingsRepositoryProvider);
-        debugPrint('[BookingsScreen._rejectBooking] Calling repository.rejectBooking...');
-        await repository.rejectBooking(bookingId, reason: reason.isEmpty ? null : reason);
+        debugPrint(
+          '[BookingsScreen._rejectBooking] Calling repository.rejectBooking...',
+        );
+        await repository.rejectBooking(
+          bookingId,
+          reason: reason.isEmpty ? null : reason,
+        );
         debugPrint('[BookingsScreen._rejectBooking] SUCCESS!');
 
         if (context.mounted) {
-          ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerBookingsRejected);
+          ErrorDisplayUtils.showWarningSnackBar(
+            context,
+            l10n.ownerBookingsRejected,
+          );
           // Update local state - rejection changes status to cancelled
-          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.cancelled);
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .updateBookingStatus(bookingId, BookingStatus.cancelled);
         }
       } catch (e, stackTrace) {
         debugPrint('[BookingsScreen._rejectBooking] ERROR: $e');
         debugPrint('[BookingsScreen._rejectBooking] Stack: $stackTrace');
         if (context.mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsRejectError);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.ownerBookingsRejectError,
+          );
         }
       }
     }
   }
 
-  void _completeBooking(BuildContext context, WidgetRef ref, String bookingId) async {
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => const BookingCompleteDialog());
+  void _completeBooking(
+    BuildContext context,
+    WidgetRef ref,
+    String bookingId,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const BookingCompleteDialog(),
+    );
 
     if (confirmed == true && context.mounted) {
       final l10n = AppLocalizations.of(context);
@@ -1406,19 +1703,32 @@ class _BookingCard extends ConsumerWidget {
         await repository.completeBooking(bookingId);
 
         if (context.mounted) {
-          ErrorDisplayUtils.showSuccessSnackBar(context, l10n.ownerBookingsCompleted);
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.ownerBookingsCompleted,
+          );
           // Update local state
-          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.completed);
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .updateBookingStatus(bookingId, BookingStatus.completed);
         }
       } catch (e) {
         if (context.mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsCompleteError);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.ownerBookingsCompleteError,
+          );
         }
       }
     }
   }
 
-  void _cancelBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+  void _cancelBooking(
+    BuildContext context,
+    WidgetRef ref,
+    String bookingId,
+  ) async {
     final result = await showDialog<Map<String, dynamic>?>(
       context: context,
       builder: (context) => const BookingCancelDialog(),
@@ -1428,16 +1738,29 @@ class _BookingCard extends ConsumerWidget {
       final l10n = AppLocalizations.of(context);
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
-        await repository.cancelBooking(bookingId, result['reason'] as String, sendEmail: result['sendEmail'] as bool);
+        await repository.cancelBooking(
+          bookingId,
+          result['reason'] as String,
+          sendEmail: result['sendEmail'] as bool,
+        );
 
         if (context.mounted) {
-          ErrorDisplayUtils.showWarningSnackBar(context, l10n.ownerBookingsCancelled);
+          ErrorDisplayUtils.showWarningSnackBar(
+            context,
+            l10n.ownerBookingsCancelled,
+          );
           // Update local state
-          ref.read(windowedBookingsNotifierProvider.notifier).updateBookingStatus(bookingId, BookingStatus.cancelled);
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .updateBookingStatus(bookingId, BookingStatus.cancelled);
         }
       } catch (e) {
         if (context.mounted) {
-          ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.ownerBookingsCancelError);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.ownerBookingsCancelError,
+          );
         }
       }
     }
@@ -1475,7 +1798,12 @@ class _InfoRow extends StatelessWidget {
 
 /// View mode toggle button widget
 class _ViewModeButton extends StatelessWidget {
-  const _ViewModeButton({required this.icon, required this.isSelected, required this.onTap, required this.tooltip});
+  const _ViewModeButton({
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    required this.tooltip,
+  });
 
   final IconData icon;
   final bool isSelected;
@@ -1494,13 +1822,17 @@ class _ViewModeButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.15) : Colors.transparent,
+            color: isSelected
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
             size: 20,
-            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ),

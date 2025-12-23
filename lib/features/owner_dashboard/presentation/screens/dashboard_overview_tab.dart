@@ -126,7 +126,9 @@ class DashboardOverviewTab extends ConsumerWidget {
             Text(
               l10n.ownerWelcomeSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.7 * 255).toInt(),
+                ),
                 fontSize: isMobile ? 14 : 15,
               ),
               textAlign: TextAlign.center,
@@ -275,7 +277,9 @@ class DashboardOverviewTab extends ConsumerWidget {
             Text(
               LoggingService.safeErrorToString(e),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.7 * 255).toInt(),
+                ),
               ),
               textAlign: TextAlign.center,
               maxLines: 3,
@@ -288,7 +292,10 @@ class DashboardOverviewTab extends ConsumerWidget {
   }
 
   /// Desktop layout - Charts side-by-side
-  Widget _buildDesktopChartsRow(UnifiedDashboardData data, AppLocalizations l10n) {
+  Widget _buildDesktopChartsRow(
+    UnifiedDashboardData data,
+    AppLocalizations l10n,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -336,9 +343,8 @@ class DashboardOverviewTab extends ConsumerWidget {
             );
             showDialog(
               context: context,
-              builder: (context) => BookingDetailsDialog(
-                ownerBooking: ownerBooking,
-              ),
+              builder: (context) =>
+                  BookingDetailsDialog(ownerBooking: ownerBooking),
             );
           },
         );
@@ -369,10 +375,22 @@ class DashboardOverviewTab extends ConsumerWidget {
     final unit = ownerBooking.unit;
 
     final (type, title) = switch (booking.status) {
-      BookingStatus.pending => (ActivityType.booking, l10n.ownerNewBookingReceived),
-      BookingStatus.confirmed => (ActivityType.confirmed, l10n.ownerBookingConfirmedActivity),
-      BookingStatus.cancelled => (ActivityType.cancellation, l10n.ownerBookingCancelledActivity),
-      BookingStatus.completed => (ActivityType.completed, l10n.ownerBookingCompleted),
+      BookingStatus.pending => (
+        ActivityType.booking,
+        l10n.ownerNewBookingReceived,
+      ),
+      BookingStatus.confirmed => (
+        ActivityType.confirmed,
+        l10n.ownerBookingConfirmedActivity,
+      ),
+      BookingStatus.cancelled => (
+        ActivityType.cancellation,
+        l10n.ownerBookingCancelledActivity,
+      ),
+      BookingStatus.completed => (
+        ActivityType.completed,
+        l10n.ownerBookingCompleted,
+      ),
     };
 
     return ActivityItem(
@@ -665,20 +683,32 @@ class _RevenueChart extends StatelessWidget {
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     if (data.isEmpty) {
-      return _buildEmptyState(context, l10n, theme, Icons.insert_chart_outlined_rounded);
+      return _buildEmptyState(
+        context,
+        l10n,
+        theme,
+        Icons.insert_chart_outlined_rounded,
+      );
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final chartHeight = screenWidth > 900 ? 300.0 : screenWidth > 600 ? 260.0 : 220.0;
+        final chartHeight = screenWidth > 900
+            ? 300.0
+            : screenWidth > 600
+            ? 260.0
+            : 220.0;
 
         return SizedBox(
           height: chartHeight,
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+              boxShadow: AppShadows.getElevation(
+                1,
+                isDark: theme.brightness == Brightness.dark,
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
@@ -706,36 +736,59 @@ class _RevenueChart extends StatelessWidget {
                       const SizedBox(height: 12),
                       Expanded(
                         child: Chart(
-                          data: data.asMap().entries.map((e) => {
-                            'index': e.key,
-                            'label': e.value.label,
-                            'amount': e.value.amount,
-                          }).toList(),
+                          data: data
+                              .asMap()
+                              .entries
+                              .map(
+                                (e) => {
+                                  'index': e.key,
+                                  'label': e.value.label,
+                                  'amount': e.value.amount,
+                                },
+                              )
+                              .toList(),
                           variables: {
-                            'index': Variable(accessor: (Map map) => map['index'] as num),
+                            'index': Variable(
+                              accessor: (Map map) => map['index'] as num,
+                            ),
                             'amount': Variable(
                               accessor: (Map map) => map['amount'] as num,
                               scale: LinearScale(min: 0),
                             ),
-                            'label': Variable(accessor: (Map map) => map['label'] as String),
+                            'label': Variable(
+                              accessor: (Map map) => map['label'] as String,
+                            ),
                           },
-                          coord: RectCoord(), // Removed horizontalRangeUpdater to disable zoom
+                          coord:
+                              RectCoord(), // Removed horizontalRangeUpdater to disable zoom
                           marks: [
                             AreaMark(
-                              shape: ShapeEncode(value: BasicAreaShape(smooth: true)),
-                              color: ColorEncode(value: theme.colorScheme.primary.withValues(alpha: 0.15)),
+                              shape: ShapeEncode(
+                                value: BasicAreaShape(smooth: true),
+                              ),
+                              color: ColorEncode(
+                                value: theme.colorScheme.primary.withValues(
+                                  alpha: 0.15,
+                                ),
+                              ),
                               entrance: {MarkEntrance.y},
                             ),
                             LineMark(
-                              shape: ShapeEncode(value: BasicLineShape(smooth: true)),
+                              shape: ShapeEncode(
+                                value: BasicLineShape(smooth: true),
+                              ),
                               size: SizeEncode(value: 3),
-                              color: ColorEncode(value: theme.colorScheme.primary),
+                              color: ColorEncode(
+                                value: theme.colorScheme.primary,
+                              ),
                               entrance: {MarkEntrance.y},
                             ),
                             PointMark(
                               shape: ShapeEncode(value: CircleShape()),
                               size: SizeEncode(value: 8),
-                              color: ColorEncode(value: theme.colorScheme.primary),
+                              color: ColorEncode(
+                                value: theme.colorScheme.primary,
+                              ),
                               entrance: {MarkEntrance.opacity},
                               label: LabelEncode(
                                 encoder: (tuple) {
@@ -746,7 +799,8 @@ class _RevenueChart extends StatelessWidget {
                                       textStyle: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.7),
                                       ),
                                       offset: const Offset(0, -12),
                                     ),
@@ -755,19 +809,29 @@ class _RevenueChart extends StatelessWidget {
                               ),
                             ),
                           ],
-                          axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+                          axes: [
+                            Defaults.horizontalAxis,
+                            Defaults.verticalAxis,
+                          ],
                           selections: {
                             'touchMove': PointSelection(
                               on: {GestureType.hover},
-                              devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                              devices: {
+                                PointerDeviceKind.touch,
+                                PointerDeviceKind.mouse,
+                              },
                             ),
                           },
                           tooltip: TooltipGuide(
                             backgroundColor: theme.colorScheme.surface,
                             elevation: 8,
-                            textStyle: AppTypography.bodySmall.copyWith(color: theme.colorScheme.onSurface),
+                            textStyle: AppTypography.bodySmall.copyWith(
+                              color: theme.colorScheme.onSurface,
+                            ),
                           ),
-                          crosshair: CrosshairGuide(followPointer: [false, true]),
+                          crosshair: CrosshairGuide(
+                            followPointer: [false, true],
+                          ),
                         ),
                       ),
                     ],
@@ -801,14 +865,21 @@ class _BookingsChart extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final chartHeight = screenWidth > 900 ? 300.0 : screenWidth > 600 ? 260.0 : 220.0;
+        final chartHeight = screenWidth > 900
+            ? 300.0
+            : screenWidth > 600
+            ? 260.0
+            : 220.0;
 
         return SizedBox(
           height: chartHeight,
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+              boxShadow: AppShadows.getElevation(
+                1,
+                isDark: theme.brightness == Brightness.dark,
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
@@ -836,23 +907,38 @@ class _BookingsChart extends StatelessWidget {
                       const SizedBox(height: 12),
                       Expanded(
                         child: Chart(
-                          data: data.asMap().entries.map((e) => {
-                            'index': e.key,
-                            'label': e.value.label,
-                            'count': e.value.count,
-                          }).toList(),
+                          data: data
+                              .asMap()
+                              .entries
+                              .map(
+                                (e) => {
+                                  'index': e.key,
+                                  'label': e.value.label,
+                                  'count': e.value.count,
+                                },
+                              )
+                              .toList(),
                           variables: {
-                            'index': Variable(accessor: (Map map) => map['index'] as num),
+                            'index': Variable(
+                              accessor: (Map map) => map['index'] as num,
+                            ),
                             'count': Variable(
                               accessor: (Map map) => map['count'] as num,
                               scale: LinearScale(min: 0),
                             ),
-                            'label': Variable(accessor: (Map map) => map['label'] as String),
+                            'label': Variable(
+                              accessor: (Map map) => map['label'] as String,
+                            ),
                           },
-                          coord: RectCoord(), // Removed horizontalRangeUpdater to disable zoom
+                          coord:
+                              RectCoord(), // Removed horizontalRangeUpdater to disable zoom
                           marks: [
                             IntervalMark(
-                              shape: ShapeEncode(value: RectShape(borderRadius: BorderRadius.circular(8))),
+                              shape: ShapeEncode(
+                                value: RectShape(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
                               elevation: ElevationEncode(value: 2),
                               gradient: GradientEncode(
                                 value: LinearGradient(
@@ -860,7 +946,9 @@ class _BookingsChart extends StatelessWidget {
                                   end: Alignment.topCenter,
                                   colors: [
                                     theme.colorScheme.primary,
-                                    theme.colorScheme.primary.withValues(alpha: 0.7),
+                                    theme.colorScheme.primary.withValues(
+                                      alpha: 0.7,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -875,7 +963,8 @@ class _BookingsChart extends StatelessWidget {
                                       textStyle: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.7),
                                       ),
                                       offset: const Offset(0, -8),
                                     ),
@@ -884,17 +973,25 @@ class _BookingsChart extends StatelessWidget {
                               ),
                             ),
                           ],
-                          axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+                          axes: [
+                            Defaults.horizontalAxis,
+                            Defaults.verticalAxis,
+                          ],
                           selections: {
                             'touchMove': PointSelection(
                               on: {GestureType.hover},
-                              devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                              devices: {
+                                PointerDeviceKind.touch,
+                                PointerDeviceKind.mouse,
+                              },
                             ),
                           },
                           tooltip: TooltipGuide(
                             backgroundColor: theme.colorScheme.surface,
                             elevation: 8,
-                            textStyle: AppTypography.bodySmall.copyWith(color: theme.colorScheme.onSurface),
+                            textStyle: AppTypography.bodySmall.copyWith(
+                              color: theme.colorScheme.onSurface,
+                            ),
                           ),
                         ),
                       ),
@@ -935,7 +1032,9 @@ Widget _buildChartHeader(
           children: [
             Text(
               title,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Text(
               subtitle,

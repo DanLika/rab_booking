@@ -112,17 +112,15 @@ void main() async {
           );
         };
       },
-      appRunner: () => runApp(ProviderScope(
-        overrides: overrides,
-        child: const BookingWidgetApp(),
-      )),
+      appRunner: () => runApp(
+        ProviderScope(overrides: overrides, child: const BookingWidgetApp()),
+      ),
     );
   } else {
     // Debug mode - run without Sentry
-    runApp(ProviderScope(
-      overrides: overrides,
-      child: const BookingWidgetApp(),
-    ));
+    runApp(
+      ProviderScope(overrides: overrides, child: const BookingWidgetApp()),
+    );
   }
 }
 
@@ -201,8 +199,8 @@ class _BookingWidgetAppState extends ConsumerState<BookingWidgetApp> {
 
   /// Convert theme mode string to ThemeMode enum
   ThemeMode _getThemeMode(String mode) => switch (mode.toLowerCase()) {
-        'light' => ThemeMode.light,
-        'dark' => ThemeMode.dark,
-        _ => ThemeMode.system,
-      };
+    'light' => ThemeMode.light,
+    'dark' => ThemeMode.dark,
+    _ => ThemeMode.system,
+  };
 }

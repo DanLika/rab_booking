@@ -287,10 +287,7 @@ class _AnimatedFABState extends State<AnimatedFAB>
           final pulseScale = widget.showPulse ? _pulseAnimation.value : 1.0;
           final pressScale = _isPressed ? widget.pressedScale : 1.0;
 
-          return Transform.scale(
-            scale: pulseScale * pressScale,
-            child: child,
-          );
+          return Transform.scale(scale: pulseScale * pressScale, child: child);
         },
         child: fab,
       ),

@@ -299,8 +299,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       gradient: LinearGradient(
                         colors: widget.property.isActive
                             ? [
-                                theme.colorScheme.tertiary.withValues(alpha: 0.1),
-                                theme.colorScheme.tertiary.withValues(alpha: 0.05),
+                                theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.05,
+                                ),
                               ]
                             : [
                                 theme.colorScheme.error.withValues(alpha: 0.1),
@@ -384,8 +388,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       gradient: LinearGradient(
                         colors: widget.property.isActive
                             ? [
-                                theme.colorScheme.tertiary.withValues(alpha: 0.1),
-                                theme.colorScheme.tertiary.withValues(alpha: 0.05),
+                                theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.05,
+                                ),
                               ]
                             : [
                                 theme.colorScheme.error.withValues(alpha: 0.1),
@@ -509,9 +517,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(isSmallMobile ? 8 : 10),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -7,7 +7,10 @@ abstract class AdditionalServicesRepository {
 
   /// Fetch services available for a specific unit
   /// Returns services where unitId matches OR unitId is null (available for all units)
-  Future<List<AdditionalServiceModel>> fetchByUnit(String unitId, String ownerId);
+  Future<List<AdditionalServiceModel>> fetchByUnit(
+    String unitId,
+    String ownerId,
+  );
 
   /// Create a new service
   Future<AdditionalServiceModel> create(AdditionalServiceModel service);
@@ -25,5 +28,8 @@ abstract class AdditionalServicesRepository {
   Stream<List<AdditionalServiceModel>> watchByOwner(String ownerId);
 
   /// Stream of services for a unit (real-time updates)
-  Stream<List<AdditionalServiceModel>> watchByUnit(String unitId, String ownerId);
+  Stream<List<AdditionalServiceModel>> watchByUnit(
+    String unitId,
+    String ownerId,
+  );
 }

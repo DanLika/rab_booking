@@ -76,7 +76,8 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
                   bookingRef: ref,
                   email: email,
                   token: token,
-                  showDetailsInline: true, // Prevents navigation loop on refresh
+                  showDetailsInline:
+                      true, // Prevents navigation loop on refresh
                 );
               }
 

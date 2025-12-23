@@ -69,12 +69,16 @@ class ColorTokens {
   static const Color teal50 = Color(0xFFF0FDFA);
   static const Color teal100 = Color(0xFFCCF5E8);
   static const Color teal200 = Color(0xFFD1FAE5);
-  static const Color teal300 = Color(0xFF83E7BF); // Goldilocks - medium mint (between 200 and 400)
+  static const Color teal300 = Color(
+    0xFF83E7BF,
+  ); // Goldilocks - medium mint (between 200 and 400)
   static const Color teal400 = Color(0xFF34D399);
   static const Color teal500 = Color(0xFF14B8A6);
   static const Color teal600 = Color(0xFF0D9488);
   static const Color teal700 = Color(0xFF0F766E);
-  static const Color teal800 = Color(0xFF065F46); // Dark forest green for dark theme
+  static const Color teal800 = Color(
+    0xFF065F46,
+  ); // Dark forest green for dark theme
   static const Color teal900 = Color(0xFF134E4A);
 
   // Status colors - Pink/Red (Booked)
@@ -84,7 +88,9 @@ class ColorTokens {
   static const Color pink500 = Color(0xFFEC4899);
   static const Color pink600 = Color(0xFFDB2777);
   static const Color pink700 = Color(0xFFEF4444);
-  static const Color pink800 = Color(0xFF7C2D12); // Dark burgundy/maroon for dark theme
+  static const Color pink800 = Color(
+    0xFF7C2D12,
+  ); // Dark burgundy/maroon for dark theme
   static const Color pink900 = Color(0xFF7F1D1D);
 
   // Status colors - Amber (Pending/Warning)
@@ -101,16 +107,28 @@ class ColorTokens {
   static const Color emerald900 = Color(0xFF064E3B);
 
   // Status colors - Cancel (Red variants for cancelled booking status)
-  static const Color cancelLight = Color(0xFFFBA9AA); // Light pink/red for light theme
-  static const Color cancelDark = Color(0xFFEF4444); // Bright red for dark theme
+  static const Color cancelLight = Color(
+    0xFFFBA9AA,
+  ); // Light pink/red for light theme
+  static const Color cancelDark = Color(
+    0xFFEF4444,
+  ); // Bright red for dark theme
 
   // Status colors - Blocked (distinct grey with pattern indicator)
-  static const Color blockedLight = Color(0xFFD1D5DB); // Medium grey for light theme
-  static const Color blockedDark = Color(0xFF4B5563); // Darker grey for dark theme
+  static const Color blockedLight = Color(
+    0xFFD1D5DB,
+  ); // Medium grey for light theme
+  static const Color blockedDark = Color(
+    0xFF4B5563,
+  ); // Darker grey for dark theme
 
   // Status colors - Past Reservation (red with reduced visibility)
-  static const Color pastReservationLight = Color(0xFFFECACA); // Light coral/red for light theme
-  static const Color pastReservationDark = Color(0xFF991B1B); // Deep red for dark theme
+  static const Color pastReservationLight = Color(
+    0xFFFECACA,
+  ); // Light coral/red for light theme
+  static const Color pastReservationDark = Color(
+    0xFF991B1B,
+  ); // Deep red for dark theme
 
   // Slate (for dark mode)
   static const Color slate100 = Color(0xFFF1F5F9);

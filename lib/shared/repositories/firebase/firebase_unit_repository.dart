@@ -18,7 +18,13 @@ class FirebaseUnitRepository implements UnitRepository {
         .orderBy('sort_order')
         .get();
     return snapshot.docs
-        .map((doc) => UnitModel.fromJson({...doc.data(), 'id': doc.id, 'property_id': propertyId}))
+        .map(
+          (doc) => UnitModel.fromJson({
+            ...doc.data(),
+            'id': doc.id,
+            'property_id': propertyId,
+          }),
+        )
         .toList();
   }
 
@@ -32,7 +38,11 @@ class FirebaseUnitRepository implements UnitRepository {
     for (final doc in querySnapshot.docs) {
       if (doc.id == id) {
         final propertyId = doc.reference.parent.parent?.id;
-        return UnitModel.fromJson({...doc.data(), 'id': doc.id, 'property_id': propertyId});
+        return UnitModel.fromJson({
+          ...doc.data(),
+          'id': doc.id,
+          'property_id': propertyId,
+        });
       }
     }
 
@@ -85,7 +95,11 @@ class FirebaseUnitRepository implements UnitRepository {
     final List<UnitModel> available = [];
 
     for (var unit in units) {
-      final isAvailable = await isUnitAvailable(unitId: unit.id, checkIn: checkIn, checkOut: checkOut);
+      final isAvailable = await isUnitAvailable(
+        unitId: unit.id,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      );
       if (isAvailable) {
         available.add(unit);
       }
@@ -101,7 +115,11 @@ class FirebaseUnitRepository implements UnitRepository {
     for (final doc in querySnapshot.docs) {
       if (doc.id == id) {
         final propertyId = doc.reference.parent.parent?.id;
-        final unit = UnitModel.fromJson({...doc.data(), 'id': doc.id, 'property_id': propertyId});
+        final unit = UnitModel.fromJson({
+          ...doc.data(),
+          'id': doc.id,
+          'property_id': propertyId,
+        });
         final updated = unit.copyWith(isAvailable: isAvailable);
         await doc.reference.update(updated.toJson());
         return updated;
@@ -117,7 +135,11 @@ class FirebaseUnitRepository implements UnitRepository {
     for (final doc in querySnapshot.docs) {
       if (doc.id == id) {
         final propertyId = doc.reference.parent.parent?.id;
-        final unit = UnitModel.fromJson({...doc.data(), 'id': doc.id, 'property_id': propertyId});
+        final unit = UnitModel.fromJson({
+          ...doc.data(),
+          'id': doc.id,
+          'property_id': propertyId,
+        });
         final updated = unit.copyWith(pricePerNight: pricePerNight);
         await doc.reference.update(updated.toJson());
         return updated;
@@ -127,7 +149,11 @@ class FirebaseUnitRepository implements UnitRepository {
   }
 
   @override
-  Future<bool> isUnitAvailable({required String unitId, required DateTime checkIn, required DateTime checkOut}) async {
+  Future<bool> isUnitAvailable({
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  }) async {
     // Fetch all active bookings for this unit
     // Note: Using client-side filtering to avoid Firestore limitation of
     // multiple inequality filters on different fields (check_in and check_out)
@@ -146,7 +172,8 @@ class FirebaseUnitRepository implements UnitRepository {
 
       // Overlap logic: bookings overlap if:
       // (bookingCheckOut > checkIn) AND (bookingCheckIn < checkOut)
-      return bookingCheckOut.isAfter(checkIn) && bookingCheckIn.isBefore(checkOut);
+      return bookingCheckOut.isAfter(checkIn) &&
+          bookingCheckIn.isBefore(checkOut);
     });
 
     return !hasOverlap; // Return true if NO overlap (unit is available)
@@ -170,7 +197,9 @@ class FirebaseUnitRepository implements UnitRepository {
     }
 
     final snapshot = await query.get();
-    var units = snapshot.docs.map((doc) => UnitModel.fromJson({...doc.data(), 'id': doc.id})).toList();
+    var units = snapshot.docs
+        .map((doc) => UnitModel.fromJson({...doc.data(), 'id': doc.id}))
+        .toList();
 
     // Client-side filtering
     if (maxPrice != null) {
@@ -191,9 +220,16 @@ class FirebaseUnitRepository implements UnitRepository {
 
     for (int i = 0; i < units.length; i++) {
       final unit = units[i];
-      final docRef = _firestore.collection('properties').doc(unit.propertyId).collection('units').doc(unit.id);
+      final docRef = _firestore
+          .collection('properties')
+          .doc(unit.propertyId)
+          .collection('units')
+          .doc(unit.id);
 
-      batch.update(docRef, {'sort_order': i, 'updated_at': FieldValue.serverTimestamp()});
+      batch.update(docRef, {
+        'sort_order': i,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
     }
 
     await batch.commit();
@@ -212,11 +248,19 @@ class FirebaseUnitRepository implements UnitRepository {
     if (snapshot.docs.isEmpty) return null;
 
     final doc = snapshot.docs.first;
-    return UnitModel.fromJson({...doc.data(), 'id': doc.id, 'property_id': propertyId});
+    return UnitModel.fromJson({
+      ...doc.data(),
+      'id': doc.id,
+      'property_id': propertyId,
+    });
   }
 
   @override
-  Future<bool> isSlugUniqueInProperty(String propertyId, String slug, {String? excludeUnitId}) async {
+  Future<bool> isSlugUniqueInProperty(
+    String propertyId,
+    String slug, {
+    String? excludeUnitId,
+  }) async {
     final snapshot = await _firestore
         .collection('properties')
         .doc(propertyId)
@@ -228,7 +272,8 @@ class FirebaseUnitRepository implements UnitRepository {
 
     // If we're excluding a unit (during edit), check if the only match is that unit
     if (excludeUnitId != null) {
-      return snapshot.docs.length == 1 && snapshot.docs.first.id == excludeUnitId;
+      return snapshot.docs.length == 1 &&
+          snapshot.docs.first.id == excludeUnitId;
     }
 
     return false;

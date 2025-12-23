@@ -44,7 +44,8 @@ class TimelineSplitDayCell extends StatelessWidget {
       width: width,
       height: cellHeight,
       child: Stack(
-        alignment: Alignment.topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+        alignment: Alignment
+            .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
         children: [
           // Background with diagonal split
           CustomPaint(
@@ -171,8 +172,10 @@ class SplitDayCellPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Defensive check: ensure size is valid before painting
-    if (!size.width.isFinite || !size.height.isFinite || 
-        size.width <= 0 || size.height <= 0) {
+    if (!size.width.isFinite ||
+        !size.height.isFinite ||
+        size.width <= 0 ||
+        size.height <= 0) {
       return; // Skip painting if size is invalid
     }
 

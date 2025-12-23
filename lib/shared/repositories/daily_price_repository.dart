@@ -91,8 +91,5 @@ abstract class DailyPriceRepository {
   Future<List<DailyPriceModel>> fetchAllPricesForUnit(String unitId);
 
   /// Check if date has custom price
-  Future<bool> hasCustomPrice({
-    required String unitId,
-    required DateTime date,
-  });
+  Future<bool> hasCustomPrice({required String unitId, required DateTime date});
 }

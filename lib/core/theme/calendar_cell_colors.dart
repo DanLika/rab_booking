@@ -87,6 +87,8 @@ class CalendarCellColors {
 
   /// Get today highlight color with custom alpha
   static Color getTodayHighlight(BuildContext context, {double alpha = 0.12}) {
-    return Theme.of(context).colorScheme.primary.withAlpha((alpha * 255).toInt());
+    return Theme.of(
+      context,
+    ).colorScheme.primary.withAlpha((alpha * 255).toInt());
   }
 }

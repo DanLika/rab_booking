@@ -44,10 +44,7 @@ class AnimatedContentSwitcher extends StatelessWidget {
       switchInCurve: curve,
       switchOutCurve: curve,
       transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
+        return FadeTransition(opacity: animation, child: child);
       },
       child: showContent
           ? KeyedSubtree(key: const ValueKey('content'), child: content)
@@ -99,10 +96,12 @@ class AnimatedAsyncBuilder<T> extends StatelessWidget {
         return FadeTransition(opacity: animation, child: child);
       },
       child: asyncValue.when(
-        loading: () => KeyedSubtree(key: const ValueKey('loading'), child: skeleton),
+        loading: () =>
+            KeyedSubtree(key: const ValueKey('loading'), child: skeleton),
         error: (error, stack) => KeyedSubtree(
           key: const ValueKey('error'),
-          child: errorBuilder?.call(error, stack) ??
+          child:
+              errorBuilder?.call(error, stack) ??
               Center(
                 child: Text(
                   'Error: ${error.toString()}',
@@ -110,10 +109,8 @@ class AnimatedAsyncBuilder<T> extends StatelessWidget {
                 ),
               ),
         ),
-        data: (data) => KeyedSubtree(
-          key: const ValueKey('data'),
-          child: builder(data),
-        ),
+        data: (data) =>
+            KeyedSubtree(key: const ValueKey('data'), child: builder(data)),
       ),
     );
   }

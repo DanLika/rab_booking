@@ -92,10 +92,11 @@ final dailyPriceRepositoryProvider = Provider<DailyPriceRepository>((ref) {
 });
 
 /// Widget Settings repository provider
-final widgetSettingsRepositoryProvider = Provider<FirebaseWidgetSettingsRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return FirebaseWidgetSettingsRepository(firestore);
-});
+final widgetSettingsRepositoryProvider =
+    Provider<FirebaseWidgetSettingsRepository>((ref) {
+      final firestore = ref.watch(firestoreProvider);
+      return FirebaseWidgetSettingsRepository(firestore);
+    });
 
 /// iCal Repository provider
 /// Widget uses this for displaying calendar sync status
@@ -140,7 +141,9 @@ final calendarDataServiceProvider = Provider<CalendarDataService>((ref) {
 ///
 /// NOTE: The actual web implementation is created directly in booking_widget_screen.dart
 /// using conditional imports to avoid dart:html issues on non-web platforms.
-final tabCommunicationServiceProvider = Provider<TabCommunicationService>((ref) {
+final tabCommunicationServiceProvider = Provider<TabCommunicationService>((
+  ref,
+) {
   // Return stub - actual implementation created in widget screen
   // This is because conditional imports for dart:html are tricky with providers
   return TabCommunicationServiceStub();
@@ -153,15 +156,19 @@ final tabCommunicationServiceProvider = Provider<TabCommunicationService>((ref) 
 /// Get property by ID (widget version - uses PropertyRepository)
 /// This is a lightweight alternative to owner_properties_provider.propertyByIdProvider
 /// Named widgetPropertyByIdProvider to avoid conflict with the owner version
-final widgetPropertyByIdProvider = FutureProvider.family<PropertyModel?, String>((ref, propertyId) async {
-  final repository = ref.watch(propertyRepositoryProvider);
-  return repository.fetchPropertyById(propertyId);
-});
+final widgetPropertyByIdProvider =
+    FutureProvider.family<PropertyModel?, String>((ref, propertyId) async {
+      final repository = ref.watch(propertyRepositoryProvider);
+      return repository.fetchPropertyById(propertyId);
+    });
 
 /// Get unit by ID (widget version - direct Firestore query)
 /// This is a lightweight alternative to owner_properties_provider.unitByIdProvider
 /// Uses direct Firestore access for efficiency (single doc fetch)
-final unitByIdProvider = FutureProvider.family<UnitModel?, (String, String)>((ref, params) async {
+final unitByIdProvider = FutureProvider.family<UnitModel?, (String, String)>((
+  ref,
+  params,
+) async {
   final (propertyId, unitId) = params;
   final firestore = ref.watch(firestoreProvider);
 

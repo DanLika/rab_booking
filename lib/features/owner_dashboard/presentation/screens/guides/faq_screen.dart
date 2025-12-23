@@ -275,29 +275,28 @@ class _FAQScreenState extends State<FAQScreen> {
               // Category Filter
               SizedBox(
                 height: 50,
-                child: ListView.builder(
-                  physics: PlatformScrollPhysics.adaptive,
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: _categoryKeys.length,
-                  itemBuilder: (context, index) {
-                    final categoryKey = _categoryKeys[index];
-                    final isSelected = categoryKey == _selectedCategoryKey;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: AppFilterChip(
-                        label: _getCategoryLabel(categoryKey, l10n),
-                        selected: isSelected,
-                        icon: _getCategoryIcon(categoryKey),
-                        onSelected: () {
-                          setState(() {
-                            _selectedCategoryKey = categoryKey;
-                          });
-                        },
-                      ),
-                    );
-                  },
+                child: Center(
+                  child: SingleChildScrollView(
+                    physics: PlatformScrollPhysics.adaptive,
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Wrap(
+                      spacing: 8,
+                      children: _categoryKeys.map((categoryKey) {
+                        final isSelected = categoryKey == _selectedCategoryKey;
+                        return AppFilterChip(
+                          label: _getCategoryLabel(categoryKey, l10n),
+                          selected: isSelected,
+                          icon: _getCategoryIcon(categoryKey),
+                          onSelected: () {
+                            setState(() {
+                              _selectedCategoryKey = categoryKey;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
               ),
 

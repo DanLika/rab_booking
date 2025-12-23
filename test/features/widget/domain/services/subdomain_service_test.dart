@@ -45,7 +45,10 @@ void main() {
       expect(context.found, isFalse);
       expect(context.subdomain, equals('nonexistent'));
       expect(context.propertyId, isNull);
-      expect(context.displayName, equals('nonexistent')); // Falls back to subdomain
+      expect(
+        context.displayName,
+        equals('nonexistent'),
+      ); // Falls back to subdomain
       expect(context.hasCustomBranding, isFalse);
     });
 
@@ -75,16 +78,19 @@ void main() {
       expect(context.hasCustomBranding, isTrue);
     });
 
-    test('hasCustomBranding returns false when branding has no customizations', () {
-      final context = SubdomainContext(
-        subdomain: 'test',
-        found: true,
-        property: null,
-        branding: const PropertyBranding(), // Empty branding
-      );
+    test(
+      'hasCustomBranding returns false when branding has no customizations',
+      () {
+        final context = SubdomainContext(
+          subdomain: 'test',
+          found: true,
+          property: null,
+          branding: const PropertyBranding(), // Empty branding
+        );
 
-      expect(context.hasCustomBranding, isFalse);
-    });
+        expect(context.hasCustomBranding, isFalse);
+      },
+    );
   });
 
   // Note: SubdomainService tests that require Firestore are skipped
@@ -133,15 +139,21 @@ void main() {
 
     for (final subdomain in validSubdomains) {
       test('accepts valid subdomain: $subdomain', () {
-        expect(isValidSubdomain(subdomain), isTrue,
-            reason: '$subdomain should be valid');
+        expect(
+          isValidSubdomain(subdomain),
+          isTrue,
+          reason: '$subdomain should be valid',
+        );
       });
     }
 
     for (final subdomain in invalidSubdomains) {
       test('rejects invalid subdomain: $subdomain', () {
-        expect(isValidSubdomain(subdomain), isFalse,
-            reason: '$subdomain should be invalid');
+        expect(
+          isValidSubdomain(subdomain),
+          isFalse,
+          reason: '$subdomain should be invalid',
+        );
       });
     }
   });

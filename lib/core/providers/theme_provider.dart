@@ -35,13 +35,13 @@ class ThemeNotifier extends _$ThemeNotifier {
   Future<ThemeMode> build() async {
     // Try to use the provider first (initialized in main.dart)
     final prefsFromProvider = ref.read(sharedPreferencesProvider);
-    
+
     // If provider has SharedPreferences, use it
     if (prefsFromProvider != null) {
       final savedTheme = prefsFromProvider.getString(_themeKey);
       return _parseThemeMode(savedTheme);
     }
-    
+
     // Fallback: try to get instance directly (for widget_main.dart or if provider not ready)
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -73,13 +73,13 @@ class ThemeNotifier extends _$ThemeNotifier {
 
     // Try to use the provider first
     final prefsFromProvider = ref.read(sharedPreferencesProvider);
-    
+
     if (prefsFromProvider != null) {
       final modeString = _themeModeToString(mode);
       await prefsFromProvider.setString(_themeKey, modeString);
       return;
     }
-    
+
     // Fallback: try to get instance directly
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -96,8 +96,8 @@ class ThemeNotifier extends _$ThemeNotifier {
     return mode == ThemeMode.light
         ? 'light'
         : mode == ThemeMode.dark
-            ? 'dark'
-            : 'system';
+        ? 'dark'
+        : 'system';
   }
 }
 

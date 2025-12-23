@@ -7,13 +7,20 @@ class GradientAuthButton extends StatefulWidget {
   final bool isLoading;
   final IconData? icon;
 
-  const GradientAuthButton({super.key, required this.text, this.onPressed, this.isLoading = false, this.icon});
+  const GradientAuthButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.isLoading = false,
+    this.icon,
+  });
 
   @override
   State<GradientAuthButton> createState() => _GradientAuthButtonState();
 }
 
-class _GradientAuthButtonState extends State<GradientAuthButton> with SingleTickerProviderStateMixin {
+class _GradientAuthButtonState extends State<GradientAuthButton>
+    with SingleTickerProviderStateMixin {
   bool _isHovered = false;
   late AnimationController _shimmerController;
   late Animation<double> _shimmerAnimation;
@@ -69,12 +76,17 @@ class _GradientAuthButtonState extends State<GradientAuthButton> with SingleTick
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.75)],
+              colors: [
+                theme.colorScheme.primary,
+                theme.colorScheme.primary.withValues(alpha: 0.75),
+              ],
             ),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withAlpha((0.25 * 255).toInt()),
+                color: theme.colorScheme.primary.withAlpha(
+                  (0.25 * 255).toInt(),
+                ),
                 blurRadius: _isHovered ? 16 : 10,
                 offset: Offset(0, _isHovered ? 6 : 3),
               ),
@@ -86,7 +98,8 @@ class _GradientAuthButtonState extends State<GradientAuthButton> with SingleTick
               onTap: widget.isLoading ? null : widget.onPressed,
               borderRadius: BorderRadius.circular(12),
               child: Stack(
-                alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
+                alignment: Alignment
+                    .topLeft, // Explicit to avoid TextDirection null check
                 children: [
                   // Shimmer effect when loading
                   if (widget.isLoading)
@@ -106,7 +119,9 @@ class _GradientAuthButtonState extends State<GradientAuthButton> with SingleTick
                               ],
                               colors: [
                                 Colors.transparent,
-                                theme.colorScheme.onPrimary.withAlpha((0.3 * 255).toInt()),
+                                theme.colorScheme.onPrimary.withAlpha(
+                                  (0.3 * 255).toInt(),
+                                ),
                                 Colors.transparent,
                               ],
                             ),
@@ -123,14 +138,20 @@ class _GradientAuthButtonState extends State<GradientAuthButton> with SingleTick
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               if (widget.icon != null) ...[
-                                Icon(widget.icon, color: Colors.white, size: 20),
+                                Icon(
+                                  widget.icon,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                               ],
                               Text(

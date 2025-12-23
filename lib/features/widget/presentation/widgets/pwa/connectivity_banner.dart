@@ -54,13 +54,10 @@ class _ConnectivityBannerState extends ConsumerState<ConnectivityBanner>
       vsync: this,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
   }
 
   Future<void> _checkInitialConnectivity() async {
@@ -75,8 +72,8 @@ class _ConnectivityBannerState extends ConsumerState<ConnectivityBanner>
   }
 
   void _handleConnectivityChange(List<ConnectivityResult> results) {
-    final isOffline = results.isEmpty ||
-        results.every((r) => r == ConnectivityResult.none);
+    final isOffline =
+        results.isEmpty || results.every((r) => r == ConnectivityResult.none);
 
     if (mounted) {
       if (isOffline && !_isOffline) {
@@ -167,11 +164,7 @@ class _ConnectivityBannerState extends ConsumerState<ConnectivityBanner>
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                Icon(icon, color: Colors.white, size: 20),
                 const SizedBox(width: SpacingTokens.s),
                 Flexible(
                   child: Text(

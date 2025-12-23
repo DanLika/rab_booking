@@ -123,7 +123,10 @@ class InputSanitizer {
 
     // Allow only Unicode letters, spaces, apostrophes, hyphens
     // Remove any other characters
-    sanitized = sanitized.replaceAll(RegExp(r"[^\p{L}\s'\-]", unicode: true), '');
+    sanitized = sanitized.replaceAll(
+      RegExp(r"[^\p{L}\s'\-]", unicode: true),
+      '',
+    );
 
     // Normalize whitespace (collapse multiple spaces)
     sanitized = sanitized.replaceAll(RegExp(r'\s+'), ' ');

@@ -40,7 +40,9 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
     final gradients = context.gradients;
     final primaryColor = theme.colorScheme.primary;
     final inactiveColor = theme.colorScheme.onSurfaceVariant;
-    final defaultBorder = BorderSide(color: gradients.sectionBorder.withAlpha(128));
+    final defaultBorder = BorderSide(
+      color: gradients.sectionBorder.withAlpha(128),
+    );
 
     return Focus(
       onFocusChange: (hasFocus) => setState(() => _isFocused = hasFocus),
@@ -81,16 +83,28 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
             suffixIcon: widget.suffixIcon,
             filled: true,
             fillColor: gradients.inputFillColor,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(borderRadius: _borderRadius, borderSide: defaultBorder),
-            enabledBorder: OutlineInputBorder(borderRadius: _borderRadius, borderSide: defaultBorder),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: _borderRadius,
+              borderSide: defaultBorder,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: _borderRadius,
+              borderSide: defaultBorder,
+            ),
             focusedBorder: OutlineInputBorder(
               borderRadius: _borderRadius,
               borderSide: BorderSide(color: primaryColor, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: _borderRadius,
-              borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
+              borderSide: BorderSide(
+                color: theme.colorScheme.error,
+                width: 1.5,
+              ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: _borderRadius,

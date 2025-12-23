@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../../../../core/constants/enums.dart';
-import '../../../../../core/constants/booking_status_extensions.dart';
-import '../../../../../../../../shared/models/booking_model.dart';
+import '../../../../../../core/constants/enums.dart';
+import '../../../../../../core/constants/booking_status_extensions.dart';
+import '../../../../../../shared/models/booking_model.dart';
 
 /// Header section for booking card showing status badge and booking ID
 class BookingCardHeader extends StatelessWidget {
@@ -65,6 +65,7 @@ class BookingCardHeader extends StatelessWidget {
           ),
           const Spacer(),
           // Booking Reference - User-friendly ID
+          // Icon already represents hashtag, so no # prefix needed in text
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -76,8 +77,8 @@ class BookingCardHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              Text(
-                booking.bookingReference ?? '#${booking.id.substring(0, 8)}',
+              SelectableText(
+                booking.bookingReference ?? booking.id.substring(0, 8),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withAlpha(
                     (0.65 * 255).toInt(),
@@ -85,6 +86,7 @@ class BookingCardHeader extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                   fontFamily: 'monospace',
                 ),
+                maxLines: 1,
               ),
             ],
           ),

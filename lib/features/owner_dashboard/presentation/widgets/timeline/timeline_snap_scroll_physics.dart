@@ -19,10 +19,7 @@ class TimelineSnapScrollPhysics extends ClampingScrollPhysics {
   /// Above this: snap in direction of velocity
   static const double _velocityThreshold = 200.0;
 
-  const TimelineSnapScrollPhysics({
-    required this.dayWidth,
-    super.parent,
-  });
+  const TimelineSnapScrollPhysics({required this.dayWidth, super.parent});
 
   @override
   TimelineSnapScrollPhysics applyTo(ScrollPhysics? ancestor) {
@@ -105,10 +102,7 @@ class TimelineSnapScrollPhysics extends ClampingScrollPhysics {
     // SpringDescription.withDampingRatio defaults to ratio=1.0 (critically damped)
     // This ensures no oscillation/bounce - smooth stop at target
     return ScrollSpringSimulation(
-      SpringDescription.withDampingRatio(
-        mass: 0.5,
-        stiffness: 100.0,
-      ),
+      SpringDescription.withDampingRatio(mass: 0.5, stiffness: 100.0),
       currentOffset,
       clampedTarget,
       velocity,

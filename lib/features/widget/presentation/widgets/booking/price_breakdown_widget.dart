@@ -83,7 +83,11 @@ class PriceBreakdownWidget extends StatelessWidget {
       child: Column(
         children: [
           // Room price
-          PriceRowWidget(label: translations.roomNights(nights), amount: formattedRoomPrice, isDarkMode: isDarkMode),
+          PriceRowWidget(
+            label: translations.roomNights(nights),
+            amount: formattedRoomPrice,
+            isDarkMode: isDarkMode,
+          ),
 
           // Additional services (only show if > tolerance)
           // Bug #37 Fix: Use tolerance-based comparison to handle floating point precision
@@ -104,12 +108,20 @@ class PriceBreakdownWidget extends StatelessWidget {
           ),
 
           // Total
-          PriceRowWidget(label: translations.total, amount: formattedTotal, isDarkMode: isDarkMode, isBold: true),
+          PriceRowWidget(
+            label: translations.total,
+            amount: formattedTotal,
+            isDarkMode: isDarkMode,
+            isBold: true,
+          ),
 
           // Deposit info
           const SizedBox(height: SpacingTokens.s),
           Text(
-            translations.depositWithPercentage(formattedDeposit, depositPercentage),
+            translations.depositWithPercentage(
+              formattedDeposit,
+              depositPercentage,
+            ),
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeS,
               color: colors.textSecondary,

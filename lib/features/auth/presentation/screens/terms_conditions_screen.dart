@@ -58,12 +58,20 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
   void _scrollToSection(String key) {
     final context = _sectionKeys[key]?.currentContext;
     if (context != null) {
-      Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
   void _scrollToTop() {
-    _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -94,14 +102,18 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
           child: Stack(
-            alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
+            alignment:
+                Alignment.topLeft, // Explicit to avoid TextDirection null check
             children: [
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
                   child: SingleChildScrollView(
                     controller: _scrollController,
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: isMobile ? 16 : 24),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: isMobile ? 16 : 24,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -225,7 +237,11 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
               gradient: context.gradients.brandPrimary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(Icons.description, color: Colors.white, size: isMobile ? 28 : 32),
+            child: Icon(
+              Icons.description,
+              color: Colors.white,
+              size: isMobile ? 28 : 32,
+            ),
           ),
           SizedBox(width: isMobile ? 12 : 16),
           Expanded(
@@ -244,7 +260,9 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  AppLocalizations.of(context).termsScreenLastUpdated(DateTime.now().year.toString()),
+                  AppLocalizations.of(
+                    context,
+                  ).termsScreenLastUpdated(DateTime.now().year.toString()),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: isMobile ? 11 : 12,
@@ -281,10 +299,16 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.list_alt, color: theme.colorScheme.primary, size: 20),
+                  child: Icon(
+                    Icons.list_alt,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -307,16 +331,46 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 final l10n = AppLocalizations.of(context);
                 return Column(
                   children: [
-                    _buildTocItem('1. ${l10n.termsScreenSection1Title}', 'acceptance'),
-                    _buildTocItem('2. ${l10n.termsScreenSection2Title}', 'license'),
-                    _buildTocItem('3. ${l10n.termsScreenSection3Title}', 'booking'),
-                    _buildTocItem('4. ${l10n.termsScreenSection4Title}', 'payment'),
-                    _buildTocItem('5. ${l10n.termsScreenSection5Title}', 'cancellation'),
-                    _buildTocItem('6. ${l10n.termsScreenSection6Title}', 'responsibilities'),
-                    _buildTocItem('7. ${l10n.termsScreenSection7Title}', 'liability'),
-                    _buildTocItem('8. ${l10n.termsScreenSection8Title}', 'modifications'),
-                    _buildTocItem('9. ${l10n.termsScreenSection9Title}', 'governing'),
-                    _buildTocItem('10. ${l10n.termsScreenSection10Title}', 'contact'),
+                    _buildTocItem(
+                      '1. ${l10n.termsScreenSection1Title}',
+                      'acceptance',
+                    ),
+                    _buildTocItem(
+                      '2. ${l10n.termsScreenSection2Title}',
+                      'license',
+                    ),
+                    _buildTocItem(
+                      '3. ${l10n.termsScreenSection3Title}',
+                      'booking',
+                    ),
+                    _buildTocItem(
+                      '4. ${l10n.termsScreenSection4Title}',
+                      'payment',
+                    ),
+                    _buildTocItem(
+                      '5. ${l10n.termsScreenSection5Title}',
+                      'cancellation',
+                    ),
+                    _buildTocItem(
+                      '6. ${l10n.termsScreenSection6Title}',
+                      'responsibilities',
+                    ),
+                    _buildTocItem(
+                      '7. ${l10n.termsScreenSection7Title}',
+                      'liability',
+                    ),
+                    _buildTocItem(
+                      '8. ${l10n.termsScreenSection8Title}',
+                      'modifications',
+                    ),
+                    _buildTocItem(
+                      '9. ${l10n.termsScreenSection9Title}',
+                      'governing',
+                    ),
+                    _buildTocItem(
+                      '10. ${l10n.termsScreenSection10Title}',
+                      'contact',
+                    ),
                   ],
                 );
               },
@@ -336,7 +390,10 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       onTap: () => _scrollToSection(key),
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: isMobile ? 8 : 10, horizontal: 8),
+        padding: EdgeInsets.symmetric(
+          vertical: isMobile ? 8 : 10,
+          horizontal: 8,
+        ),
         child: Row(
           children: [
             Icon(Icons.arrow_right, color: theme.colorScheme.primary, size: 20),
@@ -411,8 +468,13 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-        border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()), width: 1.5),
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+          (0.3 * 255).toInt(),
+        ),
+        border: Border.all(
+          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -424,10 +486,16 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.12 * 255).toInt(),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.info_outline, color: theme.colorScheme.primary, size: isMobile ? 20 : 24),
+                child: Icon(
+                  Icons.info_outline,
+                  color: theme.colorScheme.primary,
+                  size: isMobile ? 20 : 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

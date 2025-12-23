@@ -29,7 +29,8 @@ class UnitWizardDraft with _$UnitWizardDraft {
     double? pricePerNight,
     double? weekendBasePrice, // Weekend price (Fri-Sat nights by default)
     @Default([5, 6])
-    List<int> weekendDays, // Days considered weekend (1=Mon...7=Sun) - Fri=5, Sat=6 for hotel nights
+    List<int>
+    weekendDays, // Days considered weekend (1=Mon...7=Sun) - Fri=5, Sat=6 for hotel nights
     int? minStayNights,
     int? maxStayNights, // Maximum nights per booking (null = no limit)
     @Default([])

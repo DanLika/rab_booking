@@ -40,7 +40,8 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
 
   // Layout constants
   static const _smallScreenBreakpoint = 400.0;
-  static const _tinyScreenBreakpoint = 360.0; // iPhone SE, Galaxy S small devices
+  static const _tinyScreenBreakpoint =
+      360.0; // iPhone SE, Galaxy S small devices
   static const _smallIconSize = 16.0;
   static const _tinyIconSize = 14.0;
   static const _smallContainerSize = 28.0;
@@ -98,8 +99,8 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
                 size: isTinyScreen
                     ? _tinyIconSize
                     : isSmallScreen
-                        ? _smallIconSize
-                        : IconSizeTokens.small,
+                    ? _smallIconSize
+                    : IconSizeTokens.small,
                 color: colors.textPrimary,
               ),
               onPressed: () {
@@ -113,13 +114,13 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
                 minWidth: isTinyScreen
                     ? _tinyContainerSize
                     : isSmallScreen
-                        ? _smallContainerSize
-                        : ConstraintTokens.iconContainerSmall,
+                    ? _smallContainerSize
+                    : ConstraintTokens.iconContainerSmall,
                 minHeight: isTinyScreen
                     ? _tinyContainerSize
                     : isSmallScreen
-                        ? _smallContainerSize
-                        : ConstraintTokens.iconContainerSmall,
+                    ? _smallContainerSize
+                    : ConstraintTokens.iconContainerSmall,
               ),
             ),
 
@@ -178,18 +179,18 @@ class _LanguageSwitcherButton extends ConsumerWidget {
     final fontSize = isTinyScreen
         ? _tinyFontSize
         : isSmallScreen
-            ? _smallFontSize
-            : _normalFontSize;
+        ? _smallFontSize
+        : _normalFontSize;
     final buttonWidth = isTinyScreen
         ? _tinyButtonWidth
         : isSmallScreen
-            ? _smallButtonWidth
-            : _normalButtonWidth;
+        ? _smallButtonWidth
+        : _normalButtonWidth;
     final containerSize = isTinyScreen
         ? CalendarCombinedHeaderWidget._tinyContainerSize
         : isSmallScreen
-            ? CalendarCombinedHeaderWidget._smallContainerSize
-            : ConstraintTokens.iconContainerSmall;
+        ? CalendarCombinedHeaderWidget._smallContainerSize
+        : ConstraintTokens.iconContainerSmall;
 
     return PopupMenuButton<String>(
       icon: Row(

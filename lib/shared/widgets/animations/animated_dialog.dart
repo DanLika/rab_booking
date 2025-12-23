@@ -23,7 +23,9 @@ Future<T?> showAnimatedDialog<T>({
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    barrierLabel: barrierLabel ?? MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierLabel:
+        barrierLabel ??
+        MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: barrierColor ?? Colors.black54,
     transitionDuration: transitionDuration ?? AnimationTokens.normal,
     routeSettings: routeSettings,
@@ -67,20 +69,17 @@ Future<T?> showSlideUpDialog<T>({
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    barrierLabel: barrierLabel ?? MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierLabel:
+        barrierLabel ??
+        MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: barrierColor ?? Colors.black54,
     transitionDuration: transitionDuration ?? AnimationTokens.normal,
     pageBuilder: (context, animation, secondaryAnimation) => builder(context),
     transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final slideAnimation = Tween<Offset>(
-        begin: const Offset(0, 0.3),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: animation,
-          curve: AnimationTokens.easeOut,
-        ),
-      );
+      final slideAnimation =
+          Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+            CurvedAnimation(parent: animation, curve: AnimationTokens.easeOut),
+          );
 
       return SlideTransition(
         position: slideAnimation,
@@ -169,14 +168,12 @@ class _AnimatedDialogWrapperState extends State<AnimatedDialogWrapper>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
@@ -198,10 +195,7 @@ class _AnimatedDialogWrapperState extends State<AnimatedDialogWrapper>
       builder: (context, child) {
         return Opacity(
           opacity: _fadeAnimation.value,
-          child: Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          ),
+          child: Transform.scale(scale: _scaleAnimation.value, child: child),
         );
       },
       child: widget.child,

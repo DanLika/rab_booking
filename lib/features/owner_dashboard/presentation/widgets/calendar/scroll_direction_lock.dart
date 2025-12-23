@@ -87,7 +87,9 @@ class _ScrollDirectionLockState extends State<ScrollDirectionLock> {
         _lockedAxis = newAxis;
       });
 
-      debugPrint('[ScrollDirectionLock] Locked to: ${newAxis.name} (dx: ${dx.toStringAsFixed(1)}, dy: ${dy.toStringAsFixed(1)})');
+      debugPrint(
+        '[ScrollDirectionLock] Locked to: ${newAxis.name} (dx: ${dx.toStringAsFixed(1)}, dy: ${dy.toStringAsFixed(1)})',
+      );
     }
   }
 

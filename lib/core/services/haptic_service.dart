@@ -123,7 +123,9 @@ class HapticService {
 /// Extension on functions to add haptic feedback
 extension HapticCallback on VoidCallback {
   /// Execute callback with haptic feedback
-  VoidCallback withHaptic({HapticFeedbackType type = HapticFeedbackType.medium}) {
+  VoidCallback withHaptic({
+    HapticFeedbackType type = HapticFeedbackType.medium,
+  }) {
     return () async {
       switch (type) {
         case HapticFeedbackType.light:

@@ -22,7 +22,10 @@ void main() {
     });
 
     test('confirmedProceed is second value', () {
-      expect(PriceLockResult.values[1], equals(PriceLockResult.confirmedProceed));
+      expect(
+        PriceLockResult.values[1],
+        equals(PriceLockResult.confirmedProceed),
+      );
     });
 
     test('cancelled is third value', () {
@@ -81,8 +84,9 @@ void main() {
   });
 
   group('PriceChangeDialogBuilder', () {
-    testWidgets('buildDialogWidget creates correct widget for price increase',
-        (tester) async {
+    testWidgets('buildDialogWidget creates correct widget for price increase', (
+      tester,
+    ) async {
       bool cancelCalled = false;
       bool proceedCalled = false;
 
@@ -119,8 +123,9 @@ void main() {
       expect(proceedCalled, isTrue);
     });
 
-    testWidgets('buildDialogWidget creates correct widget for price decrease',
-        (tester) async {
+    testWidgets('buildDialogWidget creates correct widget for price decrease', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -289,9 +294,7 @@ void main() {
     }
 
     test('totalPrice equals roomPrice + additionalServicesTotal', () {
-      final calc = createCalculation(
-        additionalServicesTotal: 25.0,
-      );
+      final calc = createCalculation(additionalServicesTotal: 25.0);
       expect(calc.totalPrice, equals(125.0));
     });
 
@@ -320,18 +323,12 @@ void main() {
     });
 
     test('priceChangeDelta returns positive delta when price increased', () {
-      final calc = createCalculation(
-        roomPrice: 110.0,
-        lockedTotalPrice: 100.0,
-      );
+      final calc = createCalculation(roomPrice: 110.0, lockedTotalPrice: 100.0);
       expect(calc.priceChangeDelta, equals(10.0));
     });
 
     test('priceChangeDelta returns negative delta when price decreased', () {
-      final calc = createCalculation(
-        roomPrice: 90.0,
-        lockedTotalPrice: 100.0,
-      );
+      final calc = createCalculation(roomPrice: 90.0, lockedTotalPrice: 100.0);
       expect(calc.priceChangeDelta, equals(-10.0));
     });
 
@@ -403,8 +400,9 @@ void main() {
       );
     }
 
-    testWidgets('returns noChange when lockedCalculation is null',
-        (tester) async {
+    testWidgets('returns noChange when lockedCalculation is null', (
+      tester,
+    ) async {
       PriceLockResult? result;
 
       await tester.pumpWidget(
@@ -552,13 +550,13 @@ void main() {
                   onPressed: () async {
                     capturedResult =
                         await PriceLockService.checkAndConfirmPriceChange(
-                      context: context,
-                      currentCalculation: current,
-                      lockedCalculation: locked,
-                      onLockUpdated: () {
-                        lockUpdatedCalled = true;
-                      },
-                    );
+                          context: context,
+                          currentCalculation: current,
+                          lockedCalculation: locked,
+                          onLockUpdated: () {
+                            lockUpdatedCalled = true;
+                          },
+                        );
                   },
                   child: const Text('Test'),
                 );
@@ -579,8 +577,9 @@ void main() {
       expect(lockUpdatedCalled, isTrue);
     });
 
-    testWidgets('returns confirmedProceed when user taps Proceed',
-        (tester) async {
+    testWidgets('returns confirmedProceed when user taps Proceed', (
+      tester,
+    ) async {
       final current = createCalculation(roomPrice: 120.0);
       final locked = createCalculation();
       PriceLockResult? capturedResult;
@@ -595,13 +594,13 @@ void main() {
                   onPressed: () async {
                     capturedResult =
                         await PriceLockService.checkAndConfirmPriceChange(
-                      context: context,
-                      currentCalculation: current,
-                      lockedCalculation: locked,
-                      onLockUpdated: () {
-                        lockUpdatedCalled = true;
-                      },
-                    );
+                          context: context,
+                          currentCalculation: current,
+                          lockedCalculation: locked,
+                          onLockUpdated: () {
+                            lockUpdatedCalled = true;
+                          },
+                        );
                   },
                   child: const Text('Test'),
                 );

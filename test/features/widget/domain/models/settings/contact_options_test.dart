@@ -345,10 +345,7 @@ void main() {
       });
 
       test('prevents enabling showPhone without phoneNumber', () {
-        const original = ContactOptions(
-          showPhone: false,
-          phoneNumber: null,
-        );
+        const original = ContactOptions(showPhone: false, phoneNumber: null);
 
         // Trying to enable showPhone without a number should stay disabled
         final updated = original.copyWith(showPhone: true);

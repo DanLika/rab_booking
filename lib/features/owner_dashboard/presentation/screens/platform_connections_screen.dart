@@ -16,10 +16,12 @@ class PlatformConnectionsScreen extends ConsumerStatefulWidget {
   const PlatformConnectionsScreen({super.key, this.initialUnitId});
 
   @override
-  ConsumerState<PlatformConnectionsScreen> createState() => _PlatformConnectionsScreenState();
+  ConsumerState<PlatformConnectionsScreen> createState() =>
+      _PlatformConnectionsScreenState();
 }
 
-class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsScreen> {
+class _PlatformConnectionsScreenState
+    extends ConsumerState<PlatformConnectionsScreen> {
   @override
   Widget build(BuildContext context) {
     final connectionsAsync = ref.watch(platformConnectionsProvider);
@@ -32,7 +34,9 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      drawer: const OwnerAppDrawer(currentRoute: 'integrations/platform-connections'),
+      drawer: const OwnerAppDrawer(
+        currentRoute: 'integrations/platform-connections',
+      ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: RefreshIndicator(
@@ -55,8 +59,10 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
 
                     // Connections list
                     connectionsAsync.when(
-                      data: (connections) => _buildConnectionsList(context, connections, l10n),
-                      loading: () => const Center(child: CircularProgressIndicator()),
+                      data: (connections) =>
+                          _buildConnectionsList(context, connections, l10n),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
                       error: (error, stack) => Center(
                         child: Text('Error loading connections: $error'),
                       ),
@@ -79,7 +85,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -110,11 +116,11 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50.withValues(alpha: isDark ? 0.2 : 1.0),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.orange.shade300,
+                color: Colors.orange.shade50.withValues(
+                  alpha: isDark ? 0.2 : 1.0,
                 ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade300),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,9 +183,9 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
                 const SizedBox(height: 8),
                 Text(
                   'Add a connection to enable automatic date blocking',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                 ),
               ],
             ),
@@ -189,7 +195,9 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     }
 
     return Column(
-      children: connections.map((connection) => _buildConnectionCard(context, connection, l10n)).toList(),
+      children: connections
+          .map((connection) => _buildConnectionCard(context, connection, l10n))
+          .toList(),
     );
   }
 
@@ -266,9 +274,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
                 ),
                 child: Text(
                   'Error: ${connection.lastError}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.red,
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.red),
                 ),
               ),
             ],
@@ -278,7 +284,10 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     );
   }
 
-  Widget _buildAddConnectionButtons(BuildContext context, AppLocalizations l10n) {
+  Widget _buildAddConnectionButtons(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -287,9 +296,9 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
           children: [
             Text(
               'Add Platform Connection',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
@@ -337,15 +346,25 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 12),
-              Text('• Dates will be automatically blocked on Booking.com when you create bookings in BookBed.'),
+              Text(
+                '• Dates will be automatically blocked on Booking.com when you create bookings in BookBed.',
+              ),
               SizedBox(height: 8),
-              Text('• Dates will be automatically unblocked when bookings are completed.'),
+              Text(
+                '• Dates will be automatically unblocked when bookings are completed.',
+              ),
               SizedBox(height: 8),
-              Text('• Cancelled bookings will NOT automatically unblock dates (to prevent double-booking).'),
+              Text(
+                '• Cancelled bookings will NOT automatically unblock dates (to prevent double-booking).',
+              ),
               SizedBox(height: 8),
-              Text('• You are responsible for verifying sync status and preventing conflicts.'),
+              Text(
+                '• You are responsible for verifying sync status and preventing conflicts.',
+              ),
               SizedBox(height: 8),
-              Text('• BookBed is not responsible for double-booking caused by sync errors.'),
+              Text(
+                '• BookBed is not responsible for double-booking caused by sync errors.',
+              ),
               SizedBox(height: 16),
               Text(
                 'Do you understand and agree to these terms?',
@@ -361,9 +380,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: const Text('I Understand, Continue'),
           ),
         ],
@@ -375,7 +392,9 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     // Show dialog to get hotel ID and room type ID
     final hotelIdController = TextEditingController();
     final roomTypeIdController = TextEditingController();
-    final unitIdController = TextEditingController(text: widget.initialUnitId ?? '');
+    final unitIdController = TextEditingController(
+      text: widget.initialUnitId ?? '',
+    );
 
     if (!mounted) return;
     final result = await showDialog<bool>(
@@ -435,7 +454,10 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
 
         final authUrl = connectAsync['authorizationUrl'] as String?;
         if (authUrl != null && await canLaunchUrl(Uri.parse(authUrl))) {
-          await launchUrl(Uri.parse(authUrl), mode: LaunchMode.externalApplication);
+          await launchUrl(
+            Uri.parse(authUrl),
+            mode: LaunchMode.externalApplication,
+          );
         }
       } catch (e) {
         if (mounted) {
@@ -467,15 +489,25 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 12),
-              Text('• Dates will be automatically blocked on Airbnb when you create bookings in BookBed.'),
+              Text(
+                '• Dates will be automatically blocked on Airbnb when you create bookings in BookBed.',
+              ),
               SizedBox(height: 8),
-              Text('• Dates will be automatically unblocked when bookings are completed.'),
+              Text(
+                '• Dates will be automatically unblocked when bookings are completed.',
+              ),
               SizedBox(height: 8),
-              Text('• Cancelled bookings will NOT automatically unblock dates (to prevent double-booking).'),
+              Text(
+                '• Cancelled bookings will NOT automatically unblock dates (to prevent double-booking).',
+              ),
               SizedBox(height: 8),
-              Text('• You are responsible for verifying sync status and preventing conflicts.'),
+              Text(
+                '• You are responsible for verifying sync status and preventing conflicts.',
+              ),
               SizedBox(height: 8),
-              Text('• BookBed is not responsible for double-booking caused by sync errors.'),
+              Text(
+                '• BookBed is not responsible for double-booking caused by sync errors.',
+              ),
               SizedBox(height: 16),
               Text(
                 'Do you understand and agree to these terms?',
@@ -491,9 +523,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: const Text('I Understand, Continue'),
           ),
         ],
@@ -504,7 +534,9 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
 
     // Show dialog to get listing ID
     final listingIdController = TextEditingController();
-    final unitIdController = TextEditingController(text: widget.initialUnitId ?? '');
+    final unitIdController = TextEditingController(
+      text: widget.initialUnitId ?? '',
+    );
 
     if (!mounted) return;
     final result = await showDialog<bool>(
@@ -555,7 +587,10 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
 
         final authUrl = connectAsync['authorizationUrl'] as String?;
         if (authUrl != null && await canLaunchUrl(Uri.parse(authUrl))) {
-          await launchUrl(Uri.parse(authUrl), mode: LaunchMode.externalApplication);
+          await launchUrl(
+            Uri.parse(authUrl),
+            mode: LaunchMode.externalApplication,
+          );
         }
       } catch (e) {
         if (mounted) {
@@ -570,7 +605,9 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Remove Connection'),
-        content: Text('Are you sure you want to remove the ${connection.platform.displayName} connection?'),
+        content: Text(
+          'Are you sure you want to remove the ${connection.platform.displayName} connection?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -578,9 +615,7 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Remove'),
           ),
         ],
@@ -591,9 +626,9 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
       try {
         await ref.read(removePlatformConnectionProvider(connection.id).future);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Connection removed')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Connection removed')));
         }
       } catch (e) {
         if (mounted) {
@@ -603,4 +638,3 @@ class _PlatformConnectionsScreenState extends ConsumerState<PlatformConnectionsS
     }
   }
 }
-

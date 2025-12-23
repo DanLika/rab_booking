@@ -39,16 +39,21 @@ class _PremiumListTileState extends State<PremiumListTile> {
     final isMobile = screenWidth < 600;
 
     final effectiveIconColor = widget.iconColor ?? AppColors.primary;
-    final effectiveIconBgColor = widget.iconBackgroundColor ?? AppColors.primary.withValues(alpha: 0.1);
+    final effectiveIconBgColor =
+        widget.iconBackgroundColor ?? AppColors.primary.withValues(alpha: 0.1);
 
     return MouseRegion(
       onEnter: (_) => !isDisabled ? setState(() => _isHovered = true) : null,
       onExit: (_) => !isDisabled ? setState(() => _isHovered = false) : null,
-      cursor: isDisabled ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
+      cursor: isDisabled
+          ? SystemMouseCursors.forbidden
+          : SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: _isHovered && !isDisabled ? AppColors.primary.withValues(alpha: 0.04) : Colors.transparent,
+          color: _isHovered && !isDisabled
+              ? AppColors.primary.withValues(alpha: 0.04)
+              : Colors.transparent,
           borderRadius: widget.isLast
               ? BorderTokens.onlyBottom(12.0)
               : BorderRadius.zero,
@@ -58,11 +63,21 @@ class _PremiumListTileState extends State<PremiumListTile> {
           child: ListTile(
             dense: true,
             visualDensity: const VisualDensity(vertical: -1),
-            contentPadding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 4 : 6),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 12 : 16,
+              vertical: isMobile ? 4 : 6,
+            ),
             leading: Container(
               padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(color: effectiveIconBgColor, borderRadius: BorderRadius.circular(8)),
-              child: Icon(widget.icon, color: effectiveIconColor, size: isMobile ? 18 : 20),
+              decoration: BoxDecoration(
+                color: effectiveIconBgColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                widget.icon,
+                color: effectiveIconColor,
+                size: isMobile ? 18 : 20,
+              ),
             ),
             title: Text(
               widget.title,
@@ -77,7 +92,9 @@ class _PremiumListTileState extends State<PremiumListTile> {
                     widget.subtitle as String,
                     style: TextStyle(
                       fontSize: isMobile ? 12 : 13,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.55,
+                      ),
                     ),
                   )
                 : widget.subtitle as Widget?,

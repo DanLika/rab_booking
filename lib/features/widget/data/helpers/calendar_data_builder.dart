@@ -269,7 +269,9 @@ class CalendarDataBuilder {
     // Bug Fix #4: Explicitly mark checkout day if within range
     // Checkout day shows as partialCheckOut (guest leaving, available for new check-in)
     if (!checkOut.isBefore(start) && !checkOut.isAfter(end)) {
-      final checkoutStatus = isPending ? DateStatus.pending : DateStatus.partialCheckOut;
+      final checkoutStatus = isPending
+          ? DateStatus.pending
+          : DateStatus.partialCheckOut;
       calendar[checkOut] = CalendarDateInfo(
         date: checkOut,
         status: checkoutStatus,

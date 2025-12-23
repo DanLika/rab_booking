@@ -43,7 +43,11 @@ class StripePaymentConfig with PaymentConfigBase {
   }
 
   Map<String, dynamic> toMap() {
-    return {'enabled': enabled, 'deposit_percentage': depositPercentage, 'stripe_account_id': stripeAccountId};
+    return {
+      'enabled': enabled,
+      'deposit_percentage': depositPercentage,
+      'stripe_account_id': stripeAccountId,
+    };
   }
 
   /// Creates a copy with modified fields.
@@ -63,7 +67,9 @@ class StripePaymentConfig with PaymentConfigBase {
     return StripePaymentConfig(
       enabled: enabled ?? this.enabled,
       depositPercentage: depositPercentage ?? this.depositPercentage,
-      stripeAccountId: stripeAccountId != null ? stripeAccountId.value : this.stripeAccountId,
+      stripeAccountId: stripeAccountId != null
+          ? stripeAccountId.value
+          : this.stripeAccountId,
     );
   }
 }

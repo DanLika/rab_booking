@@ -79,13 +79,18 @@ class DetailRowWidget extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: TypographyTokens.fontSizeM, color: colors.textSecondary),
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeM,
+              color: colors.textSecondary,
+            ),
           ),
           Text(
             value,
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeM,
-              fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
+              fontWeight: isHighlighted
+                  ? TypographyTokens.bold
+                  : valueFontWeight,
               color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
             ),
           ),

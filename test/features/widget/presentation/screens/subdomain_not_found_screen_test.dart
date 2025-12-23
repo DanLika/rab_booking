@@ -22,9 +22,7 @@ void main() {
 
     testWidgets('displays error icon', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SubdomainNotFoundScreen(subdomain: 'invalid'),
-        ),
+        const MaterialApp(home: SubdomainNotFoundScreen(subdomain: 'invalid')),
       );
 
       // Check for error icon
@@ -33,9 +31,7 @@ void main() {
 
     testWidgets('displays help section', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SubdomainNotFoundScreen(subdomain: 'missing'),
-        ),
+        const MaterialApp(home: SubdomainNotFoundScreen(subdomain: 'missing')),
       );
 
       // Check for help section

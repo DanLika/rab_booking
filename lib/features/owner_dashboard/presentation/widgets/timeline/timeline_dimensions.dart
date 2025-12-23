@@ -48,21 +48,19 @@ class TimelineDimensions {
     if (!width.isFinite || width <= 0) {
       return 50.0 * zoomScale; // Fallback to reasonable default
     }
-    
-    final visibleDays = CalendarGridCalculator.getOptimalVisibleDays(
-      width,
-    );
+
+    final visibleDays = CalendarGridCalculator.getOptimalVisibleDays(width);
     final baseWidth = CalendarGridCalculator.getDayCellWidth(
       width,
       visibleDays,
       textScaleFactor: textScaleFactor,
     );
-    
+
     // Ensure baseWidth is valid
     if (!baseWidth.isFinite || baseWidth <= 0) {
       return 50.0 * zoomScale; // Fallback to reasonable default
     }
-    
+
     final result = baseWidth * zoomScale;
     // Ensure result is valid
     if (!result.isFinite || result <= 0) {
@@ -150,10 +148,16 @@ class TimelineDimensions {
   int get daysInViewport {
     final contentWidth = visibleContentWidth;
     final dayW = dayWidth;
-    if (!contentWidth.isFinite || contentWidth <= 0 || !dayW.isFinite || dayW <= 0) {
+    if (!contentWidth.isFinite ||
+        contentWidth <= 0 ||
+        !dayW.isFinite ||
+        dayW <= 0) {
       return 30; // Fallback to reasonable default
     }
-    return (contentWidth / dayW).ceil().clamp(1, 365); // Clamp to reasonable range
+    return (contentWidth / dayW).ceil().clamp(
+      1,
+      365,
+    ); // Clamp to reasonable range
   }
 
   /// Calculate offset width for windowing

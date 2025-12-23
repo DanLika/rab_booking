@@ -23,7 +23,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
@@ -42,14 +43,19 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showErrorSnackBar(context, 'Please enter a valid email address');
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        'Please enter a valid email address',
+      );
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(enhancedAuthProvider.notifier).resetPassword(_emailController.text.trim());
+      await ref
+          .read(enhancedAuthProvider.notifier)
+          .resetPassword(_emailController.text.trim());
 
       setState(() {
         _emailSent = true;
@@ -73,7 +79,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: Stack(
-          alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
+          alignment:
+              Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
             AuthBackground(
               child: SafeArea(
@@ -81,22 +88,31 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                   builder: (context, constraints) {
                     // Get keyboard height to adjust padding dynamically (with null safety)
                     final mediaQuery = MediaQuery.maybeOf(context);
-                    final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
+                    final keyboardHeight =
+                        (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
+                          0.0,
+                          double.infinity,
+                        );
                     final isKeyboardOpen = keyboardHeight > 0;
 
                     // Calculate minHeight safely - ensure it's always finite and valid
                     double minHeight;
-                    if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
+                    if (isKeyboardOpen &&
+                        constraints.maxHeight.isFinite &&
+                        constraints.maxHeight > 0) {
                       final calculated = constraints.maxHeight - keyboardHeight;
                       minHeight = calculated.clamp(0.0, constraints.maxHeight);
                     } else {
-                      minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
+                      minHeight = constraints.maxHeight.isFinite
+                          ? constraints.maxHeight
+                          : 0.0;
                     }
                     // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
                     return SingleChildScrollView(
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: EdgeInsets.only(
                         left: isCompact ? 16 : 24,
                         right: isCompact ? 16 : 24,
@@ -105,7 +121,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                       ),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
-                        child: Center(child: GlassCard(child: _emailSent ? _buildSuccessView() : _buildFormView())),
+                        child: Center(
+                          child: GlassCard(
+                            child: _emailSent
+                                ? _buildSuccessView()
+                                : _buildFormView(),
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -129,7 +151,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(
-            child: AuthLogoIcon(size: isCompact ? 70 : 80, isWhite: theme.brightness == Brightness.dark),
+            child: AuthLogoIcon(
+              size: isCompact ? 70 : 80,
+              isWhite: theme.brightness == Brightness.dark,
+            ),
           ),
           SizedBox(height: isCompact ? 16 : 20),
           Text(
@@ -188,10 +213,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
               color: AppColors.success,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: AppColors.success.withAlpha(64), blurRadius: 16, offset: const Offset(0, 6)),
+                BoxShadow(
+                  color: AppColors.success.withAlpha(64),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
               ],
             ),
-            child: Icon(Icons.check_circle_outline, size: isCompact ? 36 : 44, color: Colors.white),
+            child: Icon(
+              Icons.check_circle_outline,
+              size: isCompact ? 36 : 44,
+              color: Colors.white,
+            ),
           ),
         ),
         SizedBox(height: isCompact ? 20 : 24),
@@ -233,10 +266,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
         Center(
           child: TextButton(
             onPressed: () => setState(() => _emailSent = false),
-            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+            ),
             child: Text(
               l10n.authResendEmail,
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -248,7 +287,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     return Center(
       child: TextButton(
         onPressed: () => context.go('/login'),
-        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -256,7 +297,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
             const SizedBox(width: 6),
             Text(
               l10n.authBackToLogin,
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),

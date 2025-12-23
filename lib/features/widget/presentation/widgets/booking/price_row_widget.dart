@@ -50,7 +50,9 @@ class PriceRowWidget extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: isBold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
+            fontSize: isBold
+                ? TypographyTokens.fontSizeM
+                : TypographyTokens.fontSizeS,
             color: color ?? colors.textSecondary,
             fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
             fontFamily: TypographyTokens.primaryFont,
@@ -59,7 +61,9 @@ class PriceRowWidget extends StatelessWidget {
         Text(
           amount,
           style: TextStyle(
-            fontSize: isBold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeS,
+            fontSize: isBold
+                ? TypographyTokens.fontSizeL
+                : TypographyTokens.fontSizeS,
             color: color ?? colors.textPrimary,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
             fontFamily: TypographyTokens.primaryFont,

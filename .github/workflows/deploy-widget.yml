@@ -29,6 +29,9 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Generate code (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Build Flutter web (with source maps for Sentry)
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}

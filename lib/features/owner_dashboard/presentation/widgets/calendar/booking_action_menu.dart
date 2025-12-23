@@ -606,7 +606,9 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                                 l10n.bookingActionUnknownGuest,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                              color: Colors.white.withAlpha(
+                                (0.9 * 255).toInt(),
+                              ),
                             ),
                           ),
                         ],
@@ -620,148 +622,148 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
 
               // Units list
               unitsAsync.when(
-              data: (units) {
-                // Filter out current unit
-                final otherUnits = units
-                    .where((u) => u.id != widget.booking.unitId)
-                    .toList();
+                data: (units) {
+                  // Filter out current unit
+                  final otherUnits = units
+                      .where((u) => u.id != widget.booking.unitId)
+                      .toList();
 
-                if (otherUnits.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 48,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          l10n.bookingActionNoOtherUnits,
-                          style: TextStyle(
+                  if (otherUnits.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 48,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.bookingActionNoOtherUnits,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
-                return ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.6,
-                  ),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: otherUnits.length,
-                    itemBuilder: (context, index) {
-                      final unit = otherUnits[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _isProcessing
-                                ? null
-                                : () async {
-                                    Navigator.pop(context);
-                                    await _moveBookingToUnit(
-                                      context,
-                                      unit,
-                                      l10n,
-                                    );
-                                  },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? const Color(0xFF252530)
-                                    : const Color(0xFFF8F8FA),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
+                  return ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.6,
+                    ),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: otherUnits.length,
+                      itemBuilder: (context, index) {
+                        final unit = otherUnits[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _isProcessing
+                                  ? null
+                                  : () async {
+                                      Navigator.pop(context);
+                                      await _moveBookingToUnit(
+                                        context,
+                                        unit,
+                                        l10n,
+                                      );
+                                    },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
                                   color: isDark
-                                      ? AppColors.sectionDividerDark
-                                      : AppColors.sectionDividerLight,
+                                      ? const Color(0xFF252530)
+                                      : const Color(0xFFF8F8FA),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppColors.sectionDividerDark
+                                        : AppColors.sectionDividerLight,
+                                  ),
                                 ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withAlpha(
-                                        (0.15 * 255).toInt(),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withAlpha(
+                                          (0.15 * 255).toInt(),
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
-                                      borderRadius: BorderRadius.circular(10),
+                                      child: Icon(
+                                        _getUnitIcon(unit),
+                                        color: AppColors.primary,
+                                        size: 22,
+                                      ),
                                     ),
-                                    child: Icon(
-                                      _getUnitIcon(unit),
-                                      color: AppColors.primary,
-                                      size: 22,
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            unit.name,
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            l10n.bookingActionGuestsRooms(
+                                              unit.maxGuests,
+                                              unit.bedrooms,
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          unit.name,
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          l10n.bookingActionGuestsRooms(
-                                            unit.maxGuests,
-                                            unit.bedrooms,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ],
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
-                                  ),
-                                  Icon(
-                                    Icons.chevron_right,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-              loading: () => const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, stack) => Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  l10n.bookingActionError(
-                    LoggingService.safeErrorToString(error),
+                        );
+                      },
+                    ),
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, stack) => Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    l10n.bookingActionError(
+                      LoggingService.safeErrorToString(error),
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
-          ],
-        ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );

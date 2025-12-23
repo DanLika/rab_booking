@@ -280,15 +280,9 @@ class SuccessOverlay extends StatelessWidget {
     // Fade in, hold, then fade out and dismiss
     return content
         .animate()
-        .fadeIn(
-          duration: AnimationTokens.fast,
-          curve: AnimationTokens.easeOut,
-        )
+        .fadeIn(duration: AnimationTokens.fast, curve: AnimationTokens.easeOut)
         .then(delay: autoDismissAfter)
-        .fadeOut(
-          duration: AnimationTokens.fast,
-          curve: AnimationTokens.easeIn,
-        )
+        .fadeOut(duration: AnimationTokens.fast, curve: AnimationTokens.easeIn)
         .callback(callback: (_) => onDismiss?.call());
   }
 }

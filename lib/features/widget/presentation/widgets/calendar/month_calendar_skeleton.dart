@@ -32,27 +32,27 @@ class MonthCalendarSkeleton extends StatelessWidget {
     final aspectRatio = isMobile ? 1.0 : 0.95;
 
     return Center(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: horizontalPadding,
-          right: horizontalPadding,
-          bottom: isDesktop ? SpacingTokens.m : SpacingTokens.s,
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Weekday headers skeleton
-              _buildWeekdayHeadersSkeleton(isDark),
-              const SizedBox(height: SpacingTokens.s),
-              // Calendar grid skeleton (5 weeks)
-              _buildGridSkeleton(isDark, cellGap, aspectRatio),
-            ],
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: horizontalPadding,
+              right: horizontalPadding,
+              bottom: isDesktop ? SpacingTokens.m : SpacingTokens.s,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Weekday headers skeleton
+                  _buildWeekdayHeadersSkeleton(isDark),
+                  const SizedBox(height: SpacingTokens.s),
+                  // Calendar grid skeleton (5 weeks)
+                  _buildGridSkeleton(isDark, cellGap, aspectRatio),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
-    )
+        )
         .animate(onPlay: (controller) => controller.repeat(reverse: true))
         .fade(
           duration: const Duration(milliseconds: 1500),

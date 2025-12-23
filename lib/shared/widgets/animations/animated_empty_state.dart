@@ -157,10 +157,7 @@ class StaggeredEmptyState extends StatelessWidget {
   Widget _buildAnimatedElement(int index, Widget child) {
     return child
         .animate(delay: staggerDelay * index)
-        .fadeIn(
-          duration: AnimationTokens.fast,
-          curve: AnimationTokens.easeOut,
-        )
+        .fadeIn(duration: AnimationTokens.fast, curve: AnimationTokens.easeOut)
         .slideY(
           duration: AnimationTokens.fast,
           curve: AnimationTokens.easeOut,

@@ -263,10 +263,7 @@ class AnimatedCardEntrance extends StatelessWidget {
 
     return child
         .animate(delay: delay)
-        .fadeIn(
-          duration: duration,
-          curve: AnimationTokens.easeOut,
-        )
+        .fadeIn(duration: duration, curve: AnimationTokens.easeOut)
         .slideY(
           duration: duration,
           curve: AnimationTokens.easeOut,

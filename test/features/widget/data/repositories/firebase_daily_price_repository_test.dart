@@ -22,10 +22,10 @@ void main() {
           .collection('units')
           .doc(testUnitId)
           .set({
-        'name': 'Test Unit',
-        'base_price': 100.0,
-        'created_at': Timestamp.now(),
-      });
+            'name': 'Test Unit',
+            'base_price': 100.0,
+            'created_at': Timestamp.now(),
+          });
     }
 
     setUp(() {
@@ -121,10 +121,10 @@ void main() {
             .collection('units')
             .doc(otherUnitId)
             .set({
-          'name': 'Other Unit',
-          'base_price': 200.0,
-          'created_at': Timestamp.now(),
-        });
+              'name': 'Other Unit',
+              'base_price': 200.0,
+              'created_at': Timestamp.now(),
+            });
 
         // Add price to testUnitId
         await fakeFirestore
@@ -134,12 +134,12 @@ void main() {
             .doc(testUnitId)
             .collection('daily_prices')
             .add({
-          'unit_id': testUnitId,
-          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
-          'price': 100.0,
-          'available': true,
-          'created_at': Timestamp.now(),
-        });
+              'unit_id': testUnitId,
+              'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
+              'price': 100.0,
+              'available': true,
+              'created_at': Timestamp.now(),
+            });
 
         // Add price to other_unit
         await fakeFirestore
@@ -149,12 +149,12 @@ void main() {
             .doc(otherUnitId)
             .collection('daily_prices')
             .add({
-          'unit_id': otherUnitId,
-          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
-          'price': 200.0,
-          'available': true,
-          'created_at': Timestamp.now(),
-        });
+              'unit_id': otherUnitId,
+              'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
+              'price': 200.0,
+              'available': true,
+              'created_at': Timestamp.now(),
+            });
 
         final prices = await repository.getPricesForDateRange(
           unitId: testUnitId,
@@ -476,12 +476,12 @@ void main() {
             .doc(testUnitId)
             .collection('daily_prices')
             .add({
-          'unit_id': testUnitId,
-          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
-          'price': 100.0,
-          'available': true,
-          'created_at': Timestamp.now(),
-        });
+              'unit_id': testUnitId,
+              'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
+              'price': 100.0,
+              'available': true,
+              'created_at': Timestamp.now(),
+            });
 
         final stream = repository.watchPricesForDateRange(
           unitId: testUnitId,

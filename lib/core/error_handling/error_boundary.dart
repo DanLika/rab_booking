@@ -147,7 +147,8 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
                         .rotate(
                           delay: Duration.zero, // Run simultaneously with moveY
                           duration: const Duration(seconds: 3),
-                          begin: -0.05 / (2 * 3.14159), // Convert radians to turns
+                          begin:
+                              -0.05 / (2 * 3.14159), // Convert radians to turns
                           end: 0.05 / (2 * 3.14159),
                           curve: Curves.easeInOut,
                         ),

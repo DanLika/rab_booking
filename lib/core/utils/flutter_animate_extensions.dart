@@ -151,10 +151,7 @@ extension FlutterAnimateTokens on Animate {
   ///     .buttonPress(),
   /// )
   /// ```
-  Animate buttonPress({
-    double scaleEnd = 0.95,
-    Duration? duration,
-  }) {
+  Animate buttonPress({double scaleEnd = 0.95, Duration? duration}) {
     return scale(
       duration: duration ?? AnimationTokens.instant,
       curve: AnimationTokens.easeOut,
@@ -174,10 +171,7 @@ extension FlutterAnimateTokens on Animate {
   ///     .hoverScale(),
   /// )
   /// ```
-  Animate hoverScale({
-    double scaleEnd = 1.02,
-    Duration? duration,
-  }) {
+  Animate hoverScale({double scaleEnd = 1.02, Duration? duration}) {
     return scale(
       duration: duration ?? AnimationTokens.fast,
       curve: AnimationTokens.easeOut,
@@ -189,12 +183,8 @@ extension FlutterAnimateTokens on Animate {
   /// Dialog entrance animation
   ///
   /// Scales from 90% with fade in
-  Animate dialogEntrance({
-    Duration? duration,
-  }) {
-    return fadeInWithTokens(
-      duration: duration ?? AnimationTokens.fast,
-    ).scale(
+  Animate dialogEntrance({Duration? duration}) {
+    return fadeInWithTokens(duration: duration ?? AnimationTokens.fast).scale(
       duration: duration ?? AnimationTokens.fast,
       curve: AnimationTokens.fastOutSlowIn,
       begin: const Offset(0.9, 0.9),

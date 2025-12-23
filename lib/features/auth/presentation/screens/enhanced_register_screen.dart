@@ -81,10 +81,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     final l10n = AppLocalizations.of(context);
 
     if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showErrorSnackBar(
-        context,
-        l10n.pleaseFixErrors,
-      );
+      ErrorDisplayUtils.showErrorSnackBar(context, l10n.pleaseFixErrors);
       return;
     }
 

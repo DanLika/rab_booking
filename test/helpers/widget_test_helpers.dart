@@ -42,10 +42,7 @@ Widget createTestWidgetHr({
   List<Override>? overrides,
 }) {
   return ProviderScope(
-    overrides: [
-      languageProvider.overrideWith((ref) => 'hr'),
-      ...?overrides,
-    ],
+    overrides: [languageProvider.overrideWith((ref) => 'hr'), ...?overrides],
     child: MaterialApp(
       theme: isDarkMode ? ThemeData.dark() : ThemeData.light(),
       home: Scaffold(body: child),

@@ -26,51 +26,52 @@ class YearCalendarSkeleton extends StatelessWidget {
     final padding = isDesktop ? SpacingTokens.l : SpacingTokens.m;
 
     return LayoutBuilder(
-      builder: (context, constraints) {
-        // Defensive check: ensure constraints are bounded and finite
-        final maxWidth =
-            constraints.maxWidth.isFinite &&
+          builder: (context, constraints) {
+            // Defensive check: ensure constraints are bounded and finite
+            final maxWidth =
+                constraints.maxWidth.isFinite &&
                     constraints.maxWidth != double.infinity
                 ? constraints.maxWidth
                 : 1200.0; // Fallback to reasonable default
-        // Calculate cell size same as real calendar
-        final availableWidth = (maxWidth - (padding * 2)).clamp(
-          300.0,
-          maxWidth,
-        );
-        final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
-          availableWidth,
-        );
-        final calendarWidth =
-            ConstraintTokens.monthLabelWidth + (31 * cellSize);
+            // Calculate cell size same as real calendar
+            final availableWidth = (maxWidth - (padding * 2)).clamp(
+              300.0,
+              maxWidth,
+            );
+            final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
+              availableWidth,
+            );
+            final calendarWidth =
+                ConstraintTokens.monthLabelWidth + (31 * cellSize);
 
-        return Center(
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: padding,
-              right: padding,
-              bottom: padding,
-            ),
-            child: SizedBox(
-              width: calendarWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header row skeleton
-                  _buildHeaderRowSkeleton(cellSize, isDark),
-                  const SizedBox(height: SpacingTokens.s),
-                  // 12 month rows skeleton
-                  ...List.generate(
-                    12,
-                    (index) => _buildMonthRowSkeleton(cellSize, isDark, index),
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: padding,
+                  right: padding,
+                  bottom: padding,
+                ),
+                child: SizedBox(
+                  width: calendarWidth,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header row skeleton
+                      _buildHeaderRowSkeleton(cellSize, isDark),
+                      const SizedBox(height: SpacingTokens.s),
+                      // 12 month rows skeleton
+                      ...List.generate(
+                        12,
+                        (index) =>
+                            _buildMonthRowSkeleton(cellSize, isDark, index),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-        );
-      },
-    )
+            );
+          },
+        )
         .animate(onPlay: (controller) => controller.repeat(reverse: true))
         .fade(
           duration: const Duration(milliseconds: 1500),

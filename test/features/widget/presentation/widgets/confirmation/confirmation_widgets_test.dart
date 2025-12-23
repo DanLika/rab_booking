@@ -169,10 +169,7 @@ void main() {
       await tester.pumpWidget(
         createTestWidget(
           child: const SingleChildScrollView(
-            child: NextStepsSection(
-              isDarkMode: false,
-              paymentMethod: 'stripe',
-            ),
+            child: NextStepsSection(isDarkMode: false, paymentMethod: 'stripe'),
           ),
         ),
       );
@@ -397,10 +394,7 @@ void main() {
         createTestWidget(
           isDarkMode: true,
           child: const SingleChildScrollView(
-            child: NextStepsSection(
-              isDarkMode: true,
-              paymentMethod: 'stripe',
-            ),
+            child: NextStepsSection(isDarkMode: true, paymentMethod: 'stripe'),
           ),
         ),
       );
@@ -413,10 +407,7 @@ void main() {
       await tester.pumpWidget(
         createTestWidget(
           child: const SingleChildScrollView(
-            child: NextStepsSection(
-              isDarkMode: false,
-              paymentMethod: 'stripe',
-            ),
+            child: NextStepsSection(isDarkMode: false, paymentMethod: 'stripe'),
           ),
         ),
       );
@@ -434,10 +425,7 @@ void main() {
       await tester.pumpWidget(
         createTestWidget(
           child: const SingleChildScrollView(
-            child: NextStepsSection(
-              isDarkMode: false,
-              paymentMethod: 'stripe',
-            ),
+            child: NextStepsSection(isDarkMode: false, paymentMethod: 'stripe'),
           ),
         ),
       );

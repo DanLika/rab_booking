@@ -112,14 +112,12 @@ class ConfirmationHeader extends ConsumerWidget {
         Semantics(
           label: confirmationMessage,
           image: true,
-          child: confirmationIcon
-              .animate()
-              .scale(
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.elasticOut,
-                begin: const Offset(0.0, 0.0),
-                end: const Offset(1.0, 1.0),
-              ),
+          child: confirmationIcon.animate().scale(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.elasticOut,
+            begin: const Offset(0.0, 0.0),
+            end: const Offset(1.0, 1.0),
+          ),
         ),
 
         const SizedBox(height: SpacingTokens.l),

@@ -171,10 +171,7 @@ class AnimatedDialogWrapper extends StatelessWidget {
 
     return child
         .animate()
-        .fadeIn(
-          duration: duration,
-          curve: AnimationTokens.easeOut,
-        )
+        .fadeIn(duration: duration, curve: AnimationTokens.easeOut)
         .scale(
           duration: duration,
           curve: curve,

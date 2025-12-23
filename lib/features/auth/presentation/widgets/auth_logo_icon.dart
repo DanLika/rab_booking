@@ -31,8 +31,9 @@ class AuthLogoIcon extends StatelessWidget {
     final Color logoColor;
     if (useMinimalistic) {
       // Minimalistic: Use black in light mode, white in dark mode (for preloader)
-      logoColor =
-          isWhite ? Colors.white : (isDarkMode ? Colors.white : Colors.black);
+      logoColor = isWhite
+          ? Colors.white
+          : (isDarkMode ? Colors.white : Colors.black);
     } else {
       // Colorized: Use brand purple colors (for login/register pages)
       logoColor = isWhite
@@ -41,26 +42,26 @@ class AuthLogoIcon extends StatelessWidget {
     }
 
     return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: logoColor.withAlpha((0.3 * 255 * 0.25).toInt()),
-            blurRadius: 20,
-            spreadRadius: 2,
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: logoColor.withAlpha((0.3 * 255 * 0.25).toInt()),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: CustomPaint(
-        painter: _LogoPainter(
-          isWhite: isWhite,
-          isDarkMode: isDarkMode,
-          useMinimalistic: useMinimalistic,
-        ),
-      ),
-    )
+          child: CustomPaint(
+            painter: _LogoPainter(
+              isWhite: isWhite,
+              isDarkMode: isDarkMode,
+              useMinimalistic: useMinimalistic,
+            ),
+          ),
+        )
         .animate(onPlay: (controller) => controller.repeat(reverse: true))
         .scale(
           duration: const Duration(seconds: 3),
@@ -80,7 +81,9 @@ class AuthLogoIcon extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: logoColor.withAlpha((glowOpacity * 255 * 0.25).toInt()),
+                    color: logoColor.withAlpha(
+                      (glowOpacity * 255 * 0.25).toInt(),
+                    ),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),

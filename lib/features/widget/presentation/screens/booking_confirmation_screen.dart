@@ -284,155 +284,157 @@ class _BookingConfirmationScreenState
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
-        left: false,
-        right: false,
-        child: Column(
-            children: [
-              // Custom header with centered title and back button
-              _buildHeader(colors),
-              Divider(height: 1, thickness: 1, color: colors.borderDefault),
-              // Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(SpacingTokens.l),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 600),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Animated header with icon and message
-                          ConfirmationHeader(
-                            paymentMethod: widget.paymentMethod,
-                            colors: colors,
-                            customLogoUrl: widget
-                                .widgetSettings
-                                ?.themeOptions
-                                ?.customLogoUrl,
-                          ),
-
-                          const SizedBox(height: SpacingTokens.m),
-
-                          // Payment verification warning (Stripe pending)
-                          if (_shouldShowPaymentVerificationWarning)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: SpacingTokens.m,
-                              ),
-                              child: InfoCardWidget(
-                                title: tr.paymentVerificationInProgress,
-                                message: tr.paymentVerificationMessage,
-                                isDarkMode: isDarkMode,
-                              ),
+      body:
+          SafeArea(
+            left: false,
+            right: false,
+            child: Column(
+              children: [
+                // Custom header with centered title and back button
+                _buildHeader(colors),
+                Divider(height: 1, thickness: 1, color: colors.borderDefault),
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(SpacingTokens.l),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Animated header with icon and message
+                            ConfirmationHeader(
+                              paymentMethod: widget.paymentMethod,
+                              colors: colors,
+                              customLogoUrl: widget
+                                  .widgetSettings
+                                  ?.themeOptions
+                                  ?.customLogoUrl,
                             ),
 
-                          // Booking reference card
-                          BookingReferenceCard(
-                            bookingReference: widget.bookingReference,
-                            colors: colors,
-                          ),
+                            const SizedBox(height: SpacingTokens.m),
 
-                          const SizedBox(height: SpacingTokens.m),
+                            // Payment verification warning (Stripe pending)
+                            if (_shouldShowPaymentVerificationWarning)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: SpacingTokens.m,
+                                ),
+                                child: InfoCardWidget(
+                                  title: tr.paymentVerificationInProgress,
+                                  message: tr.paymentVerificationMessage,
+                                  isDarkMode: isDarkMode,
+                                ),
+                              ),
 
-                          // Email spam folder warning
-                          EmailSpamWarningCard(colors: colors),
-
-                          const SizedBox(height: SpacingTokens.l),
-
-                          // Booking summary card
-                          BookingSummaryCard(
-                            propertyName: widget.propertyName,
-                            unitName: widget.unitName,
-                            guestName: widget.guestName,
-                            guestEmail: widget.guestEmail,
-                            checkIn: widget.checkIn,
-                            checkOut: widget.checkOut,
-                            nights: widget.nights,
-                            guests: widget.guests,
-                            totalPrice: widget.totalPrice,
-                            isDarkMode: isDarkMode,
-                            colors: colors,
-                          ),
-
-                          const SizedBox(height: SpacingTokens.l),
-
-                          // Calendar export button (always enabled)
-                          if (widget.booking != null)
-                            CalendarExportButton(
-                              booking: widget.booking!,
-                              unitName: widget.unitName ?? widget.propertyName,
+                            // Booking reference card
+                            BookingReferenceCard(
                               bookingReference: widget.bookingReference,
                               colors: colors,
                             ),
 
-                          // Bank transfer instructions
-                          if (widget.paymentMethod == 'bank_transfer' &&
-                              hasBankTransferDetails &&
-                              bankConfig != null)
-                            BankTransferInstructionsCard(
-                              bankConfig: bankConfig,
-                              bookingReference: widget.bookingReference,
-                              colors: colors,
-                            ),
+                            const SizedBox(height: SpacingTokens.m),
 
-                          // Email confirmation with resend option
-                          EmailConfirmationCard(
-                            guestEmail: widget.guestEmail,
-                            colors: colors,
-                            booking: widget.booking,
-                            emailConfig: widget.emailConfig,
-                            widgetSettings: widget.widgetSettings,
-                            propertyName: widget.propertyName,
-                            bookingReference: widget.bookingReference,
-                          ),
+                            // Email spam folder warning
+                            EmailSpamWarningCard(colors: colors),
 
-                          // Cancellation policy
-                          if (allowGuestCancellation &&
-                              cancellationDeadlineHours != null)
-                            CancellationPolicySection(
+                            const SizedBox(height: SpacingTokens.l),
+
+                            // Booking summary card
+                            BookingSummaryCard(
+                              propertyName: widget.propertyName,
+                              unitName: widget.unitName,
+                              guestName: widget.guestName,
+                              guestEmail: widget.guestEmail,
+                              checkIn: widget.checkIn,
+                              checkOut: widget.checkOut,
+                              nights: widget.nights,
+                              guests: widget.guests,
+                              totalPrice: widget.totalPrice,
                               isDarkMode: isDarkMode,
-                              deadlineHours: cancellationDeadlineHours,
+                              colors: colors,
+                            ),
+
+                            const SizedBox(height: SpacingTokens.l),
+
+                            // Calendar export button (always enabled)
+                            if (widget.booking != null)
+                              CalendarExportButton(
+                                booking: widget.booking!,
+                                unitName:
+                                    widget.unitName ?? widget.propertyName,
+                                bookingReference: widget.bookingReference,
+                                colors: colors,
+                              ),
+
+                            // Bank transfer instructions
+                            if (widget.paymentMethod == 'bank_transfer' &&
+                                hasBankTransferDetails &&
+                                bankConfig != null)
+                              BankTransferInstructionsCard(
+                                bankConfig: bankConfig,
+                                bookingReference: widget.bookingReference,
+                                colors: colors,
+                              ),
+
+                            // Email confirmation with resend option
+                            EmailConfirmationCard(
+                              guestEmail: widget.guestEmail,
+                              colors: colors,
+                              booking: widget.booking,
+                              emailConfig: widget.emailConfig,
+                              widgetSettings: widget.widgetSettings,
+                              propertyName: widget.propertyName,
                               bookingReference: widget.bookingReference,
-                              fromEmail: widget.emailConfig?.fromEmail,
                             ),
 
-                          // Next steps section
-                          NextStepsSection(
-                            isDarkMode: isDarkMode,
-                            paymentMethod: widget.paymentMethod,
-                          ),
+                            // Cancellation policy
+                            if (allowGuestCancellation &&
+                                cancellationDeadlineHours != null)
+                              CancellationPolicySection(
+                                isDarkMode: isDarkMode,
+                                deadlineHours: cancellationDeadlineHours,
+                                bookingReference: widget.bookingReference,
+                                fromEmail: widget.emailConfig?.fromEmail,
+                              ),
 
-                          const SizedBox(height: SpacingTokens.xl),
-
-                          const SizedBox(height: SpacingTokens.m),
-
-                          // Close button - always show for same-tab navigation
-                          _buildCloseButton(colors, isDark: isDarkMode),
-                          const SizedBox(height: SpacingTokens.xl),
-
-                          // Helpful info
-                          Text(
-                            tr.saveBookingReference,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: TypographyTokens.fontSizeS,
-                              color: colors.textSecondary,
+                            // Next steps section
+                            NextStepsSection(
+                              isDarkMode: isDarkMode,
+                              paymentMethod: widget.paymentMethod,
                             ),
-                          ),
-                        ],
+
+                            const SizedBox(height: SpacingTokens.xl),
+
+                            const SizedBox(height: SpacingTokens.m),
+
+                            // Close button - always show for same-tab navigation
+                            _buildCloseButton(colors, isDark: isDarkMode),
+                            const SizedBox(height: SpacingTokens.xl),
+
+                            // Helpful info
+                            Text(
+                              tr.saveBookingReference,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: TypographyTokens.fontSizeS,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeIn,
+              ],
             ),
+          ).animate().fadeIn(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeIn,
+          ),
     );
   }
 

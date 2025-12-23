@@ -958,16 +958,16 @@ class _MoneyLoadingAnimation extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_symbols.length, (index) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  _symbols[index],
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
-                  ),
-                ),
-              )
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      _symbols[index],
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                  )
                   .animate(
                     delay: Duration(milliseconds: index * 120),
                     onPlay: (controller) => controller.repeat(reverse: true),

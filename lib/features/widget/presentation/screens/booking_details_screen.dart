@@ -237,102 +237,105 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
-          left: false,
-          right: false,
-          child: Column(
-            children: [
-              // Custom header with centered title (no back button)
-              _buildHeader(colors),
-              Divider(height: 1, thickness: 1, color: colors.borderDefault),
-              // Content
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Responsive padding - smaller on mobile
-                    final screenWidth = constraints.maxWidth;
-                    final horizontalPadding = screenWidth < 600
-                        ? SpacingTokens.m
-                        : SpacingTokens.l;
-                    final verticalPadding = SpacingTokens.l;
+      body:
+          SafeArea(
+            left: false,
+            right: false,
+            child: Column(
+              children: [
+                // Custom header with centered title (no back button)
+                _buildHeader(colors),
+                Divider(height: 1, thickness: 1, color: colors.borderDefault),
+                // Content
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Responsive padding - smaller on mobile
+                      final screenWidth = constraints.maxWidth;
+                      final horizontalPadding = screenWidth < 600
+                          ? SpacingTokens.m
+                          : SpacingTokens.l;
+                      final verticalPadding = SpacingTokens.l;
 
-                    return SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: verticalPadding,
-                      ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          // On mobile (<600px), use full width; on desktop, limit to 600px
-                          constraints: BoxConstraints(
-                            maxWidth: screenWidth < 600 ? double.infinity : 600,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Status banner - full width
-                              // Uses _currentStatus which updates after cancellation
-                              BookingStatusBanner(
-                                status: _currentStatus,
-                                colors: colors,
-                              ),
+                      return SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: verticalPadding,
+                        ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            // On mobile (<600px), use full width; on desktop, limit to 600px
+                            constraints: BoxConstraints(
+                              maxWidth: screenWidth < 600
+                                  ? double.infinity
+                                  : 600,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Status banner - full width
+                                // Uses _currentStatus which updates after cancellation
+                                BookingStatusBanner(
+                                  status: _currentStatus,
+                                  colors: colors,
+                                ),
 
-                              const SizedBox(height: SpacingTokens.l),
+                                const SizedBox(height: SpacingTokens.l),
 
-                              // Booking reference - full width, prominent
-                              DetailsReferenceCard(
-                                bookingReference:
-                                    widget.booking.bookingReference,
-                                colors: colors,
-                              ),
+                                // Booking reference - full width, prominent
+                                DetailsReferenceCard(
+                                  bookingReference:
+                                      widget.booking.bookingReference,
+                                  colors: colors,
+                                ),
 
-                              const SizedBox(height: SpacingTokens.l),
+                                const SizedBox(height: SpacingTokens.l),
 
-                              // Single column layout
-                              _buildContentCards(colors, isDarkMode),
+                                // Single column layout
+                                _buildContentCards(colors, isDarkMode),
 
-                              const SizedBox(height: SpacingTokens.xl),
+                                const SizedBox(height: SpacingTokens.xl),
 
-                              // Action buttons - full width
-                              _buildActionButtons(colors, isDarkMode),
+                                // Action buttons - full width
+                                _buildActionButtons(colors, isDarkMode),
 
-                              const SizedBox(height: SpacingTokens.m),
+                                const SizedBox(height: SpacingTokens.m),
 
-                              // Help text
-                              Builder(
-                                builder: (context) {
-                                  final tr = WidgetTranslations.of(
-                                    context,
-                                    ref,
-                                  );
-                                  return Text(
-                                    tr.needHelpContactOwner,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: TypographyTokens.fontSizeS,
-                                      color: colors.textTertiary,
-                                    ),
-                                  );
-                                },
-                              ),
+                                // Help text
+                                Builder(
+                                  builder: (context) {
+                                    final tr = WidgetTranslations.of(
+                                      context,
+                                      ref,
+                                    );
+                                    return Text(
+                                      tr.needHelpContactOwner,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: TypographyTokens.fontSizeS,
+                                        color: colors.textTertiary,
+                                      ),
+                                    );
+                                  },
+                                ),
 
-                              // Extra bottom padding for safe area
-                              const SizedBox(height: SpacingTokens.xl),
-                            ],
+                                // Extra bottom padding for safe area
+                                const SizedBox(height: SpacingTokens.xl),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeIn,
+              ],
             ),
+          ).animate().fadeIn(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeIn,
+          ),
     );
   }
 

@@ -1077,18 +1077,18 @@ class _AnimatedEmptyStateContent extends StatelessWidget {
       children: [
         // Animated icon (stagger index: 0)
         Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.notifications_none_rounded,
-            size: 60,
-            color: theme.colorScheme.primary,
-          ),
-        )
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.notifications_none_rounded,
+                size: 60,
+                color: theme.colorScheme.primary,
+              ),
+            )
             .animate()
             .fadeIn(
               duration: AnimationTokens.normal,
@@ -1104,26 +1104,26 @@ class _AnimatedEmptyStateContent extends StatelessWidget {
 
         // Animated text (stagger index: 1)
         Column(
-          children: [
-            Text(
-              l10n.notificationsEmpty,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.notificationsEmptyDesc,
-              style: TextStyle(
-                fontSize: 15,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        )
+              children: [
+                Text(
+                  l10n.notificationsEmpty,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.notificationsEmptyDesc,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            )
             .animate(delay: staggerDelay)
             .fadeIn(
               duration: AnimationTokens.fast,
@@ -1139,56 +1139,56 @@ class _AnimatedEmptyStateContent extends StatelessWidget {
 
         // Animated hints (stagger index: 2)
         Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.black.withValues(alpha: 0.06),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.notificationsEmptyHint,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurfaceVariant,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.06),
                 ),
               ),
-              const SizedBox(height: 12),
-              buildHintRow(
-                Icons.calendar_today_rounded,
-                l10n.notificationsHintNewBookings,
-                hintColor,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.notificationsEmptyHint,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  buildHintRow(
+                    Icons.calendar_today_rounded,
+                    l10n.notificationsHintNewBookings,
+                    hintColor,
+                  ),
+                  const SizedBox(height: 8),
+                  buildHintRow(
+                    Icons.payment_rounded,
+                    l10n.notificationsHintPayments,
+                    hintColor,
+                  ),
+                  const SizedBox(height: 8),
+                  buildHintRow(
+                    Icons.cancel_outlined,
+                    l10n.notificationsHintCancellations,
+                    hintColor,
+                  ),
+                  const SizedBox(height: 8),
+                  buildHintRow(
+                    Icons.access_time_rounded,
+                    l10n.notificationsHintReminders,
+                    hintColor,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              buildHintRow(
-                Icons.payment_rounded,
-                l10n.notificationsHintPayments,
-                hintColor,
-              ),
-              const SizedBox(height: 8),
-              buildHintRow(
-                Icons.cancel_outlined,
-                l10n.notificationsHintCancellations,
-                hintColor,
-              ),
-              const SizedBox(height: 8),
-              buildHintRow(
-                Icons.access_time_rounded,
-                l10n.notificationsHintReminders,
-                hintColor,
-              ),
-            ],
-          ),
-        )
+            )
             .animate(delay: staggerDelay * 2)
             .fadeIn(
               duration: AnimationTokens.normal,

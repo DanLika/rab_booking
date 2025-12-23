@@ -57,7 +57,9 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
       setState(() => _isUploading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to pick image: ${e.toString().split(':').last.trim()}'),
+          content: Text(
+            'Failed to pick image: ${e.toString().split(':').last.trim()}',
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );

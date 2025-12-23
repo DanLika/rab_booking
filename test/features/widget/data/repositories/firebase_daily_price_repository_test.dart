@@ -12,6 +12,21 @@ void main() {
     late FirebaseDailyPriceRepository repository;
 
     const testUnitId = 'unit123';
+    const testPropertyId = 'property123';
+
+    /// Helper to create the property/unit structure that the repository expects
+    Future<void> createUnitStructure() async {
+      await fakeFirestore
+          .collection('properties')
+          .doc(testPropertyId)
+          .collection('units')
+          .doc(testUnitId)
+          .set({
+        'name': 'Test Unit',
+        'base_price': 100.0,
+        'created_at': Timestamp.now(),
+      });
+    }
 
     setUp(() {
       fakeFirestore = FakeFirebaseFirestore();
@@ -26,6 +41,8 @@ void main() {
 
     group('getPriceForDate', () {
       test('returns null when no price exists', () async {
+        await createUnitStructure();
+
         final price = await repository.getPriceForDate(
           unitId: testUnitId,
           date: DateTime(2024, 1, 15),
@@ -40,6 +57,8 @@ void main() {
 
     group('getPricesForDateRange', () {
       test('returns empty list when no prices exist', () async {
+        await createUnitStructure();
+
         final prices = await repository.getPricesForDateRange(
           unitId: testUnitId,
           startDate: DateTime(2024, 1, 1),
@@ -50,24 +69,32 @@ void main() {
       });
 
       test('returns prices within range', () async {
-        // Add some daily prices
-        await fakeFirestore.collection('daily_prices').add({
+        await createUnitStructure();
+
+        // Add some daily prices under the unit's subcollection
+        final unitRef = fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId);
+
+        await unitRef.collection('daily_prices').add({
           'unit_id': testUnitId,
-          'date': Timestamp.fromDate(DateTime(2024, 1, 10)),
+          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 10)),
           'price': 100.0,
           'available': true,
           'created_at': Timestamp.now(),
         });
-        await fakeFirestore.collection('daily_prices').add({
+        await unitRef.collection('daily_prices').add({
           'unit_id': testUnitId,
-          'date': Timestamp.fromDate(DateTime(2024, 1, 15)),
+          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
           'price': 120.0,
           'available': true,
           'created_at': Timestamp.now(),
         });
-        await fakeFirestore.collection('daily_prices').add({
+        await unitRef.collection('daily_prices').add({
           'unit_id': testUnitId,
-          'date': Timestamp.fromDate(DateTime(2024, 1, 20)),
+          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 20)),
           'price': 150.0,
           'available': true,
           'created_at': Timestamp.now(),
@@ -84,16 +111,46 @@ void main() {
       });
 
       test('filters by unit_id', () async {
-        await fakeFirestore.collection('daily_prices').add({
+        await createUnitStructure();
+
+        // Create another unit
+        const otherUnitId = 'other_unit';
+        await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(otherUnitId)
+            .set({
+          'name': 'Other Unit',
+          'base_price': 200.0,
+          'created_at': Timestamp.now(),
+        });
+
+        // Add price to testUnitId
+        await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId)
+            .collection('daily_prices')
+            .add({
           'unit_id': testUnitId,
-          'date': Timestamp.fromDate(DateTime(2024, 1, 15)),
+          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
           'price': 100.0,
           'available': true,
           'created_at': Timestamp.now(),
         });
-        await fakeFirestore.collection('daily_prices').add({
-          'unit_id': 'other_unit',
-          'date': Timestamp.fromDate(DateTime(2024, 1, 15)),
+
+        // Add price to other_unit
+        await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(otherUnitId)
+            .collection('daily_prices')
+            .add({
+          'unit_id': otherUnitId,
+          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
           'price': 200.0,
           'available': true,
           'created_at': Timestamp.now(),
@@ -112,6 +169,8 @@ void main() {
 
     group('calculateBookingPrice', () {
       test('uses fallback price when no daily prices exist', () async {
+        await createUnitStructure();
+
         final price = await repository.calculateBookingPrice(
           unitId: testUnitId,
           checkIn: DateTime(2024, 1, 15),
@@ -124,6 +183,8 @@ void main() {
       });
 
       test('applies weekend price for weekend nights', () async {
+        await createUnitStructure();
+
         final price = await repository.calculateBookingPrice(
           unitId: testUnitId,
           checkIn: DateTime(2024, 1, 19), // Friday
@@ -138,6 +199,8 @@ void main() {
       });
 
       test('uses custom weekend days', () async {
+        await createUnitStructure();
+
         final price = await repository.calculateBookingPrice(
           unitId: testUnitId,
           checkIn: DateTime(2024, 1, 18), // Thursday
@@ -154,6 +217,8 @@ void main() {
 
     group('setPriceForDate', () {
       test('creates new price entry', () async {
+        await createUnitStructure();
+
         final result = await repository.setPriceForDate(
           unitId: testUnitId,
           date: DateTime(2024, 1, 15),
@@ -164,10 +229,13 @@ void main() {
         expect(result.price, 150.0);
         expect(result.id, isNotEmpty);
 
-        // Verify in Firestore
+        // Verify in Firestore (under unit's subcollection)
         final snapshot = await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId)
             .collection('daily_prices')
-            .where('unit_id', isEqualTo: testUnitId)
             .get();
 
         expect(snapshot.docs.length, 1);
@@ -175,6 +243,8 @@ void main() {
       });
 
       test('creates price with full model', () async {
+        await createUnitStructure();
+
         final model = DailyPriceModel(
           id: '',
           unitId: testUnitId,
@@ -204,6 +274,8 @@ void main() {
 
     group('bulkUpdatePrices', () {
       test('creates prices for date range', () async {
+        await createUnitStructure();
+
         final results = await repository.bulkUpdatePrices(
           unitId: testUnitId,
           startDate: DateTime(2024, 1, 10),
@@ -215,10 +287,13 @@ void main() {
         expect(results.length, 6);
         expect(results.every((p) => p.price == 120.0), true);
 
-        // Verify in Firestore
+        // Verify in Firestore (under unit's subcollection)
         final snapshot = await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId)
             .collection('daily_prices')
-            .where('unit_id', isEqualTo: testUnitId)
             .get();
 
         expect(snapshot.docs.length, 6);
@@ -227,6 +302,8 @@ void main() {
 
     group('deletePriceForDate', () {
       test('deletes price for specific date', () async {
+        await createUnitStructure();
+
         // Create a price
         await repository.setPriceForDate(
           unitId: testUnitId,
@@ -236,8 +313,11 @@ void main() {
 
         // Verify exists
         var snapshot = await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId)
             .collection('daily_prices')
-            .where('unit_id', isEqualTo: testUnitId)
             .get();
         expect(snapshot.docs.length, 1);
 
@@ -249,8 +329,11 @@ void main() {
 
         // Verify deleted
         snapshot = await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId)
             .collection('daily_prices')
-            .where('unit_id', isEqualTo: testUnitId)
             .get();
         expect(snapshot.docs.length, 0);
       });
@@ -258,6 +341,8 @@ void main() {
 
     group('deletePricesForDateRange', () {
       test('deletes all prices in range', () async {
+        await createUnitStructure();
+
         // Create prices
         await repository.bulkUpdatePrices(
           unitId: testUnitId,
@@ -268,8 +353,11 @@ void main() {
 
         // Verify exists (11 days)
         var snapshot = await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId)
             .collection('daily_prices')
-            .where('unit_id', isEqualTo: testUnitId)
             .get();
         expect(snapshot.docs.length, 11);
 
@@ -282,8 +370,11 @@ void main() {
 
         // Verify remaining (should be 4: 10, 11, 19, 20)
         snapshot = await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId)
             .collection('daily_prices')
-            .where('unit_id', isEqualTo: testUnitId)
             .get();
         expect(snapshot.docs.length, 4);
       });
@@ -291,6 +382,8 @@ void main() {
 
     group('hasCustomPrice', () {
       test('returns false when no price exists', () async {
+        await createUnitStructure();
+
         final hasPrice = await repository.hasCustomPrice(
           unitId: testUnitId,
           date: DateTime(2024, 1, 15),
@@ -305,11 +398,15 @@ void main() {
 
     group('fetchAllPricesForUnit', () {
       test('returns empty list when no prices exist', () async {
+        await createUnitStructure();
+
         final prices = await repository.fetchAllPricesForUnit(testUnitId);
         expect(prices, isEmpty);
       });
 
       test('returns all prices for unit', () async {
+        await createUnitStructure();
+
         await repository.bulkUpdatePrices(
           unitId: testUnitId,
           startDate: DateTime(2024, 1, 10),
@@ -324,6 +421,8 @@ void main() {
 
     group('bulkPartialUpdate', () {
       test('returns empty list when no dates provided', () async {
+        await createUnitStructure();
+
         final results = await repository.bulkPartialUpdate(
           unitId: testUnitId,
           dates: [],
@@ -334,6 +433,8 @@ void main() {
       });
 
       test('creates new entries with partial data', () async {
+        await createUnitStructure();
+
         final results = await repository.bulkPartialUpdate(
           unitId: testUnitId,
           dates: [DateTime(2024, 1, 15), DateTime(2024, 1, 16)],
@@ -352,6 +453,8 @@ void main() {
 
     group('watchPricesForDateRange', () {
       test('emits empty list when no prices exist', () async {
+        await createUnitStructure();
+
         final stream = repository.watchPricesForDateRange(
           unitId: testUnitId,
           startDate: DateTime(2024, 1, 1),
@@ -363,9 +466,18 @@ void main() {
       });
 
       test('emits prices when they exist', () async {
-        await fakeFirestore.collection('daily_prices').add({
+        await createUnitStructure();
+
+        // Add price under unit's subcollection
+        await fakeFirestore
+            .collection('properties')
+            .doc(testPropertyId)
+            .collection('units')
+            .doc(testUnitId)
+            .collection('daily_prices')
+            .add({
           'unit_id': testUnitId,
-          'date': Timestamp.fromDate(DateTime(2024, 1, 15)),
+          'date': Timestamp.fromDate(DateTime.utc(2024, 1, 15)),
           'price': 100.0,
           'available': true,
           'created_at': Timestamp.now(),

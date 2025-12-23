@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/widgets/booking/guest_form/email_field_with_verification.dart';
+import '../../../../../../helpers/widget_test_helpers.dart';
 
 void main() {
   group('EmailFieldWithVerification', () {
@@ -18,16 +19,14 @@ void main() {
       'renders email field without verification button when not required',
       (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: EmailFieldWithVerification(
-                controller: controller,
-                isDarkMode: false,
-                requireVerification: false,
-                emailVerified: false,
-                onEmailChanged: (_) {},
-                onVerifyPressed: () {},
-              ),
+          createTestWidget(
+            child: EmailFieldWithVerification(
+              controller: controller,
+              isDarkMode: false,
+              requireVerification: false,
+              emailVerified: false,
+              onEmailChanged: (_) {},
+              onVerifyPressed: () {},
             ),
           ),
         );
@@ -41,16 +40,14 @@ void main() {
       'renders verify button when verification required and not verified',
       (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: EmailFieldWithVerification(
-                controller: controller,
-                isDarkMode: false,
-                requireVerification: true,
-                emailVerified: false,
-                onEmailChanged: (_) {},
-                onVerifyPressed: () {},
-              ),
+          createTestWidget(
+            child: EmailFieldWithVerification(
+              controller: controller,
+              isDarkMode: false,
+              requireVerification: true,
+              emailVerified: false,
+              onEmailChanged: (_) {},
+              onVerifyPressed: () {},
             ),
           ),
         );
@@ -62,16 +59,14 @@ void main() {
 
     testWidgets('renders verified icon when email is verified', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: EmailFieldWithVerification(
-              controller: controller,
-              isDarkMode: false,
-              requireVerification: true,
-              emailVerified: true,
-              onEmailChanged: (_) {},
-              onVerifyPressed: () {},
-            ),
+        createTestWidget(
+          child: EmailFieldWithVerification(
+            controller: controller,
+            isDarkMode: false,
+            requireVerification: true,
+            emailVerified: true,
+            onEmailChanged: (_) {},
+            onVerifyPressed: () {},
           ),
         ),
       );
@@ -84,16 +79,14 @@ void main() {
       String? changedValue;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: EmailFieldWithVerification(
-              controller: controller,
-              isDarkMode: false,
-              requireVerification: false,
-              emailVerified: false,
-              onEmailChanged: (value) => changedValue = value,
-              onVerifyPressed: () {},
-            ),
+        createTestWidget(
+          child: EmailFieldWithVerification(
+            controller: controller,
+            isDarkMode: false,
+            requireVerification: false,
+            emailVerified: false,
+            onEmailChanged: (value) => changedValue = value,
+            onVerifyPressed: () {},
           ),
         ),
       );
@@ -109,16 +102,14 @@ void main() {
       controller.text = 'test@example.com';
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: EmailFieldWithVerification(
-              controller: controller,
-              isDarkMode: false,
-              requireVerification: true,
-              emailVerified: false,
-              onEmailChanged: (_) {},
-              onVerifyPressed: () => verifyPressed = true,
-            ),
+        createTestWidget(
+          child: EmailFieldWithVerification(
+            controller: controller,
+            isDarkMode: false,
+            requireVerification: true,
+            emailVerified: false,
+            onEmailChanged: (_) {},
+            onVerifyPressed: () => verifyPressed = true,
           ),
         ),
       );
@@ -131,16 +122,14 @@ void main() {
 
     testWidgets('renders email icon prefix', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: EmailFieldWithVerification(
-              controller: controller,
-              isDarkMode: false,
-              requireVerification: false,
-              emailVerified: false,
-              onEmailChanged: (_) {},
-              onVerifyPressed: () {},
-            ),
+        createTestWidget(
+          child: EmailFieldWithVerification(
+            controller: controller,
+            isDarkMode: false,
+            requireVerification: false,
+            emailVerified: false,
+            onEmailChanged: (_) {},
+            onVerifyPressed: () {},
           ),
         ),
       );
@@ -150,16 +139,15 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: EmailFieldWithVerification(
-              controller: controller,
-              isDarkMode: true,
-              requireVerification: true,
-              emailVerified: false,
-              onEmailChanged: (_) {},
-              onVerifyPressed: () {},
-            ),
+        createTestWidget(
+          isDarkMode: true,
+          child: EmailFieldWithVerification(
+            controller: controller,
+            isDarkMode: true,
+            requireVerification: true,
+            emailVerified: false,
+            onEmailChanged: (_) {},
+            onVerifyPressed: () {},
           ),
         ),
       );
@@ -172,18 +160,16 @@ void main() {
       controller.text = 'invalid-email';
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Form(
-              key: formKey,
-              child: EmailFieldWithVerification(
-                controller: controller,
-                isDarkMode: false,
-                requireVerification: false,
-                emailVerified: false,
-                onEmailChanged: (_) {},
-                onVerifyPressed: () {},
-              ),
+        createTestWidget(
+          child: Form(
+            key: formKey,
+            child: EmailFieldWithVerification(
+              controller: controller,
+              isDarkMode: false,
+              requireVerification: false,
+              emailVerified: false,
+              onEmailChanged: (_) {},
+              onVerifyPressed: () {},
             ),
           ),
         ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../core/design_tokens/animation_tokens.dart';
 
 /// Shows a dialog with scale + fade entrance animation
@@ -134,6 +136,8 @@ Future<T?> showAnimatedBottomSheet<T>({
 
 /// Animated dialog wrapper that adds entrance animation to any dialog content
 ///
+/// Uses flutter_animate for declarative scale + fade entrance animation.
+///
 /// Usage:
 /// ```dart
 /// showDialog(
@@ -143,62 +147,39 @@ Future<T?> showAnimatedBottomSheet<T>({
 ///   ),
 /// );
 /// ```
-class AnimatedDialogWrapper extends StatefulWidget {
+class AnimatedDialogWrapper extends StatelessWidget {
   final Widget child;
   final Duration duration;
   final Curve curve;
+
+  /// Whether to animate (set false to skip animation)
+  final bool animate;
 
   const AnimatedDialogWrapper({
     super.key,
     required this.child,
     this.duration = AnimationTokens.normal,
     this.curve = AnimationTokens.fastOutSlowIn,
+    this.animate = true,
   });
 
   @override
-  State<AnimatedDialogWrapper> createState() => _AnimatedDialogWrapperState();
-}
-
-class _AnimatedDialogWrapperState extends State<AnimatedDialogWrapper>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnimation;
-  late final Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(duration: widget.duration, vsync: this);
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
-    );
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _fadeAnimation.value,
-          child: Transform.scale(scale: _scaleAnimation.value, child: child),
+    if (!animate) {
+      return child;
+    }
+
+    return child
+        .animate()
+        .fadeIn(
+          duration: duration,
+          curve: AnimationTokens.easeOut,
+        )
+        .scale(
+          duration: duration,
+          curve: curve,
+          begin: const Offset(0.8, 0.8),
+          end: const Offset(1.0, 1.0),
         );
-      },
-      child: widget.child,
-    );
   }
 }

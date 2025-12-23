@@ -233,14 +233,14 @@ void main() {
     });
 
     group('isWeekend', () {
-      test('correctly identifies weekend days with default [6, 7]', () {
+      test('correctly identifies weekend days with default [5, 6]', () {
         const config = BookingBehaviorConfig();
 
-        // Saturday = 6, Sunday = 7
+        // Default uses hotel pricing: Friday = 5, Saturday = 6
+        expect(config.isWeekend(DateTime(2024, 1, 5)), true); // Friday
         expect(config.isWeekend(DateTime(2024, 1, 6)), true); // Saturday
-        expect(config.isWeekend(DateTime(2024, 1, 7)), true); // Sunday
+        expect(config.isWeekend(DateTime(2024, 1, 7)), false); // Sunday
         expect(config.isWeekend(DateTime(2024, 1, 8)), false); // Monday
-        expect(config.isWeekend(DateTime(2024, 1, 12)), false); // Friday
       });
 
       test('correctly identifies custom weekend days', () {

@@ -6,8 +6,9 @@ import 'package:bookbed/features/widget/presentation/widgets/bank_transfer/bank_
 import 'package:bookbed/features/widget/presentation/widgets/bank_transfer/payment_warning_section.dart';
 import 'package:bookbed/features/widget/presentation/widgets/bank_transfer/important_notes_section.dart';
 import 'package:bookbed/features/widget/presentation/widgets/bank_transfer/qr_code_payment_section.dart';
+import '../../../../../helpers/widget_test_helpers.dart';
 
-// Helper to get default translations for tests
+// Helper to get default translations for tests (Croatian)
 WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');
 
 void main() {
@@ -33,12 +34,10 @@ void main() {
 
     testWidgets('renders header with title', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: BankDetailsSection(
-              isDarkMode: false,
-              bankConfig: createConfig(accountHolder: 'Test User'),
-            ),
+        createTestWidgetHr(
+          child: BankDetailsSection(
+            isDarkMode: false,
+            bankConfig: createConfig(accountHolder: 'Test User'),
           ),
         ),
       );
@@ -50,12 +49,10 @@ void main() {
 
     testWidgets('renders account holder when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: BankDetailsSection(
-              isDarkMode: false,
-              bankConfig: createConfig(accountHolder: 'John Doe'),
-            ),
+        createTestWidgetHr(
+          child: BankDetailsSection(
+            isDarkMode: false,
+            bankConfig: createConfig(accountHolder: 'John Doe'),
           ),
         ),
       );
@@ -67,12 +64,10 @@ void main() {
 
     testWidgets('renders bank name when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: BankDetailsSection(
-              isDarkMode: false,
-              bankConfig: createConfig(bankName: 'Test Bank'),
-            ),
+        createTestWidgetHr(
+          child: BankDetailsSection(
+            isDarkMode: false,
+            bankConfig: createConfig(bankName: 'Test Bank'),
           ),
         ),
       );
@@ -84,12 +79,10 @@ void main() {
 
     testWidgets('renders IBAN when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: BankDetailsSection(
-              isDarkMode: false,
-              bankConfig: createConfig(iban: 'HR1234567890123456789'),
-            ),
+        createTestWidgetHr(
+          child: BankDetailsSection(
+            isDarkMode: false,
+            bankConfig: createConfig(iban: 'HR1234567890123456789'),
           ),
         ),
       );
@@ -100,12 +93,10 @@ void main() {
 
     testWidgets('renders SWIFT when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: BankDetailsSection(
-              isDarkMode: false,
-              bankConfig: createConfig(swift: 'TESTHR2X'),
-            ),
+        createTestWidgetHr(
+          child: BankDetailsSection(
+            isDarkMode: false,
+            bankConfig: createConfig(swift: 'TESTHR2X'),
           ),
         ),
       );
@@ -116,12 +107,10 @@ void main() {
 
     testWidgets('renders account number when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: BankDetailsSection(
-              isDarkMode: false,
-              bankConfig: createConfig(accountNumber: '1234567890'),
-            ),
+        createTestWidgetHr(
+          child: BankDetailsSection(
+            isDarkMode: false,
+            bankConfig: createConfig(accountNumber: '1234567890'),
           ),
         ),
       );
@@ -133,12 +122,10 @@ void main() {
 
     testWidgets('does not render fields when null', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: BankDetailsSection(
-              isDarkMode: false,
-              bankConfig: BankTransferConfig(enabled: true),
-            ),
+        createTestWidgetHr(
+          child: const BankDetailsSection(
+            isDarkMode: false,
+            bankConfig: BankTransferConfig(enabled: true),
           ),
         ),
       );
@@ -153,18 +140,16 @@ void main() {
 
     testWidgets('renders all fields when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: BankDetailsSection(
-                isDarkMode: false,
-                bankConfig: createConfig(
-                  accountHolder: 'John Doe',
-                  bankName: 'Test Bank',
-                  iban: 'HR1234567890123456789',
-                  swift: 'TESTHR2X',
-                  accountNumber: '1234567890',
-                ),
+        createTestWidgetHr(
+          child: SingleChildScrollView(
+            child: BankDetailsSection(
+              isDarkMode: false,
+              bankConfig: createConfig(
+                accountHolder: 'John Doe',
+                bankName: 'Test Bank',
+                iban: 'HR1234567890123456789',
+                swift: 'TESTHR2X',
+                accountNumber: '1234567890',
               ),
             ),
           ),
@@ -180,13 +165,11 @@ void main() {
 
     testWidgets('renders in dark mode', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: Scaffold(
-            body: BankDetailsSection(
-              isDarkMode: true,
-              bankConfig: createConfig(accountHolder: 'Test User'),
-            ),
+        createTestWidgetHr(
+          isDarkMode: true,
+          child: BankDetailsSection(
+            isDarkMode: true,
+            bankConfig: createConfig(accountHolder: 'Test User'),
           ),
         ),
       );
@@ -200,14 +183,12 @@ void main() {
   group('PaymentWarningSection', () {
     testWidgets('renders deposit amount', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: PaymentWarningSection(
-              translations: testTranslations,
-              isDarkMode: false,
-              depositAmount: '€50.00',
-              deadline: '3 dana',
-            ),
+        createTestWidgetHr(
+          child: PaymentWarningSection(
+            translations: testTranslations,
+            isDarkMode: false,
+            depositAmount: '€50.00',
+            deadline: '3 dana',
           ),
         ),
       );
@@ -217,14 +198,12 @@ void main() {
 
     testWidgets('renders deadline', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: PaymentWarningSection(
-              translations: testTranslations,
-              isDarkMode: false,
-              depositAmount: '€50.00',
-              deadline: '3 dana',
-            ),
+        createTestWidgetHr(
+          child: PaymentWarningSection(
+            translations: testTranslations,
+            isDarkMode: false,
+            depositAmount: '€50.00',
+            deadline: '3 dana',
           ),
         ),
       );
@@ -234,14 +213,12 @@ void main() {
 
     testWidgets('renders warning icon', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: PaymentWarningSection(
-              translations: testTranslations,
-              isDarkMode: false,
-              depositAmount: '€50.00',
-              deadline: '3 dana',
-            ),
+        createTestWidgetHr(
+          child: PaymentWarningSection(
+            translations: testTranslations,
+            isDarkMode: false,
+            depositAmount: '€50.00',
+            deadline: '3 dana',
           ),
         ),
       );
@@ -251,15 +228,13 @@ void main() {
 
     testWidgets('renders in dark mode', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: Scaffold(
-            body: PaymentWarningSection(
-              translations: testTranslations,
-              isDarkMode: true,
-              depositAmount: '€100.00',
-              deadline: '5 dana',
-            ),
+        createTestWidgetHr(
+          isDarkMode: true,
+          child: PaymentWarningSection(
+            translations: testTranslations,
+            isDarkMode: true,
+            depositAmount: '€100.00',
+            deadline: '5 dana',
           ),
         ),
       );
@@ -270,14 +245,12 @@ void main() {
 
     testWidgets('renders with different amounts', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: PaymentWarningSection(
-              translations: testTranslations,
-              isDarkMode: false,
-              depositAmount: '€250.75',
-              deadline: '24 sata',
-            ),
+        createTestWidgetHr(
+          child: PaymentWarningSection(
+            translations: testTranslations,
+            isDarkMode: false,
+            depositAmount: '€250.75',
+            deadline: '24 sata',
           ),
         ),
       );
@@ -290,14 +263,12 @@ void main() {
   group('ImportantNotesSection', () {
     testWidgets('renders header with title', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ImportantNotesSection(
-              translations: testTranslations,
-              isDarkMode: false,
-              bankConfig: null,
-              remainingAmount: '€80.00',
-            ),
+        createTestWidgetHr(
+          child: ImportantNotesSection(
+            translations: testTranslations,
+            isDarkMode: false,
+            bankConfig: null,
+            remainingAmount: '€80.00',
           ),
         ),
       );
@@ -311,15 +282,13 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: ImportantNotesSection(
-                translations: testTranslations,
-                isDarkMode: false,
-                bankConfig: null,
-                remainingAmount: '€80.00',
-              ),
+        createTestWidgetHr(
+          child: SingleChildScrollView(
+            child: ImportantNotesSection(
+              translations: testTranslations,
+              isDarkMode: false,
+              bankConfig: null,
+              remainingAmount: '€80.00',
             ),
           ),
         ),
@@ -333,15 +302,13 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: ImportantNotesSection(
-                translations: testTranslations,
-                isDarkMode: false,
-                bankConfig: const BankTransferConfig(enabled: true),
-                remainingAmount: '€120.00',
-              ),
+        createTestWidgetHr(
+          child: SingleChildScrollView(
+            child: ImportantNotesSection(
+              translations: testTranslations,
+              isDarkMode: false,
+              bankConfig: const BankTransferConfig(enabled: true),
+              remainingAmount: '€120.00',
             ),
           ),
         ),
@@ -352,18 +319,16 @@ void main() {
 
     testWidgets('renders custom notes when enabled', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ImportantNotesSection(
-              translations: testTranslations,
-              isDarkMode: false,
-              bankConfig: const BankTransferConfig(
-                enabled: true,
-                useCustomNotes: true,
-                customNotes: 'Ovo je prilagođena poruka za kupce.',
-              ),
-              remainingAmount: '€80.00',
+        createTestWidgetHr(
+          child: ImportantNotesSection(
+            translations: testTranslations,
+            isDarkMode: false,
+            bankConfig: const BankTransferConfig(
+              enabled: true,
+              useCustomNotes: true,
+              customNotes: 'Ovo je prilagođena poruka za kupce.',
             ),
+            remainingAmount: '€80.00',
           ),
         ),
       );
@@ -375,19 +340,17 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: ImportantNotesSection(
-                translations: testTranslations,
-                isDarkMode: false,
-                bankConfig: const BankTransferConfig(
-                  enabled: true,
-                  useCustomNotes: true,
-                  customNotes: '', // Empty custom notes
-                ),
-                remainingAmount: '€50.00',
+        createTestWidgetHr(
+          child: SingleChildScrollView(
+            child: ImportantNotesSection(
+              translations: testTranslations,
+              isDarkMode: false,
+              bankConfig: const BankTransferConfig(
+                enabled: true,
+                useCustomNotes: true,
+                customNotes: '', // Empty custom notes
               ),
+              remainingAmount: '€50.00',
             ),
           ),
         ),
@@ -398,15 +361,13 @@ void main() {
 
     testWidgets('renders in dark mode', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: Scaffold(
-            body: ImportantNotesSection(
-              translations: testTranslations,
-              isDarkMode: true,
-              bankConfig: null,
-              remainingAmount: '€100.00',
-            ),
+        createTestWidgetHr(
+          isDarkMode: true,
+          child: ImportantNotesSection(
+            translations: testTranslations,
+            isDarkMode: true,
+            bankConfig: null,
+            remainingAmount: '€100.00',
           ),
         ),
       );
@@ -432,16 +393,14 @@ void main() {
 
     testWidgets('renders header with title', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: QrCodePaymentSection(
-                translations: testTranslations,
-                isDarkMode: false,
-                bankConfig: createConfig(),
-                amount: 100.0,
-                bookingReference: 'REF123',
-              ),
+        createTestWidgetHr(
+          child: SingleChildScrollView(
+            child: QrCodePaymentSection(
+              translations: testTranslations,
+              isDarkMode: false,
+              bankConfig: createConfig(),
+              amount: 100.0,
+              bookingReference: 'REF123',
             ),
           ),
         ),
@@ -453,16 +412,14 @@ void main() {
 
     testWidgets('renders QR code icon in header', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: QrCodePaymentSection(
-                translations: testTranslations,
-                isDarkMode: false,
-                bankConfig: createConfig(),
-                amount: 100.0,
-                bookingReference: 'REF123',
-              ),
+        createTestWidgetHr(
+          child: SingleChildScrollView(
+            child: QrCodePaymentSection(
+              translations: testTranslations,
+              isDarkMode: false,
+              bankConfig: createConfig(),
+              amount: 100.0,
+              bookingReference: 'REF123',
             ),
           ),
         ),
@@ -473,16 +430,14 @@ void main() {
 
     testWidgets('renders info banner', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: QrCodePaymentSection(
-                translations: testTranslations,
-                isDarkMode: false,
-                bankConfig: createConfig(),
-                amount: 100.0,
-                bookingReference: 'REF123',
-              ),
+        createTestWidgetHr(
+          child: SingleChildScrollView(
+            child: QrCodePaymentSection(
+              translations: testTranslations,
+              isDarkMode: false,
+              bankConfig: createConfig(),
+              amount: 100.0,
+              bookingReference: 'REF123',
             ),
           ),
         ),
@@ -494,17 +449,15 @@ void main() {
 
     testWidgets('renders in dark mode', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: QrCodePaymentSection(
-                translations: testTranslations,
-                isDarkMode: true,
-                bankConfig: createConfig(),
-                amount: 150.0,
-                bookingReference: 'REF456',
-              ),
+        createTestWidgetHr(
+          isDarkMode: true,
+          child: SingleChildScrollView(
+            child: QrCodePaymentSection(
+              translations: testTranslations,
+              isDarkMode: true,
+              bankConfig: createConfig(),
+              amount: 150.0,
+              bookingReference: 'REF456',
             ),
           ),
         ),
@@ -518,16 +471,14 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: QrCodePaymentSection(
-                translations: testTranslations,
-                isDarkMode: false,
-                bankConfig: createConfig(),
-                amount: 299.99,
-                bookingReference: 'BOOKING-2025-001',
-              ),
+        createTestWidgetHr(
+          child: SingleChildScrollView(
+            child: QrCodePaymentSection(
+              translations: testTranslations,
+              isDarkMode: false,
+              bankConfig: createConfig(),
+              amount: 299.99,
+              bookingReference: 'BOOKING-2025-001',
             ),
           ),
         ),

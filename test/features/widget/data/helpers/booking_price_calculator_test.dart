@@ -141,12 +141,12 @@ void main() {
         expect(result.weekendNights, 1);
       });
 
-      test('applies weekend price for Sunday', () async {
-        // Jan 21, 2024 is Sunday
+      test('applies weekend price for Friday (hotel pricing default)', () async {
+        // Jan 19, 2024 is Friday (weekday 5) - weekend in hotel pricing [5, 6]
         final result = await calculator.calculate(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 21), // Sunday
-          checkOut: DateTime(2024, 1, 22), // Monday (1 night)
+          checkIn: DateTime(2024, 1, 19), // Friday
+          checkOut: DateTime(2024, 1, 20), // Saturday (1 night on Friday)
           basePrice: 100.0,
           weekendBasePrice: 150.0,
           checkAvailability: false,
@@ -158,7 +158,8 @@ void main() {
       });
 
       test('mixes weekend and weekday prices', () async {
-        // Jan 19 = Friday, Jan 20 = Saturday, Jan 21 = Sunday
+        // Jan 19 = Friday (5), Jan 20 = Saturday (6), Jan 21 = Sunday (7)
+        // Default weekend days: [5, 6] (Friday, Saturday - hotel pricing)
         final result = await calculator.calculate(
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 19), // Friday
@@ -168,10 +169,10 @@ void main() {
           checkAvailability: false,
         );
 
-        // Friday = 100, Saturday = 150, Sunday = 150
+        // Friday = 150 (weekend), Saturday = 150 (weekend), Sunday = 100 (weekday)
         expect(result.totalPrice, 400.0);
         expect(result.nights, 3);
-        expect(result.weekendNights, 2);
+        expect(result.weekendNights, 2); // Fri + Sat
       });
 
       test('uses custom weekend days', () async {
@@ -193,15 +194,17 @@ void main() {
       test('uses base price when weekendBasePrice is null', () async {
         final result = await calculator.calculate(
           unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 20), // Saturday
+          checkIn: DateTime(2024, 1, 20), // Saturday (weekday 6 = weekend)
           checkOut: DateTime(2024, 1, 21), // Sunday (1 night)
           basePrice: 100.0,
           weekendBasePrice: null,
           checkAvailability: false,
         );
 
+        // Price falls back to basePrice when weekendBasePrice is null
         expect(result.totalPrice, 100.0);
-        expect(result.weekendNights, 0);
+        // But the day is still counted as a weekend day (Saturday = weekday 6)
+        expect(result.weekendNights, 1);
       });
     });
 

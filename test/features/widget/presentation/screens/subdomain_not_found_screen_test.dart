@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/screens/subdomain_not_found_screen.dart';
+import '../../../../helpers/widget_test_helpers.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -8,8 +9,8 @@ void main() {
   group('SubdomainNotFoundScreen', () {
     testWidgets('renders with subdomain', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SubdomainNotFoundScreen(subdomain: 'test-subdomain'),
+        createTestWidget(
+          child: const SubdomainNotFoundScreen(subdomain: 'test-subdomain'),
         ),
       );
 
@@ -22,7 +23,9 @@ void main() {
 
     testWidgets('displays error icon', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: SubdomainNotFoundScreen(subdomain: 'invalid')),
+        createTestWidget(
+          child: const SubdomainNotFoundScreen(subdomain: 'invalid'),
+        ),
       );
 
       // Check for error icon
@@ -31,7 +34,9 @@ void main() {
 
     testWidgets('displays help section', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: SubdomainNotFoundScreen(subdomain: 'missing')),
+        createTestWidget(
+          child: const SubdomainNotFoundScreen(subdomain: 'missing'),
+        ),
       );
 
       // Check for help section
@@ -41,8 +46,8 @@ void main() {
 
     testWidgets('displays explanation text', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SubdomainNotFoundScreen(subdomain: 'nonexistent'),
+        createTestWidget(
+          child: const SubdomainNotFoundScreen(subdomain: 'nonexistent'),
         ),
       );
 
@@ -54,9 +59,9 @@ void main() {
 
     testWidgets('renders in dark theme', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: const SubdomainNotFoundScreen(subdomain: 'dark-test'),
+        createTestWidget(
+          isDarkMode: true,
+          child: const SubdomainNotFoundScreen(subdomain: 'dark-test'),
         ),
       );
 
@@ -66,9 +71,8 @@ void main() {
 
     testWidgets('renders in light theme', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.light(),
-          home: const SubdomainNotFoundScreen(subdomain: 'light-test'),
+        createTestWidget(
+          child: const SubdomainNotFoundScreen(subdomain: 'light-test'),
         ),
       );
 
@@ -82,8 +86,8 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SubdomainNotFoundScreen(subdomain: 'scroll-test'),
+        createTestWidget(
+          child: const SubdomainNotFoundScreen(subdomain: 'scroll-test'),
         ),
       );
 
@@ -99,8 +103,8 @@ void main() {
       const longSubdomain = 'this-is-a-very-long-subdomain-that-might-overflow';
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SubdomainNotFoundScreen(subdomain: longSubdomain),
+        createTestWidget(
+          child: const SubdomainNotFoundScreen(subdomain: longSubdomain),
         ),
       );
 
@@ -112,8 +116,8 @@ void main() {
       const specialSubdomain = 'test-123';
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SubdomainNotFoundScreen(subdomain: specialSubdomain),
+        createTestWidget(
+          child: const SubdomainNotFoundScreen(subdomain: specialSubdomain),
         ),
       );
 

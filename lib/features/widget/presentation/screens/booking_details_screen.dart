@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../providers/theme_provider.dart';
 import '../providers/language_provider.dart';
 import '../mixins/theme_detection_mixin.dart';
@@ -43,10 +45,8 @@ class BookingDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
-    with SingleTickerProviderStateMixin, ThemeDetectionMixin {
+    with ThemeDetectionMixin {
   bool _isCancelling = false;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
 
   // Local state for booking status (updated after cancellation)
   // This allows UI to reflect cancelled state without refetching from Firestore
@@ -72,17 +72,6 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     // Initialize local status from widget (allows UI update after cancellation)
     // Note: status is already a String in BookingDetailsModel
     _currentStatus = widget.booking.status;
-
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
-
-    _animationController.forward();
   }
 
   @override
@@ -90,12 +79,6 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     super.didChangeDependencies();
     // Detect system theme on first load (only once to preserve manual toggle)
     detectSystemTheme();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   /// Safely parse check-in date and calculate hours until check-in
@@ -254,9 +237,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SafeArea(
+      body: SafeArea(
           left: false,
           right: false,
           child: Column(
@@ -348,8 +329,10 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
               ),
             ],
           ),
-        ),
-      ),
+        ).animate().fadeIn(
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeIn,
+            ),
     );
   }
 

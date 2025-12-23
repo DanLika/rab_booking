@@ -152,11 +152,33 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       if (authState.error != null) {
         if (!mounted) return;
         debugPrint('[LOGIN_SCREEN] Auth state has error, showing snackbar');
-        setState(() => _isLoading = false);
-        _shakeForm(); // Shake on error
+
+        final errorMsg = authState.error!;
+        final isPassError = _isPasswordError(errorMsg);
+        final isEmailErr = _isEmailError(errorMsg);
+
+        setState(() {
+          _isLoading = false;
+          _autovalidateMode = AutovalidateMode.onUserInteraction;
+          if (isPassError) {
+            _passwordErrorFromServer = _getLocalizedError(errorMsg, l10n);
+          } else if (isEmailErr) {
+            _emailErrorFromServer = _getLocalizedError(errorMsg, l10n);
+          }
+        });
+
+        _shakeForm();
+
+        // Force form validation to show inline errors
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _formKey.currentState != null) {
+            _formKey.currentState!.validate();
+          }
+        });
+
         ErrorDisplayUtils.showErrorSnackBar(
           context,
-          _getLocalizedError(authState.error!, l10n),
+          _getLocalizedError(errorMsg, l10n),
           duration: const Duration(seconds: 10),
         );
         return;
@@ -165,7 +187,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       if (authState.requiresEmailVerification) {
         if (!mounted) return;
         debugPrint('[LOGIN_SCREEN] Email verification required, redirecting');
-        setState(() => _isLoading = false);
+        // Keep loader visible during navigation (widget will dispose naturally)
         context.go(OwnerRoutes.emailVerification);
         return;
       }

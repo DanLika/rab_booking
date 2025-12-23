@@ -1,17 +1,20 @@
 import 'dart:async';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cloud_functions/cloud_functions.dart';
-import '../../../../core/utils/async_utils.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../../core/utils/platform_scroll_physics.dart';
+
+import '../../../../core/design_tokens/animation_tokens.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
-import '../../../../core/services/logging_service.dart';
+import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/platform_scroll_physics.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/owner_app_drawer.dart';
 
@@ -932,66 +935,13 @@ class _StripeConnectSetupScreenState
 }
 
 /// Animated money loading widget with floating currency symbols
-/// Uses design system colors for consistency
-class _MoneyLoadingAnimation extends StatefulWidget {
+///
+/// Uses flutter_animate for staggered bouncing animations.
+class _MoneyLoadingAnimation extends StatelessWidget {
   const _MoneyLoadingAnimation();
-
-  @override
-  State<_MoneyLoadingAnimation> createState() => _MoneyLoadingAnimationState();
-}
-
-class _MoneyLoadingAnimationState extends State<_MoneyLoadingAnimation>
-    with TickerProviderStateMixin {
-  late final List<AnimationController> _controllers;
-  late final List<Animation<double>> _bounceAnimations;
-  late final List<Animation<double>> _fadeAnimations;
 
   // Currency symbols to animate
   static const _symbols = ['€', '\$', '£', '¥', '₣'];
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controllers = List.generate(
-      _symbols.length,
-      (index) => AnimationController(
-        duration: Duration(milliseconds: 800 + (index * 150)),
-        vsync: this,
-      ),
-    );
-
-    _bounceAnimations = _controllers.map((controller) {
-      return Tween<double>(
-        begin: 0,
-        end: -20,
-      ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
-    }).toList();
-
-    _fadeAnimations = _controllers.map((controller) {
-      return Tween<double>(
-        begin: 0.4,
-        end: 1.0,
-      ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
-    }).toList();
-
-    // Start animations with staggered delays
-    for (var i = 0; i < _controllers.length; i++) {
-      Future.delayed(Duration(milliseconds: i * 120), () {
-        if (mounted) {
-          _controllers[i].repeat(reverse: true);
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1007,31 +957,33 @@ class _MoneyLoadingAnimationState extends State<_MoneyLoadingAnimation>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_symbols.length, (index) {
-              return AnimatedBuilder(
-                animation: _controllers[index],
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, _bounceAnimations[index].value),
-                    child: Opacity(
-                      opacity: _fadeAnimations[index].value,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          _symbols[index],
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor.withAlpha(
-                              ((_fadeAnimations[index].value * 0.8 + 0.2) * 255)
-                                  .toInt(),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  _symbols[index],
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                  ),
+                ),
+              )
+                  .animate(
+                    delay: Duration(milliseconds: index * 120),
+                    onPlay: (controller) => controller.repeat(reverse: true),
+                  )
+                  .slideY(
+                    duration: Duration(milliseconds: 800 + (index * 150)),
+                    curve: AnimationTokens.easeInOut,
+                    begin: 0,
+                    end: -20,
+                  )
+                  .fade(
+                    duration: Duration(milliseconds: 800 + (index * 150)),
+                    curve: AnimationTokens.easeInOut,
+                    begin: 0.4,
+                    end: 1.0,
                   );
-                },
-              );
             }),
           ),
         ),

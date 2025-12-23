@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/widgets/confirmation/cancellation_policy_section.dart';
 import 'package:bookbed/features/widget/presentation/widgets/confirmation/next_steps_section.dart';
+import '../../../../../helpers/widget_test_helpers.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -9,13 +10,11 @@ void main() {
   group('CancellationPolicySection', () {
     testWidgets('renders header with title and icon', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 48,
-              bookingReference: 'REF123',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 48,
+            bookingReference: 'REF123',
           ),
         ),
       );
@@ -26,13 +25,11 @@ void main() {
 
     testWidgets('renders deadline hours text', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 24,
-              bookingReference: 'REF123',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 24,
+            bookingReference: 'REF123',
           ),
         ),
       );
@@ -45,13 +42,11 @@ void main() {
 
     testWidgets('renders different deadline hours', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 72,
-              bookingReference: 'REF456',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 72,
+            bookingReference: 'REF456',
           ),
         ),
       );
@@ -64,13 +59,11 @@ void main() {
 
     testWidgets('renders cancellation instructions header', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 48,
-              bookingReference: 'REF123',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 48,
+            bookingReference: 'REF123',
           ),
         ),
       );
@@ -80,13 +73,11 @@ void main() {
 
     testWidgets('renders booking reference in instructions', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 48,
-              bookingReference: 'BOOKING-2025-001',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 48,
+            bookingReference: 'BOOKING-2025-001',
           ),
         ),
       );
@@ -99,13 +90,11 @@ void main() {
 
     testWidgets('renders reply to email step', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 48,
-              bookingReference: 'REF123',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 48,
+            bookingReference: 'REF123',
           ),
         ),
       );
@@ -115,14 +104,12 @@ void main() {
 
     testWidgets('renders fromEmail when provided', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 48,
-              bookingReference: 'REF123',
-              fromEmail: 'bookings@example.com',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 48,
+            bookingReference: 'REF123',
+            fromEmail: 'bookings@example.com',
           ),
         ),
       );
@@ -132,13 +119,11 @@ void main() {
 
     testWidgets('does not render fromEmail when null', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 48,
-              bookingReference: 'REF123',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 48,
+            bookingReference: 'REF123',
           ),
         ),
       );
@@ -148,14 +133,12 @@ void main() {
 
     testWidgets('renders in dark mode', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: const Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: true,
-              deadlineHours: 48,
-              bookingReference: 'REF123',
-            ),
+        createTestWidget(
+          isDarkMode: true,
+          child: const CancellationPolicySection(
+            isDarkMode: true,
+            deadlineHours: 48,
+            bookingReference: 'REF123',
           ),
         ),
       );
@@ -166,14 +149,12 @@ void main() {
 
     testWidgets('renders bullet points for steps', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CancellationPolicySection(
-              isDarkMode: false,
-              deadlineHours: 48,
-              bookingReference: 'REF123',
-              fromEmail: 'test@example.com',
-            ),
+        createTestWidget(
+          child: const CancellationPolicySection(
+            isDarkMode: false,
+            deadlineHours: 48,
+            bookingReference: 'REF123',
+            fromEmail: 'test@example.com',
           ),
         ),
       );
@@ -186,13 +167,11 @@ void main() {
   group('NextStepsSection', () {
     testWidgets('renders header title', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: NextStepsSection(
-                isDarkMode: false,
-                paymentMethod: 'stripe',
-              ),
+        createTestWidget(
+          child: const SingleChildScrollView(
+            child: NextStepsSection(
+              isDarkMode: false,
+              paymentMethod: 'stripe',
             ),
           ),
         ),
@@ -204,13 +183,11 @@ void main() {
     group('Stripe payment method', () {
       testWidgets('renders stripe-specific steps', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'stripe',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'stripe',
               ),
             ),
           ),
@@ -223,13 +200,11 @@ void main() {
 
       testWidgets('renders stripe step descriptions', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'stripe',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'stripe',
               ),
             ),
           ),
@@ -247,13 +222,11 @@ void main() {
 
       testWidgets('renders stripe step icons', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'stripe',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'stripe',
               ),
             ),
           ),
@@ -268,13 +241,11 @@ void main() {
     group('Bank transfer payment method', () {
       testWidgets('renders bank transfer-specific steps', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'bank_transfer',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'bank_transfer',
               ),
             ),
           ),
@@ -287,13 +258,11 @@ void main() {
 
       testWidgets('renders bank transfer step descriptions', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'bank_transfer',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'bank_transfer',
               ),
             ),
           ),
@@ -313,13 +282,11 @@ void main() {
 
       testWidgets('renders bank transfer icons', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'bank_transfer',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'bank_transfer',
               ),
             ),
           ),
@@ -334,13 +301,11 @@ void main() {
     group('Pay on arrival payment method', () {
       testWidgets('renders pay on arrival-specific steps', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'pay_on_arrival',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'pay_on_arrival',
               ),
             ),
           ),
@@ -354,13 +319,11 @@ void main() {
 
       testWidgets('renders pay on arrival step descriptions', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'pay_on_arrival',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'pay_on_arrival',
               ),
             ),
           ),
@@ -375,13 +338,11 @@ void main() {
 
       testWidgets('renders pay on arrival icons', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'pay_on_arrival',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'pay_on_arrival',
               ),
             ),
           ),
@@ -397,13 +358,11 @@ void main() {
     group('Default/unknown payment method', () {
       testWidgets('renders default steps for unknown method', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'unknown_method',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'unknown_method',
               ),
             ),
           ),
@@ -415,13 +374,11 @@ void main() {
 
       testWidgets('renders default step descriptions', (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: NextStepsSection(
-                  isDarkMode: false,
-                  paymentMethod: 'other',
-                ),
+          createTestWidget(
+            child: const SingleChildScrollView(
+              child: NextStepsSection(
+                isDarkMode: false,
+                paymentMethod: 'other',
               ),
             ),
           ),
@@ -437,14 +394,12 @@ void main() {
 
     testWidgets('renders in dark mode', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: const Scaffold(
-            body: SingleChildScrollView(
-              child: NextStepsSection(
-                isDarkMode: true,
-                paymentMethod: 'stripe',
-              ),
+        createTestWidget(
+          isDarkMode: true,
+          child: const SingleChildScrollView(
+            child: NextStepsSection(
+              isDarkMode: true,
+              paymentMethod: 'stripe',
             ),
           ),
         ),
@@ -456,13 +411,11 @@ void main() {
 
     testWidgets('renders step connector lines between steps', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: NextStepsSection(
-                isDarkMode: false,
-                paymentMethod: 'stripe',
-              ),
+        createTestWidget(
+          child: const SingleChildScrollView(
+            child: NextStepsSection(
+              isDarkMode: false,
+              paymentMethod: 'stripe',
             ),
           ),
         ),
@@ -479,13 +432,11 @@ void main() {
 
     testWidgets('renders step icons in circular containers', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: NextStepsSection(
-                isDarkMode: false,
-                paymentMethod: 'stripe',
-              ),
+        createTestWidget(
+          child: const SingleChildScrollView(
+            child: NextStepsSection(
+              isDarkMode: false,
+              paymentMethod: 'stripe',
             ),
           ),
         ),

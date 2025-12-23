@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../core/design_tokens/animation_tokens.dart';
 
 /// Animated card with hover effects (scale + elevation) for desktop
@@ -218,6 +220,9 @@ class _HoverListTileState extends State<HoverListTile> {
 
 /// Entrance animation wrapper for cards/list items
 ///
+/// Uses flutter_animate for declarative animations with BookBed's
+/// animation design tokens.
+///
 /// Usage:
 /// ```dart
 /// AnimatedCardEntrance(
@@ -225,81 +230,48 @@ class _HoverListTileState extends State<HoverListTile> {
 ///   child: MyCard(),
 /// )
 /// ```
-class AnimatedCardEntrance extends StatefulWidget {
+class AnimatedCardEntrance extends StatelessWidget {
   /// Card content
   final Widget child;
 
   /// Animation delay
   final Duration delay;
 
-  /// Animation duration (default: normal - 300ms)
+  /// Animation duration (default: fast - 200ms)
   final Duration duration;
 
   /// Slide offset (default: 30 pixels from bottom)
   final double slideOffset;
 
+  /// Whether to animate (set false to skip animation)
+  final bool animate;
+
   const AnimatedCardEntrance({
     super.key,
     required this.child,
     this.delay = Duration.zero,
-    this.duration = AnimationTokens.normal,
+    this.duration = AnimationTokens.fast,
     this.slideOffset = 30,
+    this.animate = true,
   });
 
   @override
-  State<AnimatedCardEntrance> createState() => _AnimatedCardEntranceState();
-}
-
-class _AnimatedCardEntranceState extends State<AnimatedCardEntrance>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fadeAnimation;
-  late final Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(duration: widget.duration, vsync: this);
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
-    );
-
-    _slideAnimation =
-        Tween<Offset>(
-          begin: Offset(0, widget.slideOffset),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
-        );
-
-    Future.delayed(widget.delay, () {
-      if (mounted) {
-        _controller.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _fadeAnimation.value,
-          child: Transform.translate(
-            offset: _slideAnimation.value,
-            child: child,
-          ),
+    if (!animate) {
+      return child;
+    }
+
+    return child
+        .animate(delay: delay)
+        .fadeIn(
+          duration: duration,
+          curve: AnimationTokens.easeOut,
+        )
+        .slideY(
+          duration: duration,
+          curve: AnimationTokens.easeOut,
+          begin: slideOffset,
+          end: 0,
         );
-      },
-      child: widget.child,
-    );
   }
 }

@@ -14,6 +14,7 @@ import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/loading_overlay.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
@@ -77,16 +78,17 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   }
 
   Future<void> _handleRegister() async {
+    final l10n = AppLocalizations.of(context);
+
     if (!_formKey.currentState!.validate()) {
       ErrorDisplayUtils.showErrorSnackBar(
         context,
-        'Please fix the errors above',
+        l10n.pleaseFixErrors,
       );
       return;
     }
 
     if (!_acceptedTerms || !_acceptedPrivacy) {
-      final l10n = AppLocalizations.of(context);
       ErrorDisplayUtils.showErrorSnackBar(context, l10n.authMustAcceptTerms);
       return;
     }
@@ -136,12 +138,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       }
 
       if (authState.requiresEmailVerification) {
-        setState(() => _isLoading = false);
+        // Keep loader visible during navigation (widget will dispose naturally)
         context.go(OwnerRoutes.emailVerification);
         return;
       }
 
-      setState(() => _isLoading = false);
+      // Registration successful without email verification - navigate to dashboard
+      // Keep loader visible during navigation (widget will dispose naturally)
+      context.go(OwnerRoutes.overview);
     } catch (e) {
       if (!mounted) return;
 
@@ -153,8 +157,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           _emailErrorFromServer =
               errorMessage.contains('already exists') ||
                   errorMessage.contains('email-already-in-use')
-              ? 'An account already exists with this email'
-              : 'Invalid email address';
+              ? l10n.errorEmailInUse
+              : l10n.authErrorInvalidEmail;
           _isLoading = false;
         });
         _formKey.currentState!.validate();
@@ -272,6 +276,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                 ),
               ),
             ),
+            if (_isLoading)
+              const LoadingOverlay(message: 'Creating your account...'),
           ],
         ),
       ),

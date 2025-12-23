@@ -25,8 +25,11 @@ class ProfileImagePicker extends StatefulWidget {
 class _ProfileImagePickerState extends State<ProfileImagePicker> {
   Uint8List? _imageBytes;
   bool _isHovered = false;
+  bool _isUploading = false;
 
   Future<void> _pickImage() async {
+    setState(() => _isUploading = true);
+
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
@@ -38,13 +41,26 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
 
       if (image != null) {
         final bytes = await image.readAsBytes();
+        if (!mounted) return;
         setState(() {
           _imageBytes = bytes;
+          _isUploading = false;
         });
         widget.onImageSelected(bytes, image.name);
+      } else {
+        // User cancelled picker
+        if (!mounted) return;
+        setState(() => _isUploading = false);
       }
-    } catch (_) {
-      // Image picking cancelled or failed - silently ignore
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick image: ${e.toString().split(':').last.trim()}'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -150,8 +166,31 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
               child: _buildImageContent(),
             ),
 
-            // Hover Overlay
-            if (_isHovered)
+            // Loading Overlay (during image processing)
+            if (_isUploading)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black.withAlpha((0.6 * 255).toInt()),
+                  ),
+                  child: Center(
+                    child: SizedBox(
+                      width: widget.size * 0.3,
+                      height: widget.size * 0.3,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Hover Overlay (only when not loading)
+            if (_isHovered && !_isUploading)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -170,14 +209,14 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                 ),
               ),
 
-            // Edit Button
+            // Edit Button (disabled during upload)
             Positioned(
               bottom: 0,
               right: 0,
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: _pickImage,
+                  onTap: _isUploading ? null : _pickImage,
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.all(10),

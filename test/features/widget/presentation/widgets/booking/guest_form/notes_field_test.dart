@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bookbed/features/widget/presentation/widgets/booking/guest_form/notes_field.dart';
+import '../../../../../../helpers/widget_test_helpers.dart';
 
 void main() {
   group('NotesField', () {
@@ -17,12 +17,8 @@ void main() {
 
     testWidgets('renders text form field', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: NotesField(controller: controller, isDarkMode: false),
-            ),
-          ),
+        createTestWidget(
+          child: NotesField(controller: controller, isDarkMode: false),
         ),
       );
 
@@ -31,12 +27,8 @@ void main() {
 
     testWidgets('renders notes icon prefix', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: NotesField(controller: controller, isDarkMode: false),
-            ),
-          ),
+        createTestWidget(
+          child: NotesField(controller: controller, isDarkMode: false),
         ),
       );
 
@@ -45,12 +37,8 @@ void main() {
 
     testWidgets('shows label text', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: NotesField(controller: controller, isDarkMode: false),
-            ),
-          ),
+        createTestWidget(
+          child: NotesField(controller: controller, isDarkMode: false),
         ),
       );
 
@@ -59,12 +47,9 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: NotesField(controller: controller, isDarkMode: true),
-            ),
-          ),
+        createTestWidget(
+          isDarkMode: true,
+          child: NotesField(controller: controller, isDarkMode: true),
         ),
       );
 
@@ -73,12 +58,8 @@ void main() {
 
     testWidgets('accepts multi-line text input', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: NotesField(controller: controller, isDarkMode: false),
-            ),
-          ),
+        createTestWidget(
+          child: NotesField(controller: controller, isDarkMode: false),
         ),
       );
 
@@ -93,14 +74,10 @@ void main() {
       final formKey = GlobalKey<FormState>();
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Form(
-                key: formKey,
-                child: NotesField(controller: controller, isDarkMode: false),
-              ),
-            ),
+        createTestWidget(
+          child: Form(
+            key: formKey,
+            child: NotesField(controller: controller, isDarkMode: false),
           ),
         ),
       );

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../core/design_tokens/animation_tokens.dart';
 
 /// Animated empty state widget with fade + scale entrance animation
+///
+/// Uses flutter_animate for declarative animations with BookBed's
+/// animation design tokens.
 ///
 /// Usage:
 /// ```dart
@@ -11,7 +16,7 @@ import '../../../core/design_tokens/animation_tokens.dart';
 ///   subtitle: 'Your bookings will appear here',
 /// )
 /// ```
-class AnimatedEmptyState extends StatefulWidget {
+class AnimatedEmptyState extends StatelessWidget {
   /// Icon to display
   final IconData icon;
 
@@ -45,96 +50,67 @@ class AnimatedEmptyState extends StatefulWidget {
   });
 
   @override
-  State<AnimatedEmptyState> createState() => _AnimatedEmptyStateState();
-}
-
-class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fadeAnimation;
-  late final Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: AnimationTokens.normal,
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: AnimationTokens.fastOutSlowIn,
-      ),
-    );
-
-    if (widget.animate) {
-      _controller.forward();
-    } else {
-      _controller.value = 1.0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final effectiveIconColor =
-        widget.iconColor ??
+        iconColor ??
         theme.colorScheme.onSurfaceVariant.withAlpha((0.5 * 255).toInt());
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _fadeAnimation.value,
-          child: Transform.scale(scale: _scaleAnimation.value, child: child),
-        );
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(widget.icon, size: widget.iconSize, color: effectiveIconColor),
-          const SizedBox(height: 16),
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: iconSize, color: effectiveIconColor),
+        const SizedBox(height: 16),
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt()),
+            fontWeight: FontWeight.w500,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 8),
           Text(
-            widget.title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt()),
-              fontWeight: FontWeight.w500,
+            subtitle!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
-          if (widget.subtitle != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              widget.subtitle!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-          if (widget.actionButton != null) ...[
-            const SizedBox(height: 24),
-            widget.actionButton!,
-          ],
         ],
-      ),
+        if (actionButton != null) ...[
+          const SizedBox(height: 24),
+          actionButton!,
+        ],
+      ],
     );
+
+    // Skip animation if disabled
+    if (!animate) {
+      return content;
+    }
+
+    // Apply fade + scale animation using flutter_animate
+    return content
+        .animate()
+        .fadeIn(
+          duration: AnimationTokens.normal,
+          curve: AnimationTokens.easeOut,
+        )
+        .scale(
+          duration: AnimationTokens.normal,
+          curve: AnimationTokens.fastOutSlowIn,
+          begin: const Offset(0.8, 0.8),
+          end: const Offset(1.0, 1.0),
+        );
   }
 }
 
 /// Staggered animated empty state with delayed animations for each element
+///
+/// Each element (icon, title, subtitle, button) animates in sequence
+/// with configurable delay between them.
 ///
 /// Usage:
 /// ```dart
@@ -144,7 +120,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
 ///   subtitle: 'You're all caught up!',
 /// )
 /// ```
-class StaggeredEmptyState extends StatefulWidget {
+class StaggeredEmptyState extends StatelessWidget {
   /// Icon to display
   final IconData icon;
 
@@ -177,81 +153,27 @@ class StaggeredEmptyState extends StatefulWidget {
     this.staggerDelay = const Duration(milliseconds: 100),
   });
 
-  @override
-  State<StaggeredEmptyState> createState() => _StaggeredEmptyStateState();
-}
-
-class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
-    with TickerProviderStateMixin {
-  late final List<AnimationController> _controllers;
-  late final List<Animation<double>> _fadeAnimations;
-  late final List<Animation<double>> _slideAnimations;
-
-  int get _elementCount =>
-      2 +
-      (widget.subtitle != null ? 1 : 0) +
-      (widget.actionButton != null ? 1 : 0);
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controllers = List.generate(
-      _elementCount,
-      (index) =>
-          AnimationController(duration: AnimationTokens.fast, vsync: this),
-    );
-
-    _fadeAnimations = _controllers.map((controller) {
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: controller, curve: AnimationTokens.easeOut),
-      );
-    }).toList();
-
-    _slideAnimations = _controllers.map((controller) {
-      return Tween<double>(begin: 20.0, end: 0.0).animate(
-        CurvedAnimation(parent: controller, curve: AnimationTokens.easeOut),
-      );
-    }).toList();
-
-    // Start staggered animations
-    for (var i = 0; i < _controllers.length; i++) {
-      Future.delayed(widget.staggerDelay * i, () {
-        if (mounted) {
-          _controllers[i].forward();
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
+  /// Build animated element with stagger delay
   Widget _buildAnimatedElement(int index, Widget child) {
-    return AnimatedBuilder(
-      animation: _controllers[index],
-      builder: (context, _) {
-        return Opacity(
-          opacity: _fadeAnimations[index].value,
-          child: Transform.translate(
-            offset: Offset(0, _slideAnimations[index].value),
-            child: child,
-          ),
+    return child
+        .animate(delay: staggerDelay * index)
+        .fadeIn(
+          duration: AnimationTokens.fast,
+          curve: AnimationTokens.easeOut,
+        )
+        .slideY(
+          duration: AnimationTokens.fast,
+          curve: AnimationTokens.easeOut,
+          begin: 20,
+          end: 0,
         );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final effectiveIconColor =
-        widget.iconColor ??
+        iconColor ??
         theme.colorScheme.onSurfaceVariant.withAlpha((0.5 * 255).toInt());
 
     int elementIndex = 0;
@@ -261,13 +183,13 @@ class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
       children: [
         _buildAnimatedElement(
           elementIndex++,
-          Icon(widget.icon, size: widget.iconSize, color: effectiveIconColor),
+          Icon(icon, size: iconSize, color: effectiveIconColor),
         ),
         const SizedBox(height: 16),
         _buildAnimatedElement(
           elementIndex++,
           Text(
-            widget.title,
+            title,
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt()),
               fontWeight: FontWeight.w500,
@@ -275,12 +197,12 @@ class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
             textAlign: TextAlign.center,
           ),
         ),
-        if (widget.subtitle != null) ...[
+        if (subtitle != null) ...[
           const SizedBox(height: 8),
           _buildAnimatedElement(
             elementIndex++,
             Text(
-              widget.subtitle!,
+              subtitle!,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -288,9 +210,9 @@ class _StaggeredEmptyStateState extends State<StaggeredEmptyState>
             ),
           ),
         ],
-        if (widget.actionButton != null) ...[
+        if (actionButton != null) ...[
           const SizedBox(height: 24),
-          _buildAnimatedElement(elementIndex, widget.actionButton!),
+          _buildAnimatedElement(elementIndex, actionButton!),
         ],
       ],
     );

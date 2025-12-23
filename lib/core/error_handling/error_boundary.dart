@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/gradient_extensions.dart';
 
 /// Safely convert exception to string, handling null and edge cases
@@ -111,37 +112,7 @@ class _DefaultErrorWidget extends StatefulWidget {
   State<_DefaultErrorWidget> createState() => _DefaultErrorWidgetState();
 }
 
-class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _floatAnimation;
-  late final Animation<double> _rotateAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _floatAnimation = Tween<double>(
-      begin: -8,
-      end: 8,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    _rotateAnimation = Tween<double>(
-      begin: -0.05,
-      end: 0.05,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -160,20 +131,26 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget>
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Animated illustration
-                    AnimatedBuilder(
-                      animation: _controller,
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(0, _floatAnimation.value),
-                          child: Transform.rotate(
-                            angle: _rotateAnimation.value,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: _buildErrorIllustration(primaryColor),
-                    ),
+                    // Animated illustration with float and rotate effect
+                    // Both animations run simultaneously (delay: Duration.zero)
+                    _buildErrorIllustration(primaryColor)
+                        .animate(
+                          onPlay: (controller) =>
+                              controller.repeat(reverse: true),
+                        )
+                        .moveY(
+                          duration: const Duration(seconds: 3),
+                          begin: -8,
+                          end: 8,
+                          curve: Curves.easeInOut,
+                        )
+                        .rotate(
+                          delay: Duration.zero, // Run simultaneously with moveY
+                          duration: const Duration(seconds: 3),
+                          begin: -0.05 / (2 * 3.14159), // Convert radians to turns
+                          end: 0.05 / (2 * 3.14159),
+                          curve: Curves.easeInOut,
+                        ),
                     const SizedBox(height: 32),
 
                     // Title

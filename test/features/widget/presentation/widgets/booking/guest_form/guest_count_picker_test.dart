@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/widgets/booking/guest_form/guest_count_picker.dart';
+import '../../../../../../helpers/widget_test_helpers.dart';
 
 void main() {
   group('GuestCountPicker', () {
     testWidgets('renders title and guest counts', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestCountPicker(
-              adults: 2,
-              children: 1,
-              maxGuests: 6,
-              isDarkMode: false,
-              onAdultsChanged: (_) {},
-              onChildrenChanged: (_) {},
-            ),
+        createTestWidget(
+          child: GuestCountPicker(
+            adults: 2,
+            children: 1,
+            maxGuests: 6,
+            isDarkMode: false,
+            onAdultsChanged: (_) {},
+            onChildrenChanged: (_) {},
           ),
         ),
       );
@@ -29,16 +28,14 @@ void main() {
 
     testWidgets('shows max guests info', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestCountPicker(
-              adults: 2,
-              children: 0,
-              maxGuests: 4,
-              isDarkMode: false,
-              onAdultsChanged: (_) {},
-              onChildrenChanged: (_) {},
-            ),
+        createTestWidget(
+          child: GuestCountPicker(
+            adults: 2,
+            children: 0,
+            maxGuests: 4,
+            isDarkMode: false,
+            onAdultsChanged: (_) {},
+            onChildrenChanged: (_) {},
           ),
         ),
       );
@@ -50,16 +47,14 @@ void main() {
       int newValue = 0;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestCountPicker(
-              adults: 2,
-              children: 0,
-              maxGuests: 6,
-              isDarkMode: false,
-              onAdultsChanged: (value) => newValue = value,
-              onChildrenChanged: (_) {},
-            ),
+        createTestWidget(
+          child: GuestCountPicker(
+            adults: 2,
+            children: 0,
+            maxGuests: 6,
+            isDarkMode: false,
+            onAdultsChanged: (value) => newValue = value,
+            onChildrenChanged: (_) {},
           ),
         ),
       );
@@ -76,16 +71,14 @@ void main() {
       int newValue = 0;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestCountPicker(
-              adults: 2,
-              children: 0,
-              maxGuests: 6,
-              isDarkMode: false,
-              onAdultsChanged: (value) => newValue = value,
-              onChildrenChanged: (_) {},
-            ),
+        createTestWidget(
+          child: GuestCountPicker(
+            adults: 2,
+            children: 0,
+            maxGuests: 6,
+            isDarkMode: false,
+            onAdultsChanged: (value) => newValue = value,
+            onChildrenChanged: (_) {},
           ),
         ),
       );
@@ -100,16 +93,14 @@ void main() {
 
     testWidgets('shows capacity warning when at max', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestCountPicker(
-              adults: 4,
-              children: 2,
-              maxGuests: 6,
-              isDarkMode: false,
-              onAdultsChanged: (_) {},
-              onChildrenChanged: (_) {},
-            ),
+        createTestWidget(
+          child: GuestCountPicker(
+            adults: 4,
+            children: 2,
+            maxGuests: 6,
+            isDarkMode: false,
+            onAdultsChanged: (_) {},
+            onChildrenChanged: (_) {},
           ),
         ),
       );
@@ -120,16 +111,14 @@ void main() {
 
     testWidgets('hides capacity warning when below max', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestCountPicker(
-              adults: 2,
-              children: 1,
-              maxGuests: 6,
-              isDarkMode: false,
-              onAdultsChanged: (_) {},
-              onChildrenChanged: (_) {},
-            ),
+        createTestWidget(
+          child: GuestCountPicker(
+            adults: 2,
+            children: 1,
+            maxGuests: 6,
+            isDarkMode: false,
+            onAdultsChanged: (_) {},
+            onChildrenChanged: (_) {},
           ),
         ),
       );
@@ -140,16 +129,15 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestCountPicker(
-              adults: 2,
-              children: 0,
-              maxGuests: 4,
-              isDarkMode: true,
-              onAdultsChanged: (_) {},
-              onChildrenChanged: (_) {},
-            ),
+        createTestWidget(
+          isDarkMode: true,
+          child: GuestCountPicker(
+            adults: 2,
+            children: 0,
+            maxGuests: 4,
+            isDarkMode: true,
+            onAdultsChanged: (_) {},
+            onChildrenChanged: (_) {},
           ),
         ),
       );
@@ -161,16 +149,14 @@ void main() {
       int callCount = 0;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestCountPicker(
-              adults: 1,
-              children: 0,
-              maxGuests: 6,
-              isDarkMode: false,
-              onAdultsChanged: (_) => callCount++,
-              onChildrenChanged: (_) {},
-            ),
+        createTestWidget(
+          child: GuestCountPicker(
+            adults: 1,
+            children: 0,
+            maxGuests: 6,
+            isDarkMode: false,
+            onAdultsChanged: (_) => callCount++,
+            onChildrenChanged: (_) {},
           ),
         ),
       );

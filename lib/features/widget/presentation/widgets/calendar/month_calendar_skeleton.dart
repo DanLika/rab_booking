@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/responsive_helper.dart';
@@ -9,40 +11,12 @@ import '../../theme/responsive_helper.dart';
 /// - 7-column weekday header row
 /// - 5-week day grid (35 cells)
 ///
+/// Uses flutter_animate for pulse opacity animation.
 /// Uses the same responsive constraints as the real calendar:
 /// - Desktop (>=1024px): maxWidth 650px
 /// - Mobile/Tablet: maxWidth 600px
-class MonthCalendarSkeleton extends StatefulWidget {
+class MonthCalendarSkeleton extends StatelessWidget {
   const MonthCalendarSkeleton({super.key});
-
-  @override
-  State<MonthCalendarSkeleton> createState() => _MonthCalendarSkeletonState();
-}
-
-class _MonthCalendarSkeletonState extends State<MonthCalendarSkeleton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-
-    _animation = Tween<double>(
-      begin: 0.4,
-      end: 0.8,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,36 +31,35 @@ class _MonthCalendarSkeletonState extends State<MonthCalendarSkeleton>
     final cellGap = SpacingTokens.calendarCellGap(context);
     final aspectRatio = isMobile ? 1.0 : 0.95;
 
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _animation.value,
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: horizontalPadding,
-                right: horizontalPadding,
-                bottom: isDesktop ? SpacingTokens.m : SpacingTokens.s,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxWidth),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Weekday headers skeleton
-                    _buildWeekdayHeadersSkeleton(isDark),
-                    const SizedBox(height: SpacingTokens.s),
-                    // Calendar grid skeleton (5 weeks)
-                    _buildGridSkeleton(isDark, cellGap, aspectRatio),
-                  ],
-                ),
-              ),
-            ),
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: horizontalPadding,
+          right: horizontalPadding,
+          bottom: isDesktop ? SpacingTokens.m : SpacingTokens.s,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Weekday headers skeleton
+              _buildWeekdayHeadersSkeleton(isDark),
+              const SizedBox(height: SpacingTokens.s),
+              // Calendar grid skeleton (5 weeks)
+              _buildGridSkeleton(isDark, cellGap, aspectRatio),
+            ],
           ),
+        ),
+      ),
+    )
+        .animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .fade(
+          duration: const Duration(milliseconds: 1500),
+          begin: 0.4,
+          end: 0.8,
+          curve: Curves.easeInOut,
         );
-      },
-    );
   }
 
   Widget _buildWeekdayHeadersSkeleton(bool isDark) {

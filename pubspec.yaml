@@ -49,11 +49,9 @@ dependencies:
 
   # Internationalization
   intl: ^0.20.1
-  easy_localization: ^3.0.7
 
   # Image Handling
   cached_network_image: ^3.4.1
-  photo_view: ^0.15.0
   image_picker: ^1.1.2
 
   # PDF & Receipt Generation
@@ -68,34 +66,21 @@ dependencies:
   shimmer: ^3.0.0
 
   # Animations & Scroll Effects (2025 UX)
-  visibility_detector: ^0.4.0+2
-  flutter_animate: ^4.5.0
+  flutter_animate: ^4.5.0  # Declarative animations - reduces boilerplate by ~70%
   auto_size_text: ^3.0.0
-  step_progress_indicator: ^1.0.2
 
   # URL Launcher
   url_launcher: ^6.3.1
-
-  # Maps & Location (OpenStreetMap)
-  flutter_map: ^8.2.2
-  latlong2: ^0.9.1
-  flutter_map_marker_cluster: ^8.2.2
-  geolocator: ^14.0.2
-  geocoding: ^4.0.0
-  scrollable_positioned_list: ^0.3.8
 
   # JSON Serialization
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
 
   # Utilities
-  flutter_dotenv: ^6.0.0
   share_plus: ^12.0.1
-  vector_math: ^2.1.4
   shared_preferences: ^2.3.4
   flutter_secure_storage: ^9.0.0  # Secure credential storage
   uuid: ^4.5.1
-  universal_io: ^2.2.2
   crypto: ^3.0.3
   connectivity_plus: ^7.0.0
   web: ^1.0.0
@@ -107,7 +92,6 @@ dependencies:
   # Charts
   fl_chart: ^1.1.1
   graphic: ^2.6.0
-  fake_cloud_firestore: ^4.0.0
 
 dev_dependencies:
   flutter_test:
@@ -124,6 +108,7 @@ dev_dependencies:
 
   # Testing
   mocktail: ^1.0.4
+  fake_cloud_firestore: ^4.0.0  # Moved from dependencies - test-only package
   # integration_test removed - was causing Android release build issues
   # (Flutter bug: dev_dependencies included in GeneratedPluginRegistrant.java)
   golden_toolkit: ^0.15.0

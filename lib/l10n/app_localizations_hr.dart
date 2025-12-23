@@ -132,10 +132,10 @@ class AppLocalizationsHr extends AppLocalizations {
   String get phoneNumber => 'Broj Telefona';
 
   @override
-  String get alreadyHaveAccount => 'Već imate nalog?';
+  String get alreadyHaveAccount => 'Već imate račun?';
 
   @override
-  String get dontHaveAccount => 'Nemate nalog?';
+  String get dontHaveAccount => 'Nemate račun?';
 
   @override
   String get signInWithGoogle => 'Prijavite se sa Google';
@@ -641,13 +641,13 @@ class AppLocalizationsHr extends AppLocalizations {
   String get personalInfo => 'Lične Informacije';
 
   @override
-  String get accountSettings => 'Podešavanja Naloga';
+  String get accountSettings => 'Postavke Računa';
 
   @override
-  String get languageSettings => 'Jezička Podešavanja';
+  String get languageSettings => 'Jezične Postavke';
 
   @override
-  String get selectLanguage => 'Izaberite Jezik';
+  String get selectLanguage => 'Odaberite Jezik';
 
   @override
   String get english => 'Engleski';
@@ -828,7 +828,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get termsPropertyOwnersBody =>
-      'Vlasnici nekretnina moraju pružiti tačne opise i fotografije svojih objekata. Moraju održavati svoje objekte u dobrom stanju i osigurati dostupnost kako je navedeno. Vlasnici su odgovorni za poštovanje svih lokalnih zakona i propisa.';
+      'Vlasnici nekretnina moraju pružiti točne opise i fotografije svojih objekata. Moraju održavati svoje objekte u dobrom stanju i osigurati dostupnost kako je navedeno. Vlasnici su odgovorni za poštovanje svih lokalnih zakona i propisa.';
 
   @override
   String get termsGuestResponsibilitiesTitle => '7. Odgovornosti Gostiju';
@@ -838,7 +838,7 @@ class AppLocalizationsHr extends AppLocalizations {
       'Gosti moraju tretirati objekte sa poštovanjem i pažnjom. Bilo kakva šteta izvan normalnog habanja bit će naplaćena gostu. Gosti moraju poštovati pravila objekta, lokalne zakone i susjedske odredbe.';
 
   @override
-  String get termsReviewsRatingsTitle => '8. Recenzije i Ocene';
+  String get termsReviewsRatingsTitle => '8. Recenzije i Ocjene';
 
   @override
   String get termsReviewsRatingsBody =>
@@ -922,7 +922,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get privacyThirdPartyBody =>
-      'Naš servis može sadržati linkove ka veb stranicama trećih strana. Nismo odgovorni za prakse privatnosti ovih sajtova. Molimo vas da pregledate njihove politike privatnosti pre pružanja bilo kakvih informacija.';
+      'Naš servis može sadržati linkove na web stranice trećih strana. Nismo odgovorni za prakse privatnosti tih stranica. Molimo vas da pregledate njihove politike privatnosti prije pružanja bilo kakvih informacija.';
 
   @override
   String get privacyChildrenTitle => '9. Privatnost Dece';
@@ -967,10 +967,10 @@ class AppLocalizationsHr extends AppLocalizations {
   String get faqProperty => 'Nekretnina';
 
   @override
-  String get faqAccount => 'Nalog';
+  String get faqAccount => 'Račun';
 
   @override
-  String get stillNeedHelp => 'Još uvek vam je potrebna pomoć?';
+  String get stillNeedHelp => 'Još uvijek vam je potrebna pomoć?';
 
   @override
   String get contactSupportTeam => 'Kontaktirajte naš tim za podršku';
@@ -983,7 +983,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get faqHowToBookAnswer =>
-      'Da biste napravili rezervaciju:\n\n1. Pretražite nekretnine koristeći traku za pretragu na početnoj stranici\n2. Pregledajte dostupne nekretnine i kliknite na jednu da vidite detalje\n3. Izaberite datume prijave i odjave\n4. Odaberite broj gostiju\n5. Kliknite \"Rezerviši Sada\" i pratite proces naplate\n6. Unesite informacije o plaćanju i potvrdite rezervaciju\n\nPrimićete email potvrdu nakon što se rezervacija završi.';
+      'Da biste napravili rezervaciju:\n\n1. Pretražite nekretnine koristeći traku za pretragu na početnoj stranici\n2. Pregledajte dostupne nekretnine i kliknite na jednu da vidite detalje\n3. Odaberite datume prijave i odjave\n4. Odaberite broj gostiju\n5. Kliknite \"Rezerviraj Sada\" i pratite proces naplate\n6. Unesite informacije o plaćanju i potvrdite rezervaciju\n\nPrimit ćete email potvrdu nakon što se rezervacija završi.';
 
   @override
   String get faqModifyBooking =>
@@ -999,7 +999,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get faqBookingConfirmedAnswer =>
-      'Primićete email potvrdu odmah nakon što se rezervacija završi. Email će uključivati:\n\n• Referentni broj rezervacije\n• Detalje objekta\n• Datume prijave i odjave\n• Ukupan iznos plaćen\n• Kontakt informacije domaćina\n\nTakođe možete proveriti status rezervacije u sekciji \"Moje Rezervacije\" vašeg naloga.';
+      'Primit ćete email potvrdu odmah nakon što se rezervacija završi. Email će uključivati:\n\n• Referentni broj rezervacije\n• Detalje objekta\n• Datume prijave i odjave\n• Ukupan iznos plaćen\n• Kontakt informacije domaćina\n\nTakođer možete provjeriti status rezervacije u sekciji \"Moje Rezervacije\" vašeg računa.';
 
   @override
   String get faqPaymentMethods => 'Koje metode plaćanja su prihvaćene?';
@@ -1013,67 +1013,67 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get faqWhenChargedAnswer =>
-      'Plaćanje se obrađuje odmah kada potvrdite rezervaciju. Puni iznos, uključujući cijenu objekta, servisne naknade i sve primjenjive poreze, biće naplaćen na vašu metodu plaćanja.\n\nZa određene objekte ili dugoročne rezervacije, opcije plaćanja na rate mogu biti dostupne.';
+      'Plaćanje se obrađuje odmah kada potvrdite rezervaciju. Puni iznos, uključujući cijenu objekta, servisne naknade i sve primjenjive poreze, bit će naplaćen na vašu metodu plaćanja.\n\nZa određene objekte ili dugoročne rezervacije, opcije plaćanja na rate mogu biti dostupne.';
 
   @override
   String get faqAdditionalFees => 'Postoje li dodatne naknade?';
 
   @override
   String get faqAdditionalFeesAnswer =>
-      'Pored cijene objekta, možete biti naplaćeni:\n\n• Servisna naknada (obično 10-15% od subtotala rezervacije)\n• Naknada za čišćenje (ako je primjenjivo, postavlja vlasnik objekta)\n• Lokalni porezi (varira po lokaciji)\n\nSve naknade su jasno prikazane pre nego što potvrdite rezervaciju. Nema skrivenih troškova.';
+      'Pored cijene objekta, možete biti naplaćeni:\n\n• Servisna naknada (obično 10-15% od subtotala rezervacije)\n• Naknada za čišćenje (ako je primjenjivo, postavlja vlasnik objekta)\n• Lokalni porezi (varira po lokaciji)\n\nSve naknade su jasno prikazane prije nego što potvrdite rezervaciju. Nema skrivenih troškova.';
 
   @override
   String get faqCancellationPolicy => 'Šta je politika otkazivanja?';
 
   @override
   String get faqCancellationPolicyAnswer =>
-      'Politike otkazivanja variraju po objektu. Uobičajene politike uključuju:\n\n• Fleksibilna: Pun povraćaj ako se otkaže 24-48 sati pre prijave\n• Umerena: 50% povraćaj ako se otkaže 5-7 dana pre prijave\n• Stroga: Bez povraćaja ako se otkaže u roku od 14 dana pre prijave\n\nUvek proverite specifičnu politiku otkazivanja za svaki objekt pre rezervacije. Politika je prikazana na stranici sa detaljima objekta i u vašoj potvrdi rezervacije.';
+      'Politike otkazivanja variraju po objektu. Uobičajene politike uključuju:\n\n• Fleksibilna: Pun povraćaj ako se otkaže 24-48 sati prije prijave\n• Umjerena: 50% povraćaj ako se otkaže 5-7 dana prije prijave\n• Stroga: Bez povraćaja ako se otkaže u roku od 14 dana prije prijave\n\nUvijek provjerite specifičnu politiku otkazivanja za svaki objekt prije rezervacije. Politika je prikazana na stranici sa detaljima objekta i u vašoj potvrdi rezervacije.';
 
   @override
   String get faqHowToCancel => 'Kako da otkažem rezervaciju?';
 
   @override
   String get faqHowToCancelAnswer =>
-      'Da biste otkazali rezervaciju:\n\n1. Idite na \"Moje Rezervacije\" u vašem nalogu\n2. Izaberite rezervaciju koju želite da otkažete\n3. Kliknite \"Otkaži Rezervaciju\"\n4. Pregledajte politiku otkazivanja i iznos povraćaja\n5. Potvrdite otkazivanje\n\nVaš povraćaj (ako je primenjiv) biće obrađen u roku od 5-10 radnih dana na vašu originalnu metodu plaćanja.';
+      'Da biste otkazali rezervaciju:\n\n1. Idite na \"Moje Rezervacije\" u vašem računu\n2. Odaberite rezervaciju koju želite otkazati\n3. Kliknite \"Otkaži Rezervaciju\"\n4. Pregledajte politiku otkazivanja i iznos povraćaja\n5. Potvrdite otkazivanje\n\nVaš povraćaj (ako je primjenjiv) bit će obrađen u roku od 5-10 radnih dana na vašu originalnu metodu plaćanja.';
 
   @override
   String get faqFullRefund => 'Da li ću dobiti pun povraćaj ako otkažem?';
 
   @override
   String get faqFullRefundAnswer =>
-      'Iznos povraćaja zavisi od:\n\n• Politike otkazivanja objekta\n• Koliko unapred otkažete\n• Da li ste kupili putno osiguranje\n\nTačan iznos povraćaja se izračunava i prikazuje pre nego što potvrdite otkazivanje. Servisne naknade mogu biti nepovratne u zavisnosti od vremena vašeg otkazivanja.';
+      'Iznos povraćaja ovisi o:\n\n• Politici otkazivanja objekta\n• Koliko unaprijed otkažete\n• Da li ste kupili putno osiguranje\n\nTočan iznos povraćaja se izračunava i prikazuje prije nego što potvrdite otkazivanje. Servisne naknade mogu biti nepovratne ovisno o vremenu vašeg otkazivanja.';
 
   @override
   String get faqContactOwner => 'Kako da kontaktiram vlasnika objekta?';
 
   @override
   String get faqContactOwnerAnswer =>
-      'Nakon što je vaša rezervacija potvrđena, možete kontaktirati vlasnika objekta kroz:\n\n1. Sistem za poruke u detaljima vaše rezervacije\n2. Kontakt informacije u vašem email-u sa potvrdom\n3. Dugme \"Kontaktiraj Domaćina\" na stranici objekta\n\nSve poruke se prate radi bezbednosti i osiguranja kvaliteta.';
+      'Nakon što je vaša rezervacija potvrđena, možete kontaktirati vlasnika objekta putem:\n\n1. Sustava za poruke u detaljima vaše rezervacije\n2. Kontakt informacija u vašem email-u s potvrdom\n3. Gumba \"Kontaktiraj Domaćina\" na stranici objekta\n\nSve poruke se prate radi sigurnosti i osiguranja kvalitete.';
 
   @override
   String get faqPropertyMismatch => 'Šta ako objekt ne odgovara opisu?';
 
   @override
   String get faqPropertyMismatchAnswer =>
-      'Ako objekt ne odgovara opisu ili fotografijama:\n\n1. Dokumentujte probleme sa fotografijama\n2. Odmah kontaktirajte vlasnika objekta\n3. Ako nije rešeno, kontaktirajte našu korisničku podršku u roku od 24 sata od prijave\n\nMožemo ponuditi delimični povraćaj, pomoći vam da pronađete alternativni smeštaj ili pružiti druga rešenja u zavisnosti od situacije.';
+      'Ako objekt ne odgovara opisu ili fotografijama:\n\n1. Dokumentirajte probleme fotografijama\n2. Odmah kontaktirajte vlasnika objekta\n3. Ako nije riješeno, kontaktirajte našu korisničku podršku u roku od 24 sata od prijave\n\nMožemo ponuditi djelomični povraćaj, pomoći vam da pronađete alternativni smještaj ili pružiti druga rješenja ovisno o situaciji.';
 
   @override
   String get faqLeaveReview => 'Kako da ostavim recenziju?';
 
   @override
   String get faqLeaveReviewAnswer =>
-      'Nakon vašeg boravka, možete ostaviti recenziju:\n\n1. Idite na \"Moje Rezervacije\"\n2. Pronađite vašu završenu rezervaciju\n3. Kliknite \"Napiši Recenziju\"\n4. Ocenite svoje iskustvo i napišite povratne informacije\n5. Pošaljite recenziju\n\nRecenzije pomažu drugim gostima da donesu informisane odluke i pomažu vlasnicima objekata da poboljšaju svoju uslugu.';
+      'Nakon vašeg boravka, možete ostaviti recenziju:\n\n1. Idite na \"Moje Rezervacije\"\n2. Pronađite vašu završenu rezervaciju\n3. Kliknite \"Napiši Recenziju\"\n4. Ocijenite svoje iskustvo i napišite povratne informacije\n5. Pošaljite recenziju\n\nRecenzije pomažu drugim gostima da donesu informirane odluke i pomažu vlasnicima objekata da poboljšaju svoju uslugu.';
 
   @override
-  String get faqCreateAccount => 'Kako da kreiram nalog?';
+  String get faqCreateAccount => 'Kako da kreiram račun?';
 
   @override
   String get faqCreateAccountAnswer =>
-      'Da biste kreirali nalog:\n\n1. Kliknite \"Registruj Se\" ili \"Registracija\" u gornjem desnom uglu\n2. Unesite vašu email adresu i kreirajte lozinku\n3. Ili se registrujte koristeći Google ili Facebook\n4. Verifikujte vašu email adresu\n5. Popunite informacije vašeg profila\n\nKreiranje naloga vam omogućava da sačuvate omiljene nekretnine, upravljate rezervacijama i primate personalizovane preporuke.';
+      'Da biste kreirali račun:\n\n1. Kliknite \"Registriraj se\" ili \"Registracija\" u gornjem desnom kutu\n2. Unesite vašu email adresu i kreirajte lozinku\n3. Ili se registrirajte koristeći Google ili Facebook\n4. Verificirajte vašu email adresu\n5. Popunite informacije vašeg profila\n\nKreiranje računa vam omogućava da spremite omiljene nekretnine, upravljate rezervacijama i primate personalizirane preporuke.';
 
   @override
   String get faqForgotPassword =>
-      'Zaboravio sam lozinku. Kako da je resetujem?';
+      'Zaboravio/la sam lozinku. Kako da je resetiram?';
 
   @override
   String get faqForgotPasswordAnswer =>
@@ -1084,7 +1084,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get faqUpdateProfileAnswer =>
-      'Da biste ažurirali svoj profil:\n\n1. Prijavite se na vaš račun\n2. Kliknite na ikonu vašeg profila\n3. Izaberite \"Postavke profila\"\n4. Ažurirajte vaše informacije (ime, email, telefon, fotografija)\n5. Spremite vaše promjene\n\nOdržavanje vašeg profila ažurnim pomaže vlasnicima objekata da vas kontaktiraju i osigurava glatko iskustvo rezervacije.';
+      'Da biste ažurirali svoj profil:\n\n1. Prijavite se na vaš račun\n2. Kliknite na ikonu vašeg profila\n3. Odaberite \"Postavke profila\"\n4. Ažurirajte vaše informacije (ime, email, telefon, fotografija)\n5. Spremite vaše promjene\n\nOdržavanje vašeg profila ažurnim pomaže vlasnicima objekata da vas kontaktiraju i osigurava glatko iskustvo rezervacije.';
 
   @override
   String get contactUs => 'Kontaktirajte Nas';
@@ -1094,7 +1094,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get contactDescription =>
-      'Imate pitanje ili vam je potrebna pomoć? Pošaljite nam poruku i javićemo vam se što je pre moguće.';
+      'Imate pitanje ili vam je potrebna pomoć? Pošaljite nam poruku i javit ćemo vam se što je prije moguće.';
 
   @override
   String get contactEmail => 'Email';
@@ -3342,7 +3342,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get onboardingSetupUnitsDesc => 'Kreirajte sobe ili apartmane';
 
   @override
-  String get onboardingSetupPricing => 'Podešavanje cijena';
+  String get onboardingSetupPricing => 'Postavljanje cijena';
 
   @override
   String get onboardingSetupPricingDesc =>
@@ -3355,7 +3355,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get onboardingSkipForNow => 'Preskoči za sada';
 
   @override
-  String get onboardingAlreadyHaveAccount => 'Već imate nalog?';
+  String get onboardingAlreadyHaveAccount => 'Već imate račun?';
 
   @override
   String get onboardingSignIn => 'Prijavite se';
@@ -3365,7 +3365,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get onboardingSkipDesc =>
-      'Ako preskočite vodič, nećete naučiti osnove podešavanja sistema. Uvijek možete dodati objekt i jedinice kasnije kroz postavke.\n\nŽelite li nastaviti?';
+      'Ako preskočite vodič, nećete naučiti osnove postavljanja sustava. Uvijek možete dodati objekt i jedinice kasnije kroz postavke.\n\nŽelite li nastaviti?';
 
   @override
   String get onboardingSkip => 'Preskoči';
@@ -3375,7 +3375,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get onboardingSuccessSubtitle =>
-      'Uspješno ste završili početno podešavanje';
+      'Uspješno ste završili početno postavljanje';
 
   @override
   String get onboardingSuccessDesc =>
@@ -3808,7 +3808,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitPricingSelectUnit => 'Odaberi jedinicu';
 
   @override
-  String get unitPricingSelectUnitHint => 'Izaberite jedinicu';
+  String get unitPricingSelectUnitHint => 'Odaberite jedinicu';
 
   @override
   String get unitPricingUnit => 'Jedinica';
@@ -3862,11 +3862,11 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get onboardingWizardSkipDialogDesc =>
-      'Ako preskočite vodič, nećete završiti početno podešavanje. Morat ćete ručno dodati objekte i jedinice kasnije.\n\nŽelite li nastaviti?';
+      'Ako preskočite vodič, nećete završiti početno postavljanje. Morat ćete ručno dodati objekte i jedinice kasnije.\n\nŽelite li nastaviti?';
 
   @override
   String get onboardingWizardCompleteError =>
-      'Greška prilikom završavanja početnog podešavanja';
+      'Greška prilikom završavanja početnog postavljanja';
 
   @override
   String get widgetSettingsTitle => 'Postavke Widgeta';
@@ -4492,7 +4492,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String icalSyncLastSync(String time) {
-    return 'Zadnje sinhronizovano: $time';
+    return 'Zadnje sinkronizovano: $time';
   }
 
   @override
@@ -4502,7 +4502,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String icalSyncReservationsCount(int reservations, int syncs) {
-    return '$reservations rezervacija • $syncs sinhronizacija';
+    return '$reservations rezervacija • $syncs sinkronizacija';
   }
 
   @override
@@ -4525,7 +4525,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String icalSyncDeleteMessage(String platform, int count) {
-    return 'Da li ste sigurni da želite obrisati $platform feed? Ova akcija će obrisati $count sinhronizovanih rezervacija.';
+    return 'Da li ste sigurni da želite obrisati $platform feed? Ova akcija će obrisati $count sinkroniziranih rezervacija.';
   }
 
   @override
@@ -4545,7 +4545,7 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
-  String get icalSyncFailed => 'Greška prilikom sinhronizacije';
+  String get icalSyncFailed => 'Greška prilikom sinkronizacije';
 
   @override
   String get icalSyncPaused => 'Feed pauziran';
@@ -4560,7 +4560,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalSyncResumeError => 'Greška prilikom nastavljanja feeda';
 
   @override
-  String get icalSyncHowItWorks => 'Kako funkcionira iCal sinhronizacija?';
+  String get icalSyncHowItWorks => 'Kako funkcionira iCal sinkronizacija?';
 
   @override
   String get icalSyncLoadingError => 'Greška pri učitavanju feedova';
@@ -6987,7 +6987,7 @@ class AppLocalizationsHr extends AppLocalizations {
       'Prijavite se na Booking.com Extranet → Calendar → Reservations export → Kopirajte iCal URL → Dodajte u našu aplikaciju pod iCal Sinkronizacija. Detaljnije u \"iCal Sync\" uputstvu.';
 
   @override
-  String get ownerFaqIcal2Q => 'Koliko često se sinhronizuje?';
+  String get ownerFaqIcal2Q => 'Koliko često se sinkronizuje?';
 
   @override
   String get ownerFaqIcal2A =>

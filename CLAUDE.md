@@ -489,30 +489,74 @@ firebase deploy --only firestore:indexes
 
 **Skeleton loaders**: `SkeletonColors.baseColor/highlightColor` iz `skeleton_loader.dart`
 
-**Animation Widgets** (`lib/shared/widgets/animations/`):
+**Animation System** - koristi `flutter_animate` paket:
 ```dart
-import 'package:bookbed/shared/widgets/animations/animations.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:bookbed/core/design_tokens/animation_tokens.dart';
 
-// Empty states - fade+scale entrance
-AnimatedEmptyState(icon: Icons.inbox, title: 'No items', subtitle: 'Add your first item')
-
-// Loading transitions - skeleton→content crossfade
-AnimatedContentSwitcher(
-  showContent: !isLoading,
-  skeleton: MySkeleton(),
-  content: MyContent(),
-)
-
-// Success feedback - animated checkmark with draw animation
-AnimatedCheckmark(size: 64, color: Colors.green)
-
-// Desktop hover effects
-HoverScaleCard(child: MyCard(), onTap: () => {})
-HoverListTile(title: Text('Item'), onTap: () => {})
+// Empty states - fade+scale entrance (PREFERIRANO)
+child.animate()
+  .fadeIn(duration: AnimationTokens.normal, curve: AnimationTokens.easeOut)
+  .scale(begin: Offset(0.8, 0.8), curve: AnimationTokens.fastOutSlowIn)
 
 // Staggered list entrances
-AnimatedCardEntrance(delay: Duration(milliseconds: index * 100), child: MyCard())
+ListView.builder(
+  itemBuilder: (context, index) => Card(...)
+    .animate(delay: Duration(milliseconds: index * 100))
+    .fadeIn(duration: AnimationTokens.fast)
+    .slideY(begin: 20, end: 0),
+)
+
+// Button press feedback (state-driven)
+child.animate(target: _isPressed ? 1 : 0)
+  .scale(begin: Offset(1.0, 1.0), end: Offset(0.95, 0.95), duration: AnimationTokens.instant)
+
+// Hover effects (desktop)
+child.animate(target: _isHovered ? 1 : 0)
+  .scale(end: Offset(1.02, 1.02), duration: AnimationTokens.fast)
 ```
+
+**Pre-built Animation Widgets** (`lib/shared/widgets/animations/`):
+```dart
+// Empty states (uses flutter_animate internally)
+AnimatedEmptyState(icon: Icons.inbox, title: 'No items', subtitle: 'Add your first item')
+StaggeredEmptyState(icon: Icons.notifications_none, title: 'No notifications')
+
+// Loading transitions
+AnimatedContentSwitcher(showContent: !isLoading, skeleton: MySkeleton(), content: MyContent())
+
+// Custom extensions (lib/core/utils/flutter_animate_extensions.dart)
+child.animateWithTokens().emptyStateEntrance()  // Combined fade + scale
+child.animateWithTokens().cardEntrance(staggerIndex: index)  // Staggered list
+child.animateWithTokens().buttonPress()  // Press feedback
+child.animateWithTokens().hoverScale()  // Desktop hover
+```
+
+**flutter_animate Parallel Animations** - KRITIČNO za ispravno ponašanje:
+```dart
+// ❌ POGREŠNO - efekti se izvršavaju sekvencijalno (scale PA ONDA rotate)
+child.animate()
+  .scale(duration: 3.seconds)
+  .rotate(duration: 3.seconds)
+
+// ✅ ISPRAVNO - efekti se izvršavaju paralelno (scale I rotate istovremeno)
+child.animate()
+  .scale(duration: 3.seconds)
+  .rotate(delay: Duration.zero, duration: 3.seconds)  // delay: Duration.zero = počni odmah
+```
+
+**Migrirani widgeti** (Phase 1-5 complete):
+- ✅ `AnimatedEmptyState`, `StaggeredEmptyState` - empty state entrance
+- ✅ `auth_logo_icon.dart` - scale pulse + glow
+- ✅ `booking_details_screen.dart`, `booking_confirmation_screen.dart` - fade-in
+- ✅ `confirmation_header.dart` - scale entrance
+- ✅ `error_boundary.dart` - float + rotate
+- ✅ `year_calendar_skeleton.dart`, `month_calendar_skeleton.dart` - shimmer
+
+**NE MIGRIRATI** (ostaju sa AnimationController):
+- `owner_app_loader.dart`, `bookbed_loader.dart` - custom Alignment(-1→2) pattern
+- `connectivity_banner.dart` - event-driven forward()/reverse()
+- `enhanced_login_screen.dart` - programmatic shake
 
 **Snackbars (Widget)**: `SnackBarHelper` u `shared/utils/ui/snackbar_helper.dart`
 - Boje prate calendar status: Success=Available(zelena), Error=Booked(crvena), Warning=Pending(amber), Info=plava
@@ -552,7 +596,48 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-23 | **Version**: 6.21
+**Last Updated**: 2025-12-23 | **Version**: 6.23
+
+**Changelog 6.23**: flutter_animate Migration Phase 2-5 Complete:
+- **Migrated Files** (AnimationController → flutter_animate):
+  - `auth_logo_icon.dart`: Scale pulse + glow opacity animation
+  - `booking_details_screen.dart`: Fade-in entrance animation
+  - `booking_confirmation_screen.dart`: Fade-in entrance animation
+  - `confirmation_header.dart`: Scale animation for success icon
+  - `error_boundary.dart`: Float + rotate animation for error illustration
+  - `year_calendar_skeleton.dart`: Shimmer effect
+  - `month_calendar_skeleton.dart`: Shimmer effect
+- **Critical Bug Fix - Parallel Animations**:
+  - **Problem**: flutter_animate chains `.effect1().effect2()` run sequentially by default
+  - **Original behavior**: Single AnimationController = simultaneous animations
+  - **Fix**: Added `delay: Duration.zero` to second effect for parallel execution
+  - Affected: `auth_logo_icon.dart` (scale + glow), `error_boundary.dart` (moveY + rotate)
+- **Radians to Turns Conversion**:
+  - flutter_animate `.rotate()` uses turns (1 turn = 360°), not radians
+  - Formula: `radians / (2 * pi)` → turns (e.g., `0.05 rad / 6.283 ≈ 0.008 turns`)
+- **Files NOT Migrated** (patterns incompatible with flutter_animate):
+  - `owner_app_loader.dart`, `bookbed_loader.dart`, `bookbed_branded_loader.dart`: Custom `Alignment(-1 → 2)` animation
+  - `connectivity_banner.dart`: Event-driven `forward()`/`reverse()` control
+  - `enhanced_login_screen.dart`: Programmatic shake animation
+  - `animated_success.dart`: Complex programmatic control with external trigger
+- **Code Reduction**: ~55% average across migrated files (removed dispose, initState, AnimationController boilerplate)
+
+**Changelog 6.22**: flutter_animate Migration & Dependency Cleanup:
+- **Removed 12 Unused Packages** from pubspec.yaml:
+  - `easy_localization` - projekt koristi `intl` umjesto toga
+  - `photo_view` - nikad implementirano
+  - `visibility_detector`, `step_progress_indicator` - nekorišteno
+  - `flutter_map`, `flutter_map_marker_cluster`, `geolocator`, `geocoding`, `latlong2` - mape neće biti
+  - `scrollable_positioned_list`, `flutter_dotenv`, `universal_io`, `vector_math` - nekorišteno
+- **Moved `fake_cloud_firestore`** iz dependencies u dev_dependencies (test-only paket)
+- **Kept for future use**: `pdf`, `printing` (fakture/izvještaji), `flutter_animate` (animacije)
+- **flutter_animate Migration Phase 1 Complete**:
+  - Created `flutter_animate_extensions.dart` - helper methods za AnimationTokens integraciju
+  - Migrated `AnimatedEmptyState`: StatefulWidget (135 lines) → StatelessWidget (50 lines) = 63% reduction
+  - Migrated `StaggeredEmptyState`: StatefulWidget (164 lines) → StatelessWidget (70 lines) = 57% reduction
+  - Total: 299 → 120 lines = **60% code reduction**
+  - Zero breaking changes - API remains identical
+  - Benefits: No AnimationController disposal needed, no memory leak risk, simpler code
 
 **Changelog 6.21**: Stripe Connect Return URL Routing Fix:
 - **Sentry Error Fix**: `permission-denied` errors on `/owner/stripe-return` route

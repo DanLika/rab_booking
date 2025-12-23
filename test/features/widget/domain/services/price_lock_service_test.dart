@@ -574,7 +574,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(capturedResult, equals(PriceLockResult.cancelled));
-      expect(lockUpdatedCalled, isTrue);
+      // When cancelled, locked price should NOT be updated (user rejected change)
+      expect(lockUpdatedCalled, isFalse);
     });
 
     testWidgets('returns confirmedProceed when user taps Proceed', (

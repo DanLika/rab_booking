@@ -1995,6 +1995,7 @@ class _TimelineCalendarWidgetState
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => BookingMoveToUnitMenu(booking: booking),
     );
   }

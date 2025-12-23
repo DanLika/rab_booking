@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/l10n/widget_translations.dart';
 import 'package:bookbed/features/widget/presentation/widgets/booking/compact_pill_summary.dart';
 
-WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');
+WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('en');
 
 void main() {
   group('CompactPillSummary', () {

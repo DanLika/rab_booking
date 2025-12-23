@@ -367,38 +367,42 @@ void main() {
     });
 
     group('isWeekend', () {
-      test('returns true for Saturday with default days', () {
-        final saturday = DateTime(2024, 6, 15); // This is a Saturday
+      // Note: isWeekend defaults to hotel pricing weekends [5, 6] = Friday, Saturday
+      // This represents nights slept on Friday→Saturday and Saturday→Sunday
+      // NOT the typical Saturday+Sunday weekend
+
+      test('returns true for Friday with default days (hotel pricing)', () {
+        final friday = DateTime(2024, 6, 14); // Friday = weekday 5
+        expect(DateNormalizer.isWeekend(friday), isTrue);
+      });
+
+      test('returns true for Saturday with default days (hotel pricing)', () {
+        final saturday = DateTime(2024, 6, 15); // Saturday = weekday 6
         expect(DateNormalizer.isWeekend(saturday), isTrue);
       });
 
-      test('returns true for Sunday with default days', () {
-        final sunday = DateTime(2024, 6, 16); // This is a Sunday
-        expect(DateNormalizer.isWeekend(sunday), isTrue);
+      test('returns false for Sunday with default days (hotel pricing)', () {
+        final sunday = DateTime(2024, 6, 16); // Sunday = weekday 7
+        expect(DateNormalizer.isWeekend(sunday), isFalse);
       });
 
       test('returns false for Monday with default days', () {
-        final monday = DateTime(2024, 6, 17); // This is a Monday
+        final monday = DateTime(2024, 6, 17); // Monday = weekday 1
         expect(DateNormalizer.isWeekend(monday), isFalse);
       });
 
-      test('returns false for Friday with default days', () {
-        final friday = DateTime(2024, 6, 14); // This is a Friday
-        expect(DateNormalizer.isWeekend(friday), isFalse);
-      });
+      test('uses custom weekend days (Saturday + Sunday)', () {
+        final sunday = DateTime(2024, 6, 16); // Sunday = 7
 
-      test('uses custom weekend days', () {
-        final friday = DateTime(2024, 6, 14); // Friday = 5
-
-        // Custom weekend: Friday + Saturday (not Sunday)
-        expect(DateNormalizer.isWeekend(friday, weekendDays: [5, 6]), isTrue);
+        // Custom weekend: Saturday + Sunday (typical calendar weekend)
+        expect(DateNormalizer.isWeekend(sunday, weekendDays: [6, 7]), isTrue);
       });
 
       test('returns false when day not in custom weekend', () {
-        final sunday = DateTime(2024, 6, 16); // Sunday = 7
+        final friday = DateTime(2024, 6, 14); // Friday = 5
 
-        // Custom weekend: Friday + Saturday only
-        expect(DateNormalizer.isWeekend(sunday, weekendDays: [5, 6]), isFalse);
+        // Custom weekend: Saturday + Sunday only
+        expect(DateNormalizer.isWeekend(friday, weekendDays: [6, 7]), isFalse);
       });
     });
 

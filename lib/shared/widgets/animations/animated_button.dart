@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../core/design_tokens/animation_tokens.dart';
 
 /// Animated button with scale effect on press
@@ -165,11 +167,16 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton> {
 
 /// Animated FAB with scale effect and optional pulse animation
 ///
+/// Uses flutter_animate for pulse animation with BookBed's
+/// animation design tokens. Press scale uses AnimatedScale for
+/// responsive feedback.
+///
 /// Usage:
 /// ```dart
 /// AnimatedFAB(
 ///   onPressed: () => handleAdd(),
 ///   icon: Icons.add,
+///   showPulse: true, // Optional attention-grabbing pulse
 /// )
 /// ```
 class AnimatedFAB extends StatefulWidget {
@@ -209,48 +216,8 @@ class AnimatedFAB extends StatefulWidget {
   State<AnimatedFAB> createState() => _AnimatedFABState();
 }
 
-class _AnimatedFABState extends State<AnimatedFAB>
-    with SingleTickerProviderStateMixin {
+class _AnimatedFABState extends State<AnimatedFAB> {
   bool _isPressed = false;
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      duration: AnimationTokens.long,
-      vsync: this,
-    );
-
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: AnimationTokens.easeInOut,
-      ),
-    );
-
-    if (widget.showPulse) {
-      _pulseController.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void didUpdateWidget(AnimatedFAB oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.showPulse && !oldWidget.showPulse) {
-      _pulseController.repeat(reverse: true);
-    } else if (!widget.showPulse && oldWidget.showPulse) {
-      _pulseController.stop();
-      _pulseController.value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -273,6 +240,18 @@ class _AnimatedFABState extends State<AnimatedFAB>
       );
     }
 
+    // Apply pulse animation if enabled
+    if (widget.showPulse) {
+      fab = fab
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .scale(
+            duration: AnimationTokens.long,
+            curve: AnimationTokens.easeInOut,
+            begin: const Offset(1.0, 1.0),
+            end: const Offset(1.08, 1.08),
+          );
+    }
+
     return GestureDetector(
       onTapDown: (_) {
         if (widget.onPressed != null) {
@@ -281,14 +260,10 @@ class _AnimatedFABState extends State<AnimatedFAB>
       },
       onTapUp: (_) => setState(() => _isPressed = false),
       onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedBuilder(
-        animation: _pulseAnimation,
-        builder: (context, child) {
-          final pulseScale = widget.showPulse ? _pulseAnimation.value : 1.0;
-          final pressScale = _isPressed ? widget.pressedScale : 1.0;
-
-          return Transform.scale(scale: pulseScale * pressScale, child: child);
-        },
+      child: AnimatedScale(
+        scale: _isPressed ? widget.pressedScale : 1.0,
+        duration: AnimationTokens.instant,
+        curve: AnimationTokens.easeOut,
         child: fab,
       ),
     );

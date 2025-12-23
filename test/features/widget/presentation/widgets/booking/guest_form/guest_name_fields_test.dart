@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/widgets/booking/guest_form/guest_name_fields.dart';
+import '../../../../../../helpers/widget_test_helpers.dart';
 
 void main() {
   group('GuestNameFields', () {
@@ -19,13 +20,11 @@ void main() {
 
     testWidgets('renders two text fields in a row', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestNameFields(
-              firstNameController: firstNameController,
-              lastNameController: lastNameController,
-              isDarkMode: false,
-            ),
+        createTestWidget(
+          child: GuestNameFields(
+            firstNameController: firstNameController,
+            lastNameController: lastNameController,
+            isDarkMode: false,
           ),
         ),
       );
@@ -36,13 +35,11 @@ void main() {
 
     testWidgets('renders first name and last name labels', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestNameFields(
-              firstNameController: firstNameController,
-              lastNameController: lastNameController,
-              isDarkMode: false,
-            ),
+        createTestWidget(
+          child: GuestNameFields(
+            firstNameController: firstNameController,
+            lastNameController: lastNameController,
+            isDarkMode: false,
           ),
         ),
       );
@@ -53,13 +50,11 @@ void main() {
 
     testWidgets('renders person icon for first name', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestNameFields(
-              firstNameController: firstNameController,
-              lastNameController: lastNameController,
-              isDarkMode: false,
-            ),
+        createTestWidget(
+          child: GuestNameFields(
+            firstNameController: firstNameController,
+            lastNameController: lastNameController,
+            isDarkMode: false,
           ),
         ),
       );
@@ -69,13 +64,12 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestNameFields(
-              firstNameController: firstNameController,
-              lastNameController: lastNameController,
-              isDarkMode: true,
-            ),
+        createTestWidget(
+          isDarkMode: true,
+          child: GuestNameFields(
+            firstNameController: firstNameController,
+            lastNameController: lastNameController,
+            isDarkMode: true,
           ),
         ),
       );
@@ -85,13 +79,11 @@ void main() {
 
     testWidgets('accepts text input for first name', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestNameFields(
-              firstNameController: firstNameController,
-              lastNameController: lastNameController,
-              isDarkMode: false,
-            ),
+        createTestWidget(
+          child: GuestNameFields(
+            firstNameController: firstNameController,
+            lastNameController: lastNameController,
+            isDarkMode: false,
           ),
         ),
       );
@@ -102,13 +94,11 @@ void main() {
 
     testWidgets('accepts text input for last name', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestNameFields(
-              firstNameController: firstNameController,
-              lastNameController: lastNameController,
-              isDarkMode: false,
-            ),
+        createTestWidget(
+          child: GuestNameFields(
+            firstNameController: firstNameController,
+            lastNameController: lastNameController,
+            isDarkMode: false,
           ),
         ),
       );
@@ -119,13 +109,11 @@ void main() {
 
     testWidgets('fields are expanded equally', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GuestNameFields(
-              firstNameController: firstNameController,
-              lastNameController: lastNameController,
-              isDarkMode: false,
-            ),
+        createTestWidget(
+          child: GuestNameFields(
+            firstNameController: firstNameController,
+            lastNameController: lastNameController,
+            isDarkMode: false,
           ),
         ),
       );

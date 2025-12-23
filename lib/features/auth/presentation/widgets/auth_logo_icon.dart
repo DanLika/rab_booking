@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../core/theme/app_colors.dart';
 
 /// Custom animated logo icon for auth screens
 /// Combines house + key with gradient and pulse animation
-class AuthLogoIcon extends StatefulWidget {
+///
+/// Uses flutter_animate for scale pulse and glow opacity animation.
+class AuthLogoIcon extends StatelessWidget {
   final double size;
   final bool isWhite;
 
@@ -19,90 +23,73 @@ class AuthLogoIcon extends StatefulWidget {
   });
 
   @override
-  State<AuthLogoIcon> createState() => _AuthLogoIconState();
-}
-
-class _AuthLogoIconState extends State<AuthLogoIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _glowAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    _glowAnimation = Tween<double>(
-      begin: 0.3,
-      end: 0.6,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
     // Determine logo color based on mode
     final Color logoColor;
-    if (widget.useMinimalistic) {
+    if (useMinimalistic) {
       // Minimalistic: Use black in light mode, white in dark mode (for preloader)
-      logoColor = widget.isWhite
-          ? Colors.white
-          : (isDarkMode ? Colors.white : Colors.black);
+      logoColor =
+          isWhite ? Colors.white : (isDarkMode ? Colors.white : Colors.black);
     } else {
       // Colorized: Use brand purple colors (for login/register pages)
-      logoColor = widget.isWhite
+      logoColor = isWhite
           ? Colors.white
           : (isDarkMode ? AppColors.primaryLight : AppColors.primary);
     }
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _pulseAnimation.value,
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: logoColor.withAlpha(
-                    ((_glowAnimation.value * 255 * 0.25).toInt()),
-                  ),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: CustomPaint(
-              painter: _LogoPainter(
-                isWhite: widget.isWhite,
-                isDarkMode: isDarkMode,
-                useMinimalistic: widget.useMinimalistic,
-              ),
-            ),
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: logoColor.withAlpha((0.3 * 255 * 0.25).toInt()),
+            blurRadius: 20,
+            spreadRadius: 2,
           ),
+        ],
+      ),
+      child: CustomPaint(
+        painter: _LogoPainter(
+          isWhite: isWhite,
+          isDarkMode: isDarkMode,
+          useMinimalistic: useMinimalistic,
+        ),
+      ),
+    )
+        .animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .scale(
+          duration: const Duration(seconds: 3),
+          begin: const Offset(1.0, 1.0),
+          end: const Offset(1.05, 1.05),
+          curve: Curves.easeInOut,
+        )
+        .custom(
+          delay: Duration.zero, // Run simultaneously with scale
+          duration: const Duration(seconds: 3),
+          curve: Curves.easeInOut,
+          builder: (context, value, child) {
+            // Animate glow opacity from 0.3 to 0.6
+            final glowOpacity = 0.3 + (value * 0.3);
+            return Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: logoColor.withAlpha((glowOpacity * 255 * 0.25).toInt()),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: child,
+            );
+          },
         );
-      },
-    );
   }
 }
 

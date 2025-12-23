@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -14,19 +15,17 @@ import '../../l10n/widget_translations.dart';
 /// ConfirmationHeader(
 ///   paymentMethod: 'stripe',
 ///   colors: ColorTokens.light,
-///   scaleAnimation: _scaleAnimation,
 ///   customLogoUrl: widgetSettings?.themeOptions?.customLogoUrl,
 /// )
 /// ```
+///
+/// Uses flutter_animate for scale animation on the icon.
 class ConfirmationHeader extends ConsumerWidget {
   /// Payment method: 'stripe', 'bank_transfer', 'pay_on_arrival', 'pending'
   final String paymentMethod;
 
   /// Color tokens for theming
   final WidgetColorScheme colors;
-
-  /// Scale animation for the icon
-  final Animation<double> scaleAnimation;
 
   /// Optional custom logo URL from widget settings
   final String? customLogoUrl;
@@ -35,7 +34,6 @@ class ConfirmationHeader extends ConsumerWidget {
     super.key,
     required this.paymentMethod,
     required this.colors,
-    required this.scaleAnimation,
     this.customLogoUrl,
   });
 
@@ -114,10 +112,14 @@ class ConfirmationHeader extends ConsumerWidget {
         Semantics(
           label: confirmationMessage,
           image: true,
-          child: ScaleTransition(
-            scale: scaleAnimation,
-            child: confirmationIcon,
-          ),
+          child: confirmationIcon
+              .animate()
+              .scale(
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.elasticOut,
+                begin: const Offset(0.0, 0.0),
+                end: const Offset(1.0, 1.0),
+              ),
         ),
 
         const SizedBox(height: SpacingTokens.l),

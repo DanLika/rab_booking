@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/responsive_helper.dart';
@@ -9,40 +11,12 @@ import '../../theme/responsive_helper.dart';
 /// - Header row: "Month" label + 31 day number columns
 /// - 12 month rows: month name label + 31 day cells
 ///
+/// Uses flutter_animate for pulse opacity animation.
 /// Uses the same responsive cell sizing as the real calendar:
 /// - Cell size calculated from available width (14px to 40px)
 /// - Month label column width: 60px
-class YearCalendarSkeleton extends StatefulWidget {
+class YearCalendarSkeleton extends StatelessWidget {
   const YearCalendarSkeleton({super.key});
-
-  @override
-  State<YearCalendarSkeleton> createState() => _YearCalendarSkeletonState();
-}
-
-class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-
-    _animation = Tween<double>(
-      begin: 0.4,
-      end: 0.8,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,61 +25,59 @@ class _YearCalendarSkeletonState extends State<YearCalendarSkeleton>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final padding = isDesktop ? SpacingTokens.l : SpacingTokens.m;
 
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _animation.value,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Defensive check: ensure constraints are bounded and finite
-              final maxWidth =
-                  constraints.maxWidth.isFinite &&
-                      constraints.maxWidth != double.infinity
-                  ? constraints.maxWidth
-                  : 1200.0; // Fallback to reasonable default
-              // Calculate cell size same as real calendar
-              final availableWidth = (maxWidth - (padding * 2)).clamp(
-                300.0,
-                maxWidth,
-              );
-              final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
-                availableWidth,
-              );
-              final calendarWidth =
-                  ConstraintTokens.monthLabelWidth + (31 * cellSize);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Defensive check: ensure constraints are bounded and finite
+        final maxWidth =
+            constraints.maxWidth.isFinite &&
+                    constraints.maxWidth != double.infinity
+                ? constraints.maxWidth
+                : 1200.0; // Fallback to reasonable default
+        // Calculate cell size same as real calendar
+        final availableWidth = (maxWidth - (padding * 2)).clamp(
+          300.0,
+          maxWidth,
+        );
+        final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
+          availableWidth,
+        );
+        final calendarWidth =
+            ConstraintTokens.monthLabelWidth + (31 * cellSize);
 
-              return Center(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: padding,
-                    right: padding,
-                    bottom: padding,
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: padding,
+              right: padding,
+              bottom: padding,
+            ),
+            child: SizedBox(
+              width: calendarWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header row skeleton
+                  _buildHeaderRowSkeleton(cellSize, isDark),
+                  const SizedBox(height: SpacingTokens.s),
+                  // 12 month rows skeleton
+                  ...List.generate(
+                    12,
+                    (index) => _buildMonthRowSkeleton(cellSize, isDark, index),
                   ),
-                  child: SizedBox(
-                    width: calendarWidth,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Header row skeleton
-                        _buildHeaderRowSkeleton(cellSize, isDark),
-                        const SizedBox(height: SpacingTokens.s),
-                        // 12 month rows skeleton
-                        ...List.generate(
-                          12,
-                          (index) =>
-                              _buildMonthRowSkeleton(cellSize, isDark, index),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+                ],
+              ),
+            ),
           ),
         );
       },
-    );
+    )
+        .animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .fade(
+          duration: const Duration(milliseconds: 1500),
+          begin: 0.4,
+          end: 0.8,
+          curve: Curves.easeInOut,
+        );
   }
 
   Widget _buildHeaderRowSkeleton(double cellSize, bool isDark) {

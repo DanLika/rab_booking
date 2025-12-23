@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../core/design_tokens/animation_tokens.dart';
 
 /// Animated checkmark with scale + bounce effect for success feedback
@@ -197,6 +199,8 @@ class _CheckmarkPainter extends CustomPainter {
 
 /// Success overlay with checkmark and optional message
 ///
+/// Uses flutter_animate for fade in/out with auto-dismiss.
+///
 /// Usage:
 /// ```dart
 /// SuccessOverlay(
@@ -204,7 +208,7 @@ class _CheckmarkPainter extends CustomPainter {
 ///   onDismiss: () => Navigator.pop(context),
 /// )
 /// ```
-class SuccessOverlay extends StatefulWidget {
+class SuccessOverlay extends StatelessWidget {
   /// Success message to display
   final String? message;
 
@@ -230,92 +234,61 @@ class SuccessOverlay extends StatefulWidget {
   });
 
   @override
-  State<SuccessOverlay> createState() => _SuccessOverlayState();
-}
-
-class _SuccessOverlayState extends State<SuccessOverlay>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: AnimationTokens.fast,
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: AnimationTokens.easeOut),
-    );
-
-    _controller.forward();
-
-    // Auto-dismiss
-    Future.delayed(widget.autoDismissAfter, () {
-      if (mounted) {
-        _controller.reverse().then((_) {
-          widget.onDismiss?.call();
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(opacity: _fadeAnimation.value, child: child);
-      },
-      child: Container(
-        color: Colors.black.withAlpha((0.5 * 255).toInt()),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.all(32),
-            margin: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((0.2 * 255).toInt()),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedCheckmark(
-                  size: widget.checkmarkSize,
-                  color: widget.checkmarkColor ?? Colors.green,
-                ),
-                if (widget.message != null) ...[
-                  const SizedBox(height: 24),
-                  Text(
-                    widget.message!,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
+    final content = Container(
+      color: Colors.black.withAlpha((0.5 * 255).toInt()),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          margin: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha((0.2 * 255).toInt()),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedCheckmark(
+                size: checkmarkSize,
+                color: checkmarkColor ?? Colors.green,
+              ),
+              if (message != null) ...[
+                const SizedBox(height: 24),
+                Text(
+                  message!,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
+                  textAlign: TextAlign.center,
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ),
     );
+
+    // Fade in, hold, then fade out and dismiss
+    return content
+        .animate()
+        .fadeIn(
+          duration: AnimationTokens.fast,
+          curve: AnimationTokens.easeOut,
+        )
+        .then(delay: autoDismissAfter)
+        .fadeOut(
+          duration: AnimationTokens.fast,
+          curve: AnimationTokens.easeIn,
+        )
+        .callback(callback: (_) => onDismiss?.call());
   }
 }

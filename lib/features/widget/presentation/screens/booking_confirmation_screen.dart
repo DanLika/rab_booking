@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/theme_provider.dart';
 import '../mixins/theme_detection_mixin.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
@@ -77,29 +78,10 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
 
 class _BookingConfirmationScreenState
     extends ConsumerState<BookingConfirmationScreen>
-    with SingleTickerProviderStateMixin, ThemeDetectionMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-
+    with ThemeDetectionMixin {
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
-
-    _animationController.forward();
-
     // If in popup window (opened from iframe), send message to parent
     if (kIsWeb && isPopupWindow && widget.booking != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -243,12 +225,6 @@ class _BookingConfirmationScreenState
     detectSystemTheme();
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
   /// Navigate back to calendar
   /// Uses Navigator.pop() which works for:
   /// - Direct bookings (Pay on Arrival, Bank Transfer) - pushed via Navigator
@@ -308,12 +284,10 @@ class _BookingConfirmationScreenState
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SafeArea(
-          left: false,
-          right: false,
-          child: Column(
+      body: SafeArea(
+        left: false,
+        right: false,
+        child: Column(
             children: [
               // Custom header with centered title and back button
               _buildHeader(colors),
@@ -333,7 +307,6 @@ class _BookingConfirmationScreenState
                           ConfirmationHeader(
                             paymentMethod: widget.paymentMethod,
                             colors: colors,
-                            scaleAnimation: _scaleAnimation,
                             customLogoUrl: widget
                                 .widgetSettings
                                 ?.themeOptions
@@ -456,8 +429,10 @@ class _BookingConfirmationScreenState
               ),
             ],
           ),
-        ),
-      ),
+        ).animate().fadeIn(
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeIn,
+            ),
     );
   }
 

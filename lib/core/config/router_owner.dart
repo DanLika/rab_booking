@@ -97,6 +97,8 @@ class OwnerRoutes {
   static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
+  static const String stripeReturn = '/owner/stripe-return';
+  static const String stripeRefresh = '/owner/stripe-refresh';
   static const String bankAccount = '/owner/integrations/payments/bank-account';
   // iCal routes (NEW structure - organized under /ical/)
   static const String icalImport = '/owner/integrations/ical/import'; // iCal Sync Settings (Import)
@@ -532,6 +534,16 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.stripeIntegration,
         pageBuilder: (context, state) =>
             PageTransitions.fade(key: state.pageKey, child: const StripeConnectSetupScreen()),
+      ),
+      // Stripe Connect return/refresh URLs - redirect to Stripe Integration page
+      // These URLs are used by Stripe after onboarding completes or needs refresh
+      GoRoute(
+        path: OwnerRoutes.stripeReturn,
+        redirect: (context, state) => OwnerRoutes.stripeIntegration,
+      ),
+      GoRoute(
+        path: OwnerRoutes.stripeRefresh,
+        redirect: (context, state) => OwnerRoutes.stripeIntegration,
       ),
       // Bank Account (for bank transfer payments)
       GoRoute(

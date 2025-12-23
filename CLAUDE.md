@@ -552,7 +552,17 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-22 | **Version**: 6.20
+**Last Updated**: 2025-12-23 | **Version**: 6.21
+
+**Changelog 6.21**: Stripe Connect Return URL Routing Fix:
+- **Sentry Error Fix**: `permission-denied` errors on `/owner/stripe-return` route
+  - **Problem**: After completing Stripe Connect onboarding, Stripe redirects to `/owner/stripe-return`
+  - **Root Cause**: Route was never defined in GoRouter, causing 404 fallback and race conditions with auth state
+  - **Fix** (`router_owner.dart`):
+    - Added `stripeReturn = '/owner/stripe-return'` and `stripeRefresh = '/owner/stripe-refresh'` route constants
+    - Added GoRoute handlers that redirect to `OwnerRoutes.stripeIntegration` (`/owner/integrations/stripe`)
+  - **Result**: Owner returns to Stripe Integration page after onboarding, where `_loadStripeAccountInfo()` fetches updated status
+- **Note**: This fix only affects owner Stripe Connect flow (account linking), NOT widget Stripe payments
 
 **Changelog 6.20**: Bank Account Routing Fix & Bottom Sheet Standardization:
 - **Bank Account 404 Routing Fix** (`bank_account_screen.dart`):

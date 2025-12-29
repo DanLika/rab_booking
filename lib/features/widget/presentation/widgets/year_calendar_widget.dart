@@ -43,6 +43,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   int _currentYear = DateTime.now().toUtc().year;
   DateTime? _hoveredDate;
   Offset _mousePosition = Offset.zero;
+  bool _isValidating = false; // Prevent concurrent date range validations
 
   @override
   Widget build(BuildContext context) {
@@ -837,36 +838,73 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           return;
         }
 
-        // Year calendar specific: Check blocked dates in range
-        if (_hasBlockedDatesInRange(start, end, data)) {
-          _rangeStart = null;
-          _rangeEnd = null;
-          SnackBarHelper.showError(
-            context: context,
-            message: WidgetTranslations.of(
-              context,
-              ref,
-            ).errorCannotSelectBookedDates,
-            duration: const Duration(seconds: 3),
-          );
-          return;
-        }
-
-        // Set the range
-        if (date.isBefore(_rangeStart!)) {
-          _rangeEnd = _rangeStart;
-          _rangeStart = date;
-        } else {
-          _rangeEnd = date;
-        }
+        // Use backend availability check for final validation
+        _validateAndSetRange(start, end, colors);
       }
     });
+  }
 
-    LoggingService.log(
-      '📞 Calling onRangeSelected callback with: start=$_rangeStart, end=$_rangeEnd, callback=${widget.onRangeSelected != null ? "exists" : "NULL"}',
-      tag: 'YEAR_CALENDAR',
-    );
-    widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
+  /// Async validation using backend availability check for year view
+  /// This ensures cross-month date ranges are properly validated
+  /// RACE CONDITION PROTECTION: Uses _isValidating guard
+  Future<void> _validateAndSetRange(
+    DateTime start,
+    DateTime end,
+    WidgetColorScheme colors,
+  ) async {
+    // Prevent concurrent validations
+    if (_isValidating) return;
+
+    setState(() => _isValidating = true);
+
+    try {
+      // Check availability using backend
+      final isAvailable = await ref.read(
+        checkDateAvailabilityProvider(
+          unitId: widget.unitId,
+          checkIn: start,
+          checkOut: end,
+        ).future,
+      );
+
+      if (!mounted) return;
+
+      if (!isAvailable) {
+        // Reset selection and show error
+        setState(() {
+          _rangeStart = null;
+          _rangeEnd = null;
+        });
+
+        SnackBarHelper.showError(
+          context: context,
+          message: WidgetTranslations.of(
+            context,
+            ref,
+          ).errorCannotSelectBookedDates,
+          duration: const Duration(seconds: 3),
+        );
+        return;
+      }
+
+      // Availability confirmed, set the range
+      setState(() {
+        if (end.isBefore(start)) {
+          _rangeStart = end;
+          _rangeEnd = start;
+        } else {
+          _rangeStart = start;
+          _rangeEnd = end;
+        }
+      });
+
+      widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
+    } finally {
+      // Always reset validation flag
+      if (mounted) {
+        setState(() => _isValidating = false);
+      }
+    }
   }
 
   /// Show helpful snackbar when user taps in calendar_only mode

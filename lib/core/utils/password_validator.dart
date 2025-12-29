@@ -155,9 +155,9 @@ class PasswordValidator {
     }
 
     // Minimal validation: Prevent obvious weak passwords
-    // Check for sequential numbers (12345678, 87654321)
-    if (_isSequentialNumbers(password)) {
-      return 'Password cannot be sequential numbers (e.g., 12345678)';
+    // Check for sequential characters (12345678, abcdefgh)
+    if (_isSequentialCharacters(password)) {
+      return 'Password cannot contain sequential characters (e.g., "12345" or "abcde")';
     }
 
     // Check for repeating characters (11111111, aaaaaaaa)
@@ -168,40 +168,36 @@ class PasswordValidator {
     return null;
   }
 
-  /// Check if password is sequential numbers (12345678, 87654321, etc.)
-  static bool _isSequentialNumbers(String password) {
+  /// Check if password contains sequential characters (e.g., "12345", "abcde", "54321").
+  static bool _isSequentialCharacters(String password) {
     if (password.length < 3) return false;
+    final lowercased = password.toLowerCase();
 
-    // Check if all characters are digits
-    if (!_digitRegex.hasMatch(password) ||
-        password.length !=
-            password.split('').where(_digitRegex.hasMatch).length) {
-      return false;
-    }
+    for (int i = 0; i < lowercased.length - 2; i++) {
+      final c1 = lowercased.codeUnitAt(i);
+      final c2 = lowercased.codeUnitAt(i + 1);
+      final c3 = lowercased.codeUnitAt(i + 2);
 
-    // Check ascending sequence (12345678)
-    bool isAscending = true;
-    for (int i = 1; i < password.length; i++) {
-      final prev = int.tryParse(password[i - 1]);
-      final curr = int.tryParse(password[i]);
-      if (prev == null || curr == null || curr != prev + 1) {
-        isAscending = false;
-        break;
+      // Check for ascending sequence (e.g., abc, 123)
+      if (c2 == c1 + 1 && c3 == c2 + 1) {
+        // Check if they are all digits or all letters to avoid mixed sequences like '9ab'
+        final substr = lowercased.substring(i, i + 3);
+        if (_digitRegex.allMatches(substr).length == 3 ||
+            _lowercaseRegex.allMatches(substr).length == 3) {
+          return true;
+        }
+      }
+
+      // Check for descending sequence (e.g., cba, 321)
+      if (c2 == c1 - 1 && c3 == c2 - 1) {
+        final substr = lowercased.substring(i, i + 3);
+        if (_digitRegex.allMatches(substr).length == 3 ||
+            _lowercaseRegex.allMatches(substr).length == 3) {
+          return true;
+        }
       }
     }
-
-    // Check descending sequence (87654321)
-    bool isDescending = true;
-    for (int i = 1; i < password.length; i++) {
-      final prev = int.tryParse(password[i - 1]);
-      final curr = int.tryParse(password[i]);
-      if (prev == null || curr == null || curr != prev - 1) {
-        isDescending = false;
-        break;
-      }
-    }
-
-    return isAscending || isDescending;
+    return false;
   }
 
   /// Check if password is repeating characters (11111111, aaaaaaaa, etc.)

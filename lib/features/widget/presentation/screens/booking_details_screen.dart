@@ -367,6 +367,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             tooltip: isDarkMode
                 ? tr.tooltipSwitchToLightMode
                 : tr.tooltipSwitchToDarkMode,
+            hoverColor: colors.backgroundSecondary,
+            splashColor: colors.backgroundSecondary,
           ),
           const SizedBox(width: SpacingTokens.s),
           // Title (centered)
@@ -388,6 +390,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             ),
             onPressed: () => _showLanguageDialog(colors),
             tooltip: tr.tooltipChangeLanguage,
+            hoverColor: colors.backgroundSecondary,
+            splashColor: colors.backgroundSecondary,
           ),
         ],
       ),

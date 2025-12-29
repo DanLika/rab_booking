@@ -108,14 +108,20 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
       settings: effectiveSettings,
       ownerId: property.ownerId ?? '',
     );
-  } catch (e) {
-    // Bug #24 Fix: Wrap all exceptions in WidgetContextException for consistent error handling
-    if (e is WidgetContextException) {
-      // Re-throw WidgetContextException as-is
-      rethrow;
-    }
-    // Convert other exceptions (TypeError, PropertyException, etc.) to WidgetContextException
-    throw WidgetContextException('Failed to load widget context: $e');
+  } catch (e, stackTrace) {
+    // Log the detailed error for debugging
+    await LoggingService.logError(
+      'widgetContextProvider: Failed to load context for $params',
+      e,
+      stackTrace,
+    );
+
+    // SECURITY ENHANCEMENT: Throw a generic, user-safe exception.
+    // This prevents leaking internal implementation details (e.g., specific
+    // Firestore errors, TypeErrors) to the frontend, which could inform an attacker.
+    throw WidgetContextException(
+      'Unable to load booking widget configuration. Please check the property and unit IDs.',
+    );
   }
 }
 
@@ -144,12 +150,18 @@ Future<WidgetContext> widgetContextByUnitOnly(Ref ref, String unitId) async {
         unitId: unitId,
       )).future,
     );
-  } catch (e) {
-    // Bug #24 Fix: Wrap exceptions in WidgetContextException
-    if (e is WidgetContextException) {
-      rethrow;
-    }
-    throw WidgetContextException('Failed to load widget context by unit: $e');
+  } catch (e, stackTrace) {
+    // Log the detailed error for debugging
+    await LoggingService.logError(
+      'widgetContextByUnitOnly: Failed to load context for unit $unitId',
+      e,
+      stackTrace,
+    );
+
+    // SECURITY ENHANCEMENT: Throw a generic, user-safe exception.
+    throw WidgetContextException(
+      'Unable to load booking widget configuration. Please ensure the unit ID is correct.',
+    );
   }
 }
 

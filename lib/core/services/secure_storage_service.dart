@@ -18,36 +18,28 @@ class SecureStorageService {
   );
 
   static const _keyEmail = 'saved_email';
-  static const _keyPassword = 'saved_password';
   static const _keyRememberMe = 'remember_me';
 
-  /// Save user credentials securely
-  /// Only call this if user explicitly checks "Remember Me"
-  Future<void> saveCredentials(String email, String password) async {
+  /// Save user's email securely if "Remember Me" is enabled.
+  /// Does NOT save the password.
+  Future<void> saveEmail(String email) async {
     await _storage.write(key: _keyEmail, value: email);
-    await _storage.write(key: _keyPassword, value: password);
     await _storage.write(key: _keyRememberMe, value: 'true');
   }
 
-  /// Get saved credentials if "Remember Me" was enabled
-  /// Returns null if no credentials saved or "Remember Me" was not checked
-  Future<SavedCredentials?> getCredentials() async {
+  /// Get saved email if "Remember Me" was enabled.
+  /// Returns null if no email is saved or "Remember Me" was not checked.
+  Future<String?> getEmail() async {
     final rememberMe = await _storage.read(key: _keyRememberMe);
     if (rememberMe != 'true') return null;
 
-    final email = await _storage.read(key: _keyEmail);
-    final password = await _storage.read(key: _keyPassword);
-
-    if (email == null || password == null) return null;
-
-    return SavedCredentials(email: email, password: password);
+    return await _storage.read(key: _keyEmail);
   }
 
-  /// Clear all saved credentials
-  /// Call this on logout or when user unchecks "Remember Me"
+  /// Clear all saved data (email and remember me flag).
+  /// Call this on logout or when user unchecks "Remember Me".
   Future<void> clearCredentials() async {
     await _storage.delete(key: _keyEmail);
-    await _storage.delete(key: _keyPassword);
     await _storage.delete(key: _keyRememberMe);
   }
 

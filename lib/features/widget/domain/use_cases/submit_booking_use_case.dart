@@ -123,6 +123,13 @@ class SubmitBookingUseCase {
         ? null
         : InputSanitizer.sanitizeText(params.notes!.trim());
 
+    // SECURITY ENHANCEMENT: Add length validation to prevent abuse (e.g., DoS)
+    if (sanitizedNotes != null && sanitizedNotes.length > 1000) {
+      throw Exception(
+        'Notes cannot exceed 1000 characters. Please shorten your message.',
+      );
+    }
+
     // Validate that required fields are not empty after sanitization
     // This prevents sending empty strings to the backend which would cause 400 errors
     if (sanitizedGuestName == null || sanitizedGuestName.trim().isEmpty) {

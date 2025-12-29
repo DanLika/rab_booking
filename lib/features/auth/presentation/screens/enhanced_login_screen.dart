@@ -70,19 +70,20 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     _loadSavedCredentials();
   }
 
-  /// Load saved email from secure storage
+  /// Load saved credentials from secure storage
   Future<void> _loadSavedCredentials() async {
     try {
-      final email = await SecureStorageService().getEmail();
-      if (email != null && mounted) {
+      final credentials = await SecureStorageService().getCredentials();
+      if (credentials != null && mounted) {
         setState(() {
-          _emailController.text = email;
+          _emailController.text = credentials.email;
+          _passwordController.text = credentials.password;
           _rememberMe = true;
         });
       }
     } catch (e) {
       // Silently fail - secure storage might not be available
-      debugPrint('[LOGIN_SCREEN] Failed to load saved email: $e');
+      debugPrint('[LOGIN_SCREEN] Failed to load saved credentials: $e');
     }
   }
 
@@ -129,17 +130,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(enhancedAuthProvider.notifier).signInWithEmail(
+      await ref
+          .read(enhancedAuthProvider.notifier)
+          .signInWithEmail(
             email: email,
             password: password,
+            rememberMe: _rememberMe,
           );
-
-      // Manually handle "Remember Me" after successful sign-in
-      if (_rememberMe) {
-        await SecureStorageService().saveEmail(email);
-      } else {
-        await SecureStorageService().clearCredentials();
-      }
 
       if (!mounted) return;
 

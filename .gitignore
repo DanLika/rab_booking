@@ -34,8 +34,6 @@ migrate_working_dir/
 /build/
 
 # Code generation
-*.g.dart
-*.freezed.dart
 
 # Symbolication related
 app.*.symbols

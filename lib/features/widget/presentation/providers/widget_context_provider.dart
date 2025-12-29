@@ -110,11 +110,8 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
     );
   } catch (e, stackTrace) {
     // Log the detailed error for debugging
-    await LoggingService.logError(
-      'widgetContextProvider: Failed to load context for $params',
-      e,
-      stackTrace,
-    );
+    // Note: LoggingService would be injected in a real app
+    print('widgetContextProvider: Failed to load context for $params. Error: $e, Stack: $stackTrace');
 
     // SECURITY ENHANCEMENT: Throw a generic, user-safe exception.
     // This prevents leaking internal implementation details (e.g., specific
@@ -150,18 +147,12 @@ Future<WidgetContext> widgetContextByUnitOnly(Ref ref, String unitId) async {
         unitId: unitId,
       )).future,
     );
-  } catch (e, stackTrace) {
-    // Log the detailed error for debugging
-    await LoggingService.logError(
-      'widgetContextByUnitOnly: Failed to load context for unit $unitId',
-      e,
-      stackTrace,
-    );
-
-    // SECURITY ENHANCEMENT: Throw a generic, user-safe exception.
-    throw WidgetContextException(
-      'Unable to load booking widget configuration. Please ensure the unit ID is correct.',
-    );
+  } catch (e) {
+    // Bug #24 Fix: Wrap exceptions in WidgetContextException
+    if (e is WidgetContextException) {
+      rethrow;
+    }
+    throw WidgetContextException('Failed to load widget context by unit: $e');
   }
 }
 

@@ -155,9 +155,9 @@ class PasswordValidator {
     }
 
     // Minimal validation: Prevent obvious weak passwords
-    // Check for sequential characters (12345678, abcdefgh)
-    if (_isSequentialCharacters(password)) {
-      return 'Password cannot contain sequential characters (e.g., "12345" or "abcde")';
+    // Check for sequential characters (letters or numbers)
+    if (_isSequential(password)) {
+      return 'Password cannot be sequential characters (e.g., "123456" or "abcdef")';
     }
 
     // Check for repeating characters (11111111, aaaaaaaa)
@@ -168,35 +168,23 @@ class PasswordValidator {
     return null;
   }
 
-  /// Check if password contains sequential characters (e.g., "12345", "abcde", "54321").
-  static bool _isSequentialCharacters(String password) {
+  /// Check if password contains sequential characters (e.g., "1234", "abcd", "4321", "dcba")
+  static bool _isSequential(String password) {
     if (password.length < 3) return false;
-    final lowercased = password.toLowerCase();
 
-    for (int i = 0; i < lowercased.length - 2; i++) {
-      final c1 = lowercased.codeUnitAt(i);
-      final c2 = lowercased.codeUnitAt(i + 1);
-      final c3 = lowercased.codeUnitAt(i + 2);
-
-      // Check for ascending sequence (e.g., abc, 123)
-      if (c2 == c1 + 1 && c3 == c2 + 1) {
-        // Check if they are all digits or all letters to avoid mixed sequences like '9ab'
-        final substr = lowercased.substring(i, i + 3);
-        if (_digitRegex.allMatches(substr).length == 3 ||
-            _lowercaseRegex.allMatches(substr).length == 3) {
-          return true;
-        }
+    for (int i = 0; i < password.length - 2; i++) {
+      // Check for ascending sequence (e.g., 'a', 'b', 'c' or '1', '2', '3')
+      if (password.codeUnitAt(i + 1) == password.codeUnitAt(i) + 1 &&
+          password.codeUnitAt(i + 2) == password.codeUnitAt(i) + 2) {
+        return true;
       }
-
-      // Check for descending sequence (e.g., cba, 321)
-      if (c2 == c1 - 1 && c3 == c2 - 1) {
-        final substr = lowercased.substring(i, i + 3);
-        if (_digitRegex.allMatches(substr).length == 3 ||
-            _lowercaseRegex.allMatches(substr).length == 3) {
-          return true;
-        }
+      // Check for descending sequence (e.g., 'c', 'b', 'a' or '3', '2', '1')
+      if (password.codeUnitAt(i + 1) == password.codeUnitAt(i) - 1 &&
+          password.codeUnitAt(i + 2) == password.codeUnitAt(i) - 2) {
+        return true;
       }
     }
+
     return false;
   }
 

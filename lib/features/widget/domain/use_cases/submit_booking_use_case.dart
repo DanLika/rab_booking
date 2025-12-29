@@ -119,16 +119,12 @@ class SubmitBookingUseCase {
     final sanitizedPhone = InputSanitizer.sanitizePhone(
       params.phoneWithCountryCode,
     );
+    if (sanitizedPhone == null || sanitizedPhone.isEmpty) {
+      throw Exception('Phone number is required and cannot be empty.');
+    }
     final sanitizedNotes = params.notes?.trim().isEmpty ?? true
         ? null
         : InputSanitizer.sanitizeText(params.notes!.trim());
-
-    // SECURITY ENHANCEMENT: Add length validation to prevent abuse (e.g., DoS)
-    if (sanitizedNotes != null && sanitizedNotes.length > 1000) {
-      throw Exception(
-        'Notes cannot exceed 1000 characters. Please shorten your message.',
-      );
-    }
 
     // Validate that required fields are not empty after sanitization
     // This prevents sending empty strings to the backend which would cause 400 errors
@@ -142,12 +138,6 @@ class SubmitBookingUseCase {
         'Guest email is required and cannot be empty. Please enter a valid email address.',
       );
     }
-    // SECURITY FIX: Ensure phone number is also validated after sanitization
-    if (sanitizedPhone == null || sanitizedPhone.trim().isEmpty) {
-      throw Exception(
-        'Guest phone is required and cannot be empty. Please enter a valid phone number with a country code.',
-      );
-    }
 
     // bookingPending mode: Create booking immediately (no payment)
     if (widgetMode == WidgetMode.bookingPending) {
@@ -159,7 +149,7 @@ class SubmitBookingUseCase {
         checkOut: params.checkOut,
         guestName: sanitizedGuestName, // Validated above - guaranteed non-null
         guestEmail: sanitizedEmail, // Validated above - guaranteed non-null
-        guestPhone: sanitizedPhone, // Validated above - guaranteed non-null
+        guestPhone: sanitizedPhone ?? params.phoneWithCountryCode,
         guestCount: params.totalGuests,
         totalPrice: params.totalPrice,
         servicesTotal: params.servicesTotal,
@@ -197,7 +187,7 @@ class SubmitBookingUseCase {
       checkOut: params.checkOut,
       guestName: sanitizedGuestName, // Validated above - guaranteed non-null
       guestEmail: sanitizedEmail, // Validated above - guaranteed non-null
-      guestPhone: sanitizedPhone, // Validated above - guaranteed non-null
+      guestPhone: sanitizedPhone ?? params.phoneWithCountryCode,
       guestCount: params.totalGuests,
       totalPrice: params.totalPrice,
       servicesTotal: params.servicesTotal,

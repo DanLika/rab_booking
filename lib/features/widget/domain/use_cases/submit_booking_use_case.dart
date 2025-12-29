@@ -135,6 +135,12 @@ class SubmitBookingUseCase {
         'Guest email is required and cannot be empty. Please enter a valid email address.',
       );
     }
+    // SECURITY FIX: Ensure phone number is also validated after sanitization
+    if (sanitizedPhone == null || sanitizedPhone.trim().isEmpty) {
+      throw Exception(
+        'Guest phone is required and cannot be empty. Please enter a valid phone number with a country code.',
+      );
+    }
 
     // bookingPending mode: Create booking immediately (no payment)
     if (widgetMode == WidgetMode.bookingPending) {
@@ -146,7 +152,7 @@ class SubmitBookingUseCase {
         checkOut: params.checkOut,
         guestName: sanitizedGuestName, // Validated above - guaranteed non-null
         guestEmail: sanitizedEmail, // Validated above - guaranteed non-null
-        guestPhone: sanitizedPhone ?? params.phoneWithCountryCode,
+        guestPhone: sanitizedPhone, // Validated above - guaranteed non-null
         guestCount: params.totalGuests,
         totalPrice: params.totalPrice,
         servicesTotal: params.servicesTotal,
@@ -184,7 +190,7 @@ class SubmitBookingUseCase {
       checkOut: params.checkOut,
       guestName: sanitizedGuestName, // Validated above - guaranteed non-null
       guestEmail: sanitizedEmail, // Validated above - guaranteed non-null
-      guestPhone: sanitizedPhone ?? params.phoneWithCountryCode,
+      guestPhone: sanitizedPhone, // Validated above - guaranteed non-null
       guestCount: params.totalGuests,
       totalPrice: params.totalPrice,
       servicesTotal: params.servicesTotal,

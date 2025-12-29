@@ -79,8 +79,7 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
 
     if (!isAllowed) {
       logWarn("[iCal Sync] URL domain not in whitelist", { hostname });
-      // For now, just log warning but allow - can be tightened later
-      // return { valid: false, error: `Domain ${hostname} is not in the allowed list.` };
+      return { valid: false, error: `Domain ${hostname} is not in the allowed list.` };
     }
 
     return { valid: true };

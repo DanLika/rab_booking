@@ -146,20 +146,55 @@ class RevenueChartWidget extends StatelessWidget {
 }
 
 /// Simple bar chart
-class _BarChart extends StatelessWidget {
+class _BarChart extends StatefulWidget {
   final List<RevenueDataPoint> data;
 
   const _BarChart({required this.data});
 
   @override
+  State<_BarChart> createState() => _BarChartState();
+}
+
+class _BarChartState extends State<_BarChart> {
+  double _maxValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _maxValue = _computeMaxValue(widget.data);
+  }
+
+  @override
+  void didUpdateWidget(covariant _BarChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Recalculate max value only if data changes
+    if (widget.data != oldWidget.data) {
+      final newMaxValue = _computeMaxValue(widget.data);
+      if (newMaxValue != _maxValue) {
+        setState(() {
+          _maxValue = newMaxValue;
+        });
+      }
+    }
+  }
+
+  double _computeMaxValue(List<RevenueDataPoint> data) {
+    if (data.isEmpty) {
+      return 0;
+    }
+    // PERF: Cache the max value to avoid recalculating on every build.
+    // This is the most expensive operation in the chart.
+    return data.map((d) => d.value).reduce(math.max);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final maxValue = data.map((d) => d.value).reduce(math.max);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         // Calculate responsive Y-axis width based on max value
-        final maxValueDigits = maxValue.toStringAsFixed(0).length;
+        final maxValueDigits = _maxValue.toStringAsFixed(0).length;
         final yAxisWidth = math.min(60.0, math.max(40.0, maxValueDigits * 8.0));
 
         // Calculate available height for bars
@@ -176,7 +211,7 @@ class _BarChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: List.generate(5, (index) {
-                  final value = maxValue * (4 - index) / 4;
+                  final value = _maxValue * (4 - index) / 4;
                   return Padding(
                     padding: const EdgeInsets.only(right: 4),
                     child: Text(
@@ -203,18 +238,18 @@ class _BarChart extends StatelessWidget {
                   Expanded(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
-                      children: data.asMap().entries.map((entry) {
+                      children: widget.data.asMap().entries.map((entry) {
                         final index = entry.key;
                         final point = entry.value;
-                        final heightRatio = maxValue > 0
-                            ? point.value / maxValue
+                        final heightRatio = _maxValue > 0
+                            ? point.value / _maxValue
                             : 0;
 
                         return Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(
                               left: index == 0 ? 0 : AppDimensions.spaceXXS,
-                              right: index == data.length - 1
+                              right: index == widget.data.length - 1
                                   ? 0
                                   : AppDimensions.spaceXXS,
                             ),
@@ -247,7 +282,7 @@ class _BarChart extends StatelessWidget {
 
                   // X-axis labels
                   Row(
-                    children: data.asMap().entries.map((entry) {
+                    children: widget.data.asMap().entries.map((entry) {
                       final index = entry.key;
                       final point = entry.value;
 
@@ -255,7 +290,7 @@ class _BarChart extends StatelessWidget {
                         child: Padding(
                           padding: EdgeInsets.only(
                             left: index == 0 ? 0 : AppDimensions.spaceXXS,
-                            right: index == data.length - 1
+                            right: index == widget.data.length - 1
                                 ? 0
                                 : AppDimensions.spaceXXS,
                           ),

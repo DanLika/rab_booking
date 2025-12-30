@@ -586,6 +586,12 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
     ); // Close PopScope
   }
 
+  /// Simple HTML tag stripper for sanitization
+  String _sanitizeInput(String input) {
+    // This regex removes HTML tags to prevent HTML injection/XSS.
+    return input.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ').trim();
+  }
+
   Future<void> _sendEmail() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -601,6 +607,10 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
 
     setState(() => _isLoading = true);
 
+    // Sanitize inputs
+    final subject = _sanitizeInput(_subjectController.text);
+    final message = _sanitizeInput(_messageController.text);
+
     try {
       // Call Cloud Function
       final functions = ref.read(firebaseFunctionsProvider);
@@ -611,8 +621,8 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
             'bookingId': widget.booking.id,
             'guestEmail': widget.booking.guestEmail,
             'guestName': widget.booking.guestName,
-            'subject': _subjectController.text.trim(),
-            'message': _messageController.text.trim(),
+            'subject': subject,
+            'message': message,
           })
           .withCloudFunctionTimeout('sendCustomEmailToGuest');
 

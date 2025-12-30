@@ -45,7 +45,11 @@ mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget>
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, e);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: 'Greška pri osvježavanju kalendara',
+        );
       }
     }
   }

@@ -170,7 +170,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
           message = l10n.recentLoginRequired;
           break;
         default:
-          message = '${l10n.passwordChangeError}: ${e.message}';
+          message = l10n.passwordChangeError;
       }
 
       if (mounted) {

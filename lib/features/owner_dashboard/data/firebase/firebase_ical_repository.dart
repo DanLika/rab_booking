@@ -163,7 +163,7 @@ class FirebaseIcalRepository {
         'last_synced': Timestamp.now(),
         'sync_count': currentSyncCount + 1,
         'event_count': eventCount,
-        'status': 'active',
+        'status': IcalFeedStatus.active.name,
         'last_error': null,
         'updated_at': Timestamp.now(),
       });

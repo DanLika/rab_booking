@@ -413,26 +413,26 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     );
   }
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(IcalFeedStatus status) {
     switch (status) {
-      case 'active':
+      case IcalFeedStatus.active:
         return AppColors.success; // Green for active
-      case 'error':
+      case IcalFeedStatus.error:
         return AppColors.error; // Red for errors
-      case 'paused':
+      case IcalFeedStatus.paused:
         return AppColors.warning; // Orange for paused
       default:
         return Colors.grey;
     }
   }
 
-  IconData _getStatusIcon(String status) {
+  IconData _getStatusIcon(IcalFeedStatus status) {
     switch (status) {
-      case 'active':
+      case IcalFeedStatus.active:
         return Icons.check_circle;
-      case 'error':
+      case IcalFeedStatus.error:
         return Icons.error;
-      case 'paused':
+      case IcalFeedStatus.paused:
         return Icons.pause_circle;
       default:
         return Icons.help;
@@ -520,7 +520,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   void _pauseFeed(IcalFeed feed) async {
     try {
       final repository = ref.read(icalRepositoryProvider);
-      await repository.updateFeedStatus(feed.id, 'paused');
+      await repository.updateFeedStatus(feed.id, IcalFeedStatus.paused.name);
 
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, 'Feed pauziran');
@@ -539,7 +539,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   void _resumeFeed(IcalFeed feed) async {
     try {
       final repository = ref.read(icalRepositoryProvider);
-      await repository.updateFeedStatus(feed.id, 'active');
+      await repository.updateFeedStatus(feed.id, IcalFeedStatus.active.name);
 
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, 'Feed nastavljen');
@@ -928,7 +928,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         platform: _selectedPlatform,
         icalUrl: _icalUrlController.text.trim(),
         syncIntervalMinutes: 60,
-        status: 'active',
+        status: IcalFeedStatus.active,
         createdAt: widget.existingFeed?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );

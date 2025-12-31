@@ -21,6 +21,7 @@ class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
 
 class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen> {
   final Set<String> _syncingFeedIds = {};
+  String? _deletingFeedId;
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +213,21 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   Widget _buildFeedCard(IcalFeed feed) {
+    if (_deletingFeedId == feed.id) {
+      return Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const ListTile(
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: CircularProgressIndicator(),
+          title: Text('Brisanje u toku...'),
+        ),
+      );
+    }
+
     final statusColor = _getStatusColor(feed.status);
     final statusIcon = _getStatusIcon(feed.status);
 
@@ -556,6 +572,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
+              setState(() {
+                _deletingFeedId = feed.id;
+              });
               try {
                 final repository = ref.read(icalRepositoryProvider);
                 await repository.deleteIcalFeed(feed.id);
@@ -570,6 +589,12 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                     e,
                     userMessage: 'Greška prilikom brisanja feeda',
                   );
+                }
+              } finally {
+                if (mounted) {
+                  setState(() {
+                    _deletingFeedId = null;
+                  });
                 }
               }
             },

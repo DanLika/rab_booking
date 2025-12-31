@@ -505,15 +505,18 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         final isDesktop = constraints.maxWidth >= 900;
 
         if (isDesktop) {
-          // Desktop: 2-column layout using ListView with rows
-          // This allows cards to have natural heights without childAspectRatio constraints
-          final rows = <Widget>[];
-          for (var i = 0; i < bookings.length; i += 2) {
-            final leftBooking = bookings[i];
-            final rightBooking = i + 1 < bookings.length ? bookings[i + 1] : null;
+          // Desktop: 2-column layout using ListView.builder for performance
+          // This builds rows on-demand as they scroll into view.
+          return ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+            itemCount: (bookings.length / 2).ceil(), // Calculate number of rows
+            itemBuilder: (context, index) {
+              final int firstBookingIndex = index * 2;
+              final leftBooking = bookings[firstBookingIndex];
+              final rightBooking =
+                  firstBookingIndex + 1 < bookings.length ? bookings[firstBookingIndex + 1] : null;
 
-            rows.add(
-              Padding(
+              return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: IntrinsicHeight(
                   child: Row(
@@ -534,20 +537,16 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                           ),
                         ),
                       ] else
-                        const Spacer(),
+                        const Spacer(), // Ensure row expands if only one item
                     ],
                   ),
                 ),
-              ),
-            );
-          }
-
-          return ListView(
-            padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-            children: rows,
+              );
+            },
           );
         } else {
           // Mobile/Tablet: Single column list with natural height
+          // ListView.builder is inherently performant for long lists.
           return ListView.builder(
             padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
             itemCount: bookings.length,

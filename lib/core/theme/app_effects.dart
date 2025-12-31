@@ -30,7 +30,7 @@ class AppEffects {
 
   /// Light glass morphism decoration (light mode)
   /// Semi-transparent white background with blur
-  static BoxDecoration get glassMorphismLight => BoxDecoration(
+  static final BoxDecoration glassMorphismLight = BoxDecoration(
         gradient: AppColors.glassGradient,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
         border: Border.all(
@@ -48,7 +48,7 @@ class AppEffects {
 
   /// Dark glass morphism decoration (dark mode)
   /// Semi-transparent dark background with blur
-  static BoxDecoration get glassMorphismDark => BoxDecoration(
+  static final BoxDecoration glassMorphismDark = BoxDecoration(
         gradient: AppColors.glassGradientDark,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
         border: Border.all(
@@ -65,7 +65,7 @@ class AppEffects {
       );
 
   /// Frosted glass effect (for app bars, cards)
-  static BoxDecoration get frostedGlass => BoxDecoration(
+  static final BoxDecoration frostedGlass = BoxDecoration(
         color: AppColors.withOpacity(Colors.white, AppColors.opacity80),
         borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
         border: Border.all(
@@ -82,7 +82,7 @@ class AppEffects {
       );
 
   /// Tinted glass effect with primary color
-  static BoxDecoration get tintedGlassPrimary => BoxDecoration(
+  static final BoxDecoration tintedGlassPrimary = BoxDecoration(
         gradient: LinearGradient(
           colors: [
             AppColors.withOpacity(AppColors.primary, AppColors.opacity20),
@@ -106,7 +106,7 @@ class AppEffects {
       );
 
   /// Tinted glass effect with secondary color
-  static BoxDecoration get tintedGlassSecondary => BoxDecoration(
+  static final BoxDecoration tintedGlassSecondary = BoxDecoration(
         gradient: LinearGradient(
           colors: [
             AppColors.withOpacity(AppColors.secondary, AppColors.opacity20),
@@ -178,67 +178,67 @@ class AppEffects {
   // ============================================================================
 
   /// Hairline border (very thin, subtle)
-  static Border get hairlineBorder => Border.all(
+  static final Border hairlineBorder = Border.all(
         color: AppColors.borderLight,
         width: 0.5,
       );
 
   /// Hairline border (dark mode)
-  static Border get hairlineBorderDark => Border.all(
+  static final Border hairlineBorderDark = Border.all(
         color: AppColors.borderDark,
         width: 0.5,
       );
 
   /// Thin border (standard)
-  static Border get thinBorder => Border.all(
+  static final Border thinBorder = Border.all(
         color: AppColors.borderLight,
         width: 1.0,
       );
 
   /// Thin border (dark mode)
-  static Border get thinBorderDark => Border.all(
+  static final Border thinBorderDark = Border.all(
         color: AppColors.borderDark,
         width: 1.0,
       );
 
   /// Medium border (emphasis)
-  static Border get mediumBorder => Border.all(
+  static final Border mediumBorder = Border.all(
         color: AppColors.borderLight,
         width: 2.0,
       );
 
   /// Medium border (dark mode)
-  static Border get mediumBorderDark => Border.all(
+  static final Border mediumBorderDark = Border.all(
         color: AppColors.borderDark,
         width: 2.0,
       );
 
   /// Thick border (strong emphasis)
-  static Border get thickBorder => Border.all(
+  static final Border thickBorder = Border.all(
         color: AppColors.borderLight,
         width: 3.0,
       );
 
   /// Thick border (dark mode)
-  static Border get thickBorderDark => Border.all(
+  static final Border thickBorderDark = Border.all(
         color: AppColors.borderDark,
         width: 3.0,
       );
 
   /// Primary colored border
-  static Border get primaryBorder => Border.all(
+  static final Border primaryBorder = Border.all(
         color: AppColors.primary,
         width: 2.0,
       );
 
   /// Secondary colored border
-  static Border get secondaryBorder => Border.all(
+  static final Border secondaryBorder = Border.all(
         color: AppColors.secondary,
         width: 2.0,
       );
 
   /// Gradient border effect (using decoration)
-  static BoxDecoration get gradientBorderPrimary => BoxDecoration(
+  static final BoxDecoration gradientBorderPrimary = BoxDecoration(
         borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
         border: Border.all(
           color: Colors.transparent,
@@ -248,7 +248,7 @@ class AppEffects {
       );
 
   /// Gradient border effect with secondary color
-  static BoxDecoration get gradientBorderSecondary => BoxDecoration(
+  static final BoxDecoration gradientBorderSecondary = BoxDecoration(
         borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
         border: Border.all(
           color: Colors.transparent,
@@ -262,7 +262,7 @@ class AppEffects {
   // ============================================================================
 
   /// Shimmer gradient (light mode)
-  static LinearGradient get shimmerGradientLight => const LinearGradient(
+  static final LinearGradient shimmerGradientLight = const LinearGradient(
         colors: [
           AppColors.shimmerBase,
           AppColors.shimmerHighlight,
@@ -274,7 +274,7 @@ class AppEffects {
       );
 
   /// Shimmer gradient (dark mode)
-  static LinearGradient get shimmerGradientDark => const LinearGradient(
+  static final LinearGradient shimmerGradientDark = const LinearGradient(
         colors: [
           AppColors.surfaceVariantDark,
           AppColors.surfaceDark,
@@ -290,22 +290,22 @@ class AppEffects {
   // ============================================================================
 
   /// Scrim overlay (for modal backdrops)
-  static BoxDecoration get scrimOverlayLight => const BoxDecoration(
+  static final BoxDecoration scrimOverlayLight = const BoxDecoration(
         color: AppColors.scrimLight,
       );
 
   /// Scrim overlay (dark mode)
-  static BoxDecoration get scrimOverlayDark => const BoxDecoration(
+  static final BoxDecoration scrimOverlayDark = const BoxDecoration(
         color: AppColors.scrimDark,
       );
 
   /// Gradient overlay for images (dark bottom)
-  static BoxDecoration get imageOverlay => const BoxDecoration(
+  static final BoxDecoration imageOverlay = const BoxDecoration(
         gradient: AppColors.overlayGradient,
       );
 
   /// Gradient overlay for images (light center, dark edges)
-  static BoxDecoration get imageOverlayRadial => const BoxDecoration(
+  static final BoxDecoration imageOverlayRadial = const BoxDecoration(
         gradient: RadialGradient(
           colors: [
             Color(0x00000000), // Transparent center

@@ -12,10 +12,13 @@ import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import 'package:intl/intl.dart';
 import '../../../../shared/providers/repository_providers.dart';
-import '../widgets/bookings_table_view.dart';
 import '../../../../shared/widgets/buttons/buttons.dart';
+import '../widgets/booking_details_dialog.dart';
+import '../widgets/edit_booking_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../widgets/send_email_dialog.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
@@ -26,6 +29,9 @@ class OwnerBookingsScreen extends ConsumerStatefulWidget {
 }
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
+  // Selection state for the table view
+  final Set<String> _selectedBookingIds = {};
+
   @override
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(ownerBookingsProvider);
@@ -154,10 +160,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   ? _buildEmptyState()
                   : viewMode == BookingsViewMode.card
                       ? _buildBookingsList(bookings)
-                      : SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-                          child: BookingsTableView(bookings: bookings),
-                        ),
+                      : _buildBookingsTable(bookings),
               loading: () => ListView.builder(
                 padding: EdgeInsets.all(context.horizontalPadding),
                 itemCount: 3,
@@ -2018,6 +2021,784 @@ class _BookingDetailsDialog extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // A performant table view for bookings using ListView.builder.
+  Widget _buildBookingsTable(List<OwnerBooking> bookings) {
+    // These widths are estimates to match the original DataTable's column sizing.
+    // They might need tweaking for perfect alignment.
+    final columnWidths = {
+      0: 200.0, // Guest
+      1: 180.0, // Property/Unit
+      2: 100.0, // Check-in
+      3: 100.0, // Check-out
+      4: 60.0,  // Nights
+      5: 70.0,  // Guests
+      6: 120.0, // Status
+      7: 100.0, // Price
+      8: 120.0, // Source
+      9: 80.0,  // Actions
+    };
+    const double checkboxWidth = 60.0;
+    final double totalWidth =
+        columnWidths.values.reduce((a, b) => a + b) + checkboxWidth;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+      child: Card(
+        elevation: 2,
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            // Selection action bar
+            if (_selectedBookingIds.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: AppColors.primary.withValues(alpha: 0.1),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Text(
+                        '${_selectedBookingIds.length} odabrano',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(width: 16),
+                      TextButton.icon(
+                        onPressed: () => _deleteSelectedBookings(bookings),
+                        icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                        label: const Text('Obriši odabrane',
+                            style: TextStyle(color: AppColors.error)),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedBookingIds.clear();
+                          });
+                        },
+                        child: const Text('Poništi odabir'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            // Table content
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: totalWidth,
+                  child: Column(
+                    children: [
+                      // Header Row
+                      _buildTableHeader(columnWidths, checkboxWidth),
+                      // Body Rows (lazy-loaded)
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: bookings.length,
+                          itemBuilder: (context, index) {
+                            final ownerBooking = bookings[index];
+                            return _buildTableRowWidget(
+                              ownerBooking,
+                              columnWidths,
+                              checkboxWidth,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableHeader(
+      Map<int, double> columnWidths, double checkboxWidth) {
+    final columns = [
+      'Gost',
+      'Objekt / Jedinica',
+      'Check-in',
+      'Check-out',
+      'Noći',
+      'Gostiju',
+      'Status',
+      'Cijena',
+      'Izvor',
+      'Akcije',
+    ];
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 56, // Default DataTable header height
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariantLight,
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(width: checkboxWidth), // Checkbox space
+          ...List.generate(columns.length, (index) {
+            return SizedBox(
+              width: columnWidths[index],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  columns[index],
+                  style: theme.textTheme.labelMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableRowWidget(OwnerBooking ownerBooking,
+      Map<int, double> columnWidths, double checkboxWidth) {
+    final booking = ownerBooking.booking;
+    final property = ownerBooking.property;
+    final unit = ownerBooking.unit;
+    final isSelected = _selectedBookingIds.contains(booking.id);
+    final theme = Theme.of(context);
+
+    final cells = [
+      // Guest name - clickable to open details
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            ownerBooking.guestName,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            ownerBooking.guestEmail,
+            style: TextStyle(
+              fontSize: 12,
+              color: context.textColorSecondary,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+
+      // Property / Unit
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            property.name,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            unit.name,
+            style: TextStyle(
+              fontSize: 12,
+              color: context.textColorSecondary,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+
+      // Check-in
+      Text(DateFormat('dd.MM.yyyy').format(booking.checkIn)),
+      // Check-out
+      Text(DateFormat('dd.MM.yyyy').format(booking.checkOut)),
+      // Number of nights
+      Text('${booking.numberOfNights}'),
+      // Guest count
+      Text('${booking.guestCount}'),
+      // Status badge
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: booking.status.color.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: booking.status.color),
+        ),
+        child: Text(
+          booking.status.displayName,
+          style: TextStyle(
+            color: booking.status.color,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ),
+      // Price
+      Text(
+        booking.formattedTotalPrice,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).primaryColor,
+        ),
+      ),
+      // Source
+      _buildSourceBadge(booking.source),
+      // Actions menu
+      _buildActionsMenu(booking),
+    ];
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _selectedBookingIds.remove(booking.id);
+          } else {
+            _selectedBookingIds.add(booking.id);
+          }
+        });
+      },
+      child: Container(
+        height: 64, // Custom row height
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withOpacity(0.1) : null,
+          border: Border(bottom: BorderSide(color: theme.dividerColor)),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: checkboxWidth,
+              child: Center(
+                child: Checkbox(
+                  value: isSelected,
+                  onChanged: (selected) {
+                    setState(() {
+                      if (selected == true) {
+                        _selectedBookingIds.add(booking.id);
+                      } else {
+                        _selectedBookingIds.remove(booking.id);
+                      }
+                    });
+                  },
+                ),
+              ),
+            ),
+            ...List.generate(cells.length, (index) {
+              return SizedBox(
+                width: columnWidths[index],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: cells[index],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSourceBadge(String? source) {
+    if (source == null) {
+      return const Text('Direktno');
+    }
+
+    // Map source to display name and icon
+    String displayName;
+    IconData icon;
+    Color color;
+
+    switch (source.toLowerCase()) {
+      case 'ical':
+        displayName = 'iCal';
+        icon = Icons.sync;
+        color = Colors.blue;
+        break;
+      case 'booking_com':
+      case 'booking.com':
+        displayName = 'Booking.com';
+        icon = Icons.public;
+        color = Colors.orange;
+        break;
+      case 'airbnb':
+        displayName = 'Airbnb';
+        icon = Icons.home;
+        color = Colors.red;
+        break;
+      case 'widget':
+        displayName = 'Widget';
+        icon = Icons.web;
+        color = Colors.green;
+        break;
+      case 'admin':
+      case 'manual':
+        displayName = 'Manualno';
+        icon = Icons.person;
+        color = Colors.grey;
+        break;
+      default:
+        displayName = source;
+        icon = Icons.help_outline;
+        color = Colors.grey;
+    }
+
+    return Tooltip(
+      message: displayName,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(
+            displayName,
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionsMenu(BookingModel booking) {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      tooltip: 'Akcije',
+      onSelected: (value) => _handleAction(value, booking),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'details',
+          child: Row(
+            children: [
+              Icon(Icons.visibility_outlined),
+              SizedBox(width: 8),
+              Text('Detalji'),
+            ],
+          ),
+        ),
+        if (booking.status == BookingStatus.pending)
+          const PopupMenuItem(
+            value: 'confirm',
+            child: Row(
+              children: [
+                Icon(Icons.check_circle_outline, color: AppColors.success),
+                SizedBox(width: 8),
+                Text('Potvrdi'),
+              ],
+            ),
+          ),
+        if (booking.status == BookingStatus.confirmed && booking.isPast)
+          const PopupMenuItem(
+            value: 'complete',
+            child: Row(
+              children: [
+                Icon(Icons.done_all),
+                SizedBox(width: 8),
+                Text('Završi'),
+              ],
+            ),
+          ),
+        const PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(Icons.edit_outlined),
+              SizedBox(width: 8),
+              Text('Uredi'),
+            ],
+          ),
+        ),
+        if (booking.canBeCancelled)
+          const PopupMenuItem(
+            value: 'cancel',
+            child: Row(
+              children: [
+                Icon(Icons.cancel_outlined, color: AppColors.error),
+                SizedBox(width: 8),
+                Text('Otkaži'),
+              ],
+            ),
+          ),
+        const PopupMenuItem(
+          value: 'email',
+          child: Row(
+            children: [
+              Icon(Icons.email_outlined),
+              SizedBox(width: 8),
+              Text('Pošalji email'),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, color: AppColors.error),
+              SizedBox(width: 8),
+              Text('Obriši', style: TextStyle(color: AppColors.error)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _handleAction(String action, BookingModel booking) {
+    final bookings = ref.read(ownerBookingsProvider).valueOrNull ?? [];
+    switch (action) {
+      case 'details':
+        _showBookingDetailsById(booking.id, bookings);
+        break;
+      case 'confirm':
+        _confirmBooking(booking.id);
+        break;
+      case 'complete':
+        _completeBooking(booking.id);
+        break;
+      case 'edit':
+        _editBooking(booking.id, bookings);
+        break;
+      case 'cancel':
+        _cancelBooking(booking.id);
+        break;
+      case 'email':
+        _sendEmail(booking);
+        break;
+      case 'delete':
+        _deleteBooking(booking.id);
+        break;
+    }
+  }
+
+  void _showBookingDetails(OwnerBooking ownerBooking) {
+    showDialog(
+      context: context,
+      builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+    );
+  }
+
+  void _showBookingDetailsById(String bookingId, List<OwnerBooking> bookings) {
+    // Find booking in the list
+    final ownerBooking = bookings.firstWhere(
+      (b) => b.booking.id == bookingId,
+    );
+    _showBookingDetails(ownerBooking);
+  }
+
+  Future<void> _confirmBooking(String bookingId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Potvrdi rezervaciju'),
+        content:
+            const Text('Jeste li sigurni da želite potvrditi ovu rezervaciju?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Otkaži'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Potvrdi'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+        await repository.confirmBooking(bookingId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Rezervacija je uspješno potvrđena'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          ref.invalidate(ownerBookingsProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _completeBooking(String bookingId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Označi kao završeno'),
+        content: const Text(
+            'Jeste li sigurni da želite označiti ovu rezervaciju kao završenu?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Otkaži'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Završi'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+        await repository.completeBooking(bookingId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Rezervacija je označena kao završena'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          ref.invalidate(ownerBookingsProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _cancelBooking(String bookingId) async {
+    final reasonController = TextEditingController();
+    final sendEmailNotifier = ValueNotifier<bool>(true);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Otkaži rezervaciju'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Jeste li sigurni da želite otkazati ovu rezervaciju?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Razlog otkazivanja',
+                border: OutlineInputBorder(),
+                hintText: 'Unesite razlog...',
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            ValueListenableBuilder<bool>(
+              valueListenable: sendEmailNotifier,
+              builder: (context, sendEmail, _) {
+                return CheckboxListTile(
+                  title: const Text('Pošalji email gostu'),
+                  value: sendEmail,
+                  onChanged: (value) {
+                    sendEmailNotifier.value = value ?? true;
+                  },
+                  contentPadding: EdgeInsets.zero,
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Odustani'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('Otkaži rezervaciju'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+        await repository.cancelBooking(
+          bookingId,
+          reasonController.text.isEmpty
+              ? 'Otkazano od strane vlasnika'
+              : reasonController.text,
+          sendEmail: sendEmailNotifier.value,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Rezervacija je otkazana'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+          ref.invalidate(ownerBookingsProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _editBooking(String bookingId, List<OwnerBooking> bookings) async {
+    final ownerBooking = bookings.firstWhere(
+      (b) => b.booking.id == bookingId,
+    );
+    await showEditBookingDialog(context, ref, ownerBooking.booking);
+  }
+
+  void _sendEmail(BookingModel booking) async {
+    await showSendEmailDialog(context, ref, booking);
+  }
+
+  Future<void> _deleteBooking(String bookingId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Obriši rezervaciju'),
+        content: const Text(
+          'Jeste li sigurni da želite TRAJNO obrisati ovu rezervaciju? Ova akcija se ne može poništiti.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Odustani'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('Obriši'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+        await repository.deleteBooking(bookingId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Rezervacija je obrisana'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          ref.invalidate(ownerBookingsProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteSelectedBookings(List<OwnerBooking> bookings) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Obriši odabrane rezervacije'),
+        content: Text(
+          'Jeste li sigurni da želite TRAJNO obrisati ${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervaciju' : 'rezervacija'}? Ova akcija se ne može poništiti.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Odustani'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('Obriši sve'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+
+        // Delete all selected bookings
+        for (final bookingId in _selectedBookingIds) {
+          await repository.deleteBooking(bookingId);
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  '${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervacija je obrisana' : 'rezervacija su obrisane'}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+
+          setState(() {
+            _selectedBookingIds.clear();
+          });
+
+          ref.invalidate(ownerBookingsProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
   }
 }
 

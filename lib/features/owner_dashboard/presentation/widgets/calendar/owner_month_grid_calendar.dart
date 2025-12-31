@@ -252,6 +252,28 @@ class _OwnerMonthGridCalendarState
     final theme = Theme.of(context);
     final unitBookings = widget.bookings[unit.id] ?? [];
 
+    // Performance Optimization: Pre-calculate booked days for O(1) lookup.
+    // This avoids iterating through all bookings for every single day cell.
+    final bookedDates = <DateTime>{};
+    if (unitBookings.isNotEmpty) {
+      for (final booking in unitBookings) {
+        final checkIn = DateTime(
+            booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
+        final checkOut = DateTime(
+            booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
+
+        // Add all days from check-in up to (but not including) check-out.
+        for (var d = checkIn;
+            d.isBefore(checkOut);
+            d = d.add(const Duration(days: 1))) {
+          bookedDates.add(d);
+        }
+        // The original logic also considered the checkout day as "booked" for the
+        // purpose of hiding the '+' icon, so we add it here to match.
+        bookedDates.add(checkOut);
+      }
+    }
+
     return SizedBox(
       height: rowHeight,
       child: Row(
@@ -260,15 +282,9 @@ class _OwnerMonthGridCalendarState
           final isPast = DateRangeUtils.isPast(date);
           final isFirstOfMonth = date.day == 1;
 
-          // Check if there's a booking on this date
-          final hasBookingOnDate = unitBookings.any((booking) {
-            final checkIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-            final checkOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
-            final cellDate = DateTime(date.year, date.month, date.day);
-            return cellDate.isAtSameMomentAs(checkIn) ||
-                   cellDate.isAtSameMomentAs(checkOut) ||
-                   (cellDate.isAfter(checkIn) && cellDate.isBefore(checkOut));
-          });
+          // Optimized check: O(1) lookup in the pre-calculated set.
+          final hasBookingOnDate =
+              bookedDates.contains(DateTime(date.year, date.month, date.day));
 
           return GestureDetector(
             onTap: widget.onCellTap != null
@@ -293,19 +309,23 @@ class _OwnerMonthGridCalendarState
                     height: rowHeight,
                     decoration: BoxDecoration(
                       color: isHighlighted
-                          ? theme.colorScheme.primary.withAlpha((0.1 * 255).toInt())
+                          ? theme.colorScheme.primary
+                              .withAlpha((0.1 * 255).toInt())
                           : (isPast
-                              ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
+                              ? theme.disabledColor
+                                  .withAlpha((0.05 * 255).toInt())
                               : (isToday
                                   ? theme.colorScheme.primary
                                       .withAlpha((0.05 * 255).toInt())
                                   : theme.scaffoldBackgroundColor)),
                       border: Border(
                         right: BorderSide(
-                          color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+                          color:
+                              theme.dividerColor.withAlpha((0.3 * 255).toInt()),
                         ),
                         bottom: BorderSide(
-                          color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+                          color:
+                              theme.dividerColor.withAlpha((0.3 * 255).toInt()),
                         ),
                         left: isFirstOfMonth
                             ? BorderSide(color: theme.dividerColor, width: 2)
@@ -318,7 +338,8 @@ class _OwnerMonthGridCalendarState
                             child: Icon(
                               Icons.add_circle_outline,
                               size: 20,
-                              color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+                              color: theme.colorScheme.primary
+                                  .withAlpha((0.3 * 255).toInt()),
                             ),
                           )
                         : null,

@@ -102,14 +102,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       ) {
         // Parse bookings
         final bookings = bookingsSnapshot.docs
-            .map((doc) {
-              try {
-                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
-              } catch (e) {
-                LoggingService.logError('Error parsing booking', e);
-                return null;
-              }
-            })
+            .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
             .where(
               (booking) =>
                   booking != null && booking.checkOut.isAfter(startDate),
@@ -261,7 +254,25 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         final bookings = bookingsSnapshot.docs
             .map((doc) {
               try {
-                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+                // 🛡️ SENTINEL: SECURITY FIX - Information Exposure (HIGH)
+                // Do NOT parse the full BookingModel.fromJson which may contain PII.
+                // Only extract the fields necessary for calendar display.
+                final data = doc.data() as Map<String, dynamic>;
+                // Note: BookingStatus enum parsing requires a default value for safety.
+                final statusString = data['status'] as String?;
+                final status = BookingStatus.values.firstWhere(
+                  (e) => e.name == statusString,
+                  orElse: () => BookingStatus.confirmed,
+                );
+
+                return BookingModel(
+                  id: doc.id,
+                  unitId: unitId, // From query param, not document
+                  checkIn: (data['check_in'] as Timestamp).toDate(),
+                  checkOut: (data['check_out'] as Timestamp).toDate(),
+                  status: status,
+                  createdAt: (data['created_at'] as Timestamp).toDate(),
+                );
               } catch (e) {
                 LoggingService.logError('Error parsing booking', e);
                 return null;
@@ -403,14 +414,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     ) {
       // Parse bookings
       final bookings = bookingsSnapshot.docs
-          .map((doc) {
-            try {
-              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
-            } catch (e) {
-              LoggingService.logError('Error parsing booking', e);
-              return null;
-            }
-          })
+          .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
           .where(
             (booking) => booking != null && booking.checkOut.isAfter(startDate),
           )
@@ -537,7 +541,25 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       final bookings = bookingsSnapshot.docs
           .map((doc) {
             try {
-              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+              // 🛡️ SENTINEL: SECURITY FIX - Information Exposure (HIGH)
+              // Do NOT parse the full BookingModel.fromJson which may contain PII.
+              // Only extract the fields necessary for calendar display.
+              final data = doc.data() as Map<String, dynamic>;
+              // Note: BookingStatus enum parsing requires a default value for safety.
+              final statusString = data['status'] as String?;
+              final status = BookingStatus.values.firstWhere(
+                  (e) => e.name == statusString,
+                  orElse: () => BookingStatus.confirmed,
+                );
+
+              return BookingModel(
+                id: doc.id,
+                unitId: unitId, // From query param, not document
+                checkIn: (data['check_in'] as Timestamp).toDate(),
+                checkOut: (data['check_out'] as Timestamp).toDate(),
+                status: status,
+                createdAt: (data['created_at'] as Timestamp).toDate(),
+              );
             } catch (e) {
               LoggingService.logError('Error parsing booking', e);
               return null;
@@ -1293,5 +1315,36 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       weekendBasePrice: weekendBasePrice,
       weekendDays: weekendDays,
     );
+  }
+
+  /// 🛡️ SENTINEL: Helper to securely parse a booking document.
+  ///
+  /// Extracts only the fields necessary for calendar display to prevent
+  /// Information Exposure vulnerabilities. Returns `null` if parsing fails.
+  BookingModel? _mapDocumentToBooking(
+    QueryDocumentSnapshot doc, {
+    required String unitId,
+  }) {
+    try {
+      final data = doc.data() as Map<String, dynamic>;
+      // Note: BookingStatus enum parsing requires a default value for safety.
+      final statusString = data['status'] as String?;
+      final status = BookingStatus.values.firstWhere(
+        (e) => e.name == statusString,
+        orElse: () => BookingStatus.confirmed,
+      );
+
+      return BookingModel(
+        id: doc.id,
+        unitId: unitId, // From query param, not document
+        checkIn: (data['check_in'] as Timestamp).toDate(),
+        checkOut: (data['check_out'] as Timestamp).toDate(),
+        status: status,
+        createdAt: (data['created_at'] as Timestamp).toDate(),
+      );
+    } catch (e) {
+      LoggingService.logError('Error parsing booking document ${doc.id}', e);
+      return null;
+    }
   }
 }

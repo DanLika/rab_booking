@@ -32,6 +32,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -50,6 +53,29 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   void initState() {
     super.initState();
     _passwordController.addListener(_updatePasswordStrength);
+
+    // Performance Optimization: Initialize recognizers once to avoid re-creation on build.
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const TermsConditionsScreen(),
+            ),
+          );
+        }
+      };
+
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const PrivacyPolicyScreen(),
+            ),
+          );
+        }
+      };
   }
 
   @override
@@ -59,6 +85,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
     super.dispose();
   }
 
@@ -293,14 +321,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                 fontWeight: FontWeight.w600,
                                 decoration: TextDecoration.underline,
                               ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => const TermsConditionsScreen(),
-                                    ),
-                                  );
-                                },
+                              recognizer: _termsRecognizer,
                             ),
                             const TextSpan(text: ' *'),
                           ],
@@ -328,14 +349,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                 fontWeight: FontWeight.w600,
                                 decoration: TextDecoration.underline,
                               ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => const PrivacyPolicyScreen(),
-                                    ),
-                                  );
-                                },
+                              recognizer: _privacyRecognizer,
                             ),
                             const TextSpan(text: ' *'),
                           ],

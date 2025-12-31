@@ -20,6 +20,8 @@ class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen> {
+  final Set<String> _syncingFeedIds = {};
+
   @override
   Widget build(BuildContext context) {
     final feedsAsync = ref.watch(icalFeedsStreamProvider);
@@ -261,52 +263,58 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             ),
           ],
         ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) => _handleFeedAction(value, feed),
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'sync',
-              child: Row(
-                children: [
-                  Icon(Icons.sync, size: 18),
-                  SizedBox(width: 8),
-                  Text('Sinhronizuj sada'),
+        trailing: _syncingFeedIds.contains(feed.id)
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.0),
+              )
+            : PopupMenuButton<String>(
+                onSelected: (value) => _handleFeedAction(value, feed),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'sync',
+                    child: Row(
+                      children: [
+                        Icon(Icons.sync, size: 18),
+                        SizedBox(width: 8),
+                        Text('Sinhronizuj sada'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: feed.isActive ? 'pause' : 'resume',
+                    child: Row(
+                      children: [
+                        Icon(feed.isActive ? Icons.pause : Icons.play_arrow, size: 18),
+                        const SizedBox(width: 8),
+                        Text(feed.isActive ? 'Pauziraj' : 'Nastavi'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit, size: 18),
+                        SizedBox(width: 8),
+                        Text('Uredi'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete, size: 18, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('Obriši', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-            PopupMenuItem(
-              value: feed.isActive ? 'pause' : 'resume',
-              child: Row(
-                children: [
-                  Icon(feed.isActive ? Icons.pause : Icons.play_arrow, size: 18),
-                  const SizedBox(width: 8),
-                  Text(feed.isActive ? 'Pauziraj' : 'Nastavi'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 18),
-                  SizedBox(width: 8),
-                  Text('Uredi'),
-                ],
-              ),
-            ),
-            const PopupMenuDivider(),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, size: 18, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Obriši', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -436,6 +444,13 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   void _syncFeedNow(IcalFeed feed) async {
+    // Prevent starting a sync if one is already in progress for this feed
+    if (_syncingFeedIds.contains(feed.id)) return;
+
+    setState(() {
+      _syncingFeedIds.add(feed.id);
+    });
+
     ErrorDisplayUtils.showInfoSnackBar(
       context,
       'Sinhronizacija pokrenuta za ${feed.platformDisplayName}...',
@@ -476,6 +491,12 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           e,
           userMessage: 'Greška prilikom sinhronizacije',
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _syncingFeedIds.remove(feed.id);
+        });
       }
     }
   }

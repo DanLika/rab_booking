@@ -564,6 +564,8 @@ class _TodayIntent extends Intent {
 }
 
 /// Animated gradient FAB with hover and press effects
+// OPTIMIZED: Converted to use ValueNotifier to avoid unnecessary parent rebuilds.
+// Only the FAB's visual representation is rebuilt on state change.
 class _AnimatedGradientFAB extends StatefulWidget {
   final VoidCallback onPressed;
   final LinearGradient gradient;
@@ -575,51 +577,68 @@ class _AnimatedGradientFAB extends StatefulWidget {
 }
 
 class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
-  bool _isHovered = false;
-  bool _isPressed = false;
+  final _isHovered = ValueNotifier<bool>(false);
+  final _isPressed = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _isHovered.dispose();
+    _isPressed.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => _isHovered.value = true,
+      onExit: (_) => _isHovered.value = false,
       child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapDown: (_) => _isPressed.value = true,
         onTapUp: (_) {
-          setState(() => _isPressed = false);
+          _isPressed.value = false;
           widget.onPressed();
         },
-        onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          width: 56,
-          height: 56,
-          transform: Matrix4.diagonal3Values(
-            _isPressed ? 0.92 : (_isHovered ? 1.08 : 1.0),
-            _isPressed ? 0.92 : (_isHovered ? 1.08 : 1.0),
-            1.0,
-          ),
-          transformAlignment: Alignment.center,
-          decoration: BoxDecoration(
-            gradient: widget.gradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: widget.gradient.colors.first.withAlpha(
-                  ((_isHovered ? 0.5 : 0.35) * 255).toInt(),
-                ),
-                blurRadius: _isHovered ? 20 : 12,
-                offset: Offset(0, _isHovered ? 8 : 4),
-                spreadRadius: _isHovered ? 2 : 0,
-              ),
-            ],
-          ),
-          child: AnimatedRotation(
-            duration: const Duration(milliseconds: 200),
-            turns: _isHovered ? 0.125 : 0, // 45 degree rotation on hover
-            child: const Icon(Icons.add, color: Colors.white, size: 28),
-          ),
+        onTapCancel: () => _isPressed.value = false,
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _isHovered,
+          builder: (context, isHovered, _) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: _isPressed,
+              builder: (context, isPressed, _) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  width: 56,
+                  height: 56,
+                  transform: Matrix4.diagonal3Values(
+                    isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
+                    isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
+                    1.0,
+                  ),
+                  transformAlignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: widget.gradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.gradient.colors.first.withAlpha(
+                          ((isHovered ? 0.5 : 0.35) * 255).toInt(),
+                        ),
+                        blurRadius: isHovered ? 20 : 12,
+                        offset: Offset(0, isHovered ? 8 : 4),
+                        spreadRadius: isHovered ? 2 : 0,
+                      ),
+                    ],
+                  ),
+                  child: AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    turns: isHovered ? 0.125 : 0, // 45 degree rotation on hover
+                    child: const Icon(Icons.add, color: Colors.white, size: 28),
+                  ),
+                );
+              },
+            );
+          },
         ),
       ),
     );

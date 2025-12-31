@@ -208,6 +208,8 @@
 
   "editProfile": "Edit Profile",
   "changePassword": "Change Password",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
   "currentPassword": "Current Password",
   "newPassword": "New Password",
   "confirmPassword": "Confirm Password",

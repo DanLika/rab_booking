@@ -208,6 +208,8 @@
 
   "editProfile": "Uredi Profil",
   "changePassword": "Promijeni lozinku",
+  "showPassword": "Prikaži lozinku",
+  "hidePassword": "Sakrij lozinku",
   "currentPassword": "Trenutna Lozinka",
   "newPassword": "Nova lozinka",
   "confirmPassword": "Potvrdi Lozinku",

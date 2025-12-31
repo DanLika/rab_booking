@@ -340,6 +340,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                   prefixIcon: Icons.lock_outline,
                                   obscureText: _obscureCurrentPassword,
                                   suffixIcon: IconButton(
+                                    tooltip: _obscureCurrentPassword
+                                        ? l10n.showPassword
+                                        : l10n.hidePassword,
                                     icon: Icon(
                                       _obscureCurrentPassword
                                           ? Icons.visibility_off
@@ -368,6 +371,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                   prefixIcon: Icons.lock,
                                   obscureText: _obscureNewPassword,
                                   suffixIcon: IconButton(
+                                    tooltip: _obscureNewPassword
+                                        ? l10n.showPassword
+                                        : l10n.hidePassword,
                                     icon: Icon(
                                       _obscureNewPassword
                                           ? Icons.visibility_off
@@ -520,6 +526,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                   prefixIcon: Icons.lock_open,
                                   obscureText: _obscureConfirmPassword,
                                   suffixIcon: IconButton(
+                                    tooltip: _obscureConfirmPassword
+                                        ? l10n.showPassword
+                                        : l10n.hidePassword,
                                     icon: Icon(
                                       _obscureConfirmPassword
                                           ? Icons.visibility_off

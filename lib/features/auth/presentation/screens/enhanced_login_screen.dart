@@ -466,11 +466,17 @@ class _GoogleIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 22,
-      height: 22,
-      child: CustomPaint(
-        painter: _GoogleLogoPainter(),
+    // By wrapping the CustomPaint in a RepaintBoundary, we ensure the static Google logo
+    // is painted only once into its own buffer. This prevents it from being repainted
+    // every time the parent widget rebuilds (e.g., during hover animations),
+    // which is a significant performance optimization.
+    return RepaintBoundary(
+      child: SizedBox(
+        width: 22,
+        height: 22,
+        child: CustomPaint(
+          painter: _GoogleLogoPainter(),
+        ),
       ),
     );
   }

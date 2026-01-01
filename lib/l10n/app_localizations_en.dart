@@ -162,6 +162,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authRememberMe => 'Remember me';
 
   @override
+  String get authShowPassword => 'Show password';
+
+  @override
+  String get authHidePassword => 'Hide password';
+
+  @override
   String get authRememberMeHint => 'Keep me logged in on this device';
 
   @override

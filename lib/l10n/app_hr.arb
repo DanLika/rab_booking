@@ -55,6 +55,8 @@
   "authOwnerLogin": "Prijava vlasnika",
   "authManageProperties": "Upravljajte nekretninama i rezervacijama",
   "authRememberMe": "Zapamti me",
+  "authShowPassword": "Prikaži lozinku",
+  "authHidePassword": "Sakrij lozinku",
   "authRememberMeHint": "Drži me prijavljenim na ovom uređaju",
 
   "authErrorWrongPassword": "Pogrešna lozinka. Molimo pokušajte ponovo.",

@@ -162,6 +162,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get authRememberMe => 'Zapamti me';
 
   @override
+  String get authShowPassword => 'Prikaži lozinku';
+
+  @override
+  String get authHidePassword => 'Sakrij lozinku';
+
+  @override
   String get authRememberMeHint => 'Drži me prijavljenim na ovom uređaju';
 
   @override

@@ -55,6 +55,8 @@
   "authOwnerLogin": "Owner Login",
   "authManageProperties": "Manage your properties and bookings",
   "authRememberMe": "Remember me",
+  "authShowPassword": "Show password",
+  "authHidePassword": "Hide password",
   "authRememberMeHint": "Keep me logged in on this device",
 
   "authErrorWrongPassword": "Incorrect password. Please try again.",

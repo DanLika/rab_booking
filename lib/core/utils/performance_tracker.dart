@@ -219,34 +219,15 @@ class BuildTimeTracker extends StatefulWidget {
 }
 
 class _BuildTimeTrackerState extends State<BuildTimeTracker> {
-  final Stopwatch _stopwatch = Stopwatch();
-
-  @override
-  void initState() {
-    super.initState();
-    _stopwatch.start();
-  }
-
   @override
   Widget build(BuildContext context) {
-    _stopwatch.reset();
-    _stopwatch.start();
-
+    // This optimization uses the Timeline API for more efficient and detailed
+    // performance tracing, integrating directly with Flutter's DevTools.
+    developer.Timeline.startSync('${widget.label}.build');
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _stopwatch.stop();
-      PerformanceLogger.logMetric(
-        '${widget.label}.build',
-        _stopwatch.elapsedMilliseconds,
-      );
+      developer.Timeline.finishSync();
     });
-
     return widget.child;
-  }
-
-  @override
-  void dispose() {
-    _stopwatch.stop();
-    super.dispose();
   }
 }
 

@@ -130,6 +130,42 @@ class BookingModel with _$BookingModel {
   factory BookingModel.fromJson(Map<String, dynamic> json) =>
       _$BookingModelFromJson(json);
 
+  /// SECURITY: Create a lightweight BookingModel for calendar view.
+  /// This constructor ONLY populates non-sensitive fields required for
+  /// displaying availability on the public booking widget.
+  /// It explicitly ignores all guest PII (name, email, phone, notes)
+  /// to prevent data leakage from insecure Firestore rules.
+  factory BookingModel.fromCalendarSnapshot(Map<String, dynamic> doc) {
+    final data = doc;
+    return BookingModel(
+      // Non-sensitive fields required for calendar logic
+      id: data['id'] ?? '',
+      unitId: data['unit_id'] ?? '',
+      ownerId: data['owner_id'],
+      checkIn: const TimestampConverter().fromJson(data['check_in']),
+      checkOut: const TimestampConverter().fromJson(data['check_out']),
+      status: BookingStatus.values.firstWhere(
+        (e) => e.name == data['status'],
+        orElse: () => BookingStatus.pending,
+      ),
+      createdAt: data['created_at'] != null
+          ? const TimestampConverter().fromJson(data['created_at'])
+          : DateTime.now(),
+
+      // All other fields (including PII) are explicitly omitted
+      // and will use their default values (null or 0).
+      // This mitigates the risk of leaking guest data through the
+      // public calendar's Firestore query.
+      guestName: null,
+      guestEmail: null,
+      guestPhone: null,
+      notes: null,
+      totalPrice: 0.0,
+      paidAmount: 0.0,
+      guestCount: 1,
+    );
+  }
+
   /// Calculate number of nights
   int get numberOfNights {
     return checkOut.difference(checkIn).inDays;

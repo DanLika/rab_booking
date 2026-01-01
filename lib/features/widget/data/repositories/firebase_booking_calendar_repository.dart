@@ -104,7 +104,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         final bookings = bookingsSnapshot.docs
             .map((doc) {
               try {
-                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+                // SECURITY FIX: Use the secure fromCalendarSnapshot constructor
+                // to prevent PII from being processed by the client app.
+                return BookingModel.fromCalendarSnapshot({
+                  ...doc.data(),
+                  'id': doc.id,
+                });
               } catch (e) {
                 LoggingService.logError('Error parsing booking', e);
                 return null;
@@ -261,7 +266,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         final bookings = bookingsSnapshot.docs
             .map((doc) {
               try {
-                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+                // SECURITY FIX: Use the secure fromCalendarSnapshot constructor
+                // to prevent PII from being processed by the client app.
+                return BookingModel.fromCalendarSnapshot({
+                  ...doc.data(),
+                  'id': doc.id,
+                });
               } catch (e) {
                 LoggingService.logError('Error parsing booking', e);
                 return null;
@@ -405,7 +415,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       final bookings = bookingsSnapshot.docs
           .map((doc) {
             try {
-              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+              // SECURITY FIX: Use the secure fromCalendarSnapshot constructor
+              // to prevent PII from being processed by the client app.
+              return BookingModel.fromCalendarSnapshot({
+                ...doc.data(),
+                'id': doc.id,
+              });
             } catch (e) {
               LoggingService.logError('Error parsing booking', e);
               return null;

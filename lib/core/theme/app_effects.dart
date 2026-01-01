@@ -31,103 +31,107 @@ class AppEffects {
   /// Light glass morphism decoration (light mode)
   /// Semi-transparent white background with blur
   static final BoxDecoration glassMorphismLight = BoxDecoration(
-        gradient: AppColors.glassGradient,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
-        border: Border.all(
-          color: AppColors.withOpacity(Colors.white, AppColors.opacity20),
-          width: 1,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000), // 5% black
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
-      );
+    gradient: AppColors.glassGradient,
+    borderRadius:
+        BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+    border: Border.all(
+      color: AppColors.withOpacity(Colors.white, AppColors.opacity20),
+      width: 1,
+    ),
+    boxShadow: const [
+      BoxShadow(
+        color: Color(0x0D000000), // 5% black
+        blurRadius: 8,
+        offset: Offset(0, 4),
+      ),
+    ],
+  );
 
   /// Dark glass morphism decoration (dark mode)
   /// Semi-transparent dark background with blur
   static final BoxDecoration glassMorphismDark = BoxDecoration(
-        gradient: AppColors.glassGradientDark,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
-        border: Border.all(
-          color: AppColors.withOpacity(Colors.white, AppColors.opacity10),
-          width: 1,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000), // 20% black
-            blurRadius: 12,
-            offset: Offset(0, 6),
-          ),
-        ],
-      );
+    gradient: AppColors.glassGradientDark,
+    borderRadius:
+        BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+    border: Border.all(
+      color: AppColors.withOpacity(Colors.white, AppColors.opacity10),
+      width: 1,
+    ),
+    boxShadow: const [
+      BoxShadow(
+        color: Color(0x33000000), // 20% black
+        blurRadius: 12,
+        offset: Offset(0, 6),
+      ),
+    ],
+  );
 
   /// Frosted glass effect (for app bars, cards)
   static final BoxDecoration frostedGlass = BoxDecoration(
-        color: AppColors.withOpacity(Colors.white, AppColors.opacity80),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
-        border: Border.all(
-          color: AppColors.withOpacity(Colors.white, AppColors.opacity40),
-          width: 1,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000), // 8% black
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      );
+    color: AppColors.withOpacity(Colors.white, AppColors.opacity80),
+    borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+    border: Border.all(
+      color: AppColors.withOpacity(Colors.white, AppColors.opacity40),
+      width: 1,
+    ),
+    boxShadow: const [
+      BoxShadow(
+        color: Color(0x14000000), // 8% black
+        blurRadius: 12,
+        offset: Offset(0, 4),
+      ),
+    ],
+  );
 
   /// Tinted glass effect with primary color
   static final BoxDecoration tintedGlassPrimary = BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.withOpacity(AppColors.primary, AppColors.opacity20),
-            AppColors.withOpacity(AppColors.primary, AppColors.opacity10),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
-        border: Border.all(
-          color: AppColors.withOpacity(AppColors.primary, AppColors.opacity30),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.withOpacity(AppColors.primary, AppColors.opacity20),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      );
+    gradient: LinearGradient(
+      colors: [
+        AppColors.withOpacity(AppColors.primary, AppColors.opacity20),
+        AppColors.withOpacity(AppColors.primary, AppColors.opacity10),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    borderRadius:
+        BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+    border: Border.all(
+      color: AppColors.withOpacity(AppColors.primary, AppColors.opacity30),
+      width: 1,
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: AppColors.withOpacity(AppColors.primary, AppColors.opacity20),
+        blurRadius: 16,
+        offset: const Offset(0, 4),
+      ),
+    ],
+  );
 
   /// Tinted glass effect with secondary color
   static final BoxDecoration tintedGlassSecondary = BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.withOpacity(AppColors.secondary, AppColors.opacity20),
-            AppColors.withOpacity(AppColors.secondary, AppColors.opacity10),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
-        border: Border.all(
-          color: AppColors.withOpacity(AppColors.secondary, AppColors.opacity30),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.withOpacity(AppColors.secondary, AppColors.opacity20),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      );
+    gradient: LinearGradient(
+      colors: [
+        AppColors.withOpacity(AppColors.secondary, AppColors.opacity20),
+        AppColors.withOpacity(AppColors.secondary, AppColors.opacity10),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    borderRadius:
+        BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+    border: Border.all(
+      color: AppColors.withOpacity(AppColors.secondary, AppColors.opacity30),
+      width: 1,
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: AppColors.withOpacity(AppColors.secondary, AppColors.opacity20),
+        blurRadius: 16,
+        offset: const Offset(0, 4),
+      ),
+    ],
+  );
 
   // ============================================================================
   // BACKDROP FILTER WIDGETS
@@ -179,142 +183,142 @@ class AppEffects {
 
   /// Hairline border (very thin, subtle)
   static final Border hairlineBorder = Border.all(
-        color: AppColors.borderLight,
-        width: 0.5,
-      );
+    color: AppColors.borderLight,
+    width: 0.5,
+  );
 
   /// Hairline border (dark mode)
   static final Border hairlineBorderDark = Border.all(
-        color: AppColors.borderDark,
-        width: 0.5,
-      );
+    color: AppColors.borderDark,
+    width: 0.5,
+  );
 
   /// Thin border (standard)
   static final Border thinBorder = Border.all(
-        color: AppColors.borderLight,
-        width: 1.0,
-      );
+    color: AppColors.borderLight,
+    width: 1.0,
+  );
 
   /// Thin border (dark mode)
   static final Border thinBorderDark = Border.all(
-        color: AppColors.borderDark,
-        width: 1.0,
-      );
+    color: AppColors.borderDark,
+    width: 1.0,
+  );
 
   /// Medium border (emphasis)
   static final Border mediumBorder = Border.all(
-        color: AppColors.borderLight,
-        width: 2.0,
-      );
+    color: AppColors.borderLight,
+    width: 2.0,
+  );
 
   /// Medium border (dark mode)
   static final Border mediumBorderDark = Border.all(
-        color: AppColors.borderDark,
-        width: 2.0,
-      );
+    color: AppColors.borderDark,
+    width: 2.0,
+  );
 
   /// Thick border (strong emphasis)
   static final Border thickBorder = Border.all(
-        color: AppColors.borderLight,
-        width: 3.0,
-      );
+    color: AppColors.borderLight,
+    width: 3.0,
+  );
 
   /// Thick border (dark mode)
   static final Border thickBorderDark = Border.all(
-        color: AppColors.borderDark,
-        width: 3.0,
-      );
+    color: AppColors.borderDark,
+    width: 3.0,
+  );
 
   /// Primary colored border
   static final Border primaryBorder = Border.all(
-        color: AppColors.primary,
-        width: 2.0,
-      );
+    color: AppColors.primary,
+    width: 2.0,
+  );
 
   /// Secondary colored border
   static final Border secondaryBorder = Border.all(
-        color: AppColors.secondary,
-        width: 2.0,
-      );
+    color: AppColors.secondary,
+    width: 2.0,
+  );
 
   /// Gradient border effect (using decoration)
   static final BoxDecoration gradientBorderPrimary = BoxDecoration(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
-        border: Border.all(
-          color: Colors.transparent,
-          width: 2,
-        ),
-        gradient: AppColors.primaryGradient,
-      );
+    borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+    border: Border.all(
+      color: Colors.transparent,
+      width: 2,
+    ),
+    gradient: AppColors.primaryGradient,
+  );
 
   /// Gradient border effect with secondary color
   static final BoxDecoration gradientBorderSecondary = BoxDecoration(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
-        border: Border.all(
-          color: Colors.transparent,
-          width: 2,
-        ),
-        gradient: AppColors.secondaryGradient,
-      );
+    borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+    border: Border.all(
+      color: Colors.transparent,
+      width: 2,
+    ),
+    gradient: AppColors.secondaryGradient,
+  );
 
   // ============================================================================
   // SHIMMER EFFECT (for loading states)
   // ============================================================================
 
   /// Shimmer gradient (light mode)
-  static final LinearGradient shimmerGradientLight = const LinearGradient(
-        colors: [
-          AppColors.shimmerBase,
-          AppColors.shimmerHighlight,
-          AppColors.shimmerBase,
-        ],
-        stops: [0.0, 0.5, 1.0],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
+  static const LinearGradient shimmerGradientLight = LinearGradient(
+    colors: [
+      AppColors.shimmerBase,
+      AppColors.shimmerHighlight,
+      AppColors.shimmerBase,
+    ],
+    stops: [0.0, 0.5, 1.0],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   /// Shimmer gradient (dark mode)
-  static final LinearGradient shimmerGradientDark = const LinearGradient(
-        colors: [
-          AppColors.surfaceVariantDark,
-          AppColors.surfaceDark,
-          AppColors.surfaceVariantDark,
-        ],
-        stops: [0.0, 0.5, 1.0],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
+  static const LinearGradient shimmerGradientDark = LinearGradient(
+    colors: [
+      AppColors.surfaceVariantDark,
+      AppColors.surfaceDark,
+      AppColors.surfaceVariantDark,
+    ],
+    stops: [0.0, 0.5, 1.0],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   // ============================================================================
   // OVERLAY DECORATIONS
   // ============================================================================
 
   /// Scrim overlay (for modal backdrops)
-  static final BoxDecoration scrimOverlayLight = const BoxDecoration(
-        color: AppColors.scrimLight,
-      );
+  static const BoxDecoration scrimOverlayLight = BoxDecoration(
+    color: AppColors.scrimLight,
+  );
 
   /// Scrim overlay (dark mode)
-  static final BoxDecoration scrimOverlayDark = const BoxDecoration(
-        color: AppColors.scrimDark,
-      );
+  static const BoxDecoration scrimOverlayDark = BoxDecoration(
+    color: AppColors.scrimDark,
+  );
 
   /// Gradient overlay for images (dark bottom)
-  static final BoxDecoration imageOverlay = const BoxDecoration(
-        gradient: AppColors.overlayGradient,
-      );
+  static const BoxDecoration imageOverlay = BoxDecoration(
+    gradient: AppColors.overlayGradient,
+  );
 
   /// Gradient overlay for images (light center, dark edges)
-  static final BoxDecoration imageOverlayRadial = const BoxDecoration(
-        gradient: RadialGradient(
-          colors: [
-            Color(0x00000000), // Transparent center
-            Color(0x80000000), // 50% black edges
-          ],
-          center: Alignment.center,
-          radius: 1.0,
-        ),
-      );
+  static const BoxDecoration imageOverlayRadial = BoxDecoration(
+    gradient: RadialGradient(
+      colors: [
+        Color(0x00000000), // Transparent center
+        Color(0x80000000), // 50% black edges
+      ],
+      center: Alignment.center,
+      radius: 1.0,
+    ),
+  );
 
   // ============================================================================
   // HELPER METHODS

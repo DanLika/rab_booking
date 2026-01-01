@@ -94,15 +94,14 @@ class PerformanceOptimizationService {
       _memoCache.remove(key);
     }
 
-    // If still too large, remove oldest entries.
-    // This is O(K) where K is the number of items to remove,
-    // as Dart's default Map implementation (LinkedHashMap) maintains insertion order.
-    // The previous implementation sorted the entire cache, which was O(N log N).
+    // If still too large, remove oldest entries
     if (_memoCache.length > _maxCacheSize) {
+      final sortedEntries = _memoCache.entries.toList()
+        ..sort((a, b) => a.value.timestamp.compareTo(b.value.timestamp));
+
       final removeCount = _memoCache.length - _maxCacheSize;
-      final keysToRemove = _memoCache.keys.take(removeCount).toList();
-      for (final key in keysToRemove) {
-        _memoCache.remove(key);
+      for (var i = 0; i < removeCount; i++) {
+        _memoCache.remove(sortedEntries[i].key);
       }
     }
   }

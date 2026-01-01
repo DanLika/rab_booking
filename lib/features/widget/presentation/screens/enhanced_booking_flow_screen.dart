@@ -13,7 +13,7 @@ import 'enhanced_confirmation_screen.dart';
 /// Step 1: Summary & Additional Services
 /// Step 2: Guest Details & Payment
 /// Step 3: Confirmation
-class EnhancedBookingFlowScreen extends ConsumerStatefulWidget {
+class EnhancedBookingFlowScreen extends ConsumerWidget {
   final String? propertyId;
 
   const EnhancedBookingFlowScreen({
@@ -22,26 +22,7 @@ class EnhancedBookingFlowScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EnhancedBookingFlowScreen> createState() => _EnhancedBookingFlowScreenState();
-}
-
-class _EnhancedBookingFlowScreenState extends ConsumerState<EnhancedBookingFlowScreen> {
-  // Performance Optimization: Cache the screen widgets to avoid re-creating them on every build.
-  late final List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
-      EnhancedRoomSelectionScreen(propertyId: widget.propertyId),
-      const EnhancedSummaryScreen(),
-      const EnhancedPaymentScreen(),
-      const EnhancedConfirmationScreen(),
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentStep = ref.watch(bookingStepProvider);
 
     return PopScope(
@@ -52,7 +33,22 @@ class _EnhancedBookingFlowScreenState extends ConsumerState<EnhancedBookingFlowS
           ref.read(bookingStepProvider.notifier).state = currentStep - 1;
         }
       },
-      child: _screens[currentStep],
+      child: _buildCurrentStep(currentStep),
     );
+  }
+
+  Widget _buildCurrentStep(int step) {
+    switch (step) {
+      case 0:
+        return EnhancedRoomSelectionScreen(propertyId: propertyId);
+      case 1:
+        return const EnhancedSummaryScreen();
+      case 2:
+        return const EnhancedPaymentScreen();
+      case 3:
+        return const EnhancedConfirmationScreen();
+      default:
+        return EnhancedRoomSelectionScreen(propertyId: propertyId);
+    }
   }
 }

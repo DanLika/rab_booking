@@ -1,13 +1,5 @@
 /// Validators for booking form fields
 class BookingValidators {
-  // Performance Optimization: Pre-compile regex to avoid re-creation on every call.
-  static final RegExp _emailRegex = RegExp(
-    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-    caseSensitive: false,
-  );
-  static final RegExp _phoneCleanRegex = RegExp(r'[\s\-\(\)]');
-  static final RegExp _phoneDigitsRegex = RegExp(r'^\d+$');
-
   /// Validate name field
   static String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -25,7 +17,12 @@ class BookingValidators {
       return 'Email is required';
     }
 
-    if (!_emailRegex.hasMatch(value.trim())) {
+    final emailRegex = RegExp(
+      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+      caseSensitive: false,
+    );
+
+    if (!emailRegex.hasMatch(value.trim())) {
       return 'Please enter a valid email address';
     }
 
@@ -39,7 +36,7 @@ class BookingValidators {
     }
 
     // Remove spaces and special characters for validation
-    final cleanedPhone = value.replaceAll(_phoneCleanRegex, '');
+    final cleanedPhone = value.replaceAll(RegExp(r'[\s\-\(\)]'), '');
 
     // Check if it starts with + and has at least 8 digits
     if (cleanedPhone.startsWith('+') && cleanedPhone.length >= 9) {
@@ -47,7 +44,7 @@ class BookingValidators {
     }
 
     // Or check if it's a valid local format (at least 8 digits)
-    if (cleanedPhone.length >= 8 && _phoneDigitsRegex.hasMatch(cleanedPhone)) {
+    if (cleanedPhone.length >= 8 && RegExp(r'^\d+$').hasMatch(cleanedPhone)) {
       return null;
     }
 

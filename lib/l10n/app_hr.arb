@@ -430,5 +430,20 @@
   "widgetTermsAndConditions": "Rezervacijom prihvatate naše Uvjete korištenja i Politiku privatnosti",
   "widgetMissingParameters": "Nedostaju obavezni parametri",
   "widgetPropertyNotFound": "Nekretnina ili jedinica nije pronađena",
-  "widgetContactSupport": "Molimo kontaktirajte podršku"
+  "widgetContactSupport": "Molimo kontaktirajte podršku",
+
+  "validation_name_required": "Ime je obavezno",
+  "validation_name_too_short": "Ime mora imati najmanje 2 karaktera",
+  "validation_email_required": "Email je obavezan",
+  "validation_email_invalid": "Molimo unesite važeću email adresu",
+  "validation_phone_required": "Broj telefona je obavezan",
+  "validation_phone_invalid": "Molimo unesite važeći broj telefona (npr. +38512345678)",
+  "validation_message_too_long": "Poruka ne sme preći {maxLength} karaktera",
+  "@validation_message_too_long": {
+    "placeholders": {
+      "maxLength": {
+        "type": "int"
+      }
+    }
+  }
 }

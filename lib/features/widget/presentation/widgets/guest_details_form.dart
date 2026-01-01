@@ -93,7 +93,8 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
               label: 'Name and surname',
               icon: Icons.person,
               hintText: 'John Doe',
-              validator: BookingValidators.validateName,
+              validator: (value) =>
+                  BookingValidators.validateName(value, context),
             ),
             const SizedBox(height: SpacingTokens.m2),
             _buildTextField(
@@ -101,7 +102,8 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
               label: 'Email address',
               icon: Icons.email,
               hintText: 'john.doe@example.com',
-              validator: BookingValidators.validateEmail,
+              validator: (value) =>
+                  BookingValidators.validateEmail(value, context),
               keyboardType: TextInputType.emailAddress,
             ),
           ] else
@@ -113,7 +115,8 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
                     label: 'Name and surname',
                     icon: Icons.person,
                     hintText: 'John Doe',
-                    validator: BookingValidators.validateName,
+                    validator: (value) =>
+                        BookingValidators.validateName(value, context),
                   ),
                 ),
                 const SizedBox(width: SpacingTokens.m2),
@@ -123,7 +126,8 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
                     label: 'Email address',
                     icon: Icons.email,
                     hintText: 'john.doe@example.com',
-                    validator: BookingValidators.validateEmail,
+                    validator: (value) =>
+                        BookingValidators.validateEmail(value, context),
                     keyboardType: TextInputType.emailAddress,
                   ),
                 ),
@@ -137,7 +141,8 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
             label: 'Phone number',
             icon: Icons.phone,
             hintText: '+385951234567',
-            validator: BookingValidators.validatePhone,
+            validator: (value) =>
+                BookingValidators.validatePhone(value, context),
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: SpacingTokens.m2),
@@ -148,7 +153,8 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
             label: 'Message (optional)',
             icon: Icons.message,
             hintText: 'Any special requests?',
-            validator: (value) => BookingValidators.validateMessage(value),
+            validator: (value) =>
+                BookingValidators.validateMessage(value, context),
             maxLines: 3,
             maxLength: 255,
           ),

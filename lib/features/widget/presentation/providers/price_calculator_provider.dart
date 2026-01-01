@@ -39,17 +39,20 @@ final bookingPriceProvider = FutureProvider.family<BookingPriceBreakdown?, (Stri
       endDate: checkOut.subtract(const Duration(days: 1)), // Exclude check-out day
     );
 
+    // Performance Optimization: Convert list to a map for O(1) lookups.
+    // This avoids iterating through the list for every night of the booking.
+    final dailyPriceMap = {
+      for (var p in dailyPrices)
+        if (p != null) DateTime(p.date.year, p.date.month, p.date.day): p.price
+    };
+
     // Build nightly prices list with fallback to base price
     final List<NightlyPrice> nightlyPrices = [];
     DateTime current = checkIn;
     while (current.isBefore(checkOut)) {
-      // Try to find daily price, fallback to base price if not found
-      final dailyPriceModel = dailyPrices.cast<dynamic>().firstWhere(
-        (p) => p != null && _isSameDay(p.date, current),
-        orElse: () => null,
-      );
-
-      final priceForNight = dailyPriceModel?.price ?? fallbackPrice;
+      // Optimized lookup
+      final currentDate = DateTime(current.year, current.month, current.day);
+      final priceForNight = dailyPriceMap[currentDate] ?? fallbackPrice;
 
       nightlyPrices.add(NightlyPrice(
         date: current,
@@ -70,7 +73,3 @@ final bookingPriceProvider = FutureProvider.family<BookingPriceBreakdown?, (Stri
     );
   },
 );
-
-bool _isSameDay(DateTime a, DateTime b) {
-  return a.year == b.year && a.month == b.month && a.day == b.day;
-}

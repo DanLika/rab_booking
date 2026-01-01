@@ -237,11 +237,23 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
               fontSize: TypographyTokens.fontSizeM,
               color: ColorTokens.light.textSecondary,
             ),
-            counterText: maxLength != null ? '${controller.text.length}/$maxLength' : null,
-            counterStyle: GoogleFonts.inter(
-              fontSize: TypographyTokens.fontSizeS,
-              color: ColorTokens.light.textSecondary,
-            ),
+            buildCounter: (
+              BuildContext context, {
+              required int currentLength,
+              required bool isFocused,
+              required int? maxLength,
+            }) {
+              if (maxLength == null) {
+                return null;
+              }
+              return Text(
+                '$currentLength/$maxLength',
+                style: GoogleFonts.inter(
+                  fontSize: TypographyTokens.fontSizeS,
+                  color: ColorTokens.light.textSecondary,
+                ),
+              );
+            },
           ),
           style: GoogleFonts.inter(
             fontSize: TypographyTokens.fontSizeM,

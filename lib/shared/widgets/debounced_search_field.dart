@@ -103,13 +103,26 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
       decoration: InputDecoration(
         hintText: widget.hintText,
         prefixIcon: Icon(widget.prefixIcon),
-        suffixIcon: _showClearButton
-            ? IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: _clearSearch,
-                tooltip: 'Očisti',
-              )
-            : null,
+        suffixIcon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return ScaleTransition(
+              scale: animation,
+              child: FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+            );
+          },
+          child: _showClearButton
+              ? IconButton(
+                  key: const ValueKey('clear_button'),
+                  icon: const Icon(Icons.clear),
+                  onPressed: _clearSearch,
+                  tooltip: 'Očisti',
+                )
+              : const SizedBox.shrink(key: ValueKey('empty')),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
         ),

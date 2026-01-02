@@ -58,26 +58,40 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
 
   @override
   Widget build(BuildContext context) {
+    // Optimization: The gradient colors and stops are constant, so they don't
+    // need to be rebuilt inside the AnimatedBuilder.
+    final gradientColors = [
+      Colors.grey[300]!,
+      Colors.grey[200]!,
+      Colors.grey[300]!,
+    ];
+    const gradientStops = [0.0, 0.5, 1.0];
+
     return AnimatedBuilder(
       animation: _animation,
+      // Optimization: The Container itself doesn't depend on the animation,
+      // so it's passed as the `child` to AnimatedBuilder. This prevents it
+      // from being rebuilt on every animation frame.
+      child: SizedBox(
+        width: widget.width,
+        height: widget.height,
+      ),
       builder: (context, child) {
-        return Container(
-          width: widget.width,
-          height: widget.height,
+        // The BoxDecoration and LinearGradient are rebuilt on each frame,
+        // but this is necessary because the `transform` value changes.
+        // However, we've already optimized by not rebuilding the Container.
+        return DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
-              colors: [
-                Colors.grey[300]!,
-                Colors.grey[200]!,
-                Colors.grey[300]!,
-              ],
-              stops: const [0.0, 0.5, 1.0],
+              colors: gradientColors,
+              stops: gradientStops,
               transform: _SlideGradientTransform(_animation.value),
             ),
           ),
+          child: child,
         );
       },
     );

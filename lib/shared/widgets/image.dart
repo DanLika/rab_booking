@@ -8,6 +8,10 @@ import '../../core/constants/app_dimensions.dart';
 /// Premium image component with loading and error states
 /// Features: Shimmer loading, error fallback, caching, aspect ratio support
 class PremiumImage extends StatelessWidget {
+  // Optimization: Cache the animation to avoid creating a new object on every build.
+  static final _loadingAnimation =
+      const AlwaysStoppedAnimation<Color>(AppColors.primary);
+
   /// Image URL
   final String? imageUrl;
 
@@ -145,9 +149,9 @@ class PremiumImage extends StatelessWidget {
         color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
-      child: const Center(
+      child: Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          valueColor: _loadingAnimation,
         ),
       ),
     );

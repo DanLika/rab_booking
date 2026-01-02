@@ -63,25 +63,25 @@ abstract class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final child = isLoading
-        ? const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
+    final buttonContent = icon != null
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20),
+              const SizedBox(width: AppDimensions.spaceXS),
+              Text(label),
+            ],
           )
-        : icon != null
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 20),
-                  const SizedBox(width: AppDimensions.spaceXS),
-                  Text(label),
-                ],
-              )
-            : Text(label);
+        : Text(label);
+
+    final loadingIndicator = const SizedBox(
+      width: 20,
+      height: 20,
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      ),
+    );
 
     final button = icon != null && !isLoading
         ? ElevatedButton.icon(
@@ -93,7 +93,10 @@ abstract class AppButton extends StatelessWidget {
         : ElevatedButton(
             onPressed: isLoading ? null : onPressed,
             style: buildStyle(context),
-            child: child,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: isLoading ? loadingIndicator : buttonContent,
+            ),
           );
 
     return isFullWidth

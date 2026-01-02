@@ -11,6 +11,10 @@ export 'input_sanitizer.dart';
 /// - Allows special characters: apostrophes (O'Brien), hyphens (Jean-Claude), umlauts (Müller)
 /// - Allows letters and common diacritics (no spaces needed for first name)
 class FirstNameValidator {
+  // ⚡ Bolt: Compile RegExp once as a static final field for performance.
+  // This avoids recompiling the same regular expression on every validation call.
+  static final _namePattern = RegExp(r"^[\p{L}'\-]+$", unicode: true);
+
   /// Validates first name field
   /// Returns error message if invalid, null if valid
   static String? validate(String? value) {
@@ -22,8 +26,7 @@ class FirstNameValidator {
 
     // Allow letters (including Unicode), apostrophes, hyphens, and common diacritics
     // Pattern: Letters (any Unicode letter), apostrophes, hyphens
-    final namePattern = RegExp(r"^[\p{L}'\-]+$", unicode: true);
-    if (!namePattern.hasMatch(trimmed)) {
+    if (!_namePattern.hasMatch(trimmed)) {
       return 'First name can only contain letters, apostrophes, and hyphens';
     }
 
@@ -37,6 +40,10 @@ class FirstNameValidator {
 /// - Allows spaces for compound last names (e.g., "van der Berg", "de la Cruz")
 /// - Allows letters and common diacritics
 class LastNameValidator {
+  // ⚡ Bolt: Compile RegExp once as a static final field for performance.
+  // This avoids recompiling the same regular expression on every validation call.
+  static final _namePattern = RegExp(r"^[\p{L}\s'\-]+$", unicode: true);
+
   /// Validates last name field
   /// Returns error message if invalid, null if valid
   static String? validate(String? value) {
@@ -48,8 +55,7 @@ class LastNameValidator {
 
     // Allow letters (including Unicode), spaces, apostrophes, hyphens, and common diacritics
     // Pattern: Letters (any Unicode letter), spaces, apostrophes, hyphens
-    final namePattern = RegExp(r"^[\p{L}\s'\-]+$", unicode: true);
-    if (!namePattern.hasMatch(trimmed)) {
+    if (!_namePattern.hasMatch(trimmed)) {
       return 'Last name can only contain letters, spaces, apostrophes, and hyphens';
     }
 
@@ -63,6 +69,10 @@ class LastNameValidator {
 /// - Allows spaces, letters, and common diacritics
 @Deprecated('Use FirstNameValidator and LastNameValidator instead')
 class NameValidator {
+  // ⚡ Bolt: Compile RegExp once as a static final field for performance.
+  static final _wordSplitPattern = RegExp(r'\s+');
+  static final _namePattern = RegExp(r"^[\p{L}\s'\-]+$", unicode: true);
+
   /// Validates name field
   /// Returns error message if invalid, null if valid
   static String? validate(String? value) {
@@ -73,7 +83,7 @@ class NameValidator {
     final trimmed = value.trim();
 
     // Check for minimum 2 words (first + last name)
-    final words = trimmed.split(RegExp(r'\s+'));
+    final words = trimmed.split(_wordSplitPattern);
     if (words.length < 2) {
       return 'Please enter both first and last name';
     }
@@ -87,8 +97,7 @@ class NameValidator {
 
     // Allow letters (including Unicode), spaces, apostrophes, hyphens, and common diacritics
     // Pattern: Letters (any Unicode letter), spaces, apostrophes, hyphens
-    final namePattern = RegExp(r"^[\p{L}\s'\-]+$", unicode: true);
-    if (!namePattern.hasMatch(trimmed)) {
+    if (!_namePattern.hasMatch(trimmed)) {
       return 'Name can only contain letters, spaces, apostrophes, and hyphens';
     }
 
@@ -101,6 +110,11 @@ class NameValidator {
 /// - test@test is INVALID (no TLD)
 /// - test@test.com is VALID
 class EmailValidator {
+  // ⚡ Bolt: Compile RegExp once as a static final field for performance.
+  static final _emailPattern = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
   /// Validates email field
   /// Returns error message if invalid, null if valid
   static String? validate(String? value) {
@@ -116,11 +130,7 @@ class EmailValidator {
     // - @ symbol required
     // - Domain: alphanumeric + dots, hyphens
     // - TLD: at least 2 characters after final dot (e.g., .com, .co.uk)
-    final emailPattern = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
-
-    if (!emailPattern.hasMatch(trimmed)) {
+    if (!_emailPattern.hasMatch(trimmed)) {
       return 'Please enter a valid email address (e.g., user@example.com)';
     }
 
@@ -133,6 +143,10 @@ class EmailValidator {
 /// - Requires digits only (no letters or special characters except spaces)
 /// - Uses data-driven PhoneConfigs for country-specific rules
 class PhoneValidator {
+  // ⚡ Bolt: Compile RegExp once as a static final field for performance.
+  static final _spacePattern = RegExp(r'\s');
+  static final _digitsOnlyPattern = RegExp(r'^\d+$');
+
   /// Validates phone number for a given country dial code
   /// Returns error message if invalid, null if valid
   static String? validate(String? value, String dialCode) {
@@ -141,10 +155,10 @@ class PhoneValidator {
     }
 
     // Remove all spaces for validation
-    final digitsOnly = value.replaceAll(RegExp(r'\s'), '');
+    final digitsOnly = value.replaceAll(_spacePattern, '');
 
     // Check if contains only digits
-    if (!RegExp(r'^\d+$').hasMatch(digitsOnly)) {
+    if (!_digitsOnlyPattern.hasMatch(digitsOnly)) {
       return 'Phone number can only contain digits';
     }
 
@@ -170,6 +184,10 @@ class PhoneValidator {
 class PhoneNumberFormatter extends TextInputFormatter {
   final String dialCode;
 
+  // ⚡ Bolt: Compile RegExp once as a final field for performance.
+  // This is not static because it's part of an instance-based class.
+  final _nonDigitPattern = RegExp(r'\D');
+
   PhoneNumberFormatter(this.dialCode);
 
   @override
@@ -178,7 +196,7 @@ class PhoneNumberFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     // Get only digits
-    final digitsOnly = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final digitsOnly = newValue.text.replaceAll(_nonDigitPattern, '');
 
     // If empty, return empty
     if (digitsOnly.isEmpty) {
@@ -246,6 +264,9 @@ class PhoneNumberFormatter extends TextInputFormatter {
 /// - Allows letters, numbers, basic punctuation
 /// - Validates length (max 500 characters)
 class NotesValidator {
+  // ⚡ Bolt: Compile RegExp once as a static final field for performance.
+  static final _dangerousPattern = RegExp(r'[<>|\\`]');
+
   /// Validates notes/special requests field
   /// Returns error message if invalid, null if valid
   static String? validate(String? value) {
@@ -268,9 +289,7 @@ class NotesValidator {
 
     // Block dangerous characters that could indicate injection attacks
     // Allow most characters except: < > | \ ` (command/script injection risks)
-    final dangerousPattern = RegExp(r'[<>|\\`]');
-
-    if (dangerousPattern.hasMatch(trimmed)) {
+    if (_dangerousPattern.hasMatch(trimmed)) {
       return 'Notes contain invalid characters';
     }
 

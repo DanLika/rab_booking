@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rab_booking/features/widget/domain/errors/booking_errors.dart';
 import '../booking_repository.dart';
 import '../../models/booking_model.dart';
 import '../../../core/constants/enums.dart';
@@ -28,8 +29,23 @@ class FirebaseBookingRepository implements BookingRepository {
 
   @override
   Future<BookingModel> createBooking(BookingModel booking) async {
-    final docRef = await _firestore.collection('bookings').add(booking.toJson());
-    return booking.copyWith(id: docRef.id);
+    try {
+      final docRef = await _firestore.collection('bookings').add(booking.toJson());
+      return booking.copyWith(id: docRef.id);
+    } on FirebaseException catch (e) {
+      // Log the original error for debugging
+      print('FirebaseException during booking creation: ${e.message}');
+      // Throw a custom, user-friendly exception
+      throw BookingCreationException(
+        'We could not save your booking. Please check your internet connection and try again.',
+      );
+    } catch (e) {
+      // Catch any other unexpected errors
+      print('Unexpected error during booking creation: $e');
+      throw BookingCreationException(
+        'An unexpected error occurred. Please try again later.',
+      );
+    }
   }
 
   @override

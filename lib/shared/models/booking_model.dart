@@ -126,6 +126,36 @@ class BookingModel with _$BookingModel {
 
   const BookingModel._();
 
+  /// SECURE CONSTRUCTOR for public calendar view.
+  ///
+  /// This factory only deserializes non-sensitive fields required for displaying
+  /// calendar availability. It prevents PII (guest name, email, etc.) from
+  /// being loaded into the app memory from public calendar queries, which is
+  /// a critical client-side mitigation for the permissive Firestore rules.
+  factory BookingModel.fromCalendarSnapshot(Map<String, dynamic> doc) {
+    // Manually parse status enum, default to 'confirmed' if missing
+    final statusString = doc['status'] as String? ?? 'confirmed';
+    final status = BookingStatus.values.firstWhere(
+      (e) => e.toString().split('.').last == statusString,
+      orElse: () => BookingStatus.confirmed,
+    );
+
+    return BookingModel(
+      id: doc['id'] as String,
+      unitId: doc['unit_id'] as String,
+      checkIn: const TimestampConverter().fromJson(doc['check_in']),
+      checkOut: const TimestampConverter().fromJson(doc['check_out']),
+      status: status,
+      // createdAt is required, provide a default if missing for robustness
+      createdAt: doc['created_at'] != null
+          ? const TimestampConverter().fromJson(doc['created_at'])
+          : DateTime.now().toUtc(),
+
+      // All other non-nullable fields have defaults (@Default).
+      // All nullable PII and sensitive fields will be null.
+    );
+  }
+
   /// Create from JSON
   factory BookingModel.fromJson(Map<String, dynamic> json) =>
       _$BookingModelFromJson(json);

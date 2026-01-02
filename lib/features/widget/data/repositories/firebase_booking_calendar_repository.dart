@@ -104,7 +104,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         final bookings = bookingsSnapshot.docs
             .map((doc) {
               try {
-                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+                return BookingModel.fromCalendarSnapshot({
+                  ...doc.data(),
+                  'id': doc.id
+                });
               } catch (e) {
                 LoggingService.logError('Error parsing booking', e);
                 return null;
@@ -261,7 +264,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         final bookings = bookingsSnapshot.docs
             .map((doc) {
               try {
-                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+                return BookingModel.fromCalendarSnapshot({
+                  ...doc.data(),
+                  'id': doc.id
+                });
               } catch (e) {
                 LoggingService.logError('Error parsing booking', e);
                 return null;
@@ -405,7 +411,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       final bookings = bookingsSnapshot.docs
           .map((doc) {
             try {
-              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+              return BookingModel.fromCalendarSnapshot({
+                ...doc.data(),
+                'id': doc.id
+              });
             } catch (e) {
               LoggingService.logError('Error parsing booking', e);
               return null;
@@ -537,7 +546,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       final bookings = bookingsSnapshot.docs
           .map((doc) {
             try {
-              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+              return BookingModel.fromCalendarSnapshot({
+                ...doc.data(),
+                'id': doc.id
+              });
             } catch (e) {
               LoggingService.logError('Error parsing booking', e);
               return null;

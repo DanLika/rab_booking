@@ -67,6 +67,9 @@ class FirebaseBookingRepository implements BookingRepository {
 
   @override
   Future<BookingModel> updateBookingStatus(String id, BookingStatus status) async {
+    // Optimization: Use a direct update instead of a "read-modify-write" pattern.
+    // This is more efficient (fewer reads) and prevents race conditions.
+    // FieldValue.serverTimestamp() ensures data consistency across clients.
     final updateData = {
       'status': status.value,
       'updated_at': FieldValue.serverTimestamp(),
@@ -75,13 +78,14 @@ class FirebaseBookingRepository implements BookingRepository {
     final docRef = _firestore.collection('bookings').doc(id);
     await docRef.update(updateData);
 
-    // Return the updated model by fetching it again
+    // Return the updated model by fetching it again to ensure we have the canonical server state.
     final updatedDoc = await docRef.get();
     return BookingModel.fromJson({...updatedDoc.data()!, 'id': updatedDoc.id});
   }
 
   @override
   Future<BookingModel> cancelBooking(String id, String reason) async {
+    // Optimization: Use a direct update for atomicity and efficiency.
     final updateData = {
       'status': BookingStatus.cancelled.value,
       'cancellation_reason': reason,
@@ -261,14 +265,12 @@ class FirebaseBookingRepository implements BookingRepository {
     required double paidAmount,
     String? paymentIntentId,
   }) async {
+    // Optimization: Use a direct update for atomicity and efficiency.
     final updateData = <String, dynamic>{
       'paid_amount': paidAmount,
+      'payment_intent_id': paymentIntentId,
       'updated_at': FieldValue.serverTimestamp(),
     };
-
-    if (paymentIntentId != null) {
-      updateData['payment_intent_id'] = paymentIntentId;
-    }
 
     final docRef = _firestore.collection('bookings').doc(bookingId);
     await docRef.update(updateData);

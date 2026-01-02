@@ -445,5 +445,9 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "notFoundTitle": "Page Not Found",
+  "notFoundSubtitle": "The page you're looking for doesn't exist or has been removed.",
+  "notFoundGoHome": "Back to Home"
 }

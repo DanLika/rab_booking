@@ -445,5 +445,9 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "notFoundTitle": "Stranica nije pronađena",
+  "notFoundSubtitle": "Tražena stranica ne postoji ili je uklonjena.",
+  "notFoundGoHome": "Povratak na početnu"
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rab_booking/l10n/app_localizations.dart';
 
 /// 404 Not Found screen
 class NotFoundScreen extends StatelessWidget {
@@ -7,9 +8,11 @@ class NotFoundScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stranica nije pronađena'),
+        title: Text(l10n.notFoundTitle),
         centerTitle: true,
       ),
       body: Center(
@@ -33,7 +36,7 @@ class NotFoundScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Stranica nije pronađena',
+                l10n.notFoundTitle,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -41,7 +44,7 @@ class NotFoundScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Tražena stranica ne postoji ili je uklonjena.',
+                l10n.notFoundSubtitle,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Colors.grey[600],
                     ),
@@ -51,7 +54,7 @@ class NotFoundScreen extends StatelessWidget {
               FilledButton.icon(
                 onPressed: () => context.go('/'),
                 icon: const Icon(Icons.home),
-                label: const Text('Povratak na početnu'),
+                label: Text(l10n.notFoundGoHome),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
@@ -68,7 +71,7 @@ class NotFoundScreen extends StatelessWidget {
                     context.go('/');
                   }
                 },
-                child: const Text('Natrag'),
+                child: Text(l10n.back),
               ),
             ],
           ),

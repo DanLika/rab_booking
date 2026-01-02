@@ -67,34 +67,34 @@ class FirebaseBookingRepository implements BookingRepository {
 
   @override
   Future<BookingModel> updateBookingStatus(String id, BookingStatus status) async {
-    final doc = await _firestore.collection('bookings').doc(id).get();
-    if (!doc.exists) throw Exception('Booking not found');
+    final updateData = {
+      'status': status.value,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
 
-    final booking = BookingModel.fromJson({...doc.data()!, 'id': doc.id});
-    final updated = booking.copyWith(
-      status: status,
-      updatedAt: DateTime.now(),
-    );
+    final docRef = _firestore.collection('bookings').doc(id);
+    await docRef.update(updateData);
 
-    await _firestore.collection('bookings').doc(id).update(updated.toJson());
-    return updated;
+    // Return the updated model by fetching it again
+    final updatedDoc = await docRef.get();
+    return BookingModel.fromJson({...updatedDoc.data()!, 'id': updatedDoc.id});
   }
 
   @override
   Future<BookingModel> cancelBooking(String id, String reason) async {
-    final doc = await _firestore.collection('bookings').doc(id).get();
-    if (!doc.exists) throw Exception('Booking not found');
+    final updateData = {
+      'status': BookingStatus.cancelled.value,
+      'cancellation_reason': reason,
+      'cancelled_at': FieldValue.serverTimestamp(),
+      'updated_at': FieldValue.serverTimestamp(),
+    };
 
-    final booking = BookingModel.fromJson({...doc.data()!, 'id': doc.id});
-    final cancelled = booking.copyWith(
-      status: BookingStatus.cancelled,
-      cancellationReason: reason,
-      cancelledAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+    final docRef = _firestore.collection('bookings').doc(id);
+    await docRef.update(updateData);
 
-    await _firestore.collection('bookings').doc(id).update(cancelled.toJson());
-    return cancelled;
+    // Return the updated model by fetching it again
+    final updatedDoc = await docRef.get();
+    return BookingModel.fromJson({...updatedDoc.data()!, 'id': updatedDoc.id});
   }
 
   @override
@@ -261,18 +261,21 @@ class FirebaseBookingRepository implements BookingRepository {
     required double paidAmount,
     String? paymentIntentId,
   }) async {
-    final doc = await _firestore.collection('bookings').doc(bookingId).get();
-    if (!doc.exists) throw Exception('Booking not found');
+    final updateData = <String, dynamic>{
+      'paid_amount': paidAmount,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
 
-    final booking = BookingModel.fromJson({...doc.data()!, 'id': doc.id});
-    final updated = booking.copyWith(
-      paidAmount: paidAmount,
-      paymentIntentId: paymentIntentId,
-      updatedAt: DateTime.now(),
-    );
+    if (paymentIntentId != null) {
+      updateData['payment_intent_id'] = paymentIntentId;
+    }
 
-    await _firestore.collection('bookings').doc(bookingId).update(updated.toJson());
-    return updated;
+    final docRef = _firestore.collection('bookings').doc(bookingId);
+    await docRef.update(updateData);
+
+    // Return the updated model by fetching it again
+    final updatedDoc = await docRef.get();
+    return BookingModel.fromJson({...updatedDoc.data()!, 'id': updatedDoc.id});
   }
 
   @override

@@ -33,7 +33,7 @@ class _AdaptiveBottomNavigationBarState
     BoxShadow(
       color: Colors.black12,
       blurRadius: 8,
-      offset: Offset(0, -2),
+      offset: const Offset(0, -2),
     ),
   ];
 

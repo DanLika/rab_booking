@@ -12,7 +12,7 @@ import '../providers/platform_connections_provider.dart';
 /// - Blocking dates on external platforms
 /// - Viewing in app
 /// - Resolving conflicts
-class QuickActionButtons extends ConsumerWidget {
+class QuickActionButtons extends ConsumerStatefulWidget {
   final OverbookingConflict? conflict;
   final BookingModel? booking;
   final String? unitId;
@@ -23,13 +23,21 @@ class QuickActionButtons extends ConsumerWidget {
     this.booking,
     this.unitId,
   }) : assert(
-         conflict != null || booking != null,
-         'Either conflict or booking must be provided',
-       );
+          conflict != null || booking != null,
+          'Either conflict or booking must be provided',
+        );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final effectiveUnitId = conflict?.unitId ?? booking?.unitId ?? unitId;
+  ConsumerState<QuickActionButtons> createState() => _QuickActionButtonsState();
+}
+
+class _QuickActionButtonsState extends ConsumerState<QuickActionButtons> {
+  String? _loadingAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveUnitId =
+        widget.conflict?.unitId ?? widget.booking?.unitId ?? widget.unitId;
     if (effectiveUnitId == null) {
       return const SizedBox.shrink();
     }
@@ -53,12 +61,13 @@ class QuickActionButtons extends ConsumerWidget {
     DateTime? checkIn;
     DateTime? checkOut;
 
-    if (conflict != null && conflict!.conflictDates.isNotEmpty) {
-      checkIn = conflict!.conflictDates.first;
-      checkOut = conflict!.conflictDates.last.add(const Duration(days: 1));
-    } else if (booking != null) {
-      checkIn = booking!.checkIn;
-      checkOut = booking!.checkOut;
+    if (widget.conflict != null && widget.conflict!.conflictDates.isNotEmpty) {
+      checkIn = widget.conflict!.conflictDates.first;
+      checkOut =
+          widget.conflict!.conflictDates.last.add(const Duration(days: 1));
+    } else if (widget.booking != null) {
+      checkIn = widget.booking!.checkIn;
+      checkOut = widget.booking!.checkOut;
     }
 
     if (checkIn == null || checkOut == null) {
@@ -74,6 +83,7 @@ class QuickActionButtons extends ConsumerWidget {
             return _buildBlockButton(
               context,
               label: 'Block on Booking.com',
+              actionId: 'bookingCom',
               icon: Icons.hotel,
               onTap: () => _handleBlockBookingCom(
                 context,
@@ -86,6 +96,7 @@ class QuickActionButtons extends ConsumerWidget {
             return _buildBlockButton(
               context,
               label: 'Block on Airbnb',
+              actionId: 'airbnb',
               icon: Icons.home,
               onTap: () =>
                   _handleBlockAirbnb(context, connection, checkIn!, checkOut!),
@@ -105,14 +116,23 @@ class QuickActionButtons extends ConsumerWidget {
   Widget _buildBlockButton(
     BuildContext context, {
     required String label,
+    required String actionId,
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final isLoading = _loadingAction == actionId;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: ElevatedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 20),
+        onPressed: _loadingAction == null ? onTap : null,
+        icon: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(icon, size: 20),
         label: Text(label),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.orange,
@@ -124,32 +144,54 @@ class QuickActionButtons extends ConsumerWidget {
   }
 
   Widget _buildViewButton(BuildContext context) {
-    final effectiveUnitId = conflict?.unitId ?? booking?.unitId ?? unitId;
-    final conflictId = conflict?.id;
-    final bookingId = booking?.id;
+    final isLoading = _loadingAction == 'viewInApp';
 
     return OutlinedButton.icon(
-      onPressed: () {
-        if (conflictId != null) {
-          Navigator.of(
-            context,
-          ).pushNamed('/owner/bookings', arguments: {'conflict': conflictId});
-        } else if (bookingId != null) {
-          Navigator.of(
-            context,
-          ).pushNamed('/owner/bookings', arguments: {'booking': bookingId});
-        } else if (effectiveUnitId != null) {
-          Navigator.of(
-            context,
-          ).pushNamed('/owner/calendar', arguments: {'unit': effectiveUnitId});
-        }
-      },
-      icon: const Icon(Icons.visibility, size: 20),
+      onPressed: _loadingAction == null ? () => _handleViewInApp(context) : null,
+      icon: isLoading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.visibility, size: 20),
       label: const Text('View in App'),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
+  }
+
+  Future<void> _handleViewInApp(BuildContext context) async {
+    setState(() {
+      _loadingAction = 'viewInApp';
+    });
+    try {
+      final effectiveUnitId =
+          widget.conflict?.unitId ?? widget.booking?.unitId ?? widget.unitId;
+      final conflictId = widget.conflict?.id;
+      final bookingId = widget.booking?.id;
+
+      // Simulate a short delay to show loading indicator
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (conflictId != null) {
+        Navigator.of(context)
+            .pushNamed('/owner/bookings', arguments: {'conflict': conflictId});
+      } else if (bookingId != null) {
+        Navigator.of(context)
+            .pushNamed('/owner/bookings', arguments: {'booking': bookingId});
+      } else if (effectiveUnitId != null) {
+        Navigator.of(context)
+            .pushNamed('/owner/calendar', arguments: {'unit': effectiveUnitId});
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingAction = null;
+        });
+      }
+    }
   }
 
   Future<void> _handleBlockBookingCom(
@@ -158,14 +200,25 @@ class QuickActionButtons extends ConsumerWidget {
     DateTime checkIn,
     DateTime checkOut,
   ) async {
-    final url = DeepLinkService.generateBookingComBlockUrl(
-      hotelId: connection.externalPropertyId,
-      roomTypeId: connection.externalUnitId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    );
+    setState(() {
+      _loadingAction = 'bookingCom';
+    });
+    try {
+      final url = DeepLinkService.generateBookingComBlockUrl(
+        hotelId: connection.externalPropertyId,
+        roomTypeId: connection.externalUnitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      );
 
-    await DeepLinkService().handleDeepLink(url, context);
+      await DeepLinkService().handleDeepLink(url, context);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingAction = null;
+        });
+      }
+    }
   }
 
   Future<void> _handleBlockAirbnb(
@@ -174,12 +227,23 @@ class QuickActionButtons extends ConsumerWidget {
     DateTime checkIn,
     DateTime checkOut,
   ) async {
-    final url = DeepLinkService.generateAirbnbBlockUrl(
-      listingId: connection.externalPropertyId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    );
+    setState(() {
+      _loadingAction = 'airbnb';
+    });
+    try {
+      final url = DeepLinkService.generateAirbnbBlockUrl(
+        listingId: connection.externalPropertyId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      );
 
-    await DeepLinkService().handleDeepLink(url, context);
+      await DeepLinkService().handleDeepLink(url, context);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingAction = null;
+        });
+      }
+    }
   }
 }

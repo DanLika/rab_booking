@@ -28,6 +28,14 @@ class AdaptiveBottomNavigationBar extends ConsumerStatefulWidget {
 class _AdaptiveBottomNavigationBarState
     extends ConsumerState<AdaptiveBottomNavigationBar>
     with SingleTickerProviderStateMixin {
+  // Optimization: Pre-compute the box shadow to avoid re-creating it on every build.
+  static const _navBarShadow = [
+    BoxShadow(
+      color: Colors.black12,
+      blurRadius: 8,
+      offset: Offset(0, -2),
+    ),
+  ];
 
   // Web-only: Auto-hide behaviour
   bool _isVisible = true;
@@ -70,9 +78,7 @@ class _AdaptiveBottomNavigationBarState
   }
 
   void _onScroll() {
-    // Web-only: Auto-hide logic
-    if (!kIsWeb) return;
-
+    // This listener is only active on web, so no need to check kIsWeb again.
     final currentScrollOffset = widget.scrollController.offset;
     final scrollDelta = currentScrollOffset - _lastScrollOffset;
 
@@ -120,13 +126,7 @@ class _AdaptiveBottomNavigationBarState
       decoration: BoxDecoration(
         color: Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
             Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        boxShadow: _navBarShadow,
       ),
       child: SafeArea(
         child: NavigationBar(

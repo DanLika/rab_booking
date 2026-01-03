@@ -41,16 +41,22 @@ class HapticService {
   /// Use for: validation errors, failed actions
   static Future<void> error() async {
     if (!isSupported) return;
-    // Use heavy impact for error indication
-    await HapticFeedback.heavyImpact();
+    // Triple-tap for error indication
+    await HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 50));
+    await HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 50));
+    await HapticFeedback.lightImpact();
   }
 
   /// Vibrate for success
   /// Use for: completed actions, successful submissions
   static Future<void> success() async {
     if (!isSupported) return;
-    // Use medium impact for success indication
-    await HapticFeedback.mediumImpact();
+    // Quick double-tap for success
+    await HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 50));
+    await HapticFeedback.lightImpact();
   }
 
   /// Vibrate for warnings

@@ -515,13 +515,20 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.password,
       prefixIcon: Icons.lock_outline,
       obscureText: _obscurePassword,
-      suffixIcon: IconButton(
-        icon: Icon(
-          _obscurePassword ? Icons.visibility_off : Icons.visibility,
-          color: theme.colorScheme.onSurfaceVariant,
-          size: 20,
+      suffixIcon: Tooltip(
+        // TODO(Palette): Localize this string.
+        message: _obscurePassword ? 'Show password' : 'Hide password',
+        child: IconButton(
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: theme.colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          // TODO(Palette): Localize this string.
+          semanticLabel: _obscurePassword ? 'Show password' : 'Hide password',
+          onPressed: () =>
+              setState(() => _obscurePassword = !_obscurePassword),
         ),
-        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
       ),
       validator: (value) {
         if (_passwordErrorFromServer != null) {

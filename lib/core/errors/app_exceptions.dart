@@ -146,12 +146,12 @@ class FileSizeException extends AppException {
 
   @override
   String getUserMessage() {
-    if (maxSize != null && actualSize != null) {
+    if (userMessage != null) return userMessage!;
+    if (maxSize != null) {
       final maxMB = (maxSize! / (1024 * 1024)).toStringAsFixed(1);
-      final actualMB = (actualSize! / (1024 * 1024)).toStringAsFixed(1);
-      return 'File is too large ($actualMB MB). Maximum size is $maxMB MB.';
+      return 'Please choose a file smaller than $maxMB MB.';
     }
-    return super.getUserMessage();
+    return 'The selected file is too large.';
   }
 }
 
@@ -169,10 +169,11 @@ class FileTypeException extends AppException {
 
   @override
   String getUserMessage() {
+    if (userMessage != null) return userMessage!;
     if (allowedTypes != null) {
-      return 'Invalid file type. Allowed types: $allowedTypes';
+      return 'Please upload a valid file type (e.g., $allowedTypes).';
     }
-    return super.getUserMessage();
+    return 'The selected file type is not supported.';
   }
 }
 

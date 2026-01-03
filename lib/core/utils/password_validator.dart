@@ -94,7 +94,7 @@ class PasswordValidator {
     // If any requirements are missing, return invalid
     if (missing.isNotEmpty) {
       return PasswordValidationResult.invalid(
-        'Password must contain: ${missing.join(', ')}',
+        'Password must contain:\n• ${missing.join('\n• ')}',
         missing: missing,
       );
     }

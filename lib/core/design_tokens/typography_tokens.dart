@@ -103,60 +103,84 @@ class TypographyTokens {
   // Powered by badge size (very small)
   static const double poweredBySize = 9.0;
 
-  // Common text styles
-  static TextStyle heading({Color? color}) => TextStyle(
+  // --- Optimized Text Styles ---
+  // By caching the base TextStyle and using .copyWith(), we avoid creating
+  // new TextStyle objects on every build, reducing GC pressure.
+
+  // Base style for headings
+  static final TextStyle _baseHeading = TextStyle(
         fontSize: fontSizeXXXL,
         fontWeight: bold,
         height: lineHeightTight,
         letterSpacing: letterSpacingTight,
-        color: color,
       );
+  // Returns the cached heading style, applying a dynamic color if provided.
+  static TextStyle heading({Color? color}) =>
+      color == null ? _baseHeading : _baseHeading.copyWith(color: color);
 
-  static TextStyle subheading({Color? color}) => TextStyle(
+  // Base style for subheadings
+  static final TextStyle _baseSubheading = TextStyle(
         fontSize: fontSizeXXL,
         fontWeight: semiBold,
         height: lineHeightNormal,
         letterSpacing: letterSpacingNormal,
-        color: color,
       );
+  // Returns the cached subheading style, applying a dynamic color if provided.
+  static TextStyle subheading({Color? color}) =>
+      color == null ? _baseSubheading : _baseSubheading.copyWith(color: color);
 
-  static TextStyle body({Color? color}) => TextStyle(
+  // Base style for body text
+  static final TextStyle _baseBody = TextStyle(
         fontSize: fontSizeL,
         fontWeight: regular,
         height: lineHeightNormal,
         letterSpacing: letterSpacingNormal,
-        color: color,
       );
+  // Returns the cached body style, applying a dynamic color if provided.
+  static TextStyle body({Color? color}) =>
+      color == null ? _baseBody : _baseBody.copyWith(color: color);
 
-  static TextStyle bodyMedium({Color? color}) => TextStyle(
+  // Base style for medium-weight body text
+  static final TextStyle _baseBodyMedium = TextStyle(
         fontSize: fontSizeL,
         fontWeight: medium,
         height: lineHeightNormal,
         letterSpacing: letterSpacingNormal,
-        color: color,
       );
+  // Returns the cached medium body style, applying a dynamic color if provided.
+  static TextStyle bodyMedium({Color? color}) =>
+      color == null ? _baseBodyMedium : _baseBodyMedium.copyWith(color: color);
 
-  static TextStyle caption({Color? color}) => TextStyle(
+  // Base style for captions
+  static final TextStyle _baseCaption = TextStyle(
         fontSize: fontSizeM,
         fontWeight: regular,
         height: lineHeightNormal,
         letterSpacing: letterSpacingNormal,
-        color: color,
       );
+  // Returns the cached caption style, applying a dynamic color if provided.
+  static TextStyle caption({Color? color}) =>
+      color == null ? _baseCaption : _baseCaption.copyWith(color: color);
 
-  static TextStyle label({Color? color}) => TextStyle(
+  // Base style for labels
+  static final TextStyle _baseLabel = TextStyle(
         fontSize: fontSizeS,
         fontWeight: medium,
         height: lineHeightNormal,
         letterSpacing: letterSpacingWide,
-        color: color,
       );
+  // Returns the cached label style, applying a dynamic color if provided.
+  static TextStyle label({Color? color}) =>
+      color == null ? _baseLabel : _baseLabel.copyWith(color: color);
 
-  static TextStyle button({Color? color}) => TextStyle(
+  // Base style for buttons
+  static final TextStyle _baseButton = TextStyle(
         fontSize: fontSizeL,
         fontWeight: semiBold,
         height: lineHeightNormal,
         letterSpacing: letterSpacingWide,
-        color: color,
       );
+  // Returns the cached button style, applying a dynamic color if provided.
+  static TextStyle button({Color? color}) =>
+      color == null ? _baseButton : _baseButton.copyWith(color: color);
 }

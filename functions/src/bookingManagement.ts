@@ -190,8 +190,6 @@ export const approvePendingBooking = onCall(async (request) => {
     const booking = bookingDoc.data()!;
 
     // Verify that current user is the property owner
-    // Optimization: Fetch unit and property docs once and reuse the data.
-    // This avoids a redundant database read later in the function.
     const unitDoc = await db.collection("units").doc(booking.unit_id).get();
     if (!unitDoc.exists) {
       throw new HttpsError("not-found", "Unit not found");
@@ -233,7 +231,11 @@ export const approvePendingBooking = onCall(async (request) => {
 
     // Fetch unit and property details for emails
     const unitData = unitDoc.data();
-    const propertyData = propertyDoc.data();
+    const propertyDoc2 = await db
+      .collection("properties")
+      .doc(propertyId)
+      .get();
+    const propertyData2 = propertyDoc2.data();
 
     // Send confirmation email to guest
     try {
@@ -243,8 +245,8 @@ export const approvePendingBooking = onCall(async (request) => {
         booking.booking_reference,
         booking.check_in.toDate(),
         booking.check_out.toDate(),
-        propertyData?.name || "Property",
-        propertyData?.contact_email
+        propertyData2?.name || "Property",
+        propertyData2?.contact_email
       );
     } catch (error) {
       logError("Failed to send approval email to guest", error);

@@ -45,9 +45,9 @@ class LanguageNotifier extends _$LanguageNotifier {
   }
 
   /// Get list of supported locales
-  // Optimization: Pre-compute the list of supported locales to avoid creating
-  // a new list on every call to this getter.
-  static final List<Locale> supportedLocales = _supportedLanguages.map((code) => Locale(code)).toList();
+  static List<Locale> get supportedLocales {
+    return _supportedLanguages.map((code) => Locale(code)).toList();
+  }
 
   /// Get list of supported language codes
   static List<String> get supportedLanguageCodes {

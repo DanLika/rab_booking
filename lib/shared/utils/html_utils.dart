@@ -47,11 +47,33 @@ class HtmlUtils {
   static String escapeHtml(String? text) {
     if (text == null || text.isEmpty) return '';
 
-    return text
-        .replaceAll('&', '&amp;') // Must be first to avoid double-escaping
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
+    // Using a StringBuffer is more efficient than chained replaceAll calls,
+    // as it avoids creating a new intermediate string for each replacement.
+    // This is a micro-optimization, but it's good practice for string-heavy
+    // operations.
+    final buffer = StringBuffer();
+    for (var i = 0; i < text.length; i++) {
+      final char = text[i];
+      switch (char) {
+        case '&':
+          buffer.write('&amp;');
+          break;
+        case '<':
+          buffer.write('&lt;');
+          break;
+        case '>':
+          buffer.write('&gt;');
+          break;
+        case '"':
+          buffer.write('&quot;');
+          break;
+        case "'":
+          buffer.write('&#39;');
+          break;
+        default:
+          buffer.write(char);
+      }
+    }
+    return buffer.toString();
   }
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
@@ -19,12 +18,7 @@ final icalFeedsStreamProvider = StreamProvider<List<IcalFeed>>((ref) {
   }
 
   final repository = ref.watch(icalRepositoryProvider);
-  return repository.watchOwnerIcalFeeds(userId).handleError((error, stackTrace) {
-    // Log the error for debugging, but return an empty list to the UI
-    // This prevents the UI from showing a big error screen for a failed stream
-    debugPrint('Error in icalFeedsStreamProvider: $error');
-    return [];
-  });
+  return repository.watchOwnerIcalFeeds(userId);
 });
 
 /// Provider for iCal statistics

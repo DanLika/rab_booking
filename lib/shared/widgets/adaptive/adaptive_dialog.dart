@@ -1,8 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/constants/breakpoints.dart';
 
-/// Show an adaptive dialog that adjusts to screen size and platform
+/// Show an adaptive dialog that adjusts to screen size
 ///
 /// On mobile: Full-screen dialog
 /// On desktop: Centered dialog box
@@ -47,19 +46,9 @@ class AdaptiveDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = Breakpoints.isMobile(context);
-    final platform = Theme.of(context).platform;
 
-    // Use Cupertino dialog on iOS
-    if (platform == TargetPlatform.iOS) {
-      return CupertinoAlertDialog(
-        title: title != null ? Text(title!) : null,
-        content: content,
-        actions: actions,
-      );
-    }
-
-    // Full-screen dialog on other mobile platforms
     if (isMobile) {
+      // Full-screen dialog on mobile
       return Scaffold(
         appBar: AppBar(
           title: title != null ? Text(title!) : null,
@@ -89,17 +78,17 @@ class AdaptiveDialog extends StatelessWidget {
               )
             : null,
       );
+    } else {
+      // Centered dialog on desktop
+      return AlertDialog(
+        title: title != null ? Text(title!) : null,
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: content,
+        ),
+        actions: actions,
+      );
     }
-
-    // Centered Material dialog on desktop
-    return AlertDialog(
-      title: title != null ? Text(title!) : null,
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400),
-        child: content,
-      ),
-      actions: actions,
-    );
   }
 }
 
@@ -110,18 +99,7 @@ Future<T?> showResponsiveDialog<T>({
   bool barrierDismissible = true,
 }) {
   final isMobile = Breakpoints.isMobile(context);
-  final platform = Theme.of(context).platform;
 
-  // Use Cupertino dialog presentation on iOS
-  if (platform == TargetPlatform.iOS) {
-    return showCupertinoDialog<T>(
-      context: context,
-      builder: builder,
-      barrierDismissible: barrierDismissible,
-    );
-  }
-
-  // Use full-screen presentation on other mobile platforms
   if (isMobile) {
     return Navigator.of(context).push<T>(
       MaterialPageRoute(
@@ -129,12 +107,11 @@ Future<T?> showResponsiveDialog<T>({
         builder: builder,
       ),
     );
+  } else {
+    return showDialog<T>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      builder: builder,
+    );
   }
-
-  // Use standard Material dialog presentation on desktop
-  return showDialog<T>(
-    context: context,
-    barrierDismissible: barrierDismissible,
-    builder: builder,
-  );
 }

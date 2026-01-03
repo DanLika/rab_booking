@@ -61,20 +61,18 @@ class OnboardingWizardScreen extends ConsumerWidget {
   }
 
   Widget _buildStepperHeader(BuildContext context, int currentStep) {
-    final steps = ['Podaci o Objektu']; // Only one step for now
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(steps.length, (index) {
-          return _StepIndicator(
-            number: index + 1,
-            label: steps[index],
-            isActive: index == currentStep,
-            isCompleted: index < currentStep,
-          );
-        }),
+        children: [
+          _StepIndicator(
+            number: 1,
+            label: 'Podaci o Objektu',
+            isActive: true,
+            isCompleted: false,
+          ),
+        ],
       ),
     );
   }

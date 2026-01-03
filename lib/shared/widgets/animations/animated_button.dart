@@ -8,7 +8,7 @@ import '../../../core/services/haptic_service.dart';
 /// Release animation: bounces back with ripple
 class AnimatedButton extends StatefulWidget {
   final Widget child;
-  final AsyncCallback? onPressed;
+  final VoidCallback? onPressed;
   final Color? backgroundColor;
   final Color? foregroundColor;
   final double borderRadius;
@@ -106,10 +106,8 @@ class _AnimatedButtonState extends State<AnimatedButton>
       onTapCancel: _handleTapCancel,
       onTap: widget.enabled && !widget.isLoading && widget.onPressed != null
           ? () async {
-              // Await the onPressed callback to complete
-              await widget.onPressed!();
-              // Provide haptic feedback on successful completion
               await HapticService.buttonPress();
+              widget.onPressed!();
             }
           : null,
       child: AnimatedBuilder(

@@ -34,7 +34,6 @@ class ModernTextStyles {
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: VillaJaskoColors.textPrimary,
-    letterSpacing: -0.2,
     height: 1.3,
   );
 
@@ -47,7 +46,6 @@ class ModernTextStyles {
     fontSize: 22,
     fontWeight: FontWeight.w600,
     color: VillaJaskoColors.textPrimary,
-    letterSpacing: -0.15,
     height: 1.35,
   );
 
@@ -64,7 +62,6 @@ class ModernTextStyles {
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: VillaJaskoColors.textPrimary,
-    letterSpacing: -0.1,
     height: 1.4,
   );
 

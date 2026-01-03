@@ -173,19 +173,13 @@ class AppShadows {
   // SPECIAL EFFECT SHADOWS
   // ============================================================================
 
-  /// Soft inner shadow (for pressed/inset effects) - ENHANCED for premium feel
+  /// Soft inner shadow (for pressed/inset effects)
   static const List<BoxShadow> innerShadow = [
     BoxShadow(
-      color: Color(0x1A000000), // 10% black (inner shadow)
+      color: Color(0x1A000000), // 10% black
       blurRadius: 4,
-      offset: Offset(2, 2),
-      spreadRadius: 0,
-    ),
-    BoxShadow(
-      color: Color(0x1AFFFFFF), // 10% white (inner highlight)
-      blurRadius: 4,
-      offset: Offset(-2, -2),
-      spreadRadius: 0,
+      offset: Offset(0, 2),
+      spreadRadius: -2,
     ),
   ];
 

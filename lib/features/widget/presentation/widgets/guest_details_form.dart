@@ -93,8 +93,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
               label: 'Name and surname',
               icon: Icons.person,
               hintText: 'John Doe',
-              validator: (value) =>
-                  BookingValidators.validateName(value, context),
+              validator: BookingValidators.validateName,
             ),
             const SizedBox(height: SpacingTokens.m2),
             _buildTextField(
@@ -102,8 +101,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
               label: 'Email address',
               icon: Icons.email,
               hintText: 'john.doe@example.com',
-              validator: (value) =>
-                  BookingValidators.validateEmail(value, context),
+              validator: BookingValidators.validateEmail,
               keyboardType: TextInputType.emailAddress,
             ),
           ] else
@@ -115,8 +113,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
                     label: 'Name and surname',
                     icon: Icons.person,
                     hintText: 'John Doe',
-                    validator: (value) =>
-                        BookingValidators.validateName(value, context),
+                    validator: BookingValidators.validateName,
                   ),
                 ),
                 const SizedBox(width: SpacingTokens.m2),
@@ -126,8 +123,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
                     label: 'Email address',
                     icon: Icons.email,
                     hintText: 'john.doe@example.com',
-                    validator: (value) =>
-                        BookingValidators.validateEmail(value, context),
+                    validator: BookingValidators.validateEmail,
                     keyboardType: TextInputType.emailAddress,
                   ),
                 ),
@@ -141,8 +137,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
             label: 'Phone number',
             icon: Icons.phone,
             hintText: '+385951234567',
-            validator: (value) =>
-                BookingValidators.validatePhone(value, context),
+            validator: BookingValidators.validatePhone,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: SpacingTokens.m2),
@@ -153,8 +148,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
             label: 'Message (optional)',
             icon: Icons.message,
             hintText: 'Any special requests?',
-            validator: (value) =>
-                BookingValidators.validateMessage(value, context),
+            validator: (value) => BookingValidators.validateMessage(value),
             maxLines: 3,
             maxLength: 255,
           ),
@@ -243,23 +237,11 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
               fontSize: TypographyTokens.fontSizeM,
               color: ColorTokens.light.textSecondary,
             ),
-            buildCounter: (
-              BuildContext context, {
-              required int currentLength,
-              required bool isFocused,
-              required int? maxLength,
-            }) {
-              if (maxLength == null) {
-                return null;
-              }
-              return Text(
-                '$currentLength/$maxLength',
-                style: GoogleFonts.inter(
-                  fontSize: TypographyTokens.fontSizeS,
-                  color: ColorTokens.light.textSecondary,
-                ),
-              );
-            },
+            counterText: maxLength != null ? '${controller.text.length}/$maxLength' : null,
+            counterStyle: GoogleFonts.inter(
+              fontSize: TypographyTokens.fontSizeS,
+              color: ColorTokens.light.textSecondary,
+            ),
           ),
           style: GoogleFonts.inter(
             fontSize: TypographyTokens.fontSizeM,

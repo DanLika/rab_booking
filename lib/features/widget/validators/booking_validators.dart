@@ -1,25 +1,20 @@
-import 'package:flutter/material.dart';
-import 'package:rab_booking/l10n/app_localizations.dart';
-
 /// Validators for booking form fields
 class BookingValidators {
   /// Validate name field
-  static String? validateName(String? value, BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+  static String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return l10n.validation_name_required;
+      return 'Name is required';
     }
     if (value.trim().length < 2) {
-      return l10n.validation_name_too_short;
+      return 'Name must be at least 2 characters';
     }
     return null;
   }
 
   /// Validate email field
-  static String? validateEmail(String? value, BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+  static String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return l10n.validation_email_required;
+      return 'Email is required';
     }
 
     final emailRegex = RegExp(
@@ -28,17 +23,16 @@ class BookingValidators {
     );
 
     if (!emailRegex.hasMatch(value.trim())) {
-      return l10n.validation_email_invalid;
+      return 'Please enter a valid email address';
     }
 
     return null;
   }
 
   /// Validate phone field
-  static String? validatePhone(String? value, BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+  static String? validatePhone(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return l10n.validation_phone_required;
+      return 'Phone number is required';
     }
 
     // Remove spaces and special characters for validation
@@ -54,19 +48,17 @@ class BookingValidators {
       return null;
     }
 
-    return l10n.validation_phone_invalid;
+    return 'Please enter a valid phone number (e.g., +38512345678)';
   }
 
   /// Validate message (optional, but has character limit)
-  static String? validateMessage(String? value, BuildContext context,
-      {int maxLength = 255}) {
-    final l10n = AppLocalizations.of(context)!;
+  static String? validateMessage(String? value, {int maxLength = 255}) {
     if (value == null || value.isEmpty) {
       return null; // Message is optional
     }
 
     if (value.length > maxLength) {
-      return l10n.validation_notes_length(maxLength);
+      return 'Message must not exceed $maxLength characters';
     }
 
     return null;

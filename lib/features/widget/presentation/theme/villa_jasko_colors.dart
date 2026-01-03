@@ -54,7 +54,7 @@ class VillaJaskoColors {
   static const Color daySelectedBorder = Color(0xFF3B82F6); // Blue 500
 
   /// Days between check-in and check-out - Light blue
-  static const Color dayBetween = Color(0xFFDBEAFE); // Blue 100
+  static const Color dayBetween = Color(0xFFBFDBFE); // Blue 200
 
   /// Hover state background - Sky blue
   static const Color dayHover = Color(0xFFE0F2FE); // Sky 100

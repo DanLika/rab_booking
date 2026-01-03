@@ -1,22 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum IcalFeedStatus {
-  active,
-  error,
-  paused,
-}
-
-extension IcalFeedStatusX on IcalFeedStatus {
-  String get name => toString().split('.').last;
-
-  static IcalFeedStatus fromString(String status) {
-    return IcalFeedStatus.values.firstWhere(
-      (e) => e.name == status,
-      orElse: () => IcalFeedStatus.paused,
-    );
-  }
-}
-
 /// iCal feed configuration for syncing external calendar sources
 /// Path: ical_feeds/{feedId}
 class IcalFeed {
@@ -27,7 +10,7 @@ class IcalFeed {
   final String icalUrl;
   final int syncIntervalMinutes; // How often to sync (default: 60 min)
   final DateTime? lastSynced;
-  final IcalFeedStatus status; // 'active', 'error', 'paused'
+  final String status; // 'active', 'error', 'paused'
   final String? lastError;
   final int syncCount; // Total number of syncs performed
   final int eventCount; // Current number of events from this feed
@@ -42,7 +25,7 @@ class IcalFeed {
     required this.icalUrl,
     this.syncIntervalMinutes = 60,
     this.lastSynced,
-    this.status = IcalFeedStatus.active,
+    this.status = 'active',
     this.lastError,
     this.syncCount = 0,
     this.eventCount = 0,
@@ -61,7 +44,7 @@ class IcalFeed {
       icalUrl: data['ical_url'] ?? '',
       syncIntervalMinutes: data['sync_interval_minutes'] ?? 60,
       lastSynced: (data['last_synced'] as Timestamp?)?.toDate(),
-      status: IcalFeedStatusX.fromString(data['status'] ?? 'paused'),
+      status: data['status'] ?? 'active',
       lastError: data['last_error'],
       syncCount: data['sync_count'] ?? 0,
       eventCount: data['event_count'] ?? 0,
@@ -78,7 +61,7 @@ class IcalFeed {
       'ical_url': icalUrl,
       'sync_interval_minutes': syncIntervalMinutes,
       'last_synced': lastSynced != null ? Timestamp.fromDate(lastSynced!) : null,
-      'status': status.name,
+      'status': status,
       'last_error': lastError,
       'sync_count': syncCount,
       'event_count': eventCount,
@@ -108,11 +91,11 @@ class IcalFeed {
   /// Get status display color
   String get statusColor {
     switch (status) {
-      case IcalFeedStatus.active:
+      case 'active':
         return 'green';
-      case IcalFeedStatus.error:
+      case 'error':
         return 'red';
-      case IcalFeedStatus.paused:
+      case 'paused':
         return 'orange';
       default:
         return 'grey';
@@ -120,10 +103,10 @@ class IcalFeed {
   }
 
   /// Check if feed is active
-  bool get isActive => status == IcalFeedStatus.active;
+  bool get isActive => status == 'active';
 
   /// Check if feed has error
-  bool get hasError => status == IcalFeedStatus.error;
+  bool get hasError => status == 'error';
 
   /// Get time since last sync
   String getTimeSinceLastSync() {
@@ -151,7 +134,7 @@ class IcalFeed {
     String? icalUrl,
     int? syncIntervalMinutes,
     DateTime? lastSynced,
-    IcalFeedStatus? status,
+    String? status,
     String? lastError,
     int? syncCount,
     int? eventCount,

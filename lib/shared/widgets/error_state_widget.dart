@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rab_booking/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 
@@ -44,7 +45,7 @@ class ErrorStateWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Pokušaj ponovo'),
+                label: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
           ],

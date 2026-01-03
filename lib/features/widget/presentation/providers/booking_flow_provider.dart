@@ -17,7 +17,7 @@ final checkInDateProvider = StateProvider<DateTime?>((ref) => null);
 final checkOutDateProvider = StateProvider<DateTime?>((ref) => null);
 
 /// Number of adults
-final adultsCountProvider = StateProvider<int>((ref) => 1);
+final adultsCountProvider = StateProvider<int>((ref) => 2);
 
 /// Number of children
 final childrenCountProvider = StateProvider<int>((ref) => 0);

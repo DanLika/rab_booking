@@ -20,9 +20,6 @@ class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen> {
-  final Set<String> _syncingFeedIds = {};
-  String? _deletingFeedId;
-
   @override
   Widget build(BuildContext context) {
     final feedsAsync = ref.watch(icalFeedsStreamProvider);
@@ -213,21 +210,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   Widget _buildFeedCard(IcalFeed feed) {
-    if (_deletingFeedId == feed.id) {
-      return Card(
-        margin: const EdgeInsets.only(bottom: 12),
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          leading: CircularProgressIndicator(),
-          title: Text('Brisanje u toku...'),
-        ),
-      );
-    }
-
     final statusColor = _getStatusColor(feed.status);
     final statusIcon = _getStatusIcon(feed.status);
 
@@ -279,58 +261,52 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             ),
           ],
         ),
-        trailing: _syncingFeedIds.contains(feed.id)
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2.0),
-              )
-            : PopupMenuButton<String>(
-                onSelected: (value) => _handleFeedAction(value, feed),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'sync',
-                    child: Row(
-                      children: [
-                        Icon(Icons.sync, size: 18),
-                        SizedBox(width: 8),
-                        Text('Sinhronizuj sada'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: feed.isActive ? 'pause' : 'resume',
-                    child: Row(
-                      children: [
-                        Icon(feed.isActive ? Icons.pause : Icons.play_arrow, size: 18),
-                        const SizedBox(width: 8),
-                        Text(feed.isActive ? 'Pauziraj' : 'Nastavi'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, size: 18),
-                        SizedBox(width: 8),
-                        Text('Uredi'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 18, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Obriši', style: TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                  ),
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) => _handleFeedAction(value, feed),
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'sync',
+              child: Row(
+                children: [
+                  Icon(Icons.sync, size: 18),
+                  SizedBox(width: 8),
+                  Text('Sinhronizuj sada'),
                 ],
               ),
+            ),
+            PopupMenuItem(
+              value: feed.isActive ? 'pause' : 'resume',
+              child: Row(
+                children: [
+                  Icon(feed.isActive ? Icons.pause : Icons.play_arrow, size: 18),
+                  const SizedBox(width: 8),
+                  Text(feed.isActive ? 'Pauziraj' : 'Nastavi'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit, size: 18),
+                  SizedBox(width: 8),
+                  Text('Uredi'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, size: 18, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Obriši', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -413,26 +389,26 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     );
   }
 
-  Color _getStatusColor(IcalFeedStatus status) {
+  Color _getStatusColor(String status) {
     switch (status) {
-      case IcalFeedStatus.active:
+      case 'active':
         return AppColors.success; // Green for active
-      case IcalFeedStatus.error:
+      case 'error':
         return AppColors.error; // Red for errors
-      case IcalFeedStatus.paused:
+      case 'paused':
         return AppColors.warning; // Orange for paused
       default:
         return Colors.grey;
     }
   }
 
-  IconData _getStatusIcon(IcalFeedStatus status) {
+  IconData _getStatusIcon(String status) {
     switch (status) {
-      case IcalFeedStatus.active:
+      case 'active':
         return Icons.check_circle;
-      case IcalFeedStatus.error:
+      case 'error':
         return Icons.error;
-      case IcalFeedStatus.paused:
+      case 'paused':
         return Icons.pause_circle;
       default:
         return Icons.help;
@@ -460,13 +436,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   void _syncFeedNow(IcalFeed feed) async {
-    // Prevent starting a sync if one is already in progress for this feed
-    if (_syncingFeedIds.contains(feed.id)) return;
-
-    setState(() {
-      _syncingFeedIds.add(feed.id);
-    });
-
     ErrorDisplayUtils.showInfoSnackBar(
       context,
       'Sinhronizacija pokrenuta za ${feed.platformDisplayName}...',
@@ -508,19 +477,13 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           userMessage: 'Greška prilikom sinhronizacije',
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _syncingFeedIds.remove(feed.id);
-        });
-      }
     }
   }
 
   void _pauseFeed(IcalFeed feed) async {
     try {
       final repository = ref.read(icalRepositoryProvider);
-      await repository.updateFeedStatus(feed.id, IcalFeedStatus.paused.name);
+      await repository.updateFeedStatus(feed.id, 'paused');
 
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, 'Feed pauziran');
@@ -539,7 +502,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   void _resumeFeed(IcalFeed feed) async {
     try {
       final repository = ref.read(icalRepositoryProvider);
-      await repository.updateFeedStatus(feed.id, IcalFeedStatus.active.name);
+      await repository.updateFeedStatus(feed.id, 'active');
 
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, 'Feed nastavljen');
@@ -572,9 +535,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              setState(() {
-                _deletingFeedId = feed.id;
-              });
               try {
                 final repository = ref.read(icalRepositoryProvider);
                 await repository.deleteIcalFeed(feed.id);
@@ -589,12 +549,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                     e,
                     userMessage: 'Greška prilikom brisanja feeda',
                   );
-                }
-              } finally {
-                if (mounted) {
-                  setState(() {
-                    _deletingFeedId = null;
-                  });
                 }
               }
             },
@@ -928,7 +882,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         platform: _selectedPlatform,
         icalUrl: _icalUrlController.text.trim(),
         syncIntervalMinutes: 60,
-        status: IcalFeedStatus.active,
+        status: 'active',
         createdAt: widget.existingFeed?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );

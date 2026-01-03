@@ -68,19 +68,10 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
               fontWeight: FontWeight.w500,
             ),
             prefixIcon: widget.prefixIcon != null
-                ? TweenAnimationBuilder<Color?>(
-                    duration: const Duration(milliseconds: 300),
-                    tween: ColorTween(
-                      begin: _isFocused ? Colors.grey.shade500 : const Color(0xFF6B4CE6),
-                      end: _isFocused ? const Color(0xFF6B4CE6) : Colors.grey.shade500,
-                    ),
-                    builder: (context, color, child) {
-                      return Icon(
-                        widget.prefixIcon,
-                        color: color,
-                        size: 20,
-                      );
-                    },
+                ? Icon(
+                    widget.prefixIcon,
+                    color: _isFocused ? const Color(0xFF6B4CE6) : Colors.grey.shade500,
+                    size: 20,
                   )
                 : null,
             suffixIcon: widget.suffixIcon,

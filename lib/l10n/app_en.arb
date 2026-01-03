@@ -430,24 +430,5 @@
   "widgetTermsAndConditions": "By booking, you agree to our Terms & Conditions and Privacy Policy",
   "widgetMissingParameters": "Missing required parameters",
   "widgetPropertyNotFound": "Property or unit not found",
-  "widgetContactSupport": "Please contact support",
-
-  "validation_name_required": "Name is required",
-  "validation_name_too_short": "Name must be at least 2 characters",
-  "validation_email_required": "Email is required",
-  "validation_email_invalid": "Please enter a valid email address",
-  "validation_phone_required": "Phone number is required",
-  "validation_phone_invalid": "Please enter a valid phone number (e.g., +38512345678)",
-  "validation_message_too_long": "Message must not exceed {maxLength} characters",
-  "@validation_message_too_long": {
-    "placeholders": {
-      "maxLength": {
-        "type": "int"
-      }
-    }
-  },
-
-  "notFoundTitle": "Page Not Found",
-  "notFoundSubtitle": "The page you're looking for doesn't exist or has been removed.",
-  "notFoundGoHome": "Back to Home"
+  "widgetContactSupport": "Please contact support"
 }

@@ -94,18 +94,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       final firstName = nameParts.isNotEmpty ? nameParts.first : '';
       final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-      // Sanitize phone number before sending
-      final rawPhone = _phoneController.text.trim();
-      final sanitizedPhone = rawPhone.isNotEmpty
-          ? '+${rawPhone.replaceAll(RegExp(r'[^\d]'), '')}'
-          : null;
-
       await ref.read(enhancedAuthProvider.notifier).registerWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             firstName: firstName,
             lastName: lastName,
-            phone: sanitizedPhone,
+            phone: _phoneController.text.trim().isNotEmpty
+                ? _phoneController.text.trim()
+                : null,
             acceptedTerms: _acceptedTerms,
             acceptedPrivacy: _acceptedPrivacy,
             newsletterOptIn: _newsletterOptIn,

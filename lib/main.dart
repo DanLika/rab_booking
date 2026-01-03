@@ -15,41 +15,36 @@ import 'l10n/app_localizations.dart';
 import 'features/owner_dashboard/presentation/providers/owner_calendar_view_provider.dart';
 
 void main() async {
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize Firebase
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-    // Initialize SharedPreferences
-    final sharedPreferences = await SharedPreferences.getInstance();
+  // Initialize SharedPreferences
+  final sharedPreferences = await SharedPreferences.getInstance();
 
-    // Initialize Firebase Crashlytics (Phase 3)
-    if (kReleaseMode) {
-      // Pass all uncaught errors from the framework to Crashlytics
-      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  // Initialize Firebase Crashlytics (Phase 3)
+  if (kReleaseMode) {
+    // Pass all uncaught errors from the framework to Crashlytics
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-      // Pass all uncaught asynchronous errors to Crashlytics
-      PlatformDispatcher.instance.onError = (error, stack) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return true;
-      };
-    }
-
-    runApp(
-      ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(sharedPreferences),
-        ],
-        child: const RabBookingApp(),
-      ),
-    );
-  } catch (e) {
-    // If initialization fails, show an error screen
-    runApp(InitializationErrorWidget(error: e.toString()));
+    // Pass all uncaught asynchronous errors to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
   }
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const RabBookingApp(),
+    ),
+  );
 }
 
 /// Main application widget
@@ -83,43 +78,6 @@ class RabBookingApp extends ConsumerWidget {
         Locale('en'), // English
         Locale('hr'), // Croatian
       ],
-    );
-  }
-}
-
-/// A widget to display when the app fails to initialize.
-class InitializationErrorWidget extends StatelessWidget {
-  final String error;
-
-  const InitializationErrorWidget({super.key, required this.error});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 50),
-                const SizedBox(height: 16),
-                const Text(
-                  'Application Initialization Failed',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Could not start the application. Please try again later.\n\nError: $error',
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -167,7 +167,7 @@ class AppTypography {
       bodyLarge: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
-        letterSpacing: 0.5,
+        letterSpacing: 0.25, // Normalized for consistency
         height: 1.5,
       ),
       // Caption: 14px
@@ -180,7 +180,7 @@ class AppTypography {
       bodySmall: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w400,
-        letterSpacing: 0.4,
+        letterSpacing: 0.25, // Normalized for consistency
         height: 1.33,
       ),
 

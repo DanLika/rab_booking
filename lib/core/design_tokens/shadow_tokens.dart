@@ -30,9 +30,15 @@ class ShadowTokens {
   // Medium shadow - for elevated cards
   static List<BoxShadow> get medium => [
         const BoxShadow(
+          color: Color(0x0A000000), // 4% opacity black
+          offset: Offset(0, 2),
+          blurRadius: 4,
+          spreadRadius: -1,
+        ),
+        const BoxShadow(
           color: Color(0x1F000000), // 12% opacity black
           offset: Offset(0, 4),
-          blurRadius: 16,
+          blurRadius: 12,
           spreadRadius: 0,
         ),
       ];

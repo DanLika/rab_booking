@@ -203,10 +203,6 @@ class PremiumCard extends StatefulWidget {
 class _PremiumCardState extends State<PremiumCard> {
   bool _isHovered = false;
 
-  // Optimization: Pre-compute the transformation matrix to avoid creating a new
-  // Matrix4 object on every build during hover. This reduces garbage collection pressure.
-  static final _hoverTransform = Matrix4.translationValues(0, -4, 0);
-
   @override
   Widget build(BuildContext context) {
     final effectiveRadius = widget.borderRadius ?? AppDimensions.radiusL;
@@ -254,7 +250,7 @@ class _PremiumCardState extends State<PremiumCard> {
           curve: AppAnimations.hover.curve,
           decoration: _buildDecoration(context, effectiveRadius),
           transform: widget.enableHover && _isHovered
-              ? _hoverTransform
+              ? Matrix4.translationValues(0, -4, 0)
               : Matrix4.identity(),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(effectiveRadius),

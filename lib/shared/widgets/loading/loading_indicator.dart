@@ -143,37 +143,29 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Optimization: Pre-compute the color list so it's not re-created on every animation frame.
-    final shimmerColors = isDark
-        ? [
-            AppColors.surfaceVariantDark,
-            AppColors.surfaceDark,
-            AppColors.surfaceVariantDark,
-          ]
-        : [
-            AppColors.shimmerBase,
-            AppColors.shimmerHighlight,
-            AppColors.shimmerBase,
-          ];
 
     return AnimatedBuilder(
       animation: _controller,
-      // Optimization: The SizedBox doesn't depend on the animation, so it becomes the `child`.
-      // This prevents it from being rebuilt on every animation frame.
-      child: SizedBox(
-        width: widget.width,
-        height: widget.height,
-      ),
       builder: (context, child) {
-        // Only the `stops` of the gradient change, so we rebuild the DecoratedBox,
-        // which is more efficient than rebuilding the entire container.
-        return DecoratedBox(
+        return Container(
+          width: widget.width,
+          height: widget.height,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
-              colors: shimmerColors,
+              colors: isDark
+                  ? [
+                      AppColors.surfaceVariantDark,
+                      AppColors.surfaceDark,
+                      AppColors.surfaceVariantDark,
+                    ]
+                  : [
+                      AppColors.shimmerBase,
+                      AppColors.shimmerHighlight,
+                      AppColors.shimmerBase,
+                    ],
               stops: [
                 0.0,
                 _controller.value,
@@ -181,7 +173,6 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
               ],
             ),
           ),
-          child: child,
         );
       },
     );

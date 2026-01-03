@@ -43,6 +43,12 @@ class PasswordValidationResult {
 class PasswordValidator {
   PasswordValidator._();
 
+  // Optimization: Pre-compile regexes to avoid re-creating them on every validation call.
+  static final _upperCaseRegex = RegExp(r'[A-Z]');
+  static final _lowerCaseRegex = RegExp(r'[a-z]');
+  static final _digitRegex = RegExp(r'[0-9]');
+  static final _specialCharRegex = RegExp(r'[!@#$%^&*(),.?":{}|<>]');
+
   /// Minimum password length
   static const int minLength = 8;
 
@@ -72,22 +78,22 @@ class PasswordValidator {
     }
 
     // Check for uppercase letter
-    if (!password.contains(RegExp(r'[A-Z]'))) {
+    if (!password.contains(_upperCaseRegex)) {
       missing.add('One uppercase letter');
     }
 
     // Check for lowercase letter
-    if (!password.contains(RegExp(r'[a-z]'))) {
+    if (!password.contains(_lowerCaseRegex)) {
       missing.add('One lowercase letter');
     }
 
     // Check for digit
-    if (!password.contains(RegExp(r'[0-9]'))) {
+    if (!password.contains(_digitRegex)) {
       missing.add('One number');
     }
 
     // Check for special character
-    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+    if (!password.contains(_specialCharRegex)) {
       missing.add('One special character');
     }
 
@@ -117,20 +123,16 @@ class PasswordValidator {
     }
 
     // Complexity score
-    if (password.contains(RegExp(r'[A-Z]'))) score += 1;
-    if (password.contains(RegExp(r'[a-z]'))) score += 1;
-    if (password.contains(RegExp(r'[0-9]'))) score += 1;
-    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) score += 1;
+    if (password.contains(_upperCaseRegex)) score += 1;
+    if (password.contains(_lowerCaseRegex)) score += 1;
+    if (password.contains(_digitRegex)) score += 1;
+    if (password.contains(_specialCharRegex)) score += 1;
 
     // Multiple digits/special chars bonus
-    if (password.split('').where((c) => c.contains(RegExp(r'[0-9]'))).length >=
-        2) {
+    if (password.split('').where((c) => c.contains(_digitRegex)).length >= 2) {
       score += 1;
     }
-    if (password
-            .split('')
-            .where((c) => c.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]')))
-            .length >=
+    if (password.split('').where((c) => c.contains(_specialCharRegex)).length >=
         2) {
       score += 1;
     }

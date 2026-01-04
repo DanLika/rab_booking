@@ -102,15 +102,8 @@ service cloud.firestore {
         // - Stripe: Poll payment (by stripe_session_id)
         // - Guest: View booking (by booking_reference)
         match /bookings/{bookingId} {
-          allow read: if
-            // Owner can read their own bookings
-            (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
-            // Widget calendar availability (public for calendar display)
-            ('unit_id' in resource.data && 'status' in resource.data) ||
-            // Stripe payment polling
-            ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
-            // Guest booking view
-            ('booking_reference' in resource.data && resource.data.booking_reference != null);
+          // 🛡️ SENTINEL: Consistent security - rule matches collection group
+          allow read: if isResourceOwner();
           allow create, update, delete: if isPropertyOwner(propertyId);
         }
 
@@ -181,21 +174,15 @@ service cloud.firestore {
     // Even if attacker knows competitor's unit_ids and queries by them,
     // the rule will only return documents where owner_id == attacker's uid (none).
     match /{path=**}/bookings/{bookingId} {
-      allow read: if
-        // PRIMARY SECURITY: Owner can read ONLY their own bookings
-        // This works for ALL query patterns: realtime subscriptions, analytics, etc.
-        // Even if query filters by unit_id/check_in, only owner's bookings are returned
-        (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
-        // PUBLIC: Widget calendar availability queries (unit_id + status)
-        // SECURITY: Public for availability display, app code filters PII
-        // Requires collection group index: unit_id ASC, status ASC
-        ('unit_id' in resource.data && 'status' in resource.data) ||
-        // PUBLIC: Stripe polling after payment (by stripe_session_id)
-        // Requires collection group index: stripe_session_id ASC
-        ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
-        // PUBLIC: Guest booking view (by booking_reference)
-        // Requires collection group index: booking_reference ASC
-        ('booking_reference' in resource.data && resource.data.booking_reference != null);
+      // 🛡️ SENTINEL: CRITICAL PII LEAK FIXED
+      // The previous rules allowed any unauthenticated user to read entire booking documents,
+      // including guest PII (name, email, phone), by guessing a unit_id, stripe_session_id,
+      // or booking_reference. This relied on insecure client-side filtering.
+      // The rule is now locked down to STRICT owner-only access.
+      //
+      // TODO: Re-enable safe public access (e.g., for calendars) via a secure
+      // Cloud Function proxy that only exposes non-sensitive data.
+      allow read: if isResourceOwner();
       // Writes go through specific subcollection path above
     }
 
@@ -229,11 +216,8 @@ service cloud.firestore {
     // DEPRECATED: Top-level bookings
     // Same security rules as subcollection for consistency
     match /bookings/{bookingId} {
-      allow read: if
-        (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
-        ('unit_id' in resource.data && 'status' in resource.data) ||
-        ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
-        ('booking_reference' in resource.data && resource.data.booking_reference != null);
+      // 🛡️ SENTINEL: Consistent security - rule matches collection group
+      allow read: if isResourceOwner();
       allow create: if canCreateAsOwner();
       allow update, delete: if isResourceOwner();
     }

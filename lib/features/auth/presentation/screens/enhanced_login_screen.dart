@@ -540,18 +540,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
             onTap: () => setState(() => _rememberMe = !_rememberMe),
             child: Row(
               children: [
-                SizedBox(
-                  height: 22,
-                  width: 22,
-                  child: Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) => setState(() => _rememberMe = value!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    activeColor: theme.colorScheme.primary,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                Checkbox(
+                  value: _rememberMe,
+                  onChanged: (value) => setState(() => _rememberMe = value!),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
                   ),
+                  activeColor: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
                 Text(

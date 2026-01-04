@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:rab_booking/l10n/app_localizations.dart';
 
 /// Centralized date formatting utility
 /// Ensures consistent date formats throughout the application
@@ -8,7 +10,8 @@ class DateFormatter {
   // Standard date formats
   static final DateFormat _shortDate = DateFormat('d.M.yyyy'); // 1.1.2024
   static final DateFormat _mediumDate = DateFormat('d. MMM yyyy'); // 1. Led 2024
-  static final DateFormat _longDate = DateFormat('EEEE, d. MMMM yyyy'); // Ponedjeljak, 1. Siječanj 2024
+  static final DateFormat _longDate =
+      DateFormat('EEEE, d. MMMM yyyy'); // Ponedjeljak, 1. Siječanj 2024
   static final DateFormat _monthYear = DateFormat('MMMM yyyy'); // Siječanj 2024
   static final DateFormat _dayMonth = DateFormat('d. MMM'); // 1. Led
   static final DateFormat _time = DateFormat('HH:mm'); // 14:30
@@ -46,18 +49,21 @@ class DateFormatter {
   }
 
   /// Get relative date description: Danas, Sutra, Jučer, etc.
-  static String formatRelative(DateTime date) {
+  static String formatRelative(DateTime date, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final compareDate = DateTime(date.year, date.month, date.day);
 
     final difference = compareDate.difference(today).inDays;
 
-    if (difference == 0) return 'Danas';
-    if (difference == 1) return 'Sutra';
-    if (difference == -1) return 'Jučer';
-    if (difference > 1 && difference <= 7) return 'Za $difference dana';
-    if (difference < -1 && difference >= -7) return 'Prije ${-difference} dana';
+    if (difference == 0) return l10n.relativeDateToday;
+    if (difference == 1) return l10n.relativeDateTomorrow;
+    if (difference == -1) return l10n.relativeDateYesterday;
+    if (difference == 7) return l10n.relativeDateInAWeek;
+    if (difference == -7) return l10n.relativeDateAWeekAgo;
+    if (difference > 1) return l10n.relativeDateInXDays(difference);
+    if (difference < -1) return l10n.relativeDateXDaysAgo(-difference);
 
     return formatShort(date);
   }

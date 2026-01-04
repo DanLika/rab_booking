@@ -430,5 +430,27 @@
   "widgetTermsAndConditions": "By booking, you agree to our Terms & Conditions and Privacy Policy",
   "widgetMissingParameters": "Missing required parameters",
   "widgetPropertyNotFound": "Property or unit not found",
-  "widgetContactSupport": "Please contact support"
+  "widgetContactSupport": "Please contact support",
+
+  "relativeDateToday": "Today",
+  "relativeDateTomorrow": "Tomorrow",
+  "relativeDateYesterday": "Yesterday",
+  "relativeDateInXDays": "In {count} days",
+  "@relativeDateInXDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDateXDaysAgo": "{count} days ago",
+  "@relativeDateXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDateInAWeek": "In a week",
+  "relativeDateAWeekAgo": "A week ago"
 }

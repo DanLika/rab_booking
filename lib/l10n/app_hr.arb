@@ -430,5 +430,27 @@
   "widgetTermsAndConditions": "Rezervacijom prihvatate naše Uvjete korištenja i Politiku privatnosti",
   "widgetMissingParameters": "Nedostaju obavezni parametri",
   "widgetPropertyNotFound": "Nekretnina ili jedinica nije pronađena",
-  "widgetContactSupport": "Molimo kontaktirajte podršku"
+  "widgetContactSupport": "Molimo kontaktirajte podršku",
+
+  "relativeDateToday": "Danas",
+  "relativeDateTomorrow": "Sutra",
+  "relativeDateYesterday": "Jučer",
+  "relativeDateInXDays": "Za {count} dana",
+  "@relativeDateInXDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDateXDaysAgo": "Prije {count} dana",
+  "@relativeDateXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDateInAWeek": "Za tjedan dana",
+  "relativeDateAWeekAgo": "Prije tjedan dana"
 }

@@ -103,60 +103,74 @@ class TypographyTokens {
   // Powered by badge size (very small)
   static const double poweredBySize = 9.0;
 
+  // --- Base Text Styles ---
+  // Optimization: Caching base TextStyle objects to avoid recreating them on every call.
+  // The public methods then use .copyWith() to apply dynamic properties like color.
+  // This is more performant than `TextStyle(...)` as it avoids allocating new objects.
+
+  static const TextStyle _baseHeading = TextStyle(
+    fontSize: fontSizeXXXL,
+    fontWeight: bold,
+    height: lineHeightTight,
+    letterSpacing: letterSpacingTight,
+  );
+
+  static const TextStyle _baseSubheading = TextStyle(
+    fontSize: fontSizeXXL,
+    fontWeight: semiBold,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingNormal,
+  );
+
+  static const TextStyle _baseBody = TextStyle(
+    fontSize: fontSizeL,
+    fontWeight: regular,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingNormal,
+  );
+
+  static const TextStyle _baseBodyMedium = TextStyle(
+    fontSize: fontSizeL,
+    fontWeight: medium,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingNormal,
+  );
+
+  static const TextStyle _baseCaption = TextStyle(
+    fontSize: fontSizeM,
+    fontWeight: regular,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingNormal,
+  );
+
+  static const TextStyle _baseLabel = TextStyle(
+    fontSize: fontSizeS,
+    fontWeight: medium,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingWide,
+  );
+
+  static const TextStyle _baseButton = TextStyle(
+    fontSize: fontSizeL,
+    fontWeight: semiBold,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingWide,
+  );
+
   // Common text styles
-  static TextStyle heading({Color? color}) => TextStyle(
-        fontSize: fontSizeXXXL,
-        fontWeight: bold,
-        height: lineHeightTight,
-        letterSpacing: letterSpacingTight,
-        color: color,
-      );
+  static TextStyle heading({Color? color}) => _baseHeading.copyWith(color: color);
 
-  static TextStyle subheading({Color? color}) => TextStyle(
-        fontSize: fontSizeXXL,
-        fontWeight: semiBold,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingNormal,
-        color: color,
-      );
+  static TextStyle subheading({Color? color}) =>
+      _baseSubheading.copyWith(color: color);
 
-  static TextStyle body({Color? color}) => TextStyle(
-        fontSize: fontSizeL,
-        fontWeight: regular,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingNormal,
-        color: color,
-      );
+  static TextStyle body({Color? color}) => _baseBody.copyWith(color: color);
 
-  static TextStyle bodyMedium({Color? color}) => TextStyle(
-        fontSize: fontSizeL,
-        fontWeight: medium,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingNormal,
-        color: color,
-      );
+  static TextStyle bodyMedium({Color? color}) =>
+      _baseBodyMedium.copyWith(color: color);
 
-  static TextStyle caption({Color? color}) => TextStyle(
-        fontSize: fontSizeM,
-        fontWeight: regular,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingNormal,
-        color: color,
-      );
+  static TextStyle caption({Color? color}) => _baseCaption.copyWith(color: color);
 
-  static TextStyle label({Color? color}) => TextStyle(
-        fontSize: fontSizeS,
-        fontWeight: medium,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingWide,
-        color: color,
-      );
+  static TextStyle label({Color? color}) => _baseLabel.copyWith(color: color);
 
-  static TextStyle button({Color? color}) => TextStyle(
-        fontSize: fontSizeL,
-        fontWeight: semiBold,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingWide,
-        color: color,
-      );
+  static TextStyle button({Color? color}) => _baseButton.copyWith(color: color);
 }

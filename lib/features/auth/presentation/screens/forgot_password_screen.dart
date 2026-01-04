@@ -73,7 +73,21 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
                 child: GlassCard(
                   maxWidth: 460,
-                  child: _emailSent ? _buildSuccessView() : _buildFormView(),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _emailSent
+                        ? _buildSuccessView(key: const ValueKey('success'))
+                        : _buildFormView(key: const ValueKey('form')),
+                  ),
                 ),
               ),
             ),
@@ -83,7 +97,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildFormView() {
+  Widget _buildFormView({Key? key}) {
     return Form(
       key: _formKey,
       child: Column(
@@ -173,7 +187,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildSuccessView() {
+  Widget _buildSuccessView({Key? key}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

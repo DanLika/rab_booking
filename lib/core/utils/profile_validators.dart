@@ -2,6 +2,16 @@
 class ProfileValidators {
   ProfileValidators._();
 
+  // Optimization: Pre-compile regexes to avoid re-creating them on every validation call.
+  static final _emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+  static final _e164Regex = RegExp(r'^\+[1-9]\d{1,14}$');
+  static final _postalRegex = RegExp(r'^[a-zA-Z0-9\s-]+$');
+  static final _urlRegex = RegExp(r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$');
+  static final _taxIdRegex = RegExp(r'^[a-zA-Z0-9]+$');
+  static final _ibanRegex = RegExp(r'^[A-Z]{2}[0-9A-Z]+$');
+  static final _swiftRegex = RegExp(r'^[A-Z0-9]+$');
+
+
   // ========== NAME VALIDATION ==========
 
   /// Validate display name (2-80 characters)
@@ -30,11 +40,7 @@ class ProfileValidators {
       return 'Email is required';
     }
 
-    final emailRegex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
-
-    if (!emailRegex.hasMatch(value.trim())) {
+    if (!_emailRegex.hasMatch(value.trim())) {
       return 'Please enter a valid email address';
     }
 
@@ -49,10 +55,7 @@ class ProfileValidators {
       return null; // Phone is optional
     }
 
-    // E.164 format: + followed by 1-15 digits
-    final e164Regex = RegExp(r'^\+[1-9]\d{1,14}$');
-
-    if (!e164Regex.hasMatch(value.trim())) {
+    if (!_e164Regex.hasMatch(value.trim())) {
       return 'Phone must be in E.164 format (e.g., +385911234567)';
     }
 
@@ -91,8 +94,7 @@ class ProfileValidators {
     }
 
     // Allow alphanumeric and spaces/dashes
-    final postalRegex = RegExp(r'^[a-zA-Z0-9\s-]+$');
-    if (!postalRegex.hasMatch(trimmed)) {
+    if (!_postalRegex.hasMatch(trimmed)) {
       return 'Invalid postal code format';
     }
 
@@ -107,11 +109,7 @@ class ProfileValidators {
       return null; // Optional
     }
 
-    final urlRegex = RegExp(
-      r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$',
-    );
-
-    if (!urlRegex.hasMatch(value.trim())) {
+    if (!_urlRegex.hasMatch(value.trim())) {
       return 'Please enter a valid URL (starting with http:// or https://)';
     }
 
@@ -132,8 +130,7 @@ class ProfileValidators {
     }
 
     // Alphanumeric only
-    final taxIdRegex = RegExp(r'^[a-zA-Z0-9]+$');
-    if (!taxIdRegex.hasMatch(trimmed)) {
+    if (!_taxIdRegex.hasMatch(trimmed)) {
       return 'Tax ID can only contain letters and numbers';
     }
 
@@ -152,8 +149,7 @@ class ProfileValidators {
     }
 
     // Alphanumeric only (some countries use letters)
-    final vatIdRegex = RegExp(r'^[a-zA-Z0-9]+$');
-    if (!vatIdRegex.hasMatch(trimmed)) {
+    if (!_taxIdRegex.hasMatch(trimmed)) {
       return 'VAT ID can only contain letters and numbers';
     }
 
@@ -176,8 +172,7 @@ class ProfileValidators {
     }
 
     // IBAN starts with 2 letters (country code) followed by alphanumeric
-    final ibanRegex = RegExp(r'^[A-Z]{2}[0-9A-Z]+$');
-    if (!ibanRegex.hasMatch(trimmed)) {
+    if (!_ibanRegex.hasMatch(trimmed)) {
       return 'Invalid IBAN format';
     }
 
@@ -200,8 +195,7 @@ class ProfileValidators {
     }
 
     // Alphanumeric only
-    final swiftRegex = RegExp(r'^[A-Z0-9]+$');
-    if (!swiftRegex.hasMatch(trimmed)) {
+    if (!_swiftRegex.hasMatch(trimmed)) {
       return 'SWIFT code can only contain letters and numbers';
     }
 

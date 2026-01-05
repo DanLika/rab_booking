@@ -597,7 +597,37 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-05 | **Version**: 6.25
+**Last Updated**: 2026-01-05 | **Version**: 6.26
+
+**Changelog 6.26**: Security Audit Complete (SF-001 through SF-017):
+- **Analizirani branchevi**: 12 AI agent brancheva (Google Jules, Sentinel, Bolt, Palette)
+- **Implementirano**: 17 sigurnosnih ispravki (2 CRITICAL, 1 HIGH, ostalo Low/Medium)
+- **Odbijeno**: 1 (SF-003 - mikro-optimizacija bez koristi)
+- **Duplikati preskočeni**: 1 (sentinel/fix-pii-leak-calendar - već riješeno u SF-014)
+
+**CRITICAL fixes:**
+- **SF-007**: Uklonjena mogućnost spremanja lozinke u SecureStorage ("Remember Me" sada sprema samo email)
+- **SF-011**: Dodan `service-account-key.json` u `.gitignore` (sprječava slučajno commitanje Firebase admin credentials)
+
+**HIGH fix:**
+- **SF-014**: Spriječeno izlaganje PII podataka (ime, email, telefon gosta) u public booking widget kalendaru
+
+**Ostale ispravke:**
+- SF-001: Owner ID validacija u booking creation (server-side)
+- SF-002: SSRF prevencija u iCal sync (whitelist enabled)
+- SF-004: IconButton hover/splash feedback
+- SF-005: Phone number validacija
+- SF-006: Sequential character password check (slova + brojevi)
+- SF-008: Booking notes length limit (1000 chars)
+- SF-009: Error handling info leakage prevention
+- SF-010: Year calendar race condition fix
+- SF-012: Secure error handling & email sanitization
+- SF-013: Haptic feedback on password toggle
+- SF-015: DebouncedSearchField ValueNotifier optimization
+- SF-016: AnimatedGradientFAB ValueNotifier optimization
+- SF-017: Password visibility toggle tooltips (accessibility)
+
+**Dokumentacija**: Sve ispravke detaljno dokumentirane u `docs/SECURITY_FIXES.md`
 
 **Changelog 6.25**: Security Fixes (SF-001, SF-002):
 - **SF-001: Owner ID Validation in Booking Creation** (`atomicBooking.ts`):

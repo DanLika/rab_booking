@@ -19,6 +19,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 11. [SF-011: Ignore Service Account Key (CRITICAL)](#sf-011-ignore-service-account-key-critical)
 12. [SF-012: Secure Error Handling & Email Sanitization](#sf-012-secure-error-handling--email-sanitization)
 13. [SF-013: Haptic Feedback on Password Toggle](#sf-013-haptic-feedback-on-password-toggle)
+14. [SF-014: Prevent PII Exposure in Booking Widget (HIGH)](#sf-014-prevent-pii-exposure-in-booking-widget-high)
 
 ---
 
@@ -842,6 +843,82 @@ onPressed: () {
 ### Accessibility
 
 Poboljšava accessibility jer pruža dodatni non-visual feedback koji potvrđuje akciju korisnika.
+
+---
+
+## SF-014: Prevent PII Exposure in Booking Widget (HIGH)
+
+**Datum**: 2026-01-05  
+**Prioritet**: 🔴 High  
+**Status**: ✅ Riješeno  
+**Zahvaćeni fajlovi**: `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart`  
+**Otkrio**: Google Sentinel
+
+### Problem
+
+Public booking widget calendar je dohvaćao **cijele** Firestore booking dokumente koristeći `BookingModel.fromJson()`. Ovo je izlagalo osjetljive PII (Personally Identifiable Information) podatke svim korisnicima widgeta:
+
+- **Guest name** (ime gosta)
+- **Guest email** (email gosta)  
+- **Guest phone** (telefon gosta)
+- **Notes** (napomene)
+
+**Rizik:** Maliciozni korisnik bi mogao presresti mrežni promet prema public widgetu i prikupiti PII podatke drugih gostiju, što predstavlja ozbiljnu povredu privatnosti.
+
+### Rješenje
+
+Kreirana nova helper metoda `_mapDocumentToBooking()` koja ekstrahira **samo** polja potrebna za prikaz kalendara:
+
+```dart
+BookingModel? _mapDocumentToBooking(
+  QueryDocumentSnapshot doc, {
+  required String unitId,
+}) {
+  try {
+    final data = doc.data() as Map<String, dynamic>;
+    final statusString = data['status'] as String?;
+    final status = BookingStatus.values.firstWhere(
+      (e) => e.name == statusString,
+      orElse: () => BookingStatus.confirmed,
+    );
+
+    // Extract ONLY non-PII fields needed for calendar display
+    return BookingModel(
+      id: doc.id,
+      unitId: unitId,
+      checkIn: (data['check_in'] as Timestamp).toDate(),
+      checkOut: (data['check_out'] as Timestamp).toDate(),
+      status: status,
+      createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  } catch (e) {
+    LoggingService.logError('Error parsing booking document ${doc.id}', e);
+    return null;
+  }
+}
+```
+
+### Zahvaćena mjesta (4 stream-a):
+
+1. `watchYearCalendarData()` - year view calendar
+2. `watchCalendarData()` - month view calendar
+3. `watchYearCalendarDataOptimized()` - optimized year view
+4. `watchCalendarDataOptimized()` - optimized month view
+
+### Testiranje
+
+1. ✅ Calendar prikazuje booking datume ispravno
+2. ✅ PII podaci (name, email, phone) NISU u network response-u
+3. ✅ Status bookinga (pending/confirmed) se ispravno prikazuje
+4. ✅ Turnover days (partialCheckIn/partialCheckOut) rade ispravno
+
+### Moguće nuspojave
+
+- Nema - calendar widget nikada nije trebao PII podatke za prikaz
+
+### GDPR/Privacy implikacije
+
+Ova ispravka je važna za usklađenost s GDPR-om jer sprječava neovlašteno izlaganje osobnih podataka gostiju trećim stranama.
 
 ---
 

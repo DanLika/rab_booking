@@ -22,6 +22,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 14. [SF-014: Prevent PII Exposure in Booking Widget (HIGH)](#sf-014-prevent-pii-exposure-in-booking-widget-high)
 15. [SF-015: DebouncedSearchField ValueNotifier Optimization](#sf-015-debouncedsearchfield-valuenotifier-optimization)
 16. [SF-016: AnimatedGradientFAB ValueNotifier Optimization](#sf-016-animatedgradientfab-valuenotifier-optimization)
+17. [SF-017: Password Visibility Toggle Tooltips](#sf-017-password-visibility-toggle-tooltips)
 
 ---
 
@@ -1084,6 +1085,75 @@ class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
 ### Moguće nuspojave
 
 - Nema - ovo je čista optimizacija bez promjene funkcionalnosti
+
+---
+
+## SF-017: Password Visibility Toggle Tooltips
+
+**Datum**: 2026-01-05  
+**Prioritet**: Low  
+**Status**: ✅ Riješeno  
+**Zahvaćeni fajlovi**: 
+- `lib/features/owner_dashboard/presentation/screens/change_password_screen.dart`
+- `lib/l10n/app_en.arb`
+- `lib/l10n/app_hr.arb`
+
+**Predložio**: Google Palette
+
+### Problem
+
+Password visibility toggle gumbi na Change Password ekranu nisu imali tooltip. Icon-only gumbi bez tooltipa su problematični za:
+
+1. **Screen reader korisnike** - ne znaju što gumb radi
+2. **Nove korisnike** - možda ne prepoznaju ikonu visibility_off/visibility
+3. **Desktop korisnike** - nema hover feedback koji objašnjava funkciju
+
+### Rješenje
+
+Dodani `tooltip` parametri na sva 3 IconButton widgeta za password visibility toggle:
+
+```dart
+IconButton(
+  tooltip: _obscureCurrentPassword
+      ? l10n.showPassword
+      : l10n.hidePassword,
+  icon: Icon(_obscureCurrentPassword ? Icons.visibility_off : Icons.visibility),
+  onPressed: () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword),
+),
+```
+
+### Lokalizacija
+
+Dodani novi stringovi:
+
+| Ključ | EN | HR |
+|-------|----|----|
+| `showPassword` | Show password | Prikaži lozinku |
+| `hidePassword` | Hide password | Sakrij lozinku |
+
+### Zahvaćena polja
+
+1. **Current Password** - toggle za prikaz trenutne lozinke
+2. **New Password** - toggle za prikaz nove lozinke
+3. **Confirm Password** - toggle za prikaz potvrde lozinke
+
+### Testiranje
+
+1. ✅ Hover na desktop - prikazuje tooltip "Show password" / "Hide password"
+2. ✅ Screen reader - čita tooltip tekst
+3. ✅ Lokalizacija EN - ispravni stringovi
+4. ✅ Lokalizacija HR - ispravni stringovi
+5. ✅ Toggle state - tooltip se mijenja ovisno o stanju (show/hide)
+
+### Accessibility poboljšanje
+
+Ova promjena poboljšava WCAG 2.1 usklađenost:
+- **1.1.1 Non-text Content** - pruža tekstualnu alternativu za ikonu
+- **2.4.4 Link Purpose** - jasno objašnjava funkciju gumba
+
+### Moguće nuspojave
+
+- Nema - ovo je čisto accessibility poboljšanje bez utjecaja na funkcionalnost
 
 ---
 

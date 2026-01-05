@@ -2,11 +2,24 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to verify the user owns the parent property
+    // SECURITY: This is the primary defense against IDOR attacks on file uploads
+    function isPropertyOwner(propertyId) {
+      return isAuthenticated() &&
+        get(/databases/(default)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
+    }
+
     // User-specific files (profile images, unit images, etc.)
     // Path: users/{userId}/...
     match /users/{userId}/{allPaths=**} {
       // Users can read/write their own files
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
 
     // Property images (public read for widget display)
@@ -14,8 +27,9 @@ service firebase.storage {
     match /properties/{propertyId}/{allPaths=**} {
       // Anyone can read (for public widget display)
       allow read: if true;
-      // Only authenticated users can write (owner validation done at app level)
-      allow write: if request.auth != null;
+      // SECURITY FIX: Only the legitimate property owner can upload/overwrite images.
+      // Prevents an authenticated user from overwriting another user's property photos.
+      allow write: if isPropertyOwner(propertyId);
     }
 
     // iCal exports (public read for calendar subscriptions, authenticated write)
@@ -23,8 +37,8 @@ service firebase.storage {
     match /ical-exports/{propertyId}/{unitId}/{allPaths=**} {
       // Anyone can read (for public calendar subscriptions)
       allow read: if true;
-      // Only authenticated users can write (owner validation done at app level)
-      allow write: if request.auth != null;
+      // SECURITY FIX: Only the legitimate property owner can generate iCal exports.
+      allow write: if isPropertyOwner(propertyId);
     }
 
     // Public assets (logos, default images, etc.)

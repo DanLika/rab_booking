@@ -106,7 +106,7 @@ export const createBookingAtomic = onCall(async (request) => {
   const {
     unitId,
     propertyId,
-    ownerId,
+    ownerId: clientOwnerId, // SECURITY SF-001: Renamed - will be validated against property
     checkIn,
     checkOut,
     guestName,
@@ -125,10 +125,11 @@ export const createBookingAtomic = onCall(async (request) => {
 
   // Validate required fields with detailed error logging
   // Check for null, undefined, or empty string
+  // NOTE: ownerId is NOT validated here - it will be fetched from property document (SF-001)
   const missingFields: string[] = [];
   if (!unitId || (typeof unitId === 'string' && unitId.trim() === '')) missingFields.push('unitId');
   if (!propertyId || (typeof propertyId === 'string' && propertyId.trim() === '')) missingFields.push('propertyId');
-  if (!ownerId || (typeof ownerId === 'string' && ownerId.trim() === '')) missingFields.push('ownerId');
+  // SECURITY SF-001: ownerId validation removed - we fetch it from property document
   if (!checkIn || (typeof checkIn === 'string' && checkIn.trim() === '')) missingFields.push('checkIn');
   if (!checkOut || (typeof checkOut === 'string' && checkOut.trim() === '')) missingFields.push('checkOut');
   if (!guestName || (typeof guestName === 'string' && guestName.trim() === '')) missingFields.push('guestName');
@@ -143,7 +144,7 @@ export const createBookingAtomic = onCall(async (request) => {
       receivedData: {
         unitId: !!unitId,
         propertyId: !!propertyId,
-        ownerId: !!ownerId,
+        clientOwnerId: !!clientOwnerId, // SF-001: Renamed for clarity
         checkIn: !!checkIn,
         checkOut: !!checkOut,
         guestName: !!guestName,
@@ -163,6 +164,43 @@ export const createBookingAtomic = onCall(async (request) => {
       "invalid-argument",
       "Invalid booking data. Please check all fields and try again."
     );
+  }
+
+  // ========================================================================
+  // SECURITY FIX SF-001: Validate ownerId from property document
+  // Don't trust client-provided ownerId - fetch from Firestore
+  // This prevents malicious users from setting arbitrary owner_id values
+  // ========================================================================
+  const propertyDocForOwner = await db.collection("properties").doc(propertyId).get();
+
+  if (!propertyDocForOwner.exists) {
+    logError("[AtomicBooking] SECURITY SF-001: Property not found", null, {
+      propertyId,
+      clientOwnerId: clientOwnerId ? String(clientOwnerId).substring(0, 8) + "..." : "none",
+    });
+    throw new HttpsError("not-found", "Property not found. Please try again.");
+  }
+
+  const propertyDataForOwner = propertyDocForOwner.data();
+  const ownerId = propertyDataForOwner?.owner_id as string | undefined;
+
+  if (!ownerId) {
+    logError("[AtomicBooking] SECURITY SF-001: Property has no owner_id", null, {
+      propertyId,
+    });
+    throw new HttpsError(
+      "failed-precondition",
+      "Property configuration error. Please contact support."
+    );
+  }
+
+  // Log if client sent different ownerId (potential attack attempt or stale data)
+  if (clientOwnerId && clientOwnerId !== ownerId) {
+    logInfo("[AtomicBooking] SECURITY SF-001: Client ownerId mismatch - using validated owner", {
+      clientOwnerId: String(clientOwnerId).substring(0, 8) + "...",
+      validatedOwnerId: ownerId.substring(0, 8) + "...",
+      propertyId,
+    });
   }
 
   // ========================================================================

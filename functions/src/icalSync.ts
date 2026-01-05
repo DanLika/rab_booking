@@ -77,10 +77,11 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
       hostname === domain || hostname.endsWith(`.${domain}`)
     );
 
+    // SECURITY FIX SF-002: Enable whitelist validation to prevent SSRF attacks
+    // Previously this was just logging a warning but allowing any domain
     if (!isAllowed) {
-      logWarn("[iCal Sync] URL domain not in whitelist", { hostname });
-      // For now, just log warning but allow - can be tightened later
-      // return { valid: false, error: `Domain ${hostname} is not in the allowed list.` };
+      logWarn("[iCal Sync] SECURITY SF-002: URL domain not in whitelist - BLOCKED", { hostname });
+      return { valid: false, error: `Domain ${hostname} is not in the allowed list. Contact support to add your calendar provider.` };
     }
 
     return { valid: true };

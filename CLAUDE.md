@@ -7,6 +7,7 @@
 - [CLAUDE_WIDGET_SYSTEM.md](./docs/cloud-widget-systems/CLAUDE_WIDGET_SYSTEM.md) - Widget modovi, payment logic, pricing
 - [CLAUDE_MCP_TOOLS.md](./docs/cloud-mcp-tools/CLAUDE_MCP_TOOLS.md) - MCP serveri, slash commands
 - [EMAIL_SYSTEM.md](./docs/features/email-templates/EMAIL_SYSTEM.md) - Email template-i, payment rok, reminders
+- [SECURITY_FIXES.md](./docs/SECURITY_FIXES.md) - Sigurnosne ispravke (SF-001, SF-002, ...)
 
 ---
 
@@ -596,7 +597,31 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2025-12-23 | **Version**: 6.23
+**Last Updated**: 2026-01-05 | **Version**: 6.25
+
+**Changelog 6.25**: Security Fixes (SF-001, SF-002):
+- **SF-001: Owner ID Validation in Booking Creation** (`atomicBooking.ts`):
+  - **Problem**: `ownerId` parametar dolazio direktno iz klijentskog zahtjeva bez validacije
+  - **Fix**: Sada se `owner_id` dohvaća iz property dokumenta u Firestore-u (server-side validacija)
+  - **Benefit**: Sprječava maliciozne korisnike da postave pogrešan `owner_id`
+- **SF-002: SSRF Prevention in iCal Sync** (`icalSync.ts`):
+  - **Problem**: Whitelist validacija za iCal URL-ove bila zakomentirana - server dopuštao bilo koji URL
+  - **Fix**: Omogućena whitelist validacija - samo poznate booking platforme (Booking.com, Airbnb, Google Calendar, etc.)
+  - **Breaking Change**: URL-ovi koji nisu na whitelisti sada se blokiraju
+  - **Otkrio**: Google Sentinel (automated security scan)
+- **Nova dokumentacija**: `docs/SECURITY_FIXES.md` - prati sve sigurnosne ispravke s detaljima
+
+**Changelog 6.24**: Embed Code URL Fix - Remove Subdomain Prefix:
+- **Problem**: Embed kod generirao URL sa property subdomain prefiksom (npr. `jasko-apartments.view.bookbed.io`)
+  - Subdomene nisu uvijek konfigurirane u Firebase Hosting
+  - Property name se koristio kao subdomain, što ne odgovara stvarnoj konfiguraciji
+- **Fix**: Embed kod sada uvijek koristi `view.bookbed.io` bez prefiksa
+  - Property i Unit ID parametri su dovoljni za identifikaciju
+  - Subdomene su opcionalne i koriste se samo za slug URL-ove (shareable links)
+- **Izmijenjeni fajlovi**:
+  - `embed_code_generator_dialog.dart`: `_iframeEmbedCode` sada koristi `_defaultWidgetBaseUrl`
+  - `embed_widget_guide_screen.dart`: `_generateEmbedCode` sada koristi fiksni `view.bookbed.io`
+- **Rezultat**: Embed kod radi na svim sajtovima bez potrebe za konfiguracijom subdomene
 
 **Changelog 6.23**: flutter_animate Migration Phase 2-5 Complete:
 - **Migrated Files** (AnimationController → flutter_animate):

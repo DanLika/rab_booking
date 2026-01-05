@@ -16,6 +16,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 8. [SF-008: Booking Notes Length Limit](#sf-008-booking-notes-length-limit)
 9. [SF-009: Error Handling Info Leakage Prevention](#sf-009-error-handling-info-leakage-prevention)
 10. [SF-010: Year Calendar Race Condition Fix](#sf-010-year-calendar-race-condition-fix)
+11. [SF-011: Ignore Service Account Key (CRITICAL)](#sf-011-ignore-service-account-key-critical)
 
 ---
 
@@ -658,6 +659,63 @@ Future<void> _validateAndSetRange(DateTime start, DateTime end) async {
 
 - Mala latencija pri odabiru datuma (backend provjera)
 - Bolje korisničko iskustvo (nema frustracije zbog propale rezervacije)
+
+---
+
+## SF-011: Ignore Service Account Key (CRITICAL)
+
+**Datum**: 2026-01-05  
+**Prioritet**: 🔴 Critical  
+**Status**: ✅ Riješeno  
+**Zahvaćeni fajlovi**: `functions/.gitignore`  
+**Otkrio**: Google Sentinel
+
+### Problem
+
+`functions/.gitignore` nije imao entry za `service-account-key.json`. Lokalni script `add_test_prices.js` instruira developere da preuzmu ovaj fajl za testiranje, što stvara rizik da se slučajno commitaju **pune admin credentials** za Firebase projekt.
+
+### Što je service-account-key.json?
+
+Ovaj fajl sadrži:
+- Private key za Firebase Admin SDK
+- Puni pristup Firestore bazi podataka
+- Puni pristup Firebase Authentication
+- Puni pristup Firebase Storage
+- Mogućnost brisanja cijelog projekta
+
+**Ako se commituje, napadač može:**
+- Čitati/brisati sve podatke u bazi
+- Kreirati/brisati korisničke račune
+- Pristupiti svim fajlovima u Storage-u
+- Preuzeti potpunu kontrolu nad Firebase projektom
+
+### Rješenje
+
+Dodano `service-account-key.json` u `functions/.gitignore`:
+
+```gitignore
+# CRITICAL SECURITY SF-011: Ignore Firebase service account key.
+# This file grants full admin access to the project.
+# NEVER commit this file to the repository.
+service-account-key.json
+```
+
+### Testiranje
+
+1. ✅ Kreiran dummy `functions/service-account-key.json`
+2. ✅ `git status --ignored` potvrđuje da je ignoriran
+3. ✅ Obrisan dummy fajl
+
+### Moguće nuspojave
+
+- Nema - ovo samo sprječava slučajno commitanje osjetljivog fajla
+
+### Dodatne preporuke
+
+- Ako je `service-account-key.json` ikada bio commitovan, potrebno je:
+  1. Rotirati ključ u Firebase Console
+  2. Očistiti Git history (BFG Repo-Cleaner ili git filter-branch)
+  3. Force push na sve brancheve
 
 ---
 

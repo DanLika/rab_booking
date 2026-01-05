@@ -1089,8 +1089,9 @@ class FirebaseOwnerBookingsRepository {
           // Client-side filtering by unit IDs, property, and dates
           if (!filteredUnitIds.contains(booking.unitId)) continue;
           if (propertyId != null && booking.propertyId != propertyId) continue;
-          if (startDate != null && booking.checkIn.isBefore(startDate))
+          if (startDate != null && booking.checkIn.isBefore(startDate)) {
             continue;
+          }
           if (endDate != null && booking.checkOut.isAfter(endDate)) continue;
 
           bookings.add(booking);
@@ -1201,8 +1202,9 @@ class FirebaseOwnerBookingsRepository {
           // Client-side filtering
           if (!filteredUnitIds.contains(booking.unitId)) continue;
           if (propertyId != null && booking.propertyId != propertyId) continue;
-          if (startDate != null && booking.checkIn.isBefore(startDate))
+          if (startDate != null && booking.checkIn.isBefore(startDate)) {
             continue;
+          }
           if (endDate != null && booking.checkOut.isAfter(endDate)) continue;
 
           bookings.add(booking);

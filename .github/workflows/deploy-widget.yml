@@ -47,10 +47,9 @@ jobs:
 
       - name: Copy embed.js to build
         run: |
-          mkdir -p build/web/embed
-          cp web/embed/embed.js build/web/embed/
-          cp web/embed/README.md build/web/embed/
-          cp web/embed/example.html build/web/embed/
+          # Copy embed.js from public directory (the actual location)
+          cp public/embed.js build/web/
+          # widget-test.html is for local testing only, not needed in production build
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v2

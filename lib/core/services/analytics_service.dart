@@ -223,13 +223,15 @@ class AnalyticsService {
           'is_in_iframe': isInIframe,
         },
       );
-      if (kDebugMode)
+      if (kDebugMode) {
         print(
           '[Analytics] Stripe payment initiated: $method ($browser, $deviceType)',
         );
+      }
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('[Analytics] Error logging stripe_payment_initiated: $e');
+      }
     }
   }
 
@@ -242,11 +244,13 @@ class AnalyticsService {
         name: 'stripe_popup_blocked',
         parameters: {'browser': browser, 'device_type': deviceType},
       );
-      if (kDebugMode)
+      if (kDebugMode) {
         print('[Analytics] Stripe popup blocked: $browser, $deviceType');
+      }
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('[Analytics] Error logging stripe_popup_blocked: $e');
+      }
     }
   }
 
@@ -268,13 +272,15 @@ class AnalyticsService {
           'time_to_complete_seconds': timeToCompleteSeconds,
         },
       );
-      if (kDebugMode)
+      if (kDebugMode) {
         print(
           '[Analytics] Stripe payment completed: $sessionId ($method, ${timeToCompleteSeconds}s)',
         );
+      }
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('[Analytics] Error logging stripe_payment_completed: $e');
+      }
     }
   }
 

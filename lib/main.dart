@@ -23,9 +23,10 @@ import 'l10n/app_localizations.dart';
 import 'shared/providers/repository_providers.dart';
 import 'shared/widgets/global_navigation_loader.dart';
 
-// Sentry DSN for web error tracking (Crashlytics doesn't support web)
+// GlitchTip DSN for web error tracking (Crashlytics doesn't support web)
+// GlitchTip is Sentry SDK-compatible, uses same sentry_flutter package
 const String _sentryDsn =
-    'https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144';
+    'https://25ab187e691143f9b2a14b33d1b039a1@app.glitchtip.com/14195';
 
 /// Global initialization state - tracks what has been initialized
 class AppInitState {
@@ -59,6 +60,168 @@ void main() async {
   // Start Flutter UI IMMEDIATELY - don't wait for Firebase
   // This allows the splash screen to show while initialization happens
   _runAppWithDeferredInit();
+}
+
+/// Entry point for environment-specific main files
+/// Called AFTER Firebase is initialized by the environment entry point
+void runMainApp() {
+  // Mark Firebase as ready since it was initialized by the entry point
+  if (!AppInitState.firebaseReady.isCompleted) {
+    AppInitState.firebaseReady.complete();
+  }
+
+  // Setup error handling and run app
+  _setupErrorHandling();
+  runApp(const ProviderScope(child: BookBedApp()));
+
+  // Initialize remaining services in background (SharedPreferences, Sentry)
+  _initializeRemainingServices();
+}
+
+/// Setup error handling (extracted from _runAppWithDeferredInit)
+void _setupErrorHandling() {
+  if (kReleaseMode) {
+    if (!kIsWeb) {
+      // Mobile: Use Firebase Crashlytics (will work after Firebase init)
+      FlutterError.onError = (details) {
+        if (AppInitState.isFirebaseReady) {
+          FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+        }
+      };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        if (AppInitState.isFirebaseReady) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        }
+        return true;
+      };
+    } else {
+      // Web: Handle errors gracefully, including WebGL/CanvasKit errors
+      FlutterError.onError = (details) {
+        final exception = details.exception;
+        final errorString = _safeErrorToString(exception);
+        if (errorString.contains('getParameter') ||
+            errorString.contains('WebGL') ||
+            errorString.contains('CanvasKit')) {
+          LoggingService.log(
+            'WebGL/CanvasKit error (non-fatal): ${_safeErrorToString(exception)}',
+            tag: 'WEBGL_ERROR',
+          );
+          return;
+        }
+        LoggingService.log(
+          'Flutter error: ${_safeErrorToString(exception)}',
+          tag: 'FLUTTER_ERROR',
+        );
+      };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        final errorString = _safeErrorToString(error);
+        if (errorString.contains('getParameter') ||
+            errorString.contains('WebGL') ||
+            errorString.contains('CanvasKit')) {
+          LoggingService.log(
+            'WebGL/CanvasKit error (non-fatal): $error',
+            tag: 'WEBGL_ERROR',
+          );
+          return true;
+        }
+        LoggingService.log('Platform error: $error', tag: 'PLATFORM_ERROR');
+        return true;
+      };
+    }
+  } else {
+    GlobalErrorHandler.initialize();
+  }
+
+  // Set custom ErrorWidget for graceful error display
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (kDebugMode) {
+      return Material(
+        child: Container(
+          color: const Color(0xFFFFF3F3),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Color(0xFFD32F2F)),
+              const SizedBox(height: 16),
+              const Text(
+                'Widget Error',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFD32F2F),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _safeErrorToString(details.exception),
+                style: const TextStyle(fontSize: 12, color: Color(0xFFC62828)),
+                textAlign: TextAlign.center,
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return const Material(
+      child: Center(
+        child: Text(
+          'Something went wrong',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      ),
+    );
+  };
+}
+
+/// Initialize remaining services after Firebase (SharedPreferences, Sentry)
+Future<void> _initializeRemainingServices() async {
+  LoggingService.log('Initializing remaining services...', tag: 'INIT');
+  final stopwatch = Stopwatch()..start();
+
+  try {
+    // Initialize SharedPreferences
+    LoggingService.log('Initializing SharedPreferences...', tag: 'INIT');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!AppInitState.prefsReady.isCompleted) {
+        AppInitState.prefsReady.complete(prefs);
+      }
+      LoggingService.log(
+        'SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)',
+        tag: 'INIT',
+      );
+    } catch (e, stack) {
+      LoggingService.log(
+        'SharedPreferences init failed: $e',
+        tag: 'INIT_ERROR',
+      );
+      if (!AppInitState.prefsReady.isCompleted) {
+        AppInitState.prefsReady.completeError(e, stack);
+      }
+    }
+
+    // Initialize Sentry for web (non-blocking)
+    if (kReleaseMode && kIsWeb && _sentryDsn.isNotEmpty) {
+      unawaited(_initSentry());
+    }
+
+    // Mark all initialization as complete
+    if (!AppInitState.allReady.isCompleted) {
+      AppInitState.allReady.complete();
+    }
+    LoggingService.log(
+      'All initialization complete (${stopwatch.elapsedMilliseconds}ms)',
+      tag: 'INIT',
+    );
+  } catch (e, stack) {
+    LoggingService.log('Initialization error: $e', tag: 'INIT_ERROR');
+    if (!AppInitState.allReady.isCompleted) {
+      AppInitState.allReady.completeError(e, stack);
+    }
+  }
 }
 
 /// Runs the app immediately, initialization happens in background

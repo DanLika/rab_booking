@@ -143,8 +143,9 @@ class ICalExportConfig {
   /// Returns true if exportUrl is null (not set) or has valid HTTP/HTTPS format.
   /// Returns false only if exportUrl is set but has invalid format.
   bool get hasValidExportUrl {
-    if (exportUrl == null)
+    if (exportUrl == null) {
       return true; // Not set = valid (will fail isConfigured)
+    }
     try {
       final uri = Uri.parse(exportUrl!);
       return uri.hasScheme &&

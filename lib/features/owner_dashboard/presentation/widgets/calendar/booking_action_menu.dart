@@ -523,8 +523,13 @@ class BookingActionBottomSheet extends ConsumerWidget {
 /// Shown on long press of a booking block
 class BookingMoveToUnitMenu extends ConsumerStatefulWidget {
   final BookingModel booking;
+  final BuildContext parentContext;
 
-  const BookingMoveToUnitMenu({super.key, required this.booking});
+  const BookingMoveToUnitMenu({
+    super.key,
+    required this.booking,
+    required this.parentContext,
+  });
 
   @override
   ConsumerState<BookingMoveToUnitMenu> createState() =>
@@ -620,41 +625,40 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
 
               const SizedBox(height: 16),
 
-              // Units list
-              unitsAsync.when(
-                data: (units) {
-                  // Filter out current unit
-                  final otherUnits = units
-                      .where((u) => u.id != widget.booking.unitId)
-                      .toList();
+              // Units list - use Flexible to allow list to shrink
+              Flexible(
+                child: unitsAsync.when(
+                  data: (units) {
+                    // Filter out current unit
+                    final otherUnits = units
+                        .where((u) => u.id != widget.booking.unitId)
+                        .toList();
 
-                  if (otherUnits.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 48,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            l10n.bookingActionNoOtherUnits,
-                            style: TextStyle(
+                    if (otherUnits.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 48,
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                            const SizedBox(height: 12),
+                            Text(
+                              l10n.bookingActionNoOtherUnits,
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
 
-                  return ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.6,
-                    ),
-                    child: ListView.builder(
+                    return ListView.builder(
+                      shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: otherUnits.length,
                       itemBuilder: (context, index) {
@@ -667,9 +671,11 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                               onTap: _isProcessing
                                   ? null
                                   : () async {
+                                      // Close dialog first, then move booking
+                                      // Use widget.parentContext for snackbars (dialog context won't be valid)
                                       Navigator.pop(context);
                                       await _moveBookingToUnit(
-                                        context,
+                                        widget.parentContext,
                                         unit,
                                         l10n,
                                       );
@@ -744,10 +750,9 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                           ),
                         );
                       },
-                    ),
-                  );
-                },
-                loading: () => const Padding(
+                    );
+                  },
+                  loading: () => const Padding(
                   padding: EdgeInsets.all(24),
                   child: Center(child: CircularProgressIndicator()),
                 ),
@@ -759,6 +764,7 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                     ),
                   ),
                 ),
+              ),
               ),
 
               const SizedBox(height: 16),

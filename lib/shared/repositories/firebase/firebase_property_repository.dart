@@ -168,8 +168,9 @@ class FirebasePropertyRepository implements PropertyRepository {
   @override
   Future<PropertyModel> togglePropertyStatus(String id, bool isActive) async {
     final doc = await _firestore.collection('properties').doc(id).get();
-    if (!doc.exists)
+    if (!doc.exists) {
       throw PropertyException('Property not found', code: 'property/not-found');
+    }
 
     final property = PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     final updated = property.copyWith(isActive: isActive);
@@ -185,8 +186,9 @@ class FirebasePropertyRepository implements PropertyRepository {
     int reviewCount,
   ) async {
     final doc = await _firestore.collection('properties').doc(id).get();
-    if (!doc.exists)
+    if (!doc.exists) {
       throw PropertyException('Property not found', code: 'property/not-found');
+    }
 
     final property = PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     final updated = property.copyWith(rating: rating, reviewCount: reviewCount);

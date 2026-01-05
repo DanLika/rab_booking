@@ -8,9 +8,9 @@
 import * as Sentry from "@sentry/node";
 import {logInfo, logError} from "./logger";
 
-// Sentry DSN (same project as Flutter apps)
+// GlitchTip DSN (Sentry SDK-compatible, same project as Flutter apps)
 const SENTRY_DSN =
-  "https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144";
+  "https://25ab187e691143f9b2a14b33d1b039a1@app.glitchtip.com/14195";
 
 // Track initialization state
 let isInitialized = false;

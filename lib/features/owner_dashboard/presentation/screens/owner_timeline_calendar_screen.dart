@@ -31,20 +31,17 @@ class OwnerTimelineCalendarScreen extends ConsumerStatefulWidget {
   const OwnerTimelineCalendarScreen({super.key});
 
   @override
-  ConsumerState<OwnerTimelineCalendarScreen> createState() =>
-      _OwnerTimelineCalendarScreenState();
+  ConsumerState<OwnerTimelineCalendarScreen> createState() => _OwnerTimelineCalendarScreenState();
 }
 
-class _OwnerTimelineCalendarScreenState
-    extends ConsumerState<OwnerTimelineCalendarScreen>
+class _OwnerTimelineCalendarScreenState extends ConsumerState<OwnerTimelineCalendarScreen>
     with CalendarCommonMethodsMixin {
   late DateRangeSelection _currentRange;
 
   // GlobalKey for accessing TimelineCalendarWidget's scroll methods
   final GlobalKey timelineKey = GlobalKey();
   bool _showSummary = false;
-  int _visibleDays =
-      30; // Default to 30 days, will be updated based on screen size
+  int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
 
   // FIXED: Flag to prevent onVisibleDateRangeChanged from overwriting _currentRange
   // during programmatic navigation (Today, Previous, Next, DatePicker)
@@ -70,17 +67,12 @@ class _OwnerTimelineCalendarScreenState
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Update visible days based on screen width
-    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(
-      context,
-    );
+    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(context);
     if (newVisibleDays != _visibleDays) {
       setState(() {
         _visibleDays = newVisibleDays;
         // Recreate range with new day count
-        _currentRange = DateRangeSelection.days(
-          _currentRange.startDate,
-          _visibleDays,
-        );
+        _currentRange = DateRangeSelection.days(_currentRange.startDate, _visibleDays);
       });
     }
   }
@@ -113,28 +105,20 @@ class _OwnerTimelineCalendarScreenState
 
     return Shortcuts(
       shortcuts: <ShortcutActivator, Intent>{
-        LogicalKeySet(LogicalKeyboardKey.arrowLeft):
-            const _PreviousPeriodIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _PreviousPeriodIntent(),
         LogicalKeySet(LogicalKeyboardKey.arrowRight): const _NextPeriodIntent(),
         LogicalKeySet(LogicalKeyboardKey.keyT): const _TodayIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
-          _PreviousPeriodIntent: CallbackAction<_PreviousPeriodIntent>(
-            onInvoke: (_) => _goToPreviousPeriod(),
-          ),
-          _NextPeriodIntent: CallbackAction<_NextPeriodIntent>(
-            onInvoke: (_) => _goToNextPeriod(),
-          ),
-          _TodayIntent: CallbackAction<_TodayIntent>(
-            onInvoke: (_) => _goToToday(),
-          ),
+          _PreviousPeriodIntent: CallbackAction<_PreviousPeriodIntent>(onInvoke: (_) => _goToPreviousPeriod()),
+          _NextPeriodIntent: CallbackAction<_NextPeriodIntent>(onInvoke: (_) => _goToNextPeriod()),
+          _TodayIntent: CallbackAction<_TodayIntent>(onInvoke: (_) => _goToToday()),
         },
         child: Focus(
           autofocus: true,
           child: Scaffold(
-            backgroundColor:
-                Colors.transparent, // Transparent to show gradient background
+            backgroundColor: Colors.transparent, // Transparent to show gradient background
             appBar: CommonAppBar(
               title: calendarTitle,
               leadingIcon: Icons.menu,
@@ -142,9 +126,7 @@ class _OwnerTimelineCalendarScreenState
             ),
             drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
             body: Container(
-              decoration: BoxDecoration(
-                gradient: context.gradients.pageBackground,
-              ),
+              decoration: BoxDecoration(gradient: context.gradients.pageBackground),
               child: Column(
                 children: [
                   // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
@@ -152,16 +134,10 @@ class _OwnerTimelineCalendarScreenState
                   if (hasUnits)
                     Consumer(
                       builder: (context, ref, child) {
-                        final unreadCountAsync = ref.watch(
-                          unreadNotificationsCountProvider,
-                        );
+                        final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
                         final multiSelectState = ref.watch(multiSelectProvider);
-                        final conflictCount = ref.watch(
-                          overbookingConflictCountProvider,
-                        );
-                        final showEmptyUnits = ref.watch(
-                          showEmptyUnitsProvider,
-                        );
+                        final conflictCount = ref.watch(overbookingConflictCountProvider);
+                        final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
                         final filters = ref.watch(calendarFiltersProvider);
                         final activeFilterCount = filters.activeFilterCount;
 
@@ -190,29 +166,30 @@ class _OwnerTimelineCalendarScreenState
                             setState(() {
                               _showSummary = value;
                             });
-                            // AnimatedContainer with explicit height handles animation reliably
-                            // No additional rebuild needed
+                            // Force immediate rebuild to prevent delay
+                            // Without this, summary bar wouldn't appear until user scrolled
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  // Trigger second rebuild to ensure AnimatedSize processes
+                                });
+                              }
+                            });
                           },
                           // Show empty units toggle (persisted via provider)
                           showEmptyUnitsToggle: true,
                           isEmptyUnitsVisible: showEmptyUnits,
                           onEmptyUnitsToggleChanged: (value) {
-                            ref
-                                .read(showEmptyUnitsProvider.notifier)
-                                .setValue(value);
+                            ref.read(showEmptyUnitsProvider.notifier).setValue(value);
                           },
                           // ENHANCED: Multi-select mode toggle
                           showMultiSelectToggle: true,
                           isMultiSelectActive: multiSelectState.isEnabled,
                           onMultiSelectToggle: () {
                             if (multiSelectState.isEnabled) {
-                              ref
-                                  .read(multiSelectProvider.notifier)
-                                  .disableMultiSelect();
+                              ref.read(multiSelectProvider.notifier).disableMultiSelect();
                             } else {
-                              ref
-                                  .read(multiSelectProvider.notifier)
-                                  .enableMultiSelect();
+                              ref.read(multiSelectProvider.notifier).enableMultiSelect();
                             }
                           },
                           // Overbooking conflict badge
@@ -221,13 +198,9 @@ class _OwnerTimelineCalendarScreenState
                             _handleOverbookingBadgeTap(ref);
                           },
                           // Active filters inline display
-                          activeFilterCount: activeFilterCount > 0
-                              ? activeFilterCount
-                              : null,
+                          activeFilterCount: activeFilterCount > 0 ? activeFilterCount : null,
                           onClearFilters: () {
-                            ref
-                                .read(calendarFiltersProvider.notifier)
-                                .clearFilters();
+                            ref.read(calendarFiltersProvider.notifier).clearFilters();
                             // Force refresh of calendar data after clearing filters
                             ref.invalidate(filteredUnitsProvider);
                             ref.invalidate(filteredCalendarBookingsProvider);
@@ -241,16 +214,13 @@ class _OwnerTimelineCalendarScreenState
                   Expanded(
                     child: Consumer(
                       builder: (context, ref, child) {
-                        final showEmptyUnits = ref.watch(
-                          showEmptyUnitsProvider,
-                        );
+                        final showEmptyUnits = ref.watch(showEmptyUnitsProvider);
                         return TimelineCalendarWidget(
                           // FIXED: Only use counter in key, NOT startDate
                           // Including startDate caused infinite rebuild loop:
                           // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
                           key: timelineKey,
-                          initialScrollToDate: _currentRange
-                              .startDate, // Scroll to selected date
+                          initialScrollToDate: _currentRange.startDate, // Scroll to selected date
                           showSummary: _showSummary,
                           showEmptyUnits: showEmptyUnits,
                           // Problem #19 fix: Pass forceScrollKey to ensure Today button scrolls
@@ -263,10 +233,7 @@ class _OwnerTimelineCalendarScreenState
                             _verticalScrollOffset = offset;
                           },
                           onCellLongPress: (date, unit) =>
-                              _showCreateBookingDialog(
-                                initialCheckIn: date,
-                                unitId: unit.id,
-                              ),
+                              _showCreateBookingDialog(initialCheckIn: date, unitId: unit.id),
                           onUnitNameTap: _showUnitFutureBookings,
                           onVisibleDateRangeChanged: (startDate) {
                             // FIXED: Only update toolbar when user scrolls MANUALLY
@@ -276,10 +243,7 @@ class _OwnerTimelineCalendarScreenState
 
                             // Update toolbar date range when user scrolls manually
                             setState(() {
-                              _currentRange = DateRangeSelection.days(
-                                startDate,
-                                _visibleDays,
-                              );
+                              _currentRange = DateRangeSelection.days(startDate, _visibleDays);
                             });
                           },
                         );
@@ -360,10 +324,7 @@ class _OwnerTimelineCalendarScreenState
       final conflictDate = firstConflict.conflictDates.first;
       // Use dynamic call since we can't import private class
       try {
-        (timelineState as dynamic).scrollToConflict(
-          firstConflict.unitId,
-          conflictDate,
-        );
+        (timelineState as dynamic).scrollToConflict(firstConflict.unitId, conflictDate);
       } catch (e) {
         // If scroll fails, just show snackbar
         debugPrint('Failed to scroll to conflict: $e');
@@ -372,12 +333,8 @@ class _OwnerTimelineCalendarScreenState
 
     // Show snackbar with conflict details
     // Include platform source for external bookings (Booking.com, Airbnb, etc.)
-    final source1 = firstConflict.booking1.isExternalBooking
-        ? ' (${firstConflict.booking1.sourceDisplayName})'
-        : '';
-    final source2 = firstConflict.booking2.isExternalBooking
-        ? ' (${firstConflict.booking2.sourceDisplayName})'
-        : '';
+    final source1 = firstConflict.booking1.isExternalBooking ? ' (${firstConflict.booking1.sourceDisplayName})' : '';
+    final source2 = firstConflict.booking2.isExternalBooking ? ' (${firstConflict.booking2.sourceDisplayName})' : '';
     final guest1 = '${firstConflict.booking1.guestName ?? 'Unknown'}$source1';
     final guest2 = '${firstConflict.booking2.guestName ?? 'Unknown'}$source2';
     final l10n = AppLocalizations.of(context);
@@ -400,34 +357,25 @@ class _OwnerTimelineCalendarScreenState
   }
 
   /// Show booking details dialog for a conflict
-  void _showBookingDetailsFromConflict(
-    WidgetRef ref,
-    OverbookingConflict conflict,
-  ) async {
+  void _showBookingDetailsFromConflict(WidgetRef ref, OverbookingConflict conflict) async {
     // Try to get booking from repository
     try {
       final repository = ref.read(ownerBookingsRepositoryProvider);
-      final ownerBooking = await repository.getOwnerBookingById(
-        conflict.booking1.id,
-      );
+      final ownerBooking = await repository.getOwnerBookingById(conflict.booking1.id);
 
       if (ownerBooking != null && mounted) {
         await showDialog(
           context: context,
-          builder: (context) =>
-              BookingDetailsDialog(ownerBooking: ownerBooking),
+          builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
         );
       }
     } catch (e) {
       // If booking not found, show error
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.ownerBookingsNotFound),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.ownerBookingsNotFound), backgroundColor: Colors.red));
       }
     }
   }
@@ -505,33 +453,23 @@ class _OwnerTimelineCalendarScreenState
     if (mounted) {
       await showDialog(
         context: context,
-        builder: (context) => UnitFutureBookingsDialog(
-          unit: unit,
-          bookings: futureBookings,
-          onBookingTap: showBookingDetailsDialog,
-        ),
+        builder: (context) =>
+            UnitFutureBookingsDialog(unit: unit, bookings: futureBookings, onBookingTap: showBookingDetailsDialog),
       );
     }
   }
 
   /// Show create booking dialog
   /// ENHANCED: Now accepts optional initialCheckIn date and unitId for auto-fill
-  void _showCreateBookingDialog({
-    DateTime? initialCheckIn,
-    String? unitId,
-  }) async {
+  void _showCreateBookingDialog({DateTime? initialCheckIn, String? unitId}) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) =>
-          BookingCreateDialog(initialCheckIn: initialCheckIn, unitId: unitId),
+      builder: (context) => BookingCreateDialog(initialCheckIn: initialCheckIn, unitId: unitId),
     );
 
     // If booking was created successfully, refresh calendar
     if (result == true && mounted) {
-      await Future.wait([
-        ref.refresh(calendarBookingsProvider.future),
-        ref.refresh(allOwnerUnitsProvider.future),
-      ]);
+      await Future.wait([ref.refresh(calendarBookingsProvider.future), ref.refresh(allOwnerUnitsProvider.future)]);
     }
   }
 
@@ -575,51 +513,76 @@ class _AnimatedGradientFAB extends StatefulWidget {
 }
 
 class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
-  bool _isHovered = false;
-  bool _isPressed = false;
+  // SECURITY FIX SF-016: Use ValueNotifier instead of setState for hover/press state
+  // This prevents unnecessary rebuilds of the entire FAB widget on each state change
+  late final ValueNotifier<bool> _isHoveredNotifier;
+  late final ValueNotifier<bool> _isPressedNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _isHoveredNotifier = ValueNotifier<bool>(false);
+    _isPressedNotifier = ValueNotifier<bool>(false);
+  }
+
+  @override
+  void dispose() {
+    _isHoveredNotifier.dispose();
+    _isPressedNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => _isHoveredNotifier.value = true,
+      onExit: (_) => _isHoveredNotifier.value = false,
       child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapDown: (_) => _isPressedNotifier.value = true,
         onTapUp: (_) {
-          setState(() => _isPressed = false);
+          _isPressedNotifier.value = false;
           widget.onPressed();
         },
-        onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          width: 56,
-          height: 56,
-          transform: Matrix4.diagonal3Values(
-            _isPressed ? 0.92 : (_isHovered ? 1.08 : 1.0),
-            _isPressed ? 0.92 : (_isHovered ? 1.08 : 1.0),
-            1.0,
-          ),
-          transformAlignment: Alignment.center,
-          decoration: BoxDecoration(
-            gradient: widget.gradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: widget.gradient.colors.first.withAlpha(
-                  ((_isHovered ? 0.5 : 0.35) * 255).toInt(),
-                ),
-                blurRadius: _isHovered ? 20 : 12,
-                offset: Offset(0, _isHovered ? 8 : 4),
-                spreadRadius: _isHovered ? 2 : 0,
-              ),
-            ],
-          ),
-          child: AnimatedRotation(
-            duration: const Duration(milliseconds: 200),
-            turns: _isHovered ? 0.125 : 0, // 45 degree rotation on hover
-            child: const Icon(Icons.add, color: Colors.white, size: 28),
-          ),
+        onTapCancel: () => _isPressedNotifier.value = false,
+        // SF-016: Nested ValueListenableBuilders to rebuild only FAB content
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _isHoveredNotifier,
+          builder: (context, isHovered, _) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: _isPressedNotifier,
+              builder: (context, isPressed, _) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  width: 56,
+                  height: 56,
+                  transform: Matrix4.diagonal3Values(
+                    isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
+                    isPressed ? 0.92 : (isHovered ? 1.08 : 1.0),
+                    1.0,
+                  ),
+                  transformAlignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: widget.gradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.gradient.colors.first.withAlpha(((isHovered ? 0.5 : 0.35) * 255).toInt()),
+                        blurRadius: isHovered ? 20 : 12,
+                        offset: Offset(0, isHovered ? 8 : 4),
+                        spreadRadius: isHovered ? 2 : 0,
+                      ),
+                    ],
+                  ),
+                  child: AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    turns: isHovered ? 0.125 : 0, // 45 degree rotation on hover
+                    child: const Icon(Icons.add, color: Colors.white, size: 28),
+                  ),
+                );
+              },
+            );
+          },
         ),
       ),
     );

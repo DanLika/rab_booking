@@ -14,9 +14,10 @@ import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options.dart';
 
-// Sentry DSN for widget error tracking (same project as owner dashboard)
+// GlitchTip DSN for widget error tracking (same project as owner dashboard)
+// GlitchTip is Sentry SDK-compatible, uses same sentry_flutter package
 const String _sentryDsn =
-    'https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144';
+    'https://25ab187e691143f9b2a14b33d1b039a1@app.glitchtip.com/14195';
 
 /// Widget-only entry point for embeddable booking widget
 ///

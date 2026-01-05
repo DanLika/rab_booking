@@ -207,8 +207,9 @@ class FirebaseBookingRepository implements BookingRepository {
   ) async {
     // NEW STRUCTURE: Fetch booking first to get path
     final booking = await fetchBookingById(id);
-    if (booking == null)
+    if (booking == null) {
       throw BookingException('Booking not found', code: 'booking/not-found');
+    }
 
     final updated = booking.copyWith(status: status, updatedAt: DateTime.now());
 
@@ -227,8 +228,9 @@ class FirebaseBookingRepository implements BookingRepository {
   Future<BookingModel> cancelBooking(String id, String reason) async {
     // NEW STRUCTURE: Fetch booking first to get path
     final booking = await fetchBookingById(id);
-    if (booking == null)
+    if (booking == null) {
       throw BookingException('Booking not found', code: 'booking/not-found');
+    }
 
     final cancelled = booking.copyWith(
       status: BookingStatus.cancelled,
@@ -425,8 +427,9 @@ class FirebaseBookingRepository implements BookingRepository {
   }) async {
     // NEW STRUCTURE: Fetch booking first to get path
     final booking = await fetchBookingById(bookingId);
-    if (booking == null)
+    if (booking == null) {
       throw BookingException('Booking not found', code: 'booking/not-found');
+    }
 
     final updated = booking.copyWith(
       paidAmount: paidAmount,
@@ -449,8 +452,9 @@ class FirebaseBookingRepository implements BookingRepository {
   Future<BookingModel> completeBookingPayment(String bookingId) async {
     // NEW STRUCTURE: Fetch booking first to get path
     final booking = await fetchBookingById(bookingId);
-    if (booking == null)
+    if (booking == null) {
       throw BookingException('Booking not found', code: 'booking/not-found');
+    }
 
     final completed = booking.copyWith(
       paidAmount: booking.totalPrice,

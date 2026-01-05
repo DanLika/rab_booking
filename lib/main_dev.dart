@@ -1,0 +1,29 @@
+// Development entry point
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'core/config/environment.dart';
+import 'firebase_options_dev.dart';
+import 'main.dart' as app;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Set environment
+  EnvironmentConfig.setEnvironment(Environment.development);
+
+  // Initialize Firebase with dev options
+  await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+
+  // Connect to emulators in development
+  // await _connectToEmulators();
+
+  app.runMainApp();
+}
+
+// Future<void> _connectToEmulators() async {
+//   final host = 'localhost';
+//   FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+//   await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+//   FirebaseStorage.instance.useStorageEmulator(host, 9199);
+//   FirebaseFunctions.instance.useFunctionsEmulator(host, 5001);
+// }

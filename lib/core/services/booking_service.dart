@@ -174,21 +174,25 @@ class BookingService {
       // Validate required fields before sending
       final missingFields = <String>[];
       if (requestData['unitId'] == null ||
-          (requestData['unitId'] as String).isEmpty)
+          (requestData['unitId'] as String).isEmpty) {
         missingFields.add('unitId');
+      }
       if (requestData['propertyId'] == null ||
           (requestData['propertyId'] as String).isEmpty) {
         missingFields.add('propertyId');
       }
       if (requestData['ownerId'] == null ||
-          (requestData['ownerId'] as String).isEmpty)
+          (requestData['ownerId'] as String).isEmpty) {
         missingFields.add('ownerId');
+      }
       if (requestData['checkIn'] == null ||
-          (requestData['checkIn'] as String).isEmpty)
+          (requestData['checkIn'] as String).isEmpty) {
         missingFields.add('checkIn');
+      }
       if (requestData['checkOut'] == null ||
-          (requestData['checkOut'] as String).isEmpty)
+          (requestData['checkOut'] as String).isEmpty) {
         missingFields.add('checkOut');
+      }
       if (requestData['guestName'] == null ||
           (requestData['guestName'] as String).isEmpty) {
         missingFields.add('guestName');

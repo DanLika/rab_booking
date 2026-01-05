@@ -21,6 +21,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 13. [SF-013: Haptic Feedback on Password Toggle](#sf-013-haptic-feedback-on-password-toggle)
 14. [SF-014: Prevent PII Exposure in Booking Widget (HIGH)](#sf-014-prevent-pii-exposure-in-booking-widget-high)
 15. [SF-015: DebouncedSearchField ValueNotifier Optimization](#sf-015-debouncedsearchfield-valuenotifier-optimization)
+16. [SF-016: AnimatedGradientFAB ValueNotifier Optimization](#sf-016-animatedgradientfab-valuenotifier-optimization)
 
 ---
 
@@ -983,6 +984,102 @@ suffixIcon: ValueListenableBuilder<bool>(
 - Prije: Cijeli widget se rebuilda na svaki keystroke
 - Poslije: Samo `ValueListenableBuilder` i clear button se rebuilda
 - Rezultat: Manje CPU usage, glatkije tipkanje na sporijim uređajima
+
+### Moguće nuspojave
+
+- Nema - ovo je čista optimizacija bez promjene funkcionalnosti
+
+---
+
+## SF-016: AnimatedGradientFAB ValueNotifier Optimization
+
+**Datum**: 2026-01-05  
+**Prioritet**: Low  
+**Status**: ✅ Riješeno  
+**Zahvaćeni fajlovi**: `lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart`  
+**Predložio**: Google Bolt
+
+### Problem
+
+`_AnimatedGradientFAB` widget je koristio `setState()` za toggle hover i press stanja. Svaki hover ili press event je uzrokovao rebuild cijelog FAB widgeta, što je nepotrebno jer se mijenja samo vizualni izgled (scale, shadow, rotation).
+
+**Prije:**
+```dart
+class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      // ...
+    );
+  }
+}
+```
+
+### Rješenje
+
+Zamjena `setState` s `ValueNotifier` + `ValueListenableBuilder` pattern:
+
+```dart
+class _AnimatedGradientFABState extends State<_AnimatedGradientFAB> {
+  late final ValueNotifier<bool> _isHoveredNotifier;
+  late final ValueNotifier<bool> _isPressedNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _isHoveredNotifier = ValueNotifier<bool>(false);
+    _isPressedNotifier = ValueNotifier<bool>(false);
+  }
+
+  @override
+  void dispose() {
+    _isHoveredNotifier.dispose();
+    _isPressedNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => _isHoveredNotifier.value = true,
+      onExit: (_) => _isHoveredNotifier.value = false,
+      child: GestureDetector(
+        // ...
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _isHoveredNotifier,
+          builder: (context, isHovered, _) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: _isPressedNotifier,
+              builder: (context, isPressed, _) {
+                return AnimatedContainer(/* ... */);
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+```
+
+### Testiranje
+
+1. ✅ Hover efekt - FAB se povećava na 1.08x
+2. ✅ Press efekt - FAB se smanjuje na 0.92x
+3. ✅ Shadow animacija - shadow se povećava na hover
+4. ✅ Rotation animacija - ikona se rotira 45° na hover
+5. ✅ Dispose - notifieri se pravilno čiste
+
+### Performance poboljšanje
+
+- Prije: Cijeli FAB widget se rebuilda na svaki hover/press event
+- Poslije: Samo `AnimatedContainer` unutar `ValueListenableBuilder` se rebuilda
+- Rezultat: Manje CPU usage, glatkije animacije
 
 ### Moguće nuspojave
 

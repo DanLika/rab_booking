@@ -1,16 +1,27 @@
 {
   "projects": {
-    "default": "rab-booking-248fc"
+    "default": "rab-booking-248fc",
+    "development": "bookbed-dev",
+    "staging": "bookbed-staging",
+    "production": "rab-booking-248fc"
   },
   "targets": {
     "rab-booking-248fc": {
       "hosting": {
-        "widget": [
-          "bookbed-widget"
-        ],
-        "owner": [
-          "bookbed-owner"
-        ]
+        "widget": ["bookbed-widget"],
+        "owner": ["bookbed-owner"]
+      }
+    },
+    "bookbed-dev": {
+      "hosting": {
+        "widget": ["bookbed-widget-dev"],
+        "owner": ["bookbed-owner-dev"]
+      }
+    },
+    "bookbed-staging": {
+      "hosting": {
+        "widget": ["bookbed-widget-staging"],
+        "owner": ["bookbed-owner-staging"]
       }
     }
   },

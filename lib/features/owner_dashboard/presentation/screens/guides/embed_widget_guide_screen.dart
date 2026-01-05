@@ -21,25 +21,20 @@ class EmbedWidgetGuideScreen extends ConsumerStatefulWidget {
   const EmbedWidgetGuideScreen({super.key});
 
   @override
-  ConsumerState<EmbedWidgetGuideScreen> createState() =>
-      _EmbedWidgetGuideScreenState();
+  ConsumerState<EmbedWidgetGuideScreen> createState() => _EmbedWidgetGuideScreenState();
 }
 
-class _EmbedWidgetGuideScreenState
-    extends ConsumerState<EmbedWidgetGuideScreen> {
+class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen> {
   static const String _subdomainBaseDomain = 'view.bookbed.io';
 
   /// Generate direct iframe embed code for a unit
   /// Works on any website - just copy and paste
   /// Responsive height using aspect-ratio with min/max constraints
-  String _generateEmbedCode(
-    String propertyId,
-    UnitModel unit,
-    String? subdomain,
-  ) {
-    final baseUrl = (subdomain != null && subdomain.isNotEmpty)
-        ? 'https://$subdomain.$_subdomainBaseDomain'
-        : 'https://$_subdomainBaseDomain';
+  /// Always uses view.bookbed.io (no subdomain) - property/unit IDs are sufficient
+  String _generateEmbedCode(String propertyId, UnitModel unit, String? subdomain) {
+    // Always use base domain for iframe embeds - no subdomain needed
+    // Subdomains are optional and may not be configured for all properties
+    const baseUrl = 'https://$_subdomainBaseDomain';
     final url = '$baseUrl/?property=$propertyId&unit=${unit.id}&embed=true';
     return '''<iframe
   src="$url"
@@ -123,19 +118,12 @@ class _EmbedWidgetGuideScreenState
                 children: [
                   Text(
                     l10n.embedGuideHeaderTitle,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     l10n.embedGuideHeaderSubtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.9)),
                   ),
                 ],
               ),
@@ -164,48 +152,24 @@ class _EmbedWidgetGuideScreenState
         children: [
           Row(
             children: [
-              Icon(
-                Icons.check_circle,
-                color: theme.colorScheme.success,
-                size: 24,
-              ),
+              Icon(Icons.check_circle, color: theme.colorScheme.success, size: 24),
               const SizedBox(width: 8),
               Text(
                 l10n.embedGuideSimpleStepsTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.success,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.success),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildSimpleStep(
-            number: '1',
-            text: l10n.embedGuideSimpleStep1,
-            icon: Icons.content_copy,
-          ),
-          _buildSimpleStep(
-            number: '2',
-            text: l10n.embedGuideSimpleStep2,
-            icon: Icons.code,
-          ),
-          _buildSimpleStep(
-            number: '3',
-            text: l10n.embedGuideSimpleStep3,
-            icon: Icons.publish,
-          ),
+          _buildSimpleStep(number: '1', text: l10n.embedGuideSimpleStep1, icon: Icons.content_copy),
+          _buildSimpleStep(number: '2', text: l10n.embedGuideSimpleStep2, icon: Icons.code),
+          _buildSimpleStep(number: '3', text: l10n.embedGuideSimpleStep3, icon: Icons.publish),
         ],
       ),
     );
   }
 
-  Widget _buildSimpleStep({
-    required String number,
-    required String text,
-    required IconData icon,
-  }) {
+  Widget _buildSimpleStep({required String number, required String text, required IconData icon}) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -216,18 +180,11 @@ class _EmbedWidgetGuideScreenState
           Container(
             width: 28,
             height: 28,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
             child: Center(
               child: Text(
                 number,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
           ),
@@ -235,17 +192,10 @@ class _EmbedWidgetGuideScreenState
           Icon(
             icon,
             size: 20,
-            color: isDark
-                ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                : Colors.grey.shade600,
+            color: isDark ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : Colors.grey.shade600,
           ),
           const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14, height: 1.4),
-            ),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14, height: 1.4))),
         ],
       ),
     );
@@ -282,11 +232,7 @@ class _EmbedWidgetGuideScreenState
             tab: EmbedHelpTab.installation,
           ),
           const SizedBox(height: 8),
-          _buildHelpLinkButton(
-            icon: Icons.tune,
-            label: l10n.embedGuideAdvancedOptions,
-            tab: EmbedHelpTab.advanced,
-          ),
+          _buildHelpLinkButton(icon: Icons.tune, label: l10n.embedGuideAdvancedOptions, tab: EmbedHelpTab.advanced),
           const SizedBox(height: 8),
           _buildHelpLinkButton(
             icon: Icons.build,
@@ -298,11 +244,7 @@ class _EmbedWidgetGuideScreenState
     );
   }
 
-  Widget _buildHelpLinkButton({
-    required IconData icon,
-    required String label,
-    required EmbedHelpTab tab,
-  }) {
+  Widget _buildHelpLinkButton({required IconData icon, required String label, required EmbedHelpTab tab}) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -310,21 +252,13 @@ class _EmbedWidgetGuideScreenState
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => EmbedHelpScreen(initialTab: tab),
-            ),
-          );
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => EmbedHelpScreen(initialTab: tab)));
         },
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: isDark
-                ? theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  )
-                : Colors.grey.shade100,
+            color: isDark ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5) : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -334,18 +268,10 @@ class _EmbedWidgetGuideScreenState
               Expanded(
                 child: Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface),
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
+              Icon(Icons.chevron_right, size: 20, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
             ],
           ),
         ),
@@ -383,11 +309,7 @@ class _EmbedWidgetGuideScreenState
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    Icons.code,
-                    color: theme.colorScheme.primary,
-                    size: 24,
-                  ),
+                  child: Icon(Icons.code, color: theme.colorScheme.primary, size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -396,20 +318,11 @@ class _EmbedWidgetGuideScreenState
                     children: [
                       Text(
                         l10n.embedGuideYourEmbedCodes,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
                       ),
                       Text(
                         l10n.embedGuideCopyIframe,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                       ),
                     ],
                   ),
@@ -425,25 +338,16 @@ class _EmbedWidgetGuideScreenState
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withAlpha(20),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withAlpha(50),
-                ),
+                border: Border.all(color: theme.colorScheme.primary.withAlpha(50)),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.translate,
-                    size: 20,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(Icons.translate, size: 20, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.embedGuideLanguageNote,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurface,
-                      ),
+                      style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
                     ),
                   ),
                 ],
@@ -462,8 +366,7 @@ class _EmbedWidgetGuideScreenState
                 }
 
                 return unitsAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Text('${l10n.error}: $e'),
                   data: (units) {
                     if (units.isEmpty) {
@@ -473,17 +376,12 @@ class _EmbedWidgetGuideScreenState
                     // Group units by property
                     return Column(
                       children: properties.map((property) {
-                        final propertyUnits = units
-                            .where((u) => u.propertyId == property.id)
-                            .toList();
+                        final propertyUnits = units.where((u) => u.propertyId == property.id).toList();
                         if (propertyUnits.isEmpty) {
                           return const SizedBox.shrink();
                         }
 
-                        return _buildPropertyUnitsSection(
-                          property,
-                          propertyUnits,
-                        );
+                        return _buildPropertyUnitsSection(property, propertyUnits);
                       }).toList(),
                     );
                   },
@@ -497,23 +395,16 @@ class _EmbedWidgetGuideScreenState
   }
 
   /// Build section for a single property with its units
-  Widget _buildPropertyUnitsSection(
-    PropertyModel property,
-    List<UnitModel> units,
-  ) {
+  Widget _buildPropertyUnitsSection(PropertyModel property, List<UnitModel> units) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.surfaceContainerHighest
-            : Colors.grey.shade50,
+        color: isDark ? theme.colorScheme.surfaceContainerHighest : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? theme.colorScheme.outline : Colors.grey.shade300,
-        ),
+        border: Border.all(color: isDark ? theme.colorScheme.outline : Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -522,48 +413,26 @@ class _EmbedWidgetGuideScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark
-                  ? theme.colorScheme.surfaceContainerHigh
-                  : Colors.grey.shade100,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(11),
-              ),
+              color: isDark ? theme.colorScheme.surfaceContainerHigh : Colors.grey.shade100,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.apartment,
-                  size: 20,
-                  color: theme.colorScheme.primary,
-                ),
+                Icon(Icons.apartment, size: 20, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    property.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text(property.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 ),
-                if (property.subdomain != null &&
-                    property.subdomain!.isNotEmpty)
+                if (property.subdomain != null && property.subdomain!.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       '${property.subdomain}.$_subdomainBaseDomain',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: theme.colorScheme.primary,
-                        fontFamily: 'monospace',
-                      ),
+                      style: TextStyle(fontSize: 11, color: theme.colorScheme.primary, fontFamily: 'monospace'),
                     ),
                   ),
               ],
@@ -571,21 +440,14 @@ class _EmbedWidgetGuideScreenState
           ),
 
           // Units list
-          ...units.map(
-            (unit) =>
-                _buildUnitEmbedCard(property.id, unit, property.subdomain),
-          ),
+          ...units.map((unit) => _buildUnitEmbedCard(property.id, unit, property.subdomain)),
         ],
       ),
     );
   }
 
   /// Build embed card for a single unit
-  Widget _buildUnitEmbedCard(
-    String propertyId,
-    UnitModel unit,
-    String? subdomain,
-  ) {
+  Widget _buildUnitEmbedCard(String propertyId, UnitModel unit, String? subdomain) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -594,11 +456,7 @@ class _EmbedWidgetGuideScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: isDark ? theme.colorScheme.outline : Colors.grey.shade300,
-          ),
-        ),
+        border: Border(top: BorderSide(color: isDark ? theme.colorScheme.outline : Colors.grey.shade300)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,29 +465,17 @@ class _EmbedWidgetGuideScreenState
           Row(
             children: [
               Expanded(
-                child: Text(
-                  unit.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
+                child: Text(unit.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               ),
               TextButton.icon(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: embedCode));
-                  ErrorDisplayUtils.showSuccessSnackBar(
-                    context,
-                    l10n.embedGuideCodeCopied,
-                  );
+                  ErrorDisplayUtils.showSuccessSnackBar(context, l10n.embedGuideCodeCopied);
                 },
                 icon: const Icon(Icons.copy, size: 16),
                 label: Text(l10n.embedCodeCopy),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   visualDensity: VisualDensity.compact,
                 ),
               ),
@@ -643,22 +489,13 @@ class _EmbedWidgetGuideScreenState
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
-              ),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
-              ),
+              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
             ),
             child: SelectableText(
               embedCode,
-              style: TextStyle(
-                fontSize: 11,
-                fontFamily: 'monospace',
-                color: theme.colorScheme.primary,
-                height: 1.4,
-              ),
+              style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: theme.colorScheme.primary, height: 1.4),
             ),
           ),
         ],
@@ -674,17 +511,11 @@ class _EmbedWidgetGuideScreenState
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Icon(
-            Icons.inbox_outlined,
-            size: 48,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-          ),
+          Icon(Icons.inbox_outlined, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
           const SizedBox(height: 12),
           Text(
             message,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
+            style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
             textAlign: TextAlign.center,
           ),
         ],
